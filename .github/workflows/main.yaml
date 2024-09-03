@@ -104,7 +104,7 @@ jobs:
       - release
     steps:
       - name: Download new tag
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
           name: new_tag
       - name: Set new tag
