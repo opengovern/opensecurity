@@ -232,7 +232,7 @@ func (p *Control) PopulateIntegrationType(ctx context.Context, db Database, api 
 	_, span1 := tracer.Start(ctx, "new_GetQuery", trace.WithSpanKind(trace.SpanKindServer))
 	span1.SetName("new_GetQuery")
 
-	query, err := db.GetQuery(ctx, *p.PolicyID)
+	query, err := db.GetPolicy(ctx, *p.PolicyID)
 	if err != nil {
 		span1.RecordError(err)
 		span1.SetStatus(codes.Error, err.Error())
@@ -299,7 +299,7 @@ func (q Policy) ToApi() api.Query {
 		QueryToExecute:  q.Definition,
 		IntegrationType: integration_type.ParseTypes(q.IntegrationType),
 		ListOfTables:    q.ListOfResources,
-		PrimaryTable:    q.PrimaryResource,
+		PrimaryTable:    &q.PrimaryResource,
 		Engine:          api.QueryEngine(q.Language),
 		Parameters:      make([]api.QueryParameter, 0, len(q.Parameters)),
 		CreatedAt:       q.CreatedAt,

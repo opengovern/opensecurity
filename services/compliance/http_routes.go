@@ -3089,7 +3089,7 @@ func (h *HttpHandler) GetBenchmarkControlsTree(echoCtx echo.Context) error {
 		queryIDs = append(queryIDs, control.Query.ID)
 	}
 
-	queries, err := h.db.GetQueriesIdAndIntegrationType(ctx, queryIDs)
+	queries, err := h.db.GetPoliciesIdAndIntegrationType(ctx, queryIDs)
 	if err != nil {
 		h.logger.Error("failed to fetch queries", zap.Error(err))
 		return err
@@ -5446,7 +5446,7 @@ func (h *HttpHandler) GetQuery(echoCtx echo.Context) error {
 	span1.SetName("new_GetQuery")
 	defer span1.End()
 
-	q, err := h.db.GetQuery(ctx, queryID)
+	q, err := h.db.GetPolicy(ctx, queryID)
 	if err != nil {
 		span1.RecordError(err)
 		span1.SetStatus(codes.Error, err.Error())
@@ -7013,7 +7013,7 @@ func (h *HttpHandler) ListControlsFilters(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get primaryTables")
 	}
 
-	listOfTables, err := h.db.ListQueriesUniqueTables(ctx)
+	listOfTables, err := h.db.ListPolicyUniqueResources(ctx)
 	if err != nil {
 		h.logger.Error("failed to get listOfTables", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get listOfTables")
@@ -7071,7 +7071,7 @@ func (h *HttpHandler) ListBenchmarksFilters(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get primaryTables")
 	}
 
-	listOfTables, err := h.db.ListQueriesUniqueTables(ctx)
+	listOfTables, err := h.db.ListPolicyUniqueResources(ctx)
 	if err != nil {
 		h.logger.Error("failed to get listOfTables", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get listOfTables")
@@ -7229,7 +7229,7 @@ func (h *HttpHandler) GetParametersControls(ctx echo.Context) error {
 
 	var err error
 	if len(parameters) == 0 {
-		parameters, err = h.db.GetQueryParameters(ctx.Request().Context())
+		parameters, err = h.db.GetPolicyParameters(ctx.Request().Context())
 		if err != nil {
 			h.logger.Error("failed to get list of parameters", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get list of parameters")

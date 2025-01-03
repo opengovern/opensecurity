@@ -59,7 +59,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	p := GitParser{
 		logger:             logger,
 		frameworksChildren: make(map[string][]string),
-		controlsQueries:    make(map[string]db.Policy),
+		controlsPolicies:   make(map[string]db.Policy),
 		namedPolicies:      make(map[string]inventory.NamedPolicy),
 	}
 	if err := p.ExtractCompliance(config.ComplianceGitPath, config.ControlEnrichmentGitPath); err != nil {
@@ -110,7 +110,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 
 	err = dbMetadata.Orm.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		for _, obj := range p.queryParamValues {
+		for _, obj := range p.policyParamValues {
 			err := tx.Clauses(clause.OnConflict{
 				DoNothing: true,
 			}).Create(&obj).Error

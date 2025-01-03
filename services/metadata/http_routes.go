@@ -244,7 +244,7 @@ func (h HttpHandler) SetQueryParameter(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "no query parameters provided")
 	}
 
-	dbQueryParams := make([]*models.QueryParameterValues, 0, len(req.QueryParameters))
+	dbQueryParams := make([]*models.PolicyParameterValues, 0, len(req.QueryParameters))
 	for _, apiParam := range req.QueryParameters {
 		//key, err := models.ParseQueryParameterKey(apiParam.Key)
 		//if err != nil {
@@ -344,7 +344,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 		}
 	}
 
-	var queryParams []models.QueryParameterValues
+	var queryParams []models.PolicyParameterValues
 	if len(filteredQueryParams) > 0 {
 		queryParams, err = h.db.GetQueryParametersByIds(filteredQueryParams)
 		if err != nil {
@@ -411,7 +411,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 //	@Tags			metadata
 //	@Produce		json
 //	@Param			id	path	string	true	"ID"
-//	@Success		200	{object}	models.QueryParameterValues
+//	@Success		200	{object}	models.PolicyParameterValues
 //	@Router			/metadata/api/v1/query_parameter/{id} [get]
 func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 	key := ctx.Param("key")

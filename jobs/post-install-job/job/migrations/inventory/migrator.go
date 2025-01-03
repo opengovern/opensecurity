@@ -25,7 +25,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-var QueryParameters []models.QueryParameterValues
+var QueryParameters []models.PolicyParameterValues
 
 type ResourceType struct {
 	ResourceName         string
@@ -286,7 +286,7 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 			QueryID:  dbMetric.ID,
 		})
 		if qp.DefaultValue != "" {
-			queryParamObj := models.QueryParameterValues{
+			queryParamObj := models.PolicyParameterValues{
 				Key:   qp.Key,
 				Value: qp.DefaultValue,
 			}

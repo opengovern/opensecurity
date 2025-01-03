@@ -29,10 +29,10 @@ type GitParser struct {
 	frameworksChildren map[string][]string
 	controls           []db.Control
 	policies           []db.Policy
-	queryParamValues   []models.QueryParameterValues
+	policyParamValues  []models.PolicyParameterValues
 	queryViews         []models.QueryView
 	queryViewsQueries  []models.Query
-	controlsQueries    map[string]db.Policy
+	controlsPolicies   map[string]db.Policy
 	namedPolicies      map[string]inventory.NamedPolicy
 	Comparison         *git.ComparisonResultGrouped
 }
@@ -215,7 +215,7 @@ func (g *GitParser) ExtractControls(complianceControlsPath string, controlEnrich
 				control.Severity = "low"
 			}
 
-			p := db.Control{
+			c := db.Control{
 				ID:              control.ID,
 				Title:           control.Title,
 				Description:     control.Description,
@@ -249,7 +249,7 @@ func (g *GitParser) ExtractControls(complianceControlsPath string, controlEnrich
 							return nil
 						}
 
-						q := db.Policy{
+						p := db.Policy{
 							ID:              control.ID,
 							Definition:      query.Policy.Definition,
 							IntegrationType: integrationTypes,
@@ -257,7 +257,7 @@ func (g *GitParser) ExtractControls(complianceControlsPath string, controlEnrich
 							ListOfResources: listOfTables,
 							Language:        query.Policy.Language,
 						}
-						g.controlsQueries[control.ID] = q
+						g.controlsPolicies[control.ID] = p
 
 						controlParameterValues := make(map[string]string)
 						for _, parameter := range control.Parameters {
@@ -265,13 +265,13 @@ func (g *GitParser) ExtractControls(complianceControlsPath string, controlEnrich
 						}
 
 						for _, parameter := range parameters {
-							q.Parameters = append(q.Parameters, db.PolicyParameter{
+							p.Parameters = append(p.Parameters, db.PolicyParameter{
 								PolicyID: control.ID,
 								Key:      parameter,
 							})
 
 							if v, ok := controlParameterValues[parameter]; ok {
-								g.queryParamValues = append(g.queryParamValues, models.QueryParameterValues{
+								g.policyParamValues = append(g.policyParamValues, models.PolicyParameterValues{
 									Key:       parameter,
 									Value:     v,
 									ControlID: control.ID,
@@ -282,8 +282,8 @@ func (g *GitParser) ExtractControls(complianceControlsPath string, controlEnrich
 								return nil
 							}
 						}
-						g.policies = append(g.policies, q)
-						p.PolicyID = &control.ID
+						g.policies = append(g.policies, p)
+						c.PolicyID = &control.ID
 					}
 				} else {
 					listOfTables, err := utils.ExtractTableRefsFromPolicy(control.Policy.Language, control.Policy.Definition)
@@ -307,7 +307,7 @@ func (g *GitParser) ExtractControls(complianceControlsPath string, controlEnrich
 						Language:        control.Policy.Language,
 						Trigger:         control.Policy.Trigger,
 					}
-					g.controlsQueries[control.ID] = q
+					g.controlsPolicies[control.ID] = q
 
 					controlParameterValues := make(map[string]string)
 					for _, parameter := range control.Parameters {
@@ -321,7 +321,7 @@ func (g *GitParser) ExtractControls(complianceControlsPath string, controlEnrich
 						})
 
 						if v, ok := controlParameterValues[parameter]; ok {
-							g.queryParamValues = append(g.queryParamValues, models.QueryParameterValues{
+							g.policyParamValues = append(g.policyParamValues, models.PolicyParameterValues{
 								Key:       parameter,
 								Value:     v,
 								ControlID: control.ID,
@@ -333,10 +333,10 @@ func (g *GitParser) ExtractControls(complianceControlsPath string, controlEnrich
 						}
 					}
 					g.policies = append(g.policies, q)
-					p.PolicyID = &control.ID
+					c.PolicyID = &control.ID
 				}
 			}
-			g.controls = append(g.controls, p)
+			g.controls = append(g.controls, c)
 		}
 		return nil
 	})
@@ -752,7 +752,7 @@ func (g *GitParser) ExtractQueryViews(viewsPath string) error {
 				})
 
 				if parameter.DefaultValue != "" {
-					g.queryParamValues = append(g.queryParamValues, models.QueryParameterValues{
+					g.policyParamValues = append(g.policyParamValues, models.PolicyParameterValues{
 						Key:   parameter.Key,
 						Value: parameter.DefaultValue,
 					})

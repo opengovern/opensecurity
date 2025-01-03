@@ -16,7 +16,7 @@ func NewDatabase(orm *gorm.DB) Database {
 func (db Database) Initialize() error {
 	err := db.orm.AutoMigrate(
 		&models.ConfigMetadata{},
-		&models.QueryParameterValues{},
+		&models.PolicyParameterValues{},
 		&models.QueryView{},
 		&models.QueryViewTag{},
 		&models.Query{},
