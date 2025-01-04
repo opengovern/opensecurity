@@ -26,7 +26,7 @@ type Control struct {
 	IntegrationType    []string                       `json:"integration_type" example:"Azure"`
 	Enabled            bool                           `json:"enabled" example:"true"`
 	DocumentURI        string                         `json:"documentURI" example:"benchmarks/azure_cis_v140_1_1.md"`
-	Query              *Query                         `json:"query"`
+	Policy             *Policy                        `json:"policy"`
 	Severity           types.ComplianceResultSeverity `json:"severity" example:"low"`
 	ManualVerification bool                           `json:"manualVerification" example:"true"`
 	Managed            bool                           `json:"managed" example:"true"`
@@ -101,7 +101,7 @@ type ListControlsFilterResultControl struct {
 	Severity        types.ComplianceResultSeverity `json:"severity"`
 	Tags            map[string][]string            `json:"tags"`
 	Query           struct {
-		PrimaryTable *string          `json:"primary_table"`
+		PrimaryTable string           `json:"primary_table"`
 		ListOfTables []string         `json:"list_of_tables"`
 		Parameters   []QueryParameter `json:"parameters"`
 	} `json:"query"`
@@ -141,11 +141,11 @@ type GetControlDetailsResponse struct {
 	IntegrationType []integration.Type `json:"integrationType"`
 	Severity        string             `json:"severity"`
 	Query           struct {
-		Engine         string           `json:"engine"`
-		QueryToExecute string           `json:"queryToExecute"`
-		PrimaryTable   *string          `json:"primaryTable"`
-		ListOfTables   []string         `json:"listOfTables"`
-		Parameters     []QueryParameter `json:"parameters"`
+		Language     string           `json:"language"`
+		Definition   string           `json:"definition"`
+		PrimaryTable string           `json:"primaryTable"`
+		ListOfTables []string         `json:"listOfTables"`
+		Parameters   []QueryParameter `json:"parameters"`
 	} `json:"query"`
 	Tags       map[string][]string `json:"tags"`
 	Benchmarks *struct {
@@ -159,8 +159,8 @@ type ListControlsFiltersResponse struct {
 	Severity        []string            `json:"severity"`
 	RootBenchmark   []string            `json:"root_benchmark"`
 	ParentBenchmark []string            `json:"parent_benchmark"`
-	PrimaryTable    []string            `json:"primary_table"`
-	ListOfTables    []string            `json:"list_of_tables"`
+	PrimaryResource []string            `json:"primary_resource"`
+	ListOfResources []string            `json:"list_of_resources"`
 	Tags            []ControlTagsResult `json:"tags"`
 }
 

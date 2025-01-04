@@ -64,12 +64,12 @@ func (s *JobScheduler) buildRunners(
 			return nil, nil, err
 		}
 
-		if control.Query == nil {
+		if control.Policy == nil {
 			continue
 		}
-		if connector != nil && len(control.Query.IntegrationType) > 0 && !control.Query.Global {
+		if connector != nil && len(control.Policy.IntegrationType) > 0 && !control.Policy.Global {
 			supportsConnector := false
-			for _, c := range control.Query.IntegrationType {
+			for _, c := range control.Policy.IntegrationType {
 				if *connector == c {
 					supportsConnector = true
 					break
@@ -87,10 +87,10 @@ func (s *JobScheduler) buildRunners(
 			ControlID:          control.ID,
 			ControlSeverity:    control.Severity,
 		}
-		if control.Query.Global == true {
+		if control.Policy.Global == true {
 			runnerJob := model.ComplianceRunner{
 				FrameworkID:          rootBenchmarkID,
-				QueryID:              control.Query.ID,
+				QueryID:              control.Policy.ID,
 				IntegrationID:        nil,
 				ResourceCollectionID: resourceCollectionID,
 				ParentJobID:          parentJobID,
@@ -108,7 +108,7 @@ func (s *JobScheduler) buildRunners(
 		} else {
 			runnerJob := model.ComplianceRunner{
 				FrameworkID:          rootBenchmarkID,
-				QueryID:              control.Query.ID,
+				QueryID:              control.Policy.ID,
 				IntegrationID:        connectionID,
 				ResourceCollectionID: resourceCollectionID,
 				ParentJobID:          parentJobID,

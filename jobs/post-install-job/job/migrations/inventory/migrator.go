@@ -25,7 +25,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-var QueryParameters []models.QueryParameterValues
+var QueryParameters []models.PolicyParameterValues
 
 type ResourceType struct {
 	ResourceName         string
@@ -238,7 +238,7 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		return err
 	}
 
-	var item NamedQuery
+	var item NamedPolicy
 	err = yaml.Unmarshal(content, &item)
 	if err != nil {
 		logger.Error("failure in unmarshal", zap.String("path", path), zap.Error(err))
@@ -279,40 +279,40 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		QueryID:          &id,
 	}
 	queryParams := []inventory.QueryParameter{}
-	for _, qp := range item.Query.Parameters {
+	for _, qp := range item.Policy.Parameters {
 		queryParams = append(queryParams, inventory.QueryParameter{
 			Key:      qp.Key,
 			Required: qp.Required,
 			QueryID:  dbMetric.ID,
 		})
 		if qp.DefaultValue != "" {
-			queryParamObj := models.QueryParameterValues{
+			queryParamObj := models.PolicyParameterValues{
 				Key:   qp.Key,
 				Value: qp.DefaultValue,
 			}
 			QueryParameters = append(QueryParameters, queryParamObj)
 		}
 	}
-	listOfTables, err := utils.ExtractTableRefsFromQuery(item.Query.QueryToExecute)
+	listOfTables, err := utils.ExtractTableRefsFromQuery(item.Policy.QueryToExecute)
 	if err != nil {
 		logger.Error("failed to extract table refs from query", zap.String("query-id", dbMetric.ID), zap.Error(err))
-		listOfTables = item.Query.ListOfTables
+		listOfTables = item.Policy.ListOfTables
 	}
 	query := inventory.Query{
 		ID:             dbMetric.ID,
-		QueryToExecute: item.Query.QueryToExecute,
-		PrimaryTable:   item.Query.PrimaryTable,
+		QueryToExecute: item.Policy.QueryToExecute,
+		PrimaryTable:   item.Policy.PrimaryTable,
 		ListOfTables:   listOfTables,
-		Engine:         item.Query.Engine,
+		Engine:         item.Policy.Engine,
 		Parameters:     queryParams,
-		Global:         item.Query.Global,
+		Global:         item.Policy.Global,
 	}
 	err = tx.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}}, // key column
 		DoNothing: true,
 	}).Create(&query).Error
 	if err != nil {
-		logger.Error("failure in Creating Query", zap.String("query_id", id), zap.Error(err))
+		logger.Error("failure in Creating Policy", zap.String("query_id", id), zap.Error(err))
 		return err
 	}
 	for _, param := range query.Parameters {

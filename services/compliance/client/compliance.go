@@ -19,13 +19,13 @@ type ComplianceServiceClient interface {
 	GetBenchmarkSummary(ctx *httpclient.Context, benchmarkID string, connectionId []string, timeAt *time.Time) (*compliance.BenchmarkEvaluationSummary, error)
 	GetBenchmarkControls(ctx *httpclient.Context, benchmarkID string, connectionId []string, timeAt *time.Time) (*compliance.BenchmarkControlSummary, error)
 	GetControl(ctx *httpclient.Context, controlID string) (*compliance.Control, error)
-	GetQuery(ctx *httpclient.Context, queryID string) (*compliance.Query, error)
+	GetQuery(ctx *httpclient.Context, queryID string) (*compliance.Policy, error)
 	GetComplianceResults(ctx *httpclient.Context, req compliance.GetComplianceResultsRequest) (compliance.GetComplianceResultsResponse, error)
 	ListBenchmarks(ctx *httpclient.Context, tags map[string][]string) ([]compliance.Benchmark, error)
 	ListAllBenchmarks(ctx *httpclient.Context, isBare bool) ([]compliance.Benchmark, error)
 	GetAccountsComplianceResultsSummary(ctx *httpclient.Context, benchmarkId string, connectionId []string, connector []source.Type) (compliance.GetAccountsComplianceResultsSummaryResponse, error)
 	CreateBenchmarkAssignment(ctx *httpclient.Context, benchmarkID, connectionId string) ([]compliance.BenchmarkAssignment, error)
-	ListQueries(ctx *httpclient.Context) ([]compliance.Query, error)
+	ListQueries(ctx *httpclient.Context) ([]compliance.Policy, error)
 	ListControl(ctx *httpclient.Context, controlIDs []string, tags map[string][]string) ([]compliance.Control, error)
 	GetControlDetails(ctx *httpclient.Context, controlID string) (*compliance.GetControlDetailsResponse, error)
 	SyncQueries(ctx *httpclient.Context) error
@@ -124,8 +124,6 @@ func (s *complianceClient) GetBenchmarkSummary(ctx *httpclient.Context, benchmar
 	return &response, nil
 }
 
-
-
 func (s *complianceClient) GetBenchmarkControls(ctx *httpclient.Context, benchmarkID string, connectionId []string, timeAt *time.Time) (*compliance.BenchmarkControlSummary, error) {
 	url := fmt.Sprintf("%s/api/v1/benchmarks/%s/controls", s.baseURL, benchmarkID)
 
@@ -220,10 +218,10 @@ func (s *complianceClient) ListControl(ctx *httpclient.Context, controlIDs []str
 	return response, nil
 }
 
-func (s *complianceClient) ListQueries(ctx *httpclient.Context) ([]compliance.Query, error) {
+func (s *complianceClient) ListQueries(ctx *httpclient.Context) ([]compliance.Policy, error) {
 	url := fmt.Sprintf("%s/api/v1/benchmarks/queries", s.baseURL)
 
-	var response []compliance.Query
+	var response []compliance.Policy
 	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &response); err != nil {
 		if 400 <= statusCode && statusCode < 500 {
 			return nil, echo.NewHTTPError(statusCode, err.Error())
@@ -233,10 +231,10 @@ func (s *complianceClient) ListQueries(ctx *httpclient.Context) ([]compliance.Qu
 	return response, nil
 }
 
-func (s *complianceClient) GetQuery(ctx *httpclient.Context, queryID string) (*compliance.Query, error) {
+func (s *complianceClient) GetQuery(ctx *httpclient.Context, queryID string) (*compliance.Policy, error) {
 	url := fmt.Sprintf("%s/api/v1/queries/%s", s.baseURL, queryID)
 
-	var response compliance.Query
+	var response compliance.Policy
 	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &response); err != nil {
 		if 400 <= statusCode && statusCode < 500 {
 			return nil, echo.NewHTTPError(statusCode, err.Error())
@@ -264,8 +262,6 @@ func (s *complianceClient) GetComplianceResults(ctx *httpclient.Context, req com
 
 	return response, nil
 }
-
-
 
 func (s *complianceClient) ListBenchmarks(ctx *httpclient.Context, tags map[string][]string) ([]compliance.Benchmark, error) {
 	url := fmt.Sprintf("%s/api/v1/benchmarks", s.baseURL)

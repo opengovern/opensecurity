@@ -28,7 +28,7 @@ type QueryResult struct {
 }
 
 type ExecutionPlan struct {
-	Query complianceApi.Query
+	Query complianceApi.Policy
 
 	IntegrationIDs []string
 }
@@ -83,7 +83,7 @@ func (w *Worker) RunQuery(ctx context.Context, j QueryJob) ([]QueryResult, error
 	w.logger.Info("Extracting and pushing to nats",
 		zap.Int("res_count", len(res.Data)),
 		zap.Any("res", *res),
-		zap.String("query", j.ExecutionPlan.Query.QueryToExecute),
+		zap.String("query", j.ExecutionPlan.Query.Definition),
 		zap.String("query_id", j.ExecutionPlan.Query.ID),
 	)
 
@@ -96,7 +96,7 @@ func (w *Worker) RunQuery(ctx context.Context, j QueryJob) ([]QueryResult, error
 }
 
 func (w *Worker) runSqlWorkerJob(ctx context.Context, j QueryJob, queryParamMap map[string]string) (*steampipe.Result, error) {
-	queryTemplate, err := template.New(j.ExecutionPlan.Query.ID).Parse(j.ExecutionPlan.Query.QueryToExecute)
+	queryTemplate, err := template.New(j.ExecutionPlan.Query.ID).Parse(j.ExecutionPlan.Query.Definition)
 	if err != nil {
 		w.logger.Error("failed to parse query template", zap.Error(err))
 		return nil, err
@@ -114,7 +114,7 @@ func (w *Worker) runSqlWorkerJob(ctx context.Context, j QueryJob, queryParamMap 
 
 	w.logger.Info("runSqlWorkerJob QueryOutput",
 		zap.Uint("job_id", j.AuditJobID),
-		zap.String("query", j.ExecutionPlan.Query.QueryToExecute),
+		zap.String("query", j.ExecutionPlan.Query.Definition),
 		zap.String("query_id", j.ExecutionPlan.Query.ID),
 		zap.String("query", queryOutput.String()))
 	res, err := w.steampipeConn.QueryAll(ctx, queryOutput.String())
@@ -140,16 +140,16 @@ func GetResourceTypeFromTableName(tableName string, queryIntegrationType []integ
 	return integration.GetResourceTypeFromTableName(tableName), nil
 }
 
-func (w *QueryJob) ExtractQueryResult(_ *zap.Logger, res *steampipe.Result, query api.Query) ([]QueryResult, error) {
+func (w *QueryJob) ExtractQueryResult(_ *zap.Logger, res *steampipe.Result, query api.Policy) ([]QueryResult, error) {
 	var complianceResults []QueryResult
 	var err error
 	queryResourceType := ""
-	if query.PrimaryTable != nil || len(query.ListOfTables) == 1 {
+	if query.PrimaryResource != nil || len(query.ListOfResources) == 1 {
 		tableName := ""
-		if query.PrimaryTable != nil {
-			tableName = *query.PrimaryTable
+		if query.PrimaryResource != nil {
+			tableName = *query.PrimaryResource
 		} else {
-			tableName = query.ListOfTables[0]
+			tableName = query.ListOfResources[0]
 		}
 		if tableName != "" {
 			queryResourceType, err = GetResourceTypeFromTableName(tableName, w.ExecutionPlan.Query.IntegrationType)

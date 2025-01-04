@@ -59,8 +59,8 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	p := GitParser{
 		logger:             logger,
 		frameworksChildren: make(map[string][]string),
-		controlsQueries:    make(map[string]db.Query),
-		namedQueries:       make(map[string]inventory.NamedQuery),
+		controlsPolicies:   make(map[string]db.Policy),
+		namedPolicies:      make(map[string]inventory.NamedPolicy),
 	}
 	if err := p.ExtractCompliance(config.ComplianceGitPath, config.ControlEnrichmentGitPath); err != nil {
 		logger.Error("failed to extract controls and benchmarks", zap.Error(err))
@@ -71,7 +71,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		return err
 	}
 
-	logger.Info("extracted controls, benchmarks and query views", zap.Int("controls", len(p.controls)), zap.Int("benchmarks", len(p.benchmarks)), zap.Int("query_views", len(p.queries)))
+	logger.Info("extracted controls, benchmarks and query views", zap.Int("controls", len(p.controls)), zap.Int("benchmarks", len(p.benchmarks)), zap.Int("query_views", len(p.policies)))
 
 	loadedQueries := make(map[string]bool)
 	err = dbm.Orm.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -79,10 +79,10 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		tx.Model(&db.BenchmarkControls{}).Where("1=1").Unscoped().Delete(&db.BenchmarkControls{})
 		tx.Model(&db.Benchmark{}).Where("1=1").Unscoped().Delete(&db.Benchmark{})
 		tx.Model(&db.Control{}).Where("1=1").Unscoped().Delete(&db.Control{})
-		tx.Model(&db.QueryParameter{}).Where("1=1").Unscoped().Delete(&db.QueryParameter{})
-		tx.Model(&db.Query{}).Where("1=1").Unscoped().Delete(&db.Query{})
+		tx.Model(&db.PolicyParameter{}).Where("1=1").Unscoped().Delete(&db.PolicyParameter{})
+		tx.Model(&db.Policy{}).Where("1=1").Unscoped().Delete(&db.Policy{})
 
-		for _, obj := range p.queries {
+		for _, obj := range p.policies {
 			obj.Controls = nil
 			err := tx.Clauses(clause.OnConflict{
 				Columns:   []clause.Column{{Name: "id"}}, // key column
@@ -105,12 +105,12 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		return nil
 	})
 	if err != nil {
-		logger.Error("failed to insert queries", zap.Error(err))
+		logger.Error("failed to insert policies", zap.Error(err))
 		return err
 	}
 
 	err = dbMetadata.Orm.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		for _, obj := range p.queryParams {
+		for _, obj := range p.policyParamValues {
 			err := tx.Clauses(clause.OnConflict{
 				DoNothing: true,
 			}).Create(&obj).Error
@@ -130,9 +130,9 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 
 		for _, obj := range p.controls {
 			obj.Benchmarks = nil
-			if obj.QueryID != nil && !loadedQueries[*obj.QueryID] {
-				missingQueries[*obj.QueryID] = true
-				logger.Info("query not found", zap.String("query_id", *obj.QueryID))
+			if obj.PolicyID != nil && !loadedQueries[*obj.PolicyID] {
+				missingQueries[*obj.PolicyID] = true
+				logger.Info("query not found", zap.String("query_id", *obj.PolicyID))
 				continue
 			}
 			err := tx.Clauses(clause.OnConflict{
@@ -189,7 +189,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			}
 
 			for _, control := range obj.Controls {
-				if control.QueryID != nil && !loadedQueries[*control.QueryID] {
+				if control.PolicyID != nil && !loadedQueries[*control.PolicyID] {
 					continue
 				}
 				err := tx.Clauses(clause.OnConflict{
@@ -210,7 +210,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			missingQueriesList = append(missingQueriesList, query)
 		}
 		if len(missingQueriesList) > 0 {
-			logger.Warn("missing queries", zap.Strings("queries", missingQueriesList))
+			logger.Warn("missing policies", zap.Strings("policies", missingQueriesList))
 		}
 		return nil
 	})

@@ -48,7 +48,7 @@ func CleanupSummariesForJobs(logger *zap.Logger, es opengovernance.Client, jobId
 	}
 
 	var res BenchmarkSummaryResponse
-	logger.Info("Query to Delete Summaries", zap.ByteString("query", query))
+	logger.Info("Policy to Delete Summaries", zap.ByteString("query", query))
 	err = es.Search(ctx, types.BenchmarkSummaryIndex, string(query), &res)
 	if err != nil {
 		logger.Error("Delete Summaries Error searching", zap.Error(err))

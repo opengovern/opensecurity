@@ -16,11 +16,11 @@ type Metric struct {
 	Status                   string              `json:"status" yaml:"status"`
 }
 
-type NamedQuery struct {
-	ID               string              `json:"id" yaml:"ID"`
-	Title            string              `json:"title" yaml:"Title"`
-	Description      string              `json:"description" yaml:"Description"`
-	IntegrationTypes []integration.Type  `json:"integrationType" yaml:"IntegrationType"`
-	Query            shared.Query        `json:"query" yaml:"Query"`
-	Tags             map[string][]string `json:"tags" yaml:"Tags"`
+type NamedPolicy struct {
+	ID               string              `json:"id" yaml:"id"`
+	Title            string              `json:"title" yaml:"title"`
+	Description      string              `json:"description" yaml:"description"`
+	IntegrationTypes []integration.Type  `json:"integration_type" yaml:"integration_type"`
+	Policy           shared.Policy       `json:"policy" yaml:"policy"`
+	Tags             map[string][]string `json:"tags" yaml:"tags"`
 }

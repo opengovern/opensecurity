@@ -70,7 +70,6 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 	benchmarks.GET("/:benchmark_id/summary", httpserver2.AuthorizeHandler(h.GetBenchmarkSummary, authApi.ViewerRole))
 	benchmarks.GET("/:benchmark_id/controls", httpserver2.AuthorizeHandler(h.GetBenchmarkControlsTree, authApi.ViewerRole))
 
-
 	controls := v1.Group("/controls")
 	controls.GET("/:controlId/summary", httpserver2.AuthorizeHandler(h.GetControlSummary, authApi.ViewerRole))
 
@@ -79,7 +78,6 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 
 	assignments := v1.Group("/assignments")
 	assignments.GET("/benchmark/:benchmark_id", httpserver2.AuthorizeHandler(h.ListAssignmentsByBenchmark, authApi.ViewerRole))
-
 
 	complianceResults := v1.Group("/compliance_result")
 	complianceResults.POST("", httpserver2.AuthorizeHandler(h.GetComplianceResults, authApi.ViewerRole))
@@ -91,10 +89,8 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 	complianceResults.GET("/:benchmarkId/accounts", httpserver2.AuthorizeHandler(h.GetAccountsComplianceResultsSummary, authApi.ViewerRole))
 	complianceResults.GET("/:benchmarkId/services", httpserver2.AuthorizeHandler(h.GetServicesComplianceResultsSummary, authApi.ViewerRole))
 
-
 	resourceFindings := v1.Group("/resource_findings")
 	resourceFindings.POST("", httpserver2.AuthorizeHandler(h.ListResourceFindings, authApi.ViewerRole))
-
 
 	v3 := e.Group("/api/v3")
 
@@ -110,7 +106,6 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 	v3.GET("/parameters/controls", httpserver2.AuthorizeHandler(h.GetParametersControls, authApi.ViewerRole))
 	v3.GET("/controls/filters", httpserver2.AuthorizeHandler(h.ListControlsFilters, authApi.ViewerRole))
 	v3.GET("/control/:control_id", httpserver2.AuthorizeHandler(h.GetControlDetails, authApi.ViewerRole))
-
 
 	v3.GET("/benchmarks/:benchmark_id/nested", httpserver2.AuthorizeHandler(h.ListBenchmarksNestedForBenchmark, authApi.ViewerRole))
 
@@ -619,8 +614,6 @@ func (h *HttpHandler) GetSingleComplianceResultByComplianceResultID(echoCtx echo
 	return echoCtx.JSON(http.StatusOK, apiFinding)
 }
 
-
-
 // GetComplianceResultFilterValues godoc
 //
 //	@Summary		Get possible values for finding filters
@@ -871,8 +864,6 @@ func (h *HttpHandler) GetComplianceResultFilterValues(echoCtx echo.Context) erro
 
 	return echoCtx.JSON(http.StatusOK, response)
 }
-
-
 
 // GetTopFieldByComplianceResultCount godoc
 //
@@ -1332,8 +1323,6 @@ func (h *HttpHandler) GetTopFieldByComplianceResultCount(echoCtx echo.Context) e
 	return echoCtx.JSON(http.StatusOK, response)
 }
 
-
-
 // GetAccountsComplianceResultsSummary godoc
 //
 //	@Summary		Get accounts complianceResults summaries
@@ -1529,9 +1518,6 @@ func (h *HttpHandler) GetServicesComplianceResultsSummary(echoCtx echo.Context) 
 	return echoCtx.JSON(http.StatusOK, response)
 }
 
-
-
-
 // ChangeBenchmarkSettings godoc
 //
 //	@Summary		change benchmark settings
@@ -1558,9 +1544,6 @@ func (h *HttpHandler) ChangeBenchmarkSettings(echoCtx echo.Context) error {
 
 	return echoCtx.NoContent(http.StatusOK)
 }
-
-
-
 
 // ListResourceFindings godoc
 //
@@ -1686,7 +1669,6 @@ func (h *HttpHandler) ListResourceFindings(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, response)
 }
 
-
 func addToControlSeverityResult(controlSeverityResult api.BenchmarkControlsSeverityStatus, control *db.Control, controlResult types.ControlResult) api.BenchmarkControlsSeverityStatus {
 	if control == nil {
 		control = &db.Control{
@@ -1793,7 +1775,6 @@ func addToControlSeverityResultV2(controlSeverityResult api.BenchmarkControlsSev
 	}
 	return controlSeverityResult
 }
-
 
 // GetBenchmarkSummary godoc
 //
@@ -2131,26 +2112,26 @@ func (h *HttpHandler) GetBenchmarkControlsTree(echoCtx echo.Context) error {
 
 	queryIDs := make([]string, 0, len(controlsMap))
 	for _, control := range controlsMap {
-		if control.Query == nil {
+		if control.Policy == nil {
 			continue
 		}
-		queryIDs = append(queryIDs, control.Query.ID)
+		queryIDs = append(queryIDs, control.Policy.ID)
 	}
 
-	queries, err := h.db.GetQueriesIdAndIntegrationType(ctx, queryIDs)
+	queries, err := h.db.GetPoliciesIdAndIntegrationType(ctx, queryIDs)
 	if err != nil {
 		h.logger.Error("failed to fetch queries", zap.Error(err))
 		return err
 	}
-	queryMap := make(map[string]db.Query)
+	queryMap := make(map[string]db.Policy)
 	for _, query := range queries {
 		queryMap[query.ID] = query
 	}
 
 	controlSummaryMap := make(map[string]api.ControlSummary)
 	for _, control := range controlsMap {
-		if control.Query != nil {
-			if query, ok := queryMap[control.Query.ID]; ok {
+		if control.Policy != nil {
+			if query, ok := queryMap[control.Policy.ID]; ok {
 				control.IntegrationType = query.IntegrationType
 			}
 		}
@@ -2189,8 +2170,6 @@ func (h *HttpHandler) GetBenchmarkControlsTree(echoCtx echo.Context) error {
 
 	return echoCtx.JSON(http.StatusOK, benchmarkControlSummary)
 }
-
-
 
 func (h *HttpHandler) populateControlsMap(ctx context.Context, benchmarkID string, baseControlsMap map[string]api.Control, tags map[string][]string) error {
 	if err := ctx.Err(); err != nil {
@@ -2237,9 +2216,6 @@ func (h *HttpHandler) populateControlsMap(ctx context.Context, benchmarkID strin
 
 	return nil
 }
-
-
-
 
 // ListControlsFiltered godoc
 //
@@ -2387,16 +2363,16 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			Severity:        control.Severity,
 			Tags:            filterTagsByRegex(req.TagsRegex, model.TrimPrivateTags(control.GetTagsMap())),
 			Query: struct {
-				PrimaryTable *string              `json:"primary_table"`
+				PrimaryTable string               `json:"primary_table"`
 				ListOfTables []string             `json:"list_of_tables"`
 				Parameters   []api.QueryParameter `json:"parameters"`
 			}{
-				PrimaryTable: control.Query.PrimaryTable,
-				ListOfTables: control.Query.ListOfTables,
-				Parameters:   make([]api.QueryParameter, 0, len(control.Query.Parameters)),
+				PrimaryTable: control.Policy.PrimaryResource,
+				ListOfTables: control.Policy.ListOfResources,
+				Parameters:   make([]api.QueryParameter, 0, len(control.Policy.Parameters)),
 			},
 		}
-		for _, p := range control.Query.Parameters {
+		for _, p := range control.Policy.Parameters {
 			apiControl.Query.Parameters = append(apiControl.Query.Parameters, p.ToApi())
 		}
 
@@ -2447,9 +2423,8 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 		for _, t := range apiControl.Query.ListOfTables {
 			uniqueListOfTables[t] = true
 		}
-		if apiControl.Query.PrimaryTable != nil {
-			uniquePrimaryTables[*apiControl.Query.PrimaryTable] = true
-		}
+		uniquePrimaryTables[apiControl.Query.PrimaryTable] = true
+
 		for k, vs := range apiControl.Tags {
 			if _, ok := uniqueTags[k]; !ok {
 				uniqueTags[k] = make(map[string]bool)
@@ -2565,7 +2540,6 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, response)
 }
 
-
 // GetControlDetails godoc
 //
 //	@Summary	Get Control Details by control ID
@@ -2596,7 +2570,7 @@ func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "control not found")
 	}
 	var parameters []api.QueryParameter
-	for _, qp := range control.Query.Parameters {
+	for _, qp := range control.Policy.Parameters {
 		parameters = append(parameters, qp.ToApi())
 	}
 
@@ -2607,17 +2581,17 @@ func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 		IntegrationType: integration_type.ParseTypes(control.IntegrationType),
 		Severity:        control.Severity.String(),
 		Query: struct {
-			Engine         string               `json:"engine"`
-			QueryToExecute string               `json:"queryToExecute"`
-			PrimaryTable   *string              `json:"primaryTable"`
-			ListOfTables   []string             `json:"listOfTables"`
-			Parameters     []api.QueryParameter `json:"parameters"`
+			Language     string               `json:"language"`
+			Definition   string               `json:"definition"`
+			PrimaryTable string               `json:"primaryTable"`
+			ListOfTables []string             `json:"listOfTables"`
+			Parameters   []api.QueryParameter `json:"parameters"`
 		}{
-			Engine:         control.Query.Engine,
-			QueryToExecute: control.Query.QueryToExecute,
-			PrimaryTable:   control.Query.PrimaryTable,
-			ListOfTables:   control.Query.ListOfTables,
-			Parameters:     parameters,
+			Language:     string(control.Policy.Language),
+			Definition:   control.Policy.Definition,
+			PrimaryTable: control.Policy.PrimaryResource,
+			ListOfTables: control.Policy.ListOfResources,
+			Parameters:   parameters,
 		},
 		Tags: model.TrimPrivateTags(control.GetTagsMap()),
 	}
@@ -2657,7 +2631,6 @@ func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 
 	return echoCtx.JSON(http.StatusOK, response)
 }
-
 
 // GetControlSummary godoc
 //
@@ -2730,10 +2703,10 @@ func (h *HttpHandler) getControlSummary(ctx context.Context, controlID string, b
 	}
 
 	var resourceType *inventoryApi.ResourceType
-	if control.Query != nil {
-		apiControl.IntegrationType = control.Query.IntegrationType
-		if control.Query != nil && control.Query.PrimaryTable != nil {
-			rtName, _, err := runner.GetResourceTypeFromTableName(*control.Query.PrimaryTable, integration_type.ParseTypes(control.Query.IntegrationType))
+	if control.Policy != nil {
+		apiControl.IntegrationType = control.Policy.IntegrationType
+		if control.Policy != nil {
+			rtName, _, err := runner.GetResourceTypeFromTableName(control.Policy.PrimaryResource, integration_type.ParseTypes(control.Policy.IntegrationType))
 			if err != nil {
 				h.logger.Error("failed to get resource type from table name", zap.Error(err))
 				return nil, err
@@ -2799,11 +2772,6 @@ func (h *HttpHandler) getControlSummary(ctx context.Context, controlID string, b
 
 	return &controlSummary, nil
 }
-
-
-
-
-
 
 // ListAssignmentsByBenchmark godoc
 //
@@ -2918,8 +2886,6 @@ func (h *HttpHandler) ListAssignmentsByBenchmark(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, resp)
 }
 
-
-
 // ListBenchmarksFiltered godoc
 //
 //	@Summary	List benchmarks filtered by integrations and other filters
@@ -2927,14 +2893,14 @@ func (h *HttpHandler) ListAssignmentsByBenchmark(echoCtx echo.Context) error {
 //	@Tags		compliance
 //	@Accept		json
 //	@Produce	json
-//	@Param		request	body		api.GetBenchmarkListRequest	true	"Request Body"
+//	@Param		request	body		api.GetFrameworkListRequest	true	"Request Body"
 //	@Success	200		{object}	[]api.GetBenchmarkListResponse
 //	@Router		/compliance/api/v3/benchmarks [post]
 func (h *HttpHandler) ListBenchmarksFiltered(echoCtx echo.Context) error {
 	ctx := echoCtx.Request().Context()
 	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
 
-	var req api.GetBenchmarkListRequest
+	var req api.GetFrameworkListRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -3034,16 +3000,16 @@ func (h *HttpHandler) ListBenchmarksFiltered(echoCtx echo.Context) error {
 			}
 		}
 
-		primaryTables := metadata.PrimaryTables
-		listOfTables := metadata.ListOfTables
+		primaryTables := metadata.PrimaryResources
+		listOfTables := metadata.ListOfResources
 
-		if len(req.PrimaryTable) > 0 {
-			if !listContainsList(primaryTables, req.PrimaryTable) {
+		if len(req.PrimaryResource) > 0 {
+			if !listContainsList(primaryTables, req.PrimaryResource) {
 				continue
 			}
 		}
-		if len(req.ListOfTables) > 0 {
-			if !listContainsList(listOfTables, req.ListOfTables) {
+		if len(req.ListOfResources) > 0 {
+			if !listContainsList(listOfTables, req.ListOfResources) {
 				continue
 			}
 		}
@@ -3176,8 +3142,8 @@ func (h *HttpHandler) GetBenchmarkDetails(echoCtx echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	}
-	primaryTables := metadata.PrimaryTables
-	listOfTables := metadata.ListOfTables
+	primaryResources := metadata.PrimaryResources
+	listOfResources := metadata.ListOfResources
 
 	benchmarkMetadata := api.GetBenchmarkDetailsMetadata{
 		ID:                benchmark.ID,
@@ -3187,8 +3153,8 @@ func (h *HttpHandler) GetBenchmarkDetails(echoCtx echo.Context) error {
 		TrackDriftEvents:  benchmark.TracksDriftEvents,
 		SupportedControls: metadata.Controls,
 		NumberOfControls:  len(metadata.Controls),
-		PrimaryTables:     primaryTables,
-		ListOfTables:      listOfTables,
+		PrimaryResources:  primaryResources,
+		ListOfResources:   listOfResources,
 		Tags:              filterTagsByRegex(req.TagsRegex, model.TrimPrivateTags(benchmark.GetTagsMap())),
 		CreatedAt:         benchmark.CreatedAt,
 		UpdatedAt:         benchmark.UpdatedAt,
@@ -3434,20 +3400,18 @@ func (h *HttpHandler) ListControls(echoCtx echo.Context) error {
 func (h *HttpHandler) ListQueries(echoCtx echo.Context) error {
 	ctx := echoCtx.Request().Context()
 
-	queries, err := h.db.ListQueries(ctx)
+	policies, err := h.db.ListPolicies(ctx)
 	if err != nil {
 		return err
 	}
 
-	var resp []api.Query
-	for _, query := range queries {
+	var resp []api.Policy
+	for _, query := range policies {
 		pa := query.ToApi()
 		resp = append(resp, pa)
 	}
 	return echoCtx.JSON(http.StatusOK, resp)
 }
-
-
 
 // SyncQueries godoc
 //
@@ -3584,7 +3548,6 @@ func (h *HttpHandler) SyncQueries(echoCtx echo.Context) error {
 
 	return echoCtx.JSON(http.StatusOK, struct{}{})
 }
-
 
 // GetBenchmarkAssignments godoc
 //
@@ -3726,8 +3689,6 @@ func (h *HttpHandler) GetBenchmarkAssignments(echoCtx echo.Context) error {
 	})
 }
 
-
-
 // AssignBenchmarkToIntegration godoc
 //
 //	@Summary		Create benchmark assignment
@@ -3860,8 +3821,6 @@ func (h *HttpHandler) AssignBenchmarkToIntegration(echoCtx echo.Context) error {
 
 	return echoCtx.NoContent(http.StatusOK)
 }
-
-
 
 // ComplianceSummaryOfBenchmark godoc
 //
@@ -4162,8 +4121,6 @@ func (h *HttpHandler) ComplianceSummaryOfBenchmark(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, response)
 }
 
-
-
 // ListControlsFilters godoc
 //
 //	@Summary	List possible values for each filter in List Controls
@@ -4204,16 +4161,16 @@ func (h *HttpHandler) ListControlsFilters(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get parentBenchmarks")
 	}
 
-	primaryTables, err := h.db.ListQueriesUniquePrimaryTables(ctx)
+	primaryResources, err := h.db.ListPoliciesUniquePrimaryResources(ctx)
 	if err != nil {
-		h.logger.Error("failed to get primaryTables", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get primaryTables")
+		h.logger.Error("failed to get primaryResources", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get primaryResources")
 	}
 
-	listOfTables, err := h.db.ListQueriesUniqueTables(ctx)
+	listOfResources, err := h.db.ListPolicyUniqueResources(ctx)
 	if err != nil {
-		h.logger.Error("failed to get listOfTables", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get listOfTables")
+		h.logger.Error("failed to get listOfResources", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get listOfResources")
 	}
 
 	controlsTags, err := h.db.GetControlsTags()
@@ -4232,8 +4189,8 @@ func (h *HttpHandler) ListControlsFilters(echoCtx echo.Context) error {
 		Severity:        severities,
 		RootBenchmark:   rootBenchmarkIds,
 		ParentBenchmark: parentBenchmarks,
-		PrimaryTable:    primaryTables,
-		ListOfTables:    listOfTables,
+		PrimaryResource: primaryResources,
+		ListOfResources: listOfResources,
 		Tags:            tags,
 	}
 
@@ -4262,16 +4219,16 @@ func (h *HttpHandler) ListBenchmarksFilters(echoCtx echo.Context) error {
 		benchmarkIds = append(benchmarkIds, b.ID)
 	}
 
-	primaryTables, err := h.db.ListQueriesUniquePrimaryTables(ctx)
+	primaryResources, err := h.db.ListPoliciesUniquePrimaryResources(ctx)
 	if err != nil {
-		h.logger.Error("failed to get primaryTables", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get primaryTables")
+		h.logger.Error("failed to get primaryResources", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get primaryResources")
 	}
 
-	listOfTables, err := h.db.ListQueriesUniqueTables(ctx)
+	listOfResources, err := h.db.ListPolicyUniqueResources(ctx)
 	if err != nil {
-		h.logger.Error("failed to get listOfTables", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get listOfTables")
+		h.logger.Error("failed to get listOfResources", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get listOfResources")
 	}
 
 	benchmarksTags, err := h.db.GetBenchmarksTags()
@@ -4287,16 +4244,13 @@ func (h *HttpHandler) ListBenchmarksFilters(echoCtx echo.Context) error {
 
 	response := api.ListBenchmarksFiltersResponse{
 		ParentBenchmarkID: benchmarkIds,
-		PrimaryTable:      primaryTables,
-		ListOfTables:      listOfTables,
+		PrimaryResource:   primaryResources,
+		ListOfResources:   listOfResources,
 		Tags:              tags,
 	}
 
 	return echoCtx.JSON(http.StatusOK, response)
 }
-
-
-
 
 // GetParametersControls godoc
 //
@@ -4314,7 +4268,7 @@ func (h *HttpHandler) GetParametersControls(ctx echo.Context) error {
 
 	var err error
 	if len(parameters) == 0 {
-		parameters, err = h.db.GetQueryParameters(ctx.Request().Context())
+		parameters, err = h.db.GetPolicyParameters(ctx.Request().Context())
 		if err != nil {
 			h.logger.Error("failed to get list of parameters", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get list of parameters")
@@ -4343,8 +4297,6 @@ func (h *HttpHandler) GetParametersControls(ctx echo.Context) error {
 		ParametersControls: parametersControls,
 	})
 }
-
-
 
 // ListBenchmarksNestedForBenchmark godoc
 //

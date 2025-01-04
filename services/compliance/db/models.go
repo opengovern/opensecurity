@@ -36,11 +36,11 @@ type BenchmarkAssignmentsCount struct {
 }
 
 type BenchmarkMetadata struct {
-	IsRoot        bool
-	Controls      []string
-	PrimaryTables []string
-	ListOfTables  []string
-	BenchmarkPath string
+	IsRoot           bool
+	Controls         []string
+	PrimaryResources []string
+	ListOfResources  []string
+	BenchmarkPath    string
 }
 
 type Benchmark struct {
@@ -146,45 +146,41 @@ type Control struct {
 	Tags    []ControlTag        `gorm:"foreignKey:ControlID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	tagsMap map[string][]string `gorm:"-:all"`
 
-	IntegrationType    pq.StringArray `gorm:"type:text[]"`
-	DocumentURI        string
-	Enabled            bool
-	QueryID            *string
-	Query              *Query      `gorm:"foreignKey:QueryID;references:ID;constraint:OnDelete:SET NULL"`
-	Benchmarks         []Benchmark `gorm:"many2many:benchmark_controls;"`
-	Severity           types.ComplianceResultSeverity
-	ManualVerification bool
-	Managed            bool
-	CreatedAt          time.Time
-	UpdatedAt          time.Time
+	IntegrationType pq.StringArray `gorm:"type:text[]"`
+	DocumentURI     string
+	Enabled         bool
+	PolicyID        *string
+	Policy          *Policy     `gorm:"foreignKey:PolicyID;references:ID;constraint:OnDelete:SET NULL"`
+	Benchmarks      []Benchmark `gorm:"many2many:benchmark_controls;"`
+	Severity        types.ComplianceResultSeverity
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 func (p Control) ToApi() api.Control {
 	pa := api.Control{
-		ID:                 p.ID,
-		Title:              p.Title,
-		Description:        p.Description,
-		Tags:               model.TrimPrivateTags(p.GetTagsMap()),
-		Explanation:        "",
-		NonComplianceCost:  "",
-		UsefulExample:      "",
-		IntegrationType:    nil,
-		Enabled:            p.Enabled,
-		DocumentURI:        p.DocumentURI,
-		Severity:           p.Severity,
-		ManualVerification: p.ManualVerification,
-		Managed:            p.Managed,
-		CreatedAt:          p.CreatedAt,
-		UpdatedAt:          p.UpdatedAt,
+		ID:                p.ID,
+		Title:             p.Title,
+		Description:       p.Description,
+		Tags:              model.TrimPrivateTags(p.GetTagsMap()),
+		Explanation:       "",
+		NonComplianceCost: "",
+		UsefulExample:     "",
+		IntegrationType:   nil,
+		Enabled:           p.Enabled,
+		DocumentURI:       p.DocumentURI,
+		Severity:          p.Severity,
+		CreatedAt:         p.CreatedAt,
+		UpdatedAt:         p.UpdatedAt,
 	}
 
-	if p.QueryID != nil {
-		pa.Query = &api.Query{
-			ID: *p.QueryID,
+	if p.PolicyID != nil {
+		pa.Policy = &api.Policy{
+			ID: *p.PolicyID,
 		}
 	}
-	if p.Query != nil {
-		pa.Query = utils.GetPointer(p.Query.ToApi())
+	if p.Policy != nil {
+		pa.Policy = utils.GetPointer(p.Policy.ToApi())
 	}
 
 	if v, ok := p.GetTagsMap()[model.OpenGovernancePrivateTagPrefix+"explanation"]; ok && len(v) > 0 {
@@ -229,14 +225,14 @@ func (p *Control) PopulateIntegrationType(ctx context.Context, db Database, api 
 		return nil
 	}
 
-	if p.QueryID == nil {
+	if p.PolicyID == nil {
 		return nil
 	}
 	// tracer :
 	_, span1 := tracer.Start(ctx, "new_GetQuery", trace.WithSpanKind(trace.SpanKindServer))
 	span1.SetName("new_GetQuery")
 
-	query, err := db.GetQuery(ctx, *p.QueryID)
+	query, err := db.GetPolicy(ctx, *p.PolicyID)
 	if err != nil {
 		span1.RecordError(err)
 		span1.SetStatus(codes.Error, err.Error())
@@ -248,7 +244,7 @@ func (p *Control) PopulateIntegrationType(ctx context.Context, db Database, api 
 	span1.End()
 
 	if query == nil {
-		return fmt.Errorf("query %s not found", *p.QueryID)
+		return fmt.Errorf("query %s not found", *p.PolicyID)
 	}
 
 	ty := query.IntegrationType
@@ -267,32 +263,28 @@ type BenchmarkControls struct {
 	ControlID   string
 }
 
-type QueryParameter struct {
-	QueryID  string `gorm:"primaryKey"`
+type PolicyParameter struct {
+	PolicyID string `gorm:"primaryKey"`
 	Key      string `gorm:"primaryKey"`
-	Required bool   `gorm:"default:false"`
 }
 
-func (qp QueryParameter) ToApi() api.QueryParameter {
+func (qp PolicyParameter) ToApi() api.QueryParameter {
 	return api.QueryParameter{
-		Key:      qp.Key,
-		Required: qp.Required,
+		Key: qp.Key,
 	}
 }
 
-type Query struct {
+type Policy struct {
 	ID              string `gorm:"primaryKey"`
-	QueryToExecute  string
+	Definition      string
 	IntegrationType pq.StringArray `gorm:"type:text[]"`
-	Engine          string
+	Language        types.PolicyLanguage
 
 	Controls []Control `gorm:"foreignKey:QueryID"`
 
-	// CloudQL Fields
-	PrimaryTable *string
-	ListOfTables pq.StringArray   `gorm:"type:text[]"`
-	Parameters   []QueryParameter `gorm:"foreignKey:QueryID"`
-	Global       bool
+	PrimaryResource string
+	ListOfResources pq.StringArray    `gorm:"type:text[]"`
+	Parameters      []PolicyParameter `gorm:"foreignKey:QueryID"`
 
 	// Rego Fields
 	RegoPolicies pq.StringArray `gorm:"type:text[]"`
@@ -301,16 +293,15 @@ type Query struct {
 	UpdatedAt time.Time
 }
 
-func (q Query) ToApi() api.Query {
-	query := api.Query{
+func (q Policy) ToApi() api.Policy {
+	query := api.Policy{
 		ID:              q.ID,
-		QueryToExecute:  q.QueryToExecute,
+		Definition:      q.Definition,
 		IntegrationType: integration_type.ParseTypes(q.IntegrationType),
-		ListOfTables:    q.ListOfTables,
-		PrimaryTable:    q.PrimaryTable,
-		Engine:          api.QueryEngine(q.Engine),
+		ListOfResources: q.ListOfResources,
+		PrimaryResource: &q.PrimaryResource,
+		Language:        api.PolicyLanguage(q.Language),
 		Parameters:      make([]api.QueryParameter, 0, len(q.Parameters)),
-		Global:          q.Global,
 		RegoPolicies:    q.RegoPolicies,
 		CreatedAt:       q.CreatedAt,
 		UpdatedAt:       q.UpdatedAt,
