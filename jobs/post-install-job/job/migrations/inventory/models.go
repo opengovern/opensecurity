@@ -21,6 +21,6 @@ type NamedPolicy struct {
 	Title            string              `json:"title" yaml:"title"`
 	Description      string              `json:"description" yaml:"description"`
 	IntegrationTypes []integration.Type  `json:"integration_type" yaml:"integration_type"`
-	Policy           shared.Policy       `json:"policy" yaml:"policy"`
+	Policy           shared.Query        `json:"policy" yaml:"policy"`
 	Tags             map[string][]string `json:"tags" yaml:"tags"`
 }
