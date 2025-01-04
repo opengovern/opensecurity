@@ -1,6 +1,6 @@
 package models
 
-import "github.com/opengovern/opencomply/services/metadata/api"
+import "github.com/opengovern/opencomply/services/core/api"
 
 
 
