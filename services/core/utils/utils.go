@@ -3,11 +3,11 @@ package utils
 
 import (
 	"time"
-
 	"github.com/haoel/downsampling/core"
 	"github.com/opengovern/opencomply/services/core/api"
 	"github.com/opengovern/opencomply/services/core/db"
 	"github.com/opengovern/opencomply/services/core/db/models"
+
 )
 
 func resourceTypeTrendDataPointsToPoints(trendDataPoints []api.ResourceTypeTrendDatapoint) []core.Point {
@@ -156,3 +156,5 @@ var categoryMap = map[string][]string{
 		"microsoft.entra/groups",
 	},
 }
+
+

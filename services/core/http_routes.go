@@ -44,7 +44,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/opengovern/opencomply/services/core/api"
-	src "github.com/opengovern/opencomply/services/core/utils"
+	coreUtils "github.com/opengovern/opencomply/services/core/utils"
 	"github.com/opengovern/opencomply/services/core/db/models"
 )
 
@@ -140,7 +140,7 @@ func (h HttpHandler) GetConfigMetadata(ctx echo.Context) error {
 	_, span := tracer.Start(ctx.Request().Context(), "new_GetConfigMetadata", trace.WithSpanKind(trace.SpanKindServer))
 	span.SetName("new_GetConfigMetadata")
 
-	metadata, err := src.GetConfigMetadata(h.db, key)
+	metadata, err := coreUtils.GetConfigMetadata(h.db, key)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
@@ -185,7 +185,7 @@ func (h HttpHandler) SetConfigMetadata(ctx echo.Context) error {
 	_, span := tracer.Start(ctx.Request().Context(), "new_SetConfigMetadata", trace.WithSpanKind(trace.SpanKindServer))
 	span.SetName("new_SetConfigMetadata")
 
-	err = src.SetConfigMetadata(h.db, key, req.Value)
+	err = coreUtils.SetConfigMetadata(h.db, key, req.Value)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
@@ -562,7 +562,7 @@ func (h HttpHandler) SyncDemo(echoCtx echo.Context) error {
 		}
 	}
 
-	metadata, err := src.GetConfigMetadata(h.db, string(models.MetadataKeyCustomizationEnabled))
+	metadata, err := coreUtils.GetConfigMetadata(h.db, string(models.MetadataKeyCustomizationEnabled))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return echo.NewHTTPError(http.StatusNotFound, "config not found")
@@ -614,7 +614,7 @@ func (h HttpHandler) SyncDemo(echoCtx echo.Context) error {
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid url")
 		}
-		err = src.SetConfigMetadata(h.db, models.DemoDataS3URL, demoDataS3URL)
+		err = coreUtils.SetConfigMetadata(h.db, models.DemoDataS3URL, demoDataS3URL)
 		if err != nil {
 			h.logger.Error("set config metadata", zap.Error(err))
 			return err
@@ -1213,3 +1213,126 @@ func (h HttpHandler) GetViews(echoCtx echo.Context) error {
 
 
 
+
+
+
+func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.ListQueryParametersResponse, error) {
+	clientCtx := &httpclient.Context{UserRole: api3.AdminRole}
+	var resp api.ListQueryParametersResponse
+	var cursor, perPage int64
+	var err error
+	var request api.ListQueryParametersRequest
+	if err := ctx.Bind(&request); err != nil {
+		ctx.Logger().Errorf("bind the request: %v", err)
+		return resp,echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+	}
+
+	cursor = request.Cursor
+	perPage = request.PerPage
+
+	queryIDs := request.Queries
+	controlIDs := request.Controls
+
+	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
+	complianceClient := complianceClient.NewComplianceClient(complianceURL)
+	inventoryURL := strings.ReplaceAll(h.cfg.Inventory.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
+	inventoryClient := inventoryClient.NewInventoryServiceClient(inventoryURL)
+
+	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
+	if err != nil {
+		h.logger.Error("error listing controls", zap.Error(err))
+		return resp,echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
+	}
+	namedQueries, err := inventoryClient.ListQueriesV2(clientCtx, nil)
+	if err != nil {
+		h.logger.Error("error listing queries", zap.Error(err))
+		return resp,echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
+	}
+
+	var filteredQueryParams []string
+	if controlIDs != nil {
+		all_control, err := complianceClient.ListControl(clientCtx, controlIDs, nil)
+		if err != nil {
+			h.logger.Error("error getting control", zap.Error(err))
+			return resp,echo.NewHTTPError(http.StatusInternalServerError, "error getting control")
+		}
+		if all_control == nil {
+			return resp,echo.NewHTTPError(http.StatusNotFound, "control not found")
+		}
+		for _, control := range all_control {
+			for _, param := range control.Query.Parameters {
+				filteredQueryParams = append(filteredQueryParams, param.Key)
+			}
+		}
+	} else if queryIDs != nil {
+		// TODO: Fix this part and write new client on inventory
+		queries, err := inventoryClient.ListQueriesV2(clientCtx, &inventoryApi.ListQueryV2Request{QueryIDs: queryIDs})
+		if err != nil {
+			h.logger.Error("error getting query", zap.Error(err))
+			return resp,echo.NewHTTPError(http.StatusInternalServerError, "error getting query")
+		}
+		for _, q := range queries.Items {
+			for _, param := range q.Query.Parameters {
+				filteredQueryParams = append(filteredQueryParams, param.Key)
+			}
+		}
+	}
+
+	var queryParams []models.QueryParameterValues
+	if len(filteredQueryParams) > 0 {
+		queryParams, err = h.db.GetQueryParametersByIds(filteredQueryParams)
+		if err != nil {
+			h.logger.Error("error getting query parameters", zap.Error(err))
+			return resp,err
+		}
+	} else {
+		queryParams, err = h.db.GetQueryParametersValues()
+		if err != nil {
+			h.logger.Error("error getting query parameters", zap.Error(err))
+			return resp,err
+		}
+	}
+
+	parametersMap := make(map[string]*api.QueryParameter)
+	for _, dbParam := range queryParams {
+		apiParam := dbParam.ToAPI()
+		parametersMap[apiParam.Key] = &apiParam
+	}
+
+	for _, c := range controls {
+		for _, p := range c.Query.Parameters {
+			if _, ok := parametersMap[p.Key]; ok {
+				parametersMap[p.Key].ControlsCount += 1
+			}
+		}
+	}
+	for _, q := range namedQueries.Items {
+		for _, p := range q.Query.Parameters {
+			if _, ok := parametersMap[p.Key]; ok {
+				parametersMap[p.Key].QueriesCount += 1
+			}
+		}
+	}
+
+	var items []api.QueryParameter
+	for _, i := range parametersMap {
+		items = append(items, *i)
+	}
+
+	totalCount := len(items)
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].Key < items[j].Key
+	})
+	if perPage != 0 {
+		if cursor == 0 {
+			items = utils.Paginate(1, perPage, items)
+		} else {
+			items = utils.Paginate(cursor, perPage, items)
+		}
+	}
+
+	return  api.ListQueryParametersResponse{
+		TotalCount: totalCount,
+		Items:      items,
+	},nil
+}
