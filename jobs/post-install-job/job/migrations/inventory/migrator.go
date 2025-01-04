@@ -293,7 +293,7 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 			QueryParameters = append(QueryParameters, queryParamObj)
 		}
 	}
-	listOfTables, err := utils.ExtractTableRefsFromQuery(item.Policy.QueryToExecute)
+	listOfTables, err := utils.ExtractTableRefsFromPolicy("sql", item.Policy.QueryToExecute)
 	if err != nil {
 		logger.Error("failed to extract table refs from query", zap.String("query-id", dbMetric.ID), zap.Error(err))
 		listOfTables = item.Policy.ListOfTables

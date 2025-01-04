@@ -47,8 +47,8 @@ func (g *GitParser) getTablesUnderBenchmark(benchmark db.Benchmark, benchmarkCac
 
 	for _, c := range benchmark.Controls {
 		if query, ok := g.controlsPolicies[c.ID]; ok {
-			if query.PrimaryResource != nil && *query.PrimaryResource != "" {
-				primaryTables[*query.PrimaryResource] = true
+			if query.PrimaryResource != "" {
+				primaryTables[query.PrimaryResource] = true
 			}
 			for _, t := range query.ListOfResources {
 				if t == "" {
