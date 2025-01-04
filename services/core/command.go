@@ -141,7 +141,7 @@ func start(ctx context.Context) error {
 		cfg,
 		SteampipeHost, SteampipePort, SteampipeDb, SteampipeUser, SteampipePassword,
 		SchedulerBaseUrl, IntegrationBaseUrl, ComplianceBaseUrl,
-		logger,
+		logger,dexClient,
 	)
 	if err != nil {
 		return fmt.Errorf("init http handler: %w", err)

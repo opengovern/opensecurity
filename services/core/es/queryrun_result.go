@@ -5,7 +5,7 @@ import (
 
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/opencomply/pkg/types"
-	"github.com/opengovern/opencomply/services/inventory/api"
+	"github.com/opengovern/opencomply/services/core/api"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )

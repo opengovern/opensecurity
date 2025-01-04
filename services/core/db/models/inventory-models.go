@@ -11,7 +11,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/opengovern/og-util/pkg/model"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
-	"github.com/opengovern/opencomply/services/inventory/api"
+	"github.com/opengovern/opencomply/services/core/api"
 	"gorm.io/gorm"
 )
 

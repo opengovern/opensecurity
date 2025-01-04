@@ -43,14 +43,16 @@ import (
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/labstack/echo/v4"
-	"github.com/opengovern/opencomply/services/metadata/api"
-	"github.com/opengovern/opencomply/services/metadata/internal/src"
-	"github.com/opengovern/opencomply/services/metadata/models"
+	"github.com/opengovern/opencomply/services/core/api"
+	src "github.com/opengovern/opencomply/services/core/utils"
+	"github.com/opengovern/opencomply/services/core/db/models"
 )
+
+
 
 func (h HttpHandler) Register(r *echo.Echo) {
 	v1 := r.Group("/api/v1")
-
+	// metadata
 	filter := v1.Group("/filter")
 	filter.POST("", httpserver.AuthorizeHandler(h.AddFilter, api3.ViewerRole))
 	filter.GET("", httpserver.AuthorizeHandler(h.GetFilters, api3.ViewerRole))
@@ -63,8 +65,22 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	queryParameter.POST("/set", httpserver.AuthorizeHandler(h.SetQueryParameter, api3.AdminRole))
 	queryParameter.POST("", httpserver.AuthorizeHandler(h.ListQueryParameters, api3.ViewerRole))
 	queryParameter.GET("/:key", httpserver.AuthorizeHandler(h.GetQueryParameter, api3.ViewerRole))
+	// inventory
+	queryV1 := v1.Group("/query")
+	queryV1.GET("", httpserver.AuthorizeHandler(h.ListQueries, api3.ViewerRole))
+	queryV1.POST("/run", httpserver.AuthorizeHandler(h.RunQuery, api3.ViewerRole))
+	queryV1.GET("/run/history", httpserver.AuthorizeHandler(h.GetRecentRanQueries, api3.ViewerRole))
+	v2 := r.Group("/api/v2")
+	metadatav2 := v2.Group("/metadata")
+	metadatav2.GET("/resourcetype", httpserver.AuthorizeHandler(h.ListResourceTypeMetadata, api3.ViewerRole))
+
+	resourceCollectionMetadata := metadata.Group("/resource-collection")
+	resourceCollectionMetadata.GET("", httpserver.AuthorizeHandler(h.ListResourceCollectionsMetadata, api3.ViewerRole))
+	resourceCollectionMetadata.GET("/:resourceCollectionId", httpserver.AuthorizeHandler(h.GetResourceCollectionMetadata, api3.ViewerRole))
+
 
 	v3 := r.Group("/api/v3")
+	// metadata
 	v3.PUT("/sample/purge", httpserver.AuthorizeHandler(h.PurgeSampleData, api3.ViewerRole))
 	v3.PUT("/sample/sync", httpserver.AuthorizeHandler(h.SyncDemo, api3.ViewerRole))
 	v3.PUT("/sample/loaded", httpserver.AuthorizeHandler(h.WorkspaceLoadedSampleData, api3.ViewerRole))
@@ -80,9 +96,22 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	views.PUT("/reload", httpserver.AuthorizeHandler(h.ReloadViews, api3.AdminRole))
 	views.GET("/checkpoint", httpserver.AuthorizeHandler(h.GetViewsCheckpoint, api3.AdminRole))
 	views.GET("", httpserver.AuthorizeHandler(h.GetViews, api3.ViewerRole))
+	// inventory
+	v3.POST("/queries", httpserver.AuthorizeHandler(h.ListQueriesV2, api3.ViewerRole))
+	v3.GET("/queries/filters", httpserver.AuthorizeHandler(h.ListQueriesFilters, api3.ViewerRole))
+	v3.GET("/queries/:query_id", httpserver.AuthorizeHandler(h.GetQuery, api3.ViewerRole))
+	v3.GET("/queries/tags", httpserver.AuthorizeHandler(h.ListQueriesTags, api3.ViewerRole))
+	v3.POST("/query/run", httpserver.AuthorizeHandler(h.RunQueryByID, api3.ViewerRole))
+	v3.GET("/query/async/run/:run_id/result", httpserver.AuthorizeHandler(h.GetAsyncQueryRunResult, api3.ViewerRole))
+	v3.GET("/resources/categories", httpserver.AuthorizeHandler(h.GetResourceCategories, api3.ViewerRole))
+	v3.GET("/queries/categories", httpserver.AuthorizeHandler(h.GetQueriesResourceCategories, api3.ViewerRole))
+	v3.GET("/tables/categories", httpserver.AuthorizeHandler(h.GetTablesResourceCategories, api3.ViewerRole))
+	v3.GET("/categories/queries", httpserver.AuthorizeHandler(h.GetCategoriesQueries, api3.ViewerRole))
+	v3.GET("/parameters/queries", httpserver.AuthorizeHandler(h.GetParametersQueries, api3.ViewerRole))
+	
 }
 
-var tracer = otel.Tracer("metadata")
+var tracer = otel.Tracer("core")
 
 func bindValidate(ctx echo.Context, i interface{}) error {
 	if err := ctx.Bind(i); err != nil {
@@ -352,7 +381,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 			return err
 		}
 	} else {
-		queryParams, err = h.db.GetQueryParameters()
+		queryParams, err = h.db.GetQueryParametersValues()
 		if err != nil {
 			h.logger.Error("error getting query parameters", zap.Error(err))
 			return err
@@ -1135,9 +1164,9 @@ func (h HttpHandler) GetViews(echoCtx echo.Context) error {
 	for _, view := range views {
 		var query api.Query
 		if view.Query != nil {
-			var parameters []api.Parameters
+			var parameters []api.QueryParameter
 			for _, p := range view.Query.Parameters {
-				parameters = append(parameters, api.Parameters{
+				parameters = append(parameters, api.QueryParameter{
 					Key:      p.Key,
 					Required: p.Required,
 				})
@@ -1179,3 +1208,8 @@ func (h HttpHandler) GetViews(echoCtx echo.Context) error {
 		TotalCount: totalCount,
 	})
 }
+
+// 
+
+
+
