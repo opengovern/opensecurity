@@ -53,8 +53,8 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 			}
 			jobMsg.Query = namedQuery.Query.QueryToExecute
 			jobMsg.Parameters = namedQuery.Query.Parameters
-			jobMsg.ListOfTables = namedQuery.Query.ListOfTables
-			jobMsg.PrimaryTable = namedQuery.Query.PrimaryTable
+			jobMsg.ListOfResources = namedQuery.Query.ListOfTables
+			jobMsg.PrimaryResource = namedQuery.Query.PrimaryTable
 			jobMsg.IntegrationType = namedQuery.IntegrationTypes
 		} else if job.QueryType == queryvalidator.QueryTypeComplianceControl {
 			jobMsg.QueryType = queryvalidator.QueryTypeComplianceControl
@@ -63,17 +63,17 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 			if err != nil {
 				s.logger.Error("Get Control Error", zap.Error(err))
 			}
-			jobMsg.Query = controlQuery.Query.Definition
+			jobMsg.Query = controlQuery.Policy.Definition
 			var parameters []inventoryApi.QueryParameter
-			for _, qp := range controlQuery.Query.Parameters {
+			for _, qp := range controlQuery.Policy.Parameters {
 				parameters = append(parameters, inventoryApi.QueryParameter{
 					Key:      qp.Key,
 					Required: qp.Required,
 				})
 			}
 			jobMsg.Parameters = parameters
-			jobMsg.ListOfTables = controlQuery.Query.ListOfTables
-			jobMsg.PrimaryTable = controlQuery.Query.PrimaryTable
+			jobMsg.ListOfResources = controlQuery.Policy.ListOfResources
+			jobMsg.PrimaryResource = &controlQuery.Policy.PrimaryResource
 			jobMsg.IntegrationType = controlQuery.IntegrationType
 		} else {
 			_ = s.db.UpdateQueryValidatorJobStatus(job.ID, queryvalidator.QueryValidatorFailed, "query ID not found")

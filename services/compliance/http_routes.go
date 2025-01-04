@@ -2280,7 +2280,7 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 	}
 
 	controls, err := h.db.ListControlsByFilter(ctx, nil, req.IntegrationTypes, req.Severity, benchmarks, req.Tags, req.HasParameters,
-		req.PrimaryTable, req.ListOfTables, nil)
+		req.PrimaryResource, req.ListOfResources, nil)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -2362,7 +2362,7 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			IntegrationType: integration_type.ParseTypes(control.IntegrationType),
 			Severity:        control.Severity,
 			Tags:            filterTagsByRegex(req.TagsRegex, model.TrimPrivateTags(control.GetTagsMap())),
-			Query: struct {
+			Policy: struct {
 				PrimaryTable string               `json:"primary_table"`
 				ListOfTables []string             `json:"list_of_tables"`
 				Parameters   []api.QueryParameter `json:"parameters"`
@@ -2373,7 +2373,7 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			},
 		}
 		for _, p := range control.Policy.Parameters {
-			apiControl.Query.Parameters = append(apiControl.Query.Parameters, p.ToApi())
+			apiControl.Policy.Parameters = append(apiControl.Policy.Parameters, p.ToApi())
 		}
 
 		h.logger.Info("ListControlsByFilter", zap.Strings("benchmarks", benchmarks))
@@ -2420,10 +2420,10 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			uniqueIntegrationTypes[c.String()] = true
 		}
 		uniqueSeverities[apiControl.Severity.String()] = true
-		for _, t := range apiControl.Query.ListOfTables {
+		for _, t := range apiControl.Policy.ListOfResources {
 			uniqueListOfTables[t] = true
 		}
-		uniquePrimaryTables[apiControl.Query.PrimaryTable] = true
+		uniquePrimaryTables[apiControl.Policy.PrimaryResource] = true
 
 		for k, vs := range apiControl.Tags {
 			if _, ok := uniqueTags[k]; !ok {
@@ -2580,7 +2580,7 @@ func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 		Description:     control.Description,
 		IntegrationType: integration_type.ParseTypes(control.IntegrationType),
 		Severity:        control.Severity.String(),
-		Query: struct {
+		Policy: struct {
 			Language     string               `json:"language"`
 			Definition   string               `json:"definition"`
 			PrimaryTable string               `json:"primaryTable"`
