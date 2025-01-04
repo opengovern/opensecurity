@@ -19,7 +19,7 @@ import (
 	"github.com/opengovern/opencomply/jobs/post-install-job/job/git"
 	"github.com/opengovern/opencomply/pkg/types"
 	"github.com/opengovern/opencomply/services/compliance/db"
-	"github.com/opengovern/opencomply/services/metadata/models"
+	"github.com/opengovern/opencomply/services/core/db/models"
 	"go.uber.org/zap"
 )
 
