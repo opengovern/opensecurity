@@ -61,7 +61,7 @@ func GetJobReportControlViewByJobID(ctx context.Context, logger *zap.Logger, cli
 		return nil, err
 	}
 
-	logger.Info("ES Query", zap.String("index", types.ComplianceJobReportControlViewIndex), zap.String("query", string(b)))
+	logger.Info("ES Policy", zap.String("index", types.ComplianceJobReportControlViewIndex), zap.String("query", string(b)))
 
 	var response ControlViewResponse
 	err = client.Search(ctx, types.ComplianceJobReportControlViewIndex, string(b), &response)
@@ -125,7 +125,7 @@ func GetJobReportControlSummaryByJobID(ctx context.Context, logger *zap.Logger, 
 		return nil, err
 	}
 
-	logger.Info("ES Query to get compliance job report control summary", zap.String("index", types.ComplianceJobReportControlSummaryIndex), zap.String("query", string(b)))
+	logger.Info("ES Policy to get compliance job report control summary", zap.String("index", types.ComplianceJobReportControlSummaryIndex), zap.String("query", string(b)))
 
 	var response ControlSummaryResponse
 	err = client.Search(ctx, types.ComplianceJobReportControlSummaryIndex, string(b), &response)
@@ -179,7 +179,7 @@ func GetJobReportResourceViewByJobID(ctx context.Context, logger *zap.Logger, cl
 		return nil, err
 	}
 
-	logger.Info("ES Query", zap.String("index", types.ComplianceJobReportResourceViewIndex), zap.String("query", string(b)))
+	logger.Info("ES Policy", zap.String("index", types.ComplianceJobReportResourceViewIndex), zap.String("query", string(b)))
 
 	var response ResourceViewResponse
 	err = client.Search(ctx, types.ComplianceJobReportResourceViewIndex, string(b), &response)

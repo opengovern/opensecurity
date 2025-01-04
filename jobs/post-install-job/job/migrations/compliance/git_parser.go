@@ -305,7 +305,7 @@ func (g *GitParser) ExtractControls(complianceControlsPath string, controlEnrich
 						PrimaryResource: control.Policy.PrimaryResource,
 						ListOfResources: listOfTables,
 						Language:        control.Policy.Language,
-						Trigger:         control.Policy.Trigger,
+						RegoPolicies:    control.Policy.RegoPolicies,
 					}
 					g.controlsPolicies[control.ID] = q
 
@@ -665,9 +665,9 @@ func (g GitParser) ExtractBenchmarksMetadata() error {
 			listOfTables = append(listOfTables, k)
 		}
 		metadata := db.BenchmarkMetadata{
-			Controls:      controls,
-			PrimaryTables: primaryTables,
-			ListOfTables:  listOfTables,
+			Controls:         controls,
+			PrimaryResources: primaryTables,
+			ListOfResources:  listOfTables,
 		}
 		metadataJson, err := json.Marshal(metadata)
 		if err != nil {

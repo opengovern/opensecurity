@@ -7251,7 +7251,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Query ID",
+                        "description": "Policy ID",
                         "name": "query_id",
                         "in": "path",
                         "required": true
@@ -9853,7 +9853,7 @@ const docTemplate = `{
                     "example": "To enable multi-factor authentication for a user, run the following command..."
                 },
                 "query": {
-                    "$ref": "#/definitions/github_com_opengovern_opengovernance_pkg_compliance_api.Query"
+                    "$ref": "#/definitions/github_com_opengovern_opengovernance_pkg_compliance_api.Policy"
                 },
                 "severity": {
                     "allOf": [
@@ -11111,7 +11111,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_opengovern_opengovernance_pkg_compliance_api.Query": {
+        "github_com_opengovern_opengovernance_pkg_compliance_api.Policy": {
             "type": "object",
             "properties": {
                 "Global": {
@@ -13181,7 +13181,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "description": "Query Id",
+                    "description": "Policy Id",
                     "type": "string"
                 },
                 "integration_types": {
@@ -13192,7 +13192,7 @@ const docTemplate = `{
                     }
                 },
                 "query": {
-                    "description": "Query",
+                    "description": "Policy",
                     "type": "string"
                 },
                 "tags": {
@@ -13215,7 +13215,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "description": "Query Id",
+                    "description": "Policy Id",
                     "type": "string"
                 },
                 "integration_types": {
@@ -13226,10 +13226,10 @@ const docTemplate = `{
                     }
                 },
                 "query": {
-                    "description": "Query",
+                    "description": "Policy",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/github_com_opengovern_opengovernance_pkg_inventory_api.Query"
+                            "$ref": "#/definitions/github_com_opengovern_opengovernance_pkg_inventory_api.Policy"
                         }
                     ]
                 },
@@ -13304,7 +13304,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_opengovern_opengovernance_pkg_inventory_api.Query": {
+        "github_com_opengovern_opengovernance_pkg_inventory_api.Policy": {
             "type": "object",
             "properties": {
                 "Global": {
@@ -13688,7 +13688,7 @@ const docTemplate = `{
                     }
                 },
                 "query": {
-                    "description": "Query",
+                    "description": "Policy",
                     "type": "string"
                 },
                 "result": {
@@ -13700,7 +13700,7 @@ const docTemplate = `{
                     }
                 },
                 "title": {
-                    "description": "Query Title",
+                    "description": "Policy Title",
                     "type": "string"
                 }
             }

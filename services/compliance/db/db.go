@@ -868,7 +868,7 @@ func (db Database) ListControls(ctx context.Context, controlIDs []string, tags m
 	return s, nil
 }
 
-func (db Database) ListQueries(ctx context.Context) ([]Policy, error) {
+func (db Database) ListPolicies(ctx context.Context) ([]Policy, error) {
 	var s []Policy
 	tx := db.Orm.WithContext(ctx).Model(&Policy{}).Preload(clause.Associations).
 		Find(&s)
@@ -938,7 +938,7 @@ func (db Database) ListControlsUniqueParentBenchmarks(ctx context.Context) ([]st
 	return parentBenchmarks, nil
 }
 
-func (db Database) ListQueriesUniquePrimaryTables(ctx context.Context) ([]string, error) {
+func (db Database) ListPoliciesUniquePrimaryResources(ctx context.Context) ([]string, error) {
 	var primaryTables []string
 
 	tx := db.Orm.WithContext(ctx).

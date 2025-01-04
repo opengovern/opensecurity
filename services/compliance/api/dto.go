@@ -8,12 +8,11 @@ import (
 	inventoryApi "github.com/opengovern/opencomply/services/inventory/api"
 )
 
-type QueryEngine string
+type PolicyLanguage string
 
 const (
-	QueryEngineCloudQLLegacy QueryEngine = "cloudql-v0.0.1"
-	QueryEngineCloudQL       QueryEngine = "cloudql"
-	QueryEngineCloudQLRego   QueryEngine = "cloudql-rego"
+	PolicyLanguageSQL  PolicyLanguage = "sql"
+	PolicyLanguageRego PolicyLanguage = "rego"
 )
 
 type BenchmarkAssignment struct {
@@ -111,17 +110,16 @@ type QueryParameter struct {
 	Required bool   `json:"required" example:"true"`
 }
 
-type Query struct {
+type Policy struct {
 	ID              string             `json:"id" example:"azure_ad_manual_control"`
-	Engine          QueryEngine        `json:"engine" example:"CLOUDQL"`
-	QueryToExecute  string             `json:"queryToExecute" example:"select\n  -- Required Columns\n  'active_directory' as resource,\n  'info' as status,\n  'Manual verification required.' as reason;\n"`
+	Language        PolicyLanguage     `json:"language" example:"sql"`
+	Definition      string             `json:"definition" example:"select\n  -- Required Columns\n  'active_directory' as resource,\n  'info' as status,\n  'Manual verification required.' as reason;\n"`
 	IntegrationType []integration.Type `json:"integrationType" example:"Azure"`
-	PrimaryTable    *string            `json:"primaryTable" example:"null"`
-	ListOfTables    []string           `json:"listOfTables" example:"null"`
+	PrimaryResource *string            `json:"primaryResource" example:"null"`
+	ListOfResources []string           `json:"listOfResources" example:"null"`
 
 	// CloudQL Fields
 	Parameters []QueryParameter `json:"parameters"`
-	Global     bool             `json:"Global"`
 
 	// Rego Fields
 	RegoPolicies []string `json:"regoPolicies" example:"null"`

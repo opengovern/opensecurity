@@ -276,7 +276,7 @@ func (h HttpHandler) SetQueryParameter(ctx echo.Context) error {
 //	@Security		BearerToken
 //	@Tags			metadata
 //	@Produce		json
-//	@Param			query_id	query	string	false	"Query ID to filter with"
+//	@Param			query_id	query	string	false	"Policy ID to filter with"
 //	@Param			control_id	query	string	false	"Control ID to filter with"
 //	@Param			cursor		query	int		false	"Cursor"
 //	@Param			per_page	query	int		false	"Per Page"
@@ -326,7 +326,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusNotFound, "control not found")
 		}
 		for _, control := range all_control {
-			for _, param := range control.Query.Parameters {
+			for _, param := range control.Policy.Parameters {
 				filteredQueryParams = append(filteredQueryParams, param.Key)
 			}
 		}
@@ -366,7 +366,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	}
 
 	for _, c := range controls {
-		for _, p := range c.Query.Parameters {
+		for _, p := range c.Policy.Parameters {
 			if _, ok := parametersMap[p.Key]; ok {
 				parametersMap[p.Key].ControlsCount += 1
 			}
@@ -441,7 +441,7 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 	var controlsList []complianceapi.Control
 	var queriesList []inventoryApi.NamedQueryItemV2
 	for _, c := range controls {
-		for _, p := range c.Query.Parameters {
+		for _, p := range c.Policy.Parameters {
 			if p.Key == key {
 				controlsList = append(controlsList, c)
 			}

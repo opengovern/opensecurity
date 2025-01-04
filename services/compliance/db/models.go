@@ -36,11 +36,11 @@ type BenchmarkAssignmentsCount struct {
 }
 
 type BenchmarkMetadata struct {
-	IsRoot        bool
-	Controls      []string
-	PrimaryTables []string
-	ListOfTables  []string
-	BenchmarkPath string
+	IsRoot           bool
+	Controls         []string
+	PrimaryResources []string
+	ListOfResources  []string
+	BenchmarkPath    string
 }
 
 type Benchmark struct {
@@ -175,12 +175,12 @@ func (p Control) ToApi() api.Control {
 	}
 
 	if p.PolicyID != nil {
-		pa.Query = &api.Query{
+		pa.Policy = &api.Policy{
 			ID: *p.PolicyID,
 		}
 	}
 	if p.Policy != nil {
-		pa.Query = utils.GetPointer(p.Policy.ToApi())
+		pa.Policy = utils.GetPointer(p.Policy.ToApi())
 	}
 
 	if v, ok := p.GetTagsMap()[model.OpenGovernancePrivateTagPrefix+"explanation"]; ok && len(v) > 0 {
@@ -287,21 +287,22 @@ type Policy struct {
 	Parameters      []PolicyParameter `gorm:"foreignKey:QueryID"`
 
 	// Rego Fields
-	Trigger *string
+	RegoPolicies pq.StringArray `gorm:"type:text[]"`
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
-func (q Policy) ToApi() api.Query {
-	query := api.Query{
+func (q Policy) ToApi() api.Policy {
+	query := api.Policy{
 		ID:              q.ID,
-		QueryToExecute:  q.Definition,
+		Definition:      q.Definition,
 		IntegrationType: integration_type.ParseTypes(q.IntegrationType),
-		ListOfTables:    q.ListOfResources,
-		PrimaryTable:    &q.PrimaryResource,
-		Engine:          api.QueryEngine(q.Language),
+		ListOfResources: q.ListOfResources,
+		PrimaryResource: &q.PrimaryResource,
+		Language:        api.PolicyLanguage(q.Language),
 		Parameters:      make([]api.QueryParameter, 0, len(q.Parameters)),
+		RegoPolicies:    q.RegoPolicies,
 		CreatedAt:       q.CreatedAt,
 		UpdatedAt:       q.UpdatedAt,
 	}

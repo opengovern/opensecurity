@@ -18,7 +18,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 	ctx2 := &httpclient.Context{UserRole: api.AdminRole}
 	ctx2.Ctx = ctx
 
-	s.logger.Info("Query Runner publisher started")
+	s.logger.Info("Policy Runner publisher started")
 
 	err := s.db.UpdateTimedOutQueuedQueryRunners()
 	if err != nil {
@@ -49,7 +49,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 			jobMsg.QueryId = job.QueryId
 			namedQuery, err := s.inventoryClient.GetQuery(ctx2, job.QueryId)
 			if err != nil {
-				s.logger.Error("Get Query Error", zap.Error(err))
+				s.logger.Error("Get Policy Error", zap.Error(err))
 			}
 			jobMsg.Query = namedQuery.Query.QueryToExecute
 			jobMsg.Parameters = namedQuery.Query.Parameters
@@ -104,7 +104,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 		jobJson, err := json.Marshal(jobMsg)
 		if err != nil {
 			_ = s.db.UpdateQueryValidatorJobStatus(job.ID, queryvalidator.QueryValidatorFailed, "failed to marshal job")
-			s.logger.Error("failed to marshal Query Runner Job", zap.Error(err), zap.Uint("runnerId", job.ID))
+			s.logger.Error("failed to marshal Policy Runner Job", zap.Error(err), zap.Uint("runnerId", job.ID))
 			continue
 		}
 

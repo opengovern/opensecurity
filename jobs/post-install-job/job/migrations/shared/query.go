@@ -6,10 +6,10 @@ type Query struct {
 	QueryID        *string `json:"QueryID,omitempty" yaml:"QueryID,omitempty"`
 	ID             string  `json:"ID,omitempty" yaml:"ID,omitempty"`
 	Engine         string  `json:"Engine" yaml:"Engine"`
-	QueryToExecute string  `json:"QueryToExecute" yaml:"QueryToExecute"`
+	QueryToExecute string  `json:"Definition" yaml:"Definition"`
 
-	PrimaryTable *string          `json:"PrimaryTable" yaml:"PrimaryTable"`
-	ListOfTables []string         `json:"ListOfTables" yaml:"ListOfTables"`
+	PrimaryTable *string          `json:"PrimaryResource" yaml:"PrimaryResource"`
+	ListOfTables []string         `json:"ListOfResources" yaml:"ListOfResources"`
 	Parameters   []QueryParameter `json:"Parameters" yaml:"Parameters"`
 	Global       bool             `json:"Global,omitempty" yaml:"Global,omitempty"`
 
@@ -22,7 +22,7 @@ type Policy struct {
 	PrimaryResource string               `json:"primary_resource" yaml:"primary_resource"`
 	ExampleData     *string              `json:"example_data,omitempty" yaml:"example_data,omitempty"`
 	Definition      string               `json:"definition" yaml:"definition"`
-	Trigger         *string              `json:"trigger,omitempty" yaml:"trigger,omitempty"`
+	RegoPolicies    []string             `json:"rego_policies,omitempty" yaml:"RegoPolicies,omitempty"`
 }
 
 type ControlParameter struct {

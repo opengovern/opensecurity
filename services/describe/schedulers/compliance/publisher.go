@@ -35,7 +35,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context, manuals bool) error {
 		s.logger.Error("failed to get queries", zap.Error(err))
 		return err
 	}
-	queriesMap := make(map[string]*complianceApi.Query)
+	queriesMap := make(map[string]*complianceApi.Policy)
 	for _, query := range queries {
 		query := query
 		queriesMap[query.ID] = &query

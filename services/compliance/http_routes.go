@@ -2112,10 +2112,10 @@ func (h *HttpHandler) GetBenchmarkControlsTree(echoCtx echo.Context) error {
 
 	queryIDs := make([]string, 0, len(controlsMap))
 	for _, control := range controlsMap {
-		if control.Query == nil {
+		if control.Policy == nil {
 			continue
 		}
-		queryIDs = append(queryIDs, control.Query.ID)
+		queryIDs = append(queryIDs, control.Policy.ID)
 	}
 
 	queries, err := h.db.GetPoliciesIdAndIntegrationType(ctx, queryIDs)
@@ -2130,8 +2130,8 @@ func (h *HttpHandler) GetBenchmarkControlsTree(echoCtx echo.Context) error {
 
 	controlSummaryMap := make(map[string]api.ControlSummary)
 	for _, control := range controlsMap {
-		if control.Query != nil {
-			if query, ok := queryMap[control.Query.ID]; ok {
+		if control.Policy != nil {
+			if query, ok := queryMap[control.Policy.ID]; ok {
 				control.IntegrationType = query.IntegrationType
 			}
 		}
@@ -2893,14 +2893,14 @@ func (h *HttpHandler) ListAssignmentsByBenchmark(echoCtx echo.Context) error {
 //	@Tags		compliance
 //	@Accept		json
 //	@Produce	json
-//	@Param		request	body		api.GetBenchmarkListRequest	true	"Request Body"
+//	@Param		request	body		api.GetFrameworkListRequest	true	"Request Body"
 //	@Success	200		{object}	[]api.GetBenchmarkListResponse
 //	@Router		/compliance/api/v3/benchmarks [post]
 func (h *HttpHandler) ListBenchmarksFiltered(echoCtx echo.Context) error {
 	ctx := echoCtx.Request().Context()
 	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
 
-	var req api.GetBenchmarkListRequest
+	var req api.GetFrameworkListRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -3000,16 +3000,16 @@ func (h *HttpHandler) ListBenchmarksFiltered(echoCtx echo.Context) error {
 			}
 		}
 
-		primaryTables := metadata.PrimaryTables
-		listOfTables := metadata.ListOfTables
+		primaryTables := metadata.PrimaryResources
+		listOfTables := metadata.ListOfResources
 
-		if len(req.PrimaryTable) > 0 {
-			if !listContainsList(primaryTables, req.PrimaryTable) {
+		if len(req.PrimaryResource) > 0 {
+			if !listContainsList(primaryTables, req.PrimaryResource) {
 				continue
 			}
 		}
-		if len(req.ListOfTables) > 0 {
-			if !listContainsList(listOfTables, req.ListOfTables) {
+		if len(req.ListOfResources) > 0 {
+			if !listContainsList(listOfTables, req.ListOfResources) {
 				continue
 			}
 		}
@@ -3142,8 +3142,8 @@ func (h *HttpHandler) GetBenchmarkDetails(echoCtx echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	}
-	primaryTables := metadata.PrimaryTables
-	listOfTables := metadata.ListOfTables
+	primaryResources := metadata.PrimaryResources
+	listOfResources := metadata.ListOfResources
 
 	benchmarkMetadata := api.GetBenchmarkDetailsMetadata{
 		ID:                benchmark.ID,
@@ -3153,8 +3153,8 @@ func (h *HttpHandler) GetBenchmarkDetails(echoCtx echo.Context) error {
 		TrackDriftEvents:  benchmark.TracksDriftEvents,
 		SupportedControls: metadata.Controls,
 		NumberOfControls:  len(metadata.Controls),
-		PrimaryTables:     primaryTables,
-		ListOfTables:      listOfTables,
+		PrimaryResources:  primaryResources,
+		ListOfResources:   listOfResources,
 		Tags:              filterTagsByRegex(req.TagsRegex, model.TrimPrivateTags(benchmark.GetTagsMap())),
 		CreatedAt:         benchmark.CreatedAt,
 		UpdatedAt:         benchmark.UpdatedAt,
@@ -3400,13 +3400,13 @@ func (h *HttpHandler) ListControls(echoCtx echo.Context) error {
 func (h *HttpHandler) ListQueries(echoCtx echo.Context) error {
 	ctx := echoCtx.Request().Context()
 
-	queries, err := h.db.ListQueries(ctx)
+	policies, err := h.db.ListPolicies(ctx)
 	if err != nil {
 		return err
 	}
 
-	var resp []api.Query
-	for _, query := range queries {
+	var resp []api.Policy
+	for _, query := range policies {
 		pa := query.ToApi()
 		resp = append(resp, pa)
 	}
@@ -4161,16 +4161,16 @@ func (h *HttpHandler) ListControlsFilters(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get parentBenchmarks")
 	}
 
-	primaryTables, err := h.db.ListQueriesUniquePrimaryTables(ctx)
+	primaryResources, err := h.db.ListPoliciesUniquePrimaryResources(ctx)
 	if err != nil {
-		h.logger.Error("failed to get primaryTables", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get primaryTables")
+		h.logger.Error("failed to get primaryResources", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get primaryResources")
 	}
 
-	listOfTables, err := h.db.ListPolicyUniqueResources(ctx)
+	listOfResources, err := h.db.ListPolicyUniqueResources(ctx)
 	if err != nil {
-		h.logger.Error("failed to get listOfTables", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get listOfTables")
+		h.logger.Error("failed to get listOfResources", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get listOfResources")
 	}
 
 	controlsTags, err := h.db.GetControlsTags()
@@ -4189,8 +4189,8 @@ func (h *HttpHandler) ListControlsFilters(echoCtx echo.Context) error {
 		Severity:        severities,
 		RootBenchmark:   rootBenchmarkIds,
 		ParentBenchmark: parentBenchmarks,
-		PrimaryTable:    primaryTables,
-		ListOfTables:    listOfTables,
+		PrimaryResource: primaryResources,
+		ListOfResources: listOfResources,
 		Tags:            tags,
 	}
 
@@ -4219,16 +4219,16 @@ func (h *HttpHandler) ListBenchmarksFilters(echoCtx echo.Context) error {
 		benchmarkIds = append(benchmarkIds, b.ID)
 	}
 
-	primaryTables, err := h.db.ListQueriesUniquePrimaryTables(ctx)
+	primaryResources, err := h.db.ListPoliciesUniquePrimaryResources(ctx)
 	if err != nil {
-		h.logger.Error("failed to get primaryTables", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get primaryTables")
+		h.logger.Error("failed to get primaryResources", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get primaryResources")
 	}
 
-	listOfTables, err := h.db.ListPolicyUniqueResources(ctx)
+	listOfResources, err := h.db.ListPolicyUniqueResources(ctx)
 	if err != nil {
-		h.logger.Error("failed to get listOfTables", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get listOfTables")
+		h.logger.Error("failed to get listOfResources", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get listOfResources")
 	}
 
 	benchmarksTags, err := h.db.GetBenchmarksTags()
@@ -4244,8 +4244,8 @@ func (h *HttpHandler) ListBenchmarksFilters(echoCtx echo.Context) error {
 
 	response := api.ListBenchmarksFiltersResponse{
 		ParentBenchmarkID: benchmarkIds,
-		PrimaryTable:      primaryTables,
-		ListOfTables:      listOfTables,
+		PrimaryResource:   primaryResources,
+		ListOfResources:   listOfResources,
 		Tags:              tags,
 	}
 

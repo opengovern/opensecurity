@@ -16,7 +16,7 @@ func (s *TaskScheduler) runPublisher(ctx context.Context) error {
 	ctx2 := &httpclient.Context{UserRole: api.AdminRole}
 	ctx2.Ctx = ctx
 
-	s.logger.Info("Query Runner publisher started")
+	s.logger.Info("Policy Runner publisher started")
 
 	err := s.db.TimeoutTaskRunsByTaskID(s.TaskID, s.Timeout)
 	if err != nil {

@@ -312,7 +312,7 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		DoNothing: true,
 	}).Create(&query).Error
 	if err != nil {
-		logger.Error("failure in Creating Query", zap.String("query_id", id), zap.Error(err))
+		logger.Error("failure in Creating Policy", zap.String("query_id", id), zap.Error(err))
 		return err
 	}
 	for _, param := range query.Parameters {

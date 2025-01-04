@@ -156,13 +156,13 @@ func (w *Worker) RunJobForIntegration(ctx context.Context, job *AuditJob, integr
 	}
 
 	for _, control := range controls {
-		if control.Query == nil {
+		if control.Policy == nil {
 			continue
 		}
 		queryJob := QueryJob{
 			AuditJobID: job.JobID,
 			ExecutionPlan: ExecutionPlan{
-				Query:          *control.Query,
+				Query:          *control.Policy,
 				IntegrationIDs: job.IntegrationIDs,
 			},
 		}

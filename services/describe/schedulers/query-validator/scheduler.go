@@ -20,7 +20,7 @@ func (s *JobScheduler) runScheduler() error {
 	}
 	for _, c := range controls {
 		hasParams := false
-		if len(c.Query.Parameters) > 0 {
+		if len(c.Policy.Parameters) > 0 {
 			hasParams = true
 		}
 		_, err = s.db.CreateQueryValidatorJob(&model.QueryValidatorJob{

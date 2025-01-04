@@ -59,7 +59,7 @@ func (w *Worker) RunJob(ctx context.Context, job Job) error {
 	doc = append(doc, queryRunResult)
 
 	if _, err := w.sinkClient.Ingest(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}, doc); err != nil {
-		w.logger.Error("Failed to sink Query Run Result", zap.String("ID", strconv.Itoa(int(job.ID))), zap.String("QueryID", job.QueryId), zap.Error(err))
+		w.logger.Error("Failed to sink Policy Run Result", zap.String("ID", strconv.Itoa(int(job.ID))), zap.String("QueryID", job.QueryId), zap.Error(err))
 		return err
 	}
 

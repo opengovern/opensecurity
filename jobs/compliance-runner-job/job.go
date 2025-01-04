@@ -95,11 +95,11 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 	}
 	var res *steampipe.Result
 
-	switch j.ExecutionPlan.Query.Engine {
-	case api.QueryEngineCloudQLRego:
+	switch j.ExecutionPlan.Query.Language {
+	case api.PolicyLanguageRego:
 		res, err = w.runRegoWorkerJob(ctx, j, queryParamMap)
-	case api.QueryEngineCloudQLLegacy, api.QueryEngineCloudQL:
-		fallthrough
+	case api.PolicyLanguageSQL:
+		res, err = w.runSqlWorkerJob(ctx, j, queryParamMap)
 	default:
 		res, err = w.runSqlWorkerJob(ctx, j, queryParamMap)
 	}
@@ -114,7 +114,7 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 		zap.Int("res_count", len(res.Data)),
 		zap.Int("caller_count", len(j.ExecutionPlan.Callers)),
 		zap.Any("res", *res),
-		zap.String("query", j.ExecutionPlan.Query.QueryToExecute),
+		zap.String("query", j.ExecutionPlan.Query.Definition),
 		zap.String("query_id", j.ExecutionPlan.Query.ID),
 	)
 	totalComplianceResultCountMap := make(map[string]int)
@@ -149,15 +149,6 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 	}
 
 	newComplianceResults := make([]types.ComplianceResult, 0, len(complianceResults))
-	//complianceResultDriftEvents := make([]types.ComplianceResultDriftEvent, 0, len(complianceResults))
-
-	//trackDrifts := false
-	//for _, f := range j.ExecutionPlan.Callers {
-	//	if f.TracksDriftEvents {
-	//		trackDrifts = true
-	//		break
-	//	}
-	//}
 
 	filtersJSON, _ := json.Marshal(filters)
 	w.logger.Info("Old complianceResult query", zap.Int("length", len(complianceResults)), zap.String("filters", string(filtersJSON)))
@@ -363,7 +354,7 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 }
 
 func (w *Worker) runSqlWorkerJob(ctx context.Context, j Job, queryParamMap map[string]string) (*steampipe.Result, error) {
-	queryTemplate, err := template.New(j.ExecutionPlan.Query.ID).Parse(j.ExecutionPlan.Query.QueryToExecute)
+	queryTemplate, err := template.New(j.ExecutionPlan.Query.ID).Parse(j.ExecutionPlan.Query.Definition)
 	if err != nil {
 		w.logger.Error("failed to parse query template", zap.Error(err))
 		return nil, err
@@ -382,7 +373,7 @@ func (w *Worker) runSqlWorkerJob(ctx context.Context, j Job, queryParamMap map[s
 	w.logger.Info("runSqlWorkerJob QueryOutput",
 		zap.Uint("job_id", j.ID),
 		zap.Int("caller_count", len(j.ExecutionPlan.Callers)),
-		zap.String("query", j.ExecutionPlan.Query.QueryToExecute),
+		zap.String("query", j.ExecutionPlan.Query.Definition),
 		zap.String("query_id", j.ExecutionPlan.Query.ID),
 		zap.String("query", queryOutput.String()))
 	res, err := w.steampipeConn.QueryAll(ctx, queryOutput.String())
@@ -395,7 +386,7 @@ func (w *Worker) runSqlWorkerJob(ctx context.Context, j Job, queryParamMap map[s
 }
 
 func (w *Worker) runRegoWorkerJob(ctx context.Context, j Job, queryParamMap map[string]string) (*steampipe.Result, error) {
-	regoResults, err := w.regoEngine.Evaluate(ctx, j.ExecutionPlan.Query.RegoPolicies, j.ExecutionPlan.Query.QueryToExecute)
+	regoResults, err := w.regoEngine.Evaluate(ctx, j.ExecutionPlan.Query.RegoPolicies, j.ExecutionPlan.Query.Definition)
 	if err != nil {
 		w.logger.Error("failed to evaluate rego", zap.Error(err), zap.String("query_id", j.ExecutionPlan.Query.ID), zap.Stringp("integration_id", j.ExecutionPlan.IntegrationID))
 		return nil, err
@@ -436,7 +427,7 @@ func (w *Worker) runRegoWorkerJob(ctx context.Context, j Job, queryParamMap map[
 	w.logger.Info("runRegoWorkerJob QueryOutput",
 		zap.Uint("job_id", j.ID),
 		zap.Int("caller_count", len(j.ExecutionPlan.Callers)),
-		zap.String("query", j.ExecutionPlan.Query.QueryToExecute),
+		zap.String("query", j.ExecutionPlan.Query.Definition),
 		zap.String("query_id", j.ExecutionPlan.Query.ID),
 		zap.Int("result_count", len(results.Data)),
 	)
