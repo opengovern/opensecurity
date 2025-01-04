@@ -7,7 +7,7 @@ import (
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	"github.com/opengovern/opencomply/jobs/post-install-job/db/model"
 	integrationClient "github.com/opengovern/opencomply/services/integration/client"
-	metadataClient "github.com/opengovern/opencomply/services/metadata/client"
+	coreClient "github.com/opengovern/opencomply/services/core/client"
 	"github.com/sashabaranov/go-openai"
 	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -19,7 +19,6 @@ import (
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/opencomply/services/compliance/db"
 	describeClient "github.com/opengovern/opencomply/services/describe/client"
-	inventoryClient "github.com/opengovern/opencomply/services/inventory/client"
 
 	"go.uber.org/zap"
 )
@@ -35,8 +34,7 @@ type HttpHandler struct {
 
 	schedulerClient   describeClient.SchedulerServiceClient
 	integrationClient integrationClient.IntegrationServiceClient
-	inventoryClient   inventoryClient.InventoryServiceClient
-	metadataClient    metadataClient.MetadataServiceClient
+	coreClient    coreClient.CoreServiceClient
 	openAIClient      *openai.Client
 	kubeClient        client.Client
 }
@@ -143,8 +141,7 @@ func InitializeHttpHandler(
 
 	h.schedulerClient = describeClient.NewSchedulerServiceClient(conf.Scheduler.BaseURL)
 	h.integrationClient = integrationClient.NewIntegrationServiceClient(conf.Integration.BaseURL)
-	h.inventoryClient = inventoryClient.NewInventoryServiceClient(conf.Inventory.BaseURL)
-	h.metadataClient = metadataClient.NewMetadataServiceClient(conf.Metadata.BaseURL)
+	h.coreClient = coreClient.NewCoreServiceClient(conf.Metadata.BaseURL)
 	h.openAIClient = openai.NewClient(conf.OpenAI.Token)
 
 	kubeClient, err := NewKubeClient()

@@ -5,7 +5,7 @@ import (
 
 	"github.com/opengovern/og-util/pkg/integration"
 	integrationapi "github.com/opengovern/opencomply/services/integration/api/models"
-	inventoryApi "github.com/opengovern/opencomply/services/inventory/api"
+	coreClient "github.com/opengovern/opencomply/services/core/api"
 )
 
 type QueryEngine string
@@ -48,7 +48,7 @@ type BenchmarkAssignedEntities struct {
 
 type TopFieldRecord struct {
 	Integration  *integrationapi.Integration
-	ResourceType *inventoryApi.ResourceType
+	ResourceType *coreClient.ResourceType
 	Control      *Control
 	Service      *string
 

@@ -5,7 +5,7 @@ import (
 
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/opencomply/pkg/types"
-	inventoryApi "github.com/opengovern/opencomply/services/inventory/api"
+	coreClient "github.com/opengovern/opencomply/services/core/api"
 )
 
 type Control struct {
@@ -36,7 +36,7 @@ type Control struct {
 
 type ControlSummary struct {
 	Control      Control                    `json:"control"`
-	ResourceType *inventoryApi.ResourceType `json:"resourceType"`
+	ResourceType *coreClient.ResourceType `json:"resourceType"`
 
 	Benchmarks []Benchmark `json:"benchmarks"`
 
