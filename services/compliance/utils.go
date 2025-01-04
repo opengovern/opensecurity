@@ -158,8 +158,8 @@ func (h *HttpHandler) getTablesUnderBenchmark(ctx context.Context, benchmarkId s
 	}
 	for _, c := range benchmark.Controls {
 		if c.Policy != nil {
-			if c.Policy.PrimaryResource != nil && *c.Policy.PrimaryResource != "" {
-				primaryTables[*c.Policy.PrimaryResource] = true
+			if c.Policy.PrimaryResource != "" {
+				primaryTables[c.Policy.PrimaryResource] = true
 			}
 			for _, t := range c.Policy.ListOfResources {
 				if t == "" {
