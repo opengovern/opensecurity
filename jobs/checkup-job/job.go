@@ -11,7 +11,7 @@ import (
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/opencomply/jobs/checkup-job/config"
 	authClient "github.com/opengovern/opencomply/services/auth/client"
-	metadataClient "github.com/opengovern/opencomply/services/metadata/client"
+	coreClient "github.com/opengovern/opencomply/services/core/client"
 	"golang.org/x/net/context"
 
 	"github.com/go-errors/errors"
@@ -32,7 +32,7 @@ type JobResult struct {
 }
 
 func (j Job) Do(integrationClient client.IntegrationServiceClient, authClient authClient.AuthServiceClient,
-	metadataClient metadataClient.MetadataServiceClient, logger *zap.Logger, config config.WorkerConfig) (r JobResult) {
+	coreClient coreClient.CoreServiceClient, logger *zap.Logger, config config.WorkerConfig) (r JobResult) {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Println("paniced with error:", err)
@@ -113,7 +113,7 @@ func (j Job) Do(integrationClient client.IntegrationServiceClient, authClient au
 	}
 
 	if config.DoTelemetry {
-		j.SendTelemetry(context.Background(), logger, config, integrationClient, authClient, metadataClient)
+		j.SendTelemetry(context.Background(), logger, config, integrationClient, authClient, coreClient)
 	}
 
 	return JobResult{
@@ -124,7 +124,7 @@ func (j Job) Do(integrationClient client.IntegrationServiceClient, authClient au
 }
 
 func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfig config.WorkerConfig,
-	integrationClient client.IntegrationServiceClient, authClient authClient.AuthServiceClient, metadataClient metadataClient.MetadataServiceClient) {
+	integrationClient client.IntegrationServiceClient, authClient authClient.AuthServiceClient, coreClient coreClient.CoreServiceClient) {
 	now := time.Now()
 
 	httpCtx := httpclient.Context{Ctx: ctx, UserRole: authAPI.AdminRole}
@@ -154,7 +154,7 @@ func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfi
 	}
 	req.NumberOfUsers = int64(len(users))
 
-	about, err := metadataClient.GetAbout(&httpCtx)
+	about, err := coreClient.GetAbout(&httpCtx)
 	if err != nil {
 		logger.Error("failed to get about", zap.Error(err))
 		return

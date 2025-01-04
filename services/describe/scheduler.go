@@ -45,9 +45,9 @@ import (
 	"github.com/opengovern/opencomply/services/describe/schedulers/compliance"
 	"github.com/opengovern/opencomply/services/describe/schedulers/discovery"
 	integrationClient "github.com/opengovern/opencomply/services/integration/client"
-	inventoryClient "github.com/opengovern/opencomply/services/inventory/client"
-	metadataClient "github.com/opengovern/opencomply/services/metadata/client"
-	"github.com/opengovern/opencomply/services/metadata/models"
+	
+	coreClient "github.com/opengovern/opencomply/services/core/client"
+	"github.com/opengovern/opencomply/services/core/db/models"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"go.uber.org/zap"
@@ -104,10 +104,9 @@ type Scheduler struct {
 	complianceIntervalHours    time.Duration
 
 	logger            *zap.Logger
-	metadataClient    metadataClient.MetadataServiceClient
+	coreClient    coreClient.CoreServiceClient
 	complianceClient  client.ComplianceServiceClient
 	integrationClient integrationClient.IntegrationServiceClient
-	inventoryClient   inventoryClient.InventoryServiceClient
 	sinkClient        esSinkClient.EsSinkServiceClient
 	authGrpcClient    envoyAuth.AuthorizationClient
 	es                opengovernance.Client
@@ -258,10 +257,9 @@ func InitializeScheduler(
 
 	s.complianceIntervalHours = time.Duration(conf.ComplianceIntervalHours) * time.Hour
 
-	s.metadataClient = metadataClient.NewMetadataServiceClient(MetadataBaseURL)
+	s.coreClient = coreClient.NewCoreServiceClient(CoreBaseURL)
 	s.complianceClient = client.NewComplianceClient(ComplianceBaseURL)
 	s.integrationClient = integrationClient.NewIntegrationServiceClient(IntegrationBaseURL)
-	s.inventoryClient = inventoryClient.NewInventoryServiceClient(InventoryBaseURL)
 	s.sinkClient = esSinkClient.NewEsSinkServiceClient(s.logger, EsSinkBaseURL)
 	authGRPCConn, err := grpc.NewClient(AuthGRPCURI, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})))
 	if err != nil {
@@ -381,7 +379,7 @@ func (s *Scheduler) Run(ctx context.Context) error {
 		UserRole: authAPI.ViewerRole,
 	}
 	httpCtx.Ctx = ctx
-	describeJobIntM, err := s.metadataClient.GetConfigMetadata(httpCtx, models.MetadataKeyDescribeJobInterval)
+	describeJobIntM, err := s.coreClient.GetConfigMetadata(httpCtx, models.MetadataKeyDescribeJobInterval)
 	if err != nil {
 		s.logger.Error("failed to set describe interval due to error", zap.Error(err))
 	} else {
@@ -393,7 +391,7 @@ func (s *Scheduler) Run(ctx context.Context) error {
 		}
 	}
 
-	costDiscoveryJobIntM, err := s.metadataClient.GetConfigMetadata(httpCtx, models.MetadataKeyCostDiscoveryJobInterval)
+	costDiscoveryJobIntM, err := s.coreClient.GetConfigMetadata(httpCtx, models.MetadataKeyCostDiscoveryJobInterval)
 	if err != nil {
 		s.logger.Error("failed to set describe interval due to error", zap.Error(err))
 	} else {
@@ -405,7 +403,7 @@ func (s *Scheduler) Run(ctx context.Context) error {
 		}
 	}
 
-	complianceJobIntM, err := s.metadataClient.GetConfigMetadata(httpCtx, models.MetadataKeyComplianceJobInterval)
+	complianceJobIntM, err := s.coreClient.GetConfigMetadata(httpCtx, models.MetadataKeyComplianceJobInterval)
 	if err != nil {
 		s.logger.Error("failed to set describe interval due to error", zap.Error(err))
 	} else {
@@ -443,9 +441,8 @@ func (s *Scheduler) Run(ctx context.Context) error {
 		s.db,
 		s.jq,
 		s.es,
-		s.inventoryClient,
 		s.complianceClient,
-		s.metadataClient,
+		s.coreClient,
 	)
 	s.queryRunnerScheduler.Run(ctx)
 
@@ -458,9 +455,8 @@ func (s *Scheduler) Run(ctx context.Context) error {
 		s.db,
 		s.jq,
 		s.es,
-		s.inventoryClient,
 		s.complianceClient,
-		s.metadataClient,
+		s.coreClient,
 	)
 	s.auditScheduler.Run(ctx)
 
@@ -475,9 +471,8 @@ func (s *Scheduler) Run(ctx context.Context) error {
 			s.db,
 			s.jq,
 			s.es,
-			s.inventoryClient,
 			s.complianceClient,
-			s.metadataClient,
+			s.coreClient,
 		)
 		s.queryValidatorScheduler.Run(ctx)
 	}

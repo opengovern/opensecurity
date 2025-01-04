@@ -10,7 +10,7 @@ import (
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	queryvalidator "github.com/opengovern/opencomply/jobs/query-validator-job"
-	inventoryApi "github.com/opengovern/opencomply/services/inventory/api"
+	coreApi "github.com/opengovern/opencomply/services/core/api"
 	"go.uber.org/zap"
 )
 
@@ -47,7 +47,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 		if job.QueryType == queryvalidator.QueryTypeNamedQuery {
 			jobMsg.QueryType = queryvalidator.QueryTypeNamedQuery
 			jobMsg.QueryId = job.QueryId
-			namedQuery, err := s.inventoryClient.GetQuery(ctx2, job.QueryId)
+			namedQuery, err := s.coreClient.GetQuery(ctx2, job.QueryId)
 			if err != nil {
 				s.logger.Error("Get Query Error", zap.Error(err))
 			}
@@ -64,9 +64,9 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 				s.logger.Error("Get Control Error", zap.Error(err))
 			}
 			jobMsg.Query = controlQuery.Query.QueryToExecute
-			var parameters []inventoryApi.QueryParameter
+			var parameters []coreApi.QueryParameter
 			for _, qp := range controlQuery.Query.Parameters {
-				parameters = append(parameters, inventoryApi.QueryParameter{
+				parameters = append(parameters, coreApi.QueryParameter{
 					Key:      qp.Key,
 					Required: qp.Required,
 				})
@@ -80,7 +80,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 			continue
 		}
 
-		queryParams, err := s.metadataClient.ListQueryParameters(&httpclient.Context{UserRole: api.AdminRole})
+		queryParams, err := s.coreClient.ListQueryParameters(&httpclient.Context{UserRole: api.AdminRole})
 		if err != nil {
 			_ = s.db.UpdateQueryValidatorJobStatus(job.ID, queryvalidator.QueryValidatorFailed, fmt.Sprintf("failed to list parameters: %s", err.Error()))
 			return err
