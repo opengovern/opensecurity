@@ -26,9 +26,6 @@ import (
 	schedulerClient "github.com/opengovern/opencomply/services/describe/client"
 	integrationApi "github.com/opengovern/opencomply/services/integration/api/models"
 	integrationClient "github.com/opengovern/opencomply/services/integration/client"
-	inventoryApi "github.com/opengovern/opencomply/services/inventory/api"
-	client2 "github.com/opengovern/opencomply/services/inventory/client"
-	inventoryClient "github.com/opengovern/opencomply/services/inventory/client"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -330,15 +327,14 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 
 	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
 	complianceClient := complianceClient.NewComplianceClient(complianceURL)
-	inventoryURL := strings.ReplaceAll(h.cfg.Inventory.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
-	inventoryClient := inventoryClient.NewInventoryServiceClient(inventoryURL)
+	
 
 	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
 	if err != nil {
 		h.logger.Error("error listing controls", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
 	}
-	namedQueries, err := inventoryClient.ListQueriesV2(clientCtx, nil)
+	namedQueries, err := h.ListQueriesV2Internal(clientCtx, nil)
 	if err != nil {
 		h.logger.Error("error listing queries", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
@@ -361,7 +357,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 		}
 	} else if queryIDs != nil {
 		// TODO: Fix this part and write new client on inventory
-		queries, err := inventoryClient.ListQueriesV2(clientCtx, &inventoryApi.ListQueryV2Request{QueryIDs: queryIDs})
+		queries, err := h.ListQueriesV2Internal(clientCtx, &api.ListQueryV2Request{QueryIDs: queryIDs})
 		if err != nil {
 			h.logger.Error("error getting query", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "error getting query")
@@ -448,15 +444,13 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 
 	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
 	complianceClient := complianceClient.NewComplianceClient(complianceURL)
-	inventoryURL := strings.ReplaceAll(h.cfg.Inventory.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
-	inventoryClient := inventoryClient.NewInventoryServiceClient(inventoryURL)
-
+	
 	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
 	if err != nil {
 		h.logger.Error("error listing controls", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
 	}
-	namedQueries, err := inventoryClient.ListQueriesV2(clientCtx, nil)
+	namedQueries, err := h.ListQueriesV2Internal(clientCtx, nil)
 	if err != nil {
 		h.logger.Error("error listing queries", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
@@ -468,7 +462,7 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 		return err
 	}
 	var controlsList []complianceapi.Control
-	var queriesList []inventoryApi.NamedQueryItemV2
+	var queriesList []api.NamedQueryItemV2
 	for _, c := range controls {
 		for _, p := range c.Query.Parameters {
 			if p.Key == key {
@@ -962,16 +956,14 @@ func (h HttpHandler) GetAbout(echoCtx echo.Context) error {
 		integrations[c.IntegrationType.String()] = append(integrations[c.IntegrationType.String()], c)
 	}
 
-	inventoryURL := strings.ReplaceAll(h.cfg.Inventory.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
-	inventoryClient := client2.NewInventoryServiceClient(inventoryURL)
 
-	var engine inventoryApi.QueryEngine
-	engine = inventoryApi.QueryEngineCloudQL
+	var engine api.QueryEngine
+	engine = api.QueryEngineCloudQL
 	query := `SELECT
     (SELECT SUM(cost) FROM azure_costmanagement_costbyresourcetype) +
     (SELECT SUM(amortized_cost_amount) FROM aws_cost_by_service_daily) AS total_cost;`
-	results, err := inventoryClient.RunQuery(ctx, inventoryApi.RunQueryRequest{
-		Page: inventoryApi.Page{
+	results, err := h.RunQueryInternal(ctx, api.RunQueryRequest{
+		Page: api.Page{
 			No:   1,
 			Size: 1000,
 		},
@@ -1235,15 +1227,13 @@ func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.L
 
 	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
 	complianceClient := complianceClient.NewComplianceClient(complianceURL)
-	inventoryURL := strings.ReplaceAll(h.cfg.Inventory.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
-	inventoryClient := inventoryClient.NewInventoryServiceClient(inventoryURL)
 
 	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
 	if err != nil {
 		h.logger.Error("error listing controls", zap.Error(err))
 		return resp,echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
 	}
-	namedQueries, err := inventoryClient.ListQueriesV2(clientCtx, nil)
+	namedQueries, err := h.ListQueriesV2Internal(clientCtx, nil)
 	if err != nil {
 		h.logger.Error("error listing queries", zap.Error(err))
 		return resp,echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
@@ -1266,7 +1256,7 @@ func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.L
 		}
 	} else if queryIDs != nil {
 		// TODO: Fix this part and write new client on inventory
-		queries, err := inventoryClient.ListQueriesV2(clientCtx, &inventoryApi.ListQueryV2Request{QueryIDs: queryIDs})
+		queries, err := h.ListQueriesV2Internal(clientCtx, &api.ListQueryV2Request{QueryIDs: queryIDs})
 		if err != nil {
 			h.logger.Error("error getting query", zap.Error(err))
 			return resp,echo.NewHTTPError(http.StatusInternalServerError, "error getting query")

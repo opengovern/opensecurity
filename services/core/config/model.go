@@ -12,7 +12,6 @@ type Config struct {
 	Integration koanf.OpenGovernanceService `yaml:"integration" koanf:"integration"`
 	Scheduler   koanf.OpenGovernanceService `yaml:"scheduler" koanf:"scheduler"`
 	Compliance  koanf.OpenGovernanceService `yaml:"compliance" koanf:"compliance"`
-	Inventory   koanf.OpenGovernanceService `yaml:"inventory" koanf:"inventory"`
 	Vault vault.Config `yaml:"vault" koanf:"vault"`
 
 	OpengovernanceNamespace      string `yaml:"opengovernance_namespace" koanf:"opengovernance_namespace"`

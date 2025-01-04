@@ -1,7 +1,7 @@
 package api
 import (
 	complianceapi "github.com/opengovern/opencomply/services/compliance/api"
-	inventoryApi "github.com/opengovern/opencomply/services/inventory/api"
+
 )
 
 type QueryParameter struct {
@@ -33,6 +33,6 @@ type GetQueryParamDetailsResponse struct {
 	Key           string `json:"key"`
 	Value         string `json:"value"`
 	Controls 	[]complianceapi.Control `json:"controls"`
-	Queries 	[]inventoryApi.NamedQueryItemV2 `json:"queries"`
+	Queries 	[]NamedQueryItemV2 `json:"queries"`
 
 }

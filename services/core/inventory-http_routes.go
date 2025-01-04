@@ -22,7 +22,7 @@ import (
 	queryrunner "github.com/opengovern/opencomply/jobs/query-runner-job"
 	"github.com/opengovern/opencomply/pkg/types"
 	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
-	"github.com/opengovern/opencomply/services/inventory/rego_runner"
+	"github.com/opengovern/opencomply/services/core/rego_runner"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 
 	"github.com/labstack/echo/v4"
@@ -1562,4 +1562,208 @@ func (h *HttpHandler) GetParametersQueries(ctx echo.Context) error {
 	return ctx.JSON(200, api.GetParametersQueriesResponse{
 		ParametersQueries: parametersQueries,
 	})
+}
+
+
+func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context,req *api.ListQueryV2Request) (*api.ListQueriesV2Response, error) {
+	
+	var namedQuery api.ListQueriesV2Response
+	if err := bindValidate(ctx, &req); err != nil {
+		return &namedQuery,echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	var search *string
+	if len(req.TitleFilter) > 0 {
+		search = &req.TitleFilter
+	}
+
+	integrationTypes := make(map[string]bool)
+	integrations, err := h.integrationClient.ListIntegrations(&httpclient.Context{UserRole: api2.AdminRole}, nil)
+	if err != nil {
+		h.logger.Error("failed to get integrations list", zap.Error(err))
+		return &namedQuery,echo.NewHTTPError(http.StatusInternalServerError, "failed to get integrations list")
+	}
+	for _, i := range integrations.Integrations {
+		integrationTypes[i.IntegrationType.String()] = true
+	}
+
+	// trace :
+	_, span := tracer.Start(ctx.Request().Context(), "new_GetQueriesWithTagsFilters", trace.WithSpanKind(trace.SpanKindServer))
+	span.SetName("new_GetQueriesWithTagsFilters")
+
+	var tablesFilter []string
+	if len(req.Categories) > 0 {
+
+		categories, err := h.db.ListUniqueCategoriesAndTablesForTables(nil)
+		if err != nil {
+			h.logger.Error("failed to list resource categories", zap.Error(err))
+			return &namedQuery,echo.NewHTTPError(http.StatusInternalServerError, "failed to list resource categories")
+		}
+		categoriesFilterMap := make(map[string]bool)
+		for _, c := range req.Categories {
+			categoriesFilterMap[c] = true
+		}
+
+		var categoriesApi []api.ResourceCategory
+		for _, c := range categories {
+			if _, ok := categoriesFilterMap[c.Category]; !ok && len(req.Categories) > 0 {
+				continue
+			}
+			resourceTypes, err := h.db.ListCategoryResourceTypes(c.Category)
+			if err != nil {
+				return &namedQuery,echo.NewHTTPError(http.StatusInternalServerError, "list category resource types")
+			}
+			var resourceTypesApi []api.ResourceTypeV2
+			for _, r := range resourceTypes {
+				resourceTypesApi = append(resourceTypesApi, r.ToApi())
+			}
+			categoriesApi = append(categoriesApi, api.ResourceCategory{
+				Category:  c.Category,
+				Resources: resourceTypesApi,
+			})
+		}
+
+		tablesFilterMap := make(map[string]string)
+
+		for _, c := range categoriesApi {
+			for _, r := range c.Resources {
+				tablesFilterMap[r.SteampipeTable] = r.ResourceID
+			}
+		}
+		if len(req.ListOfTables) > 0 {
+			for _, t := range req.ListOfTables {
+				if _, ok := tablesFilterMap[t]; ok {
+					tablesFilter = append(tablesFilter, t)
+				}
+			}
+		} else {
+			for t, _ := range tablesFilterMap {
+				tablesFilter = append(tablesFilter, t)
+			}
+		}
+	} else {
+		tablesFilter = req.ListOfTables
+	}
+
+	queries, err := h.db.ListQueriesByFilters(req.QueryIDs, search, req.Tags, req.IntegrationTypes, req.HasParameters, req.PrimaryTable,
+		tablesFilter, nil)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return &namedQuery,err
+	}
+	span.End()
+
+	var items []api.NamedQueryItemV2
+	for _, item := range queries {
+		if req.IsBookmarked {
+			if !item.IsBookmarked {
+				continue
+			}
+		}
+		if req.IntegrationExists {
+			integrationExists := false
+			for _, i := range item.IntegrationTypes {
+				if _, ok := integrationTypes[i]; ok {
+					integrationExists = true
+				}
+			}
+			if !integrationExists {
+				continue
+			}
+		}
+
+		tags := item.GetTagsMap()
+		if tags == nil || len(tags) == 0 {
+			tags = make(map[string][]string)
+		}
+		if item.IsBookmarked {
+			tags["platform_queries_bookmark"] = []string{"true"}
+		}
+		items = append(items, api.NamedQueryItemV2{
+			ID:               item.ID,
+			Title:            item.Title,
+			Description:      item.Description,
+			IntegrationTypes: integration_type.ParseTypes(item.IntegrationTypes),
+			Query:            item.Query.ToApi(),
+			Tags:             filterTagsByRegex(req.TagsRegex, tags),
+		})
+	}
+
+	totalCount := len(items)
+
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].ID < items[j].ID
+	})
+	if req.PerPage != nil {
+		if req.Cursor == nil {
+			items = utils.Paginate(1, *req.PerPage, items)
+		} else {
+			items = utils.Paginate(*req.Cursor, *req.PerPage, items)
+		}
+	}
+
+	result := api.ListQueriesV2Response{
+		Items:      items,
+		TotalCount: totalCount,
+	}
+
+	return &result,nil
+}
+
+
+func (h *HttpHandler) RunQueryInternal(ctx echo.Context,req api.RunQueryRequest) (*api.RunQueryResponse, error) {
+	var resp *api.RunQueryResponse
+
+	if err := bindValidate(ctx, &req); err != nil {
+		return resp,echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if req.Query == nil || *req.Query == "" {
+		return resp,echo.NewHTTPError(http.StatusBadRequest, "Query is required")
+	}
+	// tracer :
+	outputS, span := tracer.Start(ctx.Request().Context(), "new_RunQuery", trace.WithSpanKind(trace.SpanKindServer))
+	span.SetName("new_RunQuery")
+
+	queryParams, err := h.ListQueryParametersInternal(&httpclient.Context{UserRole: api2.AdminRole})
+	if err != nil {
+		return resp,err
+	}
+	queryParamMap := make(map[string]string)
+	for _, qp := range queryParams.Items {
+		queryParamMap[qp.Key] = qp.Value
+	}
+
+	queryTemplate, err := template.New("query").Parse(*req.Query)
+	if err != nil {
+		return resp,err
+	}
+	var queryOutput bytes.Buffer
+	if err := queryTemplate.Execute(&queryOutput, queryParamMap); err != nil {
+		return resp,fmt.Errorf("failed to execute query template: %w", err)
+	}
+
+	if req.Engine == nil || *req.Engine == api.QueryEngineCloudQL {
+		resp, err = h.RunSQLNamedQuery(outputS, *req.Query, queryOutput.String(), &req)
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return resp,err
+		}
+	} else if *req.Engine == api.QueryEngineCloudQLRego {
+		resp, err = h.RunRegoNamedQuery(outputS, *req.Query, queryOutput.String(), &req)
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return resp,err
+		}
+	} else {
+		return resp,fmt.Errorf("invalid query engine: %s", *req.Engine)
+	}
+
+	span.AddEvent("information", trace.WithAttributes(
+		attribute.String("query title ", resp.Title),
+	))
+	span.End()
+	return resp,nil
 }
