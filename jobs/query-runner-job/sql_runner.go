@@ -7,14 +7,14 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/opengovern/og-util/pkg/steampipe"
-	inventoryApi "github.com/opengovern/opencomply/services/inventory/api"
+	coreApi "github.com/opengovern/opencomply/services/core/api"
 	"go.uber.org/zap"
 )
 
 func (w *Worker) RunSQLNamedQuery(ctx context.Context, query string) (*QueryResult, error) {
 	var err error
 
-	direction := inventoryApi.DirectionType("")
+	direction := coreApi.DirectionType("")
 
 	for i := 0; i < 10; i++ {
 		err = w.steampipeConn.Conn().Ping(ctx)
