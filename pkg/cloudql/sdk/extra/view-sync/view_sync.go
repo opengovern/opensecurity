@@ -25,8 +25,8 @@ type ViewSync struct {
 
 	updateLock sync.Mutex
 
-	metadataClient               client.MetadataServiceClient
-	metadataPostgresClientConfig config.ClientConfig
+	coreClient               client.CoreServiceClient
+	corePostgresClientConfig config.ClientConfig
 
 	viewCheckpoint time.Time
 }
@@ -35,14 +35,14 @@ func NewViewSync(logger *zap.Logger) *ViewSync {
 	v := ViewSync{
 		logger:         logger,
 		updateLock:     sync.Mutex{},
-		metadataClient: client.NewMetadataServiceClient(os.Getenv("METADATA_BASEURL")),
-		metadataPostgresClientConfig: config.ClientConfig{
-			PgHost:     utils.GetPointer(os.Getenv("METADATA_DB_HOST")),
-			PgPort:     utils.GetPointer(os.Getenv("METADATA_DB_PORT")),
+		coreClient: client.NewCoreServiceClient(os.Getenv("CORE_BASEURL")),
+		corePostgresClientConfig: config.ClientConfig{
+			PgHost:     utils.GetPointer(os.Getenv("CORE_DB_HOST")),
+			PgPort:     utils.GetPointer(os.Getenv("CORE_DB_PORT")),
 			PgPassword: utils.GetPointer(os.Getenv("PG_PASSWORD")),
-			PgSslMode:  utils.GetPointer(os.Getenv("METADATA_DB_SSL_MODE")),
+			PgSslMode:  utils.GetPointer(os.Getenv("CORE_DB_SSL_MODE")),
 			PgUser:     utils.GetPointer("steampipe_user"),
-			PgDatabase: utils.GetPointer("metadata"),
+			PgDatabase: utils.GetPointer("core"),
 		},
 	}
 
@@ -59,7 +59,7 @@ func (v *ViewSync) timeBasedViewSync(ctx context.Context) {
 func (v *ViewSync) pullBasedViewSync(ctx context.Context) {
 	ticker := time.NewTicker(10 * time.Second)
 	for range ticker.C {
-		res, err := v.metadataClient.GetViewsCheckpoint(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole})
+		res, err := v.coreClient.GetViewsCheckpoint(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole})
 		if err != nil {
 			v.logger.Error("Error fetching views checkpoint", zap.Error(err))
 			v.logger.Sync()
@@ -82,7 +82,7 @@ func (v *ViewSync) updateViews(ctx context.Context) {
 		v.logger.Sync()
 		return
 	}
-	metadataPostgresClient, err := pg.NewMetadataClient(v.metadataPostgresClientConfig, ctx)
+	metadataPostgresClient, err := pg.NewMetadataClient(v.corePostgresClientConfig, ctx)
 	if err != nil {
 		v.logger.Error("Error creating metadata client for refreshing materialized views", zap.Error(err))
 		v.logger.Sync()
@@ -209,7 +209,7 @@ func (v *ViewSync) Start(ctx context.Context) {
 	}
 	v.logger.Info("Creating metadata client")
 	v.logger.Sync()
-	metadataClient, err := pg.NewMetadataClient(v.metadataPostgresClientConfig, ctx)
+	metadataClient, err := pg.NewMetadataClient(v.corePostgresClientConfig, ctx)
 	if err != nil {
 		v.logger.Error("Error creating metadata client for init materialized views", zap.Error(err))
 		v.logger.Sync()
