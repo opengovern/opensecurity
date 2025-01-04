@@ -8,15 +8,11 @@ import Workspaces from '../pages/Workspaces'
 import Logout from '../pages/Logout'
 import Integrations from '../pages/Integrations'
 import Compliance from '../pages/Governance/Compliance'
-import BenchmarkSummary from '../pages/Governance/Compliance/BenchmarkSummary'
 import Overview from '../pages/Overview'
 import Stack from '../pages/Stack'
 import Single from '../pages/Assets/Single'
 import SingleSpend from '../pages/Spend/Single'
-import SingleComplianceConnection from '../pages/Governance/Compliance/BenchmarkSummary/SingleConnection'
 // import Boostrap from '../pages/Workspaces/Bootstrap'
-import ResourceCollection from '../pages/ResourceCollection'
-import ResourceCollectionDetail from '../pages/ResourceCollection/Detail'
 import ControlDetail from '../pages/Governance/Controls/ControlSummary'
 import Findings from '../pages/Governance/Findings'
 import { SpendOverview } from '../pages/Spend/Overview'
@@ -26,10 +22,6 @@ import Layout from '../components/Layout'
 import RequestDemo from '../pages/RequestDemo'
 import AssetAccounts from '../pages/Assets/Account'
 import AssetMetrics from '../pages/Assets/Metric'
-import ScoreOverview from '../pages/Insights/ScoreOverview'
-import ScoreCategory from '../pages/Insights/ScoreCategory'
-import ScoreDetails from '../pages/Insights/Details'
-import SecurityOverview from '../pages/Governance/Overview'
 import WorkloadOptimizer from '../pages/WorkloadOptimizer'
 import RequestAccess from '../pages/Integrations/RequestAccess'
 import SettingsJobs from '../pages/Settings/Jobs'
@@ -211,21 +203,7 @@ const authRoutes = [
         path: '/dashboard/spend/spend-details/:id/:metric',
         element: <SingleSpend />,
     },
-    {
-        key: 'score',
-        path: '/score',
-        element: <ScoreOverview />,
-    },
-    {
-        key: 'score category',
-        path: '/score/:category',
-        element: <ScoreCategory />,
-    },
-    {
-        key: 'score details',
-        path: '/score/:category/:id',
-        element: <ScoreDetails />,
-    },
+    
     {
         key: 'integrations',
         path: '/integrations',
@@ -278,11 +256,7 @@ const authRoutes = [
         path: '/settings/access',
         element: <SettingsAccess />,
     },
-    {
-        key: 'security overview',
-        path: '/security-overview',
-        element: <SecurityOverview />,
-    },
+   
     {
         key: 'Compliance',
         path: '/compliance',
@@ -314,11 +288,7 @@ const authRoutes = [
         path: '/compliance/:benchmarkId/:controlId',
         element: <ControlDetail />,
     },
-    {
-        key: 'benchmark single connection',
-        path: '/compliance/:benchmarkId/:connectionId',
-        element: <SingleComplianceConnection />,
-    },
+   
     {
         key: 'benchmark single connection',
         path: '/compliance/:benchmarkId/report/:id',
@@ -360,11 +330,7 @@ const authRoutes = [
         path: '/incidents/:controlId',
         element: <ControlDetail />,
     },
-    {
-        key: 'service advisor summary',
-        path: '/service-advisor/:id',
-        element: <BenchmarkSummary />,
-    },
+    
     {
         key: 'home',
         path: '/',
@@ -390,26 +356,8 @@ const authRoutes = [
     //     path: '/ws/new-ws',
     //     element: <Boostrap />,
     // },
-    {
-        key: 'resource collection',
-        path: '/resource-collection',
-        element: <ResourceCollection />,
-    },
-    {
-        key: 'resource collection detail',
-        path: '/resource-collection/:resourceId',
-        element: <ResourceCollectionDetail />,
-    },
-    {
-        key: 'benchmark summary',
-        path: '/resource-collection/:resourceId/:id',
-        element: <BenchmarkSummary />,
-    },
-    {
-        key: 'benchmark single connection',
-        path: '/resource-collection/:resourceId/:id/:connection',
-        element: <SingleComplianceConnection />,
-    },
+
+    
     // {
     //     key: 'resource collection assets metrics',
     //     path: '/:ws/resource-collection/:resourceId/assets-details',

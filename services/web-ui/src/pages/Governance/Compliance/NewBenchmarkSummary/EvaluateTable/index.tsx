@@ -115,7 +115,7 @@ export default function EvaluateTable({
         type: 'relative',
     })
     const GetHistory = () => {
-        // /compliance/api/v3/benchmark/{benchmark-id}/assignments
+        
         setLoading(true)
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
@@ -185,7 +185,7 @@ export default function EvaluateTable({
             })
     }
     const GetIntegrations = () => {
-        // /compliance/api/v3/benchmark/{benchmark-id}/assignments
+        
         setLoadingI(true)
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
@@ -220,7 +220,7 @@ export default function EvaluateTable({
     }
 
     const GetDetail = () => {
-        // /compliance/api/v3/benchmark/{benchmark-id}/assignments
+        
         setLoading(true)
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {

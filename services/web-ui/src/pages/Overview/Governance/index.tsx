@@ -1,7 +1,6 @@
 import { Button, Card, CategoryBar, Col, Flex, Grid, Icon, Title } from '@tremor/react'
 import { ChevronRightIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 import Compliance from './Compliance'
-import Findings from './Findings'
 import { useNavigate, useParams } from 'react-router-dom'
 
 export default function Governance() {

@@ -27,7 +27,6 @@ import DateRangePicker from '@cloudscape-design/components/date-range-picker'
 import { useEffect, useState } from 'react'
 import {
     useComplianceApiV1BenchmarksSummaryDetail,
-    useComplianceApiV1BenchmarksTrendDetail,
     useComplianceApiV1FindingEventsCountList,
 } from '../../../../api/compliance.gen'
 import { useScheduleApiV1ComplianceTriggerUpdate } from '../../../../api/schedule.gen'
@@ -164,7 +163,7 @@ export default function NewBenchmarkSummary() {
                         return item.Critical
                     }),
                     type: 'line',
-                }
+                },
             ],
         }
         return opt
@@ -274,18 +273,7 @@ export default function NewBenchmarkSummary() {
             (benchmarkKPIStart?.conformanceStatusSummary?.passed || 0) ===
         0
 
-    const {
-        response: trend,
-        isLoading: trendLoading,
-        error: trendError,
-        sendNow: sendTrend,
-    } = useComplianceApiV1BenchmarksTrendDetail(String(benchmarkId), {
-        ...topQuery,
-        startTime: activeTimeRange.start.unix(),
-        endTime: activeTimeRange.end.unix(),
-    })
     const GetEnabled = () => {
-        // /compliance/api/v3/benchmark/{benchmark-id}/assignments
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -334,7 +322,6 @@ export default function NewBenchmarkSummary() {
             })
     }
     const GetChart = () => {
-        // /compliance/api/v3/benchmark/{benchmark-id}/assignments
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -381,10 +368,11 @@ export default function NewBenchmarkSummary() {
                             'Non Compliant':
                                 item.compliance_results_summary?.non_incidents,
                             High: item.incidents_severity_breakdown.highCount,
-                            Medium:
-                                item.incidents_severity_breakdown.mediumCount,
+                            Medium: item.incidents_severity_breakdown
+                                .mediumCount,
                             Low: item.incidents_severity_breakdown.lowCount,
-                            Critical: item.incidents_severity_breakdown.criticalCount,
+                            Critical:
+                                item.incidents_severity_breakdown.criticalCount,
                         }
                         return temp_data
                     }
@@ -400,8 +388,7 @@ export default function NewBenchmarkSummary() {
                 console.log(err)
             })
     }
-    const RunBenchmark = (c: any[],b: boolean) => {
-        // /compliance/api/v3/benchmark/{benchmark-id}/assignments
+    const RunBenchmark = (c: any[], b: boolean) => {
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -485,7 +472,7 @@ export default function NewBenchmarkSummary() {
         }
     }, [enable])
     const find_tabs = () => {
-        const tabs =[]
+        const tabs = []
         tabs.push({
             label: 'Controls',
             id: 'second',
@@ -494,7 +481,7 @@ export default function NewBenchmarkSummary() {
                     <div className="w-full">
                         <Controls
                             id={String(benchmarkId)}
-                            assignments={trend === null ? 0 : 1}
+                            assignments={1}
                             enable={enable}
                             accounts={account}
                         />
@@ -510,52 +497,53 @@ export default function NewBenchmarkSummary() {
             disabledReason:
                 'This is available when the Framework has at least one assignments.',
         })
-        if(!['baseline_efficiency',
-            'baseline_reliability',
-            'baseline_security',
-            'baseline_supportability'].includes(benchmarkDetail?.id)){
-                tabs.push({
-                    label: 'Settings',
-                    id: 'fourth',
-                    content: (
-                        <Settings
-                            id={benchmarkDetail?.id}
-                            response={(e) => setAssignments(e)}
-                            autoAssign={benchmarkDetail?.autoAssign}
-                            tracksDriftEvents={
-                                benchmarkDetail?.tracksDriftEvents
-                            }
-                            isAutoResponse={(x) => setRecall(true)}
-                            reload={() => updateDetail()}
-                        />
-                    ),
-                    disabled: false,
-                })
-            }
+        if (
+            ![
+                'baseline_efficiency',
+                'baseline_reliability',
+                'baseline_security',
+                'baseline_supportability',
+            ].includes(benchmarkDetail?.id)
+        ) {
             tabs.push({
-                label: 'Run History',
-                id: 'fifth',
+                label: 'Settings',
+                id: 'fourth',
                 content: (
-                    <EvaluateTable
+                    <Settings
                         id={benchmarkDetail?.id}
-                        benchmarkDetail={benchmarkDetail}
-                        assignmentsCount={assignments}
-                        onEvaluate={(c) => {
-                            triggerEvaluate(
-                                {
-                                    benchmark_id: [benchmarkId || ''],
-                                    connection_id: c,
-                                },
-                                {}
-                            )
-                        }}
+                        response={(e) => setAssignments(e)}
+                        autoAssign={benchmarkDetail?.autoAssign}
+                        tracksDriftEvents={benchmarkDetail?.tracksDriftEvents}
+                        isAutoResponse={(x) => setRecall(true)}
+                        reload={() => updateDetail()}
                     />
                 ),
-                // disabled: true,
-                // disabledReason: 'COMING SOON',
+                disabled: false,
             })
-            return tabs
-        
+        }
+        tabs.push({
+            label: 'Run History',
+            id: 'fifth',
+            content: (
+                <EvaluateTable
+                    id={benchmarkDetail?.id}
+                    benchmarkDetail={benchmarkDetail}
+                    assignmentsCount={assignments}
+                    onEvaluate={(c) => {
+                        triggerEvaluate(
+                            {
+                                benchmark_id: [benchmarkId || ''],
+                                connection_id: c,
+                            },
+                            {}
+                        )
+                    }}
+                />
+            ),
+            // disabled: true,
+            // disabledReason: 'COMING SOON',
+        })
+        return tabs
     }
 
     return (
@@ -833,7 +821,7 @@ export default function NewBenchmarkSummary() {
                     </Flex> */}
                     <Flex flexDirection="col" className="w-full mt-4">
                         {/* {chart && enable && ( */}
-                        {false &&  (
+                        {false && (
                             <>
                                 <Flex className="bg-white  w-full border-solid border-2    rounded-xl p-4">
                                     {/* <LineChart
@@ -1134,117 +1122,116 @@ export default function NewBenchmarkSummary() {
     )
 }
 
+// {
+//     label: 'Summary',
+//     id: 'first',
+//     content: (
+//         <Flex
+//             className="w-full flex-wrap"
+//             flexDirection="col"
+//         >
+//             {/* {hideKPIs ? (
+//                 ''
+//             ) : (
+//                 <Grid
+//                     numItems={4}
+//                     className="w-full gap-4 mb-4"
+//                 >
+//                     <SummaryCard
+//                         title="Security Score"
+//                         metric={
+//                             ((benchmarkKPIEnd
+//                                 ?.controlsSeverityStatus
+//                                 ?.total?.passed ||
+//                                 0) /
+//                                 (benchmarkKPIEnd
+//                                     ?.controlsSeverityStatus
+//                                     ?.total
+//                                     ?.total || 1)) *
+//                                 100 || 0
+//                         }
+//                         metricPrev={
+//                             ((benchmarkKPIStart
+//                                 ?.controlsSeverityStatus
+//                                 ?.total?.passed ||
+//                                 0) /
+//                                 (benchmarkKPIStart
+//                                     ?.controlsSeverityStatus
+//                                     ?.total
+//                                     ?.total || 1)) *
+//                                 100 || 0
+//                         }
+//                         isPercent
+//                         loading={
+//                             benchmarkKPIEndLoading ||
+//                             benchmarkKPIStartLoading
+//                         }
+//                     />
+//                     <SummaryCard
+//                         title="Issues"
+//                         metric={
+//                             benchmarkKPIEnd
+//                                 ?.conformanceStatusSummary
+//                                 ?.failed
+//                         }
+//                         metricPrev={
+//                             benchmarkKPIStart
+//                                 ?.conformanceStatusSummary
+//                                 ?.failed
+//                         }
+//                         loading={
+//                             benchmarkKPIEndLoading ||
+//                             benchmarkKPIStartLoading
+//                         }
+//                     />
 
-   // {
-                                    //     label: 'Summary',
-                                    //     id: 'first',
-                                    //     content: (
-                                    //         <Flex
-                                    //             className="w-full flex-wrap"
-                                    //             flexDirection="col"
-                                    //         >
-                                    //             {/* {hideKPIs ? (
-                                    //                 ''
-                                    //             ) : (
-                                    //                 <Grid
-                                    //                     numItems={4}
-                                    //                     className="w-full gap-4 mb-4"
-                                    //                 >
-                                    //                     <SummaryCard
-                                    //                         title="Security Score"
-                                    //                         metric={
-                                    //                             ((benchmarkKPIEnd
-                                    //                                 ?.controlsSeverityStatus
-                                    //                                 ?.total?.passed ||
-                                    //                                 0) /
-                                    //                                 (benchmarkKPIEnd
-                                    //                                     ?.controlsSeverityStatus
-                                    //                                     ?.total
-                                    //                                     ?.total || 1)) *
-                                    //                                 100 || 0
-                                    //                         }
-                                    //                         metricPrev={
-                                    //                             ((benchmarkKPIStart
-                                    //                                 ?.controlsSeverityStatus
-                                    //                                 ?.total?.passed ||
-                                    //                                 0) /
-                                    //                                 (benchmarkKPIStart
-                                    //                                     ?.controlsSeverityStatus
-                                    //                                     ?.total
-                                    //                                     ?.total || 1)) *
-                                    //                                 100 || 0
-                                    //                         }
-                                    //                         isPercent
-                                    //                         loading={
-                                    //                             benchmarkKPIEndLoading ||
-                                    //                             benchmarkKPIStartLoading
-                                    //                         }
-                                    //                     />
-                                    //                     <SummaryCard
-                                    //                         title="Issues"
-                                    //                         metric={
-                                    //                             benchmarkKPIEnd
-                                    //                                 ?.conformanceStatusSummary
-                                    //                                 ?.failed
-                                    //                         }
-                                    //                         metricPrev={
-                                    //                             benchmarkKPIStart
-                                    //                                 ?.conformanceStatusSummary
-                                    //                                 ?.failed
-                                    //                         }
-                                    //                         loading={
-                                    //                             benchmarkKPIEndLoading ||
-                                    //                             benchmarkKPIStartLoading
-                                    //                         }
-                                    //                     />
+//                     <SummaryCard
+//                         title="Passed"
+//                         metric={
+//                             benchmarkKPIEnd
+//                                 ?.conformanceStatusSummary
+//                                 ?.passed
+//                         }
+//                         metricPrev={
+//                             benchmarkKPIStart
+//                                 ?.conformanceStatusSummary
+//                                 ?.passed
+//                         }
+//                         loading={
+//                             benchmarkKPIEndLoading ||
+//                             benchmarkKPIStartLoading
+//                         }
+//                     />
 
-                                    //                     <SummaryCard
-                                    //                         title="Passed"
-                                    //                         metric={
-                                    //                             benchmarkKPIEnd
-                                    //                                 ?.conformanceStatusSummary
-                                    //                                 ?.passed
-                                    //                         }
-                                    //                         metricPrev={
-                                    //                             benchmarkKPIStart
-                                    //                                 ?.conformanceStatusSummary
-                                    //                                 ?.passed
-                                    //                         }
-                                    //                         loading={
-                                    //                             benchmarkKPIEndLoading ||
-                                    //                             benchmarkKPIStartLoading
-                                    //                         }
-                                    //                     />
-
-                                    //                     <SummaryCard
-                                    //                         title="Accounts"
-                                    //                         metric={
-                                    //                             benchmarkKPIEnd
-                                    //                                 ?.connectionsStatus
-                                    //                                 ?.total
-                                    //                         }
-                                    //                         metricPrev={
-                                    //                             benchmarkKPIStart
-                                    //                                 ?.connectionsStatus
-                                    //                                 ?.total
-                                    //                         }
-                                    //                         loading={
-                                    //                             benchmarkKPIEndLoading ||
-                                    //                             benchmarkKPIStartLoading
-                                    //                         }
-                                    //                     />
-                                    //                 </Grid>
-                                    //             )} */}
-                                    //             {trend === null ? (
-                                    //                 ''
-                                    //             ) : (
-                                    //                 // <BenchmarkChart
-                                    //                 //     title="Security Score"
-                                    //                 //     isLoading={trendLoading}
-                                    //                 //     trend={trend}
-                                    //                 //     error={toErrorMessage(
-                                    //                 //         trendError
-                                    //                 //     )}
-                                    //                 //     onRefresh={() => sendTrend()}
-                                    //                 // />
-                                    //
+//                     <SummaryCard
+//                         title="Accounts"
+//                         metric={
+//                             benchmarkKPIEnd
+//                                 ?.connectionsStatus
+//                                 ?.total
+//                         }
+//                         metricPrev={
+//                             benchmarkKPIStart
+//                                 ?.connectionsStatus
+//                                 ?.total
+//                         }
+//                         loading={
+//                             benchmarkKPIEndLoading ||
+//                             benchmarkKPIStartLoading
+//                         }
+//                     />
+//                 </Grid>
+//             )} */}
+//             {trend === null ? (
+//                 ''
+//             ) : (
+//                 // <BenchmarkChart
+//                 //     title="Security Score"
+//                 //     isLoading={trendLoading}
+//                 //     trend={trend}
+//                 //     error={toErrorMessage(
+//                 //         trendError
+//                 //     )}
+//                 //     onRefresh={() => sendTrend()}
+//                 // />
+//

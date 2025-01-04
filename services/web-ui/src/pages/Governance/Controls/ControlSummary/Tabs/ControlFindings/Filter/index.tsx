@@ -115,7 +115,7 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
     const [jobData, setJobData] = useState([])
     const [jobs, setJobs] = useState([])
     const GetJobs = () => {
-        // /compliance/api/v3/benchmark/{benchmark-id}/assignments
+        
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL

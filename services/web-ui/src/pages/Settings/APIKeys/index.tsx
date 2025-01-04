@@ -84,7 +84,7 @@ const fixRole = (role: string) => {
        }, [responseDelete,deleteIsExecuted,deleteIsLoading])
        
      const EditKey = () => {
-         // /compliance/api/v3/benchmark/{benchmark-id}/assignments
+         
          setEditLoading(true)
          let url = ''
          if (window.location.origin === 'http://localhost:3000') {

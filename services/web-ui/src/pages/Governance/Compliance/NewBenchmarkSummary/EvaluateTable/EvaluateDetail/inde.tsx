@@ -126,7 +126,7 @@ export default function EvaluateDetail() {
     const [integrationDetail,setIntegrationDetail]= useState()
     const [integrationDetailLoading,setIntegrationDetailLoading]= useState(false)
     const GetDetail = () => {
-        // /compliance/api/v3/benchmark/{benchmark-id}/assignments
+        
         setDetailLoading(true)
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
@@ -163,7 +163,7 @@ export default function EvaluateDetail() {
     }
 
     const GetControls = () => {
-        // /compliance/api/v3/benchmark/{benchmark-id}/assignments
+        
         setDetailLoading(true)
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
@@ -206,7 +206,7 @@ export default function EvaluateDetail() {
             })
     }
     const GetResults = () => {
-        // /compliance/api/v3/benchmark/{benchmark-id}/assignments
+        
         setDetailLoading(true)
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
@@ -252,7 +252,7 @@ export default function EvaluateDetail() {
     }
 
     const GetFullResults = () => {
-        // /compliance/api/v3/benchmark/{benchmark-id}/assignments
+        
         setFullLoading(true)
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
@@ -292,7 +292,7 @@ export default function EvaluateDetail() {
             })
     }
     const GetIntegrationDetail = () => {
-        // /compliance/api/v3/benchmark/{benchmark-id}/assignments
+        
         setIntegrationDetailLoading(true)
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {

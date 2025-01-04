@@ -258,7 +258,7 @@ export default function View({ setTab }: Props) {
     //     })
    
     const getRows = () => {
-        // /compliance/api/v3/benchmark/{benchmark-id}/assignments
+        
         setLoading(true)
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {

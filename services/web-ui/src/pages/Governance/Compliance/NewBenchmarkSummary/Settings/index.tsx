@@ -17,8 +17,6 @@ import DrawerPanel from '../../../../../components/DrawerPanel'
 import Table, { IColumn } from '../../../../../components/Table'
 import {
     useComplianceApiV1AssignmentsBenchmarkDetail,
-    useComplianceApiV1AssignmentsConnectionCreate,
-    useComplianceApiV1AssignmentsConnectionDelete,
     useComplianceApiV1BenchmarksSettingsCreate,
 } from '../../../../../api/compliance.gen'
 import Spinner from '../../../../../components/Spinner'
@@ -48,59 +46,6 @@ interface ISettings {
     reload: () => void
 }
 
-const columns: (isDemo: boolean) => IColumn<any, any>[] = (isDemo) => [
-    {
-        width: 120,
-        sortable: true,
-        filter: true,
-        enableRowGroup: true,
-        type: 'string',
-        field: 'connector',
-    },
-    {
-        field: 'providerConnectionName',
-        headerName: 'Connection Name',
-        type: 'string',
-        sortable: true,
-        filter: true,
-        resizable: true,
-        flex: 1,
-        cellRenderer: (param: ValueFormatterParams) => (
-            <span className={isDemo ? 'blur-sm' : ''}>{param.value}</span>
-        ),
-    },
-    {
-        field: 'providerConnectionID',
-        headerName: 'Connection ID',
-        type: 'string',
-        sortable: true,
-        filter: true,
-        resizable: true,
-        flex: 1,
-        cellRenderer: (param: ValueFormatterParams) => (
-            <span className={isDemo ? 'blur-sm' : ''}>{param.value}</span>
-        ),
-    },
-    {
-        headerName: 'Enable',
-        sortable: true,
-        type: 'string',
-        filter: true,
-        resizable: true,
-        flex: 0.5,
-        cellRenderer: (params: any) => {
-            return (
-                <Flex
-                    alignItems="center"
-                    justifyContent="center"
-                    className="h-full w-full"
-                >
-                    <Switch checked={params.data?.status} />
-                </Flex>
-            )
-        },
-    },
-]
 
 interface ITransferState {
     connectionID: string
@@ -116,10 +61,7 @@ export default function Settings({
     reload,
 }: ISettings) {
     const [firstLoading, setFirstLoading] = useState<boolean>(true)
-    const [transfer, setTransfer] = useState<ITransferState>({
-        connectionID: '',
-        status: false,
-    })
+  
     const [allEnable, setAllEnable] = useState(autoAssign)
     const [enableStatus,setEnableStatus] = useState('')
     const [banner, setBanner] = useState(autoAssign)
@@ -213,18 +155,9 @@ export default function Settings({
         // setFirstLoading(false)
     }, [])
 
-    useEffect(() => {
-        if (enableExecuted && !enableLoading) {
-            setTransfer({ connectionID: '', status: false })
-            // refreshList()
-        }
-        if (disableExecuted && !disableLoading) {
-            setTransfer({ connectionID: '', status: false })
-            // refreshList()
-        }
-    }, [enableExecuted, disableExecuted, enableLoading, disableLoading])
+   
    const GetEnabled = () => {
-       // /compliance/api/v3/benchmark/{benchmark-id}/assignments
+       
        setLoading(true)
        let url = ''
        if (window.location.origin === 'http://localhost:3000') {
@@ -258,7 +191,7 @@ export default function Settings({
            })
    }
    const ChangeStatus = (status: string) => {
-       // /compliance/api/v3/benchmark/{benchmark-id}/assignments
+       
        setLoading(true)
        setEnableStatus(status)
        let url = ''
@@ -294,8 +227,7 @@ export default function Settings({
            })
    }
     const ChangeStatusItem = (status: string,tracker_id: string) => {
-        console.log("salan");
-        console.log(tracker_id);
+        
         setLoading(true);
         setEnableStatus(status);
         let url = ''

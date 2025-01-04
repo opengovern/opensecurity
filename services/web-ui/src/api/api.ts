@@ -4364,30 +4364,7 @@ export class Api<
             }),
     }
     compliance = {
-        /**
-         * No description
-         *
-         * @tags compliance
-         * @name ApiV1AiControlRemediationCreate
-         * @summary Get control remediation using AI
-         * @request POST:/compliance/api/v1/ai/control/{controlID}/remediation
-         * @secure
-         */
-        apiV1AiControlRemediationCreate: (
-            controlId: string,
-            params: RequestParams = {}
-        ) =>
-            this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkRemediation,
-                any
-            >({
-                path: `/compliance/api/v1/ai/control/${controlId}/remediation`,
-                method: 'POST',
-                secure: true,
-                type: ContentType.Json,
-                format: 'json',
-                ...params,
-            }),
+        
         /**
          * @description API for get new control list
          *
@@ -4524,165 +4501,9 @@ export class Api<
                 ...params,
             }),
 
-        /**
-         * @description Retrieving all benchmark assigned to a connection with connection id
-         *
-         * @tags benchmarks_assignment
-         * @name ApiV1AssignmentsConnectionDetail
-         * @summary Get list of benchmark assignments for a connection
-         * @request GET:/compliance/api/v1/assignments/connection/{connection_id}
-         * @secure
-         */
-        apiV1AssignmentsConnectionDetail: (
-            connectionId: string,
-            params: RequestParams = {}
-        ) =>
-            this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiAssignedBenchmark[],
-                any
-            >({
-                path: `/compliance/api/v1/assignments/connection/${connectionId}`,
-                method: 'GET',
-                secure: true,
-                type: ContentType.Json,
-                format: 'json',
-                ...params,
-            }),
-
-        /**
-         * @description Retrieving all benchmark assigned to a resource collection with resource collection id
-         *
-         * @tags benchmarks_assignment
-         * @name ApiV1AssignmentsResourceCollectionDetail
-         * @summary Get list of benchmark assignments for a resource collection
-         * @request GET:/compliance/api/v1/assignments/resource_collection/{resource_collection_id}
-         * @secure
-         */
-        apiV1AssignmentsResourceCollectionDetail: (
-            resourceCollectionId: string,
-            params: RequestParams = {}
-        ) =>
-            this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiAssignedBenchmark[],
-                any
-            >({
-                path: `/compliance/api/v1/assignments/resource_collection/${resourceCollectionId}`,
-                method: 'GET',
-                secure: true,
-                type: ContentType.Json,
-                format: 'json',
-                ...params,
-            }),
-
-        /**
-         * @description Creating a benchmark assignment for a connection.
-         *
-         * @tags benchmarks_assignment
-         * @name ApiV1AssignmentsConnectionCreate
-         * @summary Create benchmark assignment
-         * @request POST:/compliance/api/v1/assignments/{benchmark_id}/connection
-         * @secure
-         */
-        apiV1AssignmentsConnectionCreate: (
-            benchmarkId: string,
-            query?: {
-                /** Auto enable benchmark for connections */
-                auto_assign?: boolean
-                /** Connection ID or 'all' for everything */
-                connectionId?: string[]
-                /** Connection group */
-                connectionGroup?: string[]
-                /** Resource collection */
-                resourceCollection?: string[]
-            },
-            params: RequestParams = {}
-        ) =>
-            this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkAssignment[],
-                any
-            >({
-                path: `/compliance/api/v1/assignments/${benchmarkId}/connection`,
-                method: 'POST',
-                query: query,
-                secure: true,
-                type: ContentType.Json,
-                format: 'json',
-                ...params,
-            }),
-
-        /**
-         * @description Delete benchmark assignment with source id and benchmark id
-         *
-         * @tags benchmarks_assignment
-         * @name ApiV1AssignmentsConnectionDelete
-         * @summary Delete benchmark assignment
-         * @request DELETE:/compliance/api/v1/assignments/{benchmark_id}/connection
-         * @secure
-         */
-        apiV1AssignmentsConnectionDelete: (
-            benchmarkId: string,
-            query?: {
-                /** Connection ID or 'all' for everything */
-                connectionId?: string[]
-                /** Connection Group  */
-                connectionGroup?: string[]
-                /** Resource Collection */
-                resourceCollection?: string[]
-            },
-            params: RequestParams = {}
-        ) =>
-            this.request<void, any>({
-                path: `/compliance/api/v1/assignments/${benchmarkId}/connection`,
-                method: 'DELETE',
-                query: query,
-                secure: true,
-                type: ContentType.Json,
-                ...params,
-            }),
-
-        /**
-         * @description Retrieving a summary of all benchmarks and their associated checks and results within a specified time interval.
-         *
-         * @tags compliance
-         * @name ApiV1BenchmarksSummaryList
-         * @summary List benchmarks summaries
-         * @request GET:/compliance/api/v1/benchmarks/summary
-         * @secure
-         */
-        apiV1BenchmarksSummaryList: (
-            query?: {
-                /** Connection IDs to filter by */
-                connectionId?: string[]
-                /** Connection groups to filter by  */
-                connectionGroup?: string[]
-                /** Resource collection IDs to filter by */
-                resourceCollection?: string[]
-                /** Connector type to filter by */
-                connector?: ('' | 'AWS' | 'Azure')[]
-                /** Key-Value tags in key=value format to filter by */
-                tag?: string[]
-                /** timestamp for values in epoch seconds */
-                timeAt?: number
-                /**
-                 * Top account count
-                 * @default 3
-                 */
-                topAccountCount?: number
-            },
-            params: RequestParams = {}
-        ) =>
-            this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiListBenchmarksSummaryResponse,
-                any
-            >({
-                path: `/compliance/api/v1/benchmarks/summary`,
-                method: 'GET',
-                query: query,
-                secure: true,
-                type: ContentType.Json,
-                format: 'json',
-                ...params,
-            }),
+       
+   
+        
 
         /**
          * No description
@@ -4720,41 +4541,7 @@ export class Api<
                 ...params,
             }),
 
-        /**
-         * No description
-         *
-         * @tags compliance
-         * @name ApiV1BenchmarksControlsDetail2
-         * @summary Get benchmark controls
-         * @request GET:/compliance/api/v1/benchmarks/{benchmark_id}/controls/{controlId}
-         * @originalName apiV1BenchmarksControlsDetail
-         * @duplicate
-         * @secure
-         */
-        apiV1BenchmarksControlsDetail2: (
-            benchmarkId: string,
-            controlId: string,
-            query?: {
-                /** Connection IDs to filter by */
-                connectionId?: string[]
-                /** Connection groups to filter by  */
-                connectionGroup?: string[]
-            },
-            params: RequestParams = {}
-        ) =>
-            this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiControlSummary,
-                any
-            >({
-                path: `/compliance/api/v1/benchmarks/${benchmarkId}/controls/${controlId}`,
-                method: 'GET',
-                query: query,
-                secure: true,
-                type: ContentType.Json,
-                format: 'json',
-                ...params,
-            }),
-
+        
         /**
          * @description Changes benchmark settings.
          *
@@ -4824,81 +4611,8 @@ export class Api<
                 ...params,
             }),
 
-        /**
-         * @description Retrieving a trend of a benchmark result and checks.
-         *
-         * @tags compliance
-         * @name ApiV1BenchmarksTrendDetail
-         * @summary Get benchmark trend
-         * @request GET:/compliance/api/v1/benchmarks/{benchmark_id}/trend
-         * @secure
-         */
-        apiV1BenchmarksTrendDetail: (
-            benchmarkId: string,
-            query?: {
-                /** Connection IDs to filter by */
-                connectionId?: string[]
-                /** Connection groups to filter by  */
-                connectionGroup?: string[]
-                /** Resource collection IDs to filter by */
-                resourceCollection?: string[]
-                /** Connector type to filter by */
-                connector?: ('' | 'AWS' | 'Azure')[]
-                /** timestamp for start of the chart in epoch seconds */
-                startTime?: number
-                /** timestamp for end of the chart in epoch seconds */
-                endTime?: number
-            },
-            params: RequestParams = {}
-        ) =>
-            this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkTrendDatapoint[],
-                any
-            >({
-                path: `/compliance/api/v1/benchmarks/${benchmarkId}/trend`,
-                method: 'GET',
-                query: query,
-                secure: true,
-                type: ContentType.Json,
-                format: 'json',
-                ...params,
-            }),
-
-        /**
-         * No description
-         *
-         * @tags compliance
-         * @name ApiV1ControlsSummaryList
-         * @summary List controls summaries
-         * @request GET:/compliance/api/v1/controls/summary
-         * @secure
-         */
-        apiV1ControlsSummaryList: (
-            query?: {
-                /** Control IDs to filter by */
-                controlId?: string[]
-                /** Connection IDs to filter by */
-                connectionId?: string[]
-                /** Connection groups to filter by  */
-                connectionGroup?: string[]
-                /** Key-Value tags in key=value format to filter by */
-                tag?: string[]
-            },
-            params: RequestParams = {}
-        ) =>
-            this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiControlSummary[],
-                any
-            >({
-                path: `/compliance/api/v1/controls/summary`,
-                method: 'GET',
-                query: query,
-                secure: true,
-                type: ContentType.Json,
-                format: 'json',
-                ...params,
-            }),
-
+        
+       
         /**
          * No description
          *
@@ -4923,47 +4637,6 @@ export class Api<
                 any
             >({
                 path: `/compliance/api/v1/controls/${controlId}/summary`,
-                method: 'GET',
-                query: query,
-                secure: true,
-                type: ContentType.Json,
-                format: 'json',
-                ...params,
-            }),
-
-        /**
-         * No description
-         *
-         * @tags compliance
-         * @name ApiV1ControlsTrendDetail
-         * @summary Get control trend
-         * @request GET:/compliance/api/v1/controls/{controlId}/trend
-         * @secure
-         */
-        apiV1ControlsTrendDetail: (
-            controlId: string,
-            query?: {
-                /** Connection IDs to filter by */
-                connectionId?: string[]
-                /** Connection groups to filter by  */
-                connectionGroup?: string[]
-                /** timestamp for start of the chart in epoch seconds */
-                startTime?: number
-                /** timestamp for end of the chart in epoch seconds */
-                endTime?: number
-                /**
-                 * granularity of the chart
-                 * @default "daily"
-                 */
-                granularity?: 'daily' | 'monthly'
-            },
-            params: RequestParams = {}
-        ) =>
-            this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiControlTrendDatapoint[],
-                any
-            >({
-                path: `/compliance/api/v1/controls/${controlId}/trend`,
                 method: 'GET',
                 query: query,
                 secure: true,
@@ -5113,36 +4786,7 @@ export class Api<
                 ...params,
             }),
 
-        /**
-         * @description Retrieving all compliance run findings count with respect to filters.
-         *
-         * @tags compliance
-         * @name ApiV1FindingsCountList
-         * @summary Get findings count
-         * @request GET:/compliance/api/v1/compliance_result/count
-         * @secure
-         */
-        apiV1FindingsCountList: (
-            query?: {
-                /** ConformanceStatus to filter by defaults to all conformanceStatus except passed */
-                conformanceStatus?: ('failed' | 'passed')[]
-                /** StateActive to filter by defaults to true */
-                stateActive?: boolean[]
-            },
-            params: RequestParams = {}
-        ) =>
-            this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiCountFindingsResponse,
-                any
-            >({
-                path: `/compliance/api/v1/compliance_result/count`,
-                method: 'GET',
-                query: query,
-                secure: true,
-                type: ContentType.Json,
-                format: 'json',
-                ...params,
-            }),
+      
 
         /**
          * @description Retrieving all compliance run finding events with respect to filters.
@@ -5192,28 +4836,7 @@ export class Api<
                 ...params,
             }),
 
-        /**
-         * @description Retrieving KPIs for findings.
-         *
-         * @tags compliance
-         * @name ApiV1FindingsKpiList
-         * @summary Get finding KPIs
-         * @request GET:/compliance/api/v1/compliance_result/kpi
-         * @secure
-         */
-        apiV1FindingsKpiList: (params: RequestParams = {}) =>
-            this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiFindingKPIResponse,
-                any
-            >({
-                path: `/compliance/api/v1/compliance_result/kpi`,
-                method: 'GET',
-                secure: true,
-                type: ContentType.Json,
-                format: 'json',
-                ...params,
-            }),
-
+ 
         /**
          * @description Retrieving a single finding
          *
@@ -5378,65 +5001,7 @@ export class Api<
                 ...params,
             }),
 
-        /**
-         * @description Retrieving the number of findings field count by controls.
-         *
-         * @tags compliance
-         * @name ApiV1FindingsCountDetail
-         * @summary Get findings field count by controls
-         * @request GET:/compliance/api/v1/compliance_result/{benchmarkId}/{field}/count
-         * @secure
-         */
-        apiV1FindingsCountDetail: (
-            benchmarkId: string,
-            field: 'resourceType' | 'integrationID' | 'resourceID' | 'service',
-            query?: {
-                /** Connection IDs to filter by */
-                connectionId?: string[]
-                /** Connection groups to filter by  */
-                connectionGroup?: string[]
-                /** Resource collection IDs to filter by */
-                resourceCollection?: string[]
-                /** Connector type to filter by */
-                connector?: ('' | 'AWS' | 'Azure')[]
-                /** Severities to filter by defaults to all severities except passed */
-                severities?: ('none' | 'low' | 'medium' | 'high' | 'critical')[]
-                /** ConformanceStatus to filter by defaults to failed */
-                conformanceStatus?: ('failed' | 'passed')[]
-            },
-            params: RequestParams = {}
-        ) =>
-            this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiGetTopFieldResponse,
-                any
-            >({
-                path: `/compliance/api/v1/compliance_result/${benchmarkId}/${field}/count`,
-                method: 'GET',
-                query: query,
-                secure: true,
-                type: ContentType.Json,
-                format: 'json',
-                ...params,
-            }),
-
-        /**
-         * @description Retrieving a list of compliance tag keys with their possible values.
-         *
-         * @tags compliance
-         * @name ApiV1MetadataTagComplianceList
-         * @summary List compliance tag keys
-         * @request GET:/compliance/api/v1/metadata/tag/compliance
-         * @secure
-         */
-        apiV1MetadataTagComplianceList: (params: RequestParams = {}) =>
-            this.request<Record<string, string[]>, any>({
-                path: `/compliance/api/v1/metadata/tag/compliance`,
-                method: 'GET',
-                secure: true,
-                type: ContentType.Json,
-                format: 'json',
-                ...params,
-            }),
+      
 
         /**
          * @description Syncs queries with the git backend.
@@ -5488,31 +5053,7 @@ export class Api<
                 format: 'json',
                 ...params,
             }),
-        /**
-         * @description Retrieving list of categories for all controls
-         *
-         * @tags analytics
-         * @name ApiV3ComplianceControlCategoryList
-         * @summary List Analytics categories
-         * @request GET:/compliance/api/v3/controls/categories
-         * @secure
-         */
-        apiV3ComplianceControlCategoryList: (
-            query: string[] | undefined,
-            params: RequestParams = {}
-        ) =>
-            this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiInventoryCategoriesResponse,
-                any
-            >({
-                path: `/compliance/api/v3/controls/categories`,
-                method: 'GET',
-                query: query,
-                secure: true,
-                type: ContentType.Json,
-                format: 'json',
-                ...params,
-            }),
+       
     }
     integration = {
         /**

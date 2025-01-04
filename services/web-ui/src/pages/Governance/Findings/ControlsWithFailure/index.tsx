@@ -10,7 +10,6 @@ import {
     TypesFindingSeverity,
 } from '../../../../api/api'
 import Table, { IColumn } from '../../../../components/Table'
-import { topControls } from '../../Compliance/BenchmarkSummary/TopDetails/Controls'
 import { severityBadge } from '../../Controls'
 import { DateRange, searchAtom } from '../../../../utilities/urlstate'
 import { useEffect, useState } from 'react'

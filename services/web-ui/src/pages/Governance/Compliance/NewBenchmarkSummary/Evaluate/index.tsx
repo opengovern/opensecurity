@@ -79,7 +79,7 @@ export default function Evaluate({
     //     }
     // }, [assignments])
     const RunBenchmark = () => {
-        // /compliance/api/v3/benchmark/{benchmark-id}/assignments
+        
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -138,7 +138,7 @@ export default function Evaluate({
     }
 
     const GetEnabled = () => {
-        // /compliance/api/v3/benchmark/{benchmark-id}/assignments
+        
         setLoading(true)
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {

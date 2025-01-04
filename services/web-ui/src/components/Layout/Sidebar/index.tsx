@@ -34,7 +34,6 @@ import {
     useInventoryApiV2AnalyticsCountList,
     useInventoryApiV2AnalyticsSpendCountList,
 } from '../../../api/inventory.gen'
-import { useComplianceApiV1FindingsCountList } from '../../../api/compliance.gen'
 import { useIntegrationApiV1ConnectionsCountList } from '../../../api/integration.gen'
 import { numericDisplay } from '../../../utilities/numericDisplay'
 import AnimatedAccordion from '../../AnimatedAccordion'
@@ -74,31 +73,7 @@ export default function Sidebar({  currentPage }: ISidebar) {
     const { isAuthenticated, getAccessTokenSilently } = useAuth()
     const [collapsed, setCollapsed] = useAtom(sideBarCollapsedAtom)
     const preview = useAtomValue(previewAtom)
-    // const {
-    //     response: spendCount,
-    //     isLoading: spendCountIsLoading,
-    //     error: spendCountErr,
-    //     sendNow: sendSpend,
-    // } = useInventoryApiV2AnalyticsSpendCountList({}, false, workspace)
-    // const {
-    //     response: assetCount,
-    //     isLoading: assetsIsLoading,
-    //     error: assetCountErr,
-    //     sendNow: sendAssets,
-    // } = useInventoryApiV2AnalyticsCountList({}, false, workspace)
-    // const {
-    //     response: findingsCount,
-    //     isLoading: findingsIsLoading,
-    //     error: findingsErr,
-    //     sendNow: sendFindings,
-    // // } = useComplianceApiV1FindingsCountList({}, {}, false, workspace)
-    // const {
-    //     response: connectionCount,
-    //     isExecuted: connectionsIsExecuted,
-    //     isLoading: connectionsIsLoading,
-    //     error: connectionsErr,
-    //     sendNow: sendConnections,
-    // } = useIntegrationApiV1ConnectionsCountList({}, {}, false, workspace)
+    
 
     const searchParams = useAtomValue(searchAtom)
     const setOldUrl = useSetAtom(oldUrlAtom)

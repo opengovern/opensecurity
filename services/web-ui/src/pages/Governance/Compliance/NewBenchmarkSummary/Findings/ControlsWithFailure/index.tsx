@@ -9,7 +9,7 @@ import {
     TypesFindingSeverity,
 } from '../../../../../../api/api'
 import Table, { IColumn } from '../../../../../../components/Table'
-import { topControls } from '../../../../Compliance/BenchmarkSummary/TopDetails/Controls'
+import { topControls } from '../../TopDetails/Controls'
 import { severityBadge } from '../../../../Controls'
 import { DateRange, searchAtom } from '../../../../../../utilities/urlstate'
 
