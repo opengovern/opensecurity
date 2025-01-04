@@ -15,8 +15,8 @@ import (
 	"github.com/opengovern/opencomply/pkg/cloudql/sdk/pg"
 	"github.com/opengovern/opencomply/pkg/cloudql/utils/dag"
 	"github.com/opengovern/opencomply/pkg/utils"
-	"github.com/opengovern/opencomply/services/metadata/client"
-	"github.com/opengovern/opencomply/services/metadata/models"
+	"github.com/opengovern/opencomply/services/core/client"
+	"github.com/opengovern/opencomply/services/core/db/models"
 	"go.uber.org/zap"
 )
 

@@ -10,5 +10,5 @@ type IntegrationConfig struct {
 	Steampipe koanf.Postgres              `json:"steampipe,omitempty" koanf:"steampipe"`
 	Http      koanf.HttpServer            `json:"http,omitempty" koanf:"http"`
 	Vault     vault.Config                `json:"vault,omitempty" koanf:"vault"`
-	Metadata  koanf.OpenGovernanceService `json:"metadata,omitempty" koanf:"metadata"`
+	Core  koanf.OpenGovernanceService `json:"core,omitempty" koanf:"core"`
 }

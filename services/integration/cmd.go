@@ -29,7 +29,7 @@ import (
 	"github.com/opengovern/opencomply/services/integration/api"
 	"github.com/opengovern/opencomply/services/integration/config"
 	"github.com/opengovern/opencomply/services/integration/db"
-	metadata "github.com/opengovern/opencomply/services/metadata/client"
+	core "github.com/opengovern/opencomply/services/core/client"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -70,10 +70,10 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			mClient := metadata.NewMetadataServiceClient(cnf.Metadata.BaseURL)
+			mClient := core.NewCoreServiceClient(cnf.Core.BaseURL)
 
 			_, err = mClient.VaultConfigured(&httpclient.Context{UserRole: api3.AdminRole})
-			if err != nil && errors.Is(err, metadata.ErrConfigNotFound) {
+			if err != nil && errors.Is(err, core.ErrConfigNotFound) {
 				return err
 			}
 

@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/opengovern/opencomply/services/metadata"
+	"github.com/opengovern/opencomply/services/core"
 )
 
 func main() {
@@ -29,7 +29,7 @@ func main() {
 		}
 	}()
 
-	if err := metadata.Command().ExecuteContext(ctx); err != nil {
+	if err := core.Command().ExecuteContext(ctx); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
