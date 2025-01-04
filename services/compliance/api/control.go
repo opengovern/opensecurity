@@ -101,7 +101,7 @@ type ListControlsFilterResultControl struct {
 	Severity        types.ComplianceResultSeverity `json:"severity"`
 	Tags            map[string][]string            `json:"tags"`
 	Query           struct {
-		PrimaryTable *string          `json:"primary_table"`
+		PrimaryTable string           `json:"primary_table"`
 		ListOfTables []string         `json:"list_of_tables"`
 		Parameters   []QueryParameter `json:"parameters"`
 	} `json:"query"`
@@ -141,11 +141,11 @@ type GetControlDetailsResponse struct {
 	IntegrationType []integration.Type `json:"integrationType"`
 	Severity        string             `json:"severity"`
 	Query           struct {
-		Engine         string           `json:"engine"`
-		QueryToExecute string           `json:"queryToExecute"`
-		PrimaryTable   *string          `json:"primaryTable"`
-		ListOfTables   []string         `json:"listOfTables"`
-		Parameters     []QueryParameter `json:"parameters"`
+		Language     string           `json:"language"`
+		Definition   string           `json:"definition"`
+		PrimaryTable string           `json:"primaryTable"`
+		ListOfTables []string         `json:"listOfTables"`
+		Parameters   []QueryParameter `json:"parameters"`
 	} `json:"query"`
 	Tags       map[string][]string `json:"tags"`
 	Benchmarks *struct {

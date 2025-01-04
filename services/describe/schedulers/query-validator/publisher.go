@@ -63,7 +63,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 			if err != nil {
 				s.logger.Error("Get Control Error", zap.Error(err))
 			}
-			jobMsg.Query = controlQuery.Query.QueryToExecute
+			jobMsg.Query = controlQuery.Query.Definition
 			var parameters []inventoryApi.QueryParameter
 			for _, qp := range controlQuery.Query.Parameters {
 				parameters = append(parameters, inventoryApi.QueryParameter{

@@ -51,7 +51,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 			query = namedQuery.Query.QueryToExecute
 			parameters = namedQuery.Query.Parameters
 		} else if controlQuery != nil {
-			query = controlQuery.Query.QueryToExecute
+			query = controlQuery.Query.Definition
 			for _, qp := range controlQuery.Query.Parameters {
 				parameters = append(parameters, inventoryApi.QueryParameter{
 					Key:      qp.Key,
