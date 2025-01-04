@@ -2363,13 +2363,13 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			Severity:        control.Severity,
 			Tags:            filterTagsByRegex(req.TagsRegex, model.TrimPrivateTags(control.GetTagsMap())),
 			Policy: struct {
-				PrimaryTable string               `json:"primary_table"`
-				ListOfTables []string             `json:"list_of_tables"`
-				Parameters   []api.QueryParameter `json:"parameters"`
+				PrimaryResource string               `json:"primary_resource"`
+				ListOfResources []string             `json:"list_of_resources"`
+				Parameters      []api.QueryParameter `json:"parameters"`
 			}{
-				PrimaryTable: control.Policy.PrimaryResource,
-				ListOfTables: control.Policy.ListOfResources,
-				Parameters:   make([]api.QueryParameter, 0, len(control.Policy.Parameters)),
+				PrimaryResource: control.Policy.PrimaryResource,
+				ListOfResources: control.Policy.ListOfResources,
+				Parameters:      make([]api.QueryParameter, 0, len(control.Policy.Parameters)),
 			},
 		}
 		for _, p := range control.Policy.Parameters {
@@ -2581,17 +2581,17 @@ func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 		IntegrationType: integration_type.ParseTypes(control.IntegrationType),
 		Severity:        control.Severity.String(),
 		Policy: struct {
-			Language     string               `json:"language"`
-			Definition   string               `json:"definition"`
-			PrimaryTable string               `json:"primaryTable"`
-			ListOfTables []string             `json:"listOfTables"`
-			Parameters   []api.QueryParameter `json:"parameters"`
+			Language        string               `json:"language"`
+			Definition      string               `json:"definition"`
+			PrimaryResource string               `json:"primaryResource"`
+			ListOfResources []string             `json:"listOfResources"`
+			Parameters      []api.QueryParameter `json:"parameters"`
 		}{
-			Language:     string(control.Policy.Language),
-			Definition:   control.Policy.Definition,
-			PrimaryTable: control.Policy.PrimaryResource,
-			ListOfTables: control.Policy.ListOfResources,
-			Parameters:   parameters,
+			Language:        string(control.Policy.Language),
+			Definition:      control.Policy.Definition,
+			PrimaryResource: control.Policy.PrimaryResource,
+			ListOfResources: control.Policy.ListOfResources,
+			Parameters:      parameters,
 		},
 		Tags: model.TrimPrivateTags(control.GetTagsMap()),
 	}
