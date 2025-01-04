@@ -316,7 +316,7 @@ func (g *GitParser) parseControlFile(content []byte, path string) error {
 				for _, it := range query.IntegrationTypes {
 					integrationTypes = append(integrationTypes, string(it))
 				}
-				listOfTables, err := utils.ExtractTableRefsFromPolicy(types.PolicyLanguageSQL, query.Policy.Definition)
+				listOfTables, err := utils.ExtractTableRefsFromPolicy(types.PolicyLanguageSQL, query.Policy.QueryToExecute)
 				if err != nil {
 					g.logger.Error("failed to extract table refs from query", zap.String("query-id", control.ID), zap.Error(err))
 					return nil
@@ -328,13 +328,18 @@ func (g *GitParser) parseControlFile(content []byte, path string) error {
 					return nil
 				}
 
+				var primaryResource string
+				if query.Policy.PrimaryTable != nil {
+					primaryResource = *query.Policy.PrimaryTable
+				}
+
 				p := db.Policy{
 					ID:              control.ID,
-					Definition:      query.Policy.Definition,
+					Definition:      query.Policy.QueryToExecute,
 					IntegrationType: integrationTypes,
-					PrimaryResource: query.Policy.PrimaryResource,
+					PrimaryResource: primaryResource,
 					ListOfResources: listOfTables,
-					Language:        query.Policy.Language,
+					Language:        types.PolicyLanguageSQL,
 				}
 				g.controlsPolicies[control.ID] = p
 
