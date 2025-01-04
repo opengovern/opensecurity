@@ -280,11 +280,11 @@ type Policy struct {
 	IntegrationType pq.StringArray `gorm:"type:text[]"`
 	Language        types.PolicyLanguage
 
-	Controls []Control `gorm:"foreignKey:QueryID"`
+	Controls []Control `gorm:"foreignKey:PolicyID"`
 
 	PrimaryResource string
 	ListOfResources pq.StringArray    `gorm:"type:text[]"`
-	Parameters      []PolicyParameter `gorm:"foreignKey:QueryID"`
+	Parameters      []PolicyParameter `gorm:"foreignKey:PolicyID"`
 
 	// Rego Fields
 	RegoPolicies pq.StringArray `gorm:"type:text[]"`
