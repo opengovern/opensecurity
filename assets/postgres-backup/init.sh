@@ -208,7 +208,7 @@ GRANT pg_read_all_data TO $migratorUserName;
 GRANT pg_write_all_data TO $migratorUserName;
 GRANT ALL ON SCHEMA public TO $migratorUserName;
 GRANT pg_read_all_data TO $steampipeUserName;
-\connect "$inventoryDatabaseName";
+\connect "$coreDatabaseName";
 GRANT pg_read_all_data TO $migratorUserName;
 GRANT pg_write_all_data TO $migratorUserName;
 GRANT ALL ON SCHEMA public TO $migratorUserName;
