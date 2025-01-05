@@ -77,7 +77,7 @@ func MetadataQueryParamMigration(conf config.MigratorConfig, logger *zap.Logger,
 		Port:    conf.PostgreSQL.Port,
 		User:    conf.PostgreSQL.Username,
 		Passwd:  conf.PostgreSQL.Password,
-		DB:      "metadata",
+		DB:      "core",
 		SSLMode: conf.PostgreSQL.SSLMode,
 	}, logger)
 	if err != nil {
