@@ -156,7 +156,7 @@ func (db Database) ListQueriesByFilters(queryIds []string, search *string, tagFi
 	hasParameters *bool, primaryTable []string, listOfTables []string, params []string) ([]models.NamedQuery, error) {
 	var s []models.NamedQuery
 
-	m := db.orm.Model(&models.NamedQuery{}).Distinct("named_queries.*").Preload(clause.Associations).Preload("Policy.Parameters").Preload("Tags")
+	m := db.orm.Model(&models.NamedQuery{}).Distinct("named_queries.*").Preload(clause.Associations).Preload("Query.Parameters").Preload("Tags")
 
 	if len(queryIds) > 0 {
 		m = m.Where("id IN ?", queryIds)
