@@ -72,15 +72,14 @@ func (db Database) GetAppConfiguration() (*models.PlatformConfiguration, error) 
 	return &appConfiguration, nil
 }
 
-
-func (db Database) upsertQueryParameter(queryParam models.QueryParameterValues) error {
+func (db Database) upsertQueryParameter(queryParam models.PolicyParameterValues) error {
 	return db.orm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "key"}},
 		DoUpdates: clause.AssignmentColumns([]string{"value"}),
 	}).Create(&queryParam).Error
 }
 
-func (db Database) upsertQueryParameters(queryParam []*models.QueryParameterValues) error {
+func (db Database) upsertQueryParameters(queryParam []*models.PolicyParameterValues) error {
 	return db.orm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "key"}},
 		DoUpdates: clause.AssignmentColumns([]string{"value"}),
@@ -88,18 +87,18 @@ func (db Database) upsertQueryParameters(queryParam []*models.QueryParameterValu
 }
 
 func (db Database) SetQueryParameter(key string, value string) error {
-	return db.upsertQueryParameter(models.QueryParameterValues{
+	return db.upsertQueryParameter(models.PolicyParameterValues{
 		Key:   key,
 		Value: value,
 	})
 }
 
-func (db Database) SetQueryParameters(queryParams []*models.QueryParameterValues) error {
+func (db Database) SetQueryParameters(queryParams []*models.PolicyParameterValues) error {
 	return db.upsertQueryParameters(queryParams)
 }
 
-func (db Database) GetQueryParameter(key string) (*models.QueryParameterValues, error) {
-	var queryParam models.QueryParameterValues
+func (db Database) GetQueryParameter(key string) (*models.PolicyParameterValues, error) {
+	var queryParam models.PolicyParameterValues
 	err := db.orm.First(&queryParam, "key = ?", key).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -110,8 +109,8 @@ func (db Database) GetQueryParameter(key string) (*models.QueryParameterValues, 
 	return &queryParam, nil
 }
 
-func (db Database) GetQueryParametersValues() ([]models.QueryParameterValues, error) {
-	var queryParams []models.QueryParameterValues
+func (db Database) GetQueryParametersValues() ([]models.PolicyParameterValues, error) {
+	var queryParams []models.PolicyParameterValues
 	err := db.orm.Find(&queryParams).Error
 	if err != nil {
 		return nil, err
@@ -119,8 +118,8 @@ func (db Database) GetQueryParametersValues() ([]models.QueryParameterValues, er
 	return queryParams, nil
 }
 
-func (db Database) GetQueryParametersByIds(ids []string) ([]models.QueryParameterValues, error) {
-	var queryParams []models.QueryParameterValues
+func (db Database) GetQueryParametersByIds(ids []string) ([]models.PolicyParameterValues, error) {
+	var queryParams []models.PolicyParameterValues
 	err := db.orm.Where("key IN ?", ids).Find(&queryParams).Error
 	if err != nil {
 		return nil, err
@@ -129,8 +128,9 @@ func (db Database) GetQueryParametersByIds(ids []string) ([]models.QueryParamete
 }
 
 func (db Database) DeleteQueryParameter(key string) error {
-	return db.orm.Unscoped().Delete(&models.QueryParameterValues{}, "key = ?", key).Error
+	return db.orm.Unscoped().Delete(&models.PolicyParameterValues{}, "key = ?", key).Error
 }
+
 
 func (db Database) ListQueryViews() ([]models.QueryView, error) {
 	var queryViews []models.QueryView

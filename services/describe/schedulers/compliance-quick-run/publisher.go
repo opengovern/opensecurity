@@ -15,7 +15,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 	ctx2 := &httpclient.Context{UserRole: api.AdminRole}
 	ctx2.Ctx = ctx
 
-	s.logger.Info("Query Runner publisher started")
+	s.logger.Info("Policy Runner publisher started")
 
 	err := s.db.UpdateComplianceJobsTimedOut(false, 20)
 	if err != nil {
@@ -24,10 +24,10 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 
 	jobs, err := s.db.ListCreatedComplianceJobs(false)
 	if err != nil {
-		s.logger.Error("Fetch Created Query Runner Jobs Error", zap.Error(err))
+		s.logger.Error("Fetch Created Policy Runner Jobs Error", zap.Error(err))
 		return err
 	}
-	s.logger.Info("Fetch Created Query Runner Jobs", zap.Any("Jobs Count", len(jobs)))
+	s.logger.Info("Fetch Created Policy Runner Jobs", zap.Any("Jobs Count", len(jobs)))
 	for _, job := range jobs {
 		auditJobMsg := auditjob.AuditJob{
 			JobID:          job.ID,
@@ -39,7 +39,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 		jobJson, err := json.Marshal(auditJobMsg)
 		if err != nil {
 			_ = s.db.UpdateComplianceJob(job.ID, model.ComplianceJobFailed, "failed to marshal job")
-			s.logger.Error("failed to marshal Query Runner Job", zap.Error(err), zap.Uint("runnerId", job.ID))
+			s.logger.Error("failed to marshal Policy Runner Job", zap.Error(err), zap.Uint("runnerId", job.ID))
 			continue
 		}
 

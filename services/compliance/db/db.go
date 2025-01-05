@@ -18,8 +18,8 @@ type Database struct {
 
 func (db Database) Initialize(ctx context.Context) error {
 	err := db.Orm.WithContext(ctx).AutoMigrate(
-		&Query{},
-		&QueryParameter{},
+		&Policy{},
+		&PolicyParameter{},
 		&Control{},
 		&ControlTag{},
 		&Benchmark{},
@@ -225,7 +225,7 @@ func (db Database) GetBenchmarks(ctx context.Context, benchmarkIds []string) ([]
 
 func (db Database) GetBenchmarkWithControlQueries(ctx context.Context, benchmarkId string) (*Benchmark, error) {
 	var s Benchmark
-	tx := db.Orm.WithContext(ctx).Model(&Benchmark{}).Preload(clause.Associations).Preload("Controls").Preload("Controls.Query").
+	tx := db.Orm.WithContext(ctx).Model(&Benchmark{}).Preload(clause.Associations).Preload("Controls").Preload("Controls.Policy").
 		Where("id = ?", benchmarkId).
 		First(&s)
 
@@ -309,10 +309,10 @@ func (db Database) ListDistinctRootBenchmarksFromControlIds(ctx context.Context,
 	return res, nil
 }
 
-func (db Database) GetQuery(ctx context.Context, queryID string) (*Query, error) {
-	var s Query
-	tx := db.Orm.WithContext(ctx).Model(&Query{}).Preload(clause.Associations).
-		Where("id = ?", queryID).
+func (db Database) GetPolicy(ctx context.Context, policyID string) (*Policy, error) {
+	var s Policy
+	tx := db.Orm.WithContext(ctx).Model(&Policy{}).Preload(clause.Associations).
+		Where("id = ?", policyID).
 		First(&s)
 
 	if tx.Error != nil {
@@ -377,13 +377,13 @@ func (db Database) GetControl(ctx context.Context, id string) (*Control, error) 
 		return nil, tx.Error
 	}
 
-	if s.QueryID != nil {
-		var query Query
-		tx := db.Orm.WithContext(ctx).Model(&Query{}).Preload(clause.Associations).Where("id = ?", *s.QueryID).First(&query)
+	if s.PolicyID != nil {
+		var policy Policy
+		tx := db.Orm.WithContext(ctx).Model(&Policy{}).Preload(clause.Associations).Where("id = ?", *s.PolicyID).First(&policy)
 		if tx.Error != nil {
 			return nil, tx.Error
 		}
-		s.Query = &query
+		s.Policy = &policy
 	}
 
 	return &s, nil
@@ -431,36 +431,36 @@ func (db Database) ListControlsByBenchmarkID(ctx context.Context, benchmarkID st
 		return nil, tx.Error
 	}
 
-	queryIds := make([]string, 0, len(s))
+	policyIDs := make([]string, 0, len(s))
 	for _, control := range s {
-		if control.QueryID != nil {
-			queryIds = append(queryIds, *control.QueryID)
+		if control.PolicyID != nil {
+			policyIDs = append(policyIDs, *control.PolicyID)
 		}
 	}
-	var queriesMap map[string]Query
-	if len(queryIds) > 0 {
-		var queries []Query
-		qtx := db.Orm.WithContext(ctx).Model(&Query{}).Preload(clause.Associations).Where("id IN ?", queryIds).Find(&queries)
+	var queriesMap map[string]Policy
+	if len(policyIDs) > 0 {
+		var policies []Policy
+		qtx := db.Orm.WithContext(ctx).Model(&Policy{}).Preload(clause.Associations).Where("id IN ?", policyIDs).Find(&policies)
 		if qtx.Error != nil {
 			return nil, qtx.Error
 		}
-		queriesMap = make(map[string]Query)
-		for _, query := range queries {
-			queriesMap[query.ID] = query
+		queriesMap = make(map[string]Policy)
+		for _, policy := range policies {
+			queriesMap[policy.ID] = policy
 		}
 	}
 
 	for i, c := range s {
-		if c.QueryID != nil {
-			v := queriesMap[*c.QueryID]
-			s[i].Query = &v
+		if c.PolicyID != nil {
+			v := queriesMap[*c.PolicyID]
+			s[i].Policy = &v
 		}
 	}
 
 	return s, nil
 }
 func (db Database) ListControlsByFilter(ctx context.Context, controlIDs, integrationTypes []string, severity []string, benchmarkIDs []string,
-	tagFilters map[string][]string, hasParameters *bool, primaryTable []string, listOfTables []string, params []string) ([]Control, error) {
+	tagFilters map[string][]string, hasParameters *bool, primaryResource []string, listOfResources []string, params []string) ([]Control, error) {
 	var s []Control
 
 	m := db.Orm.WithContext(ctx).Model(&Control{}).Distinct("controls.*").
@@ -503,38 +503,38 @@ func (db Database) ListControlsByFilter(ctx context.Context, controlIDs, integra
 			Where("bc.benchmark_id IN ?", benchmarkIDs)
 	}
 
-	if hasParameters != nil || len(params) > 0 || len(primaryTable) > 0 || len(listOfTables) > 0 {
-		m = m.Joins("JOIN queries q ON q.id = controls.query_id")
+	if hasParameters != nil || len(params) > 0 || len(primaryResource) > 0 || len(listOfResources) > 0 {
+		m = m.Joins("JOIN policies p ON p.id = controls.policy_id")
 	}
 
 	if hasParameters != nil {
 		if *hasParameters {
-			m = m.Joins("LEFT JOIN query_parameters qp ON qp.query_id = q.id").
+			m = m.Joins("LEFT JOIN policy_parameters pp ON pp.policy_id = p.id").
 				Group("controls.id").
-				Having("COUNT(qp.query_id) > 0")
+				Having("COUNT(pp.policy_id) > 0")
 		} else {
-			m = m.Joins("LEFT JOIN query_parameters qp ON qp.query_id = q.id").
+			m = m.Joins("LEFT JOIN policy_parameters pp ON pp.policy_id = p.id").
 				Group("controls.id").
-				Having("COUNT(qp.query_id) = 0")
+				Having("COUNT(pp.policy_id) = 0")
 		}
 	}
 
 	if len(params) > 0 {
-		m = m.Joins("LEFT JOIN query_parameters qp ON qp.query_id = q.id").
-			Where("qp.key IN ?", params).
+		m = m.Joins("LEFT JOIN policy_parameters pp ON pp.policy_id = p.id").
+			Where("pp.key IN ?", params).
 			Group("controls.id").
-			Having("COUNT(qp.query_id) > 0")
+			Having("COUNT(pp.policy_id) > 0")
 	}
 
-	if len(primaryTable) > 0 {
-		m = m.Where("q.primary_table IN ?", primaryTable)
+	if len(primaryResource) > 0 {
+		m = m.Where("p.primary_resource IN ?", primaryResource)
 	}
 
-	if len(listOfTables) > 0 {
-		m = m.Where("q.list_of_tables::text[] && ?", pq.Array(listOfTables))
+	if len(listOfResources) > 0 {
+		m = m.Where("p.list_of_resources::text[] && ?", pq.Array(listOfResources))
 	}
 
-	// Execute the query
+	// Execute the policy
 	tx := m.Find(&s)
 
 	if tx.Error != nil {
@@ -553,29 +553,29 @@ func (db Database) ListControlsByFilter(ctx context.Context, controlIDs, integra
 		res = append(res, val)
 	}
 
-	queryIds := make([]string, 0, len(res))
+	policyIDs := make([]string, 0, len(res))
 	for _, control := range res {
-		if control.QueryID != nil {
-			queryIds = append(queryIds, *control.QueryID)
+		if control.PolicyID != nil {
+			policyIDs = append(policyIDs, *control.PolicyID)
 		}
 	}
-	var queriesMap map[string]Query
-	if len(queryIds) > 0 {
-		var queries []Query
-		qtx := db.Orm.WithContext(ctx).Model(&Query{}).Preload(clause.Associations).Where("id IN ?", queryIds).Find(&queries)
+	var queriesMap map[string]Policy
+	if len(policyIDs) > 0 {
+		var policies []Policy
+		qtx := db.Orm.WithContext(ctx).Model(&Policy{}).Preload(clause.Associations).Where("id IN ?", policyIDs).Find(&policies)
 		if qtx.Error != nil {
 			return nil, qtx.Error
 		}
-		queriesMap = make(map[string]Query)
-		for _, query := range queries {
-			queriesMap[query.ID] = query
+		queriesMap = make(map[string]Policy)
+		for _, policy := range policies {
+			queriesMap[policy.ID] = policy
 		}
 	}
 
 	for i, c := range res {
-		if c.QueryID != nil {
-			v := queriesMap[*c.QueryID]
-			res[i].Query = &v
+		if c.PolicyID != nil {
+			v := queriesMap[*c.PolicyID]
+			res[i].Policy = &v
 		}
 	}
 
@@ -649,39 +649,39 @@ func (db Database) GetControls(ctx context.Context, controlIDs []string, tags ma
 		return nil, tx.Error
 	}
 
-	queryIds := make([]string, 0, len(s))
+	policyIDs := make([]string, 0, len(s))
 	for _, control := range s {
-		if control.QueryID != nil {
-			queryIds = append(queryIds, *control.QueryID)
+		if control.PolicyID != nil {
+			policyIDs = append(policyIDs, *control.PolicyID)
 		}
 	}
-	var queriesMap map[string]Query
-	if len(queryIds) > 0 {
-		var queries []Query
-		qtx := db.Orm.WithContext(ctx).Model(&Query{}).Preload(clause.Associations).Where("id IN ?", queryIds).Find(&queries)
+	var queriesMap map[string]Policy
+	if len(policyIDs) > 0 {
+		var policies []Policy
+		qtx := db.Orm.WithContext(ctx).Model(&Policy{}).Preload(clause.Associations).Where("id IN ?", policyIDs).Find(&policies)
 		if qtx.Error != nil {
 			return nil, qtx.Error
 		}
-		queriesMap = make(map[string]Query)
-		for _, query := range queries {
-			queriesMap[query.ID] = query
+		queriesMap = make(map[string]Policy)
+		for _, policy := range policies {
+			queriesMap[policy.ID] = policy
 		}
 	}
 
 	for i, c := range s {
-		if c.QueryID != nil {
-			v := queriesMap[*c.QueryID]
-			s[i].Query = &v
+		if c.PolicyID != nil {
+			v := queriesMap[*c.PolicyID]
+			s[i].Policy = &v
 		}
 	}
 
 	return s, nil
 }
 
-func (db Database) GetQueries(ctx context.Context, queryIDs []string) ([]Query, error) {
-	var s []Query
-	tx := db.Orm.WithContext(ctx).Model(&Query{}).
-		Where("id IN ?", queryIDs).
+func (db Database) GetPolicies(ctx context.Context, policyIDs []string) ([]Policy, error) {
+	var s []Policy
+	tx := db.Orm.WithContext(ctx).Model(&Policy{}).
+		Where("id IN ?", policyIDs).
 		Find(&s)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -689,11 +689,11 @@ func (db Database) GetQueries(ctx context.Context, queryIDs []string) ([]Query, 
 	return s, nil
 }
 
-func (db Database) GetQueriesIdAndIntegrationType(ctx context.Context, queryIDs []string) ([]Query, error) {
-	var s []Query
-	tx := db.Orm.WithContext(ctx).Model(&Query{}).
+func (db Database) GetPoliciesIdAndIntegrationType(ctx context.Context, policyIDs []string) ([]Policy, error) {
+	var s []Policy
+	tx := db.Orm.WithContext(ctx).Model(&Policy{}).
 		Select("id, integration_type").
-		Where("id IN ?", queryIDs).
+		Where("id IN ?", policyIDs).
 		Find(&s)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -846,7 +846,7 @@ func (db Database) ListControls(ctx context.Context, controlIDs []string, tags m
 	var s []Control
 	tx := db.Orm.WithContext(ctx).Model(&Control{}).
 		Preload(clause.Associations).
-		Preload("Query.Parameters")
+		Preload("Policy.Parameters")
 
 	if len(controlIDs) > 0 {
 		tx = tx.Where("id IN ?", controlIDs)
@@ -868,9 +868,9 @@ func (db Database) ListControls(ctx context.Context, controlIDs []string, tags m
 	return s, nil
 }
 
-func (db Database) ListQueries(ctx context.Context) ([]Query, error) {
-	var s []Query
-	tx := db.Orm.WithContext(ctx).Model(&Query{}).Preload(clause.Associations).
+func (db Database) ListPolicies(ctx context.Context) ([]Policy, error) {
+	var s []Policy
+	tx := db.Orm.WithContext(ctx).Model(&Policy{}).Preload(clause.Associations).
 		Find(&s)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -938,13 +938,13 @@ func (db Database) ListControlsUniqueParentBenchmarks(ctx context.Context) ([]st
 	return parentBenchmarks, nil
 }
 
-func (db Database) ListQueriesUniquePrimaryTables(ctx context.Context) ([]string, error) {
+func (db Database) ListPoliciesUniquePrimaryResources(ctx context.Context) ([]string, error) {
 	var primaryTables []string
 
 	tx := db.Orm.WithContext(ctx).
-		Model(&Query{}).
-		Select("DISTINCT primary_table").
-		Where("primary_table is not NULL").
+		Model(&Policy{}).
+		Select("DISTINCT primary_resource").
+		Where("primary_resource is not NULL").
 		Scan(&primaryTables)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -953,12 +953,12 @@ func (db Database) ListQueriesUniquePrimaryTables(ctx context.Context) ([]string
 	return primaryTables, nil
 }
 
-func (db Database) ListQueriesUniqueTables(ctx context.Context) ([]string, error) {
+func (db Database) ListPolicyUniqueResources(ctx context.Context) ([]string, error) {
 	var tables []string
 
 	tx := db.Orm.WithContext(ctx).
-		Model(&Query{}).
-		Select("DISTINCT UNNEST(list_of_tables)").
+		Model(&Policy{}).
+		Select("DISTINCT UNNEST(list_of_resources)").
 		Scan(&tables)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -967,12 +967,12 @@ func (db Database) ListQueriesUniqueTables(ctx context.Context) ([]string, error
 	return tables, nil
 }
 
-func (db Database) GetQueryParameters(ctx context.Context) ([]string, error) {
+func (db Database) GetPolicyParameters(ctx context.Context) ([]string, error) {
 	var parameters []string
 
 	tx := db.Orm.WithContext(ctx).
 		Select("DISTINCT key").
-		Model(&QueryParameter{}).
+		Model(&PolicyParameter{}).
 		Scan(&parameters)
 	if tx.Error != nil {
 		return nil, tx.Error

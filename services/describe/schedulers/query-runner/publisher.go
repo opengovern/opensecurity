@@ -18,7 +18,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 	ctx2 := &httpclient.Context{UserRole: api.AdminRole}
 	ctx2.Ctx = ctx
 
-	s.logger.Info("Query Runner publisher started")
+	s.logger.Info("Policy Runner publisher started")
 
 	err := s.db.UpdateTimedOutQueuedQueryRunners()
 	if err != nil {
@@ -32,14 +32,14 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 
 	jobs, err := s.db.FetchCreatedQueryRunnerJobs()
 	if err != nil {
-		s.logger.Error("Fetch Created Query Runner Jobs Error", zap.Error(err))
+		s.logger.Error("Fetch Created Policy Runner Jobs Error", zap.Error(err))
 		return err
 	}
-	s.logger.Info("Fetch Created Query Runner Jobs", zap.Any("Jobs Count", len(jobs)))
+	s.logger.Info("Fetch Created Policy Runner Jobs", zap.Any("Jobs Count", len(jobs)))
 	for _, job := range jobs {
 		namedQuery, err := s.coreClient.GetQuery(ctx2, job.QueryId)
 		if err != nil {
-			s.logger.Error("Get Query Error", zap.Error(err))
+			s.logger.Error("Get Policy Error", zap.Error(err))
 		}
 		controlQuery, err := s.complianceClient.GetControlDetails(ctx2, job.QueryId)
 		if err != nil {
@@ -51,8 +51,8 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 			query = namedQuery.Query.QueryToExecute
 			parameters = namedQuery.Query.Parameters
 		} else if controlQuery != nil {
-			query = controlQuery.Query.QueryToExecute
-			for _, qp := range controlQuery.Query.Parameters {
+			query = controlQuery.Policy.Definition
+			for _, qp := range controlQuery.Policy.Parameters {
 				parameters = append(parameters, coreApi.QueryParameter{
 					Key:      qp.Key,
 					Required: qp.Required,
@@ -62,7 +62,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 			_ = s.db.UpdateQueryRunnerJobStatus(job.ID, queryrunner.QueryRunnerFailed, "query ID not found")
 			continue
 		}
-		s.logger.Info("Query Runner publisher", zap.String("query", query))
+		s.logger.Info("Policy Runner publisher", zap.String("query", query))
 
 		queryParams, err := s.coreClient.ListQueryParameters(&httpclient.Context{UserRole: api.AdminRole})
 		if err != nil {
@@ -95,7 +95,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 		jobJson, err := json.Marshal(runnerJobMsg)
 		if err != nil {
 			_ = s.db.UpdateQueryRunnerJobStatus(job.ID, queryrunner.QueryRunnerFailed, "failed to marshal job")
-			s.logger.Error("failed to marshal Query Runner Job", zap.Error(err), zap.Uint("runnerId", job.ID))
+			s.logger.Error("failed to marshal Policy Runner Job", zap.Error(err), zap.Uint("runnerId", job.ID))
 			continue
 		}
 

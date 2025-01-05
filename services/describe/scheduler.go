@@ -293,13 +293,13 @@ func InitializeScheduler(
 }
 
 func (s *Scheduler) SetupNats(ctx context.Context) error {
-	if err := s.jq.Stream(ctx, queryrunner.StreamName, "Query Runner job queues", []string{queryrunner.JobQueueTopic, queryrunner.JobResultQueueTopic}, 1000); err != nil {
-		s.logger.Error("Failed to stream to Query Runner queue", zap.Error(err))
+	if err := s.jq.Stream(ctx, queryrunner.StreamName, "Policy Runner job queues", []string{queryrunner.JobQueueTopic, queryrunner.JobResultQueueTopic}, 1000); err != nil {
+		s.logger.Error("Failed to stream to Policy Runner queue", zap.Error(err))
 		return err
 	}
 
-	if err := s.jq.Stream(ctx, queryvalidator.StreamName, "Query Validator job queues", []string{queryvalidator.JobQueueTopic, queryvalidator.JobResultQueueTopic}, 1000); err != nil {
-		s.logger.Error("Failed to stream to Query Validator queue", zap.Error(err))
+	if err := s.jq.Stream(ctx, queryvalidator.StreamName, "Policy Validator job queues", []string{queryvalidator.JobQueueTopic, queryvalidator.JobResultQueueTopic}, 1000); err != nil {
+		s.logger.Error("Failed to stream to Policy Validator queue", zap.Error(err))
 		return err
 	}
 
@@ -431,7 +431,7 @@ func (s *Scheduler) Run(ctx context.Context) error {
 
 	// Inventory summarizer
 
-	// Query Runner
+	// Policy Runner
 	s.queryRunnerScheduler = queryrunnerscheduler.New(
 		func(ctx context.Context) error {
 			return s.SetupNats(ctx)
@@ -461,7 +461,7 @@ func (s *Scheduler) Run(ctx context.Context) error {
 	s.auditScheduler.Run(ctx)
 
 	if s.conf.QueryValidatorEnabled == "true" {
-		// Query Validator
+		// Policy Validator
 		s.queryValidatorScheduler = queryrvalidatorscheduler.New(
 			func(ctx context.Context) error {
 				return s.SetupNats(ctx)

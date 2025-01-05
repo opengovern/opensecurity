@@ -22,14 +22,14 @@ type FrameworkMetadata struct {
 }
 
 type Framework struct {
-	ID           string             `json:"id" yaml:"id"`
-	Title        string             `json:"title" yaml:"title"`
-	Description  string             `json:"description" yaml:"description"`
-	SectionCode  string             `json:"section-code" yaml:"section-code"`
-	Metadata     *FrameworkMetadata `json:"metadata" yaml:"metadata"`
-	Tags         map[string][]string  `json:"tags" yaml:"tags"`
-	ControlGroup []Framework        `json:"control-group" yaml:"control-group"`
-	Controls     []string           `json:"controls" yaml:"controls"`
+	ID           string              `json:"id" yaml:"id"`
+	Title        string              `json:"title" yaml:"title"`
+	Description  string              `json:"description" yaml:"description"`
+	SectionCode  string              `json:"section-code" yaml:"section-code"`
+	Metadata     *FrameworkMetadata  `json:"metadata" yaml:"metadata"`
+	Tags         map[string][]string `json:"tags" yaml:"tags"`
+	ControlGroup []Framework         `json:"control-group" yaml:"control-group"`
+	Controls     []string            `json:"controls" yaml:"controls"`
 }
 
 type Benchmark struct {
@@ -46,22 +46,21 @@ type Benchmark struct {
 }
 
 type Control struct {
-	ID                 string              `json:"ID" yaml:"ID"`
-	Title              string              `json:"Title" yaml:"Title"`
-	IntegrationType    []string            `json:"IntegrationType" yaml:"IntegrationType"`
-	Description        string              `json:"Description" yaml:"Description"`
-	Query              *shared.Query       `json:"Query" yaml:"Query"`
-	ManualVerification bool                `json:"ManualVerification" yaml:"ManualVerification"`
-	Severity           string              `json:"Severity" yaml:"Severity"`
-	Tags               map[string][]string `json:"Tags" yaml:"Tags"`
-	Managed            bool                `json:"Managed" yaml:"Managed"`
+	ID              string                    `json:"id" yaml:"id"`
+	Title           string                    `json:"title" yaml:"title"`
+	Description     string                    `json:"description" yaml:"description"`
+	IntegrationType []string                  `json:"integration_type" yaml:"integration_type"`
+	Parameters      []shared.ControlParameter `json:"parameters" yaml:"parameters"`
+	Policy          *shared.Policy            `json:"policy" yaml:"policy"`
+	Severity        string                    `json:"severity" yaml:"severity"`
+	Tags            map[string][]string       `json:"tags" yaml:"tags"`
 }
 
 type QueryView struct {
 	ID          string        `json:"id" yaml:"ID"`
 	Title       string        `json:"title" yaml:"Title"`
 	Description string        `json:"description" yaml:"Description"`
-	Query       *shared.Query `json:"query" yaml:"Query"`
+	Query       *shared.Query `json:"query" yaml:"Policy"`
 
 	Dependencies []string `json:"dependencies" yaml:"Dependencies"`
 }

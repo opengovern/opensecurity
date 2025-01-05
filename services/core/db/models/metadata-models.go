@@ -29,11 +29,11 @@ type PlatformConfiguration struct {
 	Configured bool      `json:"configured"`
 }
 
-type QueryParameterValues struct {
-	Key   string `gorm:"primaryKey"`
-	Value string `gorm:"type:text;not null"`
+type PolicyParameterValues struct {
+	Key       string `gorm:"primaryKey"`
+	ControlID string `gorm:"primaryKey"`
+	Value     string `gorm:"type:text;not null"`
 }
-
 
 
 type QueryViewTag struct {

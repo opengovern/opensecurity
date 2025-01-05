@@ -6,27 +6,28 @@ import "github.com/opengovern/opencomply/services/core/api"
 
 
 
-func (qp QueryParameterValues) GetKey() string {
+func (qp PolicyParameterValues) GetKey() string {
 	return qp.Key
 }
 
-func (qp QueryParameterValues) GetValue() string {
+func (qp PolicyParameterValues) GetValue() string {
 	return qp.Value
 }
 
-func (qp QueryParameterValues) ToAPI() api.QueryParameter {
+func (qp PolicyParameterValues) ToAPI() api.QueryParameter {
 	return api.QueryParameter{
 		Key:   qp.Key,
 		Value: qp.Value,
 	}
 }
 
-func QueryParameterFromAPI(apiQP api.QueryParameter) QueryParameterValues {
-	var qp QueryParameterValues
+func QueryParameterFromAPI(apiQP api.QueryParameter) PolicyParameterValues {
+	var qp PolicyParameterValues
 	qp.Key = apiQP.Key
 	qp.Value = apiQP.Value
 	return qp
 }
+
 
 
 

@@ -26,7 +26,7 @@ type Control struct {
 	IntegrationType    []string                       `json:"integration_type" example:"Azure"`
 	Enabled            bool                           `json:"enabled" example:"true"`
 	DocumentURI        string                         `json:"documentURI" example:"benchmarks/azure_cis_v140_1_1.md"`
-	Query              *Query                         `json:"query"`
+	Policy             *Policy                        `json:"policy"`
 	Severity           types.ComplianceResultSeverity `json:"severity" example:"low"`
 	ManualVerification bool                           `json:"manualVerification" example:"true"`
 	Managed            bool                           `json:"managed" example:"true"`
@@ -50,7 +50,7 @@ type ControlSummary struct {
 }
 
 type ControlTrendDatapoint struct {
-	Timestamp              int `json:"timestamp" example:"1686346668"` // Time
+	Timestamp              int `json:"timestamp"` // Time
 	FailedResourcesCount   int `json:"failedResourcesCount"`
 	TotalResourcesCount    int `json:"totalResourcesCount"`
 	FailedIntegrationCount int `json:"failedIntegrationCount"`
@@ -63,8 +63,8 @@ type ControlsFilterSummaryRequest struct {
 	RootBenchmark           []string                 `json:"root_benchmark"`
 	ParentBenchmark         []string                 `json:"parent_benchmark"`
 	HasParameters           *bool                    `json:"has_parameters"`
-	PrimaryTable            []string                 `json:"primary_table"`
-	ListOfTables            []string                 `json:"list_of_tables"`
+	PrimaryResource         []string                 `json:"primary_resource"`
+	ListOfResources         []string                 `json:"list_of_resources"`
 	Tags                    map[string][]string      `json:"tags"`
 	TagsRegex               *string                  `json:"tags_regex"`
 	ComplianceResultFilters *ComplianceResultFilters `json:"compliance_result_filters"`
@@ -76,8 +76,8 @@ type ListControlsFilterRequest struct {
 	RootBenchmark           []string                 `json:"root_benchmark"`
 	ParentBenchmark         []string                 `json:"parent_benchmark"`
 	HasParameters           *bool                    `json:"has_parameters"`
-	PrimaryTable            []string                 `json:"primary_table"`
-	ListOfTables            []string                 `json:"list_of_tables"`
+	PrimaryResource         []string                 `json:"primary_resource"`
+	ListOfResources         []string                 `json:"list_of_resources"`
 	Tags                    map[string][]string      `json:"tags"`
 	TagsRegex               *string                  `json:"tags_regex"`
 	ComplianceResultFilters *ComplianceResultFilters `json:"compliance_result_filters"`
@@ -100,11 +100,11 @@ type ListControlsFilterResultControl struct {
 	IntegrationType []integration.Type             `json:"integration_type"`
 	Severity        types.ComplianceResultSeverity `json:"severity"`
 	Tags            map[string][]string            `json:"tags"`
-	Query           struct {
-		PrimaryTable *string          `json:"primary_table"`
-		ListOfTables []string         `json:"list_of_tables"`
-		Parameters   []QueryParameter `json:"parameters"`
-	} `json:"query"`
+	Policy          struct {
+		PrimaryResource string           `json:"primary_resource"`
+		ListOfResources []string         `json:"list_of_resources"`
+		Parameters      []QueryParameter `json:"parameters"`
+	} `json:"policy"`
 	ComplianceResultsSummary struct {
 		IncidentCount         int64    `json:"incident_count"`
 		NonIncidentCount      int64    `json:"non_incident_count"`
@@ -120,8 +120,8 @@ type ControlsFilterSummaryResult struct {
 	IntegrationTypes []string            `json:"integration_types"`
 	Severity         []string            `json:"severity"`
 	Tags             map[string][]string `json:"tags"`
-	PrimaryTable     []string            `json:"primary_table"`
-	ListOfTables     []string            `json:"list_of_tables"`
+	PrimaryResource  []string            `json:"primary_resource"`
+	ListOfResources  []string            `json:"list_of_resources"`
 }
 
 type ControlTagsResult struct {
@@ -140,13 +140,13 @@ type GetControlDetailsResponse struct {
 	Description     string             `json:"description"`
 	IntegrationType []integration.Type `json:"integrationType"`
 	Severity        string             `json:"severity"`
-	Query           struct {
-		Engine         string           `json:"engine"`
-		QueryToExecute string           `json:"queryToExecute"`
-		PrimaryTable   *string          `json:"primaryTable"`
-		ListOfTables   []string         `json:"listOfTables"`
-		Parameters     []QueryParameter `json:"parameters"`
-	} `json:"query"`
+	Policy          struct {
+		Language        string           `json:"language"`
+		Definition      string           `json:"definition"`
+		PrimaryResource string           `json:"primaryResource"`
+		ListOfResources []string         `json:"listOfResources"`
+		Parameters      []QueryParameter `json:"parameters"`
+	} `json:"policy"`
 	Tags       map[string][]string `json:"tags"`
 	Benchmarks *struct {
 		Roots    []string `json:"roots"`
@@ -159,8 +159,8 @@ type ListControlsFiltersResponse struct {
 	Severity        []string            `json:"severity"`
 	RootBenchmark   []string            `json:"root_benchmark"`
 	ParentBenchmark []string            `json:"parent_benchmark"`
-	PrimaryTable    []string            `json:"primary_table"`
-	ListOfTables    []string            `json:"list_of_tables"`
+	PrimaryResource []string            `json:"primary_resource"`
+	ListOfResources []string            `json:"list_of_resources"`
 	Tags            []ControlTagsResult `json:"tags"`
 }
 

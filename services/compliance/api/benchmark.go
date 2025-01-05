@@ -178,8 +178,8 @@ type GetBenchmarkDetailsMetadata struct {
 	IntegrationTypes  []integration.Type  `json:"integration_types"`
 	NumberOfControls  int                 `json:"number_of_controls"`
 	SupportedControls []string            `json:"supported_controls"`
-	PrimaryTables     []string            `json:"primary_tables"`
-	ListOfTables      []string            `json:"list_of_tables"`
+	PrimaryResources  []string            `json:"primary_resources"`
+	ListOfResources   []string            `json:"list_of_resources"`
 	Tags              map[string][]string `json:"tags"`
 	CreatedAt         time.Time           `json:"created_at"`
 	UpdatedAt         time.Time           `json:"updated_at"`
@@ -206,13 +206,13 @@ type GetBenchmarkDetailsResponse struct {
 	Children          []GetBenchmarkDetailsChildren        `json:"children"`
 }
 
-type GetBenchmarkListRequest struct {
+type GetFrameworkListRequest struct {
 	TitleRegex              *string                         `json:"title_regex"`
 	ParentBenchmarkID       []string                        `json:"parent_benchmark_id"`
 	Tags                    map[string][]string             `json:"tags"`
 	TagsRegex               *string                         `json:"tags_regex"`
-	PrimaryTable            []string                        `json:"primary_table"`
-	ListOfTables            []string                        `json:"list_of_tables"`
+	PrimaryResource         []string                        `json:"primary_resource"`
+	ListOfResources         []string                        `json:"list_of_resources"`
 	Controls                []string                        `json:"controls"`
 	Integration             []IntegrationFilter             `json:"integration"`
 	IntegrationTypes        []string                        `json:"integration_types"`
@@ -367,8 +367,8 @@ type ListComplianceJobsHistoryResponse struct {
 
 type ListBenchmarksFiltersResponse struct {
 	ParentBenchmarkID []string              `json:"parent_benchmark_id"`
-	PrimaryTable      []string              `json:"primary_table"`
-	ListOfTables      []string              `json:"list_of_tables"`
+	PrimaryResource   []string              `json:"primary_resource"`
+	ListOfResources   []string              `json:"list_of_resources"`
 	Tags              []BenchmarkTagsResult `json:"tags"`
 }
 

@@ -31,7 +31,7 @@ func (db Database) Initialize() error {
 		&models.ResourceTypeV2{},
 		// metadata
 		&models.ConfigMetadata{},
-		&models.QueryParameterValues{},
+		&models.PolicyParameterValues{},
 		&models.QueryView{},
 		&models.QueryViewTag{},
 		&models.PlatformConfiguration{},

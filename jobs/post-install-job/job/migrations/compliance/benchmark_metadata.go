@@ -46,11 +46,11 @@ func (g *GitParser) getTablesUnderBenchmark(benchmark db.Benchmark, benchmarkCac
 	listOfTables := make(map[string]bool)
 
 	for _, c := range benchmark.Controls {
-		if query, ok := g.controlsQueries[c.ID]; ok {
-			if query.PrimaryTable != nil && *query.PrimaryTable != "" {
-				primaryTables[*query.PrimaryTable] = true
+		if query, ok := g.controlsPolicies[c.ID]; ok {
+			if query.PrimaryResource != "" {
+				primaryTables[query.PrimaryResource] = true
 			}
-			for _, t := range query.ListOfTables {
+			for _, t := range query.ListOfResources {
 				if t == "" {
 					continue
 				}

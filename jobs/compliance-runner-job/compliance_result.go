@@ -31,17 +31,17 @@ func GetResourceTypeFromTableName(tableName string, queryIntegrationType []integ
 	return integration.GetResourceTypeFromTableName(tableName), integrationType, nil
 }
 
-func (w *Job) ExtractComplianceResults(_ *zap.Logger, benchmarkCache map[string]api.Benchmark, caller Caller, res *steampipe.Result, query api.Query) ([]types.ComplianceResult, error) {
+func (w *Job) ExtractComplianceResults(_ *zap.Logger, benchmarkCache map[string]api.Benchmark, caller Caller, res *steampipe.Result, query api.Policy) ([]types.ComplianceResult, error) {
 	var complianceResults []types.ComplianceResult
 	var integrationType integration.Type
 	var err error
 	queryResourceType := ""
-	if query.PrimaryTable != nil || len(query.ListOfTables) == 1 {
+	if query.PrimaryResource != nil || len(query.ListOfResources) == 1 {
 		tableName := ""
-		if query.PrimaryTable != nil {
-			tableName = *query.PrimaryTable
+		if query.PrimaryResource != nil {
+			tableName = *query.PrimaryResource
 		} else {
-			tableName = query.ListOfTables[0]
+			tableName = query.ListOfResources[0]
 		}
 		if tableName != "" {
 			queryResourceType, integrationType, err = GetResourceTypeFromTableName(tableName, w.ExecutionPlan.Query.IntegrationType)

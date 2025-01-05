@@ -90,7 +90,7 @@ func MetadataQueryParamMigration(conf config.MigratorConfig, logger *zap.Logger,
 		return err
 	}
 
-	var queryParameters []models.QueryParameterValues
+	var queryParameters []models.PolicyParameterValues
 	err = json.Unmarshal(content, &queryParameters)
 	if err != nil {
 		return err

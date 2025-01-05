@@ -64,12 +64,12 @@ func (s *JobScheduler) buildRunners(
 			return nil, nil, err
 		}
 
-		if control.Query == nil {
+		if control.Policy == nil {
 			continue
 		}
-		if connector != nil && len(control.Query.IntegrationType) > 0 && !control.Query.Global {
+		if connector != nil && len(control.Policy.IntegrationType) > 0 {
 			supportsConnector := false
-			for _, c := range control.Query.IntegrationType {
+			for _, c := range control.Policy.IntegrationType {
 				if *connector == c {
 					supportsConnector = true
 					break
@@ -87,44 +87,24 @@ func (s *JobScheduler) buildRunners(
 			ControlID:          control.ID,
 			ControlSeverity:    control.Severity,
 		}
-		if control.Query.Global == true {
-			runnerJob := model.ComplianceRunner{
-				FrameworkID:          rootBenchmarkID,
-				QueryID:              control.Query.ID,
-				IntegrationID:        nil,
-				ResourceCollectionID: resourceCollectionID,
-				ParentJobID:          parentJobID,
-				StartedAt:            time.Time{},
-				RetryCount:           0,
-				Status:               runner.ComplianceRunnerCreated,
-				FailureMessage:       "",
-				TriggerType:          triggerType,
-			}
-			err = runnerJob.SetCallers([]runner.Caller{callers})
-			if err != nil {
-				return nil, nil, err
-			}
-			globalRunners = append(globalRunners, &runnerJob)
-		} else {
-			runnerJob := model.ComplianceRunner{
-				FrameworkID:          rootBenchmarkID,
-				QueryID:              control.Query.ID,
-				IntegrationID:        connectionID,
-				ResourceCollectionID: resourceCollectionID,
-				ParentJobID:          parentJobID,
-				StartedAt:            time.Time{},
-				RetryCount:           0,
-				Status:               runner.ComplianceRunnerCreated,
-				FailureMessage:       "",
-				TriggerType:          triggerType,
-			}
-			err = runnerJob.SetCallers([]runner.Caller{callers})
-			if err != nil {
-				return nil, nil, err
-			}
-			runners = append(runners, &runnerJob)
-		}
 
+		runnerJob := model.ComplianceRunner{
+			FrameworkID:          rootBenchmarkID,
+			QueryID:              control.Policy.ID,
+			IntegrationID:        connectionID,
+			ResourceCollectionID: resourceCollectionID,
+			ParentJobID:          parentJobID,
+			StartedAt:            time.Time{},
+			RetryCount:           0,
+			Status:               runner.ComplianceRunnerCreated,
+			FailureMessage:       "",
+			TriggerType:          triggerType,
+		}
+		err = runnerJob.SetCallers([]runner.Caller{callers})
+		if err != nil {
+			return nil, nil, err
+		}
+		runners = append(runners, &runnerJob)
 	}
 
 	uniqueMap := map[string]*model.ComplianceRunner{}

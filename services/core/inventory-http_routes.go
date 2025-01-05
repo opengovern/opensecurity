@@ -402,7 +402,7 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	if req.Query == nil || *req.Query == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Query is required")
+		return echo.NewHTTPError(http.StatusBadRequest, "Policy is required")
 	}
 	// tracer :
 	outputS, span := tracer.Start(ctx.Request().Context(), "new_RunQuery", trace.WithSpanKind(trace.SpanKindServer))
@@ -1061,11 +1061,11 @@ func (h *HttpHandler) RunQueryByID(ctx echo.Context) error {
 			h.logger.Error("failed to get compliance", zap.Error(err))
 			return echo.NewHTTPError(http.StatusBadRequest, "Could not find named query")
 		}
-		if control.Query == nil {
+		if control.Policy == nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Compliance query is empty")
 		}
-		query = control.Query.QueryToExecute
-		engineStr = string(control.Query.Engine)
+		query = control.Policy.Definition
+		engineStr = string(control.Policy.Language)
 	} else {
 		return echo.NewHTTPError(http.StatusBadRequest, "Runnable Type is not valid. Options: named_query, control")
 	}
@@ -1147,9 +1147,9 @@ func (h *HttpHandler) RunQueryByID(ctx echo.Context) error {
 		job, err := h.schedulerClient.RunQuery(&httpclient.Context{UserRole: api2.AdminRole}, req.ID)
 		if err != nil {
 			h.logger.Error("failed to run async query run", zap.Error(err))
-			return echo.NewHTTPError(http.StatusRequestTimeout, "Query execution timed out and failed to create async query run")
+			return echo.NewHTTPError(http.StatusRequestTimeout, "Policy execution timed out and failed to create async query run")
 		}
-		msg := fmt.Sprintf("Query execution timed out, created an async query run instead: jobid = %v", job.ID)
+		msg := fmt.Sprintf("Policy execution timed out, created an async query run instead: jobid = %v", job.ID)
 		return echo.NewHTTPError(http.StatusRequestTimeout, msg)
 	default:
 		return ctx.JSON(200, resp)

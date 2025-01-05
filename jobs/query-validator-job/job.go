@@ -31,8 +31,8 @@ type Job struct {
 	Parameters      []api.QueryParameter `json:"parameters"`
 	Query           string               `json:"query"`
 	IntegrationType []integration.Type   `json:"integration_type"`
-	PrimaryTable    *string              `json:"primary_table"`
-	ListOfTables    []string             `json:"list_of_tables"`
+	PrimaryResource *string              `json:"primary_resource"`
+	ListOfResources []string             `json:"list_of_resources"`
 }
 
 func (w *Worker) RunJob(ctx context.Context, job Job) error {
@@ -46,12 +46,12 @@ func (w *Worker) RunJob(ctx context.Context, job Job) error {
 	if job.QueryType == QueryTypeComplianceControl {
 		w.logger.Info("QueryTypeComplianceControl")
 		queryResourceType := ""
-		if job.PrimaryTable != nil || len(job.ListOfTables) == 1 {
+		if job.PrimaryResource != nil || len(job.ListOfResources) == 1 {
 			tableName := ""
-			if job.PrimaryTable != nil {
-				tableName = *job.PrimaryTable
+			if job.PrimaryResource != nil {
+				tableName = *job.PrimaryResource
 			} else {
-				tableName = job.ListOfTables[0]
+				tableName = job.ListOfResources[0]
 			}
 			if tableName != "" {
 				queryResourceType, _, err = GetResourceTypeFromTableName(tableName, job.IntegrationType)

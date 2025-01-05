@@ -209,10 +209,10 @@ func (s *Scheduler) getFrameworkDependencies(frameworkID string) ([]string, erro
 		for _, i := range control.IntegrationType {
 			integrationTypesMap[i] = true
 		}
-		for _, i := range control.Query.IntegrationType {
+		for _, i := range control.Policy.IntegrationType {
 			integrationTypesMap[i.String()] = true
 		}
-		for _, table := range control.Query.ListOfTables {
+		for _, table := range control.Policy.ListOfResources {
 			tables[table] = true
 		}
 	}
