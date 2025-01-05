@@ -30,13 +30,14 @@ import {
     Link,
     Pagination,
     PropertyFilter,
+    SegmentedControl,
 } from '@cloudscape-design/components'
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 let sortKey: any[] = []
 
 interface IImpactedResources {
     controlId: string
-    conformanceFilter?: GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+    // conformanceFilter?: GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
     linkPrefix?: string
     isCostOptimization?: boolean
 }
@@ -45,7 +46,7 @@ interface IImpactedResources {
 
 export default function ImpactedResources({
     controlId,
-    conformanceFilter,
+    // conformanceFilter,
     linkPrefix,
     isCostOptimization,
 }: IImpactedResources) {
@@ -63,7 +64,26 @@ export default function ImpactedResources({
  const [page, setPage] = useState(1)
  const [totalCount, setTotalCount] = useState(0)
  const [totalPage, setTotalPage] = useState(0)
-
+ const [conformanceFilter, setConformanceFilter] = useState<
+     GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[] | undefined
+ >(undefined)
+ const conformanceFilterIdx = () => {
+     if (
+         conformanceFilter?.length === 1 &&
+         conformanceFilter[0] ===
+             GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed
+     ) {
+         return '1'
+     }
+     if (
+         conformanceFilter?.length === 1 &&
+         conformanceFilter[0] ===
+             GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
+     ) {
+         return '2'
+     }
+     return '0'
+ }
     // const ssr = () => {
     //     return {
     //         getRows: (params: IServerSideGetRowsParams) => {
@@ -228,7 +248,7 @@ export default function ImpactedResources({
                             finding ? (
                                 <>
                                     <Flex justifyContent="start">
-                                       {finding?.integrationName}
+                                        {finding?.integrationName}
                                         <Title className="text-lg font-semibold ml-2 my-1">
                                             {finding?.resourceName}
                                         </Title>
@@ -502,31 +522,31 @@ export default function ImpactedResources({
                             </Box>
                         }
                         filter={
-                            ''
-                            // <PropertyFilter
-                            //     // @ts-ignore
-                            //     query={undefined}
-                            //     // @ts-ignore
-                            //     onChange={({ detail }) => {
-                            //         // @ts-ignore
-                            //         setQueries(detail)
-                            //     }}
-                            //     // countText="5 matches"
-                            //     enableTokenGroups
-                            //     expandToViewport
-                            //     filteringAriaLabel="Control Categories"
-                            //     // @ts-ignore
-                            //     // filteringOptions={filters}
-                            //     filteringPlaceholder="Control Categories"
-                            //     // @ts-ignore
-                            //     filteringOptions={undefined}
-                            //     // @ts-ignore
-
-                            //     filteringProperties={undefined}
-                            //     // filteringProperties={
-                            //     //     filterOption
-                            //     // }
-                            // />
+                            <SegmentedControl
+                                selectedId={conformanceFilterIdx()}
+                                onChange={({ detail }) => {
+                                    switch (detail.selectedId) {
+                                        case '1':
+                                            setConformanceFilter([
+                                                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+                                            ])
+                                            break
+                                        case '2':
+                                            setConformanceFilter([
+                                                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
+                                            ])
+                                            break
+                                        default:
+                                            setConformanceFilter(undefined)
+                                    }
+                                }}
+                                label="Default segmented control"
+                                options={[
+                                    { text: 'All', id: '0' },
+                                    { text: 'Failed', id: '1' },
+                                    { text: 'Passed', id: '2' },
+                                ]}
+                            />
                         }
                         header={
                             <Header className="w-full">
