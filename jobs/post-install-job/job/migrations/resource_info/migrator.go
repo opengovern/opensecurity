@@ -11,7 +11,7 @@ import (
 	"github.com/opengovern/opencomply/jobs/post-install-job/config"
 	"github.com/opengovern/opencomply/jobs/post-install-job/db"
 	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
-	"github.com/opengovern/opencomply/services/inventory"
+	"github.com/opengovern/opencomply/services/core/db/models"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -50,7 +50,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		Port:    conf.PostgreSQL.Port,
 		User:    conf.PostgreSQL.Username,
 		Passwd:  conf.PostgreSQL.Password,
-		DB:      "inventory",
+		DB:      "core",
 		SSLMode: conf.PostgreSQL.SSLMode,
 	}, logger)
 	if err != nil {
@@ -77,7 +77,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 
 	err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(&inventory.ResourceTypeV2{}).Where("1 = 1").Unscoped().Delete(&inventory.ResourceTypeV2{}).Error
+		err := tx.Model(&models.ResourceTypeV2{}).Where("1 = 1").Unscoped().Delete(&models.ResourceTypeV2{}).Error
 		if err != nil {
 			logger.Error("failed to delete aws resource types", zap.Error(err))
 			return err
@@ -86,7 +86,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		for _, record := range records {
 			err = tx.Clauses(clause.OnConflict{
 				DoNothing: true,
-			}).Create(&inventory.ResourceTypeV2{
+			}).Create(&models.ResourceTypeV2{
 				IntegrationType: integration_type.IntegrationTypeAWSAccount,
 				ResourceName:    record[0],
 				ResourceID:      record[1],

@@ -18,8 +18,7 @@ import (
 	"github.com/opengovern/opencomply/jobs/post-install-job/config"
 	"github.com/opengovern/opencomply/jobs/post-install-job/db"
 	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
-	"github.com/opengovern/opencomply/services/inventory"
-	"github.com/opengovern/opencomply/services/metadata/models"
+	"github.com/opengovern/opencomply/services/core/db/models"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -59,7 +58,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		Port:    conf.PostgreSQL.Port,
 		User:    conf.PostgreSQL.Username,
 		Passwd:  conf.PostgreSQL.Password,
-		DB:      "inventory",
+		DB:      "core",
 		SSLMode: conf.PostgreSQL.SSLMode,
 	}, logger)
 	if err != nil {
@@ -67,18 +66,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 	dbm := db.Database{ORM: orm}
 
-	ormMetadata, err := postgres.NewClient(&postgres.Config{
-		Host:    conf.PostgreSQL.Host,
-		Port:    conf.PostgreSQL.Port,
-		User:    conf.PostgreSQL.Username,
-		Passwd:  conf.PostgreSQL.Password,
-		DB:      "metadata",
-		SSLMode: conf.PostgreSQL.SSLMode,
-	}, logger)
-	if err != nil {
-		return fmt.Errorf("new postgres client: %w", err)
-	}
-	dbMetadata := db.Database{ORM: ormMetadata}
+
 
 	awsResourceTypesContent, err := os.ReadFile(path.Join(m.AttachmentFolderPath(), "aws-resource-types.json"))
 	if err != nil {
@@ -98,7 +86,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 
 	err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(&inventory.ResourceType{}).Where("integration_type = ?", integration_type.IntegrationTypeAWSAccount).Unscoped().Delete(&inventory.ResourceType{}).Error
+		err := tx.Model(&models.ResourceType{}).Where("integration_type = ?", integration_type.IntegrationTypeAWSAccount).Unscoped().Delete(&models.ResourceType{}).Error
 		if err != nil {
 			logger.Error("failed to delete aws resource types", zap.Error(err))
 			return err
@@ -107,7 +95,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		for _, resourceType := range awsResourceTypes {
 			err = tx.Clauses(clause.OnConflict{
 				DoNothing: true,
-			}).Create(&inventory.ResourceType{
+			}).Create(&models.ResourceType{
 				IntegrationType: integration_type.IntegrationTypeAWSAccount,
 				ResourceType:    resourceType.ResourceName,
 				ResourceLabel:   resourceType.ResourceLabel,
@@ -121,7 +109,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 
 			err = tx.Clauses(clause.OnConflict{
 				DoNothing: true,
-			}).Create(&inventory.ResourceTypeTag{
+			}).Create(&models.ResourceTypeTag{
 				Tag: model.Tag{
 					Key:   "category",
 					Value: resourceType.Category,
@@ -140,7 +128,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 
 	err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(&inventory.ResourceType{}).Where("integration_type = ?", integration_type.IntegrationTypeAzureSubscription).Unscoped().Delete(&inventory.ResourceType{}).Error
+		err := tx.Model(&models.ResourceType{}).Where("integration_type = ?", integration_type.IntegrationTypeAzureSubscription).Unscoped().Delete(&models.ResourceType{}).Error
 		if err != nil {
 			logger.Error("failed to delete azure resource types", zap.Error(err))
 			return err
@@ -148,7 +136,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		for _, resourceType := range azureResourceTypes {
 			err = tx.Clauses(clause.OnConflict{
 				DoNothing: true,
-			}).Create(&inventory.ResourceType{
+			}).Create(&models.ResourceType{
 				IntegrationType: integration_type.IntegrationTypeAzureSubscription,
 				ResourceType:    resourceType.ResourceName,
 				ResourceLabel:   resourceType.ResourceLabel,
@@ -162,7 +150,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 
 			err = tx.Clauses(clause.OnConflict{
 				DoNothing: true,
-			}).Create(&inventory.ResourceTypeTag{
+			}).Create(&models.ResourceTypeTag{
 				Tag: model.Tag{
 					Key:   "category",
 					Value: resourceType.Category,
@@ -185,7 +173,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		return err
 	}
 
-	err = dbMetadata.ORM.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err = dbm.ORM.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, obj := range QueryParameters {
 			err := tx.Clauses(clause.OnConflict{
 				DoNothing: true,
@@ -207,10 +195,10 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 func populateQueries(logger *zap.Logger, db db.Database) error {
 	err := db.ORM.Transaction(func(tx *gorm.DB) error {
 
-		tx.Model(&inventory.NamedQuery{}).Where("1=1").Unscoped().Delete(&inventory.NamedQuery{})
-		tx.Model(&inventory.NamedQueryTag{}).Where("1=1").Unscoped().Delete(&inventory.NamedQueryTag{})
-		tx.Model(&inventory.QueryParameter{}).Where("1=1").Unscoped().Delete(&inventory.QueryParameter{})
-		tx.Model(&inventory.Query{}).Where("1=1").Unscoped().Delete(&inventory.Query{})
+		tx.Model(&models.NamedQuery{}).Where("1=1").Unscoped().Delete(&models.NamedQuery{})
+		tx.Model(&models.NamedQueryTag{}).Where("1=1").Unscoped().Delete(&models.NamedQueryTag{})
+		tx.Model(&models.QueryParameter{}).Where("1=1").Unscoped().Delete(&models.QueryParameter{})
+		tx.Model(&models.Query{}).Where("1=1").Unscoped().Delete(&models.Query{})
 
 		err := filepath.Walk(config.QueriesGitPath, func(path string, info fs.FileInfo, err error) error {
 			if !info.IsDir() && strings.HasSuffix(path, ".yaml") {
@@ -255,12 +243,12 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 	}
 
 	isBookmarked := false
-	tags := make([]inventory.NamedQueryTag, 0, len(item.Tags))
+	tags := make([]models.NamedQueryTag, 0, len(item.Tags))
 	for k, v := range item.Tags {
 		if k == "platform_queries_bookmark" {
 			isBookmarked = true
 		}
-		tag := inventory.NamedQueryTag{
+		tag := models.NamedQueryTag{
 			NamedQueryID: id,
 			Tag: model.Tag{
 				Key:   k,
@@ -270,7 +258,7 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		tags = append(tags, tag)
 	}
 
-	dbMetric := inventory.NamedQuery{
+	dbMetric := models.NamedQuery{
 		ID:               id,
 		IntegrationTypes: integrationTypes,
 		Title:            item.Title,
@@ -278,9 +266,9 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		IsBookmarked:     isBookmarked,
 		QueryID:          &id,
 	}
-	queryParams := []inventory.QueryParameter{}
+	queryParams := []models.QueryParameter{}
 	for _, qp := range item.Policy.Parameters {
-		queryParams = append(queryParams, inventory.QueryParameter{
+		queryParams = append(queryParams, models.QueryParameter{
 			Key:      qp.Key,
 			Required: qp.Required,
 			QueryID:  dbMetric.ID,
@@ -298,7 +286,7 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		logger.Error("failed to extract table refs from query", zap.String("query-id", dbMetric.ID), zap.Error(err))
 		listOfTables = item.Policy.ListOfTables
 	}
-	query := inventory.Query{
+	query := models.Query{
 		ID:             dbMetric.ID,
 		QueryToExecute: item.Policy.QueryToExecute,
 		PrimaryTable:   item.Policy.PrimaryTable,
@@ -325,7 +313,7 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		}
 	}
 
-	err = tx.Model(&inventory.NamedQuery{}).Clauses(clause.OnConflict{
+	err = tx.Model(&models.NamedQuery{}).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}}, // key column
 		DoNothing: true,                          // column needed to be updated
 	}).Create(dbMetric).Error
@@ -338,7 +326,7 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 
 	if len(tags) > 0 {
 		for _, tag := range tags {
-			err = tx.Model(&inventory.NamedQueryTag{}).Create(&tag).Error
+			err = tx.Model(&models.NamedQueryTag{}).Create(&tag).Error
 			if err != nil {
 				logger.Error("failure in insert tags", zap.Error(err))
 				return err

@@ -177,14 +177,14 @@ func ImportSQLFiles(config types.DemoImporterConfig, path string) error {
 	if err != nil {
 		return fmt.Errorf("error executing psql command: %s", string(out))
 	}
-	cmd = exec.Command("psql", "-h", config.PostgreSQL.Host, "-p", config.PostgreSQL.Port, "-U", config.PostgreSQL.Username, "-d", "metadata", "-f", path+"/metadata.sql")
+	cmd = exec.Command("psql", "-h", config.PostgreSQL.Host, "-p", config.PostgreSQL.Port, "-U", config.PostgreSQL.Username, "-d", "core", "-f", path+"/core.sql")
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, fmt.Sprintf("PGPASSWORD=%s", config.PostgreSQL.Password))
 	out, err = cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("error executing psql command: %s", string(out))
 	}
-	cmd = exec.Command("psql", "-h", config.PostgreSQL.Host, "-p", config.PostgreSQL.Port, "-U", config.PostgreSQL.Username, "-d", "metadata", "-f", path+"/metadata.sql")
+	cmd = exec.Command("psql", "-h", config.PostgreSQL.Host, "-p", config.PostgreSQL.Port, "-U", config.PostgreSQL.Username, "-d", "core", "-f", path+"/core.sql")
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, fmt.Sprintf("PGPASSWORD=%s", config.PostgreSQL.Password))
 	out, err = cmd.CombinedOutput()

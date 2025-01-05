@@ -8,7 +8,7 @@ import (
 	"github.com/opengovern/og-util/pkg/jq"
 	"github.com/opengovern/opencomply/jobs/checkup-job/config"
 	authClient "github.com/opengovern/opencomply/services/auth/client"
-	metadataClient "github.com/opengovern/opencomply/services/metadata/client"
+	coreClient "github.com/opengovern/opencomply/services/core/client"
 
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/opengovern/opencomply/services/integration/client"
@@ -22,7 +22,7 @@ type Worker struct {
 	config            config.WorkerConfig
 	integrationClient client.IntegrationServiceClient
 	authClient        authClient.AuthServiceClient
-	metadataClient    metadataClient.MetadataServiceClient
+	coreClient    coreClient.CoreServiceClient
 }
 
 func NewWorker(
@@ -31,7 +31,7 @@ func NewWorker(
 	logger *zap.Logger,
 	integrationBaseURL string,
 	authBaseURL string,
-	metadataBaseURL string,
+	coreBaseURL string,
 	config config.WorkerConfig,
 	ctx context.Context,
 ) (w *Worker, err error) {
@@ -61,7 +61,7 @@ func NewWorker(
 
 	w.integrationClient = client.NewIntegrationServiceClient(integrationBaseURL)
 	w.authClient = authClient.NewAuthClient(authBaseURL)
-	w.metadataClient = metadataClient.NewMetadataServiceClient(metadataBaseURL)
+	w.coreClient = coreClient.NewCoreServiceClient(coreBaseURL)
 	w.config = config
 	return w, nil
 }
@@ -89,7 +89,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 			w.logger.Info("Processing job", zap.Int("jobID", int(job.JobID)))
 
-			result := job.Do(w.integrationClient, w.authClient, w.metadataClient, w.logger, w.config)
+			result := job.Do(w.integrationClient, w.authClient, w.coreClient, w.logger, w.config)
 
 			bytes, err := json.Marshal(result)
 			if err != nil {

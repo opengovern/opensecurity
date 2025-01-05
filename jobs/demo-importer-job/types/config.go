@@ -7,7 +7,7 @@ type DemoImporterConfig struct {
 
 	PostgreSQL            config.Postgres
 	ElasticSearch         config.ElasticSearch
-	Metadata              config.OpenGovernanceService
+	Core              config.OpenGovernanceService
 	DemoDataS3URL         string `yaml:"demo_data_s3_url"`
 	DemoDataGitURL        string `yaml:"demo_data_git_url"`
 	GithubToken           string `yaml:"github_token"`

@@ -35,8 +35,8 @@ import (
 	schedulerapi "github.com/opengovern/opencomply/services/describe/api"
 	integrationapi "github.com/opengovern/opencomply/services/integration/api/models"
 	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
-	inventoryApi "github.com/opengovern/opencomply/services/inventory/api"
-	"github.com/opengovern/opencomply/services/metadata/models"
+	coreApi "github.com/opengovern/opencomply/services/core/api"
+	"github.com/opengovern/opencomply/services/core/db/models"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -290,13 +290,13 @@ func (h *HttpHandler) GetComplianceResults(echoCtx echo.Context) error {
 		benchmarksMap[benchmark.ID] = &benchmark
 	}
 
-	resourceTypeMetadata, err := h.inventoryClient.ListResourceTypesMetadata(&httpclient.Context{UserRole: authApi.AdminRole},
+	resourceTypeMetadata, err := h.coreClient.ListResourceTypesMetadata(&httpclient.Context{UserRole: authApi.AdminRole},
 		nil, nil, nil, false, nil, 10000, 1)
 	if err != nil {
 		h.logger.Error("failed to get resource type metadata", zap.Error(err))
 		return err
 	}
-	resourceTypeMetadataMap := make(map[string]*inventoryApi.ResourceType)
+	resourceTypeMetadataMap := make(map[string]*coreApi.ResourceType)
 	for _, item := range resourceTypeMetadata.ResourceTypes {
 		item := item
 		resourceTypeMetadataMap[strings.ToLower(item.ResourceType)] = &item
@@ -491,13 +491,13 @@ func (h *HttpHandler) GetSingleResourceFinding(echoCtx echo.Context) error {
 		benchmarksMap[benchmark.ID] = &benchmark
 	}
 
-	resourceTypeMetadata, err := h.inventoryClient.ListResourceTypesMetadata(&httpclient.Context{UserRole: authApi.AdminRole},
+	resourceTypeMetadata, err := h.coreClient.ListResourceTypesMetadata(&httpclient.Context{UserRole: authApi.AdminRole},
 		nil, nil, nil, false, nil, 10000, 1)
 	if err != nil {
 		h.logger.Error("failed to get resource type metadata", zap.Error(err))
 		return err
 	}
-	resourceTypeMetadataMap := make(map[string]*inventoryApi.ResourceType)
+	resourceTypeMetadataMap := make(map[string]*coreApi.ResourceType)
 	for _, item := range resourceTypeMetadata.ResourceTypes {
 		item := item
 		resourceTypeMetadataMap[strings.ToLower(item.ResourceType)] = &item
@@ -577,7 +577,7 @@ func (h *HttpHandler) GetSingleComplianceResultByComplianceResultID(echoCtx echo
 	apiFinding.IntegrationName = integration.Name
 
 	if len(finding.ResourceType) > 0 {
-		resourceTypeMetadata, err := h.inventoryClient.ListResourceTypesMetadata(&httpclient.Context{UserRole: authApi.AdminRole},
+		resourceTypeMetadata, err := h.coreClient.ListResourceTypesMetadata(&httpclient.Context{UserRole: authApi.AdminRole},
 			nil, nil,
 			[]string{finding.ResourceType}, false, nil, 10000, 1)
 		if err != nil {
@@ -653,24 +653,24 @@ func (h *HttpHandler) GetComplianceResultFilterValues(echoCtx echo.Context) erro
 		esComplianceStatuses = append(esComplianceStatuses, status.GetEsComplianceStatuses()...)
 	}
 
-	resourceTypeMetadata, err := h.inventoryClient.ListResourceTypesMetadata(&httpclient.Context{UserRole: authApi.AdminRole},
+	resourceTypeMetadata, err := h.coreClient.ListResourceTypesMetadata(&httpclient.Context{UserRole: authApi.AdminRole},
 		nil, nil, nil, false, nil, 10000, 1)
 	if err != nil {
 		h.logger.Error("failed to get resource type metadata", zap.Error(err))
 		return err
 	}
-	resourceTypeMetadataMap := make(map[string]*inventoryApi.ResourceType)
+	resourceTypeMetadataMap := make(map[string]*coreApi.ResourceType)
 	for _, item := range resourceTypeMetadata.ResourceTypes {
 		item := item
 		resourceTypeMetadataMap[strings.ToLower(item.ResourceType)] = &item
 	}
 
-	resourceCollectionMetadata, err := h.inventoryClient.ListResourceCollections(&httpclient.Context{UserRole: authApi.AdminRole})
+	resourceCollectionMetadata, err := h.coreClient.ListResourceCollections(&httpclient.Context{UserRole: authApi.AdminRole})
 	if err != nil {
 		h.logger.Error("failed to get resource collection metadata", zap.Error(err))
 		return err
 	}
-	resourceCollectionMetadataMap := make(map[string]*inventoryApi.ResourceCollection)
+	resourceCollectionMetadataMap := make(map[string]*coreApi.ResourceCollection)
 	for _, item := range resourceCollectionMetadata {
 		item := item
 		resourceCollectionMetadataMap[item.ID] = &item
@@ -993,12 +993,12 @@ func (h *HttpHandler) GetTopFieldByComplianceResultCount(echoCtx echo.Context) e
 			}
 			resourceTypeList = append(resourceTypeList, item.Key)
 		}
-		resourceTypeMetadata, err := h.inventoryClient.ListResourceTypesMetadata(&httpclient.Context{UserRole: authApi.AdminRole},
+		resourceTypeMetadata, err := h.coreClient.ListResourceTypesMetadata(&httpclient.Context{UserRole: authApi.AdminRole},
 			nil, nil, resourceTypeList, false, nil, 10000, 1)
 		if err != nil {
 			return err
 		}
-		resourceTypeMetadataMap := make(map[string]*inventoryApi.ResourceType)
+		resourceTypeMetadataMap := make(map[string]*coreApi.ResourceType)
 		for _, item := range resourceTypeMetadata.ResourceTypes {
 			item := item
 			resourceTypeMetadataMap[strings.ToLower(item.ResourceType)] = &item
@@ -1021,7 +1021,7 @@ func (h *HttpHandler) GetTopFieldByComplianceResultCount(echoCtx echo.Context) e
 		for k, v := range resourceTypeCountMap {
 			rt, ok := resourceTypeMetadataMap[strings.ToLower(k)]
 			if !ok {
-				rt = &inventoryApi.ResourceType{
+				rt = &coreApi.ResourceType{
 					ResourceType:  k,
 					ResourceLabel: k,
 				}
@@ -1046,12 +1046,12 @@ func (h *HttpHandler) GetTopFieldByComplianceResultCount(echoCtx echo.Context) e
 		for _, item := range topFieldResponse.Aggregations.FieldFilter.Buckets {
 			resourceTypeList = append(resourceTypeList, item.Key)
 		}
-		resourceTypeMetadata, err := h.inventoryClient.ListResourceTypesMetadata(&httpclient.Context{UserRole: authApi.AdminRole},
+		resourceTypeMetadata, err := h.coreClient.ListResourceTypesMetadata(&httpclient.Context{UserRole: authApi.AdminRole},
 			nil, nil, resourceTypeList, false, nil, 10000, 1)
 		if err != nil {
 			return err
 		}
-		resourceTypeMetadataMap := make(map[string]inventoryApi.ResourceType)
+		resourceTypeMetadataMap := make(map[string]coreApi.ResourceType)
 		for _, item := range resourceTypeMetadata.ResourceTypes {
 			resourceTypeMetadataMap[strings.ToLower(item.ResourceType)] = item
 		}
@@ -1450,13 +1450,13 @@ func (h *HttpHandler) GetServicesComplianceResultsSummary(echoCtx echo.Context) 
 		return err
 	}
 
-	resourceTypes, err := h.inventoryClient.ListResourceTypesMetadata(&httpclient.Context{UserRole: authApi.AdminRole},
+	resourceTypes, err := h.coreClient.ListResourceTypesMetadata(&httpclient.Context{UserRole: authApi.AdminRole},
 		nil, nil, nil, false, nil, 10000, 1)
 	if err != nil {
 		h.logger.Error("failed to get resource types metadata", zap.Error(err))
 		return err
 	}
-	resourceTypeMap := make(map[string]inventoryApi.ResourceType)
+	resourceTypeMap := make(map[string]coreApi.ResourceType)
 	for _, rt := range resourceTypes.ResourceTypes {
 		resourceTypeMap[strings.ToLower(rt.ResourceType)] = rt
 	}
@@ -1612,12 +1612,12 @@ func (h *HttpHandler) ListResourceFindings(echoCtx echo.Context) error {
 		integrationMap[integration.IntegrationID] = &integration
 	}
 
-	resourceTypes, err := h.inventoryClient.ListResourceTypesMetadata(&httpclient.Context{UserRole: authApi.AdminRole}, nil, nil, nil, false, nil, 10000, 1)
+	resourceTypes, err := h.coreClient.ListResourceTypesMetadata(&httpclient.Context{UserRole: authApi.AdminRole}, nil, nil, nil, false, nil, 10000, 1)
 	if err != nil {
 		h.logger.Error("failed to get resource types metadata", zap.Error(err))
 		return err
 	}
-	resourceTypeMap := make(map[string]*inventoryApi.ResourceType)
+	resourceTypeMap := make(map[string]*coreApi.ResourceType)
 	for _, rt := range resourceTypes.ResourceTypes {
 		rt := rt
 		resourceTypeMap[strings.ToLower(rt.ResourceType)] = &rt
@@ -2690,19 +2690,19 @@ func (h *HttpHandler) getControlSummary(ctx context.Context, controlID string, b
 		apiControl.IntegrationType = benchmark.IntegrationType
 	}
 
-	resourceTypes, err := h.inventoryClient.ListResourceTypesMetadata(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole},
+	resourceTypes, err := h.coreClient.ListResourceTypesMetadata(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole},
 		nil, nil, nil, false, nil, 10000, 1)
 	if err != nil {
 		h.logger.Error("failed to get resource types metadata", zap.Error(err))
 		return nil, err
 	}
-	resourceTypeMap := make(map[string]*inventoryApi.ResourceType)
+	resourceTypeMap := make(map[string]*coreApi.ResourceType)
 	for _, rt := range resourceTypes.ResourceTypes {
 		rt := rt
 		resourceTypeMap[strings.ToLower(rt.ResourceType)] = &rt
 	}
 
-	var resourceType *inventoryApi.ResourceType
+	var resourceType *coreApi.ResourceType
 	if control.Policy != nil {
 		apiControl.IntegrationType = control.Policy.IntegrationType
 		if control.Policy != nil {
@@ -3441,7 +3441,7 @@ func (h *HttpHandler) SyncQueries(echoCtx echo.Context) error {
 		}
 	}
 
-	enabled, err := h.metadataClient.GetConfigMetadata(&httpclient.Context{UserRole: authApi.AdminRole}, models.MetadataKeyCustomizationEnabled)
+	enabled, err := h.coreClient.GetConfigMetadata(&httpclient.Context{UserRole: authApi.AdminRole}, models.MetadataKeyCustomizationEnabled)
 	if err != nil {
 		h.logger.Error("get config metadata", zap.Error(err))
 		return err
@@ -3459,7 +3459,7 @@ func (h *HttpHandler) SyncQueries(echoCtx echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid url")
 		}
 
-		err = h.metadataClient.SetConfigMetadata(&httpclient.Context{UserRole: authApi.AdminRole}, models.MetadataKeyAnalyticsGitURL, configzGitURL)
+		err = h.coreClient.SetConfigMetadata(&httpclient.Context{UserRole: authApi.AdminRole}, models.MetadataKeyAnalyticsGitURL, configzGitURL)
 		if err != nil {
 			h.logger.Error("set config metadata", zap.Error(err))
 			return err

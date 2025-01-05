@@ -9,7 +9,7 @@ import (
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/opencomply/jobs/post-install-job/config"
 	"github.com/opengovern/opencomply/jobs/post-install-job/db"
-	"github.com/opengovern/opencomply/services/metadata/models"
+	"github.com/opengovern/opencomply/services/core/db/models"
 	"go.uber.org/zap"
 	"gorm.io/gorm/clause"
 )
@@ -41,7 +41,7 @@ func MetadataMigration(conf config.MigratorConfig, logger *zap.Logger, metadataF
 		Port:    conf.PostgreSQL.Port,
 		User:    conf.PostgreSQL.Username,
 		Passwd:  conf.PostgreSQL.Password,
-		DB:      "metadata",
+		DB:      "core",
 		SSLMode: conf.PostgreSQL.SSLMode,
 	}, logger)
 	if err != nil {

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/opengovern/og-util/pkg/jq"
-	metadataClient "github.com/opengovern/opencomply/services/metadata/client"
+	coreClient "github.com/opengovern/opencomply/services/core/client"
 
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/ticker"
@@ -13,7 +13,7 @@ import (
 	complianceClient "github.com/opengovern/opencomply/services/compliance/client"
 	"github.com/opengovern/opencomply/services/describe/config"
 	"github.com/opengovern/opencomply/services/describe/db"
-	inventoryClient "github.com/opengovern/opencomply/services/inventory/client"
+	
 	"go.uber.org/zap"
 )
 
@@ -26,9 +26,9 @@ type JobScheduler struct {
 	db                  db.Database
 	jq                  *jq.JobQueue
 	esClient            opengovernance.Client
-	inventoryClient     inventoryClient.InventoryServiceClient
+
 	complianceClient    complianceClient.ComplianceServiceClient
-	metadataClient      metadataClient.MetadataServiceClient
+	coreClient      coreClient.CoreServiceClient
 }
 
 func New(
@@ -38,9 +38,9 @@ func New(
 	db db.Database,
 	jq *jq.JobQueue,
 	esClient opengovernance.Client,
-	inventoryClient inventoryClient.InventoryServiceClient,
+
 	complianceClient complianceClient.ComplianceServiceClient,
-	metadataClient metadataClient.MetadataServiceClient,
+	coreClient coreClient.CoreServiceClient,
 ) *JobScheduler {
 	return &JobScheduler{
 		runSetupNatsStreams: runSetupNatsStreams,
@@ -49,9 +49,9 @@ func New(
 		db:                  db,
 		jq:                  jq,
 		esClient:            esClient,
-		inventoryClient:     inventoryClient,
+	
 		complianceClient:    complianceClient,
-		metadataClient:      metadataClient,
+		coreClient:      coreClient,
 	}
 }
 

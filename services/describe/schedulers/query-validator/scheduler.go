@@ -35,7 +35,7 @@ func (s *JobScheduler) runScheduler() error {
 		}
 	}
 
-	namedQueries, err := s.inventoryClient.ListQueriesV2(clientCtx, nil)
+	namedQueries, err := s.coreClient.ListQueriesV2(clientCtx, nil)
 	if err != nil {
 		s.logger.Error("error while listing benchmarks", zap.Error(err))
 		return fmt.Errorf("error while listing benchmarks: %v", err)

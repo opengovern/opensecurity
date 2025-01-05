@@ -6,8 +6,8 @@ import (
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/inventory"
-	metadataClient "github.com/opengovern/opencomply/services/metadata/client"
-	"github.com/opengovern/opencomply/services/metadata/models"
+	coreClient "github.com/opengovern/opencomply/services/core/client"
+	"github.com/opengovern/opencomply/services/core/db/models"
 
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/opencomply/jobs/post-install-job/config"
@@ -48,7 +48,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		Port:    conf.PostgreSQL.Port,
 		User:    conf.PostgreSQL.Username,
 		Passwd:  conf.PostgreSQL.Password,
-		DB:      "metadata",
+		DB:      "core",
 		SSLMode: conf.PostgreSQL.SSLMode,
 	}, logger)
 	if err != nil {
@@ -287,7 +287,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		return err
 	}
 
-	mClient := metadataClient.NewMetadataServiceClient(conf.Metadata.BaseURL)
+	mClient := coreClient.NewCoreServiceClient(conf.Core.BaseURL)
 	err = mClient.ReloadViews(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole})
 	if err != nil {
 		logger.Error("failed to reload views", zap.Error(err))

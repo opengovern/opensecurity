@@ -10,7 +10,7 @@ import (
 	"github.com/opengovern/og-util/pkg/es"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/opencomply/pkg/types"
-	"github.com/opengovern/opencomply/services/inventory/api"
+	"github.com/opengovern/opencomply/services/core/api"
 	"go.uber.org/zap"
 )
 

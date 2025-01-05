@@ -16,7 +16,7 @@ import (
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/steampipe"
 	complianceClient "github.com/opengovern/opencomply/services/compliance/client"
-	metadataClient "github.com/opengovern/opencomply/services/metadata/client"
+	coreClient "github.com/opengovern/opencomply/services/core/client"
 	"go.uber.org/zap"
 )
 
@@ -24,7 +24,7 @@ type Config struct {
 	ElasticSearch config.ElasticSearch
 	NATS          config.NATS
 	Compliance    config.OpenGovernanceService
-	Metadata      config.OpenGovernanceService
+	Core      config.OpenGovernanceService
 	EsSink        config.OpenGovernanceService
 	Steampipe     config.Postgres
 }
@@ -36,7 +36,7 @@ type Worker struct {
 	esClient         opengovernance.Client
 	jq               *jq.JobQueue
 	complianceClient complianceClient.ComplianceServiceClient
-	metadataClient   metadataClient.MetadataServiceClient
+	coreClient   coreClient.CoreServiceClient
 	sinkClient       esSinkClient.EsSinkServiceClient
 }
 
@@ -97,7 +97,7 @@ func NewWorker(
 		esClient:         esClient,
 		jq:               jq,
 		complianceClient: complianceClient.NewComplianceClient(config.Compliance.BaseURL),
-		metadataClient:   metadataClient.NewMetadataServiceClient(config.Metadata.BaseURL),
+		coreClient:   coreClient.NewCoreServiceClient(config.Core.BaseURL),
 		sinkClient:       esSinkClient.NewEsSinkServiceClient(logger, config.EsSink.BaseURL),
 	}, nil
 }

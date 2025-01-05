@@ -44,7 +44,7 @@ func (w *Worker) RunQuery(ctx context.Context, j QueryJob) ([]QueryResult, error
 		zap.Strings("integration_ids", j.ExecutionPlan.IntegrationIDs),
 	)
 
-	queryParams, err := w.metadataClient.ListQueryParameters(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole})
+	queryParams, err := w.coreClient.ListQueryParameters(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole})
 	if err != nil {
 		w.logger.Error("failed to get query parameters", zap.Error(err))
 		return nil, err

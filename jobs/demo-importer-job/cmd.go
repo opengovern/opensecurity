@@ -15,8 +15,8 @@ import (
 	"github.com/opengovern/opencomply/jobs/demo-importer-job/fetch"
 	"github.com/opengovern/opencomply/jobs/demo-importer-job/types"
 	"github.com/opengovern/opencomply/jobs/demo-importer-job/worker"
-	"github.com/opengovern/opencomply/services/metadata/client"
-	"github.com/opengovern/opencomply/services/metadata/models"
+	"github.com/opengovern/opencomply/services/core/client"
+	"github.com/opengovern/opencomply/services/core/db/models"
 	"github.com/opensearch-project/opensearch-go/v4"
 	"github.com/opensearch-project/opensearch-go/v4/opensearchapi"
 	"github.com/spf13/cobra"
@@ -61,7 +61,7 @@ func Command() *cobra.Command {
 
 			cmd.SilenceUsage = true
 
-			metadataClient := client.NewMetadataServiceClient(cnf.Metadata.BaseURL)
+			metadataClient := client.NewCoreServiceClient(cnf.Core.BaseURL)
 
 			s3Url := cnf.DemoDataS3URL
 			value, err := metadataClient.GetConfigMetadata(&httpclient.Context{
