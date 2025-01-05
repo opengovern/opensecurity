@@ -1568,9 +1568,9 @@ func (h *HttpHandler) GetParametersQueries(ctx echo.Context) error {
 func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context,req *api.ListQueryV2Request) (*api.ListQueriesV2Response, error) {
 	
 	var namedQuery api.ListQueriesV2Response
-	if err := bindValidate(ctx, &req); err != nil {
-		return &namedQuery,echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
+	// if err := bindValidate(ctx, &req); err != nil {
+	// 	return &namedQuery,echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	// }
 
 	var search *string
 	if len(req.TitleFilter) > 0 {
