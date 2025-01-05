@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/lib/pq"
 	"github.com/opengovern/opencomply/jobs/post-install-job/config"
-	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/inventory"
 	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/shared"
 	"github.com/opengovern/opencomply/jobs/post-install-job/utils"
 	"io/fs"
@@ -20,7 +19,7 @@ import (
 	"github.com/opengovern/opencomply/jobs/post-install-job/job/git"
 	"github.com/opengovern/opencomply/pkg/types"
 	"github.com/opengovern/opencomply/services/compliance/db"
-	"github.com/opengovern/opencomply/services/metadata/models"
+	"github.com/opengovern/opencomply/services/core/db/models"
 	"go.uber.org/zap"
 )
 
@@ -32,9 +31,9 @@ type GitParser struct {
 	policies           []db.Policy
 	policyParamValues  []models.PolicyParameterValues
 	queryViews         []models.QueryView
-	queryViewsQueries  []models.Query
+	coreServiceQueries []models.Query
 	controlsPolicies   map[string]db.Policy
-	namedPolicies      map[string]inventory.NamedPolicy
+	namedPolicies      map[string]NamedPolicy
 	Comparison         *git.ComparisonResultGrouped
 
 	manualRemediationMap       map[string]string
@@ -76,7 +75,7 @@ func (g *GitParser) ExtractNamedQueries() error {
 				return err
 			}
 
-			var item inventory.NamedPolicy
+			var item NamedPolicy
 			err = yaml.Unmarshal(content, &item)
 			if err != nil {
 				g.logger.Error("failure in unmarshal", zap.String("path", path), zap.Error(err))
@@ -840,7 +839,7 @@ func (g *GitParser) ExtractQueryViews(viewsPath string) error {
 					})
 				}
 			}
-			g.queryViewsQueries = append(g.queryViewsQueries, q)
+			g.coreServiceQueries = append(g.coreServiceQueries, q)
 			qv.QueryID = &obj.ID
 		}
 

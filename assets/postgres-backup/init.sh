@@ -28,14 +28,12 @@ assistantUserName="assistant_service"
 policyDatabaseName="policy"
 policyUserName="policy_service"
 
-inventoryDatabaseName="inventory"
-inventoryUserName="inventory_service"
 
 complianceDatabaseName="compliance"
 complianceUserName="compliance_service"
 
-metadataDatabaseName="metadata"
-metadataUserName="metadata_service"
+coreDatabaseName="core"
+coreUserName="core_service"
 
 reporterDatabaseName="reporter"
 reporterUserName="reporter_service"
@@ -103,18 +101,6 @@ GRANT ALL ON SCHEMA public TO $policyUserName;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS citext;
 
-SELECT 'CREATE DATABASE $inventoryDatabaseName'
-WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$inventoryDatabaseName')\gexec
-SELECT 'ALTER ROLE $inventoryUserName WITH PASSWORD ''$POSTGRES_INVENTORY_DB_PASSWORD'''
-WHERE EXISTS (select from pg_catalog.pg_roles where rolname = '$inventoryUserName')\gexec
-SELECT 'CREATE USER $inventoryUserName WITH PASSWORD ''$POSTGRES_INVENTORY_DB_PASSWORD'''
-WHERE NOT EXISTS (select from pg_catalog.pg_roles where rolname = '$inventoryUserName')\gexec
-GRANT ALL PRIVILEGES ON DATABASE "$inventoryDatabaseName" to $inventoryUserName;
-
-\c $inventoryDatabaseName
-GRANT ALL ON SCHEMA public TO $inventoryUserName;
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
-CREATE EXTENSION IF NOT EXISTS citext;
 
 SELECT 'CREATE DATABASE $complianceDatabaseName'
 WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$complianceDatabaseName')\gexec
@@ -142,16 +128,16 @@ GRANT ALL ON SCHEMA public TO $authUserName;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS citext;
 
-SELECT 'CREATE DATABASE $metadataDatabaseName'
-WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$metadataDatabaseName')\gexec
-SELECT 'ALTER ROLE $metadataUserName WITH PASSWORD ''$POSTGRES_METADATA_DB_PASSWORD'''
-WHERE EXISTS (select from pg_catalog.pg_roles where rolname = '$metadataUserName')\gexec
-SELECT 'CREATE USER $metadataUserName WITH PASSWORD ''$POSTGRES_METADATA_DB_PASSWORD'''
-WHERE NOT EXISTS (select from pg_catalog.pg_roles where rolname = '$metadataUserName')\gexec
-GRANT ALL PRIVILEGES ON DATABASE "$metadataDatabaseName" to $metadataUserName;
+SELECT 'CREATE DATABASE $coreDatabaseName'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$coreDatabaseName')\gexec
+SELECT 'ALTER ROLE $coreUserName WITH PASSWORD ''$POSTGRES_CORE_DB_PASSWORD'''
+WHERE EXISTS (select from pg_catalog.pg_roles where rolname = '$coreUserName')\gexec
+SELECT 'CREATE USER $coreUserName WITH PASSWORD ''$POSTGRES_CORE_DB_PASSWORD'''
+WHERE NOT EXISTS (select from pg_catalog.pg_roles where rolname = '$coreUserName')\gexec
+GRANT ALL PRIVILEGES ON DATABASE "$coreDatabaseName" to $coreUserName;
 
-\c "$metadataDatabaseName"
-GRANT ALL ON SCHEMA public TO $metadataUserName;
+\c "$coreDatabaseName"
+GRANT ALL ON SCHEMA public TO $coreUserName;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS citext;
 
@@ -193,9 +179,9 @@ GRANT ALL PRIVILEGES ON DATABASE "$migratorDatabaseName" to $migratorUserName;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS citext;
 GRANT ALL ON SCHEMA public TO $migratorUserName;
-GRANT pg_read_all_data TO $metadataUserName;
-GRANT pg_write_all_data TO $metadataUserName;
-GRANT ALL ON SCHEMA public TO $metadataUserName;
+GRANT pg_read_all_data TO $coreUserName;
+GRANT pg_write_all_data TO $coreUserName;
+GRANT ALL ON SCHEMA public TO $coreUserName;
 GRANT pg_read_all_data TO $complianceUserName;
 GRANT pg_write_all_data TO $complianceUserName;
 GRANT ALL ON SCHEMA public TO $complianceUserName;
@@ -209,7 +195,7 @@ WHERE NOT EXISTS (select from pg_catalog.pg_roles where rolname = '$steampipeUse
 GRANT pg_read_all_data TO $migratorUserName;
 GRANT pg_write_all_data TO $migratorUserName;
 GRANT ALL ON SCHEMA public TO $migratorUserName;
-\connect "$metadataDatabaseName";
+\connect "$coreDatabaseName";
 GRANT pg_read_all_data TO $migratorUserName;
 GRANT pg_write_all_data TO $migratorUserName;
 GRANT ALL ON SCHEMA public TO $migratorUserName;
@@ -222,7 +208,7 @@ GRANT pg_read_all_data TO $migratorUserName;
 GRANT pg_write_all_data TO $migratorUserName;
 GRANT ALL ON SCHEMA public TO $migratorUserName;
 GRANT pg_read_all_data TO $steampipeUserName;
-\connect "$inventoryDatabaseName";
+\connect "$coreDatabaseName";
 GRANT pg_read_all_data TO $migratorUserName;
 GRANT pg_write_all_data TO $migratorUserName;
 GRANT ALL ON SCHEMA public TO $migratorUserName;
@@ -252,9 +238,9 @@ set "PGPASSWORD=postgres"
 PGPASSWORD="postgres"
 pg_restore -h localhost -p 5432 -U postgres -d $authDatabaseName -v "$authDatabaseName.bak";
 pg_restore -h localhost -p 5432 -U postgres -d $integrationDatabaseName -v "$integrationDatabaseName.bak";
-pg_restore -h localhost -p 5432 -U postgres -d $inventoryDatabaseName -v "$inventoryDatabaseName.bak";
 pg_restore -h localhost -p 5432 -U postgres -d $complianceDatabaseName -v "$complianceDatabaseName.bak";
-pg_restore -h localhost -p 5432 -U postgres -d $metadataDatabaseName -v "$metadataDatabaseName.bak";
 pg_restore -h localhost -p 5432 -U postgres -d $dexDatabaseName -v "$dexDatabaseName.bak";
+pg_restore -h localhost -p 5432 -U postgres -d $coreDatabaseName -v "$coreDatabaseName.bak";
+
 
 echo "$dt - Restore is completed";  

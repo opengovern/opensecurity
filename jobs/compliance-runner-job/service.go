@@ -18,8 +18,7 @@ import (
 	complianceApi "github.com/opengovern/opencomply/services/compliance/api"
 	complianceClient "github.com/opengovern/opencomply/services/compliance/client"
 	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
-	inventoryClient "github.com/opengovern/opencomply/services/inventory/client"
-	metadataClient "github.com/opengovern/opencomply/services/metadata/client"
+	coreClient "github.com/opengovern/opencomply/services/core/client"
 	regoService "github.com/opengovern/opencomply/services/rego/service"
 	"go.uber.org/zap"
 )
@@ -30,7 +29,7 @@ type Config struct {
 	Compliance            config.OpenGovernanceService
 	Onboard               config.OpenGovernanceService
 	Inventory             config.OpenGovernanceService
-	Metadata              config.OpenGovernanceService
+	Core              config.OpenGovernanceService
 	EsSink                config.OpenGovernanceService
 	Steampipe             config.Postgres
 	PrometheusPushAddress string
@@ -44,8 +43,8 @@ type Worker struct {
 	jq               *jq.JobQueue
 	regoEngine       *regoService.RegoEngine
 	complianceClient complianceClient.ComplianceServiceClient
-	inventoryClient  inventoryClient.InventoryServiceClient
-	metadataClient   metadataClient.MetadataServiceClient
+
+	coreClient   coreClient.CoreServiceClient
 	sinkClient       esSinkClient.EsSinkServiceClient
 
 	benchmarkCache map[string]complianceApi.Benchmark
@@ -119,8 +118,8 @@ func NewWorker(
 		jq:               jq,
 		regoEngine:       regoEngine,
 		complianceClient: complianceClient.NewComplianceClient(config.Compliance.BaseURL),
-		inventoryClient:  inventoryClient.NewInventoryServiceClient(config.Inventory.BaseURL),
-		metadataClient:   metadataClient.NewMetadataServiceClient(config.Metadata.BaseURL),
+
+		coreClient:   coreClient.NewCoreServiceClient(config.Core.BaseURL),
 		sinkClient:       esSinkClient.NewEsSinkServiceClient(logger, config.EsSink.BaseURL),
 		benchmarkCache:   make(map[string]complianceApi.Benchmark),
 	}

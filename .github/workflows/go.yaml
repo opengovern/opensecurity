@@ -76,8 +76,8 @@ jobs:
       compliance-service: ${{ steps.build_services.outputs.compliance-service }}
       compliance-summarizer-job: ${{ steps.build_services.outputs.compliance-summarizer-job }}
       scheduler-service: ${{ steps.build_services.outputs.scheduler-service }}
-      inventory-service: ${{ steps.build_services.outputs.inventory-service }}
-      metadata-service: ${{ steps.build_services.outputs.metadata-service }}
+     
+      core-service: ${{ steps.build_services.outputs.core-service }}
       post-install-job: ${{ steps.build_services.outputs.post-install-job }}
       swagger-ui: ${{ steps.build_services.outputs.swagger-ui }}
       cloudql: ${{ steps.build_services.outputs.cloudql }}
@@ -598,43 +598,9 @@ jobs:
           file: docker/EsSinkServiceDockerfile
           context: .
 
-  deploy-inventory-service:
-    runs-on: ubuntu-latest
-    needs:
-      - build
-      - tag
-    permissions:
-      id-token: write
-      contents: read
-    environment: docker
-    if: needs.build.outputs.inventory-service == 'true' && github.event_name != 'pull_request'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: build
-          path: .
-      - name: Unpack artifact
-        run: |
-          tar -xvf build.tar.gz
-      - name: Log in to the Container registry
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
-      - name: Build and push Docker images
-        uses: docker/build-push-action@v4
-        with:
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/inventory-service:${{ needs.tag.outputs.latest_tag }}
-          file: docker/InventoryServiceDockerfile
-          context: .
+  
 
-  deploy-metadata-service:
+  deploy-core-service:
     runs-on: ubuntu-latest
     needs:
       - build
@@ -643,7 +609,7 @@ jobs:
       id-token: write
       contents: read
     environment: docker
-    if: needs.build.outputs.metadata-service == 'true' && github.event_name != 'pull_request'
+    if: needs.build.outputs.core-service == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -666,8 +632,8 @@ jobs:
         with:
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/metadata-service:${{ needs.tag.outputs.latest_tag }}
-          file: docker/MetadataServiceDockerfile
+            ghcr.io/${{ github.repository_owner }}/core-service:${{ needs.tag.outputs.latest_tag }}
+          file: docker/CoreServiceDockerfile
           context: .
 
   deploy-post-install-job:

@@ -12,7 +12,7 @@ import (
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/opencomply/jobs/post-install-job/config"
 	"github.com/opengovern/opencomply/jobs/post-install-job/db"
-	"github.com/opengovern/opencomply/services/inventory"
+	"github.com/opengovern/opencomply/services/core/db/models"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -24,7 +24,7 @@ type ResourceCollection struct {
 	Tags        map[string][]string                       `json:"tags" yaml:"tags"`
 	Filters     []opengovernance.ResourceCollectionFilter `json:"filters" yaml:"filters"`
 	Description string                                    `json:"description" yaml:"description"`
-	Status      inventory.ResourceCollectionStatus        `json:"status" yaml:"status"`
+	Status      models.ResourceCollectionStatus        `json:"status" yaml:"status"`
 }
 
 type Migration struct {
@@ -43,7 +43,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		Port:    conf.PostgreSQL.Port,
 		User:    conf.PostgreSQL.Username,
 		Passwd:  conf.PostgreSQL.Password,
-		DB:      "inventory",
+		DB:      "core",
 		SSLMode: conf.PostgreSQL.SSLMode,
 	}, logger)
 	if err != nil {
@@ -58,19 +58,19 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 
 	err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
-		currentRCs := make([]inventory.ResourceCollection, 0)
-		err := tx.Model(&inventory.ResourceCollection{}).Find(&currentRCs).Error
+		currentRCs := make([]models.ResourceCollection, 0)
+		err := tx.Model(&models.ResourceCollection{}).Find(&currentRCs).Error
 		if err != nil {
 			logger.Error("failed to get current resource collections", zap.Error(err))
 			return err
 		}
-		currentRcMap := make(map[string]inventory.ResourceCollection)
+		currentRcMap := make(map[string]models.ResourceCollection)
 		for _, rc := range currentRCs {
 			currentRcMap[rc.ID] = rc
 		}
 
-		tx.Model(&inventory.ResourceCollection{}).Where("1=1").Unscoped().Delete(&inventory.ResourceCollection{})
-		tx.Model(&inventory.ResourceCollectionTag{}).Where("1=1").Unscoped().Delete(&inventory.ResourceCollectionTag{})
+		tx.Model(&models.ResourceCollection{}).Where("1=1").Unscoped().Delete(&models.ResourceCollection{})
+		tx.Model(&models.ResourceCollectionTag{}).Where("1=1").Unscoped().Delete(&models.ResourceCollectionTag{})
 		for _, resourceCollection := range resourceCollections {
 			filtersJson, err := json.Marshal(resourceCollection.Filters)
 			if err != nil {
@@ -93,10 +93,10 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 				}
 			}
 			if resourceCollection.Status == "" {
-				resourceCollection.Status = inventory.ResourceCollectionStatusActive
+				resourceCollection.Status = models.ResourceCollectionStatusActive
 			}
 
-			dbResourceCollection := inventory.ResourceCollection{
+			dbResourceCollection := models.ResourceCollection{
 				ID:          resourceCollection.ID,
 				Name:        resourceCollection.Name,
 				FiltersJson: jsonb,
@@ -115,7 +115,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			for key, values := range resourceCollection.Tags {
 				err = tx.Clauses(clause.OnConflict{
 					DoNothing: true,
-				}).Create(&inventory.ResourceCollectionTag{
+				}).Create(&models.ResourceCollectionTag{
 					Tag: model.Tag{
 						Key:   key,
 						Value: values,

@@ -5,9 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/opensearch-project/opensearch-go/v2"
 	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
-	"time"
 
 	"github.com/opengovern/og-util/pkg/api"
 	es2 "github.com/opengovern/og-util/pkg/es"
@@ -16,7 +17,7 @@ import (
 	types2 "github.com/opengovern/opencomply/jobs/compliance-summarizer-job/types"
 	"github.com/opengovern/opencomply/pkg/types"
 	"github.com/opengovern/opencomply/services/compliance/es"
-	es3 "github.com/opengovern/opencomply/services/describe/es"
+	es3 "github.com/opengovern/opencomply/services/scheduler/es"
 	"go.uber.org/zap"
 )
 

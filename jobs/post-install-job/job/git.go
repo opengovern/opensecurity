@@ -9,8 +9,8 @@ import (
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/opencomply/jobs/post-install-job/config"
 	git2 "github.com/opengovern/opencomply/jobs/post-install-job/job/git"
-	"github.com/opengovern/opencomply/services/metadata/client"
-	"github.com/opengovern/opencomply/services/metadata/models"
+	"github.com/opengovern/opencomply/services/core/client"
+	"github.com/opengovern/opencomply/services/core/db/models"
 	"go.uber.org/zap"
 )
 
@@ -21,8 +21,8 @@ func GitClone(conf config.MigratorConfig, logger *zap.Logger) (string, error) {
 		githubToken:             conf.GithubToken,
 	}
 
-	metadataClient := client.NewMetadataServiceClient(conf.Metadata.BaseURL)
-	value, err := metadataClient.GetConfigMetadata(&httpclient.Context{
+	coreClient := client.NewCoreServiceClient(conf.Core.BaseURL)
+	value, err := coreClient.GetConfigMetadata(&httpclient.Context{
 		UserRole: api.AdminRole,
 	}, models.MetadataKeyAnalyticsGitURL)
 

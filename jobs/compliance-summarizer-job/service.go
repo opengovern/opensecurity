@@ -15,7 +15,7 @@ import (
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/opencomply/jobs/compliance-summarizer-job/types"
 	integrationClient "github.com/opengovern/opencomply/services/integration/client"
-	inventoryClient "github.com/opengovern/opencomply/services/inventory/client"
+	coreClient "github.com/opengovern/opencomply/services/core/client"
 	"go.uber.org/zap"
 )
 
@@ -23,7 +23,7 @@ type Config struct {
 	ElasticSearch         config.ElasticSearch
 	NATS                  config.NATS
 	PrometheusPushAddress string
-	Inventory             config.OpenGovernanceService
+	Core             config.OpenGovernanceService
 	Integration           config.OpenGovernanceService
 	EsSink                config.OpenGovernanceService
 }
@@ -34,7 +34,7 @@ type Worker struct {
 	esClient opengovernance.Client
 	jq       *jq.JobQueue
 
-	inventoryClient   inventoryClient.InventoryServiceClient
+	coreClient   coreClient.CoreServiceClient
 	integrationClient integrationClient.IntegrationServiceClient
 	esSinkClient      esSinkClient.EsSinkServiceClient
 }
@@ -81,7 +81,7 @@ func NewWorker(
 		logger:            logger,
 		esClient:          esClient,
 		jq:                jq,
-		inventoryClient:   inventoryClient.NewInventoryServiceClient(config.Inventory.BaseURL),
+		coreClient:   coreClient.NewCoreServiceClient(config.Core.BaseURL),
 		integrationClient: integrationClient.NewIntegrationServiceClient(config.Integration.BaseURL),
 		esSinkClient:      esSinkClient.NewEsSinkServiceClient(logger, config.EsSink.BaseURL),
 	}
