@@ -18,7 +18,7 @@ import (
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/opencomply/services/compliance/db"
-	describeClient "github.com/opengovern/opencomply/services/describe/client"
+	describeClient "github.com/opengovern/opencomply/services/scheduler/client"
 
 	"go.uber.org/zap"
 )

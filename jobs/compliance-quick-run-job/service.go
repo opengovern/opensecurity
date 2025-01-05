@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/opengovern/opencomply/services/describe/db/model"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"os"
 	"time"
+
+	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
+	"github.com/opengovern/opencomply/services/scheduler/db/model"
 
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/opengovern/og-util/pkg/config"

@@ -8,7 +8,7 @@ import (
 
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/opencomply/pkg/utils"
-	"github.com/opengovern/opencomply/services/describe"
+	describe "github.com/opengovern/opencomply/services/scheduler"
 )
 
 type ResourceTypeCountsResponse struct {

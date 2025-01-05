@@ -1,37 +1,35 @@
 package core
 
 import (
+	"context"
+	"crypto/rand"
 	"fmt"
-	"time"
-"context"
-"crypto/rand"
 	"strings"
+	"time"
 
-	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
-	"github.com/opengovern/opencomply/services/core/config"
-	"github.com/opengovern/opencomply/services/core/db"
-	integrationClient "github.com/opengovern/opencomply/services/integration/client"
 	dexApi "github.com/dexidp/dex/api/v2"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	"github.com/google/uuid"
+	api6 "github.com/hashicorp/vault/api"
+	config3 "github.com/opengovern/og-util/pkg/config"
+	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/og-util/pkg/steampipe"
 	"github.com/opengovern/og-util/pkg/vault"
 	db2 "github.com/opengovern/opencomply/jobs/post-install-job/db"
 	"github.com/opengovern/opencomply/jobs/post-install-job/db/model"
 	complianceClient "github.com/opengovern/opencomply/services/compliance/client"
-	describeClient "github.com/opengovern/opencomply/services/describe/client"
+	"github.com/opengovern/opencomply/services/core/config"
+	"github.com/opengovern/opencomply/services/core/db"
+	"github.com/opengovern/opencomply/services/core/db/models"
+	integrationClient "github.com/opengovern/opencomply/services/integration/client"
+	describeClient "github.com/opengovern/opencomply/services/scheduler/client"
 	"go.uber.org/zap"
 	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	api6 "github.com/hashicorp/vault/api"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"github.com/opengovern/opencomply/services/core/db/models"
-	"github.com/google/uuid"
-	config3 "github.com/opengovern/og-util/pkg/config"
-
-
 )
 
 type HttpHandler struct {
