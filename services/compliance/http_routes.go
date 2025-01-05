@@ -268,7 +268,7 @@ func (h *HttpHandler) GetComplianceResults(echoCtx echo.Context) error {
 		return err
 	}
 
-	controls, err := h.db.ListControls(ctx, nil, nil)
+	controls, err := h.db.ListControls(nil, nil)
 	if err != nil {
 		h.logger.Error("failed to get controls", zap.Error(err))
 		return err
@@ -469,7 +469,7 @@ func (h *HttpHandler) GetSingleResourceFinding(echoCtx echo.Context) error {
 		allSourcesMap[src.IntegrationID] = &src
 	}
 
-	controls, err := h.db.ListControls(ctx, nil, nil)
+	controls, err := h.db.ListControls(nil, nil)
 	if err != nil {
 		h.logger.Error("failed to get controls", zap.Error(err))
 		return err
@@ -3379,12 +3379,10 @@ func (h *HttpHandler) GetControl(echoCtx echo.Context) error {
 }
 
 func (h *HttpHandler) ListControls(echoCtx echo.Context) error {
-	ctx := echoCtx.Request().Context()
-
 	controlIDs := httpserver2.QueryArrayParam(echoCtx, "control_id")
 	tagMap := model.TagStringsToTagMap(httpserver2.QueryArrayParam(echoCtx, "tag"))
 
-	controls, err := h.db.ListControls(ctx, controlIDs, tagMap)
+	controls, err := h.db.ListControls(controlIDs, tagMap)
 	if err != nil {
 		return err
 	}
@@ -4870,7 +4868,7 @@ func (h HttpHandler) GetJobReportSummary(ctx echo.Context) error {
 	for c, _ := range controlsMap {
 		controlsStr = append(controlsStr, c)
 	}
-	controls, err := h.db.ListControls(ctx.Request().Context(), controlsStr, nil)
+	controls, err := h.db.ListControls(controlsStr, nil)
 
 	summary, err := es.GetJobReportControlSummaryByJobID(ctx.Request().Context(), h.logger, h.client, jobId, controlsFilter)
 	if err != nil {
