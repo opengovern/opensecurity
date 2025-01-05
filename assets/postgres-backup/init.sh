@@ -240,5 +240,7 @@ pg_restore -h localhost -p 5432 -U postgres -d $authDatabaseName -v "$authDataba
 pg_restore -h localhost -p 5432 -U postgres -d $integrationDatabaseName -v "$integrationDatabaseName.bak";
 pg_restore -h localhost -p 5432 -U postgres -d $complianceDatabaseName -v "$complianceDatabaseName.bak";
 pg_restore -h localhost -p 5432 -U postgres -d $dexDatabaseName -v "$dexDatabaseName.bak";
+pg_restore -h localhost -p 5432 -U postgres -d $coreDatabaseName -v "$coreDatabaseName.bak";
+
 
 echo "$dt - Restore is completed";  
