@@ -268,7 +268,7 @@ export default function SettingsEntitlement() {
     
 
      axios
-         .get(`${url}/main/metadata/api/v3/migration/status `, config)
+         .get(`${url}/main/core/api/v3/migration/status `, config)
          .then((res) => {
              setStatus(res.data.status)
              setMigrationsStatus(res.data)
@@ -324,7 +324,7 @@ export default function SettingsEntitlement() {
      }
 
      axios
-         .put(`${url}/main/metadata/api/v3/sample/loaded `, {}, config)
+         .put(`${url}/main/core/api/v3/sample/loaded `, {}, config)
          .then((res) => {
             if(res.data === 'True'){
                 // @ts-ignore
@@ -369,7 +369,7 @@ export default function SettingsEntitlement() {
      }
 
      axios
-         .get(`${url}/main/metadata/api/v3/sample/sync/status `, config)
+         .get(`${url}/main/core/api/v3/sample/sync/status `, config)
          .then((res) => {
              if (res?.data?.progress !== 1 && res?.data?.progress !== 0) {
                  // @ts-ignore
