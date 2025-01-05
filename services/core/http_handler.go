@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"github.com/opengovern/opencomply/services/core/db/models"
 	"github.com/google/uuid"
+	config3 "github.com/opengovern/og-util/pkg/config"
 
 
 )
@@ -55,7 +56,7 @@ func InitializeHttpHandler(
 	cfg config.Config,
 	steampipeHost string, steampipePort string, steampipeDb string, steampipeUsername string, steampipePassword string,
 	schedulerBaseUrl string, integrationBaseUrl string, complianceBaseUrl string,
-	logger *zap.Logger,dexClient dexApi.DexClient,
+	logger *zap.Logger,dexClient dexApi.DexClient,esConf config3.ElasticSearch,
 ) (h *HttpHandler, err error) {
 	h = &HttpHandler{}
 	ctx := context.Background()
@@ -218,13 +219,13 @@ func InitializeHttpHandler(
 	fmt.Println("Initialized steampipe database: ", steampipeConn)
 
 	h.client, err = opengovernance.NewClient(opengovernance.ClientConfig{
-		Addresses:     []string{cfg.ElasticSearch.Address},
-		Username:     &cfg.ElasticSearch.Username,
-		Password:     &cfg.ElasticSearch.Password,
-		IsOnAks:      &cfg.ElasticSearch.IsOnAks,
-		IsOpenSearch: &cfg.ElasticSearch.IsOpenSearch,
-		AwsRegion:    &cfg.ElasticSearch.AwsRegion,
-		AssumeRoleArn:&cfg.ElasticSearch.AssumeRoleArn,
+		Addresses:     []string{esConf.Address},
+		Username:      &esConf.Username,
+		Password:      &esConf.Password,
+		IsOnAks:       &esConf.IsOnAks,
+		IsOpenSearch:  &esConf.IsOpenSearch,
+		AwsRegion:     &esConf.AwsRegion,
+		AssumeRoleArn: &esConf.AssumeRoleArn,
 	})
 	if err != nil {
 		return nil, err

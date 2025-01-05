@@ -15,6 +15,7 @@ import (
 	config2 "github.com/opengovern/opencomply/services/core/config"
 	vault2 "github.com/opengovern/opencomply/services/core/vault"
 	"strings"
+	"github.com/opengovern/og-util/pkg/config"
 
 	
 )
@@ -35,15 +36,17 @@ var (
 func Command() *cobra.Command {
 	return &cobra.Command{
 		RunE: func(cmd *cobra.Command, args []string) error {
-		
+			var cnf config2.Config
+			config.ReadFromEnv(&cnf, nil)
 
-			return start(cmd.Context())
+			return start(cmd.Context(),cnf)
 		},
 	}
 }
 
-func start(ctx context.Context) error {
+func start(ctx context.Context,cnf config2.Config) error {
 	cfg := koanf.Provide("core", config2.Config{})
+
 	logger, err := zap.NewProduction()
 	if err != nil {
 		return fmt.Errorf("new logger: %w", err)
@@ -142,6 +145,7 @@ func start(ctx context.Context) error {
 		SteampipeHost, SteampipePort, SteampipeDb, SteampipeUser, SteampipePassword,
 		SchedulerBaseUrl, IntegrationBaseUrl, ComplianceBaseUrl,
 		logger,dexClient,
+		cnf.ElasticSearch,
 	)
 	if err != nil {
 		return fmt.Errorf("init http handler: %w", err)
