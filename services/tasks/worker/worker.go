@@ -21,7 +21,7 @@ var (
 	ESPassword = os.Getenv("ELASTICSEARCH_PASSWORD")
 	ESIsOnAks  = os.Getenv("ELASTICSEARCH_ISONAKS")
 
-	InventoryBaseURL = os.Getenv("INVENTORY_BASEURL")
+	InventoryBaseURL = os.Getenv("CORE_BASEURL")
 )
 
 func CreateWorker(ctx context.Context, cfg config.Config, kubeClient client.Client, taskConfig *Task, namespace string) error {
