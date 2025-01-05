@@ -41,11 +41,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/opengovern/opencomply/services/core/api"
-	coreUtils "github.com/opengovern/opencomply/services/core/utils"
 	"github.com/opengovern/opencomply/services/core/db/models"
+	coreUtils "github.com/opengovern/opencomply/services/core/utils"
 )
-
-
 
 func (h HttpHandler) Register(r *echo.Echo) {
 	v1 := r.Group("/api/v1")
@@ -74,7 +72,6 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	resourceCollectionMetadata := metadata.Group("/resource-collection")
 	resourceCollectionMetadata.GET("", httpserver.AuthorizeHandler(h.ListResourceCollectionsMetadata, api3.ViewerRole))
 	resourceCollectionMetadata.GET("/:resourceCollectionId", httpserver.AuthorizeHandler(h.GetResourceCollectionMetadata, api3.ViewerRole))
-
 
 	v3 := r.Group("/api/v3")
 	// metadata
@@ -105,7 +102,7 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v3.GET("/tables/categories", httpserver.AuthorizeHandler(h.GetTablesResourceCategories, api3.ViewerRole))
 	v3.GET("/categories/queries", httpserver.AuthorizeHandler(h.GetCategoriesQueries, api3.ViewerRole))
 	v3.GET("/parameters/queries", httpserver.AuthorizeHandler(h.GetParametersQueries, api3.ViewerRole))
-	
+
 }
 
 var tracer = otel.Tracer("core")
@@ -327,7 +324,6 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 
 	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
 	complianceClient := complianceClient.NewComplianceClient(complianceURL)
-	
 
 	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
 	if err != nil {
@@ -444,7 +440,7 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 
 	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
 	complianceClient := complianceClient.NewComplianceClient(complianceURL)
-	
+
 	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
 	if err != nil {
 		h.logger.Error("error listing controls", zap.Error(err))
@@ -478,10 +474,55 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 			}
 		}
 	}
+	var apiControlsList []api.Control
+	for _, control := range controlsList {
+		var parameters []api.ControlQueryParameter
+		for _, parameter := range control.Query.Parameters {
+			parameters = append(parameters, api.ControlQueryParameter{
+				Key:      parameter.Key,
+				Required: parameter.Required,
+			})
+		}
+		query := api.ControlQuery{
+			ID:              control.Query.ID,
+			Engine:          api.QueryEngine(control.Query.Engine),
+			QueryToExecute:  control.Query.QueryToExecute,
+			IntegrationType: control.Query.IntegrationType,
+			PrimaryTable:    control.Query.PrimaryTable,
+			ListOfTables:    control.Query.ListOfTables,
+			Parameters:      parameters,
+			Global:          control.Query.Global,
+			RegoPolicies:    control.Query.RegoPolicies,
+			CreatedAt:       control.Query.CreatedAt,
+			UpdatedAt:       control.Query.UpdatedAt,
+		}
+		apiControlsList = append(apiControlsList, api.Control{
+			ID:                      control.ID,
+			Title:                   control.Title,
+			Description:             control.Description,
+			Tags:                    control.Tags,
+			Explanation:             control.Explanation,
+			NonComplianceCost:       control.NonComplianceCost,
+			UsefulExample:           control.UsefulExample,
+			CliRemediation:          control.CliRemediation,
+			ManualRemediation:       control.ManualRemediation,
+			GuardrailRemediation:    control.GuardrailRemediation,
+			ProgrammaticRemediation: control.ProgrammaticRemediation,
+			IntegrationType:         control.IntegrationType,
+			Enabled:                 control.Enabled,
+			DocumentURI:             control.DocumentURI,
+			Query:                   &query,
+			Severity:                api.ComplianceResultSeverity(control.Severity),
+			ManualVerification:      control.ManualVerification,
+			Managed:                 control.Managed,
+			CreatedAt:               control.CreatedAt,
+			UpdatedAt:               control.UpdatedAt,
+		})
+	}
 	return ctx.JSON(http.StatusOK, api.GetQueryParamDetailsResponse{
 		Key:      key,
 		Value:    queryParam.Value,
-		Controls: controlsList,
+		Controls: apiControlsList,
 		Queries:  queriesList,
 	})
 }
@@ -956,7 +997,6 @@ func (h HttpHandler) GetAbout(echoCtx echo.Context) error {
 		integrations[c.IntegrationType.String()] = append(integrations[c.IntegrationType.String()], c)
 	}
 
-
 	var engine api.QueryEngine
 	engine = api.QueryEngineCloudQL
 	query := `SELECT
@@ -1201,12 +1241,7 @@ func (h HttpHandler) GetViews(echoCtx echo.Context) error {
 	})
 }
 
-// 
-
-
-
-
-
+//
 
 func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.ListQueryParametersResponse, error) {
 	clientCtx := &httpclient.Context{UserRole: api3.AdminRole}
@@ -1216,7 +1251,7 @@ func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.L
 	var request api.ListQueryParametersRequest
 	if err := ctx.Bind(&request); err != nil {
 		ctx.Logger().Errorf("bind the request: %v", err)
-		return resp,echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+		return resp, echo.NewHTTPError(http.StatusBadRequest, "invalid request")
 	}
 
 	cursor = request.Cursor
@@ -1231,12 +1266,12 @@ func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.L
 	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
 	if err != nil {
 		h.logger.Error("error listing controls", zap.Error(err))
-		return resp,echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
+		return resp, echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
 	}
 	namedQueries, err := h.ListQueriesV2Internal(clientCtx, nil)
 	if err != nil {
 		h.logger.Error("error listing queries", zap.Error(err))
-		return resp,echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
+		return resp, echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
 	}
 
 	var filteredQueryParams []string
@@ -1244,10 +1279,10 @@ func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.L
 		all_control, err := complianceClient.ListControl(clientCtx, controlIDs, nil)
 		if err != nil {
 			h.logger.Error("error getting control", zap.Error(err))
-			return resp,echo.NewHTTPError(http.StatusInternalServerError, "error getting control")
+			return resp, echo.NewHTTPError(http.StatusInternalServerError, "error getting control")
 		}
 		if all_control == nil {
-			return resp,echo.NewHTTPError(http.StatusNotFound, "control not found")
+			return resp, echo.NewHTTPError(http.StatusNotFound, "control not found")
 		}
 		for _, control := range all_control {
 			for _, param := range control.Query.Parameters {
@@ -1259,7 +1294,7 @@ func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.L
 		queries, err := h.ListQueriesV2Internal(clientCtx, &api.ListQueryV2Request{QueryIDs: queryIDs})
 		if err != nil {
 			h.logger.Error("error getting query", zap.Error(err))
-			return resp,echo.NewHTTPError(http.StatusInternalServerError, "error getting query")
+			return resp, echo.NewHTTPError(http.StatusInternalServerError, "error getting query")
 		}
 		for _, q := range queries.Items {
 			for _, param := range q.Query.Parameters {
@@ -1273,13 +1308,13 @@ func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.L
 		queryParams, err = h.db.GetQueryParametersByIds(filteredQueryParams)
 		if err != nil {
 			h.logger.Error("error getting query parameters", zap.Error(err))
-			return resp,err
+			return resp, err
 		}
 	} else {
 		queryParams, err = h.db.GetQueryParametersValues()
 		if err != nil {
 			h.logger.Error("error getting query parameters", zap.Error(err))
-			return resp,err
+			return resp, err
 		}
 	}
 
@@ -1321,8 +1356,8 @@ func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.L
 		}
 	}
 
-	return  api.ListQueryParametersResponse{
+	return api.ListQueryParametersResponse{
 		TotalCount: totalCount,
 		Items:      items,
-	},nil
+	}, nil
 }
