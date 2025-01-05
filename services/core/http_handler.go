@@ -2,36 +2,28 @@ package core
 
 import (
 	"fmt"
-	"time"
-"context"
-"crypto/rand"
-	"strings"
-
-	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
-	"github.com/opengovern/opencomply/services/core/config"
-	"github.com/opengovern/opencomply/services/core/db"
-	integrationClient "github.com/opengovern/opencomply/services/integration/client"
 	dexApi "github.com/dexidp/dex/api/v2"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
+	"github.com/google/uuid"
+	config3 "github.com/opengovern/og-util/pkg/config"
+	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/og-util/pkg/steampipe"
-	"github.com/opengovern/og-util/pkg/vault"
 	db2 "github.com/opengovern/opencomply/jobs/post-install-job/db"
 	"github.com/opengovern/opencomply/jobs/post-install-job/db/model"
 	complianceClient "github.com/opengovern/opencomply/services/compliance/client"
+	"github.com/opengovern/opencomply/services/core/config"
+	"github.com/opengovern/opencomply/services/core/db"
+	"github.com/opengovern/opencomply/services/core/db/models"
 	describeClient "github.com/opengovern/opencomply/services/describe/client"
+	integrationClient "github.com/opengovern/opencomply/services/integration/client"
 	"go.uber.org/zap"
 	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	api6 "github.com/hashicorp/vault/api"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"github.com/opengovern/opencomply/services/core/db/models"
-	"github.com/google/uuid"
-	config3 "github.com/opengovern/og-util/pkg/config"
-
-
+	"time"
 )
 
 type HttpHandler struct {
@@ -41,26 +33,21 @@ type HttpHandler struct {
 	schedulerClient   describeClient.SchedulerServiceClient
 	integrationClient integrationClient.IntegrationServiceClient
 	complianceClient  complianceClient.ComplianceServiceClient
-	logger *zap.Logger
-	viewCheckpoint time.Time
-	cfg                config.Config
-	kubeClient         client.Client
-	vault              vault.VaultSourceConfig
-	vaultSecretHandler vault.VaultSecretHandler
-	dexClient          dexApi.DexClient
-	migratorDb         *db2.Database
-
+	logger            *zap.Logger
+	viewCheckpoint    time.Time
+	cfg               config.Config
+	kubeClient        client.Client
+	dexClient         dexApi.DexClient
+	migratorDb        *db2.Database
 }
 
 func InitializeHttpHandler(
 	cfg config.Config,
 	steampipeHost string, steampipePort string, steampipeDb string, steampipeUsername string, steampipePassword string,
 	schedulerBaseUrl string, integrationBaseUrl string, complianceBaseUrl string,
-	logger *zap.Logger,dexClient dexApi.DexClient,esConf config3.ElasticSearch,
+	logger *zap.Logger, dexClient dexApi.DexClient, esConf config3.ElasticSearch,
 ) (h *HttpHandler, err error) {
 	h = &HttpHandler{}
-	ctx := context.Background()
-
 	fmt.Println("Initializing http handler")
 	// shared
 	// setup postgres connection
@@ -117,7 +104,6 @@ func InitializeHttpHandler(
 		return nil, fmt.Errorf("gorm migrate: %w", err)
 	}
 	migratorDb := &db2.Database{ORM: migratorOrm}
-	
 
 	kubeClient, err := NewKubeClient()
 	if err != nil {
@@ -131,78 +117,8 @@ func InitializeHttpHandler(
 	h.cfg = cfg
 	h.migratorDb = migratorDb
 	h.dexClient = dexClient
-	h.viewCheckpoint =time.Now().Add(-time.Hour * 2)
-	switch cfg.Vault.Provider {
-	case vault.AwsKMS:
-		h.vault, err = vault.NewKMSVaultSourceConfig(ctx, cfg.Vault.Aws, cfg.Vault.KeyId)
-		if err != nil {
-			logger.Error("new kms vaultClient source config", zap.Error(err))
-			return nil, fmt.Errorf("new kms vaultClient source config: %w", err)
-		}
-	case vault.AzureKeyVault:
-		h.vault, err = vault.NewAzureVaultClient(ctx, logger, cfg.Vault.Azure, cfg.Vault.KeyId)
-		if err != nil {
-			logger.Error("new azure vaultClient source config", zap.Error(err))
-			return nil, fmt.Errorf("new azure vaultClient source config: %w", err)
-		}
-		h.vaultSecretHandler, err = vault.NewAzureVaultSecretHandler(logger, cfg.Vault.Azure)
-		if err != nil {
-			logger.Error("new azure vaultClient secret handler", zap.Error(err))
-			return nil, fmt.Errorf("new azure vaultClient secret handler: %w", err)
-		}
-	case vault.HashiCorpVault:
-		h.vaultSecretHandler, err = vault.NewHashiCorpVaultSecretHandler(ctx, logger, cfg.Vault.HashiCorp)
-		if err != nil {
-			logger.Error("new hashicorp vaultClient secret handler", zap.Error(err))
-			return nil, fmt.Errorf("new hashicorp vaultClient secret handler: %w", err)
-		}
+	h.viewCheckpoint = time.Now().Add(-time.Hour * 2)
 
-		h.vault, err = vault.NewHashiCorpVaultClient(ctx, logger, cfg.Vault.HashiCorp, cfg.Vault.KeyId)
-		if err != nil {
-			if strings.Contains(err.Error(), api6.ErrSecretNotFound.Error()) {
-				b := make([]byte, 32)
-				_, err := rand.Read(b)
-				if err != nil {
-					return nil, err
-				}
-
-				_, err = h.vaultSecretHandler.SetSecret(ctx, cfg.Vault.KeyId, b)
-				if err != nil {
-					return nil, err
-				}
-
-				h.vault, err = vault.NewHashiCorpVaultClient(ctx, logger, cfg.Vault.HashiCorp, cfg.Vault.KeyId)
-				if err != nil {
-					logger.Error("new hashicorp vaultClient source config after setSecret", zap.Error(err))
-					return nil, fmt.Errorf("new hashicorp vaultClient source config after setSecret: %w", err)
-				}
-			} else {
-				logger.Error("new hashicorp vaultClient source config", zap.Error(err))
-				return nil, fmt.Errorf("new hashicorp vaultClient source config: %w", err)
-			}
-		}
-	default:
-		return nil, fmt.Errorf("unsupported vault provider: %s", cfg.Vault.Provider)
-	}
-
-	switch cfg.Vault.Provider {
-	case vault.AzureKeyVault, vault.HashiCorpVault:
-		_, err = h.vaultSecretHandler.GetSecret(ctx, h.cfg.Vault.KeyId)
-		if err != nil {
-			// create new aes key
-			b := make([]byte, 32)
-			_, err := rand.Read(b)
-			if err != nil {
-				h.logger.Error("failed to generate random bytes", zap.Error(err))
-			}
-			_, err = h.vaultSecretHandler.SetSecret(ctx, h.cfg.Vault.KeyId, b)
-			if err != nil {
-				h.logger.Error("failed to set secret", zap.Error(err))
-			}
-		}
-	default:
-		h.logger.Error("unsupported vault provider", zap.Any("provider", h.cfg.Vault.Provider))
-	}
 	// setup steampipe connection
 	// inventory
 	steampipeConn, err := steampipe.NewSteampipeDatabase(steampipe.Option{
@@ -239,7 +155,6 @@ func InitializeHttpHandler(
 
 	return h, nil
 }
-
 
 func NewKubeClient() (client.Client, error) {
 	scheme := runtime.NewScheme()
