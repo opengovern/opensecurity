@@ -25,8 +25,7 @@ type ServerConfig struct {
 	PostgreSQL    config.Postgres
 	Scheduler     config.OpenGovernanceService
 	Integration   config.OpenGovernanceService
-	Inventory     config.OpenGovernanceService
-	Metadata      config.OpenGovernanceService
+	Core          config.OpenGovernanceService
 	OpenAI        OpenAI
 	Http          config.HttpServer
 

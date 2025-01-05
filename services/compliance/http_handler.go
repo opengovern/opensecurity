@@ -6,8 +6,8 @@ import (
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	"github.com/opengovern/opencomply/jobs/post-install-job/db/model"
-	integrationClient "github.com/opengovern/opencomply/services/integration/client"
 	coreClient "github.com/opengovern/opencomply/services/core/client"
+	integrationClient "github.com/opengovern/opencomply/services/integration/client"
 	"github.com/sashabaranov/go-openai"
 	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -34,7 +34,7 @@ type HttpHandler struct {
 
 	schedulerClient   describeClient.SchedulerServiceClient
 	integrationClient integrationClient.IntegrationServiceClient
-	coreClient    coreClient.CoreServiceClient
+	coreClient        coreClient.CoreServiceClient
 	openAIClient      *openai.Client
 	kubeClient        client.Client
 }
@@ -141,7 +141,7 @@ func InitializeHttpHandler(
 
 	h.schedulerClient = describeClient.NewSchedulerServiceClient(conf.Scheduler.BaseURL)
 	h.integrationClient = integrationClient.NewIntegrationServiceClient(conf.Integration.BaseURL)
-	h.coreClient = coreClient.NewCoreServiceClient(conf.Metadata.BaseURL)
+	h.coreClient = coreClient.NewCoreServiceClient(conf.Core.BaseURL)
 	h.openAIClient = openai.NewClient(conf.OpenAI.Token)
 
 	kubeClient, err := NewKubeClient()

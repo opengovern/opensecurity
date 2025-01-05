@@ -45,7 +45,7 @@ import (
 	"github.com/opengovern/opencomply/services/describe/schedulers/compliance"
 	"github.com/opengovern/opencomply/services/describe/schedulers/discovery"
 	integrationClient "github.com/opengovern/opencomply/services/integration/client"
-	
+
 	coreClient "github.com/opengovern/opencomply/services/core/client"
 	"github.com/opengovern/opencomply/services/core/db/models"
 	"github.com/prometheus/client_golang/prometheus"
@@ -104,7 +104,7 @@ type Scheduler struct {
 	complianceIntervalHours    time.Duration
 
 	logger            *zap.Logger
-	coreClient    coreClient.CoreServiceClient
+	coreClient        coreClient.CoreServiceClient
 	complianceClient  client.ComplianceServiceClient
 	integrationClient integrationClient.IntegrationServiceClient
 	sinkClient        esSinkClient.EsSinkServiceClient
