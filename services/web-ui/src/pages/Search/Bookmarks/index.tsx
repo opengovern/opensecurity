@@ -267,7 +267,7 @@ export default function Bookmarks({ setTab }: Props) {
             }
         }
         axios
-            .post(`${url}/main/inventory/api/v3/queries`, body, config)
+            .post(`${url}/main/core/api/v3/queries`, body, config)
             .then((res) => {
                 if (res?.data) {
                     setRows(res.data.items)
@@ -301,7 +301,7 @@ export default function Bookmarks({ setTab }: Props) {
 
         axios
             .get(
-                `${url}/main/inventory/api/v3/queries/categories`,
+                `${url}/main/core/api/v3/queries/categories`,
 
                 config
             )

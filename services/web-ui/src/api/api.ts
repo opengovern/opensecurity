@@ -5592,7 +5592,7 @@ export class Api<
          * @tags smart_query
          * @name ApiV1QueryList
          * @summary List smart queries
-         * @request GET:/inventory/api/v1/query
+         * @request GET:/core/api/v1/query
          * @secure
          */
         apiV1QueryList: (
@@ -5603,7 +5603,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItem[],
                 any
             >({
-                path: `/inventory/api/v1/query`,
+                path: `/core/api/v1/query`,
                 method: 'GET',
                 body: request,
                 secure: true,
@@ -5617,7 +5617,7 @@ export class Api<
          * @tags smart_query
          * @name ApiV2QueryList
          * @summary List smart queries
-         * @request GET:/inventory/api/v2/queries
+         * @request GET:/core/api/v2/queries
          * @secure
          */
         apiV2QueryList: (
@@ -5628,7 +5628,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2Response,
                 any
             >({
-                path: `/inventory/api/v3/queries`,
+                path: `/core/api/v3/queries`,
                 method: 'POST',
                 body: request,
                 secure: true,
@@ -5642,7 +5642,7 @@ export class Api<
          * @tags smart_query
          * @name ApiV2QueryListFilters
          * @summary List smart queries Filters
-         * @request GET:/inventory/api/v3/queries/filters
+         * @request GET:/core/api/v3/queries/filters
          * @secure
          */
         apiV3QueryListFilter: (params: RequestParams = {}) =>
@@ -5650,7 +5650,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryFilters,
                 any
             >({
-                path: `/inventory/api/v3/queries/filters`,
+                path: `/core/api/v3/queries/filters`,
                 method: 'GET',
                 secure: true,
                 type: ContentType.Json,
@@ -5664,7 +5664,7 @@ export class Api<
          * @tags smart_query
          * @name ApiV1QueryRunCreate
          * @summary Run query
-         * @request POST:/inventory/api/v1/query/run
+         * @request POST:/core/api/v1/query/run
          * @secure
          */
         apiV1QueryRunCreate: (
@@ -5675,7 +5675,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryResponse,
                 any
             >({
-                path: `/inventory/api/v1/query/run`,
+                path: `/core/api/v1/query/run`,
                 method: 'POST',
                 body: request,
                 secure: true,
@@ -5690,7 +5690,7 @@ export class Api<
          * @tags smart_query
          * @name ApiV1QueryRunHistoryList
          * @summary List recently ran queries
-         * @request GET:/inventory/api/v1/query/run/history
+         * @request GET:/core/api/v1/query/run/history
          * @secure
          */
         apiV1QueryRunHistoryList: (params: RequestParams = {}) =>
@@ -5698,7 +5698,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryHistory[],
                 any
             >({
-                path: `/inventory/api/v1/query/run/history`,
+                path: `/core/api/v1/query/run/history`,
                 method: 'GET',
                 secure: true,
                 format: 'json',
@@ -5711,7 +5711,7 @@ export class Api<
          * @tags analytics
          * @name ApiV2AnalyticsCategoriesList
          * @summary List Analytics categories
-         * @request GET:/inventory/api/v2/analytics/categories
+         * @request GET:/core/api/v2/analytics/categories
          * @secure
          */
         apiV2AnalyticsCategoriesList: (
@@ -5727,7 +5727,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiAnalyticsCategoriesResponse,
                 any
             >({
-                path: `/inventory/api/v2/analytics/categories`,
+                path: `/core/api/v2/analytics/categories`,
                 method: 'GET',
                 query: query,
                 secure: true,
@@ -5741,7 +5741,7 @@ export class Api<
          * @tags analytics
          * @name ApiV3InventoryCategoryList
          * @summary List Analytics categories
-         * @request GET:/inventory/api/v3/queries/categories
+         * @request GET:/core/api/v3/queries/categories
          * @secure
          */
         apiV3InventoryCategoryList: (params: RequestParams = {}) =>
@@ -5749,7 +5749,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiInventoryCategoriesResponse,
                 any
             >({
-                path: `/inventory/api/v3/queries/categories`,
+                path: `/core/api/v3/queries/categories`,
                 method: 'GET',
                 secure: true,
                 type: ContentType.Json,
@@ -5763,7 +5763,7 @@ export class Api<
          * @tags analytics
          * @name ApiV2AnalyticsCompositionDetail
          * @summary List analytics composition
-         * @request GET:/inventory/api/v2/analytics/composition/{key}
+         * @request GET:/core/api/v2/analytics/composition/{key}
          * @secure
          */
         apiV2AnalyticsCompositionDetail: (
@@ -5792,7 +5792,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiListResourceTypeCompositionResponse,
                 any
             >({
-                path: `/inventory/api/v2/analytics/composition/${key}`,
+                path: `/core/api/v2/analytics/composition/${key}`,
                 method: 'GET',
                 query: query,
                 secure: true,
@@ -5807,7 +5807,7 @@ export class Api<
          * @tags analytics
          * @name ApiV2AnalyticsCountList
          * @summary Count analytics
-         * @request GET:/inventory/api/v2/analytics/count
+         * @request GET:/core/api/v2/analytics/count
          * @secure
          */
         apiV2AnalyticsCountList: (params: RequestParams = {}) =>
@@ -5815,7 +5815,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiCountAnalyticsMetricsResponse,
                 any
             >({
-                path: `/inventory/api/v2/analytics/count`,
+                path: `/core/api/v2/analytics/count`,
                 method: 'GET',
                 secure: true,
                 type: ContentType.Json,
@@ -5829,7 +5829,7 @@ export class Api<
          * @tags analytics
          * @name ApiV2AnalyticsMetricList
          * @summary List analytics metrics
-         * @request GET:/inventory/api/v2/analytics/metric
+         * @request GET:/core/api/v2/analytics/metric
          * @secure
          */
         apiV2AnalyticsMetricList: (
@@ -5867,7 +5867,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiListMetricsResponse,
                 any
             >({
-                path: `/inventory/api/v2/analytics/metric`,
+                path: `/core/api/v2/analytics/metric`,
                 method: 'GET',
                 query: query,
                 secure: true,
@@ -5882,7 +5882,7 @@ export class Api<
          * @tags analytics
          * @name ApiV2AnalyticsMetricsListList
          * @summary List metrics
-         * @request GET:/inventory/api/v2/analytics/metrics/list
+         * @request GET:/core/api/v2/analytics/metrics/list
          * @secure
          */
         apiV2AnalyticsMetricsListList: (
@@ -5898,7 +5898,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiAnalyticsMetric[],
                 any
             >({
-                path: `/inventory/api/v2/analytics/metrics/list`,
+                path: `/core/api/v2/analytics/metrics/list`,
                 method: 'GET',
                 query: query,
                 secure: true,
@@ -5913,7 +5913,7 @@ export class Api<
          * @tags analytics
          * @name ApiV2AnalyticsMetricsDetail
          * @summary List metrics
-         * @request GET:/inventory/api/v2/analytics/metrics/{metric_id}
+         * @request GET:/core/api/v2/analytics/metrics/{metric_id}
          * @secure
          */
         apiV2AnalyticsMetricsDetail: (
@@ -5924,7 +5924,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiAnalyticsMetric,
                 any
             >({
-                path: `/inventory/api/v2/analytics/metrics/${metricId}`,
+                path: `/core/api/v2/analytics/metrics/${metricId}`,
                 method: 'GET',
                 secure: true,
                 type: ContentType.Json,
@@ -5938,7 +5938,7 @@ export class Api<
          * @tags analytics
          * @name ApiV2AnalyticsSpendCompositionList
          * @summary List cost composition
-         * @request GET:/inventory/api/v2/analytics/spend/composition
+         * @request GET:/core/api/v2/analytics/spend/composition
          * @secure
          */
         apiV2AnalyticsSpendCompositionList: (
@@ -5962,7 +5962,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiListCostCompositionResponse,
                 any
             >({
-                path: `/inventory/api/v2/analytics/spend/composition`,
+                path: `/core/api/v2/analytics/spend/composition`,
                 method: 'GET',
                 query: query,
                 secure: true,
@@ -5977,7 +5977,7 @@ export class Api<
          * @tags analytics
          * @name ApiV2AnalyticsSpendCountList
          * @summary Count analytics spend
-         * @request GET:/inventory/api/v2/analytics/spend/count
+         * @request GET:/core/api/v2/analytics/spend/count
          * @secure
          */
         apiV2AnalyticsSpendCountList: (params: RequestParams = {}) =>
@@ -5985,7 +5985,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiCountAnalyticsSpendResponse,
                 any
             >({
-                path: `/inventory/api/v2/analytics/spend/count`,
+                path: `/core/api/v2/analytics/spend/count`,
                 method: 'GET',
                 secure: true,
                 type: ContentType.Json,
@@ -5999,7 +5999,7 @@ export class Api<
          * @tags analytics
          * @name ApiV2AnalyticsSpendMetricList
          * @summary List spend metrics
-         * @request GET:/inventory/api/v2/analytics/spend/metric
+         * @request GET:/core/api/v2/analytics/spend/metric
          * @secure
          */
         apiV2AnalyticsSpendMetricList: (
@@ -6031,7 +6031,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiListCostMetricsResponse,
                 any
             >({
-                path: `/inventory/api/v2/analytics/spend/metric`,
+                path: `/core/api/v2/analytics/spend/metric`,
                 method: 'GET',
                 query: query,
                 secure: true,
@@ -6046,7 +6046,7 @@ export class Api<
          * @tags analytics
          * @name ApiV2AnalyticsSpendTableList
          * @summary Get Spend Trend
-         * @request GET:/inventory/api/v2/analytics/spend/table
+         * @request GET:/core/api/v2/analytics/spend/table
          * @secure
          */
         apiV2AnalyticsSpendTableList: (
@@ -6074,7 +6074,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiSpendTableRow[],
                 any
             >({
-                path: `/inventory/api/v2/analytics/spend/table`,
+                path: `/core/api/v2/analytics/spend/table`,
                 method: 'GET',
                 query: query,
                 secure: true,
@@ -6089,7 +6089,7 @@ export class Api<
          * @tags analytics
          * @name ApiV2AnalyticsSpendTrendList
          * @summary Get Cost Trend
-         * @request GET:/inventory/api/v2/analytics/spend/trend
+         * @request GET:/core/api/v2/analytics/spend/trend
          * @secure
          */
         apiV2AnalyticsSpendTrendList: (
@@ -6115,7 +6115,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiCostTrendDatapoint[],
                 any
             >({
-                path: `/inventory/api/v2/analytics/spend/trend`,
+                path: `/core/api/v2/analytics/spend/trend`,
                 method: 'GET',
                 query: query,
                 secure: true,
@@ -6130,7 +6130,7 @@ export class Api<
          * @tags analytics
          * @name ApiV2AnalyticsTableList
          * @summary Get Assets Table
-         * @request GET:/inventory/api/v2/analytics/table
+         * @request GET:/core/api/v2/analytics/table
          * @secure
          */
         apiV2AnalyticsTableList: (
@@ -6150,7 +6150,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiAssetTableRow[],
                 any
             >({
-                path: `/inventory/api/v2/analytics/table`,
+                path: `/core/api/v2/analytics/table`,
                 method: 'GET',
                 query: query,
                 secure: true,
@@ -6165,7 +6165,7 @@ export class Api<
          * @tags analytics
          * @name ApiV2AnalyticsTagList
          * @summary List analytics tags
-         * @request GET:/inventory/api/v2/analytics/tag
+         * @request GET:/core/api/v2/analytics/tag
          * @secure
          */
         apiV2AnalyticsTagList: (
@@ -6190,7 +6190,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<Record<string, string[]>, any>({
-                path: `/inventory/api/v2/analytics/tag`,
+                path: `/core/api/v2/analytics/tag`,
                 method: 'GET',
                 query: query,
                 secure: true,
@@ -6205,7 +6205,7 @@ export class Api<
          * @tags analytics
          * @name ApiV2AnalyticsTrendList
          * @summary Get metric trend
-         * @request GET:/inventory/api/v2/analytics/trend
+         * @request GET:/core/api/v2/analytics/trend
          * @secure
          */
         apiV2AnalyticsTrendList: (
@@ -6237,7 +6237,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiResourceTypeTrendDatapoint[],
                 any
             >({
-                path: `/inventory/api/v2/analytics/trend`,
+                path: `/core/api/v2/analytics/trend`,
                 method: 'GET',
                 query: query,
                 secure: true,
@@ -6252,7 +6252,7 @@ export class Api<
          * @tags resource_collection
          * @name ApiV2MetadataResourceCollectionList
          * @summary List resource collections
-         * @request GET:/inventory/api/v2/metadata/resource-collection
+         * @request GET:/core/api/v2/metadata/resource-collection
          * @secure
          */
         apiV2MetadataResourceCollectionList: (
@@ -6268,7 +6268,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollection[],
                 any
             >({
-                path: `/inventory/api/v2/metadata/resource-collection`,
+                path: `/core/api/v2/metadata/resource-collection`,
                 method: 'GET',
                 query: query,
                 secure: true,
@@ -6282,7 +6282,7 @@ export class Api<
          * @tags resource_collection
          * @name ApiV2MetadataResourceCollectionDetail
          * @summary Get resource collection
-         * @request GET:/inventory/api/v2/metadata/resource-collection/{resourceCollectionId}
+         * @request GET:/core/api/v2/metadata/resource-collection/{resourceCollectionId}
          * @secure
          */
         apiV2MetadataResourceCollectionDetail: (
@@ -6293,7 +6293,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollection,
                 any
             >({
-                path: `/inventory/api/v2/metadata/resource-collection/${resourceCollectionId}`,
+                path: `/core/api/v2/metadata/resource-collection/${resourceCollectionId}`,
                 method: 'GET',
                 secure: true,
                 format: 'json',
@@ -6306,7 +6306,7 @@ export class Api<
          * @tags resource_collection
          * @name ApiV2ResourceCollectionList
          * @summary List resource collections with inventory data
-         * @request GET:/inventory/api/v2/resource-collection
+         * @request GET:/core/api/v2/resource-collection
          * @secure
          */
         apiV2ResourceCollectionList: (
@@ -6322,7 +6322,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollection[],
                 any
             >({
-                path: `/inventory/api/v2/resource-collection`,
+                path: `/core/api/v2/resource-collection`,
                 method: 'GET',
                 query: query,
                 secure: true,
@@ -6336,7 +6336,7 @@ export class Api<
          * @tags resource_collection
          * @name ApiV2ResourceCollectionDetail
          * @summary Get resource collection with inventory data
-         * @request GET:/inventory/api/v2/resource-collection/{resourceCollectionId}
+         * @request GET:/core/api/v2/resource-collection/{resourceCollectionId}
          * @secure
          */
         apiV2ResourceCollectionDetail: (
@@ -6347,7 +6347,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollection,
                 any
             >({
-                path: `/inventory/api/v2/resource-collection/${resourceCollectionId}`,
+                path: `/core/api/v2/resource-collection/${resourceCollectionId}`,
                 method: 'GET',
                 secure: true,
                 format: 'json',
@@ -6360,7 +6360,7 @@ export class Api<
          * @tags resource_collection
          * @name ApiV2ResourceCollectionLandscapeDetail
          * @summary Get resource collection landscape
-         * @request GET:/inventory/api/v2/resource-collection/{resourceCollectionId}/landscape
+         * @request GET:/core/api/v2/resource-collection/{resourceCollectionId}/landscape
          * @secure
          */
         apiV2ResourceCollectionLandscapeDetail: (
@@ -6371,7 +6371,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollectionLandscape,
                 any
             >({
-                path: `/inventory/api/v2/resource-collection/${resourceCollectionId}/landscape`,
+                path: `/core/api/v2/resource-collection/${resourceCollectionId}/landscape`,
                 method: 'GET',
                 secure: true,
                 format: 'json',
@@ -6385,7 +6385,7 @@ export class Api<
          * @tags metadata
          * @name ApiV1FilterList
          * @summary list filters
-         * @request GET:/metadata/api/v1/filter
+         * @request GET:/core/api/v1/filter
          * @secure
          */
         apiV1FilterList: (params: RequestParams = {}) =>
@@ -6393,7 +6393,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgMetadataModelsFilter[],
                 any
             >({
-                path: `/metadata/api/v1/filter`,
+                path: `/core/api/v1/filter`,
                 method: 'GET',
                 secure: true,
                 format: 'json',
@@ -6406,7 +6406,7 @@ export class Api<
          * @tags metadata
          * @name ApiV1FilterCreate
          * @summary add filter
-         * @request POST:/metadata/api/v1/filter
+         * @request POST:/core/api/v1/filter
          * @secure
          */
         apiV1FilterCreate: (
@@ -6414,7 +6414,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<void, any>({
-                path: `/metadata/api/v1/filter`,
+                path: `/core/api/v1/filter`,
                 method: 'POST',
                 body: req,
                 secure: true,
@@ -6428,7 +6428,7 @@ export class Api<
          * @tags metadata
          * @name ApiV1MetadataCreate
          * @summary Set key metadata
-         * @request POST:/metadata/api/v1/metadata
+         * @request POST:/core/api/v1/metadata
          * @secure
          */
         apiV1MetadataCreate: (
@@ -6436,7 +6436,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<void, any>({
-                path: `/metadata/api/v1/metadata`,
+                path: `/core/api/v1/metadata`,
                 method: 'POST',
                 body: req,
                 secure: true,
@@ -6450,7 +6450,7 @@ export class Api<
          * @tags metadata
          * @name ApiV1MetadataDetail
          * @summary Get key metadata
-         * @request GET:/metadata/api/v1/metadata/{key}
+         * @request GET:/core/api/v1/metadata/{key}
          * @secure
          */
         apiV1MetadataDetail: (key: string, params: RequestParams = {}) =>
@@ -6458,7 +6458,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgMetadataModelsConfigMetadata,
                 any
             >({
-                path: `/metadata/api/v1/metadata/${key}`,
+                path: `/core/api/v1/metadata/${key}`,
                 method: 'GET',
                 secure: true,
                 format: 'json',
@@ -6471,7 +6471,7 @@ export class Api<
          * @tags metadata
          * @name ApiV1QueryParameterList
          * @summary List query parameters
-         * @request GET:/metadata/api/v1/query_parameter
+         * @request GET:/core/api/v1/query_parameter
          * @secure
          */
         apiV1QueryParameterList: (params: RequestParams = {}) =>
@@ -6479,7 +6479,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgMetadataApiListQueryParametersResponse,
                 any
             >({
-                path: `/metadata/api/v1/query_parameter`,
+                path: `/core/api/v1/query_parameter`,
                 method: 'GET',
                 secure: true,
                 format: 'json',
@@ -6492,7 +6492,7 @@ export class Api<
          * @tags metadata
          * @name ApiV1QueryParameterCreate
          * @summary Set query parameter
-         * @request POST:/metadata/api/v1/query_parameter
+         * @request POST:/core/api/v1/query_parameter
          * @secure
          */
         apiV1QueryParameterCreate: (
@@ -6500,7 +6500,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<void, any>({
-                path: `/metadata/api/v1/query_parameter`,
+                path: `/core/api/v1/query_parameter`,
                 method: 'POST',
                 body: req,
                 secure: true,
@@ -7470,7 +7470,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceResponse,
                 any
             >({
-                path: `/metadata/api/v3/about`,
+                path: `/core/api/v3/about`,
                 method: 'GET',
                 secure: true,
                 type: ContentType.Json,
@@ -7564,7 +7564,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceLimitsUsage,
                 any
             >({
-                path: `/metadata/api/v3/sample/sync`,
+                path: `/core/api/v3/sample/sync`,
                 method: 'PUT',
                 // query: query,
                 secure: true,
@@ -7586,7 +7586,7 @@ export class Api<
                 GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceLimitsUsage,
                 any
             >({
-                path: `/metadata/api/v3/sample/purge`,
+                path: `/core/api/v3/sample/purge`,
                 method: 'PUT',
                 // query: query,
                 secure: true,
@@ -7605,7 +7605,7 @@ export class Api<
          */
         apiV3GetSetup: (data: any, params: RequestParams = {}) =>
             this.request<string, any>({
-                path: `/metadata/api/v3/configured/status`,
+                path: `/core/api/v3/configured/status`,
                 method: 'GET',
                 // query: query,
                 secure: true,
@@ -7624,7 +7624,7 @@ export class Api<
          */
         apiV3DoneSetup: (data: any, params: RequestParams = {}) =>
             this.request<string, any>({
-                path: `/metadata/api/v3/configured/set`,
+                path: `/core/api/v3/configured/set`,
                 method: 'PUT',
                 // query: query,
                 secure: true,

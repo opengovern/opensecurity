@@ -275,7 +275,7 @@ export default function View({ setTab }: Props) {
             },
         }
         axios
-            .get(`${url}/main/metadata/api/v3/views?per_page=10&cursor=${page}`, config)
+            .get(`${url}/main/core/api/v3/views?per_page=10&cursor=${page}`, config)
             .then((res) => {
                 if (res.data) {
                     setRows(res.data.views)

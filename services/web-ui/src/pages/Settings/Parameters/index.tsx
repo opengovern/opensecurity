@@ -108,7 +108,7 @@ export default function SettingsParameters() {
         }
         axios
             .post(
-                `${url}/main/metadata/api/v1/query_parameter`,body,
+                `${url}/main/core/api/v1/query_parameter`,body,
                 config
             )
             .then((res) => {
@@ -150,7 +150,7 @@ export default function SettingsParameters() {
         }
 
         axios
-            .post(`${url}/main/metadata/api/v1/query_parameter/set`, body, config)
+            .post(`${url}/main/core/api/v1/query_parameter/set`, body, config)
             .then((res) => {
                 GetParams()
                 setLoading(false)
@@ -178,7 +178,7 @@ export default function SettingsParameters() {
          }
         
          axios
-             .get(`${url}/main/metadata/api/v1/query_parameter/${key}`, config)
+             .get(`${url}/main/core/api/v1/query_parameter/${key}`, config)
              .then((res) => {
                  if(res.data){
                     setSelectedItem(res.data)
@@ -248,7 +248,7 @@ const GetQueries = () => {
     }
 
     axios
-        .post(`${url}/main/inventory/api/v3/queries `, body, config)
+        .post(`${url}/main/core/api/v3/queries `, body, config)
         .then((res) => {
             if (res.data) {
                 setQueries(res.data?.items)
