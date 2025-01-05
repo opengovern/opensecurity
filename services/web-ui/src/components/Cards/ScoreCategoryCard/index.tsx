@@ -66,7 +66,7 @@ export default function ScoreCategoryCard({
         >
             <Flex className="relative w-fit">
                 <ProgressCircle color={color} value={percentage} size="md" >
-                    <Text>{percentage.toFixed(1)}%</Text>
+                    <Text>{percentage? percentage.toFixed(1) : 0}%</Text>
                 </ProgressCircle>
             </Flex>
             <Flex justifyContent="between" className="h-full">
