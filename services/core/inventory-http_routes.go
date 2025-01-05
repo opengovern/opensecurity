@@ -408,7 +408,7 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 	outputS, span := tracer.Start(ctx.Request().Context(), "new_RunQuery", trace.WithSpanKind(trace.SpanKindServer))
 	span.SetName("new_RunQuery")
 
-	queryParams, err := h.ListQueryParametersInternal(&httpclient.Context{UserRole: api2.AdminRole})
+	queryParams, err := h.ListQueryParametersInternal(ctx)
 	if err != nil {
 		return err
 	}
@@ -1076,7 +1076,7 @@ func (h *HttpHandler) RunQueryByID(ctx echo.Context) error {
 		engine = api.QueryEngine(engineStr)
 	}
 
-	queryParams, err := h.ListQueryParametersInternal(&httpclient.Context{UserRole: api2.AdminRole})
+	queryParams, err := h.ListQueryParametersInternal(ctx)
 	if err != nil {
 		h.logger.Error("failed to get query parameters", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get query parameters")
@@ -1716,7 +1716,9 @@ func (h *HttpHandler) RunQueryInternal(ctx echo.Context,req api.RunQueryRequest)
 	var resp *api.RunQueryResponse
 
 	
-
+	if err := bindValidate(ctx, &req); err != nil {
+		return resp,echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 	if req.Query == nil || *req.Query == "" {
 		return resp,echo.NewHTTPError(http.StatusBadRequest, "Query is required")
 	}
@@ -1724,7 +1726,7 @@ func (h *HttpHandler) RunQueryInternal(ctx echo.Context,req api.RunQueryRequest)
 	outputS, span := tracer.Start(ctx.Request().Context(), "new_RunQuery", trace.WithSpanKind(trace.SpanKindServer))
 	span.SetName("new_RunQuery")
 
-	queryParams, err := h.ListQueryParametersInternal(&httpclient.Context{UserRole: api2.AdminRole})
+	queryParams, err := h.ListQueryParametersInternal(ctx)
 	if err != nil {
 		return resp,err
 	}

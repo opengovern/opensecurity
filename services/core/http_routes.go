@@ -331,7 +331,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 		h.logger.Error("error listing controls", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
 	}
-	namedQueries, err := h.ListQueriesV2Internal(clientCtx, nil)
+	namedQueries, err := h.ListQueriesV2Internal(ctx, nil)
 	if err != nil {
 		h.logger.Error("error listing queries", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
@@ -354,7 +354,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 		}
 	} else if queryIDs != nil {
 		// TODO: Fix this part and write new client on inventory
-		queries, err := h.ListQueriesV2Internal(clientCtx, &api.ListQueryV2Request{QueryIDs: queryIDs})
+		queries, err := h.ListQueriesV2Internal(ctx, &api.ListQueryV2Request{QueryIDs: queryIDs})
 		if err != nil {
 			h.logger.Error("error getting query", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "error getting query")
@@ -447,7 +447,7 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 		h.logger.Error("error listing controls", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
 	}
-	namedQueries, err := h.ListQueriesV2Internal(clientCtx, nil)
+	namedQueries, err := h.ListQueriesV2Internal(ctx, nil)
 	if err != nil {
 		h.logger.Error("error listing queries", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
@@ -1012,7 +1012,7 @@ func (h HttpHandler) GetAbout(echoCtx echo.Context) error {
 		Sorts:  nil,
 	}
 	
-	results, err := h.RunQueryInternal(ctx, query_req)
+	results, err := h.RunQueryInternal(echoCtx, query_req)
 	if err != nil {
 		h.logger.Error("failed to run query", zap.Error(err))
 	}
@@ -1245,7 +1245,7 @@ func (h HttpHandler) GetViews(echoCtx echo.Context) error {
 
 //
 
-func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.ListQueryParametersResponse, error) {
+func (h HttpHandler) ListQueryParametersInternal(ctx echo.Context) (api.ListQueryParametersResponse, error) {
 	clientCtx := &httpclient.Context{UserRole: api3.AdminRole}
 	var resp api.ListQueryParametersResponse
 	var cursor, perPage int64
@@ -1270,7 +1270,7 @@ func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.L
 		h.logger.Error("error listing controls", zap.Error(err))
 		return resp, echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
 	}
-	namedQueries, err := h.ListQueriesV2Internal(clientCtx, nil)
+	namedQueries, err := h.ListQueriesV2Internal(ctx, nil)
 	if err != nil {
 		h.logger.Error("error listing queries", zap.Error(err))
 		return resp, echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
@@ -1293,7 +1293,7 @@ func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.L
 		}
 	} else if queryIDs != nil {
 		// TODO: Fix this part and write new client on inventory
-		queries, err := h.ListQueriesV2Internal(clientCtx, &api.ListQueryV2Request{QueryIDs: queryIDs})
+		queries, err := h.ListQueriesV2Internal(ctx, &api.ListQueryV2Request{QueryIDs: queryIDs})
 		if err != nil {
 			h.logger.Error("error getting query", zap.Error(err))
 			return resp, echo.NewHTTPError(http.StatusInternalServerError, "error getting query")
