@@ -7,30 +7,26 @@ import (
 
 	"github.com/opengovern/og-util/pkg/httpserver"
 
-	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 	dexApi "github.com/dexidp/dex/api/v2"
+	"github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/koanf"
 	"github.com/opengovern/og-util/pkg/vault"
 	config2 "github.com/opengovern/opencomply/services/core/config"
 	vault2 "github.com/opengovern/opencomply/services/core/vault"
+	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 	"strings"
-	"github.com/opengovern/og-util/pkg/config"
-
-	
 )
 
 var (
-	
-	SteampipeHost     = os.Getenv("STEAMPIPE_HOST")
-	SteampipePort     = os.Getenv("STEAMPIPE_PORT")
-	SteampipeDb       = os.Getenv("STEAMPIPE_DB")
-	SteampipeUser     = os.Getenv("STEAMPIPE_USERNAME")
-	SteampipePassword = os.Getenv("STEAMPIPE_PASSWORD")
+	SteampipeHost      = os.Getenv("STEAMPIPE_HOST")
+	SteampipePort      = os.Getenv("STEAMPIPE_PORT")
+	SteampipeDb        = os.Getenv("STEAMPIPE_DB")
+	SteampipeUser      = os.Getenv("STEAMPIPE_USERNAME")
+	SteampipePassword  = os.Getenv("STEAMPIPE_PASSWORD")
 	SchedulerBaseUrl   = os.Getenv("SCHEDULER_BASE_URL")
 	IntegrationBaseUrl = os.Getenv("INTEGRATION_BASE_URL")
 	ComplianceBaseUrl  = os.Getenv("COMPLIANCE_BASE_URL")
-	HttpAddress = os.Getenv("HTTP_ADDRESS")
 )
 
 func Command() *cobra.Command {
@@ -39,19 +35,19 @@ func Command() *cobra.Command {
 			var cnf config2.Config
 			config.ReadFromEnv(&cnf, nil)
 
-			return start(cmd.Context(),cnf)
+			return start(cmd.Context(), cnf)
 		},
 	}
 }
 
-func start(ctx context.Context,cnf config2.Config) error {
+func start(ctx context.Context, cnf config2.Config) error {
 	cfg := koanf.Provide("core", config2.Config{})
 
 	logger, err := zap.NewProduction()
 	if err != nil {
 		return fmt.Errorf("new logger: %w", err)
 	}
-		if cfg.Vault.Provider == vault.HashiCorpVault {
+	if cfg.Vault.Provider == vault.HashiCorpVault {
 		sealHandler, err := vault2.NewSealHandler(ctx, logger, cfg)
 		if err != nil {
 			return fmt.Errorf("new seal handler: %w", err)
@@ -139,17 +135,16 @@ func start(ctx context.Context,cnf config2.Config) error {
 		}
 	}
 
-
 	handler, err := InitializeHttpHandler(
 		cfg,
 		SteampipeHost, SteampipePort, SteampipeDb, SteampipeUser, SteampipePassword,
 		SchedulerBaseUrl, IntegrationBaseUrl, ComplianceBaseUrl,
-		logger,dexClient,
+		logger, dexClient,
 		cnf.ElasticSearch,
 	)
 	if err != nil {
 		return fmt.Errorf("init http handler: %w", err)
 	}
 
-	return httpserver.RegisterAndStart(ctx, logger, HttpAddress, handler)
+	return httpserver.RegisterAndStart(ctx, logger, cfg.Http.Address, handler)
 }
