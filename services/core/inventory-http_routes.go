@@ -1715,9 +1715,8 @@ func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context,req *api.ListQueryV
 func (h *HttpHandler) RunQueryInternal(ctx echo.Context,req api.RunQueryRequest) (*api.RunQueryResponse, error) {
 	var resp *api.RunQueryResponse
 
-	if err := bindValidate(ctx, &req); err != nil {
-		return resp,echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
+	
+
 	if req.Query == nil || *req.Query == "" {
 		return resp,echo.NewHTTPError(http.StatusBadRequest, "Query is required")
 	}

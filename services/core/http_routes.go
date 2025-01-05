@@ -1002,7 +1002,7 @@ func (h HttpHandler) GetAbout(echoCtx echo.Context) error {
 	query := `SELECT
     (SELECT SUM(cost) FROM azure_costmanagement_costbyresourcetype) +
     (SELECT SUM(amortized_cost_amount) FROM aws_cost_by_service_daily) AS total_cost;`
-	results, err := h.RunQueryInternal(ctx, api.RunQueryRequest{
+	var query_req= api.RunQueryRequest{
 		Page: api.Page{
 			No:   1,
 			Size: 1000,
@@ -1010,7 +1010,9 @@ func (h HttpHandler) GetAbout(echoCtx echo.Context) error {
 		Engine: &engine,
 		Query:  &query,
 		Sorts:  nil,
-	})
+	}
+	
+	results, err := h.RunQueryInternal(ctx, query_req)
 	if err != nil {
 		h.logger.Error("failed to run query", zap.Error(err))
 	}
