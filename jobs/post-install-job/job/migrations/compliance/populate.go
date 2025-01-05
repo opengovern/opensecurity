@@ -52,7 +52,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 	dbm := db.Database{Orm: orm}
 
-	ormMetadata, err := postgres.NewClient(&postgres.Config{
+	ormCore, err := postgres.NewClient(&postgres.Config{
 		Host:    conf.PostgreSQL.Host,
 		Port:    conf.PostgreSQL.Port,
 		User:    conf.PostgreSQL.Username,
@@ -63,7 +63,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	if err != nil {
 		return fmt.Errorf("new postgres client: %w", err)
 	}
-	dbMetadata := db.Database{Orm: ormMetadata}
+	dbCore := db.Database{Orm: ormCore}
 
 	p := GitParser{
 		logger:             logger,
@@ -118,7 +118,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		return err
 	}
 
-	err = dbMetadata.Orm.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err = dbCore.Orm.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, obj := range p.policyParamValues {
 			err := tx.Clauses(clause.OnConflict{
 				DoNothing: true,
@@ -231,7 +231,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 
 	loadedQueryViewsQueries := make(map[string]bool)
 	missingQueryViewsQueries := make(map[string]bool)
-	err = dbMetadata.Orm.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err = dbCore.Orm.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		tx.Model(&models.QueryView{}).Where("1=1").Unscoped().Delete(&models.QueryView{})
 		tx.Model(&models.QueryParameter{}).Where("1=1").Unscoped().Delete(&models.QueryParameter{})
 		tx.Model(&models.Query{}).Where("1=1").Unscoped().Delete(&models.Query{})
@@ -263,7 +263,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		return err
 	}
 
-	err = dbMetadata.Orm.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err = dbCore.Orm.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, obj := range p.queryViews {
 			if obj.QueryID != nil && !loadedQueryViewsQueries[*obj.QueryID] {
 				missingQueryViewsQueries[*obj.QueryID] = true
@@ -296,12 +296,12 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		return err
 	}
 
-	err = populateQueries(logger, dbm)
+	err = populateQueries(logger, dbCore)
 	if err != nil {
 		return err
 	}
 
-	err = dbMetadata.Orm.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err = dbCore.Orm.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, obj := range QueryParameters {
 			err := tx.Clauses(clause.OnConflict{
 				DoNothing: true,
