@@ -1,5 +1,5 @@
 package consts
 
 const (
-	InventoryBaseURL = "INVENTORY_BASEURL"
+	InventoryBaseURL = "CORE_BASEURL"
 )
