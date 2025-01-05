@@ -1248,20 +1248,10 @@ func (h HttpHandler) GetViews(echoCtx echo.Context) error {
 func (h HttpHandler) ListQueryParametersInternal(ctx echo.Context) (api.ListQueryParametersResponse, error) {
 	clientCtx := &httpclient.Context{UserRole: api3.AdminRole}
 	var resp api.ListQueryParametersResponse
-	var cursor, perPage int64
 	var err error
-	var request api.ListQueryParametersRequest
-	if err := ctx.Bind(&request); err != nil {
-		ctx.Logger().Errorf("bind the request: %v", err)
-		return resp, echo.NewHTTPError(http.StatusBadRequest, "invalid request")
-	}
+	
 
-	cursor = request.Cursor
-	perPage = request.PerPage
-
-	queryIDs := request.Queries
-	controlIDs := request.Controls
-
+	
 	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
 	complianceClient := complianceClient.NewComplianceClient(complianceURL)
 
@@ -1277,33 +1267,7 @@ func (h HttpHandler) ListQueryParametersInternal(ctx echo.Context) (api.ListQuer
 	}
 
 	var filteredQueryParams []string
-	if controlIDs != nil {
-		all_control, err := complianceClient.ListControl(clientCtx, controlIDs, nil)
-		if err != nil {
-			h.logger.Error("error getting control", zap.Error(err))
-			return resp, echo.NewHTTPError(http.StatusInternalServerError, "error getting control")
-		}
-		if all_control == nil {
-			return resp, echo.NewHTTPError(http.StatusNotFound, "control not found")
-		}
-		for _, control := range all_control {
-			for _, param := range control.Policy.Parameters {
-				filteredQueryParams = append(filteredQueryParams, param.Key)
-			}
-		}
-	} else if queryIDs != nil {
-		// TODO: Fix this part and write new client on inventory
-		queries, err := h.ListQueriesV2Internal(ctx, &api.ListQueryV2Request{QueryIDs: queryIDs})
-		if err != nil {
-			h.logger.Error("error getting query", zap.Error(err))
-			return resp, echo.NewHTTPError(http.StatusInternalServerError, "error getting query")
-		}
-		for _, q := range queries.Items {
-			for _, param := range q.Query.Parameters {
-				filteredQueryParams = append(filteredQueryParams, param.Key)
-			}
-		}
-	}
+	
 
 	var queryParams []models.PolicyParameterValues
 	if len(filteredQueryParams) > 0 {
@@ -1350,13 +1314,7 @@ func (h HttpHandler) ListQueryParametersInternal(ctx echo.Context) (api.ListQuer
 	sort.Slice(items, func(i, j int) bool {
 		return items[i].Key < items[j].Key
 	})
-	if perPage != 0 {
-		if cursor == 0 {
-			items = utils.Paginate(1, perPage, items)
-		} else {
-			items = utils.Paginate(cursor, perPage, items)
-		}
-	}
+	
 
 	return api.ListQueryParametersResponse{
 		TotalCount: totalCount,
