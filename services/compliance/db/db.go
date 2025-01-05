@@ -842,9 +842,9 @@ func (db Database) ListComplianceTagKeysWithPossibleValues(ctx context.Context) 
 	return result, nil
 }
 
-func (db Database) ListControls(ctx context.Context, controlIDs []string, tags map[string][]string) ([]Control, error) {
+func (db Database) ListControls(controlIDs []string, tags map[string][]string) ([]Control, error) {
 	var s []Control
-	tx := db.Orm.WithContext(ctx).Model(&Control{}).
+	tx := db.Orm.Model(&Control{}).
 		Preload(clause.Associations).
 		Preload("Policy.Parameters")
 

@@ -69,11 +69,11 @@ func (db Database) UpdateComplianceJobAreAllRunnersQueued(id uint, areAllRunners
 	return nil
 }
 
-func (db Database) UpdateComplianceJobsTimedOut(withIncidents bool, complianceIntervalHours int64) error {
+func (db Database) UpdateComplianceJobsTimedOut(withIncidents bool, complianceIntervalMinutes int64) error {
 	tx := db.ORM.
 		Model(&model.ComplianceJob{}).
 		Where("with_incidents = ?", withIncidents).
-		Where(fmt.Sprintf("created_at < NOW() - INTERVAL '%d MINUTES'", complianceIntervalHours)).
+		Where(fmt.Sprintf("created_at < NOW() - INTERVAL '%d MINUTES'", complianceIntervalMinutes)).
 		Where("status IN ?", []string{string(model.ComplianceJobCreated),
 			string(model.ComplianceJobRunnersInProgress),
 			string(model.ComplianceJobSummarizerInProgress),
