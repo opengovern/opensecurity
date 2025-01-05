@@ -93,7 +93,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			}
 			for _, param := range obj.Parameters {
 				err = tx.Clauses(clause.OnConflict{
-					Columns:   []clause.Column{{Name: "key"}, {Name: "query_id"}}, // key columns
+					Columns:   []clause.Column{{Name: "key"}, {Name: "policy_id"}}, // key columns
 					DoNothing: true,
 				}).Create(&param).Error
 				if err != nil {
