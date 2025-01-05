@@ -477,24 +477,23 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 	var apiControlsList []api.Control
 	for _, control := range controlsList {
 		var parameters []api.ControlQueryParameter
-		for _, parameter := range control.Query.Parameters {
+		for _, parameter := range control.Policy.Parameters {
 			parameters = append(parameters, api.ControlQueryParameter{
 				Key:      parameter.Key,
 				Required: parameter.Required,
 			})
 		}
-		query := api.ControlQuery{
-			ID:              control.Query.ID,
-			Engine:          api.QueryEngine(control.Query.Engine),
-			QueryToExecute:  control.Query.QueryToExecute,
-			IntegrationType: control.Query.IntegrationType,
-			PrimaryTable:    control.Query.PrimaryTable,
-			ListOfTables:    control.Query.ListOfTables,
+		query := api.Policy{
+			ID:              control.Policy.ID,
+			Language:          api.PolicyLanguage(control.Policy.Language),
+			Definition:  control.Policy.Definition,
+			IntegrationType: control.Policy.IntegrationType,
+			PrimaryResource:    control.Policy.PrimaryResource,
+			ListOfResources:    control.Policy.ListOfResources,
 			Parameters:      parameters,
-			Global:          control.Query.Global,
-			RegoPolicies:    control.Query.RegoPolicies,
-			CreatedAt:       control.Query.CreatedAt,
-			UpdatedAt:       control.Query.UpdatedAt,
+			RegoPolicies:    control.Policy.RegoPolicies,
+			CreatedAt:       control.Policy.CreatedAt,
+			UpdatedAt:       control.Policy.UpdatedAt,
 		}
 		apiControlsList = append(apiControlsList, api.Control{
 			ID:                      control.ID,
@@ -511,7 +510,7 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 			IntegrationType:         control.IntegrationType,
 			Enabled:                 control.Enabled,
 			DocumentURI:             control.DocumentURI,
-			Query:                   &query,
+			Policy:                   &query,
 			Severity:                api.ComplianceResultSeverity(control.Severity),
 			ManualVerification:      control.ManualVerification,
 			Managed:                 control.Managed,
@@ -1285,7 +1284,7 @@ func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.L
 			return resp, echo.NewHTTPError(http.StatusNotFound, "control not found")
 		}
 		for _, control := range all_control {
-			for _, param := range control.Query.Parameters {
+			for _, param := range control.Policy.Parameters {
 				filteredQueryParams = append(filteredQueryParams, param.Key)
 			}
 		}
@@ -1303,7 +1302,7 @@ func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.L
 		}
 	}
 
-	var queryParams []models.QueryParameterValues
+	var queryParams []models.PolicyParameterValues
 	if len(filteredQueryParams) > 0 {
 		queryParams, err = h.db.GetQueryParametersByIds(filteredQueryParams)
 		if err != nil {
@@ -1325,7 +1324,7 @@ func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.L
 	}
 
 	for _, c := range controls {
-		for _, p := range c.Query.Parameters {
+		for _, p := range c.Policy.Parameters {
 			if _, ok := parametersMap[p.Key]; ok {
 				parametersMap[p.Key].ControlsCount += 1
 			}

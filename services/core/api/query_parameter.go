@@ -33,18 +33,19 @@ type ControlQueryParameter struct {
 	Key      string `json:"key" example:"key"`
 	Required bool   `json:"required" example:"true"`
 }
+type PolicyLanguage string
 
-type ControlQuery struct {
+
+type Policy struct {
 	ID              string             `json:"id" example:"azure_ad_manual_control"`
-	Engine          QueryEngine        `json:"engine" example:"CLOUDQL"`
-	QueryToExecute  string             `json:"queryToExecute" example:"select\n  -- Required Columns\n  'active_directory' as resource,\n  'info' as status,\n  'Manual verification required.' as reason;\n"`
+	Language        PolicyLanguage     `json:"language" example:"sql"`
+	Definition      string             `json:"definition" example:"select\n  -- Required Columns\n  'active_directory' as resource,\n  'info' as status,\n  'Manual verification required.' as reason;\n"`
 	IntegrationType []integration.Type `json:"integrationType" example:"Azure"`
-	PrimaryTable    *string            `json:"primaryTable" example:"null"`
-	ListOfTables    []string           `json:"listOfTables" example:"null"`
+	PrimaryResource *string            `json:"primaryResource" example:"null"`
+	ListOfResources []string           `json:"listOfResources" example:"null"`
 
 	// CloudQL Fields
 	Parameters []ControlQueryParameter `json:"parameters"`
-	Global     bool                    `json:"Global"`
 
 	// Rego Fields
 	RegoPolicies []string `json:"regoPolicies" example:"null"`
@@ -52,6 +53,7 @@ type ControlQuery struct {
 	CreatedAt time.Time `json:"createdAt" example:"2023-06-07T14:00:15.677558Z"`
 	UpdatedAt time.Time `json:"updatedAt" example:"2023-06-16T14:58:08.759554Z"`
 }
+
 
 type ComplianceResultSeverity string
 
@@ -73,7 +75,7 @@ type Control struct {
 	IntegrationType    []string                 `json:"integration_type" example:"Azure"`
 	Enabled            bool                     `json:"enabled" example:"true"`
 	DocumentURI        string                   `json:"documentURI" example:"benchmarks/azure_cis_v140_1_1.md"`
-	Query              *ControlQuery            `json:"query"`
+	Policy             *Policy                        `json:"policy"`
 	Severity           ComplianceResultSeverity `json:"severity" example:"low"`
 	ManualVerification bool                     `json:"manualVerification" example:"true"`
 	Managed            bool                     `json:"managed" example:"true"`
