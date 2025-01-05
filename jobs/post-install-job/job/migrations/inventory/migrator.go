@@ -3,28 +3,21 @@ package inventory
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/goccy/go-yaml"
-	utils "github.com/opengovern/opencomply/jobs/post-install-job/utils"
-	"io/fs"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/opengovern/og-util/pkg/model"
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/opencomply/jobs/post-install-job/config"
 	"github.com/opengovern/opencomply/jobs/post-install-job/db"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"github.com/opengovern/opencomply/services/core/db/models"
+	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
-
-var QueryParameters []models.PolicyParameterValues
 
 type ResourceType struct {
 	ResourceName         string
@@ -65,8 +58,6 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		return fmt.Errorf("new postgres client: %w", err)
 	}
 	dbm := db.Database{ORM: orm}
-
-
 
 	awsResourceTypesContent, err := os.ReadFile(path.Join(m.AttachmentFolderPath(), "aws-resource-types.json"))
 	if err != nil {
@@ -166,172 +157,6 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	})
 	if err != nil {
 		return fmt.Errorf("failure in azure transaction: %v", err)
-	}
-
-	err = populateQueries(logger, dbm)
-	if err != nil {
-		return err
-	}
-
-	err = dbm.ORM.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		for _, obj := range QueryParameters {
-			err := tx.Clauses(clause.OnConflict{
-				DoNothing: true,
-			}).Create(&obj).Error
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		logger.Error("failed to insert query params", zap.Error(err))
-		return err
-	}
-
-	return nil
-}
-
-func populateQueries(logger *zap.Logger, db db.Database) error {
-	err := db.ORM.Transaction(func(tx *gorm.DB) error {
-
-		tx.Model(&models.NamedQuery{}).Where("1=1").Unscoped().Delete(&models.NamedQuery{})
-		tx.Model(&models.NamedQueryTag{}).Where("1=1").Unscoped().Delete(&models.NamedQueryTag{})
-		tx.Model(&models.QueryParameter{}).Where("1=1").Unscoped().Delete(&models.QueryParameter{})
-		tx.Model(&models.Query{}).Where("1=1").Unscoped().Delete(&models.Query{})
-
-		err := filepath.Walk(config.QueriesGitPath, func(path string, info fs.FileInfo, err error) error {
-			if !info.IsDir() && strings.HasSuffix(path, ".yaml") {
-				return populateFinderItem(logger, tx, path, info)
-			}
-			return nil
-		})
-		if err != nil && !errors.Is(err, fs.ErrNotExist) {
-			logger.Error("failed to get queries", zap.Error(err))
-			return err
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.FileInfo) error {
-	id := strings.TrimSuffix(info.Name(), ".yaml")
-
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return err
-	}
-
-	var item NamedPolicy
-	err = yaml.Unmarshal(content, &item)
-	if err != nil {
-		logger.Error("failure in unmarshal", zap.String("path", path), zap.Error(err))
-		return err
-	}
-
-	if item.ID != "" {
-		id = item.ID
-	}
-
-	var integrationTypes []string
-	for _, c := range item.IntegrationTypes {
-		integrationTypes = append(integrationTypes, string(c))
-	}
-
-	isBookmarked := false
-	tags := make([]models.NamedQueryTag, 0, len(item.Tags))
-	for k, v := range item.Tags {
-		if k == "platform_queries_bookmark" {
-			isBookmarked = true
-		}
-		tag := models.NamedQueryTag{
-			NamedQueryID: id,
-			Tag: model.Tag{
-				Key:   k,
-				Value: v,
-			},
-		}
-		tags = append(tags, tag)
-	}
-
-	dbMetric := models.NamedQuery{
-		ID:               id,
-		IntegrationTypes: integrationTypes,
-		Title:            item.Title,
-		Description:      item.Description,
-		IsBookmarked:     isBookmarked,
-		QueryID:          &id,
-	}
-	queryParams := []models.QueryParameter{}
-	for _, qp := range item.Policy.Parameters {
-		queryParams = append(queryParams, models.QueryParameter{
-			Key:      qp.Key,
-			Required: qp.Required,
-			QueryID:  dbMetric.ID,
-		})
-		if qp.DefaultValue != "" {
-			queryParamObj := models.PolicyParameterValues{
-				Key:   qp.Key,
-				Value: qp.DefaultValue,
-			}
-			QueryParameters = append(QueryParameters, queryParamObj)
-		}
-	}
-	listOfTables, err := utils.ExtractTableRefsFromPolicy("sql", item.Policy.QueryToExecute)
-	if err != nil {
-		logger.Error("failed to extract table refs from query", zap.String("query-id", dbMetric.ID), zap.Error(err))
-		listOfTables = item.Policy.ListOfTables
-	}
-	query := models.Query{
-		ID:             dbMetric.ID,
-		QueryToExecute: item.Policy.QueryToExecute,
-		PrimaryTable:   item.Policy.PrimaryTable,
-		ListOfTables:   listOfTables,
-		Engine:         item.Policy.Engine,
-		Parameters:     queryParams,
-		Global:         item.Policy.Global,
-	}
-	err = tx.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "id"}}, // key column
-		DoNothing: true,
-	}).Create(&query).Error
-	if err != nil {
-		logger.Error("failure in Creating Policy", zap.String("query_id", id), zap.Error(err))
-		return err
-	}
-	for _, param := range query.Parameters {
-		err = tx.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "key"}, {Name: "query_id"}}, // key columns
-			DoNothing: true,
-		}).Create(&param).Error
-		if err != nil {
-			return fmt.Errorf("failure in query parameter insert: %v", err)
-		}
-	}
-
-	err = tx.Model(&models.NamedQuery{}).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "id"}}, // key column
-		DoNothing: true,                          // column needed to be updated
-	}).Create(dbMetric).Error
-	if err != nil {
-		logger.Error("failure in insert query", zap.Error(err))
-		return err
-	}
-
-	// logger.Info("parsed the tags", zap.String("id", id), zap.Any("tags", tags))
-
-	if len(tags) > 0 {
-		for _, tag := range tags {
-			err = tx.Model(&models.NamedQueryTag{}).Create(&tag).Error
-			if err != nil {
-				logger.Error("failure in insert tags", zap.Error(err))
-				return err
-			}
-		}
 	}
 
 	return nil
