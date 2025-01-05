@@ -82,34 +82,34 @@ export default function ControlDetail() {
         error: controlDetailError,
         sendNow: refreshControlDetail,
     } = useComplianceApiV1ControlsSummaryDetail(String(controlId))
-    const {
-        response: parameters,
-        isLoading: parametersLoading,
-        isExecuted,
-        error: parametersError,
-        sendNow: refresh,
-    } = useMetadataApiV1QueryParameterList()
-    const [conformanceFilter, setConformanceFilter] = useState<
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
-        | undefined
-    >(undefined)
-    const conformanceFilterIdx = () => {
-        if (
-            conformanceFilter?.length === 1 &&
-            conformanceFilter[0] ===
-                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed
-        ) {
-            return '1'
-        }
-        if (
-            conformanceFilter?.length === 1 &&
-            conformanceFilter[0] ===
-                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
-        ) {
-            return '2'
-        }
-        return '0'
-    }
+    // const {
+    //     response: parameters,
+    //     isLoading: parametersLoading,
+    //     isExecuted,
+    //     error: parametersError,
+    //     sendNow: refresh,
+    // } = useMetadataApiV1QueryParameterList()
+    // const [conformanceFilter, setConformanceFilter] = useState<
+    //     | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+    //     | undefined
+    // >(undefined)
+    // const conformanceFilterIdx = () => {
+    //     if (
+    //         conformanceFilter?.length === 1 &&
+    //         conformanceFilter[0] ===
+    //             GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed
+    //     ) {
+    //         return '1'
+    //     }
+    //     if (
+    //         conformanceFilter?.length === 1 &&
+    //         conformanceFilter[0] ===
+    //             GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
+    //     ) {
+    //         return '2'
+    //     }
+    //     return '0'
+    // }
     const truncate = (text: string | undefined) => {
         if (text) {
             return text.length > 600 ? text.substring(0, 600) + '...' : text
@@ -547,7 +547,7 @@ export default function ControlDetail() {
                                             )
                                         }
                                         value={
-                                            controlDetail?.control?.query?.queryToExecute?.replace(
+                                            controlDetail?.control?.policy?.definition?.replace(
                                                 '$IS_ALL_CONNECTIONS_QUERY',
                                                 'true'
                                             ) || ''
@@ -567,7 +567,7 @@ export default function ControlDetail() {
                                                 iconPosition="left"
                                                 onClick={() =>
                                                     clipboardCopy(
-                                                        controlDetail?.control?.query?.queryToExecute?.replace(
+                                                        controlDetail?.control?.policy?.definition?.replace(
                                                             '$IS_ALL_CONNECTIONS_QUERY',
                                                             'true'
                                                         ) || ''
@@ -579,13 +579,13 @@ export default function ControlDetail() {
                                                     )
                                                 }
                                             >
-                                                Copy
+                                                Copy SQL Policy
                                             </Button>
                                             <Button
                                                 variant="secondary"
                                                 onClick={() => {
                                                     setQuery(
-                                                        controlDetail?.control?.query?.queryToExecute?.replace(
+                                                        controlDetail?.control?.policy?.definition?.replace(
                                                             '$IS_ALL_CONNECTIONS_QUERY',
                                                             'true'
                                                         ) || ''
@@ -593,7 +593,7 @@ export default function ControlDetail() {
                                                 }}
                                             >
                                                 <Link to={`/cloudql`}>
-                                                    Open in Query
+                                                    Open in CloudQL
                                                 </Link>
                                             </Button>
                                         </Flex>
@@ -843,8 +843,8 @@ export default function ControlDetail() {
                             </Grid> */}
                                 </Flex>
                             </Grid>
-                            <Flex flexDirection="row" className="w-full">
-                                <Header
+                            {/* <Flex flexDirection="row" className="w-full"> */}
+                                {/* <Header
                                     variant="h3"
                                     actions={
                                         <SegmentedControl
@@ -877,7 +877,7 @@ export default function ControlDetail() {
                                     }
                                 >
                                     Compliance Status filter:
-                                </Header>
+                                </Header> */}
                                 {/* <Text className="mr-2 w-fit">
                             Confomance Status filter:
                         </Text>
@@ -932,7 +932,7 @@ export default function ControlDetail() {
                                 <Tab value="3">Passed</Tab>
                             </TabList>
                         </TabGroup> */}
-                            </Flex>
+                            {/* </Flex> */}
                             <Tabs
                                 tabs={[
                                     {
@@ -945,15 +945,15 @@ export default function ControlDetail() {
                                                         ?.id || ''
                                                 }
                                                 linkPrefix={`/score/categories/`}
-                                                conformanceFilter={
-                                                    conformanceFilter
-                                                }
+                                                // conformanceFilter={
+                                                //     conformanceFilter
+                                                // }
                                             />
                                         ),
                                     },
                                     {
                                         id: '1',
-                                        label: 'Impacted accounts',
+                                        label: 'Impacted Integrations',
                                         content: (
                                             <ImpactedAccounts
                                                 controlId={
@@ -979,7 +979,7 @@ export default function ControlDetail() {
                                     // },
                                     {
                                         id: '3',
-                                        label: 'Framework',
+                                        label: 'Frameworks',
                                         content: (
                                             <Benchmarks
                                                 benchmarks={

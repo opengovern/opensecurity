@@ -171,13 +171,14 @@ export default function Overview() {
             })
     }
     useEffect(() => {
-        if (user?.email == 'admin@example.com') {
-            setUserModal(true)
-        } else {
-            if(me?.connector_id === 'local'){
-            // PassCheck()
-            }
-        }
+        // if (user?.email == 'admin@example.com') {
+        //     setUserModal(true)
+        // } else {
+           
+        // }
+         if (me?.connector_id === 'local') {
+             PassCheck()
+         }
     }, [])
     const CheckEmail = () => {
         if (!userData?.email || userData?.email == '') {

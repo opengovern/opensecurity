@@ -163,7 +163,7 @@ export default function ImpactedAccounts({ controlId }: IImpactedAccounts) {
                         columnDefinitions={[
                             {
                                 id: 'providerConnectionName',
-                                header: 'Account name',
+                                header: 'Integration name',
                                 cell: (item) => (
                                     // @ts-ignore
                                     <>
@@ -172,7 +172,6 @@ export default function ImpactedAccounts({ controlId }: IImpactedAccounts) {
                                             // @ts-ignore
 
                                             item?.Integration?.name
-                                              
                                         }
                                     </>
                                 ),
@@ -182,7 +181,7 @@ export default function ImpactedAccounts({ controlId }: IImpactedAccounts) {
                             },
                             {
                                 id: 'providerConnectionID',
-                                header: 'Account Id',
+                                header: 'Provider ID',
                                 cell: (item) => (
                                     // @ts-ignore
                                     <>
