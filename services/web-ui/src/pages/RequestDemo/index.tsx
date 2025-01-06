@@ -80,7 +80,7 @@ export default function RequestDemo() {
                         Booking a Demo
                     </Flex>
                 </Flex>
-                <Text>Copyright 2024 open governance inc. All Rights Reserved.</Text>
+                <Text>Copyright 2025 open governance inc. All Rights Reserved.</Text>
             </Flex>
             <iframe
                 title="Setup a meeting"

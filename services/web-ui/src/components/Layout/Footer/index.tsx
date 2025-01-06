@@ -16,7 +16,7 @@ export default function Footer() {
                 className="max-w-7xl w-full"
             >
                 {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                <Text> © 2024 open governance. All rights reserved.</Text>{" "}
+                <Text> © 2025 open governance. All rights reserved.</Text>{" "}
                 
                 {/* {smaple && <>{" "}
                 Demo data loaded</>} */}
