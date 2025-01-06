@@ -21,8 +21,8 @@ import (
 	"github.com/opengovern/og-util/pkg/integration"
 	queryrunner "github.com/opengovern/opencomply/jobs/query-runner-job"
 	"github.com/opengovern/opencomply/pkg/types"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"github.com/opengovern/opencomply/services/core/rego_runner"
+	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 
 	"github.com/labstack/echo/v4"
@@ -42,8 +42,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
-
 const (
 	EsFetchPageSize = 10000
 	MaxConns        = 100
@@ -59,8 +57,6 @@ const (
 	IntegrationIdParam    = "integrationId"
 	IntegrationGroupParam = "integrationGroup"
 )
-
-
 
 func (h *HttpHandler) getIntegrationTypesFromIntegrationIDs(ctx echo.Context, integrationTypes []integration.Type, integrationIDs []string) ([]integration.Type, error) {
 	if len(integrationIDs) == 0 {
@@ -1564,9 +1560,8 @@ func (h *HttpHandler) GetParametersQueries(ctx echo.Context) error {
 	})
 }
 
+func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context, req api.ListQueryV2Request) (*api.ListQueriesV2Response, error) {
 
-func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context,req *api.ListQueryV2Request) (*api.ListQueriesV2Response, error) {
-	
 	var namedQuery api.ListQueriesV2Response
 	// if err := bindValidate(ctx, &req); err != nil {
 	// 	return &namedQuery,echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -1581,7 +1576,7 @@ func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context,req *api.ListQueryV
 	integrations, err := h.integrationClient.ListIntegrations(&httpclient.Context{UserRole: api2.AdminRole}, nil)
 	if err != nil {
 		h.logger.Error("failed to get integrations list", zap.Error(err))
-		return &namedQuery,echo.NewHTTPError(http.StatusInternalServerError, "failed to get integrations list")
+		return &namedQuery, echo.NewHTTPError(http.StatusInternalServerError, "failed to get integrations list")
 	}
 	for _, i := range integrations.Integrations {
 		integrationTypes[i.IntegrationType.String()] = true
@@ -1597,7 +1592,7 @@ func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context,req *api.ListQueryV
 		categories, err := h.db.ListUniqueCategoriesAndTablesForTables(nil)
 		if err != nil {
 			h.logger.Error("failed to list resource categories", zap.Error(err))
-			return &namedQuery,echo.NewHTTPError(http.StatusInternalServerError, "failed to list resource categories")
+			return &namedQuery, echo.NewHTTPError(http.StatusInternalServerError, "failed to list resource categories")
 		}
 		categoriesFilterMap := make(map[string]bool)
 		for _, c := range req.Categories {
@@ -1611,7 +1606,7 @@ func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context,req *api.ListQueryV
 			}
 			resourceTypes, err := h.db.ListCategoryResourceTypes(c.Category)
 			if err != nil {
-				return &namedQuery,echo.NewHTTPError(http.StatusInternalServerError, "list category resource types")
+				return &namedQuery, echo.NewHTTPError(http.StatusInternalServerError, "list category resource types")
 			}
 			var resourceTypesApi []api.ResourceTypeV2
 			for _, r := range resourceTypes {
@@ -1650,7 +1645,7 @@ func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context,req *api.ListQueryV
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		return &namedQuery,err
+		return &namedQuery, err
 	}
 	span.End()
 
@@ -1708,19 +1703,17 @@ func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context,req *api.ListQueryV
 		TotalCount: totalCount,
 	}
 
-	return &result,nil
+	return &result, nil
 }
 
-
-func (h *HttpHandler) RunQueryInternal(ctx echo.Context,req api.RunQueryRequest) (*api.RunQueryResponse, error) {
+func (h *HttpHandler) RunQueryInternal(ctx echo.Context, req api.RunQueryRequest) (*api.RunQueryResponse, error) {
 	var resp *api.RunQueryResponse
 
-	
 	if err := bindValidate(ctx, &req); err != nil {
-		return resp,echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return resp, echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	if req.Query == nil || *req.Query == "" {
-		return resp,echo.NewHTTPError(http.StatusBadRequest, "Query is required")
+		return resp, echo.NewHTTPError(http.StatusBadRequest, "Query is required")
 	}
 	// tracer :
 	outputS, span := tracer.Start(ctx.Request().Context(), "new_RunQuery", trace.WithSpanKind(trace.SpanKindServer))
@@ -1728,7 +1721,7 @@ func (h *HttpHandler) RunQueryInternal(ctx echo.Context,req api.RunQueryRequest)
 
 	queryParams, err := h.ListQueryParametersInternal(ctx)
 	if err != nil {
-		return resp,err
+		return resp, err
 	}
 	queryParamMap := make(map[string]string)
 	for _, qp := range queryParams.Items {
@@ -1737,11 +1730,11 @@ func (h *HttpHandler) RunQueryInternal(ctx echo.Context,req api.RunQueryRequest)
 
 	queryTemplate, err := template.New("query").Parse(*req.Query)
 	if err != nil {
-		return resp,err
+		return resp, err
 	}
 	var queryOutput bytes.Buffer
 	if err := queryTemplate.Execute(&queryOutput, queryParamMap); err != nil {
-		return resp,fmt.Errorf("failed to execute query template: %w", err)
+		return resp, fmt.Errorf("failed to execute query template: %w", err)
 	}
 
 	if req.Engine == nil || *req.Engine == api.QueryEngineCloudQL {
@@ -1749,22 +1742,22 @@ func (h *HttpHandler) RunQueryInternal(ctx echo.Context,req api.RunQueryRequest)
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
-			return resp,err
+			return resp, err
 		}
 	} else if *req.Engine == api.QueryEngineCloudQLRego {
 		resp, err = h.RunRegoNamedQuery(outputS, *req.Query, queryOutput.String(), &req)
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
-			return resp,err
+			return resp, err
 		}
 	} else {
-		return resp,fmt.Errorf("invalid query engine: %s", *req.Engine)
+		return resp, fmt.Errorf("invalid query engine: %s", *req.Engine)
 	}
 
 	span.AddEvent("information", trace.WithAttributes(
 		attribute.String("query title ", resp.Title),
 	))
 	span.End()
-	return resp,nil
+	return resp, nil
 }
