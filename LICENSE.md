@@ -2,29 +2,30 @@
 
 ## Overview
 
-This document pertains to the licensing terms of the software product known as "opencomply" version v0.400.0 or later, owned by Open Governance, Inc. This product is available under the Business Source License 1.1.
+This document pertains to the licensing terms of the software product known as "opencomply" version v0.300.0 or later, owned by Open Governance, Inc. This product is available under the Business Source License 1.1.
 
 ## Copyright Notice
 
 License text © 2020 MariaDB Corporation Ab. All Rights Reserved. "Business Source License" is a trademark of MariaDB Corporation Ab.
 
-## Parameters
+## License Components
 
 - **Licensor**: Open Governance, Inc.
-- **Licensed Work**: Opencomply version 0.400.0 or later. © 2025 Open Governance, Inc.
+- **Licensed Work**: Opencomply version 0.300.0 or later. © 2025 Open Governance, Inc.
   
 ## Additional Use Grant
 
 You are permitted to make production use of the Licensed Work with the following conditions:
 
 - Your use should not involve offering the Licensed Work to third parties on a hosted or embedded basis that competes with Open Governance's paid versions.
-- **Competitive Offering**: Defined as a product offered on a paid basis that significantly overlaps with Open Governance's paid versions, including paid support; Products distributed without charge are considered non-competitive.
+- **Competitive Offering**: Defined as a product offered on a paid basis that significantly overlaps with Open Governance's paid versions, including paid support.
+- Products distributed without charge are considered non-competitive.
 - **Product**: Software offered to end users for self-management or as a hosted service.
 - **Embedded**: Involves inclusion of Licensed Work code in a competitive offering or packaging it such that access or download is required for operation.
 - Internal organizational use is not deemed competitive.
 - Your organization includes affiliates under common control.
 
-For additional guidance, consult our [FAQ](https://www.opencomply.io/license-faq).
+For interpretive guidance, consult our [FAQ](https://www.opencomply.io/license-faq).
 
 ## License Change Policy
 
@@ -57,4 +58,5 @@ The Licensor grants you rights to:
 - The Licensed Work is provided "as is" without warranties, express or implied, including those of merchantability, fitness for a particular purpose, non-infringement, and title.
 
 ---
+
 For any specifics regarding interpretation or other detailed inquiries, ensure to refer to the [Business Source License FAQ](https://www.opencomply.io/license-faq) or the contact information provided.
