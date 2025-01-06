@@ -1,5 +1,6 @@
 # Licensing
 
+
 ## Overview
 
 This document pertains to the licensing terms of the software product known as "opencomply" version v0.300.0 or later, owned by Open Governance, Inc. This product is available under the Business Source License 1.1.
