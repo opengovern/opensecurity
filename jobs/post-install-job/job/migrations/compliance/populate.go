@@ -234,6 +234,8 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	err = dbCore.Orm.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		tx.Model(&models.QueryView{}).Where("1=1").Unscoped().Delete(&models.QueryView{})
 		tx.Model(&models.QueryParameter{}).Where("1=1").Unscoped().Delete(&models.QueryParameter{})
+		tx.Model(&models.NamedQuery{}).Where("1=1").Unscoped().Delete(&models.NamedQuery{})
+		tx.Model(&models.NamedQueryTag{}).Where("1=1").Unscoped().Delete(&models.NamedQueryTag{})
 		tx.Model(&models.Query{}).Where("1=1").Unscoped().Delete(&models.Query{})
 		for _, obj := range p.coreServiceQueries {
 			obj.QueryViews = nil
@@ -329,10 +331,6 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 
 func populateQueries(logger *zap.Logger, db db.Database) error {
 	err := db.Orm.Transaction(func(tx *gorm.DB) error {
-
-		tx.Model(&models.NamedQuery{}).Where("1=1").Unscoped().Delete(&models.NamedQuery{})
-		tx.Model(&models.NamedQueryTag{}).Where("1=1").Unscoped().Delete(&models.NamedQueryTag{})
-
 		err := filepath.Walk(config.QueriesGitPath, func(path string, info fs.FileInfo, err error) error {
 			if !info.IsDir() && strings.HasSuffix(path, ".yaml") {
 				return populateFinderItem(logger, tx, path, info)
@@ -391,7 +389,7 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		tags = append(tags, tag)
 	}
 
-	dbMetric := models.NamedQuery{
+	namedQuery := models.NamedQuery{
 		ID:               id,
 		IntegrationTypes: integrationTypes,
 		Title:            item.Title,
@@ -402,10 +400,10 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 	queryParams := []models.QueryParameter{}
 	listOfTables, err := utils.ExtractTableRefsFromPolicy("sql", item.Query)
 	if err != nil {
-		logger.Error("failed to extract table refs from query", zap.String("query-id", dbMetric.ID), zap.Error(err))
+		logger.Error("failed to extract table refs from query", zap.String("query-id", namedQuery.ID), zap.Error(err))
 	}
 	query := models.Query{
-		ID:             dbMetric.ID,
+		ID:             namedQuery.ID,
 		QueryToExecute: item.Query,
 		ListOfTables:   listOfTables,
 		Engine:         "sql",
@@ -432,7 +430,7 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 	err = tx.Model(&models.NamedQuery{}).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}}, // key column
 		DoNothing: true,                          // column needed to be updated
-	}).Create(dbMetric).Error
+	}).Create(namedQuery).Error
 	if err != nil {
 		logger.Error("failure in insert query", zap.Error(err))
 		return err
