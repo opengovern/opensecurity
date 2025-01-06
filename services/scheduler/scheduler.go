@@ -280,7 +280,7 @@ func InitializeScheduler(
 	describeServer.DoProcessReceivedMessages, _ = strconv.ParseBool(DoProcessReceivedMsgs)
 	s.MaxConcurrentCall, _ = strconv.ParseInt(MaxConcurrentCall, 10, 64)
 	if s.MaxConcurrentCall <= 0 {
-		s.MaxConcurrentCall = 5000
+		s.MaxConcurrentCall = 100
 	}
 
 	s.discoveryScheduler = discovery.New(

@@ -31,7 +31,7 @@ import (
 
 const (
 	MaxQueued      = 5000
-	MaxIn10Minutes = 5000
+	MaxIn10Minutes = 1000
 )
 
 var ErrJobInProgress = errors.New("job already in progress")
@@ -159,11 +159,11 @@ func (s *Scheduler) RunDescribeResourceJobCycle(ctx context.Context, manuals boo
 			cred: credential,
 		}
 		wp.AddJob(func() (interface{}, error) {
-			err, natsPayload := s.enqueueCloudNativeDescribeJob(ctx, c.dc, c.cred.Secret, c.src)
+			err := s.enqueueCloudNativeDescribeJob(ctx, c.dc, c.cred.Secret, c.src)
 			if err != nil {
 				s.logger.Error("Failed to enqueueCloudNativeDescribeConnectionJob", zap.Error(err), zap.Uint("jobID", dc.ID))
 				DescribeResourceJobsCount.WithLabelValues("failure", "enqueue").Inc()
-				return natsPayload, err
+				return nil, err
 			}
 			DescribeResourceJobsCount.WithLabelValues("successful", "").Inc()
 			return nil, nil
@@ -173,7 +173,6 @@ func (s *Scheduler) RunDescribeResourceJobCycle(ctx context.Context, manuals boo
 	res := wp.Run()
 	for _, r := range res {
 		if r.Error != nil {
-			s.logger.Error("failure on calling cloudNative describer", zap.Error(r.Error), zap.String("payload", string(r.Value.([]byte))))
 			s.logger.Error("failure on calling cloudNative describer", zap.Error(r.Error))
 		}
 	}
@@ -384,7 +383,7 @@ func newDescribeConnectionJob(a integrationapi.Integration, resourceType string,
 }
 
 func (s *Scheduler) enqueueCloudNativeDescribeJob(ctx context.Context, dc model.DescribeIntegrationJob, cipherText string,
-	integration *integrationapi.Integration) (error, []byte) {
+	integration *integrationapi.Integration) error {
 	var err error
 
 	ctx, span := otel.Tracer(opengovernanceTrace.JaegerTracerName).Start(ctx, opengovernanceTrace.GetCurrentFuncName())
@@ -392,7 +391,7 @@ func (s *Scheduler) enqueueCloudNativeDescribeJob(ctx context.Context, dc model.
 
 	integrationType, ok := integration_type.IntegrationTypes[dc.IntegrationType]
 	if !ok {
-		return fmt.Errorf("integration type not found"), nil
+		return fmt.Errorf("integration type not found")
 	}
 
 	s.logger.Debug("enqueueCloudNativeDescribeJob",
@@ -406,7 +405,7 @@ func (s *Scheduler) enqueueCloudNativeDescribeJob(ctx context.Context, dc model.
 	var parameters map[string]string
 	if dc.Parameters.Status == pgtype.Present {
 		if err := json.Unmarshal(dc.Parameters.Bytes, &parameters); err != nil {
-			return err, nil
+			return err
 		}
 	}
 
@@ -470,7 +469,7 @@ func (s *Scheduler) enqueueCloudNativeDescribeJob(ctx context.Context, dc model.
 	if err != nil {
 		s.logger.Error("failed to marshal cloud native req", zap.Uint("jobID", dc.ID), zap.String("IntegrationID", dc.IntegrationID), zap.String("resourceType", dc.ResourceType), zap.Error(err))
 		isFailed = true
-		return fmt.Errorf("failed to marshal cloud native req due to %w", err), natsPayload
+		return fmt.Errorf("failed to marshal cloud native req due to %w", err)
 	}
 
 	describerConfig := integrationType.GetConfiguration()
@@ -485,7 +484,7 @@ func (s *Scheduler) enqueueCloudNativeDescribeJob(ctx context.Context, dc model.
 			err = s.SetupNats(ctx)
 			if err != nil {
 				s.logger.Error("Failed to setup nats streams", zap.Error(err))
-				return err, natsPayload
+				return err
 			}
 			seqNum, err = s.jq.Produce(ctx, topic, natsPayload, fmt.Sprintf("%s-%d-%d", dc.IntegrationType, input.DescribeJob.JobID, input.DescribeJob.RetryCounter))
 			if err != nil {
@@ -496,7 +495,7 @@ func (s *Scheduler) enqueueCloudNativeDescribeJob(ctx context.Context, dc model.
 					zap.Error(err),
 				)
 				isFailed = true
-				return fmt.Errorf("failed to produce message to jetstream due to %v", err), natsPayload
+				return fmt.Errorf("failed to produce message to jetstream due to %v", err)
 			}
 		} else {
 			s.logger.Error("failed to produce message to jetstream",
@@ -507,7 +506,7 @@ func (s *Scheduler) enqueueCloudNativeDescribeJob(ctx context.Context, dc model.
 				zap.String("error message", err.Error()),
 			)
 			isFailed = true
-			return fmt.Errorf("failed to produce message to jetstream due to %v", err), natsPayload
+			return fmt.Errorf("failed to produce message to jetstream due to %v", err)
 		}
 	}
 	if seqNum != nil {
@@ -526,5 +525,5 @@ func (s *Scheduler) enqueueCloudNativeDescribeJob(ctx context.Context, dc model.
 		zap.String("resourceType", dc.ResourceType),
 	)
 
-	return nil, natsPayload
+	return nil
 }
