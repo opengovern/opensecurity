@@ -79,7 +79,7 @@ func (g *GitParser) ExtractNamedQueries() error {
 			err = yaml.Unmarshal(content, &item)
 			if err != nil {
 				g.logger.Error("failure in unmarshal", zap.String("path", path), zap.Error(err))
-				return err
+				return nil
 			}
 
 			if item.ID != "" {
@@ -797,7 +797,7 @@ func (g *GitParser) ExtractQueryViews(viewsPath string) error {
 		err = yaml.Unmarshal(content, &obj)
 		if err != nil {
 			g.logger.Error("failed to unmarshal query view", zap.String("path", path), zap.Error(err))
-			return err
+			return nil
 		}
 
 		qv := models.QueryView{
