@@ -3,7 +3,6 @@ package compliance
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lib/pq"
 	"github.com/opengovern/opencomply/jobs/post-install-job/config"
 	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/shared"
 	"github.com/opengovern/opencomply/jobs/post-install-job/utils"
@@ -164,6 +163,37 @@ func (g *GitParser) ExtractControls(complianceControlsPath string, controlEnrich
 	})
 }
 
+func (g *GitParser) ExtractPolicies(compliancePoliciesPath string) error {
+	return filepath.WalkDir(compliancePoliciesPath, func(path string, d fs.DirEntry, err error) error {
+		if strings.HasSuffix(path, ".yaml") {
+			content, err := os.ReadFile(path)
+			if err != nil {
+				g.logger.Error("failed to read yaml", zap.String("path", path), zap.Error(err))
+				return err
+			}
+
+			var data map[string]interface{}
+			if err := yaml.Unmarshal(content, &data); err != nil {
+				g.logger.Error("failed to unmarshal yaml", zap.String("path", path), zap.Error(err))
+				return fmt.Errorf("cannot parse YAML as map: %w", err)
+			}
+
+			if data["policy"] != nil && data["severity"] != nil {
+				if err = g.parseControlFile(content, path); err != nil {
+					g.logger.Error("failed to parse control", zap.String("path", path), zap.Error(err))
+					return err
+				}
+			} else if data["definition"] != nil && data["language"] != nil {
+				if err = g.parsePolicyFile(content, path); err != nil {
+					g.logger.Error("failed to parse control", zap.String("path", path), zap.Error(err))
+					return err
+				}
+			}
+		}
+		return nil
+	})
+}
+
 func (g *GitParser) parsePolicyFile(content []byte, path string) error {
 	var policy shared.Policy
 	err := yaml.Unmarshal(content, &policy)
@@ -305,66 +335,8 @@ func (g *GitParser) parseControlFile(content []byte, path string) error {
 	}
 
 	if control.Policy != nil {
-		if control.Policy.ID != nil {
-			query, ok := g.namedPolicies[*control.Policy.ID]
-			if !ok {
-				g.logger.Error("could not find the named query", zap.String("control", control.ID),
-					zap.String("query", *control.Policy.ID))
-			} else {
-				var integrationTypes pq.StringArray
-				for _, it := range query.IntegrationTypes {
-					integrationTypes = append(integrationTypes, string(it))
-				}
-				listOfTables, err := utils.ExtractTableRefsFromPolicy(types.PolicyLanguageSQL, query.Query)
-				if err != nil {
-					g.logger.Error("failed to extract table refs from query", zap.String("query-id", control.ID), zap.Error(err))
-					return nil
-				}
-
-				parameters, err := utils.ExtractParameters(control.Policy.Language, control.Policy.Definition)
-				if err != nil {
-					g.logger.Error("extract control failed: failed to extract parameters from query", zap.String("control-id", control.ID), zap.Error(err))
-					return nil
-				}
-
-				var primaryResource string
-
-				p := db.Policy{
-					ID:              control.ID,
-					Definition:      query.Query,
-					IntegrationType: integrationTypes,
-					PrimaryResource: primaryResource,
-					ListOfResources: listOfTables,
-					Language:        types.PolicyLanguageSQL,
-				}
-				g.controlsPolicies[control.ID] = p
-
-				controlParameterValues := make(map[string]string)
-				for _, parameter := range control.Parameters {
-					controlParameterValues[parameter.Key] = parameter.Value
-				}
-
-				for _, parameter := range parameters {
-					p.Parameters = append(p.Parameters, db.PolicyParameter{
-						PolicyID: control.ID,
-						Key:      parameter,
-					})
-
-					if v, ok := controlParameterValues[parameter]; ok {
-						g.policyParamValues = append(g.policyParamValues, models.PolicyParameterValues{
-							Key:       parameter,
-							Value:     v,
-							ControlID: control.ID,
-						})
-					} else {
-						g.logger.Error("extract control failed: control does not contain parameter value", zap.String("control-id", control.ID),
-							zap.String("parameter", parameter))
-						return nil
-					}
-				}
-				g.policies = append(g.policies, p)
-				c.PolicyID = &control.ID
-			}
+		if control.Policy.Ref != nil {
+			c.PolicyID = control.Policy.Ref
 		} else {
 			listOfTables, err := utils.ExtractTableRefsFromPolicy(control.Policy.Language, control.Policy.Definition)
 			if err != nil {
@@ -763,6 +735,9 @@ func (g GitParser) ExtractBenchmarksMetadata() error {
 
 func (g *GitParser) ExtractCompliance(compliancePath string, controlEnrichmentBasePath string) error {
 	if err := g.ExtractNamedQueries(); err != nil {
+		return err
+	}
+	if err := g.ExtractPolicies(path.Join(compliancePath, "policies")); err != nil {
 		return err
 	}
 	if err := g.ExtractControls(path.Join(compliancePath, "controls"), controlEnrichmentBasePath); err != nil {
