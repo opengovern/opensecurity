@@ -4616,13 +4616,6 @@ func (h HttpHandler) GetQuickScanSummary(c echo.Context) error {
 		complianceJob.JobStatus == string(schedulerapi.ComplianceJobSummarizerInProgress) {
 		return echo.NewHTTPError(http.StatusBadRequest, "job is in progress")
 	}
-	if complianceJob.WithIncidents {
-		if complianceJob.SummaryJobId == nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "compliance job not summarized yet")
-		}
-		jobId = strconv.Itoa(int(*complianceJob.SummaryJobId))
-	}
-
 	var result api.AuditSummary
 
 	switch view {
@@ -4804,12 +4797,6 @@ func (h HttpHandler) GetComplianceJobReport(c echo.Context) error {
 		complianceJob.JobStatus == string(schedulerapi.ComplianceJobCreated) ||
 		complianceJob.JobStatus == string(schedulerapi.ComplianceJobSummarizerInProgress) {
 		return echo.NewHTTPError(http.StatusBadRequest, "job is in progress")
-	}
-	if complianceJob.WithIncidents {
-		if complianceJob.SummaryJobId == nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "compliance job not summarized yet")
-		}
-		jobId = strconv.Itoa(int(*complianceJob.SummaryJobId))
 	}
 
 	summary, err := es.GetJobReportControlSummaryByJobID(c.Request().Context(), h.logger, h.client, jobId, controls)
