@@ -1,6 +1,3 @@
-# Licensing
-
-<br>
 
 ## Overview
 
