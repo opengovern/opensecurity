@@ -33,7 +33,7 @@ type GitParser struct {
 	queryViews         []models.QueryView
 	coreServiceQueries []models.Query
 	controlsPolicies   map[string]db.Policy
-	namedPolicies      map[string]NamedPolicy
+	namedPolicies      map[string]NamedQuery
 	Comparison         *git.ComparisonResultGrouped
 
 	manualRemediationMap       map[string]string
@@ -75,7 +75,7 @@ func (g *GitParser) ExtractNamedQueries() error {
 				return err
 			}
 
-			var item NamedPolicy
+			var item NamedQuery
 			err = yaml.Unmarshal(content, &item)
 			if err != nil {
 				g.logger.Error("failure in unmarshal", zap.String("path", path), zap.Error(err))
@@ -315,7 +315,7 @@ func (g *GitParser) parseControlFile(content []byte, path string) error {
 				for _, it := range query.IntegrationTypes {
 					integrationTypes = append(integrationTypes, string(it))
 				}
-				listOfTables, err := utils.ExtractTableRefsFromPolicy(types.PolicyLanguageSQL, query.Policy.QueryToExecute)
+				listOfTables, err := utils.ExtractTableRefsFromPolicy(types.PolicyLanguageSQL, query.Query)
 				if err != nil {
 					g.logger.Error("failed to extract table refs from query", zap.String("query-id", control.ID), zap.Error(err))
 					return nil
@@ -328,13 +328,10 @@ func (g *GitParser) parseControlFile(content []byte, path string) error {
 				}
 
 				var primaryResource string
-				if query.Policy.PrimaryTable != nil {
-					primaryResource = *query.Policy.PrimaryTable
-				}
 
 				p := db.Policy{
 					ID:              control.ID,
-					Definition:      query.Policy.QueryToExecute,
+					Definition:      query.Query,
 					IntegrationType: integrationTypes,
 					PrimaryResource: primaryResource,
 					ListOfResources: listOfTables,
@@ -804,44 +801,25 @@ func (g *GitParser) ExtractQueryViews(viewsPath string) error {
 		}
 
 		qv := models.QueryView{
-			ID:           obj.ID,
-			Title:        obj.Title,
-			Description:  obj.Description,
-			Dependencies: obj.Dependencies,
+			ID:          obj.ID,
+			Title:       obj.Title,
+			Description: obj.Description,
 		}
 
-		if obj.Query != nil {
-			listOfTables, err := utils.ExtractTableRefsFromPolicy(types.PolicyLanguageSQL, obj.Query.QueryToExecute)
-			if err != nil {
-				g.logger.Error("failed to extract table refs from query", zap.String("query-id", obj.ID), zap.Error(err))
-				listOfTables = obj.Query.ListOfTables
-			}
-
-			q := models.Query{
-				ID:             obj.ID,
-				QueryToExecute: obj.Query.QueryToExecute,
-				PrimaryTable:   obj.Query.PrimaryTable,
-				ListOfTables:   listOfTables,
-				Engine:         obj.Query.Engine,
-				Global:         obj.Query.Global,
-			}
-			for _, parameter := range obj.Query.Parameters {
-				q.Parameters = append(q.Parameters, models.QueryParameter{
-					QueryID:  obj.ID,
-					Key:      parameter.Key,
-					Required: parameter.Required,
-				})
-
-				if parameter.DefaultValue != "" {
-					g.policyParamValues = append(g.policyParamValues, models.PolicyParameterValues{
-						Key:   parameter.Key,
-						Value: parameter.DefaultValue,
-					})
-				}
-			}
-			g.coreServiceQueries = append(g.coreServiceQueries, q)
-			qv.QueryID = &obj.ID
+		listOfTables, err := utils.ExtractTableRefsFromPolicy(types.PolicyLanguageSQL, obj.Query)
+		if err != nil {
+			g.logger.Error("failed to extract table refs from query", zap.String("query-id", obj.ID), zap.Error(err))
 		}
+
+		q := models.Query{
+			ID:             obj.ID,
+			QueryToExecute: obj.Query,
+			ListOfTables:   listOfTables,
+			Engine:         "sql",
+		}
+
+		g.coreServiceQueries = append(g.coreServiceQueries, q)
+		qv.QueryID = &obj.ID
 
 		g.queryViews = append(g.queryViews, qv)
 

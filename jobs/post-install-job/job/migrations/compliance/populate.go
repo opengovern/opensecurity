@@ -69,7 +69,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		logger:             logger,
 		frameworksChildren: make(map[string][]string),
 		controlsPolicies:   make(map[string]db.Policy),
-		namedPolicies:      make(map[string]NamedPolicy),
+		namedPolicies:      make(map[string]NamedQuery),
 	}
 	if err := p.ExtractCompliance(config.ComplianceGitPath, config.ControlEnrichmentGitPath); err != nil {
 		logger.Error("failed to extract controls and benchmarks", zap.Error(err))
@@ -359,7 +359,7 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		return err
 	}
 
-	var item NamedPolicy
+	var item NamedQuery
 	err = yaml.Unmarshal(content, &item)
 	if err != nil {
 		logger.Error("failure in unmarshal", zap.String("path", path), zap.Error(err))
@@ -400,33 +400,16 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		QueryID:          &id,
 	}
 	queryParams := []models.QueryParameter{}
-	for _, qp := range item.Policy.Parameters {
-		queryParams = append(queryParams, models.QueryParameter{
-			Key:      qp.Key,
-			Required: qp.Required,
-			QueryID:  dbMetric.ID,
-		})
-		if qp.DefaultValue != "" {
-			queryParamObj := models.PolicyParameterValues{
-				Key:   qp.Key,
-				Value: qp.DefaultValue,
-			}
-			QueryParameters = append(QueryParameters, queryParamObj)
-		}
-	}
-	listOfTables, err := utils.ExtractTableRefsFromPolicy("sql", item.Policy.QueryToExecute)
+	listOfTables, err := utils.ExtractTableRefsFromPolicy("sql", item.Query)
 	if err != nil {
 		logger.Error("failed to extract table refs from query", zap.String("query-id", dbMetric.ID), zap.Error(err))
-		listOfTables = item.Policy.ListOfTables
 	}
 	query := models.Query{
 		ID:             dbMetric.ID,
-		QueryToExecute: item.Policy.QueryToExecute,
-		PrimaryTable:   item.Policy.PrimaryTable,
+		QueryToExecute: item.Query,
 		ListOfTables:   listOfTables,
-		Engine:         item.Policy.Engine,
+		Engine:         "sql",
 		Parameters:     queryParams,
-		Global:         item.Policy.Global,
 	}
 	err = tx.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}}, // key column
@@ -454,8 +437,6 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		logger.Error("failure in insert query", zap.Error(err))
 		return err
 	}
-
-	// logger.Info("parsed the tags", zap.String("id", id), zap.Any("tags", tags))
 
 	if len(tags) > 0 {
 		for _, tag := range tags {
