@@ -227,7 +227,6 @@ func (g *GitParser) parsePolicyFile(content []byte, path string) error {
 		Language:        policy.Language,
 		RegoPolicies:    policy.RegoPolicies,
 	}
-	g.policies = append(g.policies, q)
 
 	for _, parameter := range parameters {
 		q.Parameters = append(q.Parameters, db.PolicyParameter{
@@ -235,6 +234,8 @@ func (g *GitParser) parsePolicyFile(content []byte, path string) error {
 			Key:      parameter,
 		})
 	}
+
+	g.policies = append(g.policies, q)
 
 	return nil
 }
