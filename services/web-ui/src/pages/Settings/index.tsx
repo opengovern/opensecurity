@@ -175,15 +175,15 @@ export default function Settings() {
                         ),
                         id: '0',
                     },
-                    {
-                        label: 'Parameters',
-                        content: (
-                            <>
-                                <SettingsParameters />
-                            </>
-                        ),
-                        id: '1',
-                    },
+                    // {
+                    //     label: 'Parameters',
+                    //     content: (
+                    //         <>
+                    //             <SettingsParameters />
+                    //         </>
+                    //     ),
+                    //     id: '1',
+                    // },
                     {
                         label: 'Authentication',
                         content: (
@@ -191,7 +191,7 @@ export default function Settings() {
                                 <SettingsMembers />
                             </>
                         ),
-                        id: '2',
+                        id: '1',
                     },
                     {
                         label: 'SSO Configuration',
@@ -200,7 +200,7 @@ export default function Settings() {
                                 <SettingsConnectors />
                             </>
                         ),
-                        id: '3',
+                        id: '2',
                     },
                     {
                         label: 'API',
@@ -209,7 +209,7 @@ export default function Settings() {
                                 <SettingsWorkspaceAPIKeys />
                             </>
                         ),
-                        id: '4',
+                        id: '3',
                     },
                 ]}
             />

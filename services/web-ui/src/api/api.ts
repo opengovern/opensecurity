@@ -2855,7 +2855,7 @@ export interface GithubComKaytuIoKaytuEnginePkgControlDetailV3 {
     integrationType: string[]
     description: string
     id: string
-    query: GithubComKaytuIoKaytuEnginePkgControlDetailV3Query
+    policy: GithubComKaytuIoKaytuEnginePkgControlDetailV3Query
     severity: string
     tags: GithubComKaytuIoKaytuEnginePkgControlDetailV3Tags
     title: string
@@ -2868,13 +2868,19 @@ export interface GithubComKaytuIoKaytuEnginePkgControlDetailV3Benchmarks {
 export interface GithubComKaytuIoKaytuEnginePkgControlDetailV3Tags {
     [key: string]: string[]
 }
+export interface GithubComKaytuIoKaytuEnginePkgControlDetailV3QueryParams {
+    key: string
+    value: string
+}
 
 export interface GithubComKaytuIoKaytuEnginePkgControlDetailV3Query {
-    engine: string
-    listOfTables: string[]
-    primaryTable: string
-    queryToExecute: string
+    language: string
+    listOfResources: string[]
+    primaryResource: string
+    definition: string
+    parameters: GithubComKaytuIoKaytuEnginePkgControlDetailV3QueryParams[]
 }
+
 export interface GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequestV2 {
     /** Specifies the Title */
     title_filter?: string
