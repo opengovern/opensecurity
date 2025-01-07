@@ -338,6 +338,7 @@ func (g *GitParser) parseControlFile(content []byte, path string) error {
 	if control.Policy != nil {
 		if control.Policy.Ref != nil {
 			c.PolicyID = control.Policy.Ref
+			c.ExternalPolicy = true
 		} else {
 			listOfTables, err := utils.ExtractTableRefsFromPolicy(control.Policy.Language, control.Policy.Definition)
 			if err != nil {
