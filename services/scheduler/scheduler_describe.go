@@ -31,8 +31,8 @@ import (
 
 const (
 	MaxQueued           = 5000
-	MaxIn10Minutes      = 750
-	MaxGetQueuedAtATime = 75
+	MaxIn10Minutes      = 500
+	MaxGetQueuedAtATime = 50
 )
 
 var ErrJobInProgress = errors.New("job already in progress")
