@@ -2087,7 +2087,7 @@ func (h HttpServer) BenchmarkAuditHistory(ctx echo.Context) error {
 		integrations = append(integrations, connectionsTmp.Integrations...)
 	}
 
-	connectionInfo := make(map[string]api.IntegrationInfo)
+	integrationInfo := make(map[string]api.IntegrationInfo)
 	var connectionIDs []string
 	for _, c := range integrations {
 		connectionIDs = append(connectionIDs, c.IntegrationID)
@@ -2098,7 +2098,7 @@ func (h HttpServer) BenchmarkAuditHistory(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	for _, c := range connections2.Integrations {
-		connectionInfo[c.IntegrationID] = api.IntegrationInfo{
+		integrationInfo[c.IntegrationID] = api.IntegrationInfo{
 			IntegrationID:   c.IntegrationID,
 			IntegrationType: string(c.IntegrationType),
 			Name:            c.Name,
@@ -2132,9 +2132,9 @@ func (h HttpServer) BenchmarkAuditHistory(ctx echo.Context) error {
 			UpdatedAt:     j.UpdatedAt,
 		}
 		for _, i := range j.IntegrationIDs {
-			if info, ok := connectionInfo[i]; ok {
-				item.IntegrationInfo = []api.IntegrationInfo{info}
-				item.NumberOfIntegrations = 1
+			if info, ok := integrationInfo[i]; ok {
+				item.IntegrationInfo = append(item.IntegrationInfo, info)
+				item.NumberOfIntegrations += 1
 			}
 		}
 

@@ -35,7 +35,7 @@ type Control struct {
 }
 
 type ControlSummary struct {
-	Control      Control                    `json:"control"`
+	Control      Control                  `json:"control"`
 	ResourceType *coreClient.ResourceType `json:"resourceType"`
 
 	Benchmarks []Benchmark `json:"benchmarks"`
@@ -101,6 +101,8 @@ type ListControlsFilterResultControl struct {
 	Severity        types.ComplianceResultSeverity `json:"severity"`
 	Tags            map[string][]string            `json:"tags"`
 	Policy          struct {
+		Type            string           `json:"type"`      // external/inline
+		Reference       *string          `json:"reference"` // null if inline
 		PrimaryResource string           `json:"primary_resource"`
 		ListOfResources []string         `json:"list_of_resources"`
 		Parameters      []QueryParameter `json:"parameters"`
@@ -141,6 +143,8 @@ type GetControlDetailsResponse struct {
 	IntegrationType []integration.Type `json:"integrationType"`
 	Severity        string             `json:"severity"`
 	Policy          struct {
+		Type            string           `json:"type"`      // external/inline
+		Reference       *string          `json:"reference"` // null if inline
 		Language        string           `json:"language"`
 		Definition      string           `json:"definition"`
 		PrimaryResource string           `json:"primaryResource"`

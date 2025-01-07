@@ -409,9 +409,65 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	}
 
 	totalCount := len(items)
-	sort.Slice(items, func(i, j int) bool {
-		return items[i].Key < items[j].Key
-	})
+
+	sortOrder := "desc"
+	sortBy := "key"
+	if request.SortOrder != nil {
+		sortOrder = strings.ToLower(*request.SortOrder)
+	}
+	if request.SortBy != nil {
+		sortBy = strings.ToLower(*request.SortBy)
+	}
+
+	switch sortOrder {
+	case "asc":
+		switch sortBy {
+		case "key":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].Key < items[j].Key
+			})
+		case "value":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].Value < items[j].Value
+			})
+		case "controlid", "control_id":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].ControlID < items[j].ControlID
+			})
+		case "controlscount", "controls_count":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].ControlsCount < items[j].ControlsCount
+			})
+		case "queriescount", "queries_count":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].QueriesCount < items[j].QueriesCount
+			})
+		}
+	case "desc":
+		switch sortBy {
+		case "key":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].Key > items[j].Key
+			})
+		case "value":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].Value > items[j].Value
+			})
+		case "controlid", "control_id":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].ControlID > items[j].ControlID
+			})
+		case "controlscount", "controls_count":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].ControlsCount > items[j].ControlsCount
+			})
+		case "queriescount", "queries_count":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].QueriesCount > items[j].QueriesCount
+			})
+		}
+	}
+
 	if perPage != 0 {
 		if cursor == 0 {
 			items = utils.Paginate(1, perPage, items)
@@ -1218,11 +1274,12 @@ func (h HttpHandler) GetViews(echoCtx echo.Context) error {
 		}
 
 		apiViews = append(apiViews, api.View{
-			ID:           view.ID,
-			Title:        view.Title,
-			Description:  view.Description,
-			Query:        query,
-			Dependencies: view.Dependencies,
+			ID:               view.ID,
+			Title:            view.Title,
+			Description:      view.Description,
+			LastTimeRendered: h.viewCheckpoint,
+			Query:            query,
+			Dependencies:     view.Dependencies,
 		})
 	}
 

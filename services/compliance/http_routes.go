@@ -2363,6 +2363,8 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			Severity:        control.Severity,
 			Tags:            filterTagsByRegex(req.TagsRegex, model.TrimPrivateTags(control.GetTagsMap())),
 			Policy: struct {
+				Type            string               `json:"type"`      // external/inline
+				Reference       *string              `json:"reference"` // null if inline
 				PrimaryResource string               `json:"primary_resource"`
 				ListOfResources []string             `json:"list_of_resources"`
 				Parameters      []api.QueryParameter `json:"parameters"`
@@ -2371,6 +2373,12 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 				ListOfResources: control.Policy.ListOfResources,
 				Parameters:      make([]api.QueryParameter, 0, len(control.Policy.Parameters)),
 			},
+		}
+		if control.ExternalPolicy {
+			apiControl.Policy.Type = "external"
+			apiControl.Policy.Reference = &control.Policy.ID
+		} else {
+			apiControl.Policy.Type = "inline"
 		}
 		for _, p := range control.Policy.Parameters {
 			apiControl.Policy.Parameters = append(apiControl.Policy.Parameters, p.ToApi())
@@ -2581,6 +2589,8 @@ func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 		IntegrationType: integration_type.ParseTypes(control.IntegrationType),
 		Severity:        control.Severity.String(),
 		Policy: struct {
+			Type            string               `json:"type"`
+			Reference       *string              `json:"reference"`
 			Language        string               `json:"language"`
 			Definition      string               `json:"definition"`
 			PrimaryResource string               `json:"primaryResource"`
@@ -2594,6 +2604,13 @@ func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 			Parameters:      parameters,
 		},
 		Tags: model.TrimPrivateTags(control.GetTagsMap()),
+	}
+
+	if control.ExternalPolicy {
+		response.Policy.Type = "external"
+		response.Policy.Reference = &control.Policy.ID
+	} else {
+		response.Policy.Type = "inline"
 	}
 
 	if showReferences {

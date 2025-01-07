@@ -150,7 +150,8 @@ type Control struct {
 	DocumentURI     string
 	Enabled         bool
 	PolicyID        *string
-	Policy          *Policy     `gorm:"foreignKey:PolicyID;references:ID;constraint:OnDelete:SET NULL"`
+	Policy          *Policy `gorm:"foreignKey:PolicyID;references:ID;constraint:OnDelete:SET NULL"`
+	ExternalPolicy  bool
 	Benchmarks      []Benchmark `gorm:"many2many:benchmark_controls;"`
 	Severity        types.ComplianceResultSeverity
 	CreatedAt       time.Time

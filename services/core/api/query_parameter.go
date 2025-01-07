@@ -24,11 +24,13 @@ type ListQueryParametersResponse struct {
 }
 
 type ListQueryParametersRequest struct {
-	Cursor   int64    `json:"cursor"`
-	PerPage  int64    `json:"per_page"`
-	KeyRegex *string  `json:"key_regex"`
-	Controls []string `json:"controls"`
-	Queries  []string `json:"queries"`
+	Cursor    int64    `json:"cursor"`
+	PerPage   int64    `json:"per_page"`
+	SortBy    *string  `json:"sort_by"`
+	SortOrder *string  `json:"sort_order"`
+	KeyRegex  *string  `json:"key_regex"`
+	Controls  []string `json:"controls"`
+	Queries   []string `json:"queries"`
 }
 
 type ControlQueryParameter struct {
