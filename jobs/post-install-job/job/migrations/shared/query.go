@@ -18,6 +18,8 @@ type Query struct {
 
 type Policy struct {
 	ID              *string              `json:"id,omitempty" yaml:"id,omitempty"`
+	Title           string               `json:"title,omitempty" yaml:"title,omitempty"`
+	Description     string               `json:"description,omitempty" yaml:"description,omitempty"`
 	Ref             *string              `json:"@ref,omitempty" yaml:"@ref,omitempty"`
 	Language        types.PolicyLanguage `json:"language" yaml:"language"`
 	PrimaryResource string               `json:"primary_resource" yaml:"primary_resource"`

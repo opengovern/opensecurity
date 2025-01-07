@@ -94,6 +94,9 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 
 	v3 := e.Group("/api/v3")
 
+	v3.GET("/policies", httpserver2.AuthorizeHandler(h.ListPolicies, authApi.ViewerRole))
+	v3.GET("/policies/:policy_id", httpserver2.AuthorizeHandler(h.GetPolicy, authApi.ViewerRole))
+
 	v3.POST("/benchmarks", httpserver2.AuthorizeHandler(h.ListBenchmarksFiltered, authApi.ViewerRole))
 	v3.GET("/benchmarks/filters", httpserver2.AuthorizeHandler(h.ListBenchmarksFilters, authApi.ViewerRole))
 	v3.POST("/benchmark/:benchmark_id", httpserver2.AuthorizeHandler(h.GetBenchmarkDetails, authApi.ViewerRole))
@@ -4934,4 +4937,105 @@ func (h HttpHandler) GetJobReportSummary(ctx echo.Context) error {
 	response.JobDetails.JobScore = jobScore
 
 	return ctx.JSON(http.StatusOK, response)
+}
+
+// ListPolicies godoc
+//
+//	@Summary		List all policies
+//	@Description	Returns all policies
+//	@Security		BearerToken
+//	@Tags			workspace
+//	@Accept			json
+//	@Produce		json
+//	@Param			cursor		query	int		false	"Cursor"
+//	@Param			per_page	query	int		false	"Per Page"
+//	@Success		200
+//	@Router			/compliance/api/v3/policies [get]
+func (h HttpHandler) ListPolicies(c echo.Context) error {
+	var cursor, perPage int64
+	var err error
+
+	cursorStr := c.QueryParam("cursor")
+	if cursorStr != "" {
+		cursor, err = strconv.ParseInt(cursorStr, 10, 64)
+		if err != nil {
+			return err
+		}
+	}
+	perPageStr := c.QueryParam("per_page")
+	if perPageStr != "" {
+		perPage, err = strconv.ParseInt(perPageStr, 10, 64)
+		if err != nil {
+			return err
+		}
+	}
+
+	policies, err := h.db.ListPolicies(c.Request().Context())
+	if err != nil {
+		h.logger.Error("failed to get policies", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get policies")
+	}
+
+	totalCount := len(policies)
+	sort.Slice(policies, func(i, j int) bool {
+		return policies[i].ID < policies[j].ID
+	})
+	if perPage != 0 {
+		if cursor == 0 {
+			policies = utils.Paginate(1, perPage, policies)
+		} else {
+			policies = utils.Paginate(cursor, perPage, policies)
+		}
+	}
+
+	var policiesItems []api.ListPolicyItem
+	for _, p := range policies {
+		policiesItems = append(policiesItems, api.ListPolicyItem{
+			ID:            p.ID,
+			Title:         p.Title,
+			Language:      string(p.Language),
+			ControlsCount: len(p.Controls),
+		})
+	}
+
+	return c.JSON(http.StatusOK, api.ListPoliciesResponse{
+		Policies:   policiesItems,
+		TotalCount: totalCount,
+	})
+}
+
+// GetPolicy godoc
+//
+//	@Summary		Get policy
+//	@Description	Get policy
+//	@Security		BearerToken
+//	@Tags			workspace
+//	@Accept			json
+//	@Produce		json
+//	@Param			policy_id	path		string	true	"Policy ID"
+//	@Success		200
+//	@Router			/compliance/api/v3/policies/{policy_id} [get]
+func (h HttpHandler) GetPolicy(c echo.Context) error {
+	policyId := c.Param("policy_id")
+
+	policy, err := h.db.GetPolicy(c.Request().Context(), policyId)
+	if err != nil {
+		h.logger.Error("failed to get policies", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get policies")
+	}
+
+	policyItem := api.GetPolicyItem{
+		ID:            policy.ID,
+		Title:         policy.Title,
+		Description:   policy.Description,
+		Language:      string(policy.Language),
+		Definition:    policy.Definition,
+		ControlsCount: len(policy.Controls),
+	}
+
+	for _, c := range policy.Controls {
+		policyItem.ListOfControls = append(policyItem.ListOfControls, c.ID)
+	}
+
+	return c.JSON(http.StatusOK, policyItem)
 }
