@@ -379,6 +379,11 @@ func (g *GitParser) parseControlFile(content []byte, path string) error {
 						Value:     v,
 						ControlID: control.ID,
 					})
+					g.policyParamValues = append(g.policyParamValues, models.PolicyParameterValues{
+						Key:       parameter,
+						Value:     "",
+						ControlID: "",
+					})
 				} else {
 					g.logger.Error("extract control failed: control does not contain parameter value", zap.String("control-id", control.ID),
 						zap.String("parameter", parameter))
