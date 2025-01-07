@@ -277,6 +277,8 @@ func (qp PolicyParameter) ToApi() api.QueryParameter {
 
 type Policy struct {
 	ID              string `gorm:"primaryKey"`
+	Title           string
+	Description     string
 	Definition      string
 	IntegrationType pq.StringArray `gorm:"type:text[]"`
 	Language        types.PolicyLanguage

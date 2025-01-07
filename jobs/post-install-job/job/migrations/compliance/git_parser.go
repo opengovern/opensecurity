@@ -221,6 +221,8 @@ func (g *GitParser) parsePolicyFile(content []byte, path string) error {
 
 	q := db.Policy{
 		ID:              *policy.ID,
+		Title:           policy.Title,
+		Description:     policy.Description,
 		Definition:      policy.Definition,
 		PrimaryResource: policy.PrimaryResource,
 		ListOfResources: listOfTables,
