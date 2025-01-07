@@ -94,11 +94,16 @@ export default function SettingsParameters() {
         }
         const controls: any = []
         const queries: any = []
+        const titles: any = []
         queryToken?.tokens?.map((t: any) => {
             if (t.propertyKey === 'controls') {
                 controls.push(t.value)
-            } else {
+            } 
+            if (t.propertyKey === 'queries') {
                 queries.push(t.value)
+            }
+            if (t.propertyKey === 'key_regex') {
+                titles.push(t.value)
             }
         })
         if (controls.length > 0) {
@@ -106,6 +111,9 @@ export default function SettingsParameters() {
         }
         if(queries.length > 0){
             body['queries'] = queries
+        }
+        if(titles.length > 0){
+            body['key_regex'] = titles[0]
         }
         axios
             .post(
@@ -513,6 +521,12 @@ useEffect(()=>{
                                 operators: ['='],
                                 propertyLabel: 'Queries',
                                 groupValuesLabel: 'Query values',
+                            },
+                            {
+                                key: 'key_regex',
+                                operators: ['='],
+                                propertyLabel: 'Key',
+                                groupValuesLabel: 'Key',
                             },
                         ]}
                         // filteringProperties={
