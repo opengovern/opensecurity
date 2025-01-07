@@ -133,7 +133,7 @@ func (v *ViewSync) updateViewsInDatabase(ctx context.Context, selfClient *steamp
 
 	var queryViews []models.QueryView
 
-	err := coreClient.DB().Model(&models.QueryView{}).Preload(clause.Associations).Preload("Policy.Parameters").Find(&queryViews).Error
+	err := coreClient.DB().Model(&models.QueryView{}).Preload(clause.Associations).Preload("Query.Parameters").Find(&queryViews).Error
 	if err != nil {
 		v.logger.Error("Error fetching query views from core", zap.Error(err))
 		v.logger.Sync()
