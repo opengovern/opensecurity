@@ -68,6 +68,7 @@ export default function SettingsParameters() {
     const [editValue, setEditValue] = useState({
         key: '',
         value: '',
+        control_id: '',
     })
 
     const GetParams = () => {
@@ -145,6 +146,8 @@ export default function SettingsParameters() {
                 {
                     key: editValue.key,
                     value: editValue.value,
+                    control_id: editValue?.control_id ? editValue.control_id : '',
+                         
                 },
             ],
         }
@@ -380,6 +383,9 @@ useEffect(()=>{
                                             setEditValue({
                                                 key: item.key,
                                                 value: event.detail.value,
+                                                control_id: item?.control_id
+                                                    ? item.control_id
+                                                    : '',
                                             })
                                         }}
                                     />
@@ -388,8 +394,16 @@ useEffect(()=>{
                         },
                     },
                     {
+                        id: 'control_id',
+                        header: 'Control',
+                        cell: (item: any) =>
+                            item.control_id ? item.control_id : 'Global',
+                        maxWidth: 200,
+                    },
+                    {
                         id: 'controls_count',
                         header: 'Using control count',
+                        maxWidth: 50,
                         cell: (item: any) =>
                             item?.controls_count ? item?.controls_count : 0,
                     },
@@ -397,6 +411,8 @@ useEffect(()=>{
                     {
                         id: 'queries_count',
                         header: 'Using query count',
+                        maxWidth: 50,
+
                         cell: (item: any) =>
                             item?.queries_count ? item?.queries_count : 0,
                     },
@@ -421,6 +437,7 @@ useEffect(()=>{
                 columnDisplay={[
                     { id: 'key', visible: true },
                     { id: 'value', visible: true },
+                    { id: 'control_id', visible: true },
                     { id: 'controls_count', visible: true },
                     { id: 'queries_count', visible: true },
                     { id: 'action', visible: true },
