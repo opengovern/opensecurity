@@ -294,8 +294,8 @@ export default function ControlDetail({
                                                             // @ts-ignore
                                                             setQuery(
                                                                 selectedItem
-                                                                    ?.query
-                                                                    ?.queryToExecute
+                                                                    ?.policy
+                                                                    ?.definition
                                                             )
                                                         }}
                                                         disabled={false}
@@ -325,8 +325,8 @@ export default function ControlDetail({
                                                         }
                                                         // @ts-ignore
                                                         value={
-                                                            selectedItem?.query
-                                                                ?.queryToExecute
+                                                            selectedItem?.policy
+                                                                ?.definition
                                                         }
                                                         className="w-full bg-white dark:bg-gray-900 dark:text-gray-50 font-mono text-sm"
                                                         style={{
