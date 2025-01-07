@@ -33,8 +33,8 @@ type ViewSync struct {
 
 func NewViewSync(logger *zap.Logger) *ViewSync {
 	v := ViewSync{
-		logger:         logger,
-		updateLock:     sync.Mutex{},
+		logger:     logger,
+		updateLock: sync.Mutex{},
 		coreClient: client.NewCoreServiceClient(os.Getenv("CORE_BASEURL")),
 		corePostgresClientConfig: config.ClientConfig{
 			PgHost:     utils.GetPointer(os.Getenv("CORE_DB_HOST")),
@@ -82,13 +82,13 @@ func (v *ViewSync) updateViews(ctx context.Context) {
 		v.logger.Sync()
 		return
 	}
-	metadataPostgresClient, err := pg.NewMetadataClient(v.corePostgresClientConfig, ctx)
+	corePostgresClient, err := pg.NewCoreClient(v.corePostgresClientConfig, ctx)
 	if err != nil {
-		v.logger.Error("Error creating metadata client for refreshing materialized views", zap.Error(err))
+		v.logger.Error("Error creating core client for refreshing materialized views", zap.Error(err))
 		v.logger.Sync()
 		return
 	}
-	v.updateViewsInDatabase(ctx, selfClient, metadataPostgresClient)
+	v.updateViewsInDatabase(ctx, selfClient, corePostgresClient)
 	query := `CREATE OR REPLACE FUNCTION RefreshAllMaterializedViews(schema_arg TEXT DEFAULT 'public')
 RETURNS INT AS $$
 DECLARE
@@ -123,19 +123,19 @@ $$ LANGUAGE plpgsql;`
 	}
 
 	selfClient.GetConnection().Close()
-	db, _ := metadataPostgresClient.DB().DB()
+	db, _ := corePostgresClient.DB().DB()
 	db.Close()
 	v.viewCheckpoint = time.Now()
 }
 
-func (v *ViewSync) updateViewsInDatabase(ctx context.Context, selfClient *steampipesdk.SelfClient, metadataClient pg.Client) {
+func (v *ViewSync) updateViewsInDatabase(ctx context.Context, selfClient *steampipesdk.SelfClient, coreClient pg.Client) {
 	v.logger.Info("updating views in database")
 
 	var queryViews []models.QueryView
 
-	err := metadataClient.DB().Model(&models.QueryView{}).Preload(clause.Associations).Preload("Policy.Parameters").Find(&queryViews).Error
+	err := coreClient.DB().Model(&models.QueryView{}).Preload(clause.Associations).Preload("Policy.Parameters").Find(&queryViews).Error
 	if err != nil {
-		v.logger.Error("Error fetching query views from metadata", zap.Error(err))
+		v.logger.Error("Error fetching query views from core", zap.Error(err))
 		v.logger.Sync()
 		return
 	}
@@ -207,21 +207,21 @@ func (v *ViewSync) Start(ctx context.Context) {
 		v.logger.Sync()
 		return
 	}
-	v.logger.Info("Creating metadata client")
+	v.logger.Info("Creating core client")
 	v.logger.Sync()
-	metadataClient, err := pg.NewMetadataClient(v.corePostgresClientConfig, ctx)
+	coreClient, err := pg.NewCoreClient(v.corePostgresClientConfig, ctx)
 	if err != nil {
-		v.logger.Error("Error creating metadata client for init materialized views", zap.Error(err))
+		v.logger.Error("Error creating core client for init materialized views", zap.Error(err))
 		v.logger.Sync()
 		return
 	}
 
 	v.updateLock.Lock()
-	v.updateViewsInDatabase(ctx, selfClient, metadataClient)
+	v.updateViewsInDatabase(ctx, selfClient, coreClient)
 	v.updateLock.Unlock()
 
 	selfClient.GetConnection().Close()
-	db, _ := metadataClient.DB().DB()
+	db, _ := coreClient.DB().DB()
 	db.Close()
 
 	v.viewCheckpoint = time.Now()

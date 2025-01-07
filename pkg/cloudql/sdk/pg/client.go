@@ -55,8 +55,8 @@ func NewInventoryClientCached(c config.ClientConfig, cache *connection.Connectio
 	return client, nil
 }
 
-func NewMetadataClient(c config.ClientConfig, ctx context.Context) (Client, error) {
-	c.PgDatabase = aws.String("metadata")
+func NewCoreClient(c config.ClientConfig, ctx context.Context) (Client, error) {
+	c.PgDatabase = aws.String("core")
 	return NewClient(ctx, c)
 }
 
