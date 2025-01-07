@@ -279,16 +279,11 @@ func (h HttpHandler) SetQueryParameter(ctx echo.Context) error {
 		dbQueryParams = append(dbQueryParams, &dbParam)
 	}
 
-	_, span := tracer.Start(ctx.Request().Context(), "new_SetQueryParameter", trace.WithSpanKind(trace.SpanKindServer))
-	span.SetName("new_SetQueryParameter")
 	err := h.db.SetQueryParameters(dbQueryParams)
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
 		h.logger.Error("error setting query parameters", zap.Error(err))
 		return err
 	}
-	span.End()
 
 	return ctx.JSON(http.StatusOK, nil)
 }
@@ -486,11 +481,11 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 		}
 		query := api.Policy{
 			ID:              control.Policy.ID,
-			Language:          api.PolicyLanguage(control.Policy.Language),
-			Definition:  control.Policy.Definition,
+			Language:        api.PolicyLanguage(control.Policy.Language),
+			Definition:      control.Policy.Definition,
 			IntegrationType: control.Policy.IntegrationType,
-			PrimaryResource:    control.Policy.PrimaryResource,
-			ListOfResources:    control.Policy.ListOfResources,
+			PrimaryResource: control.Policy.PrimaryResource,
+			ListOfResources: control.Policy.ListOfResources,
 			Parameters:      parameters,
 			RegoPolicies:    control.Policy.RegoPolicies,
 			CreatedAt:       control.Policy.CreatedAt,
@@ -511,7 +506,7 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 			IntegrationType:         control.IntegrationType,
 			Enabled:                 control.Enabled,
 			DocumentURI:             control.DocumentURI,
-			Policy:                   &query,
+			Policy:                  &query,
 			Severity:                api.ComplianceResultSeverity(control.Severity),
 			ManualVerification:      control.ManualVerification,
 			Managed:                 control.Managed,
@@ -1002,7 +997,7 @@ func (h HttpHandler) GetAbout(echoCtx echo.Context) error {
 	query := `SELECT
     (SELECT SUM(cost) FROM azure_costmanagement_costbyresourcetype) +
     (SELECT SUM(amortized_cost_amount) FROM aws_cost_by_service_daily) AS total_cost;`
-	var query_req= api.RunQueryRequest{
+	var query_req = api.RunQueryRequest{
 		Page: api.Page{
 			No:   1,
 			Size: 1000,
@@ -1011,7 +1006,7 @@ func (h HttpHandler) GetAbout(echoCtx echo.Context) error {
 		Query:  &query,
 		Sorts:  nil,
 	}
-	
+
 	results, err := h.RunQueryInternal(echoCtx, query_req)
 	if err != nil {
 		h.logger.Error("failed to run query", zap.Error(err))
@@ -1249,9 +1244,7 @@ func (h HttpHandler) ListQueryParametersInternal(ctx echo.Context) (api.ListQuer
 	clientCtx := &httpclient.Context{UserRole: api3.AdminRole}
 	var resp api.ListQueryParametersResponse
 	var err error
-	
 
-	
 	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
 	complianceClient := complianceClient.NewComplianceClient(complianceURL)
 
@@ -1267,7 +1260,6 @@ func (h HttpHandler) ListQueryParametersInternal(ctx echo.Context) (api.ListQuer
 	}
 
 	var filteredQueryParams []string
-	
 
 	var queryParams []models.PolicyParameterValues
 	if len(filteredQueryParams) > 0 {
@@ -1314,7 +1306,6 @@ func (h HttpHandler) ListQueryParametersInternal(ctx echo.Context) (api.ListQuer
 	sort.Slice(items, func(i, j int) bool {
 		return items[i].Key < items[j].Key
 	})
-	
 
 	return api.ListQueryParametersResponse{
 		TotalCount: totalCount,

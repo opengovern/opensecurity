@@ -1,13 +1,11 @@
 package db
 
 import (
-	"github.com/opengovern/opencomply/services/core/db/models"
-	"gorm.io/gorm/clause"
 	"errors"
+	"github.com/opengovern/opencomply/services/core/db/models"
 	"gorm.io/gorm"
-
+	"gorm.io/gorm/clause"
 )
-
 
 func (db Database) upsertConfigMetadata(configMetadata models.ConfigMetadata) error {
 	return db.orm.Clauses(clause.OnConflict{
@@ -81,7 +79,7 @@ func (db Database) upsertQueryParameter(queryParam models.PolicyParameterValues)
 
 func (db Database) upsertQueryParameters(queryParam []*models.PolicyParameterValues) error {
 	return db.orm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "key"}},
+		Columns:   []clause.Column{{Name: "key"}, {Name: "control_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"value"}),
 	}).Create(queryParam).Error
 }
@@ -130,7 +128,6 @@ func (db Database) GetQueryParametersByIds(ids []string) ([]models.PolicyParamet
 func (db Database) DeleteQueryParameter(key string) error {
 	return db.orm.Unscoped().Delete(&models.PolicyParameterValues{}, "key = ?", key).Error
 }
-
 
 func (db Database) ListQueryViews() ([]models.QueryView, error) {
 	var queryViews []models.QueryView

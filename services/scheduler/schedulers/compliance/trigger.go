@@ -16,8 +16,8 @@ import (
 
 func (s *JobScheduler) buildRunners(
 	parentJobID uint,
-	connectionID *string,
-	connector *integration.Type,
+	integrationID *string,
+	integrationType *integration.Type,
 	resourceCollectionID *string,
 	rootBenchmarkID string,
 	parentBenchmarkIDs []string,
@@ -47,7 +47,7 @@ func (s *JobScheduler) buildRunners(
 	}
 
 	for _, child := range benchmark.Children {
-		childRunners, childGlobalRunners, err := s.buildRunners(parentJobID, connectionID, connector, resourceCollectionID, rootBenchmarkID, append(parentBenchmarkIDs, benchmarkID), child, currentRunnerExistMap, triggerType)
+		childRunners, childGlobalRunners, err := s.buildRunners(parentJobID, integrationID, integrationType, resourceCollectionID, rootBenchmarkID, append(parentBenchmarkIDs, benchmarkID), child, currentRunnerExistMap, triggerType)
 		if err != nil {
 			s.logger.Error("error while building child runners", zap.Error(err))
 			return nil, nil, err
@@ -67,10 +67,10 @@ func (s *JobScheduler) buildRunners(
 		if control.Policy == nil {
 			continue
 		}
-		if connector != nil && len(control.Policy.IntegrationType) > 0 {
+		if integrationType != nil && len(control.Policy.IntegrationType) > 0 {
 			supportsConnector := false
 			for _, c := range control.Policy.IntegrationType {
-				if *connector == c {
+				if *integrationType == c {
 					supportsConnector = true
 					break
 				}
@@ -90,8 +90,9 @@ func (s *JobScheduler) buildRunners(
 
 		runnerJob := model.ComplianceRunner{
 			FrameworkID:          rootBenchmarkID,
-			QueryID:              control.Policy.ID,
-			IntegrationID:        connectionID,
+			PolicyID:             control.Policy.ID,
+			ControlID:            control.ID,
+			IntegrationID:        integrationID,
 			ResourceCollectionID: resourceCollectionID,
 			ParentJobID:          parentJobID,
 			StartedAt:            time.Time{},
@@ -109,7 +110,7 @@ func (s *JobScheduler) buildRunners(
 
 	uniqueMap := map[string]*model.ComplianceRunner{}
 	for _, r := range runners {
-		v, ok := uniqueMap[r.QueryID]
+		v, ok := uniqueMap[r.PolicyID]
 		if ok {
 			cr, err := r.GetCallers()
 			if err != nil {
@@ -132,11 +133,11 @@ func (s *JobScheduler) buildRunners(
 		} else {
 			v = r
 		}
-		uniqueMap[r.QueryID] = v
+		uniqueMap[r.PolicyID] = v
 	}
 	globalUniqueMap := map[string]*model.ComplianceRunner{}
 	for _, r := range globalRunners {
-		v, ok := globalUniqueMap[r.QueryID]
+		v, ok := globalUniqueMap[r.PolicyID]
 		if ok {
 			cr, err := r.GetCallers()
 			if err != nil {
@@ -159,7 +160,7 @@ func (s *JobScheduler) buildRunners(
 		} else {
 			v = r
 		}
-		globalUniqueMap[r.QueryID] = v
+		globalUniqueMap[r.PolicyID] = v
 	}
 
 	var jobs []*model.ComplianceRunner

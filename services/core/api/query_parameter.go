@@ -7,6 +7,7 @@ import (
 
 type QueryParameter struct {
 	Key           string `json:"key"`
+	ControlID     string `json:"control_id"`
 	Value         string `json:"value"`
 	Required      bool   `json:"required" example:"true"`
 	ControlsCount int    `json:"controls_count"`
@@ -35,7 +36,6 @@ type ControlQueryParameter struct {
 }
 type PolicyLanguage string
 
-
 type Policy struct {
 	ID              string             `json:"id" example:"azure_ad_manual_control"`
 	Language        PolicyLanguage     `json:"language" example:"sql"`
@@ -53,7 +53,6 @@ type Policy struct {
 	CreatedAt time.Time `json:"createdAt" example:"2023-06-07T14:00:15.677558Z"`
 	UpdatedAt time.Time `json:"updatedAt" example:"2023-06-16T14:58:08.759554Z"`
 }
-
 
 type ComplianceResultSeverity string
 
@@ -75,7 +74,7 @@ type Control struct {
 	IntegrationType    []string                 `json:"integration_type" example:"Azure"`
 	Enabled            bool                     `json:"enabled" example:"true"`
 	DocumentURI        string                   `json:"documentURI" example:"benchmarks/azure_cis_v140_1_1.md"`
-	Policy             *Policy                        `json:"policy"`
+	Policy             *Policy                  `json:"policy"`
 	Severity           ComplianceResultSeverity `json:"severity" example:"low"`
 	ManualVerification bool                     `json:"manualVerification" example:"true"`
 	Managed            bool                     `json:"managed" example:"true"`
