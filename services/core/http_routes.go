@@ -362,14 +362,20 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	}
 
 	var queryParams []models.PolicyParameterValues
-	if len(filteredQueryParams) > 0 {
+	if request.KeyRegex != nil {
+		queryParams, err = h.db.GetQueryParametersValues(request.KeyRegex)
+		if err != nil {
+			h.logger.Error("error getting query parameters", zap.Error(err))
+			return err
+		}
+	} else if len(filteredQueryParams) > 0 {
 		queryParams, err = h.db.GetQueryParametersByIds(filteredQueryParams)
 		if err != nil {
 			h.logger.Error("error getting query parameters", zap.Error(err))
 			return err
 		}
 	} else {
-		queryParams, err = h.db.GetQueryParametersValues()
+		queryParams, err = h.db.GetQueryParametersValues(nil)
 		if err != nil {
 			h.logger.Error("error getting query parameters", zap.Error(err))
 			return err
@@ -1269,7 +1275,7 @@ func (h HttpHandler) ListQueryParametersInternal(ctx echo.Context) (api.ListQuer
 			return resp, err
 		}
 	} else {
-		queryParams, err = h.db.GetQueryParametersValues()
+		queryParams, err = h.db.GetQueryParametersValues(nil)
 		if err != nil {
 			h.logger.Error("error getting query parameters", zap.Error(err))
 			return resp, err
