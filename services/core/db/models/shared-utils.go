@@ -22,6 +22,7 @@ func QueryParameterFromAPI(apiQP api.QueryParameter) PolicyParameterValues {
 	var qp PolicyParameterValues
 	qp.Key = apiQP.Key
 	qp.Value = apiQP.Value
+	qp.ControlID = apiQP.ControlID
 	return qp
 }
 
