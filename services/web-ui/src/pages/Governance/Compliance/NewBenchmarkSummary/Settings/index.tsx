@@ -21,6 +21,8 @@ import {
 } from '../../../../../api/compliance.gen'
 import Spinner from '../../../../../components/Spinner'
 import KTable from '@cloudscape-design/components/table'
+import KButton from '@cloudscape-design/components/button'
+
 import Box from '@cloudscape-design/components/box'
 import SpaceBetween from '@cloudscape-design/components/space-between'
 import {
@@ -63,7 +65,6 @@ export default function Settings({
     const [firstLoading, setFirstLoading] = useState<boolean>(true)
   
     const [allEnable, setAllEnable] = useState(autoAssign)
-    const [enableStatus,setEnableStatus] = useState('')
     const [banner, setBanner] = useState(autoAssign)
     const isDemo = useAtomValue(isDemoAtom)
     const [loading, setLoading] = useState(false)
@@ -130,7 +131,6 @@ export default function Settings({
            )
            .then((res) => {
             setRows(res.data.items)
-            setEnableStatus(res.data.status)
        setLoading(false)
               
            })
@@ -141,9 +141,7 @@ export default function Settings({
            })
    }
    const ChangeStatus = (status: string) => {
-       
        setLoading(true)
-       setEnableStatus(status)
        let url = ''
        if (window.location.origin === 'http://localhost:3000') {
            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -168,7 +166,9 @@ export default function Settings({
                config
            )
            .then((res) => {
-                // window.location.reload()
+                window.location.reload()
+            //    setLoading(false)
+
            })
            .catch((err) => {
                setLoading(false)
@@ -179,7 +179,6 @@ export default function Settings({
     const ChangeStatusItem = (status: string,tracker_id: string) => {
         
         setLoading(true);
-        setEnableStatus(status);
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -194,6 +193,9 @@ export default function Settings({
                 Authorization: `Bearer ${token}`,
             },
         }
+        console.log("tracker",tracker_id)
+        console.log("status",status)
+
         const body = {
             auto_enable: status == 'auto-enable' ? true : false,
             disable: status == 'disabled' ? true : false,
@@ -203,7 +205,7 @@ export default function Settings({
                 },
             ],
         }
-        console.log(body,"body");
+       
         
         axios
             .post(
@@ -213,7 +215,7 @@ export default function Settings({
             )
             .then((res) => {
                 // window.location.reload()
-                getEnabled()
+                GetEnabled()
             })
             .catch((err) => {
                 setLoading(false)
@@ -235,7 +237,7 @@ export default function Settings({
                 justifyContent="start"
                 alignItems="center"
             >
-                <Flex className="w-full mb-3">
+                {/* <Flex className="w-full mb-3">
                     <Tiles
                         value={enableStatus}
                         className="gap-8"
@@ -253,8 +255,9 @@ export default function Settings({
                             {
                                 value: 'enabled',
                                 label: `Enabled`,
+                                disabled: true,
                                 description:
-                                    'Select integrations from the list below to enable the framework for auditing.',
+                                    'Thi',
                             },
                             {
                                 value: 'auto-enable',
@@ -264,7 +267,7 @@ export default function Settings({
                             },
                         ]}
                     />
-                </Flex>
+                </Flex> */}
                 <Flex className="relative">
                     {/* {allEnable && (
                         <Flex
@@ -411,7 +414,19 @@ export default function Settings({
                             // />
                         }
                         header={
-                            <Header className="w-full">
+                            <Header
+                                className="w-full"
+                                actions={
+                                    <Flex className='gap-2'>
+                                        <KButton onClick={()=>{
+                                            ChangeStatus('auto-enable')
+                                        }} >Enable All</KButton>
+                                        <KButton onClick={()=>{
+                                            ChangeStatus('disabled')
+                                        }} >Disable All</KButton>
+                                    </Flex>
+                                }
+                            >
                                 Assigments{' '}
                                 <span className=" font-medium">
                                     ({rows?.length})
@@ -456,7 +471,7 @@ export default function Settings({
                   
                 )} */}
                 {/* <Divider /> */}
-                <Flex
+                {/* <Flex
                     className="w-full gap-2  bg-white p-7 rounded-xl mt-2"
                     justifyContent="between"
                 >
@@ -479,7 +494,7 @@ export default function Settings({
                             ></Toggle>
                         </>
                     )}
-                </Flex>
+                </Flex> */}
             </Flex>
         </>
     )
