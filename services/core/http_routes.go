@@ -1276,14 +1276,20 @@ func (h HttpHandler) GetViews(echoCtx echo.Context) error {
 			}
 		}
 
-		apiViews = append(apiViews, api.View{
+		apiView := api.View{
 			ID:               view.ID,
 			Title:            view.Title,
 			Description:      view.Description,
 			LastTimeRendered: h.viewCheckpoint,
 			Query:            query,
 			Dependencies:     view.Dependencies,
-		})
+			Tags:             make(map[string][]string),
+		}
+		for _, tag := range view.Tags {
+			apiView.Tags[tag.Key] = tag.Value
+		}
+
+		apiViews = append(apiViews, apiView)
 	}
 
 	totalCount := len(apiViews)
