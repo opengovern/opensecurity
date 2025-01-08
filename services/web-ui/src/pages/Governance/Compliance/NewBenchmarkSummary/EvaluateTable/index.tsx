@@ -421,19 +421,51 @@ export default function EvaluateTable({
 
                     {
                         id: 'integration_name',
-                        header: 'Integration Name',
-                        cell: (item) => (
-                            // @ts-ignore
-                            <>{item.integration_info[0]?.name}</>
-                        ),
+                        header: 'Integration(s)',
+                        cell: (item) => {
+                            const names =[]
+                            item.integration_info.map((i)=>{
+                                names.push(i.name)
+                            })
+                            var unique = names.filter(
+                                (value, index, array) =>
+                                    array.indexOf(value) === index
+                            )
+                            const length = unique.length
+
+                            return (
+                                // @ts-ignore
+                                <>
+                                {length>2 ? (<>
+                                <>{unique[0]}{length > 2 && ` + ${length-1} more`}</>
+                                
+                                </>) : (<>
+                                    {unique.join(', ')}
+                                </>)}
+                                </>
+                            )
+
+                            
+
+                        }
                     },
                     {
                         id: 'integration_type',
                         header: 'Integration Type',
-                        cell: (item) => (
-                            // @ts-ignore
-                            <>{item.integration_info[0]?.integration_type}</>
-                        ),
+                        cell: (item) =>{
+                            const types =[]
+                            item.integration_info.map((i)=>{
+                                types.push(i.integration_type)
+                            })
+                            var unique = types.filter(
+                                (value, index, array) =>
+                                    array.indexOf(value) === index
+                            )
+                            return (
+                                // @ts-ignore
+                                <>{unique.join(', ')}</>
+                            )
+                        }
                     },
 
                     {

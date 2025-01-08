@@ -1137,6 +1137,20 @@ export default function AllControls() {
                                             maxWidth: 70,
                                         },
                                         {
+                                            id: 'polity_type',
+                                            header: 'Policy Type',
+                                            cell: (item) =>
+                                                String(item?.policy?.type)
+                                                    .charAt(0)
+                                                    .toUpperCase() +
+                                                String(
+                                                    item?.policy?.type
+                                                ).slice(1),
+                                            // sortingField: 'title',
+                                            // minWidth: 400,
+                                            maxWidth: 50,
+                                        },
+                                        {
                                             id: 'query',
                                             header: 'Primary Table',
                                             maxWidth: 120,
@@ -1161,12 +1175,12 @@ export default function AllControls() {
                                                         item.severity.slice(1)}
                                                 </Badge>
                                             ),
-                                            maxWidth: 80,
+                                            maxWidth: 50,
                                         },
                                         {
                                             id: 'parameters',
-                                            header: 'Customizable',
-                                            maxWidth: 80,
+                                            header: 'Parametrized',
+                                            maxWidth: 50,
 
                                             cell: (item) => (
                                                 <>
@@ -1185,6 +1199,10 @@ export default function AllControls() {
                                         },
                                         {
                                             id: 'integration_type',
+                                            visible: true,
+                                        },
+                                        {
+                                            id: 'polity_type',
                                             visible: true,
                                         },
                                         // { id: 'query', visible: true },
