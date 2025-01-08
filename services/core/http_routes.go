@@ -368,7 +368,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 			h.logger.Error("error getting query parameters", zap.Error(err))
 			return err
 		}
-	} else if len(filteredQueryParams) > 0 {
+	} else if controlIDs != nil || queryIDs != nil {
 		queryParams, err = h.db.GetQueryParametersByIds(filteredQueryParams)
 		if err != nil {
 			h.logger.Error("error getting query parameters", zap.Error(err))
