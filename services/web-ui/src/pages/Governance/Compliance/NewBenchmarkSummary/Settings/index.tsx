@@ -69,46 +69,11 @@ export default function Settings({
     const [loading, setLoading] = useState(false)
     const [rows,setRows] = useState<any>([])
        const [page, setPage] = useState(0)
-    const {
-        sendNow: sendEnable,
-        isLoading: enableLoading,
-        isExecuted: enableExecuted,
-    } = useComplianceApiV1AssignmentsConnectionCreate(
-        String(id),
-        { integrationID: [transfer.connectionID] },
-        {},
-        false
-    )
-    const {
-        response: enableAllResponse,
-        sendNow: sendEnableAll,
-        isLoading: enableAllLoading,
-        isExecuted: enableAllExecuted,
-    } = useComplianceApiV1AssignmentsConnectionCreate(
-        String(id),
-        { auto_assign: !allEnable },
-        {},
-        false
-    )
+ 
 
-    useEffect(() => {
-        if (enableAllResponse) {
-            isAutoResponse(true)
-            setAllEnable(!allEnable)
-            window.location.reload()
-        }
-    }, [enableAllResponse])
+   
 
-    const {
-        sendNow: sendDisable,
-        isLoading: disableLoading,
-        isExecuted: disableExecuted,
-    } = useComplianceApiV1AssignmentsConnectionDelete(
-        String(id),
-        { integrationID: [transfer.connectionID] },
-        {},
-        false
-    )
+    
 
     // const {
     //     response: assignments,
@@ -138,24 +103,9 @@ export default function Settings({
     //     }
     // }, [id, assignments])
 
-    useEffect(() => {
-        if (transfer.connectionID !== '') {
-            if (transfer.status) {
-                sendEnable()
-            } else {
-                sendDisable()
-            }
-        }
-    }, [transfer])
 
-    useEffect(() => {
-        // if (firstLoading) {
-        //     refreshList()
-        // }
-        // setFirstLoading(false)
-    }, [])
 
-   
+ 
    const GetEnabled = () => {
        
        setLoading(true)
@@ -218,7 +168,7 @@ export default function Settings({
                config
            )
            .then((res) => {
-                window.location.reload()
+                // window.location.reload()
            })
            .catch((err) => {
                setLoading(false)
@@ -271,9 +221,13 @@ export default function Settings({
                 console.log(err)
             })
     }
-   useEffect(() => {
-       GetEnabled()
-   }, [enableExecuted, disableExecuted])
+    useEffect(() => {
+        if (firstLoading) {
+            GetEnabled()
+            setFirstLoading(false)
+        }
+    }, [firstLoading])
+  
     return (
         <>
             <Flex

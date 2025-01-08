@@ -19,6 +19,7 @@ import {
     Title,
 } from '@tremor/react'
 import {
+    AdjustmentsVerticalIcon,
     BookOpenIcon,
     ChevronRightIcon,
     ClockIcon,
@@ -33,7 +34,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { useSetAtom } from 'jotai/index'
 import clipboardCopy from 'clipboard-copy'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Editor from 'react-simple-code-editor'
 import { highlight, languages } from 'prismjs'
 import Markdown from 'react-markdown'
@@ -66,6 +67,7 @@ import {
 } from '@cloudscape-design/components'
 import KGrid from '@cloudscape-design/components/grid'
 import SegmentedControl from '@cloudscape-design/components/segmented-control'
+import axios from 'axios'
 
 export default function ControlDetail() {
     const { controlId, ws } = useParams()
@@ -75,6 +77,40 @@ export default function ControlDetail() {
     const [doc, setDoc] = useState('')
     const [docTitle, setDocTitle] = useState('')
     const setQuery = useSetAtom(queryAtom)
+    const [params, setParams] = useState([])
+
+    const GetParams = () => {
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+
+        let body: any = {
+            controls: [controlDetail?.control?.id],
+            cursor: 1,
+            per_page: 300,
+        }
+
+        axios
+            .post(`${url}/main/core/api/v1/query_parameter`, body, config)
+            .then((res) => {
+                const data = res.data
+                setParams(data?.items)
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+    }
 
     const {
         response: controlDetail,
@@ -127,6 +163,14 @@ export default function ControlDetail() {
                 text: 'Compliance',
                 href: `/compliance`,
             })
+            const temp2 = window.location.pathname.split('/')
+            if (temp2.length > 3) {
+                temp.push({
+                    text: temp2[2],
+                    href: `/compliance/${temp2[2]}`,
+                })
+            }
+           
         }
         temp.push({ text: 'Control Detail', href: '#' })
 
@@ -161,7 +205,7 @@ export default function ControlDetail() {
                     <CopyToClipboard
                         variant="inline"
                         textToCopy={
-                            controlDetail?.resourceType?.resource_type || ''                            
+                            controlDetail?.resourceType?.resource_type || ''
                         }
                         copySuccessText="Resource type copied to clipboard"
                     />
@@ -169,7 +213,6 @@ export default function ControlDetail() {
             })
         }
         temp.push(
-           
             {
                 label: 'Compliant Resources',
                 value: (
@@ -196,12 +239,17 @@ export default function ControlDetail() {
                         {controlDetail?.failedResourcesCount}
                     </Text>
                 ),
-            },
-            
+            }
         )
         return temp
         // @ts-ignore
     }
+    useEffect(() => {
+        if (controlDetail?.control?.id) {
+            GetParams()
+        }
+    }, [controlDetail])
+
     return (
         <>
             {/* <TopHeader
@@ -262,9 +310,9 @@ export default function ControlDetail() {
                                                     <div>
                                                         <Box
                                                             variant="h1"
-                                                            className="text-white important"
+                                                            className="text-white important w-full"
                                                         >
-                                                            <span className="text-white">
+                                                            <span className="text-white w-full">
                                                                 {
                                                                     controlDetail
                                                                         ?.control
@@ -418,11 +466,41 @@ export default function ControlDetail() {
                                 numItems={2}
                                 className=" w-full gap-4 mb-6 mt-4"
                             >
-                                <Card className="h-fit min-h-[258px] max-h-[258px]">
+                                <Card className="h-fit min-h-[258px] max-h-[258px] overflow-scroll">
                                     <KeyValuePairs
                                         columns={2}
                                         items={GetKeyValue()}
                                     />
+                                    <Flex
+                                        flexDirection="col"
+                                        className="gap-2 mt-2 justify-start items-start"
+                                    >
+                                        <Title>Parameters:</Title>
+                                        <Flex
+                                            className="gap-1 flex-row justify-start w-full flex-wrap"
+                                            flexDirection="row"
+                                        >
+                                            <>
+                                                {params?.map((item, index) => {
+                                                    return (
+                                                        <Badge color="severity-neutral">
+                                                            <Flex
+                                                                flexDirection="row"
+                                                                justifyContent="start"
+                                                                className="hover:cursor-pointer max-w-full w-fit  px-1"
+                                                            >
+                                                                <AdjustmentsVerticalIcon className="min-w-4 w-4 mr-1" />
+                                                                {/* @ts-ignore */}
+                                                                {`${item?.key} : ${item?.value}`}
+                                                            </Flex>
+                                                        </Badge>
+                                                    )
+                                                })}
+                                                {params?.length == 0 &&
+                                                    'No Parameters'}
+                                            </>
+                                        </Flex>
+                                    </Flex>
                                     {/* <Flex justifyContent="end">
                                                 <Button
                                                     variant="light"
@@ -844,7 +922,7 @@ export default function ControlDetail() {
                                 </Flex>
                             </Grid>
                             {/* <Flex flexDirection="row" className="w-full"> */}
-                                {/* <Header
+                            {/* <Header
                                     variant="h3"
                                     actions={
                                         <SegmentedControl
@@ -878,7 +956,7 @@ export default function ControlDetail() {
                                 >
                                     Compliance Status filter:
                                 </Header> */}
-                                {/* <Text className="mr-2 w-fit">
+                            {/* <Text className="mr-2 w-fit">
                             Confomance Status filter:
                         </Text>
                         <SegmentedControl
@@ -906,7 +984,7 @@ export default function ControlDetail() {
                                 { text: 'Passes', id: '2' },
                             ]}
                         /> */}
-                                {/* <TabGroup
+                            {/* <TabGroup
                             tabIndex={conformanceFilterIdx()}
                             className="w-fit"
                             onIndexChange={(tabIndex) => {
