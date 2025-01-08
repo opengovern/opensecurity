@@ -321,17 +321,6 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
 	complianceClient := complianceClient.NewComplianceClient(complianceURL)
 
-	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
-	if err != nil {
-		h.logger.Error("error listing controls", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
-	}
-	namedQueries, err := h.ListQueriesV2Internal(ctx, api.ListQueryV2Request{})
-	if err != nil {
-		h.logger.Error("error listing queries", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
-	}
-
 	var filteredQueryParams []string
 	if controlIDs != nil {
 		all_control, err := complianceClient.ListControl(clientCtx, controlIDs, nil)
@@ -386,6 +375,17 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	for _, dbParam := range queryParams {
 		apiParam := dbParam.ToAPI()
 		parametersMap[apiParam.Key+apiParam.ControlID] = &apiParam
+	}
+
+	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
+	if err != nil {
+		h.logger.Error("error listing controls", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
+	}
+	namedQueries, err := h.ListQueriesV2Internal(ctx, api.ListQueryV2Request{})
+	if err != nil {
+		h.logger.Error("error listing queries", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
 	}
 
 	for _, c := range controls {

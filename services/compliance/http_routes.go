@@ -2725,7 +2725,7 @@ func (h *HttpHandler) getControlSummary(ctx context.Context, controlID string, b
 	var resourceType *coreApi.ResourceType
 	if control.Policy != nil {
 		apiControl.IntegrationType = control.Policy.IntegrationType
-		if control.Policy != nil {
+		if len(control.Policy.IntegrationType) == 1 {
 			rtName, _, err := runner.GetResourceTypeFromTableName(control.Policy.PrimaryResource, integration_type.ParseTypes(control.Policy.IntegrationType))
 			if err != nil {
 				h.logger.Error("failed to get resource type from table name", zap.Error(err))
