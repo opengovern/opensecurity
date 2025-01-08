@@ -385,12 +385,15 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	parametersMap := make(map[string]*api.QueryParameter)
 	for _, dbParam := range queryParams {
 		apiParam := dbParam.ToAPI()
-		parametersMap[apiParam.Key] = &apiParam
+		parametersMap[apiParam.Key+apiParam.ControlID] = &apiParam
 	}
 
 	for _, c := range controls {
 		for _, p := range c.Policy.Parameters {
 			if _, ok := parametersMap[p.Key]; ok {
+				parametersMap[p.Key].ControlsCount += 1
+			}
+			if _, ok := parametersMap[p.Key+c.ID]; ok {
 				parametersMap[p.Key].ControlsCount += 1
 			}
 		}
