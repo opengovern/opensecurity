@@ -9,12 +9,13 @@ type GetViewsCheckpointResponse struct {
 }
 
 type View struct {
-	ID               string    `json:"id"`
-	Title            string    `json:"title"`
-	Description      string    `json:"description"`
-	LastTimeRendered time.Time `json:"last_time_rendered"`
-	Query            Query     `json:"query"`
-	Dependencies     []string  `json:"dependencies"`
+	ID               string              `json:"id"`
+	Title            string              `json:"title"`
+	Description      string              `json:"description"`
+	LastTimeRendered time.Time           `json:"last_time_rendered"`
+	Query            Query               `json:"query"`
+	Dependencies     []string            `json:"dependencies"`
+	Tags             map[string][]string `json:"tags"`
 }
 
 type GetViewsResponse struct {

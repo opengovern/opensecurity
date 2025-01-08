@@ -121,7 +121,10 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	err = dbCore.Orm.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, obj := range p.policyParamValues {
 			err := tx.Clauses(clause.OnConflict{
-				DoNothing: true,
+				Columns: []clause.Column{{Name: "key"}, {Name: "control_id"}},
+				DoUpdates: clause.Assignments(map[string]interface{}{
+					"value": gorm.Expr("CASE WHEN value = '' THEN ? ELSE value END", obj.Value),
+				}),
 			}).Create(&obj).Error
 			if err != nil {
 				return err

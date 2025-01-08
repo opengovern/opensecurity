@@ -38,3 +38,13 @@ type QueryParameter struct {
 	Required     bool   `json:"Required" yaml:"Required"`
 	DefaultValue string `json:"DefaultValue" yaml:"DefaultValue"`
 }
+
+type ParameterDefaultValue struct {
+	Key      string   `json:"key" yaml:"key"`
+	Value    string   `json:"value" yaml:"value"`
+	Controls []string `json:"controls" yaml:"controls"`
+}
+
+type ParameterDefaultValueFile struct {
+	Parameters []ParameterDefaultValue `json:"parameters" yaml:"parameters"`
+}
