@@ -394,7 +394,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 				parametersMap[p.Key].ControlsCount += 1
 			}
 			if _, ok := parametersMap[p.Key+c.ID]; ok {
-				parametersMap[p.Key].ControlsCount += 1
+				parametersMap[p.Key+c.ID].ControlsCount += 1
 			}
 		}
 	}
