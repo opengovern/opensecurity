@@ -123,7 +123,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			err := tx.Clauses(clause.OnConflict{
 				Columns: []clause.Column{{Name: "key"}, {Name: "control_id"}},
 				DoUpdates: clause.Assignments(map[string]interface{}{
-					"value": gorm.Expr("CASE WHEN value = '' THEN ? ELSE value END", obj.Value),
+					"value": gorm.Expr("CASE WHEN policy_parameter_values.value = '' THEN ? ELSE policy_parameter_values.value END", obj.Value),
 				}),
 			}).Create(&obj).Error
 			if err != nil {
