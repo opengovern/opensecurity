@@ -276,6 +276,7 @@ func (g *GitParser) parsePolicyFile(content []byte, path string) error {
 		ID:              *policy.ID,
 		Title:           policy.Title,
 		Description:     policy.Description,
+		ExternalPolicy:  true,
 		Definition:      policy.Definition,
 		PrimaryResource: policy.PrimaryResource,
 		ListOfResources: listOfTables,

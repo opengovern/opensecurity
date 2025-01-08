@@ -4990,12 +4990,19 @@ func (h HttpHandler) ListPolicies(c echo.Context) error {
 
 	var policiesItems []api.ListPolicyItem
 	for _, p := range policies {
-		policiesItems = append(policiesItems, api.ListPolicyItem{
+		item := api.ListPolicyItem{
 			ID:            p.ID,
 			Title:         p.Title,
 			Language:      string(p.Language),
 			ControlsCount: len(p.Controls),
-		})
+		}
+		if p.ExternalPolicy {
+			item.Type = "external"
+		} else {
+			item.Type = "inline"
+		}
+
+		policiesItems = append(policiesItems, item)
 	}
 
 	return c.JSON(http.StatusOK, api.ListPoliciesResponse{
@@ -5031,6 +5038,12 @@ func (h HttpHandler) GetPolicy(c echo.Context) error {
 		Language:      string(policy.Language),
 		Definition:    policy.Definition,
 		ControlsCount: len(policy.Controls),
+	}
+
+	if policy.ExternalPolicy {
+		policyItem.Type = "external"
+	} else {
+		policyItem.Type = "inline"
 	}
 
 	for _, c := range policy.Controls {
