@@ -198,7 +198,7 @@ export default function ControlDetail({
                                         >
                                             <Title>Parameters:</Title>
                                             <Flex
-                                                className="gap-1 flex-wrap w-full"
+                                                className="gap-1 flex-wrap w-full justify-start "
                                                 flexDirection="row"
                                             >
                                                 <>
@@ -219,7 +219,8 @@ export default function ControlDetail({
                                                             )
                                                         }
                                                     )}
-                                                    {params?.length ==0 && 'No Parameters'}
+                                                    {params?.length == 0 &&
+                                                        'No Parameters'}
                                                 </>
                                             </Flex>
                                         </Flex>

@@ -232,7 +232,7 @@ export default function Controls({
         //     groupValuesLabel: `Exclude Inactive Integration' values`,
         // },
     ])
-    const [sort, setSort] = useState('incidents')
+    const [sort, setSort] = useState('noncompliant_resources')
     const [sortOrder, setSortOrder] = useState(true)
 
     const navigateToInsightsDetails = (id: string) => {
@@ -271,7 +271,7 @@ export default function Controls({
             // list_of_tables: listofTables,
             severity: query?.severity,
             root_benchmark: flag ? [id] : [benchmarkId],
-            finding_summary: enable,
+            compliance_result_summary: true,
             cursor: page,
             per_page: 10,
             sort_by: sort,
@@ -533,7 +533,7 @@ export default function Controls({
                                 cell: (item) => (
                                     <Link
                                         href={`${window.location}/${item.id}`}
-                                        target='__blank'
+                                        target="__blank"
 
                                         // onClick={() => {
                                         //     navigateToInsightsDetails(item.id)
@@ -592,8 +592,9 @@ export default function Controls({
                                     // @ts-ignore
                                     <>
                                         {/**@ts-ignore */}
-                                        {item?.findings_summary?.incident_count
-                                            ? item?.findings_summary
+                                        {item?.compliance_results_summary
+                                            ?.incident_count
+                                            ? item?.compliance_results_summary
                                                   ?.incident_count
                                             : 0}
                                     </>
@@ -608,9 +609,9 @@ export default function Controls({
                                 cell: (item) => (
                                     // @ts-ignore
                                     <>
-                                        {item?.findings_summary
+                                        {item?.compliance_results_summary
                                             ?.non_incident_count
-                                            ? item?.findings_summary
+                                            ? item?.compliance_results_summary
                                                   ?.non_incident_count
                                             : 0}
                                     </>
@@ -625,9 +626,9 @@ export default function Controls({
                                 cell: (item) => (
                                     // @ts-ignore
                                     <>
-                                        {item?.findings_summary
+                                        {item?.compliance_results_summary
                                             ?.noncompliant_resources
-                                            ? item?.findings_summary
+                                            ? item?.compliance_results_summary
                                                   ?.noncompliant_resources
                                             : 0}
                                     </>
@@ -640,9 +641,9 @@ export default function Controls({
                                 cell: (item) => (
                                     // @ts-ignore
                                     <>
-                                        {item?.findings_summary
+                                        {item?.compliance_results_summary
                                             ?.cost_optimization
-                                            ? item?.findings_summary
+                                            ? item?.compliance_results_summary
                                                   ?.cost_optimization
                                             : 0}
                                     </>
