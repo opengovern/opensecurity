@@ -394,7 +394,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 				parametersMap[p.Key].ControlsCount += 1
 			}
 			if _, ok := parametersMap[p.Key+c.ID]; ok {
-				parametersMap[p.Key].ControlsCount += 1
+				parametersMap[p.Key+c.ID].ControlsCount += 1
 			}
 		}
 	}
@@ -427,22 +427,40 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 		switch sortBy {
 		case "key":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].Key == items[j].Key {
+					return items[i].ControlsCount < items[j].ControlsCount
+				}
 				return items[i].Key < items[j].Key
 			})
 		case "value":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].Value == items[j].Value {
+					if items[i].Key == items[j].Key {
+						return items[i].ControlsCount < items[j].ControlsCount
+					}
+					return items[i].Key < items[j].Key
+				}
 				return items[i].Value < items[j].Value
 			})
 		case "controlid", "control_id":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].ControlID == items[j].ControlID {
+					return items[i].Key < items[j].Key
+				}
 				return items[i].ControlID < items[j].ControlID
 			})
 		case "controlscount", "controls_count":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].ControlsCount == items[j].ControlsCount {
+					return items[i].Key < items[j].Key
+				}
 				return items[i].ControlsCount < items[j].ControlsCount
 			})
 		case "queriescount", "queries_count":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].QueriesCount == items[j].QueriesCount {
+					return items[i].Key < items[j].Key
+				}
 				return items[i].QueriesCount < items[j].QueriesCount
 			})
 		}
@@ -450,22 +468,40 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 		switch sortBy {
 		case "key":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].Key == items[j].Key {
+					return items[i].ControlsCount > items[j].ControlsCount
+				}
 				return items[i].Key > items[j].Key
 			})
 		case "value":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].Value == items[j].Value {
+					if items[i].Key == items[j].Key {
+						return items[i].ControlsCount > items[j].ControlsCount
+					}
+					return items[i].Key > items[j].Key
+				}
 				return items[i].Value > items[j].Value
 			})
 		case "controlid", "control_id":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].ControlID == items[j].ControlID {
+					return items[i].Key > items[j].Key
+				}
 				return items[i].ControlID > items[j].ControlID
 			})
 		case "controlscount", "controls_count":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].ControlsCount == items[j].ControlsCount {
+					return items[i].Key > items[j].Key
+				}
 				return items[i].ControlsCount > items[j].ControlsCount
 			})
 		case "queriescount", "queries_count":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].QueriesCount == items[j].QueriesCount {
+					return items[i].Key > items[j].Key
+				}
 				return items[i].QueriesCount > items[j].QueriesCount
 			})
 		}
