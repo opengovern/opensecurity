@@ -48,6 +48,7 @@ import ScoreCategoryCard from '../../../components/Cards/ScoreCategoryCard'
 import AllControls from './All Controls'
 import SettingsParameters from '../../Settings/Parameters'
 import { useIntegrationApiV1EnabledConnectorsList } from '../../../api/integration.gen'
+import AllPolicy from './All Policy'
 const CATEGORY = {
     sre_efficiency: 'Efficiency',
     sre_reliability: 'Reliability',
@@ -503,7 +504,11 @@ const {
                                                 Frameworks.
                                             </p>
                                             <Grid
-                                                    numItems={window.innerWidth > 1440 ? 4 : 2}
+                                                numItems={
+                                                    window.innerWidth > 1440
+                                                        ? 4
+                                                        : 2
+                                                }
                                                 className="2xl:gap-[30px] sm: gap-10 mt-6 w-full justify-items-center"
                                             >
                                                 {isLoading || !response
@@ -830,6 +835,11 @@ const {
                     },
                     {
                         id: '2',
+                        label: 'Policy',
+                        content: <AllPolicy />,
+                    },
+                    {
+                        id: '3',
                         label: 'Parameters',
                         content: <SettingsParameters />,
                     },

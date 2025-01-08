@@ -100,7 +100,7 @@ export const getTable = (
     const columns: IColumn<any, any>[] = []
     const rows: any[] = []
     const headerField = headers?.map((value, idx) => {
-        if (headers.filter((v) => v === value).length > 1) {
+        if (headers.filter((v) => v === value)?.length > 1) {
             return `${value}-${idx}`
         }
         return value
@@ -331,9 +331,15 @@ export default function AllControls() {
         api.compliance
             .apiV2ControlList(body)
             .then((resp) => {
+                if(resp.data?.items){
                 setRows(resp.data.items)
-                setTotalCount(resp.data.total_count)
-                setTotalPage(Math.ceil(resp.data.total_count / 15))
+
+                }
+                else{
+                    setRows([])
+                }
+                setTotalCount(resp.data?.total_count)
+                setTotalPage(Math.ceil(resp.data?.total_count / 15))
                 setLoading(false)
             })
             .catch((err) => {
@@ -498,18 +504,18 @@ export default function AllControls() {
             })
             setQuery({
                 connector:
-                    temp_connector.length > 0 ? temp_connector : undefined,
-                severity: temp_severity.length > 0 ? temp_severity : undefined,
+                    temp_connector?.length > 0 ? temp_connector : undefined,
+                severity: temp_severity?.length > 0 ? temp_severity : undefined,
                 parent_benchmark:
-                    temp_parent_benchmark.length > 0
+                    temp_parent_benchmark?.length > 0
                         ? temp_parent_benchmark
                         : undefined,
                 list_of_tables:
-                    temp_list_of_tables.length > 0
+                    temp_list_of_tables?.length > 0
                         ? temp_list_of_tables
                         : undefined,
                 primary_table:
-                    temp_primary_table.length > 0
+                    temp_primary_table?.length > 0
                         ? temp_primary_table
                         : undefined,
                 // @ts-ignore
@@ -1137,6 +1143,20 @@ export default function AllControls() {
                                             maxWidth: 70,
                                         },
                                         {
+                                            id: 'polity_type',
+                                            header: 'Policy Type',
+                                            cell: (item) =>
+                                                String(item?.policy?.type)
+                                                    .charAt(0)
+                                                    .toUpperCase() +
+                                                String(
+                                                    item?.policy?.type
+                                                ).slice(1),
+                                            // sortingField: 'title',
+                                            // minWidth: 400,
+                                            maxWidth: 50,
+                                        },
+                                        {
                                             id: 'query',
                                             header: 'Primary Table',
                                             maxWidth: 120,
@@ -1161,12 +1181,12 @@ export default function AllControls() {
                                                         item.severity.slice(1)}
                                                 </Badge>
                                             ),
-                                            maxWidth: 80,
+                                            maxWidth: 50,
                                         },
                                         {
                                             id: 'parameters',
-                                            header: 'Customizable',
-                                            maxWidth: 80,
+                                            header: 'Parametrized',
+                                            maxWidth: 50,
 
                                             cell: (item) => (
                                                 <>
@@ -1185,6 +1205,10 @@ export default function AllControls() {
                                         },
                                         {
                                             id: 'integration_type',
+                                            visible: true,
+                                        },
+                                        {
+                                            id: 'polity_type',
                                             visible: true,
                                         },
                                         // { id: 'query', visible: true },

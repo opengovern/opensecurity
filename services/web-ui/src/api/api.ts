@@ -2879,6 +2879,8 @@ export interface GithubComKaytuIoKaytuEnginePkgControlDetailV3Query {
     primaryResource: string
     definition: string
     parameters: GithubComKaytuIoKaytuEnginePkgControlDetailV3QueryParams[]
+    reference: string
+    type: string
 }
 
 export interface GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequestV2 {

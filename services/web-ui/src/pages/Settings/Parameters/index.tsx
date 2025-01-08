@@ -36,7 +36,9 @@ import {
     Pagination,
     PropertyFilter,
     RadioGroup,
+    Select,
     SpaceBetween,
+    Spinner,
     Table,
     Toggle,
 } from '@cloudscape-design/components'
@@ -53,6 +55,7 @@ export default function SettingsParameters() {
     const [page, setPage] = useState(1)
     const [total, setTotal] = useState(0)
     const [loading, setLoading] = useState(false)
+    const [detailLoading, setDetailLoading] = useState(false)
     const [selectedItem, setSelectedItem] = useState<any>()
     const [selected, setSelected] = useState<any>()
     const [open, setOpen] = useState(false)
@@ -70,9 +73,19 @@ export default function SettingsParameters() {
         value: '',
         control_id: '',
     })
+     const [addValue, setAddValue] = useState({
+         key: '',
+         value: '',
+         control_id: {},
+     })
+     const [addError, setAddError] = useState('')
+     const [addOpen, setAddOpen] = useState(false)
+    const [sortOrder, setSortOrder] = useState('asc')
+    const [sortField, setSortField] = useState<any>()
 
     const GetParams = () => {
         setLoading(true)
+      
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -114,6 +127,10 @@ export default function SettingsParameters() {
         }
         if(titles.length > 0){
             body['key_regex'] = titles[0]
+        }
+        if(sortField){
+            body['sort_by'] = sortField?.sortingField
+            body['sort_order'] = sortOrder
         }
         axios
             .post(
@@ -171,8 +188,61 @@ export default function SettingsParameters() {
                 setLoading(false)
             })
     }
-     const GetParamDetail = (key: string) => {
+     const AddParams = () => {
+          if (addValue.key === '' || addValue.value === '') {
+              setAddError('Key and Value cannot be empty')
+              setLoading(false)
+              return
+          }
+
          setLoading(true)
+         let url = ''
+         if (window.location.origin === 'http://localhost:3000') {
+             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+         } else {
+             url = window.location.origin
+         }
+         // @ts-ignore
+         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+         const config = {
+             headers: {
+                 Authorization: `Bearer ${token}`,
+             },
+         }
+         const body = {
+             query_parameters: [
+                 {
+                     key: addValue.key,
+                     value: addValue.value,
+                     //  @ts-ignore
+                     control_id: addValue?.control_id?.value
+                         ? //  @ts-ignore
+                           addValue.control_id?.value
+                         : '',
+                 },
+             ],
+         }
+
+         axios
+             .post(`${url}/main/core/api/v1/query_parameter/set`, body, config)
+             .then((res) => {
+                 setLoading(false)
+                 setAddOpen(false)
+                 setAddValue({
+                     key: '',
+                     value: '',
+                     control_id: {},
+                 })
+                 GetParams()
+             })
+             .catch((err) => {
+                 console.log(err)
+                 setLoading(false)
+             })
+     }
+     const GetParamDetail = (key: string) => {
+         setDetailLoading(true)
          let url = ''
          if (window.location.origin === 'http://localhost:3000') {
              url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -193,13 +263,13 @@ export default function SettingsParameters() {
              .then((res) => {
                  if(res.data){
                     setSelectedItem(res.data)
-                    setOpen(true)
                  }
-                 setLoading(false)
+                 setDetailLoading(false)
              })
              .catch((err) => {
                  console.log(err)
-                 setLoading(false)
+                 setOpen(false)
+                 setDetailLoading(false)
              })
      }
      const GetControls = () => {
@@ -302,7 +372,7 @@ useEffect(()=>{
     }, [page])
     useEffect(() => {
         GetParams()
-    }, [queryToken,page])
+    }, [queryToken,page,sortOrder,sortField])
 
 
     return (
@@ -312,72 +382,159 @@ useEffect(()=>{
                 onDismiss={() => setOpen(false)}
                 header="Parameter Detail"
             >
-                <KeyValuePairs
-                    columns={4}
-                    items={[
-                        { label: 'Key', value: selectedItem?.key },
-                        { label: 'Value', value: selectedItem?.value },
-                        {
-                            label: 'Using control count',
-                            value: selected?.controls_count,
-                        },
-                        {
-                            label: 'Using query count',
-                            value: selected?.queries_count,
-                        },
-                        {
-                            label: 'Controls',
-                            value: (
-                                <>
-                                    {selectedItem?.controls?.map((c: any) => {
-                                        return (
-                                            <>
-                                                <Link
-                                                    href={`/incidents/${c.id}`}
-                                                >
-                                                    {c.title}
-                                                </Link>
-                                            </>
-                                        )
-                                    })}
-                                </>
-                            ),
-                        },
-                        {
-                            label: 'Queries',
-                            value: (
-                                <>
-                                    {selectedItem?.queries?.map((c: any) => {
-                                        return (
-                                            <>
-                                                <Link
-                                                    href={`/incidents/${c.id}`}
-                                                >
-                                                    {c.title}
-                                                </Link>
-                                            </>
-                                        )
-                                    })}
-                                </>
-                            ),
-                        },
-                    ]}
-                />
+                {detailLoading ? (
+                    <Spinner />
+                ) : (
+                    <>
+                        <KeyValuePairs
+                            columns={4}
+                            items={[
+                                { label: 'Key', value: selectedItem?.key },
+                                { label: 'Value', value: selectedItem?.value },
+                                {
+                                    label: 'Using control count',
+                                    value: selected?.controls_count,
+                                },
+                                {
+                                    label: 'Using query count',
+                                    value: selected?.queries_count,
+                                },
+                                {
+                                    label: 'Controls',
+                                    value: (
+                                        <>
+                                            {selectedItem?.controls?.map(
+                                                (c: any) => {
+                                                    return (
+                                                        <>
+                                                            <Link
+                                                                href={`/incidents/${c.id}`}
+                                                            >
+                                                                {c.title}
+                                                            </Link>
+                                                        </>
+                                                    )
+                                                }
+                                            )}
+                                        </>
+                                    ),
+                                },
+                                {
+                                    label: 'Queries',
+                                    value: (
+                                        <>
+                                            {selectedItem?.queries?.map(
+                                                (c: any) => {
+                                                    return (
+                                                        <>
+                                                            <Link
+                                                                href={`/incidents/${c.id}`}
+                                                            >
+                                                                {c.title}
+                                                            </Link>
+                                                        </>
+                                                    )
+                                                }
+                                            )}
+                                        </>
+                                    ),
+                                },
+                            ]}
+                        />
+                    </>
+                )}
+            </Modal>
+            <Modal
+                visible={addOpen}
+                onDismiss={() => setAddOpen(false)}
+                header="Add Parameter"
+            >
+                <Flex
+                    flexDirection="col"
+                    justifyContent="start"
+                    alignItems="start"
+                    className="gap-3"
+                >
+                    <Input
+                        name="Key"
+                        className="w-full"
+                        placeholder="Key"
+                        value={addValue.key}
+                        onChange={(e) => {
+                            setAddValue({ ...addValue, key: e.detail.value })
+                        }}
+                    />
+                    <Input
+                        name="Value"
+                        className="w-full"
+                        placeholder="Value"
+                        value={addValue.value}
+                        onChange={(e) => {
+                            setAddValue({ ...addValue, value: e.detail.value })
+                        }}
+                    />
+                    <Select
+                        selectedOption={addValue.control_id}
+                        placeholder='controls'
+                        inlineLabelText='Controls'
+                        className="w-full"
+                        onChange={({ detail }) =>
+                            setAddValue({
+                                ...addValue,
+                                control_id: detail.selectedOption,
+                            })
+                        }
+                        options={controls.map((c: any) => {
+                            return {
+                                value: c.id,
+                                label: c.title,
+                            }
+                        })}
+                    />
+                    {addError && addError != '' && (
+                        <>
+                            <Alert
+                                statusIconAriaLabel="Error"
+                                className='w-full'
+                                type="error"
+                                header="Invalid Input"
+                            >
+                                {addError}
+                            </Alert>
+                        </>
+                    )}
+                    <div className='flex flex-row justify-end w-full'>
+                        <KButton onClick={AddParams}>Add</KButton>
+                    </div>
+                </Flex>
             </Modal>
             <Table
                 className="mt-2"
+                sortingColumn={sortField}
+                sortingDescending={sortOrder === 'desc' ? true : false}
+                onSortingChange={({ detail }) => {
+                    if (detail.isDescending) {
+                        setSortOrder('desc')
+                    } else {
+                        setSortOrder('asc')
+                    }
+                    setSortField(detail.sortingColumn)
+                }}
                 columnDefinitions={[
                     {
                         id: 'key',
                         header: 'Key Name',
                         cell: (item: any) => item.key,
                         maxWidth: 150,
+                        sortingField: 'key',
                     },
 
                     {
                         id: 'value',
                         header: 'Value',
                         cell: (item: any) => item.value,
+                        sortingField: 'value',
+                        maxWidth:120,
                         editConfig: {
                             ariaLabel: 'Value',
                             editIconAriaLabel: 'editable',
@@ -385,7 +542,7 @@ useEffect(()=>{
                                 return (
                                     <Input
                                         autoFocus={true}
-                                        value={currentValue ?? item.name}
+                                        value={currentValue ?? item.value}
                                         onChange={(event) => {
                                             setValue(event.detail.value)
                                             setEditValue({
@@ -407,11 +564,14 @@ useEffect(()=>{
                         cell: (item: any) =>
                             item.control_id ? item.control_id : 'Global',
                         maxWidth: 200,
+                        sortingField: 'control_id',
                     },
                     {
                         id: 'controls_count',
                         header: 'Using control count',
-                        maxWidth: 50,
+                        maxWidth: 100,
+                        sortingField: 'controls_count',
+
                         cell: (item: any) =>
                             item?.controls_count ? item?.controls_count : 0,
                     },
@@ -419,20 +579,22 @@ useEffect(()=>{
                     {
                         id: 'queries_count',
                         header: 'Using query count',
-                        maxWidth: 50,
-
+                        sortingField: 'queries_count',
+                        maxWidth: 100,
                         cell: (item: any) =>
                             item?.queries_count ? item?.queries_count : 0,
                     },
                     {
                         id: 'action',
                         header: '',
+                        maxWidth: 100,
                         cell: (item) => (
                             // @ts-ignore
                             <KButton
                                 onClick={() => {
                                     GetParamDetail(item.key)
                                     setSelected(item)
+                                    setOpen(true)
                                 }}
                                 variant="inline-link"
                                 ariaLabel={`Open Detail`}
@@ -471,9 +633,16 @@ useEffect(()=>{
                 header={
                     <Header
                         actions={
-                            <>
+                            <Flex className="gap-2">
+                                <KButton
+                                    onClick={() => {
+                                        setAddOpen(true)
+                                    }}
+                                >
+                                    Add
+                                </KButton>
                                 <KButton onClick={GetParams}>Reload</KButton>
-                            </>
+                            </Flex>
                         }
                         className="w-full"
                     >

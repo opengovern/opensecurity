@@ -15,13 +15,15 @@ import {
     Text,
     Title,
 } from '@tremor/react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import ReactJson from '@microlink/react-json-view'
 import {
+    AdjustmentsVerticalIcon,
     CheckCircleIcon,
     PlayCircleIcon,
     Square2StackIcon,
     TagIcon,
+    VariableIcon,
     XCircleIcon,
 } from '@heroicons/react/24/outline'
 import {
@@ -48,6 +50,7 @@ import 'prismjs/components/prism-sql' // eslint-disable-next-line import/no-extr
 import 'prismjs/themes/prism.css'
 import { severityBadge } from '../../../Controls'
 import { Badge, KeyValuePairs, Tabs } from '@cloudscape-design/components'
+import axios from 'axios'
 
 interface IResourceFindingDetail {
     selectedItem: GithubComKaytuIoKaytuEnginePkgControlDetailV3 | undefined
@@ -66,60 +69,113 @@ export default function ControlDetail({
 }: IResourceFindingDetail) {
     const { ws } = useParams()
     const setQuery = useSetAtom(queryAtom)
+     const [params, setParams] = useState([])
 
-    // const { response, isLoading, sendNow } =
-    //     useComplianceApiV1FindingsResourceCreate(
-    //         { kaytuResourceId: resourceFinding?.kaytuResourceID || '' },
-    //         {},
-    //         false
-    //     )
-    const searchParams = useAtomValue(searchAtom)
+    const GetParams = () => {
 
-    // useEffect(() => {
-    //     if (resourceFinding && open) {
-    //         sendNow()
-    //     }
-    // }, [resourceFinding, open])
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-    const isDemo = useAtomValue(isDemoAtom)
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
 
-    // const finding = resourceFinding?.findings
-    //     ?.filter((f) => f.controlID === controlID)
-    //     .at(0)
+        let body: any = {
+            controls: [selectedItem?.id],
+            cursor: 1,
+            per_page: 300,
+        }
+        
+       
+        axios
+            .post(`${url}/main/core/api/v1/query_parameter`, body, config)
+            .then((res) => {
+                const data = res.data
+                setParams(data?.items)
+              
 
-    // const conformance = () => {
-    //     if (showOnlyOneControl) {
-    //         return (finding?.conformanceStatus || 0) ===
-    //             GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed ? (
-    //             <Flex className="w-fit gap-1.5">
-    //                 <XCircleIcon className="h-4 text-rose-600" />
-    //                 <Text>Failed</Text>
-    //             </Flex>
-    //         ) : (
-    //             <Flex className="w-fit gap-1.5">
-    //                 <CheckCircleIcon className="h-4 text-emerald-500" />
-    //                 <Text>Passed</Text>
-    //             </Flex>
-    //         )
-    //     }
+              
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+    } 
+   
+   useEffect(()=>{GetParams()},[selectedItem])
+   const getItems = () => {
+        const items = [
+            {
+                label: 'ID',
+                value: selectedItem?.id,
+            },
+            {
+                label: 'Title',
+                value: selectedItem?.title,
+            },
 
-    //     const failingControls = new Map<string, string>()
-    //     resourceFinding?.findings?.forEach((f) => {
-    //         failingControls.set(f.controlID || '', '')
-    //     })
-
-    //     return failingControls.size > 0 ? (
-    //         <Flex className="w-fit gap-1.5">
-    //             <XCircleIcon className="h-4 text-rose-600" />
-    //             <Text>{failingControls.size} Failing</Text>
-    //         </Flex>
-    //     ) : (
-    //         <Flex className="w-fit gap-1.5">
-    //             <CheckCircleIcon className="h-4 text-emerald-500" />
-    //             <Text>Passed</Text>
-    //         </Flex>
-    //     )
-    // }
+            {
+                label: 'Integration Type',
+                value: selectedItem?.integrationType?.map((item, index) => {
+                    return `${item} `
+                }),
+            },
+            {
+                label: 'Severity',
+                value: severityBadge(selectedItem?.severity),
+            },
+            {
+                label: 'Description',
+                value: selectedItem?.description,
+            },
+            {
+                label: 'Policy Language',
+                value: selectedItem?.policy?.language,
+            },
+        ]
+        if(selectedItem?.policy.type =='external'){
+            items.push({
+                label: 'Policy Id',
+                value: selectedItem?.policy?.reference,
+            })
+        }
+        items.push({
+            label: 'Tags',
+            value: (
+                <>
+                    <Flex className="gap-2 flex-wrap" flexDirection="row">
+                        <>
+                        {/* @ts-ignore */}
+                            {Object.entries(selectedItem?.tags).map(
+                                (key, index) => {
+                                    return (
+                                        <Badge color="severity-neutral">
+                                            <Flex
+                                                flexDirection="row"
+                                                justifyContent="start"
+                                                className="hover:cursor-pointer max-w-full w-fit  px-1"
+                                            >
+                                                <TagIcon className="min-w-4 w-4 mr-1" />
+                                                {`${key[0]} : ${key[1]}`}
+                                            </Flex>
+                                        </Badge>
+                                    )
+                                }
+                            )}
+                        </>
+                    </Flex>
+                </>
+            ),
+        })
+        return items
+   }
 
     return (
         <>
@@ -133,72 +189,40 @@ export default function ControlDetail({
                                 content: (
                                     <>
                                         <KeyValuePairs
-                                            columns={3}
-                                            items={[
-                                                {
-                                                    label: 'ID',
-                                                    value: selectedItem?.id,
-                                                },
-                                                {
-                                                    label: 'Title',
-                                                    value: selectedItem?.title,
-                                                },
-
-                                                {
-                                                    label: 'Integration Type',
-                                                    value: selectedItem?.integrationType?.map(
-                                                        (item, index) => {
-                                                            return `${item} `
-                                                        }
-                                                    ),
-                                                },
-                                                {
-                                                    label: 'Severity',
-                                                    value: severityBadge(
-                                                        selectedItem?.severity
-                                                    ),
-                                                },
-                                                {
-                                                    label: 'Description',
-                                                    value: selectedItem?.description,
-                                                },
-                                                {
-                                                    label: 'Tags',
-                                                    value: (
-                                                        <>
-                                                            <Flex
-                                                                className="gap-2 flex-wrap"
-                                                                flexDirection="row"
-                                                            >
-                                                                <>
-                                                                    {Object.entries(
-                                                                        selectedItem?.tags
-                                                                    ).map(
-                                                                        (
-                                                                            key,
-                                                                            index
-                                                                        ) => {
-                                                                            return (
-                                                                                <Badge color="severity-neutral">
-                                                                                    <Flex
-                                                                                        flexDirection="row"
-                                                                                        justifyContent="start"
-                                                                                        className="hover:cursor-pointer max-w-full w-fit  px-1"
-                                                                                    >
-                                                                                        <TagIcon className="min-w-4 w-4 mr-1" />
-                                                                                        {`${key[0]} : ${key[1]}`}
-                                                                                    </Flex>
-                                                                                </Badge>
-                                                                            )
-                                                                        }
-                                                                    )}
-                                                                </>
-                                                            </Flex>
-                                                        </>
-                                                    ),
-                                                },
-                                            ]}
+                                            columns={4}
+                                            items={getItems()}
                                         />
+                                        <Flex
+                                            flexDirection="col"
+                                            className="gap-2 mt-2 justify-start items-start"
+                                        >
+                                            <Title>Parameters:</Title>
+                                            <Flex
+                                                className="gap-1 flex-wrap w-full"
+                                                flexDirection="row"
+                                            >
+                                                <>
+                                                    {params?.map(
+                                                        (item, index) => {
+                                                            return (
+                                                                <Badge color="severity-neutral">
+                                                                    <Flex
+                                                                        flexDirection="row"
+                                                                        justifyContent="start"
+                                                                        className="hover:cursor-pointer max-w-full w-fit  px-1"
+                                                                    >
+                                                                        <AdjustmentsVerticalIcon className="min-w-4 w-4 mr-1" />
+                                                                        {/* @ts-ignore */}
+                                                                        {`${item?.key} : ${item?.value}`}
+                                                                    </Flex>
+                                                                </Badge>
+                                                            )
+                                                        }
+                                                    )}
+                                                    {params?.length ==0 && 'No Parameters'}
+                                                </>
+                                            </Flex>
+                                        </Flex>
                                         <Grid
                                             className="w-full gap-4 mb-6"
                                             numItems={1}
@@ -285,7 +309,7 @@ export default function ControlDetail({
                                                     className="mb-2"
                                                 >
                                                     <Title className="mb-2">
-                                                        Query
+                                                        Definition
                                                     </Title>
 
                                                     <Button
@@ -302,10 +326,8 @@ export default function ControlDetail({
                                                         loading={false}
                                                         loadingText="Running"
                                                     >
-                                                        <Link
-                                                            to={`/cloudql`}
-                                                        >
-                                                            Run in Query
+                                                        <Link to={`/cloudql`}>
+                                                            Open in CloudQL
                                                         </Link>{' '}
                                                     </Button>
                                                 </Flex>
