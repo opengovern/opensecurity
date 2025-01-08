@@ -47,7 +47,7 @@ import { Badge, KeyValuePairs } from '@cloudscape-design/components'
 
 interface IResourceFindingDetail {
     query:
-        | GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2
+        | any
         | undefined
     open: boolean
     onClose: () => void
@@ -123,7 +123,7 @@ export default function ViewDetail({
 
     return (
         <>
-            {/* <KeyValuePairs
+            <KeyValuePairs
                 columns={4}
                 items={[
                     {
@@ -131,18 +131,16 @@ export default function ViewDetail({
                         value: query?.id,
                     },
                     {
+                        label: 'Title',
+                        value: query?.title,
+                    },
+                    {
                         label: 'Description',
                         value: query?.description,
                     },
                     {
-                        label: 'Connector',
-                        value: (
-                            <>
-                                {query?.connectors?.map((item, index) => {
-                                    return `${item} `
-                                })}
-                            </>
-                        ),
+                        label: 'Last time rendered',
+                        value: dateTimeDisplay(query?.last_time_rendered),
                     },
                     {
                         label: 'Query Engine',
@@ -185,7 +183,7 @@ export default function ViewDetail({
                         ),
                     },
                 ]}
-            /> */}
+            />
             {/* <Grid className="w-full gap-4 mb-6" numItems={1}>
                 <Flex
                     flexDirection="row"
@@ -265,7 +263,7 @@ export default function ViewDetail({
                     onValueChange={(text) => {}}
                     highlight={(text) => highlight(text, languages.sql, 'sql')}
                     // @ts-ignore
-                    value={query?.query?.query_to_execute || '' }
+                    value={query?.query?.query_to_execute || ''}
                     className="w-full bg-white dark:bg-gray-900 dark:text-gray-50 font-mono text-sm"
                     style={{
                         minHeight: '200px',
