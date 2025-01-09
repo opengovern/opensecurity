@@ -256,6 +256,21 @@ func (s *JobScheduler) enqueueRunnersCycle() error {
 	}
 	s.logger.Info("jobs with unqueued runners", zap.Int("count", len(jobsWithUnqueuedRunners)))
 	for _, job := range jobsWithUnqueuedRunners {
+		if job.Status == model.ComplianceJobCreated {
+			framework, err := s.complianceClient.GetBenchmark(&httpclient.Context{UserRole: api.AdminRole}, job.FrameworkID)
+			if err != nil {
+				s.logger.Error("error while getting framework", zap.String("frameworkID", job.FrameworkID), zap.Error(err))
+				continue
+			}
+			if framework == nil {
+				s.logger.Error("framework not exist", zap.String("frameworkID", job.FrameworkID))
+				continue
+			}
+			err = s.ValidateComplianceJob(*framework)
+			if err != nil {
+				_ = s.db.UpdateComplianceJob(job.ID, model.ComplianceJobFailed, err.Error())
+			}
+		}
 		s.logger.Info("processing job with unqueued runners", zap.Uint("jobID", job.ID))
 		var allRunners []*model.ComplianceRunner
 		var assignments *complianceApi.BenchmarkAssignedEntities
