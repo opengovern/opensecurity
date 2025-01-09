@@ -486,6 +486,7 @@ func (s *Scheduler) Run(ctx context.Context) error {
 		s.conf,
 		s.logger,
 		s.complianceClient,
+		s.coreClient,
 		s.integrationClient,
 		s.db,
 		s.jq,

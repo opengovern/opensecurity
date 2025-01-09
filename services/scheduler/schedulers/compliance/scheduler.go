@@ -78,8 +78,6 @@ func (s *JobScheduler) runScheduler() error {
 				s.logger.Error("error while creating compliance job", zap.Error(err))
 				return err
 			}
-
-			ComplianceJobsCount.WithLabelValues("successful").Inc()
 		}
 	}
 

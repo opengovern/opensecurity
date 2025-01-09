@@ -3194,31 +3194,28 @@ func (h *HttpHandler) GetBenchmarkDetails(echoCtx echo.Context) error {
 
 func (h *HttpHandler) ListBenchmarks(echoCtx echo.Context) error {
 	ctx := echoCtx.Request().Context()
+	frameworkIDs := httpserver2.QueryArrayParam(echoCtx, "framework_id")
 
 	var response []api.Benchmark
-	// trace :
-	ctx, span1 := tracer.Start(ctx, "new_ListRootBenchmarks", trace.WithSpanKind(trace.SpanKindServer))
-	span1.SetName("new_ListRootBenchmarks")
-	defer span1.End()
 	tagMap := model.TagStringsToTagMap(httpserver2.QueryArrayParam(echoCtx, "tag"))
 
-	benchmarks, err := h.db.ListRootBenchmarks(ctx, tagMap)
-	if err != nil {
-		span1.RecordError(err)
-		span1.SetStatus(codes.Error, err.Error())
-		return err
+	var err error
+	var benchmarks []db.Benchmark
+	if len(frameworkIDs) > 0 {
+		benchmarks, err = h.db.GetBenchmarks(ctx, frameworkIDs)
+		if err != nil {
+			return err
+		}
+	} else {
+		benchmarks, err = h.db.ListRootBenchmarks(ctx, tagMap)
+		if err != nil {
+			return err
+		}
 	}
-	span1.End()
-
-	// tracer :
-	ctx, span2 := tracer.Start(ctx, "new_PopulateIntegrationTypes(loop)", trace.WithSpanKind(trace.SpanKindServer))
-	span2.SetName("new_PopulateIntegrationTypes(loop)")
-	defer span2.End()
 
 	for _, b := range benchmarks {
 		response = append(response, b.ToApi())
 	}
-	span2.End()
 
 	return echoCtx.JSON(http.StatusOK, response)
 }
