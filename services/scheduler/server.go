@@ -135,7 +135,7 @@ func (h HttpServer) ListJobs(ctx echo.Context) error {
 		return err
 	}
 
-	benchmarks, err := h.Scheduler.complianceClient.ListBenchmarks(&httpclient.Context{UserRole: apiAuth.AdminRole}, nil)
+	benchmarks, err := h.Scheduler.complianceClient.ListBenchmarks(&httpclient.Context{UserRole: apiAuth.AdminRole}, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -543,7 +543,7 @@ func (h HttpServer) TriggerConnectionsComplianceJobs(ctx echo.Context) error {
 	var benchmarks []complianceapi.Benchmark
 	var err error
 	if len(benchmarkIDs) == 0 {
-		benchmarks, err = h.Scheduler.complianceClient.ListBenchmarks(clientCtx, nil)
+		benchmarks, err = h.Scheduler.complianceClient.ListBenchmarks(clientCtx, nil, nil)
 		if err != nil {
 			return fmt.Errorf("error while getting benchmarks: %v", err)
 		}
@@ -596,7 +596,7 @@ func (h HttpServer) TriggerConnectionsComplianceJobSummary(ctx echo.Context) err
 	var benchmarks []complianceapi.Benchmark
 	var err error
 	if benchmarkID == "all" {
-		benchmarks, err = h.Scheduler.complianceClient.ListBenchmarks(clientCtx, nil)
+		benchmarks, err = h.Scheduler.complianceClient.ListBenchmarks(clientCtx, nil, nil)
 		if err != nil {
 			return fmt.Errorf("error while getting benchmarks: %v", err)
 		}
@@ -1400,7 +1400,7 @@ func (h HttpServer) RunBenchmark(ctx echo.Context) error {
 
 	var benchmarks []complianceapi.Benchmark
 	if len(request.BenchmarkIds) == 0 {
-		benchmarks, err = h.Scheduler.complianceClient.ListBenchmarks(clientCtx, nil)
+		benchmarks, err = h.Scheduler.complianceClient.ListBenchmarks(clientCtx, nil, nil)
 		if err != nil {
 			return fmt.Errorf("error while getting benchmarks: %v", err)
 		}
@@ -1956,7 +1956,7 @@ func (h HttpServer) ListComplianceJobs(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	benchmarks, err := h.Scheduler.complianceClient.ListBenchmarks(&httpclient.Context{UserRole: apiAuth.AdminRole}, nil)
+	benchmarks, err := h.Scheduler.complianceClient.ListBenchmarks(&httpclient.Context{UserRole: apiAuth.AdminRole}, nil, nil)
 	if err != nil {
 		return err
 	}
