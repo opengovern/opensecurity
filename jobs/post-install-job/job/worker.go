@@ -159,7 +159,7 @@ func (w *Job) Run(ctx context.Context) error {
 		updateFailed := false
 		migErr := mig.Run(ctx, w.conf, w.logger)
 		if migErr != nil {
-			w.logger.Error("failed to run migration", zap.Error(err), zap.String("migrationName", name))
+			w.logger.Error("failed to run migration", zap.Error(migErr), zap.String("migrationName", name))
 			updateFailed = true
 		}
 
