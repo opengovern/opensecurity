@@ -46,7 +46,7 @@ type IntegrationTypeRPC struct {
 
 func (i *IntegrationTypeRPC) GetIntegrationType() integration.Type {
 	var integrationType integration.Type
-	err := i.client.Call("PluginGetIntegrationType", struct{}{}, &integrationType)
+	err := i.client.Call("Plugin.GetIntegrationType", struct{}{}, &integrationType)
 	if err != nil {
 		panic(err)
 	}
