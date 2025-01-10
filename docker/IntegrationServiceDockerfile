@@ -4,6 +4,9 @@ RUN apk --no-cache add ca-certificates
 
 FROM scratch
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+RUN mkdir -p /plugins/github_account
+COPY ./services/integration/integration-type/github-account/integration-plugin /plugins/github_account/integration-plugin
+RUN chmod +x /plugins/github_account/integration-plugin
 COPY ./build/integration-service /
 COPY ./assets/integrations /integrations
 CMD [ "/integration-service" ]
