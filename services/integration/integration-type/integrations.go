@@ -1,6 +1,10 @@
 package integration_type
 
 import (
+	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-plugin"
+	"go.uber.org/zap"
+	"os/exec"
 	"strings"
 
 	"github.com/opengovern/og-util/pkg/integration"
@@ -18,8 +22,6 @@ import (
 	dopplerConfigs "github.com/opengovern/opencomply/services/integration/integration-type/doppler-account/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/entra-id-directory"
 	entraidConfigs "github.com/opengovern/opencomply/services/integration/integration-type/entra-id-directory/configs"
-	githubaccount "github.com/opengovern/opencomply/services/integration/integration-type/github-account"
-	githubConfigs "github.com/opengovern/opencomply/services/integration/integration-type/github-account/configs"
 	google_workspace_account "github.com/opengovern/opencomply/services/integration/integration-type/google-workspace-account"
 	googleConfig "github.com/opengovern/opencomply/services/integration/integration-type/google-workspace-account/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
@@ -31,13 +33,14 @@ import (
 	openaiConfigs "github.com/opengovern/opencomply/services/integration/integration-type/openai-integration/configs"
 	render "github.com/opengovern/opencomply/services/integration/integration-type/render-account"
 	renderConfigs "github.com/opengovern/opencomply/services/integration/integration-type/render-account/configs"
+	hczap "github.com/zaffka/zap-to-hclog"
 )
 
 var integrationTypes = map[integration.Type]interfaces.IntegrationType{
-	awsConfigs.IntegrationTypeAwsCloudAccount:           &aws_account.Integration{},
-	azureConfigs.IntegrationTypeAzureSubscription:       &azure_subscription.Integration{},
-	entraidConfigs.IntegrationTypeEntraidDirectory:      &entra_id_directory.Integration{},
-	githubConfigs.IntegrationTypeGithubAccount:          &githubaccount.Integration{},
+	awsConfigs.IntegrationTypeAwsCloudAccount:      &aws_account.Integration{},
+	azureConfigs.IntegrationTypeAzureSubscription:  &azure_subscription.Integration{},
+	entraidConfigs.IntegrationTypeEntraidDirectory: &entra_id_directory.Integration{},
+	//githubConfigs.IntegrationTypeGithubAccount:          &githubaccount.Integration{},
 	digitalOceanConfigs.IntegrationTypeDigitalOceanTeam: &digitalocean_team.Integration{},
 	cloudflareConfigs.IntegrationNameCloudflareAccount:  &cloudflareaccount.Integration{},
 	openaiConfigs.IntegrationTypeOpenaiIntegration:      &openaiproject.Integration{},
@@ -50,11 +53,52 @@ var integrationTypes = map[integration.Type]interfaces.IntegrationType{
 }
 
 type IntegrationTypeManager struct {
+	logger           *zap.Logger
+	hcLogger         hclog.Logger
 	IntegrationTypes map[integration.Type]interfaces.IntegrationType
 }
 
-func NewIntegrationTypeManager() *IntegrationTypeManager {
+func NewIntegrationTypeManager(logger *zap.Logger) *IntegrationTypeManager {
+	hcLogger := hczap.Wrap(logger)
+
+	// TODO Load plugins from scanning plugins folder for zip files
+	plugins := make(map[string]string)
+	plugins["github_account"] = "/plugins/github_account/integration-plugin"
+
+	for pluginName, pluginPath := range plugins {
+		client := plugin.NewClient(&plugin.ClientConfig{
+			HandshakeConfig: interfaces.HandshakeConfig,
+			Plugins:         map[string]plugin.Plugin{pluginName: &interfaces.IntegrationTypePlugin{}},
+			Cmd:             exec.Command(pluginPath),
+			Logger:          hcLogger,
+		})
+
+		rpcClient, err := client.Client()
+		if err != nil {
+			logger.Error("failed to create plugin client", zap.Error(err), zap.String("plugin", pluginName), zap.String("path", pluginPath))
+			continue
+		}
+
+		// Request the plugin
+		raw, err := rpcClient.Dispense("greeter")
+		if err != nil {
+			logger.Error("failed to dispense plugin", zap.Error(err), zap.String("plugin", pluginName), zap.String("path", pluginPath))
+			continue
+		}
+
+		// Cast the raw interface to the appropriate interface
+		itInterface, ok := raw.(interfaces.IntegrationType)
+		if !ok {
+			logger.Error("failed to cast plugin to integration type", zap.String("plugin", pluginName), zap.String("path", pluginPath))
+			continue
+		}
+
+		integrationTypes[itInterface.GetIntegrationType()] = itInterface
+	}
+
 	return &IntegrationTypeManager{
+		logger:           logger,
+		hcLogger:         hcLogger,
 		IntegrationTypes: integrationTypes,
 	}
 }

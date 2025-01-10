@@ -99,7 +99,7 @@ func Command() *cobra.Command {
 				}
 			}
 
-			typeManager := integration_type.NewIntegrationTypeManager()
+			typeManager := integration_type.NewIntegrationTypeManager(logger)
 
 			err = IntegrationTypesMigration(logger, db, typeManager, IntegrationsJsonFilePath)
 			if err != nil {
