@@ -1,10 +1,11 @@
 # syntax=docker/dockerfile:1
 FROM docker.io/golang:alpine as build
 RUN apk --no-cache add ca-certificates
+RUN mkdir -p /plugins/github_account
 
 FROM scratch
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-RUN mkdir -p /plugins/github_account
+COPY --from=build /plugins/github_account /plugins/github_account
 COPY ./services/integration/integration-type/github-account/integration-plugin /plugins/github_account/integration-plugin
 RUN chmod +x /plugins/github_account/integration-plugin
 COPY ./build/integration-service /
