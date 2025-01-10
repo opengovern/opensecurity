@@ -123,3 +123,11 @@ func (i *AwsCloudAccountIntegration) GetResourceTypeFromTableName(tableName stri
 	}
 	return ""
 }
+
+func (i *AwsCloudAccountIntegration) GetTablesByLabels(map[string]string) ([]string, error) {
+	var tables []string
+	for t, _ := range awsDescriberLocal.TablesToResourceTypes {
+		tables = append(tables, t)
+	}
+	return tables, nil
+}

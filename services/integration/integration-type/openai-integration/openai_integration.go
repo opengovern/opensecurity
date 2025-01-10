@@ -98,3 +98,11 @@ func hashSHA256(input string) string {
 	hashedBytes := hash.Sum(nil)
 	return hex.EncodeToString(hashedBytes)
 }
+
+func (i *OpenAIIntegration) GetTablesByLabels(map[string]string) ([]string, error) {
+	var tables []string
+	for t, _ := range openaiDescriberLocal.TablesToResourceTypes {
+		tables = append(tables, t)
+	}
+	return tables, nil
+}

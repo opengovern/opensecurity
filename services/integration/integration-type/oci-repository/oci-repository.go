@@ -117,3 +117,11 @@ func (i *Integration) GetResourceTypeFromTableName(tableName string) string {
 
 	return ""
 }
+
+func (i *Integration) GetTablesByLabels(map[string]string) ([]string, error) {
+	var tables []string
+	for t, _ := range configs.TablesToResourceTypes {
+		tables = append(tables, t)
+	}
+	return tables, nil
+}
