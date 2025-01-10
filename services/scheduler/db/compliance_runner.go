@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	runnerRetryCount          = 1
-	runnerQueueTimeoutMinutes = 60 // Minutes
+	runnerRetryCount = 1
 )
 
 func (db Database) CreateRunnerJobs(tx *gorm.DB, runners []*model.ComplianceRunner) error {
@@ -129,7 +128,7 @@ func (db Database) UpdateRunnerJobNatsSeqNum(
 func (db Database) UpdateTimeoutQueuedRunnerJobs() error {
 	tx := db.ORM.
 		Model(&model.ComplianceRunner{}).
-		Where("created_at < NOW() - INTERVAL '? MINUTES'", runnerQueueTimeoutMinutes).
+		Where("created_at < NOW() - INTERVAL '60 MINUTES'").
 		Where("status IN ?", []string{string(runner.ComplianceRunnerCreated), string(runner.ComplianceRunnerQueued)}).
 		Updates(model.ComplianceRunner{Status: runner.ComplianceRunnerTimeOut, FailureMessage: "Job timed out"})
 	if tx.Error != nil {
