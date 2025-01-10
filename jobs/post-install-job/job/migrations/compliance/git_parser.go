@@ -3,7 +3,6 @@ package compliance
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lib/pq"
 	"github.com/opengovern/opencomply/jobs/post-install-job/config"
 	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/shared"
 	"github.com/opengovern/opencomply/jobs/post-install-job/utils"
@@ -33,7 +32,7 @@ type GitParser struct {
 	queryViews         []models.QueryView
 	coreServiceQueries []models.Query
 	controlsPolicies   map[string]db.Policy
-	namedPolicies      map[string]NamedPolicy
+	namedPolicies      map[string]NamedQuery
 	Comparison         *git.ComparisonResultGrouped
 
 	manualRemediationMap       map[string]string
@@ -75,11 +74,11 @@ func (g *GitParser) ExtractNamedQueries() error {
 				return err
 			}
 
-			var item NamedPolicy
+			var item NamedQuery
 			err = yaml.Unmarshal(content, &item)
 			if err != nil {
 				g.logger.Error("failure in unmarshal", zap.String("path", path), zap.Error(err))
-				return err
+				return nil
 			}
 
 			if item.ID != "" {
@@ -164,6 +163,90 @@ func (g *GitParser) ExtractControls(complianceControlsPath string, controlEnrich
 	})
 }
 
+func (g *GitParser) ExtractParameters(complianceParametersPath string) error {
+	return filepath.WalkDir(complianceParametersPath, func(path string, d fs.DirEntry, err error) error {
+		if strings.HasSuffix(path, ".yaml") {
+			content, err := os.ReadFile(path)
+			if err != nil {
+				g.logger.Error("failed to read yaml", zap.String("path", path), zap.Error(err))
+				return err
+			}
+
+			var data map[string]interface{}
+			if err := yaml.Unmarshal(content, &data); err != nil {
+				g.logger.Error("failed to unmarshal yaml", zap.String("path", path), zap.Error(err))
+				return fmt.Errorf("cannot parse YAML as map: %w", err)
+			}
+
+			if err = g.parseParameterDefaulValuesFile(content, path); err != nil {
+				g.logger.Error("failed to parse control", zap.String("path", path), zap.Error(err))
+				return err
+			}
+
+		}
+		return nil
+	})
+}
+
+func (g *GitParser) parseParameterDefaulValuesFile(content []byte, path string) error {
+	var parametersFile shared.ParameterDefaultValueFile
+	err := yaml.Unmarshal(content, &parametersFile)
+	if err != nil {
+		g.logger.Error("failed to unmarshal policy", zap.String("path", path), zap.Error(err))
+		return err
+	}
+
+	for _, p := range parametersFile.Parameters {
+		if len(p.Controls) == 0 {
+			g.policyParamValues = append(g.policyParamValues, models.PolicyParameterValues{
+				Key:   p.Key,
+				Value: p.Value,
+			})
+		} else {
+			for _, c := range p.Controls {
+				g.policyParamValues = append(g.policyParamValues, models.PolicyParameterValues{
+					Key:       p.Key,
+					ControlID: c,
+					Value:     p.Value,
+				})
+			}
+		}
+	}
+
+	return nil
+}
+
+func (g *GitParser) ExtractPolicies(compliancePoliciesPath string) error {
+	return filepath.WalkDir(compliancePoliciesPath, func(path string, d fs.DirEntry, err error) error {
+		if strings.HasSuffix(path, ".yaml") {
+			content, err := os.ReadFile(path)
+			if err != nil {
+				g.logger.Error("failed to read yaml", zap.String("path", path), zap.Error(err))
+				return err
+			}
+
+			var data map[string]interface{}
+			if err := yaml.Unmarshal(content, &data); err != nil {
+				g.logger.Error("failed to unmarshal yaml", zap.String("path", path), zap.Error(err))
+				return fmt.Errorf("cannot parse YAML as map: %w", err)
+			}
+
+			if data["policy"] != nil && data["severity"] != nil {
+				if err = g.parseControlFile(content, path); err != nil {
+					g.logger.Error("failed to parse control", zap.String("path", path), zap.Error(err))
+					return err
+				}
+			} else if data["definition"] != nil && data["language"] != nil {
+				if err = g.parsePolicyFile(content, path); err != nil {
+					g.logger.Error("failed to parse control", zap.String("path", path), zap.Error(err))
+					return err
+				}
+			}
+		}
+		return nil
+	})
+}
+
 func (g *GitParser) parsePolicyFile(content []byte, path string) error {
 	var policy shared.Policy
 	err := yaml.Unmarshal(content, &policy)
@@ -191,13 +274,14 @@ func (g *GitParser) parsePolicyFile(content []byte, path string) error {
 
 	q := db.Policy{
 		ID:              *policy.ID,
+		Title:           policy.Title,
+		Description:     policy.Description,
 		Definition:      policy.Definition,
 		PrimaryResource: policy.PrimaryResource,
 		ListOfResources: listOfTables,
 		Language:        policy.Language,
 		RegoPolicies:    policy.RegoPolicies,
 	}
-	g.policies = append(g.policies, q)
 
 	for _, parameter := range parameters {
 		q.Parameters = append(q.Parameters, db.PolicyParameter{
@@ -205,6 +289,8 @@ func (g *GitParser) parsePolicyFile(content []byte, path string) error {
 			Key:      parameter,
 		})
 	}
+
+	g.policies = append(g.policies, q)
 
 	return nil
 }
@@ -305,69 +391,9 @@ func (g *GitParser) parseControlFile(content []byte, path string) error {
 	}
 
 	if control.Policy != nil {
-		if control.Policy.ID != nil {
-			query, ok := g.namedPolicies[*control.Policy.ID]
-			if !ok {
-				g.logger.Error("could not find the named query", zap.String("control", control.ID),
-					zap.String("query", *control.Policy.ID))
-			} else {
-				var integrationTypes pq.StringArray
-				for _, it := range query.IntegrationTypes {
-					integrationTypes = append(integrationTypes, string(it))
-				}
-				listOfTables, err := utils.ExtractTableRefsFromPolicy(types.PolicyLanguageSQL, query.Policy.QueryToExecute)
-				if err != nil {
-					g.logger.Error("failed to extract table refs from query", zap.String("query-id", control.ID), zap.Error(err))
-					return nil
-				}
-
-				parameters, err := utils.ExtractParameters(control.Policy.Language, control.Policy.Definition)
-				if err != nil {
-					g.logger.Error("extract control failed: failed to extract parameters from query", zap.String("control-id", control.ID), zap.Error(err))
-					return nil
-				}
-
-				var primaryResource string
-				if query.Policy.PrimaryTable != nil {
-					primaryResource = *query.Policy.PrimaryTable
-				}
-
-				p := db.Policy{
-					ID:              control.ID,
-					Definition:      query.Policy.QueryToExecute,
-					IntegrationType: integrationTypes,
-					PrimaryResource: primaryResource,
-					ListOfResources: listOfTables,
-					Language:        types.PolicyLanguageSQL,
-				}
-				g.controlsPolicies[control.ID] = p
-
-				controlParameterValues := make(map[string]string)
-				for _, parameter := range control.Parameters {
-					controlParameterValues[parameter.Key] = parameter.Value
-				}
-
-				for _, parameter := range parameters {
-					p.Parameters = append(p.Parameters, db.PolicyParameter{
-						PolicyID: control.ID,
-						Key:      parameter,
-					})
-
-					if v, ok := controlParameterValues[parameter]; ok {
-						g.policyParamValues = append(g.policyParamValues, models.PolicyParameterValues{
-							Key:       parameter,
-							Value:     v,
-							ControlID: control.ID,
-						})
-					} else {
-						g.logger.Error("extract control failed: control does not contain parameter value", zap.String("control-id", control.ID),
-							zap.String("parameter", parameter))
-						return nil
-					}
-				}
-				g.policies = append(g.policies, p)
-				c.PolicyID = &control.ID
-			}
+		if control.Policy.Ref != nil {
+			c.PolicyID = control.Policy.Ref
+			c.ExternalPolicy = true
 		} else {
 			listOfTables, err := utils.ExtractTableRefsFromPolicy(control.Policy.Language, control.Policy.Definition)
 			if err != nil {
@@ -408,6 +434,11 @@ func (g *GitParser) parseControlFile(content []byte, path string) error {
 						Key:       parameter,
 						Value:     v,
 						ControlID: control.ID,
+					})
+					g.policyParamValues = append(g.policyParamValues, models.PolicyParameterValues{
+						Key:       parameter,
+						Value:     "",
+						ControlID: "",
 					})
 				} else {
 					g.logger.Error("extract control failed: control does not contain parameter value", zap.String("control-id", control.ID),
@@ -768,6 +799,9 @@ func (g *GitParser) ExtractCompliance(compliancePath string, controlEnrichmentBa
 	if err := g.ExtractNamedQueries(); err != nil {
 		return err
 	}
+	if err := g.ExtractPolicies(path.Join(compliancePath, "policies")); err != nil {
+		return err
+	}
 	if err := g.ExtractControls(path.Join(compliancePath, "controls"), controlEnrichmentBasePath); err != nil {
 		return err
 	}
@@ -777,6 +811,9 @@ func (g *GitParser) ExtractCompliance(compliancePath string, controlEnrichmentBa
 	//if err := g.CheckForDuplicate(); err != nil {
 	//	return err
 	//}
+	if err := g.ExtractParameters(path.Join(compliancePath, "parameters-default-values")); err != nil {
+		return err
+	}
 
 	if err := g.ExtractBenchmarksMetadata(); err != nil {
 		return err
@@ -800,48 +837,29 @@ func (g *GitParser) ExtractQueryViews(viewsPath string) error {
 		err = yaml.Unmarshal(content, &obj)
 		if err != nil {
 			g.logger.Error("failed to unmarshal query view", zap.String("path", path), zap.Error(err))
-			return err
+			return nil
 		}
 
 		qv := models.QueryView{
-			ID:           obj.ID,
-			Title:        obj.Title,
-			Description:  obj.Description,
-			Dependencies: obj.Dependencies,
+			ID:          obj.ID,
+			Title:       obj.Title,
+			Description: obj.Description,
 		}
 
-		if obj.Query != nil {
-			listOfTables, err := utils.ExtractTableRefsFromPolicy(types.PolicyLanguageSQL, obj.Query.QueryToExecute)
-			if err != nil {
-				g.logger.Error("failed to extract table refs from query", zap.String("query-id", obj.ID), zap.Error(err))
-				listOfTables = obj.Query.ListOfTables
-			}
-
-			q := models.Query{
-				ID:             obj.ID,
-				QueryToExecute: obj.Query.QueryToExecute,
-				PrimaryTable:   obj.Query.PrimaryTable,
-				ListOfTables:   listOfTables,
-				Engine:         obj.Query.Engine,
-				Global:         obj.Query.Global,
-			}
-			for _, parameter := range obj.Query.Parameters {
-				q.Parameters = append(q.Parameters, models.QueryParameter{
-					QueryID:  obj.ID,
-					Key:      parameter.Key,
-					Required: parameter.Required,
-				})
-
-				if parameter.DefaultValue != "" {
-					g.policyParamValues = append(g.policyParamValues, models.PolicyParameterValues{
-						Key:   parameter.Key,
-						Value: parameter.DefaultValue,
-					})
-				}
-			}
-			g.coreServiceQueries = append(g.coreServiceQueries, q)
-			qv.QueryID = &obj.ID
+		listOfTables, err := utils.ExtractTableRefsFromPolicy(types.PolicyLanguageSQL, obj.Query)
+		if err != nil {
+			g.logger.Error("failed to extract table refs from query", zap.String("query-id", obj.ID), zap.Error(err))
 		}
+
+		q := models.Query{
+			ID:             obj.ID,
+			QueryToExecute: obj.Query,
+			ListOfTables:   listOfTables,
+			Engine:         "sql",
+		}
+
+		g.coreServiceQueries = append(g.coreServiceQueries, q)
+		qv.QueryID = &obj.ID
 
 		g.queryViews = append(g.queryViews, qv)
 

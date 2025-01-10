@@ -33,68 +33,62 @@ import (
 	renderConfigs "github.com/opengovern/opencomply/services/integration/integration-type/render-account/configs"
 )
 
-const (
-	IntegrationTypeAWSAccount             = awsConfigs.IntegrationTypeAwsCloudAccount
-	IntegrationTypeAzureSubscription      = azureConfigs.IntegrationTypeAzureSubscription
-	IntegrationTypeEntraIdDirectory       = entraidConfigs.IntegrationTypeEntraidDirectory
-	IntegrationTypeGithubAccount          = githubConfigs.IntegrationTypeGithubAccount
-	IntegrationTypeDigitalOceanTeam       = digitalOceanConfigs.IntegrationTypeDigitalOceanTeam
-	IntegrationTypeCloudflareAccount      = cloudflareConfigs.IntegrationNameCloudflareAccount
-	IntegrationTypeOpenAIIntegration      = openaiConfigs.IntegrationTypeOpenaiIntegration
-	IntegrationTypeLinodeProject          = linodeConfigs.IntegrationTypeLinodeProject
-	IntegrationTypeCohereAIProject        = cohereaiConfigs.IntegrationTypeCohereaiProject
-	IntegrationTypeGoogleWorkspaceAccount = googleConfig.IntegrationTypeGoogleWorkspaceAccount
-	IntegrationTypeOCIRepository          = ociConfigs.IntegrationTypeOciRepository
-	IntegrationTypeRenderAccount          = renderConfigs.IntegrationTypeRenderAccount
-	IntegrationTypeDopplerAccount         = dopplerConfigs.IntegrationTypeDopplerAccount
-)
-
-var AllIntegrationTypes = []integration.Type{
-	IntegrationTypeAWSAccount,
-	IntegrationTypeAzureSubscription,
-	IntegrationTypeEntraIdDirectory,
-	IntegrationTypeGithubAccount,
-	IntegrationTypeDigitalOceanTeam,
-	IntegrationTypeCloudflareAccount,
-	IntegrationTypeOpenAIIntegration,
-	IntegrationTypeLinodeProject,
-	IntegrationTypeCohereAIProject,
-	IntegrationTypeGoogleWorkspaceAccount,
-	IntegrationTypeOCIRepository,
-	IntegrationTypeRenderAccount,
-	IntegrationTypeDopplerAccount,
+var integrationTypes = map[integration.Type]interfaces.IntegrationType{
+	awsConfigs.IntegrationTypeAwsCloudAccount:           &aws_account.Integration{},
+	azureConfigs.IntegrationTypeAzureSubscription:       &azure_subscription.Integration{},
+	entraidConfigs.IntegrationTypeEntraidDirectory:      &entra_id_directory.Integration{},
+	githubConfigs.IntegrationTypeGithubAccount:          &githubaccount.Integration{},
+	digitalOceanConfigs.IntegrationTypeDigitalOceanTeam: &digitalocean_team.Integration{},
+	cloudflareConfigs.IntegrationNameCloudflareAccount:  &cloudflareaccount.Integration{},
+	openaiConfigs.IntegrationTypeOpenaiIntegration:      &openaiproject.Integration{},
+	linodeConfigs.IntegrationTypeLinodeProject:          &linodeaccount.Integration{},
+	cohereaiConfigs.IntegrationTypeCohereaiProject:      &cohereaiproject.Integration{},
+	googleConfig.IntegrationTypeGoogleWorkspaceAccount:  &google_workspace_account.Integration{},
+	ociConfigs.IntegrationTypeOciRepository:             &oci.Integration{},
+	renderConfigs.IntegrationTypeRenderAccount:          &render.Integration{},
+	dopplerConfigs.IntegrationTypeDopplerAccount:        &doppler.Integration{},
 }
 
-var IntegrationTypes = map[integration.Type]interfaces.IntegrationType{
-	IntegrationTypeAWSAccount:             &aws_account.AwsCloudAccountIntegration{},
-	IntegrationTypeAzureSubscription:      &azure_subscription.AzureSubscriptionIntegration{},
-	IntegrationTypeEntraIdDirectory:       &entra_id_directory.EntraIdDirectoryIntegration{},
-	IntegrationTypeGithubAccount:          &githubaccount.GithubAccountIntegration{},
-	IntegrationTypeDigitalOceanTeam:       &digitalocean_team.DigitaloceanTeamIntegration{},
-	IntegrationTypeCloudflareAccount:      &cloudflareaccount.CloudFlareAccountIntegration{},
-	IntegrationTypeOpenAIIntegration:      &openaiproject.OpenAIIntegration{},
-	IntegrationTypeLinodeProject:          &linodeaccount.LinodeAccountIntegration{},
-	IntegrationTypeCohereAIProject:        &cohereaiproject.CohereAIProjectIntegration{},
-	IntegrationTypeGoogleWorkspaceAccount: &google_workspace_account.GoogleWorkspaceAccountIntegration{},
-	IntegrationTypeOCIRepository:          &oci.Integration{},
-	IntegrationTypeRenderAccount:          &render.RenderAccountIntegration{},
-	IntegrationTypeDopplerAccount:         &doppler.DopplerAccountIntegration{},
+type IntegrationTypeManager struct {
+	IntegrationTypes map[integration.Type]interfaces.IntegrationType
 }
 
-func ParseType(str string) integration.Type {
+func NewIntegrationTypeManager() *IntegrationTypeManager {
+	return &IntegrationTypeManager{
+		IntegrationTypes: integrationTypes,
+	}
+}
+
+func (m *IntegrationTypeManager) GetIntegrationTypes() []integration.Type {
+	types := make([]integration.Type, 0, len(m.IntegrationTypes))
+	for t := range m.IntegrationTypes {
+		types = append(types, t)
+	}
+	return types
+}
+
+func (m *IntegrationTypeManager) GetIntegrationType(t integration.Type) interfaces.IntegrationType {
+	return m.IntegrationTypes[t]
+}
+
+func (m *IntegrationTypeManager) GetIntegrationTypeMap() map[integration.Type]interfaces.IntegrationType {
+	return m.IntegrationTypes
+}
+
+func (m *IntegrationTypeManager) ParseType(str string) integration.Type {
 	str = strings.ToLower(str)
-	for _, t := range AllIntegrationTypes {
-		if str == t.String() {
+	for t, _ := range m.IntegrationTypes {
+		if str == strings.ToLower(t.String()) {
 			return t
 		}
 	}
 	return ""
 }
 
-func ParseTypes(str []string) []integration.Type {
+func (m *IntegrationTypeManager) ParseTypes(str []string) []integration.Type {
 	result := make([]integration.Type, 0, len(str))
 	for _, s := range str {
-		t := ParseType(s)
+		t := m.ParseType(s)
 		if t == "" {
 			continue
 		}
@@ -103,7 +97,7 @@ func ParseTypes(str []string) []integration.Type {
 	return result
 }
 
-func UnparseTypes(types []integration.Type) []string {
+func (m *IntegrationTypeManager) UnparseTypes(types []integration.Type) []string {
 	result := make([]string, 0, len(types))
 	for _, t := range types {
 		result = append(result, t.String())

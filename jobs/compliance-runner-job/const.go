@@ -25,8 +25,9 @@ type Caller struct {
 }
 
 type ExecutionPlan struct {
-	Callers []Caller
-	Query   complianceApi.Policy
+	Callers   []Caller
+	Query     complianceApi.Policy
+	ControlID string
 
 	IntegrationID *string
 	ProviderID    *string

@@ -33,3 +33,15 @@ type ListIntegrationTypesResponse struct {
 	IntegrationTypes []ListIntegrationTypesItem `json:"integration_types"`
 	TotalCount       int                        `json:"total_count"`
 }
+
+type GetResourceTypeFromTableNameResponse struct {
+	ResourceType string `json:"resource_type"`
+}
+
+type GetResourceTypesByLabelsRequest struct {
+	Labels map[string]string `json:"labels"`
+}
+
+type GetResourceTypesByLabelsResponse struct {
+	ResourceTypes map[string]*ResourceTypeConfiguration
+}

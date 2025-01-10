@@ -19,7 +19,6 @@ import (
 
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	queryrunner "github.com/opengovern/opencomply/jobs/query-runner-job"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	queryrunnerscheduler "github.com/opengovern/opencomply/services/scheduler/schedulers/query-runner"
 	queryrvalidatorscheduler "github.com/opengovern/opencomply/services/scheduler/schedulers/query-validator"
 
@@ -280,7 +279,7 @@ func InitializeScheduler(
 	describeServer.DoProcessReceivedMessages, _ = strconv.ParseBool(DoProcessReceivedMsgs)
 	s.MaxConcurrentCall, _ = strconv.ParseInt(MaxConcurrentCall, 10, 64)
 	if s.MaxConcurrentCall <= 0 {
-		s.MaxConcurrentCall = 5000
+		s.MaxConcurrentCall = MaxGetQueuedAtATime
 	}
 
 	s.discoveryScheduler = discovery.New(
@@ -330,8 +329,22 @@ func (s *Scheduler) SetupNats(ctx context.Context) error {
 	}
 
 	if s.conf.ServerlessProvider == config.ServerlessProviderTypeLocal.String() {
-		for itName, integrationType := range integration_type.IntegrationTypes {
-			describerConfig := integrationType.GetConfiguration()
+		httpCtx := &httpclient.Context{
+			UserRole: authAPI.ViewerRole,
+			Ctx:      ctx,
+		}
+		integrationTypes, err := s.integrationClient.ListIntegrationTypes(httpCtx)
+		if err != nil {
+			s.logger.Error("Failed to list integration types", zap.Error(err))
+			return err
+		}
+
+		for itName, integrationType := range integrationTypes {
+			describerConfig, err := s.integrationClient.GetIntegrationConfiguration(httpCtx, integrationType)
+			if err != nil {
+				s.logger.Error("Failed to get integration configuration", zap.String("integration_type", string(itName)), zap.Error(err))
+				return err
+			}
 			if err := s.jq.Stream(ctx, describerConfig.NatsStreamName, fmt.Sprintf("%s describe job runner queue", itName), []string{describerConfig.NatsScheduledJobsTopic, describerConfig.NatsManualJobsTopic}, 100); err != nil {
 				s.logger.Error("Failed to stream to local integration type queue", zap.String("integration_type", string(itName)), zap.Error(err))
 				return err

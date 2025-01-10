@@ -3,34 +3,35 @@ package doppler_account
 import (
 	"encoding/json"
 	"github.com/jackc/pgtype"
-	dopplerDescriberLocal "github.com/opengovern/opencomply/services/integration/integration-type/doppler-account/configs"
+	"github.com/opengovern/og-util/pkg/integration"
+	configs "github.com/opengovern/opencomply/services/integration/integration-type/doppler-account/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/doppler-account/discovery"
 	"github.com/opengovern/opencomply/services/integration/integration-type/doppler-account/healthcheck"
 	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
 	"github.com/opengovern/opencomply/services/integration/models"
 )
 
-type DopplerAccountIntegration struct{}
+type Integration struct{}
 
-func (i *DopplerAccountIntegration) GetConfiguration() interfaces.IntegrationConfiguration {
+func (i *Integration) GetConfiguration() interfaces.IntegrationConfiguration {
 	return interfaces.IntegrationConfiguration{
-		NatsScheduledJobsTopic:   dopplerDescriberLocal.JobQueueTopic,
-		NatsManualJobsTopic:      dopplerDescriberLocal.JobQueueTopicManuals,
-		NatsStreamName:           dopplerDescriberLocal.StreamName,
-		NatsConsumerGroup:        dopplerDescriberLocal.ConsumerGroup,
-		NatsConsumerGroupManuals: dopplerDescriberLocal.ConsumerGroupManuals,
+		NatsScheduledJobsTopic:   configs.JobQueueTopic,
+		NatsManualJobsTopic:      configs.JobQueueTopicManuals,
+		NatsStreamName:           configs.StreamName,
+		NatsConsumerGroup:        configs.ConsumerGroup,
+		NatsConsumerGroupManuals: configs.ConsumerGroupManuals,
 
 		SteampipePluginName: "doppler",
 
-		UISpecFileName: "doppler-account.json",
+		UISpec: configs.UISpec,
 
-		DescriberDeploymentName: dopplerDescriberLocal.DescriberDeploymentName,
-		DescriberRunCommand:     dopplerDescriberLocal.DescriberRunCommand,
+		DescriberDeploymentName: configs.DescriberDeploymentName,
+		DescriberRunCommand:     configs.DescriberRunCommand,
 	}
 }
 
-func (i *DopplerAccountIntegration) HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error) {
-	var credentials dopplerDescriberLocal.IntegrationCredentials
+func (i *Integration) HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error) {
+	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		return false, err
@@ -42,8 +43,8 @@ func (i *DopplerAccountIntegration) HealthCheck(jsonData []byte, providerId stri
 	return isHealthy, err
 }
 
-func (i *DopplerAccountIntegration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
-	var credentials dopplerDescriberLocal.IntegrationCredentials
+func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
+	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		return nil, err
@@ -73,17 +74,21 @@ func (i *DopplerAccountIntegration) DiscoverIntegrations(jsonData []byte) ([]mod
 	return integrations, nil
 }
 
-func (i *DopplerAccountIntegration) GetResourceTypesByLabels(labels map[string]string) (map[string]*interfaces.ResourceTypeConfiguration, error) {
+func (i *Integration) GetResourceTypesByLabels(labels map[string]string) (map[string]*interfaces.ResourceTypeConfiguration, error) {
 	resourceTypesMap := make(map[string]*interfaces.ResourceTypeConfiguration)
-	for _, resourceType := range dopplerDescriberLocal.ResourceTypesList {
+	for _, resourceType := range configs.ResourceTypesList {
 		resourceTypesMap[resourceType] = nil
 	}
 	return resourceTypesMap, nil
 }
 
-func (i *DopplerAccountIntegration) GetResourceTypeFromTableName(tableName string) string {
-	if v, ok := dopplerDescriberLocal.TablesToResourceTypes[tableName]; ok {
+func (i *Integration) GetResourceTypeFromTableName(tableName string) string {
+	if v, ok := configs.TablesToResourceTypes[tableName]; ok {
 		return v
 	}
 	return ""
+}
+
+func (i *Integration) GetIntegrationType() integration.Type {
+	return configs.IntegrationTypeDopplerAccount
 }

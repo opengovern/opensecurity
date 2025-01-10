@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
 	"github.com/opengovern/opencomply/services/integration/integration-type/oci-repository/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/oci-repository/healthcheck"
@@ -22,7 +23,7 @@ func (i *Integration) GetConfiguration() interfaces.IntegrationConfiguration {
 
 		SteampipePluginName: "oci",
 
-		UISpecFileName: "oci_repository.json",
+		UISpec: configs.UISpec,
 
 		DescriberDeploymentName: configs.DescriberDeploymentName,
 		DescriberRunCommand:     configs.DescriberRunCommand,
@@ -116,4 +117,8 @@ func (i *Integration) GetResourceTypeFromTableName(tableName string) string {
 	}
 
 	return ""
+}
+
+func (i *Integration) GetIntegrationType() integration.Type {
+	return configs.IntegrationTypeOciRepository
 }

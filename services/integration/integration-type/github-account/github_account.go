@@ -3,7 +3,8 @@ package github_account
 import (
 	"encoding/json"
 	"github.com/jackc/pgtype"
-	githubDescriberLocal "github.com/opengovern/opencomply/services/integration/integration-type/github-account/configs"
+	"github.com/opengovern/og-util/pkg/integration"
+	"github.com/opengovern/opencomply/services/integration/integration-type/github-account/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/github-account/discovery"
 	"github.com/opengovern/opencomply/services/integration/integration-type/github-account/healthcheck"
 	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
@@ -11,27 +12,27 @@ import (
 	"strconv"
 )
 
-type GithubAccountIntegration struct{}
+type Integration struct{}
 
-func (i *GithubAccountIntegration) GetConfiguration() interfaces.IntegrationConfiguration {
+func (i *Integration) GetConfiguration() interfaces.IntegrationConfiguration {
 	return interfaces.IntegrationConfiguration{
-		NatsScheduledJobsTopic:   githubDescriberLocal.JobQueueTopic,
-		NatsManualJobsTopic:      githubDescriberLocal.JobQueueTopicManuals,
-		NatsStreamName:           githubDescriberLocal.StreamName,
-		NatsConsumerGroup:        githubDescriberLocal.ConsumerGroup,
-		NatsConsumerGroupManuals: githubDescriberLocal.ConsumerGroupManuals,
+		NatsScheduledJobsTopic:   configs.JobQueueTopic,
+		NatsManualJobsTopic:      configs.JobQueueTopicManuals,
+		NatsStreamName:           configs.StreamName,
+		NatsConsumerGroup:        configs.ConsumerGroup,
+		NatsConsumerGroupManuals: configs.ConsumerGroupManuals,
 
 		SteampipePluginName: "github",
 
-		UISpecFileName: "github-account.json",
+		UISpec: configs.UISpec,
 
-		DescriberDeploymentName: githubDescriberLocal.DescriberDeploymentName,
-		DescriberRunCommand:     githubDescriberLocal.DescriberRunCommand,
+		DescriberDeploymentName: configs.DescriberDeploymentName,
+		DescriberRunCommand:     configs.DescriberRunCommand,
 	}
 }
 
-func (i *GithubAccountIntegration) HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error) {
-	var credentials githubDescriberLocal.IntegrationCredentials
+func (i *Integration) HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error) {
+	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		return false, err
@@ -48,8 +49,8 @@ func (i *GithubAccountIntegration) HealthCheck(jsonData []byte, providerId strin
 	return isHealthy, err
 }
 
-func (i *GithubAccountIntegration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
-	var credentials githubDescriberLocal.IntegrationCredentials
+func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
+	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		return nil, err
@@ -83,10 +84,10 @@ func (i *GithubAccountIntegration) DiscoverIntegrations(jsonData []byte) ([]mode
 	return integrations, nil
 }
 
-func (i *GithubAccountIntegration) GetResourceTypesByLabels(labels map[string]string) (map[string]*interfaces.ResourceTypeConfiguration, error) {
+func (i *Integration) GetResourceTypesByLabels(labels map[string]string) (map[string]*interfaces.ResourceTypeConfiguration, error) {
 	resourceTypesMap := make(map[string]*interfaces.ResourceTypeConfiguration)
-	for _, resourceType := range githubDescriberLocal.ResourceTypesList {
-		if v, ok := githubDescriberLocal.ResourceTypeConfigs[resourceType]; ok {
+	for _, resourceType := range configs.ResourceTypesList {
+		if v, ok := configs.ResourceTypeConfigs[resourceType]; ok {
 			resourceTypesMap[resourceType] = v
 		} else {
 			resourceTypesMap[resourceType] = nil
@@ -95,10 +96,14 @@ func (i *GithubAccountIntegration) GetResourceTypesByLabels(labels map[string]st
 	return resourceTypesMap, nil
 }
 
-func (i *GithubAccountIntegration) GetResourceTypeFromTableName(tableName string) string {
-	if v, ok := githubDescriberLocal.TablesToResourceTypes[tableName]; ok {
+func (i *Integration) GetResourceTypeFromTableName(tableName string) string {
+	if v, ok := configs.TablesToResourceTypes[tableName]; ok {
 		return v
 	}
 
 	return ""
+}
+
+func (i *Integration) GetIntegrationType() integration.Type {
+	return configs.IntegrationTypeGithubAccount
 }

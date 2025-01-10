@@ -26,10 +26,10 @@ import (
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/og-util/pkg/steampipe"
 	"github.com/opengovern/og-util/pkg/vault"
+	core "github.com/opengovern/opencomply/services/core/client"
 	"github.com/opengovern/opencomply/services/integration/api"
 	"github.com/opengovern/opencomply/services/integration/config"
 	"github.com/opengovern/opencomply/services/integration/db"
-	core "github.com/opengovern/opencomply/services/core/client"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -99,7 +99,9 @@ func Command() *cobra.Command {
 				}
 			}
 
-			err = IntegrationTypesMigration(logger, db, IntegrationsJsonFilePath)
+			typeManager := integration_type.NewIntegrationTypeManager()
+
+			err = IntegrationTypesMigration(logger, db, typeManager, IntegrationsJsonFilePath)
 			if err != nil {
 				logger.Error("failed to migrate integration types", zap.Error(err))
 				return err
@@ -123,7 +125,7 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			for name, _ := range integration_type.IntegrationTypes {
+			for _, name := range typeManager.GetIntegrationTypes() {
 				setup, _ := db.GetIntegrationTypeSetup(name.String())
 				if setup != nil {
 					continue
@@ -148,7 +150,7 @@ func Command() *cobra.Command {
 				cmd.Context(),
 				logger,
 				cnf.Http.Address,
-				api.New(logger, db, vaultSc, steampipeConn, kubeClient),
+				api.New(logger, db, vaultSc, steampipeConn, kubeClient, typeManager),
 			)
 		},
 	}
@@ -199,7 +201,7 @@ type IntegrationType struct {
 	SchemaIDs        []string            `json:"schema_ids"`
 }
 
-func IntegrationTypesMigration(logger *zap.Logger, dbm db.Database, onboardFilePath string) error {
+func IntegrationTypesMigration(logger *zap.Logger, dbm db.Database, typeManager *integration_type.IntegrationTypeManager, onboardFilePath string) error {
 	content, err := os.ReadFile(onboardFilePath)
 	if err != nil {
 		return err
@@ -232,7 +234,7 @@ func IntegrationTypesMigration(logger *zap.Logger, dbm db.Database, onboardFileP
 				PackageURL:       obj.PackageURL,
 				PackageTag:       obj.PackageTag,
 			}
-			if _, ok := integration_type.IntegrationTypes[integration_type.ParseType(integrationType.IntegrationType)]; ok {
+			if _, ok := typeManager.GetIntegrationTypeMap()[typeManager.ParseType(integrationType.IntegrationType)]; ok {
 				integrationType.Enabled = true
 			} else {
 				integrationType.Enabled = false

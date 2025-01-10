@@ -62,7 +62,8 @@ type ComplianceRunner struct {
 
 	Callers              string
 	FrameworkID          string
-	QueryID              string
+	ControlID            string
+	PolicyID             string
 	IntegrationID        *string
 	ResourceCollectionID *string
 	ParentJobID          uint `gorm:"index"`
@@ -82,7 +83,7 @@ func (cr *ComplianceRunner) GetKeyIdentifier() string {
 	if cr.IntegrationID != nil {
 		cid = *cr.IntegrationID
 	}
-	return fmt.Sprintf("%s-%s-%s-%d", cr.FrameworkID, cr.QueryID, cid, cr.ParentJobID)
+	return fmt.Sprintf("%s-%s-%s-%d", cr.FrameworkID, cr.PolicyID, cid, cr.ParentJobID)
 }
 
 func (cr *ComplianceRunner) GetCallers() ([]runner.Caller, error) {

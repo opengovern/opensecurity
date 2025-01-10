@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/opengovern/og-util/pkg/integration"
 	"net/http"
 	"net/url"
 	"os"
@@ -23,7 +24,6 @@ import (
 	"github.com/opengovern/og-util/pkg/httpclient"
 	httpserver2 "github.com/opengovern/og-util/pkg/httpserver"
 	"github.com/opengovern/og-util/pkg/model"
-	runner "github.com/opengovern/opencomply/jobs/compliance-runner-job"
 	"github.com/opengovern/opencomply/jobs/compliance-summarizer-job/types"
 	model2 "github.com/opengovern/opencomply/jobs/post-install-job/db/model"
 	opengovernanceTypes "github.com/opengovern/opencomply/pkg/types"
@@ -35,7 +35,6 @@ import (
 	coreApi "github.com/opengovern/opencomply/services/core/api"
 	"github.com/opengovern/opencomply/services/core/db/models"
 	integrationapi "github.com/opengovern/opencomply/services/integration/api/models"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	schedulerapi "github.com/opengovern/opencomply/services/scheduler/api"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -93,6 +92,9 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 	resourceFindings.POST("", httpserver2.AuthorizeHandler(h.ListResourceFindings, authApi.ViewerRole))
 
 	v3 := e.Group("/api/v3")
+
+	v3.GET("/policies", httpserver2.AuthorizeHandler(h.ListPolicies, authApi.ViewerRole))
+	v3.GET("/policies/:policy_id", httpserver2.AuthorizeHandler(h.GetPolicy, authApi.ViewerRole))
 
 	v3.POST("/benchmarks", httpserver2.AuthorizeHandler(h.ListBenchmarksFiltered, authApi.ViewerRole))
 	v3.GET("/benchmarks/filters", httpserver2.AuthorizeHandler(h.ListBenchmarksFilters, authApi.ViewerRole))
@@ -768,10 +770,9 @@ func (h *HttpHandler) GetComplianceResultFilterValues(echoCtx echo.Context) erro
 	}
 	if len(possibleFilters.Aggregations.IntegrationTypeFilter.Buckets) > 0 {
 		for _, bucket := range possibleFilters.Aggregations.IntegrationTypeFilter.Buckets {
-			integrationType := integration_type.ParseType(bucket.Key)
 			response.IntegrationType = append(response.IntegrationType, api.FilterWithMetadata{
-				Key:         integrationType.String(),
-				DisplayName: integrationType.String(),
+				Key:         bucket.Key,
+				DisplayName: bucket.Key,
 				Count:       utils.GetPointer(bucket.DocCount),
 			})
 		}
@@ -2355,14 +2356,21 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			}
 		}
 
+		integrationTypes := make([]integration.Type, 0, len(control.IntegrationType))
+		for _, t := range control.IntegrationType {
+			integrationTypes = append(integrationTypes, integration.Type(t))
+		}
+
 		apiControl := api.ListControlsFilterResultControl{
 			ID:              control.ID,
 			Title:           control.Title,
 			Description:     control.Description,
-			IntegrationType: integration_type.ParseTypes(control.IntegrationType),
+			IntegrationType: integrationTypes,
 			Severity:        control.Severity,
 			Tags:            filterTagsByRegex(req.TagsRegex, model.TrimPrivateTags(control.GetTagsMap())),
 			Policy: struct {
+				Type            string               `json:"type"`      // external/inline
+				Reference       *string              `json:"reference"` // null if inline
 				PrimaryResource string               `json:"primary_resource"`
 				ListOfResources []string             `json:"list_of_resources"`
 				Parameters      []api.QueryParameter `json:"parameters"`
@@ -2371,6 +2379,12 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 				ListOfResources: control.Policy.ListOfResources,
 				Parameters:      make([]api.QueryParameter, 0, len(control.Policy.Parameters)),
 			},
+		}
+		if control.ExternalPolicy {
+			apiControl.Policy.Type = "external"
+			apiControl.Policy.Reference = &control.Policy.ID
+		} else {
+			apiControl.Policy.Type = "inline"
 		}
 		for _, p := range control.Policy.Parameters {
 			apiControl.Policy.Parameters = append(apiControl.Policy.Parameters, p.ToApi())
@@ -2574,13 +2588,20 @@ func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 		parameters = append(parameters, qp.ToApi())
 	}
 
+	integrationTypes := make([]integration.Type, 0, len(control.IntegrationType))
+	for _, t := range control.IntegrationType {
+		integrationTypes = append(integrationTypes, integration.Type(t))
+	}
+
 	response := api.GetControlDetailsResponse{
 		ID:              control.ID,
 		Title:           control.Title,
 		Description:     control.Description,
-		IntegrationType: integration_type.ParseTypes(control.IntegrationType),
+		IntegrationType: integrationTypes,
 		Severity:        control.Severity.String(),
 		Policy: struct {
+			Type            string               `json:"type"`
+			Reference       *string              `json:"reference"`
 			Language        string               `json:"language"`
 			Definition      string               `json:"definition"`
 			PrimaryResource string               `json:"primaryResource"`
@@ -2594,6 +2615,13 @@ func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 			Parameters:      parameters,
 		},
 		Tags: model.TrimPrivateTags(control.GetTagsMap()),
+	}
+
+	if control.ExternalPolicy {
+		response.Policy.Type = "external"
+		response.Policy.Reference = &control.Policy.ID
+	} else {
+		response.Policy.Type = "inline"
 	}
 
 	if showReferences {
@@ -2705,8 +2733,8 @@ func (h *HttpHandler) getControlSummary(ctx context.Context, controlID string, b
 	var resourceType *coreApi.ResourceType
 	if control.Policy != nil {
 		apiControl.IntegrationType = control.Policy.IntegrationType
-		if control.Policy != nil {
-			rtName, _, err := runner.GetResourceTypeFromTableName(control.Policy.PrimaryResource, integration_type.ParseTypes(control.Policy.IntegrationType))
+		if control.Policy != nil && len(control.Policy.IntegrationType) > 0 {
+			rtName, err := h.integrationClient.GetResourceTypeFromTableName(&httpclient.Context{UserRole: authApi.AdminRole, Ctx: ctx}, control.Policy.IntegrationType[0], control.Policy.PrimaryResource)
 			if err != nil {
 				h.logger.Error("failed to get resource type from table name", zap.Error(err))
 				return nil, err
@@ -2817,18 +2845,18 @@ func (h *HttpHandler) ListAssignmentsByBenchmark(echoCtx echo.Context) error {
 			return err
 		}
 
-		for _, integration := range integrations.Integrations {
-			if integration.State != integrationapi.IntegrationStateActive {
+		for _, i := range integrations.Integrations {
+			if i.State != integrationapi.IntegrationStateActive {
 				continue
 			}
 			if err != nil {
 				return err
 			}
 			ba := api.BenchmarkAssignedIntegration{
-				IntegrationID:   integration.IntegrationID,
-				ProviderID:      integration.ProviderID,
-				IntegrationName: integration.Name,
-				IntegrationType: integration_type.ParseType(c),
+				IntegrationID:   i.IntegrationID,
+				ProviderID:      i.ProviderID,
+				IntegrationName: i.Name,
+				IntegrationType: integration.Type(c),
 				Status:          false,
 			}
 			assignedIntegrations = append(assignedIntegrations, ba)
@@ -3160,7 +3188,10 @@ func (h *HttpHandler) GetBenchmarkDetails(echoCtx echo.Context) error {
 		UpdatedAt:         benchmark.UpdatedAt,
 	}
 	if benchmark.IntegrationType != nil {
-		benchmarkMetadata.IntegrationTypes = integration_type.ParseTypes(benchmark.IntegrationType)
+		benchmarkMetadata.IntegrationTypes = make([]integration.Type, 0, len(benchmark.IntegrationType))
+		for _, c := range benchmark.IntegrationType {
+			benchmarkMetadata.IntegrationTypes = append(benchmarkMetadata.IntegrationTypes, integration.Type(c))
+		}
 	}
 
 	children, err := h.getChildBenchmarksWithDetails(ctx, benchmark.ID, req)
@@ -4616,13 +4647,6 @@ func (h HttpHandler) GetQuickScanSummary(c echo.Context) error {
 		complianceJob.JobStatus == string(schedulerapi.ComplianceJobSummarizerInProgress) {
 		return echo.NewHTTPError(http.StatusBadRequest, "job is in progress")
 	}
-	if complianceJob.WithIncidents {
-		if complianceJob.SummaryJobId == nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "compliance job not summarized yet")
-		}
-		jobId = strconv.Itoa(int(*complianceJob.SummaryJobId))
-	}
-
 	var result api.AuditSummary
 
 	switch view {
@@ -4805,12 +4829,6 @@ func (h HttpHandler) GetComplianceJobReport(c echo.Context) error {
 		complianceJob.JobStatus == string(schedulerapi.ComplianceJobSummarizerInProgress) {
 		return echo.NewHTTPError(http.StatusBadRequest, "job is in progress")
 	}
-	if complianceJob.WithIncidents {
-		if complianceJob.SummaryJobId == nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "compliance job not summarized yet")
-		}
-		jobId = strconv.Itoa(int(*complianceJob.SummaryJobId))
-	}
 
 	summary, err := es.GetJobReportControlSummaryByJobID(c.Request().Context(), h.logger, h.client, jobId, controls)
 	if err != nil {
@@ -4930,4 +4948,105 @@ func (h HttpHandler) GetJobReportSummary(ctx echo.Context) error {
 	response.JobDetails.JobScore = jobScore
 
 	return ctx.JSON(http.StatusOK, response)
+}
+
+// ListPolicies godoc
+//
+//	@Summary		List all policies
+//	@Description	Returns all policies
+//	@Security		BearerToken
+//	@Tags			workspace
+//	@Accept			json
+//	@Produce		json
+//	@Param			cursor		query	int		false	"Cursor"
+//	@Param			per_page	query	int		false	"Per Page"
+//	@Success		200
+//	@Router			/compliance/api/v3/policies [get]
+func (h HttpHandler) ListPolicies(c echo.Context) error {
+	var cursor, perPage int64
+	var err error
+
+	cursorStr := c.QueryParam("cursor")
+	if cursorStr != "" {
+		cursor, err = strconv.ParseInt(cursorStr, 10, 64)
+		if err != nil {
+			return err
+		}
+	}
+	perPageStr := c.QueryParam("per_page")
+	if perPageStr != "" {
+		perPage, err = strconv.ParseInt(perPageStr, 10, 64)
+		if err != nil {
+			return err
+		}
+	}
+
+	policies, err := h.db.ListPolicies(c.Request().Context())
+	if err != nil {
+		h.logger.Error("failed to get policies", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get policies")
+	}
+
+	totalCount := len(policies)
+	sort.Slice(policies, func(i, j int) bool {
+		return policies[i].ID < policies[j].ID
+	})
+	if perPage != 0 {
+		if cursor == 0 {
+			policies = utils.Paginate(1, perPage, policies)
+		} else {
+			policies = utils.Paginate(cursor, perPage, policies)
+		}
+	}
+
+	var policiesItems []api.ListPolicyItem
+	for _, p := range policies {
+		policiesItems = append(policiesItems, api.ListPolicyItem{
+			ID:            p.ID,
+			Title:         p.Title,
+			Language:      string(p.Language),
+			ControlsCount: len(p.Controls),
+		})
+	}
+
+	return c.JSON(http.StatusOK, api.ListPoliciesResponse{
+		Policies:   policiesItems,
+		TotalCount: totalCount,
+	})
+}
+
+// GetPolicy godoc
+//
+//	@Summary		Get policy
+//	@Description	Get policy
+//	@Security		BearerToken
+//	@Tags			workspace
+//	@Accept			json
+//	@Produce		json
+//	@Param			policy_id	path		string	true	"Policy ID"
+//	@Success		200
+//	@Router			/compliance/api/v3/policies/{policy_id} [get]
+func (h HttpHandler) GetPolicy(c echo.Context) error {
+	policyId := c.Param("policy_id")
+
+	policy, err := h.db.GetPolicy(c.Request().Context(), policyId)
+	if err != nil {
+		h.logger.Error("failed to get policies", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get policies")
+	}
+
+	policyItem := api.GetPolicyItem{
+		ID:            policy.ID,
+		Title:         policy.Title,
+		Description:   policy.Description,
+		Language:      string(policy.Language),
+		Definition:    policy.Definition,
+		ControlsCount: len(policy.Controls),
+	}
+
+	for _, c := range policy.Controls {
+		policyItem.ListOfControls = append(policyItem.ListOfControls, c.ID)
+	}
+
+	return c.JSON(http.StatusOK, policyItem)
 }

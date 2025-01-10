@@ -688,7 +688,7 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiControl {
     /** @example "To enable multi-factor authentication for a user, run the following command..." */
     cliRemediation?: string
     /** @example ["Azure"] */
-    connector?: SourceType[]
+   
     /** @example "2020-01-01T00:00:00Z" */
     createdAt?: string
     /** @example "Enable multi-factor authentication for all user credentials who have write access to Azure resources. These include roles like 'Service Co-Administrators', 'Subscription Owners', 'Contributors'." */
@@ -713,7 +713,7 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiControl {
     nonComplianceCost?: string
     /** @example "To enable multi-factor authentication for a user, run the following command..." */
     programmaticRemediation?: string
-    query?: GithubComKaytuIoKaytuEnginePkgComplianceApiQuery
+    policy?: GithubComKaytuIoKaytuEnginePkgComplianceApiQuery
     /** @example "low" */
     severity?: TypesFindingSeverity
     tags?: Record<string, string[]>
@@ -1077,14 +1077,14 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiQuery {
     /** @example "2023-06-07T14:00:15.677558Z" */
     createdAt?: string
     /** @example "steampipe-v0.5" */
-    engine?: string
+    language?: string
     /** @example "azure_ad_manual_control" */
     id?: string
     /** @example ["null"] */
     listOfTables?: string[]
-    parameters?: GithubComKaytuIoKaytuEnginePkgComplianceApiQueryParameter[]
+    listOfResources?: GithubComKaytuIoKaytuEnginePkgComplianceApiQueryParameter[]
     /** @example "null" */
-    primaryTable?: string
+    primaryResource?: string
     /**
      * @example "select
      *   -- Required Columns
@@ -1093,9 +1093,10 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiQuery {
      *   'Manual verification required.' as reason;
      * "
      */
-    queryToExecute?: string
+    definition?: string
     /** @example "2023-06-16T14:58:08.759554Z" */
     updatedAt?: string
+    integrationType: string[]
 }
 
 export interface GithubComKaytuIoKaytuEnginePkgComplianceApiQueryParameter {
@@ -2854,7 +2855,7 @@ export interface GithubComKaytuIoKaytuEnginePkgControlDetailV3 {
     integrationType: string[]
     description: string
     id: string
-    query: GithubComKaytuIoKaytuEnginePkgControlDetailV3Query
+    policy: GithubComKaytuIoKaytuEnginePkgControlDetailV3Query
     severity: string
     tags: GithubComKaytuIoKaytuEnginePkgControlDetailV3Tags
     title: string
@@ -2867,13 +2868,19 @@ export interface GithubComKaytuIoKaytuEnginePkgControlDetailV3Benchmarks {
 export interface GithubComKaytuIoKaytuEnginePkgControlDetailV3Tags {
     [key: string]: string[]
 }
+export interface GithubComKaytuIoKaytuEnginePkgControlDetailV3QueryParams {
+    key: string
+    value: string
+}
 
 export interface GithubComKaytuIoKaytuEnginePkgControlDetailV3Query {
-    engine: string
-    listOfTables: string[]
-    primaryTable: string
-    queryToExecute: string
+    language: string
+    listOfResources: string[]
+    primaryResource: string
+    definition: string
+    parameters: GithubComKaytuIoKaytuEnginePkgControlDetailV3QueryParams[]
 }
+
 export interface GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequestV2 {
     /** Specifies the Title */
     title_filter?: string

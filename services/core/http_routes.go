@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/opengovern/og-util/pkg/integration"
 	"net/http"
 	"net/url"
 	"sort"
@@ -279,16 +280,11 @@ func (h HttpHandler) SetQueryParameter(ctx echo.Context) error {
 		dbQueryParams = append(dbQueryParams, &dbParam)
 	}
 
-	_, span := tracer.Start(ctx.Request().Context(), "new_SetQueryParameter", trace.WithSpanKind(trace.SpanKindServer))
-	span.SetName("new_SetQueryParameter")
 	err := h.db.SetQueryParameters(dbQueryParams)
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
 		h.logger.Error("error setting query parameters", zap.Error(err))
 		return err
 	}
-	span.End()
 
 	return ctx.JSON(http.StatusOK, nil)
 }
@@ -331,7 +327,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 		h.logger.Error("error listing controls", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
 	}
-	namedQueries, err := h.ListQueriesV2Internal(clientCtx, nil)
+	namedQueries, err := h.ListQueriesV2Internal(ctx, api.ListQueryV2Request{})
 	if err != nil {
 		h.logger.Error("error listing queries", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
@@ -354,7 +350,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 		}
 	} else if queryIDs != nil {
 		// TODO: Fix this part and write new client on inventory
-		queries, err := h.ListQueriesV2Internal(clientCtx, &api.ListQueryV2Request{QueryIDs: queryIDs})
+		queries, err := h.ListQueriesV2Internal(ctx, api.ListQueryV2Request{QueryIDs: queryIDs})
 		if err != nil {
 			h.logger.Error("error getting query", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "error getting query")
@@ -367,14 +363,20 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	}
 
 	var queryParams []models.PolicyParameterValues
-	if len(filteredQueryParams) > 0 {
+	if request.KeyRegex != nil {
+		queryParams, err = h.db.GetQueryParametersValues(request.KeyRegex)
+		if err != nil {
+			h.logger.Error("error getting query parameters", zap.Error(err))
+			return err
+		}
+	} else if len(filteredQueryParams) > 0 {
 		queryParams, err = h.db.GetQueryParametersByIds(filteredQueryParams)
 		if err != nil {
 			h.logger.Error("error getting query parameters", zap.Error(err))
 			return err
 		}
 	} else {
-		queryParams, err = h.db.GetQueryParametersValues()
+		queryParams, err = h.db.GetQueryParametersValues(nil)
 		if err != nil {
 			h.logger.Error("error getting query parameters", zap.Error(err))
 			return err
@@ -384,12 +386,15 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	parametersMap := make(map[string]*api.QueryParameter)
 	for _, dbParam := range queryParams {
 		apiParam := dbParam.ToAPI()
-		parametersMap[apiParam.Key] = &apiParam
+		parametersMap[apiParam.Key+apiParam.ControlID] = &apiParam
 	}
 
 	for _, c := range controls {
 		for _, p := range c.Policy.Parameters {
 			if _, ok := parametersMap[p.Key]; ok {
+				parametersMap[p.Key].ControlsCount += 1
+			}
+			if _, ok := parametersMap[p.Key+c.ID]; ok {
 				parametersMap[p.Key].ControlsCount += 1
 			}
 		}
@@ -408,9 +413,65 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	}
 
 	totalCount := len(items)
-	sort.Slice(items, func(i, j int) bool {
-		return items[i].Key < items[j].Key
-	})
+
+	sortOrder := "desc"
+	sortBy := "key"
+	if request.SortOrder != nil {
+		sortOrder = strings.ToLower(*request.SortOrder)
+	}
+	if request.SortBy != nil {
+		sortBy = strings.ToLower(*request.SortBy)
+	}
+
+	switch sortOrder {
+	case "asc":
+		switch sortBy {
+		case "key":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].Key < items[j].Key
+			})
+		case "value":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].Value < items[j].Value
+			})
+		case "controlid", "control_id":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].ControlID < items[j].ControlID
+			})
+		case "controlscount", "controls_count":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].ControlsCount < items[j].ControlsCount
+			})
+		case "queriescount", "queries_count":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].QueriesCount < items[j].QueriesCount
+			})
+		}
+	case "desc":
+		switch sortBy {
+		case "key":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].Key > items[j].Key
+			})
+		case "value":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].Value > items[j].Value
+			})
+		case "controlid", "control_id":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].ControlID > items[j].ControlID
+			})
+		case "controlscount", "controls_count":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].ControlsCount > items[j].ControlsCount
+			})
+		case "queriescount", "queries_count":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].QueriesCount > items[j].QueriesCount
+			})
+		}
+	}
+
 	if perPage != 0 {
 		if cursor == 0 {
 			items = utils.Paginate(1, perPage, items)
@@ -447,7 +508,7 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 		h.logger.Error("error listing controls", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
 	}
-	namedQueries, err := h.ListQueriesV2Internal(clientCtx, nil)
+	namedQueries, err := h.ListQueriesV2Internal(ctx, api.ListQueryV2Request{})
 	if err != nil {
 		h.logger.Error("error listing queries", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
@@ -484,13 +545,17 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 				Required: parameter.Required,
 			})
 		}
+		integrationTypes := make([]integration.Type, 0, len(control.Policy.IntegrationType))
+		for _, i := range control.Policy.IntegrationType {
+			integrationTypes = append(integrationTypes, integration.Type(i))
+		}
 		query := api.Policy{
 			ID:              control.Policy.ID,
-			Language:          api.PolicyLanguage(control.Policy.Language),
-			Definition:  control.Policy.Definition,
-			IntegrationType: control.Policy.IntegrationType,
-			PrimaryResource:    control.Policy.PrimaryResource,
-			ListOfResources:    control.Policy.ListOfResources,
+			Language:        api.PolicyLanguage(control.Policy.Language),
+			Definition:      control.Policy.Definition,
+			IntegrationType: integrationTypes,
+			PrimaryResource: control.Policy.PrimaryResource,
+			ListOfResources: control.Policy.ListOfResources,
 			Parameters:      parameters,
 			RegoPolicies:    control.Policy.RegoPolicies,
 			CreatedAt:       control.Policy.CreatedAt,
@@ -511,7 +576,7 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 			IntegrationType:         control.IntegrationType,
 			Enabled:                 control.Enabled,
 			DocumentURI:             control.DocumentURI,
-			Policy:                   &query,
+			Policy:                  &query,
 			Severity:                api.ComplianceResultSeverity(control.Severity),
 			ManualVerification:      control.ManualVerification,
 			Managed:                 control.Managed,
@@ -1002,7 +1067,7 @@ func (h HttpHandler) GetAbout(echoCtx echo.Context) error {
 	query := `SELECT
     (SELECT SUM(cost) FROM azure_costmanagement_costbyresourcetype) +
     (SELECT SUM(amortized_cost_amount) FROM aws_cost_by_service_daily) AS total_cost;`
-	results, err := h.RunQueryInternal(ctx, api.RunQueryRequest{
+	var query_req = api.RunQueryRequest{
 		Page: api.Page{
 			No:   1,
 			Size: 1000,
@@ -1010,7 +1075,9 @@ func (h HttpHandler) GetAbout(echoCtx echo.Context) error {
 		Engine: &engine,
 		Query:  &query,
 		Sorts:  nil,
-	})
+	}
+
+	results, err := h.RunQueryInternal(echoCtx, query_req)
 	if err != nil {
 		h.logger.Error("failed to run query", zap.Error(err))
 	}
@@ -1214,13 +1281,20 @@ func (h HttpHandler) GetViews(echoCtx echo.Context) error {
 			}
 		}
 
-		apiViews = append(apiViews, api.View{
-			ID:           view.ID,
-			Title:        view.Title,
-			Description:  view.Description,
-			Query:        query,
-			Dependencies: view.Dependencies,
-		})
+		apiView := api.View{
+			ID:               view.ID,
+			Title:            view.Title,
+			Description:      view.Description,
+			LastTimeRendered: h.viewCheckpoint,
+			Query:            query,
+			Dependencies:     view.Dependencies,
+			Tags:             make(map[string][]string),
+		}
+		for _, tag := range view.Tags {
+			apiView.Tags[tag.Key] = tag.Value
+		}
+
+		apiViews = append(apiViews, apiView)
 	}
 
 	totalCount := len(apiViews)
@@ -1243,22 +1317,10 @@ func (h HttpHandler) GetViews(echoCtx echo.Context) error {
 
 //
 
-func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.ListQueryParametersResponse, error) {
+func (h HttpHandler) ListQueryParametersInternal(ctx echo.Context) (api.ListQueryParametersResponse, error) {
 	clientCtx := &httpclient.Context{UserRole: api3.AdminRole}
 	var resp api.ListQueryParametersResponse
-	var cursor, perPage int64
 	var err error
-	var request api.ListQueryParametersRequest
-	if err := ctx.Bind(&request); err != nil {
-		ctx.Logger().Errorf("bind the request: %v", err)
-		return resp, echo.NewHTTPError(http.StatusBadRequest, "invalid request")
-	}
-
-	cursor = request.Cursor
-	perPage = request.PerPage
-
-	queryIDs := request.Queries
-	controlIDs := request.Controls
 
 	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
 	complianceClient := complianceClient.NewComplianceClient(complianceURL)
@@ -1268,40 +1330,13 @@ func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.L
 		h.logger.Error("error listing controls", zap.Error(err))
 		return resp, echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
 	}
-	namedQueries, err := h.ListQueriesV2Internal(clientCtx, nil)
+	namedQueries, err := h.ListQueriesV2Internal(ctx, api.ListQueryV2Request{})
 	if err != nil {
 		h.logger.Error("error listing queries", zap.Error(err))
 		return resp, echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
 	}
 
 	var filteredQueryParams []string
-	if controlIDs != nil {
-		all_control, err := complianceClient.ListControl(clientCtx, controlIDs, nil)
-		if err != nil {
-			h.logger.Error("error getting control", zap.Error(err))
-			return resp, echo.NewHTTPError(http.StatusInternalServerError, "error getting control")
-		}
-		if all_control == nil {
-			return resp, echo.NewHTTPError(http.StatusNotFound, "control not found")
-		}
-		for _, control := range all_control {
-			for _, param := range control.Policy.Parameters {
-				filteredQueryParams = append(filteredQueryParams, param.Key)
-			}
-		}
-	} else if queryIDs != nil {
-		// TODO: Fix this part and write new client on inventory
-		queries, err := h.ListQueriesV2Internal(clientCtx, &api.ListQueryV2Request{QueryIDs: queryIDs})
-		if err != nil {
-			h.logger.Error("error getting query", zap.Error(err))
-			return resp, echo.NewHTTPError(http.StatusInternalServerError, "error getting query")
-		}
-		for _, q := range queries.Items {
-			for _, param := range q.Query.Parameters {
-				filteredQueryParams = append(filteredQueryParams, param.Key)
-			}
-		}
-	}
 
 	var queryParams []models.PolicyParameterValues
 	if len(filteredQueryParams) > 0 {
@@ -1311,7 +1346,7 @@ func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.L
 			return resp, err
 		}
 	} else {
-		queryParams, err = h.db.GetQueryParametersValues()
+		queryParams, err = h.db.GetQueryParametersValues(nil)
 		if err != nil {
 			h.logger.Error("error getting query parameters", zap.Error(err))
 			return resp, err
@@ -1348,13 +1383,6 @@ func (h HttpHandler) ListQueryParametersInternal(ctx *httpclient.Context) (api.L
 	sort.Slice(items, func(i, j int) bool {
 		return items[i].Key < items[j].Key
 	})
-	if perPage != 0 {
-		if cursor == 0 {
-			items = utils.Paginate(1, perPage, items)
-		} else {
-			items = utils.Paginate(cursor, perPage, items)
-		}
-	}
 
 	return api.ListQueryParametersResponse{
 		TotalCount: totalCount,

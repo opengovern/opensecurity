@@ -1,0 +1,301 @@
+{
+    "integration_type_id": "github_account",
+    "integration_name": "GitHub Account",
+    "help_text_md": "GitHub Account integration allows secure connections to your GitHub organizations. [Documentation](https://docs.github.com/en).",
+    "platform_documentation": "https://docs.github.com/en",
+    "provider_documentation": "https://github.com",
+    "icon": "github.svg",
+    "discover": {
+      "credentials": [
+        {
+          "type": "classic_pat",
+          "label": "Classic Personal Access Token (PAT)",
+          "priority": 1,
+          "fields": [
+            {
+              "name": "pat_token",
+              "label": "Personal Access Token",
+              "inputType": "password",
+              "required": true,
+              "order": 1,
+              "validation": {
+                "pattern": "^[a-zA-Z0-9]{100}$",
+                "errorMessage": "Personal Access Token must be a 100-character alphanumeric string."
+              },
+              "info": "Your GitHub Personal Access Token with appropriate scopes.",
+              "external_help_url": "https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token"
+            }
+          ]
+        }
+      ],
+      "integrations": [
+        {
+          "label": "GitHub Organization",
+          "type": "github_organization",
+          "fields": [
+            {
+              "name": "uuid",
+              "label": "Integration UUID",
+              "fieldType": "text",
+              "required": true,
+              "order": 1,
+              "info": "Unique identifier (UUID) for the integration."
+            },
+            {
+              "name": "organization_name",
+              "label": "Organization Name",
+              "fieldType": "text",
+              "required": true,
+              "order": 2,
+              "info": "Name of the GitHub organization."
+            },
+            {
+              "name": "credential_type",
+              "label": "Credential Type",
+              "fieldType": "text",
+              "required": true,
+              "order": 3,
+              "info": "Type of Credential used (Classic PAT).",
+              "valueMap": {
+                "classic_pat": "Classic Personal Access Token (PAT)"
+              }
+            },
+            {
+              "name": "state",
+              "label": "State",
+              "fieldType": "status",
+              "required": true,
+              "order": 4,
+              "info": "Current state of the GitHub Organization integration.",
+              "statusOptions": [
+                {
+                  "value": "ACTIVE",
+                  "label": "Active",
+                  "color": "green"
+                },
+                {
+                  "value": "INACTIVE",
+                  "label": "Inactive",
+                  "color": "red"
+                },
+                {
+                  "value": "ARCHIVED",
+                  "label": "Archived",
+                  "color": "blue"
+                }
+              ]
+            },
+            {
+              "name": "created_at",
+              "label": "Created At",
+              "fieldType": "date",
+              "required": true,
+              "order": 5,
+              "info": "Timestamp when the integration was created."
+            },
+            {
+              "name": "last_updated",
+              "label": "Last Updated",
+              "fieldType": "date",
+              "required": true,
+              "order": 6,
+              "info": "Timestamp when the integration was last updated."
+            }
+          ]
+        }
+      ]
+    },
+    "render": {
+      "credentials": {
+        "defaultPageSize": 10,
+        "fields": [
+          {
+            "name": "id",
+            "label": "ID",
+            "fieldType": "text",
+            "order": 1,
+            "sortable": true,
+            "filterable": true,
+            "info": "ID.",
+            "detail": false,
+            "show": true,
+            "detail_order": 1
+          },
+          {
+            "name": "description",
+            "label": "Description",
+            "fieldType": "text",
+            "order": 2,
+            "sortable": true,
+            "filterable": true,
+            "show": true,
+            "info": "Description of the credential.",
+            "detail": true,
+            "detail_order": 2
+          },
+          {
+            "name": "updated_at",
+            "label": "Updated At",
+            "fieldType": "date",
+            "order": 3,
+            "sortable": true,
+            "filterable": true,
+            "show": true,
+            "info": "Timestamp when the credential was last updated.",
+            "detail": false,
+            "detail_order": 3
+          },
+          {
+            "name": "integration_count",
+            "label": "Integration Count",
+            "fieldType": "text",
+            "order": 4,
+            "sortable": true,
+            "filterable": true,
+            "show": true,
+            "info": "Number of active integrations using this credential.",
+            "detail": true,
+            "detail_order": 4
+          },
+          {
+            "name": "credential_type",
+            "label": "Credential Type",
+            "fieldType": "text",
+            "order": 5,
+            "show": false,
+            "info": "Type of Credential used (Classic PAT).",
+            "valueMap": {
+              "classic_pat": "Classic Personal Access Token (PAT)"
+            },
+            "detail": true,
+            "detail_order": 5
+          }
+        ]
+      },
+      "integrations": {
+        "defaultPageSize": 15,
+        "fields": [
+          {
+            "name": "name",
+            "label": "Name",
+            "fieldType": "text",
+            "order": 1,
+            "sortable": true,
+            "filterable": true,
+            "info": "Name.",
+            "detail": true,
+            "detail_order": 1
+          },
+          {
+            "name": "provider_id",
+            "label": "Provider ID",
+            "fieldType": "text",
+            "order": 2,
+            "sortable": true,
+            "filterable": true,
+            "info": "Provider ID.",
+            "detail": true,
+            "detail_order": 2
+          },
+          {
+            "name": "credential_id",
+            "label": "Credential ID",
+            "fieldType": "text",
+            "order": 3,
+            "sortable": true,
+            "filterable": true,
+            "info": "Credential ID.",
+            "detail": true,
+            "detail_order": 3
+          },
+
+          {
+            "name": "state",
+            "label": "State",
+            "fieldType": "status",
+            "order": 4,
+            "sortable": true,
+            "filterable": true,
+            "detail": true,
+            "detail_order": 4,
+            "info": "Current state of the Azure Subscription integration.",
+            "statusOptions": [
+              {
+                "value": "ACTIVE",
+                "label": "Active",
+                "color": "green"
+              },
+              {
+                "value": "INACTIVE",
+                "label": "Inactive",
+                "color": "red"
+              },
+              {
+                "value": "ARCHIVED",
+                "label": "Pending",
+                "color": "blue"
+              }
+            ]
+          },
+          {
+            "name": "last_check",
+            "label": "Last Check",
+            "fieldType": "date",
+            "order": 5,
+            "sortable": true,
+            "filterable": true,
+            "info": "Timestamp when the integration was last checked.",
+            "detail": true,
+            "detail_order": 5
+          }
+        ]
+      }
+    },
+    "actions": {
+      "credentials": [
+        {
+          "type": "view",
+          "label": "View"
+        },
+        {
+          "type": "update",
+          "label": "Update",
+          "editableFields": [
+            "pat_token"
+          ]
+        },
+        {
+          "type": "delete",
+          "label": "Delete",
+          "confirm": {
+            "message": "Are you sure you want to delete this credential? This action cannot be undone.",
+            "condition": {
+              "field": "integration_count",
+              "operator": "==",
+              "value": 0,
+              "errorMessage": "Credential cannot be deleted because it is used by active integrations."
+            }
+          }
+        }
+      ],
+      "integrations": [
+        {
+          "type": "view",
+          "label": "View"
+        },
+        {
+          "type": "delete",
+          "label": "Delete",
+          "confirm": {
+            "message": "Are you sure you want to delete this integration? This action cannot be undone."
+          }
+        },
+        {
+          "type": "health_check",
+          "label": "Health Check",
+          "tooltip": "Run a health check on the integration to verify connectivity and configuration."
+        }
+      ]
+    }
+  }
+  

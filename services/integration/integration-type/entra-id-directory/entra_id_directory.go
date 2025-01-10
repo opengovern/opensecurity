@@ -2,34 +2,35 @@ package entra_id_directory
 
 import (
 	"encoding/json"
-	entraidDescriberLocal "github.com/opengovern/opencomply/services/integration/integration-type/entra-id-directory/configs"
+	"github.com/opengovern/og-util/pkg/integration"
+	"github.com/opengovern/opencomply/services/integration/integration-type/entra-id-directory/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/entra-id-directory/discovery"
 	"github.com/opengovern/opencomply/services/integration/integration-type/entra-id-directory/healthcheck"
 	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
 	"github.com/opengovern/opencomply/services/integration/models"
 )
 
-type EntraIdDirectoryIntegration struct{}
+type Integration struct{}
 
-func (i *EntraIdDirectoryIntegration) GetConfiguration() interfaces.IntegrationConfiguration {
+func (i *Integration) GetConfiguration() interfaces.IntegrationConfiguration {
 	return interfaces.IntegrationConfiguration{
-		NatsScheduledJobsTopic:   entraidDescriberLocal.JobQueueTopic,
-		NatsManualJobsTopic:      entraidDescriberLocal.JobQueueTopicManuals,
-		NatsStreamName:           entraidDescriberLocal.StreamName,
-		NatsConsumerGroup:        entraidDescriberLocal.ConsumerGroup,
-		NatsConsumerGroupManuals: entraidDescriberLocal.ConsumerGroupManuals,
+		NatsScheduledJobsTopic:   configs.JobQueueTopic,
+		NatsManualJobsTopic:      configs.JobQueueTopicManuals,
+		NatsStreamName:           configs.StreamName,
+		NatsConsumerGroup:        configs.ConsumerGroup,
+		NatsConsumerGroupManuals: configs.ConsumerGroupManuals,
 
 		SteampipePluginName: "entraid",
 
-		UISpecFileName: "entraid-directory.json",
+		UISpec: configs.UISpec,
 
-		DescriberDeploymentName: entraidDescriberLocal.DescriberDeploymentName,
-		DescriberRunCommand:     entraidDescriberLocal.DescriberRunCommand,
+		DescriberDeploymentName: configs.DescriberDeploymentName,
+		DescriberRunCommand:     configs.DescriberRunCommand,
 	}
 }
 
-func (i *EntraIdDirectoryIntegration) HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error) {
-	var configs entraidDescriberLocal.IntegrationCredentials
+func (i *Integration) HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error) {
+	var configs configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &configs)
 	if err != nil {
 		return false, err
@@ -45,8 +46,8 @@ func (i *EntraIdDirectoryIntegration) HealthCheck(jsonData []byte, providerId st
 	})
 }
 
-func (i *EntraIdDirectoryIntegration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
-	var configs entraidDescriberLocal.IntegrationCredentials
+func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
+	var configs configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &configs)
 	if err != nil {
 		return nil, err
@@ -74,18 +75,21 @@ func (i *EntraIdDirectoryIntegration) DiscoverIntegrations(jsonData []byte) ([]m
 	return integrations, nil
 }
 
-func (i *EntraIdDirectoryIntegration) GetResourceTypesByLabels(labels map[string]string) (map[string]*interfaces.ResourceTypeConfiguration, error) {
+func (i *Integration) GetResourceTypesByLabels(labels map[string]string) (map[string]*interfaces.ResourceTypeConfiguration, error) {
 	resourceTypesMap := make(map[string]*interfaces.ResourceTypeConfiguration)
-	for _, resourceType := range entraidDescriberLocal.ResourceTypesList {
+	for _, resourceType := range configs.ResourceTypesList {
 		resourceTypesMap[resourceType] = nil
 	}
 	return resourceTypesMap, nil
 }
 
-func (i *EntraIdDirectoryIntegration) GetResourceTypeFromTableName(tableName string) string {
-	if v, ok := entraidDescriberLocal.TablesToResourceTypes[tableName]; ok {
+func (i *Integration) GetResourceTypeFromTableName(tableName string) string {
+	if v, ok := configs.TablesToResourceTypes[tableName]; ok {
 		return v
 	}
 
 	return ""
+}
+func (i *Integration) GetIntegrationType() integration.Type {
+	return configs.IntegrationTypeEntraidDirectory
 }

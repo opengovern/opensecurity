@@ -163,7 +163,8 @@ func (w *Worker) RunJobForIntegration(ctx context.Context, job *AuditJob, integr
 		queryJob := QueryJob{
 			AuditJobID: job.JobID,
 			ExecutionPlan: ExecutionPlan{
-				Query:          *control.Policy,
+				Policy:         *control.Policy,
+				ControlID:      control.ID,
 				IntegrationIDs: job.IntegrationIDs,
 			},
 		}

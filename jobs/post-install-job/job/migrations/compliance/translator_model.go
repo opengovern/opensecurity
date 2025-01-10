@@ -58,19 +58,18 @@ type Control struct {
 }
 
 type QueryView struct {
-	ID          string        `json:"id" yaml:"ID"`
-	Title       string        `json:"title" yaml:"Title"`
-	Description string        `json:"description" yaml:"Description"`
-	Query       *shared.Query `json:"query" yaml:"Policy"`
-
-	Dependencies []string `json:"dependencies" yaml:"Dependencies"`
+	ID          string              `json:"id" yaml:"id"`
+	Title       string              `json:"title" yaml:"title"`
+	Description string              `json:"description" yaml:"description"`
+	Query       string              `json:"query" yaml:"query"`
+	Tags        map[string][]string `json:"tags" yaml:"tags"`
 }
 
-type NamedPolicy struct {
+type NamedQuery struct {
 	ID               string              `json:"id" yaml:"id"`
 	Title            string              `json:"title" yaml:"title"`
 	Description      string              `json:"description" yaml:"description"`
 	IntegrationTypes []integration.Type  `json:"integration_type" yaml:"integration_type"`
-	Policy           shared.Query        `json:"policy" yaml:"policy"`
+	Query            string              `json:"query" yaml:"query"`
 	Tags             map[string][]string `json:"tags" yaml:"tags"`
 }

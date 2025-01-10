@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/opengovern/og-util/pkg/integration"
-	integrationapi "github.com/opengovern/opencomply/services/integration/api/models"
 	coreClient "github.com/opengovern/opencomply/services/core/api"
+	integrationapi "github.com/opengovern/opencomply/services/integration/api/models"
 )
 
 type PolicyLanguage string
@@ -111,12 +111,12 @@ type QueryParameter struct {
 }
 
 type Policy struct {
-	ID              string             `json:"id" example:"azure_ad_manual_control"`
-	Language        PolicyLanguage     `json:"language" example:"sql"`
-	Definition      string             `json:"definition" example:"select\n  -- Required Columns\n  'active_directory' as resource,\n  'info' as status,\n  'Manual verification required.' as reason;\n"`
-	IntegrationType []integration.Type `json:"integrationType" example:"Azure"`
-	PrimaryResource *string            `json:"primaryResource" example:"null"`
-	ListOfResources []string           `json:"listOfResources" example:"null"`
+	ID              string         `json:"id" example:"azure_ad_manual_control"`
+	Language        PolicyLanguage `json:"language" example:"sql"`
+	Definition      string         `json:"definition" example:"select\n  -- Required Columns\n  'active_directory' as resource,\n  'info' as status,\n  'Manual verification required.' as reason;\n"`
+	IntegrationType []string       `json:"integrationType" example:"Azure"`
+	PrimaryResource *string        `json:"primaryResource" example:"null"`
+	ListOfResources []string       `json:"listOfResources" example:"null"`
 
 	// CloudQL Fields
 	Parameters []QueryParameter `json:"parameters"`

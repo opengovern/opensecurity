@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	authApi "github.com/opengovern/og-util/pkg/api"
+	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
+	"github.com/opengovern/opencomply/services/integration/client"
 	"strconv"
 	"time"
 
@@ -22,18 +24,19 @@ type Config struct {
 	Compliance            config.OpenGovernanceService
 	Onboard               config.OpenGovernanceService
 	Inventory             config.OpenGovernanceService
-	Core              config.OpenGovernanceService
+	Core                  config.OpenGovernanceService
 	EsSink                config.OpenGovernanceService
 	Steampipe             config.Postgres
 	PrometheusPushAddress string
 }
 
 type Worker struct {
-	config        Config
-	logger        *zap.Logger
-	steampipeConn *steampipe.Database
-	esClient      opengovernance.Client
-	jq            *jq.JobQueue
+	config            Config
+	logger            *zap.Logger
+	steampipeConn     *steampipe.Database
+	esClient          opengovernance.Client
+	jq                *jq.JobQueue
+	integrationClient client.IntegrationServiceClient
 }
 
 func NewWorker(
@@ -41,9 +44,24 @@ func NewWorker(
 	logger *zap.Logger,
 	ctx context.Context,
 ) (*Worker, error) {
-	for _, integrationType := range integration_type.IntegrationTypes {
-		describerConfig := integrationType.GetConfiguration()
-		err := steampipe.PopulateSteampipeConfig(config.ElasticSearch, describerConfig.SteampipePluginName)
+
+	integrationClient := client.NewIntegrationServiceClient(config.Onboard.BaseURL)
+
+	httpCtx := httpclient.Context{Ctx: ctx, UserRole: authApi.ViewerRole}
+
+	integrationTypes, err := integrationClient.ListIntegrationTypes(&httpCtx)
+	if err != nil {
+		logger.Error("failed to list integration types", zap.Error(err))
+		return nil, err
+	}
+
+	for _, integrationType := range integrationTypes {
+		describerConfig, err := integrationClient.GetIntegrationConfiguration(&httpCtx, integrationType)
+		if err != nil {
+			logger.Error("failed to get integration configuration", zap.Error(err))
+			return nil, err
+		}
+		err = steampipe.PopulateSteampipeConfig(config.ElasticSearch, describerConfig.SteampipePluginName)
 		if err != nil {
 			return nil, err
 		}
@@ -83,11 +101,12 @@ func NewWorker(
 	}
 
 	w := &Worker{
-		config:        config,
-		logger:        logger,
-		steampipeConn: steampipeConn,
-		esClient:      esClient,
-		jq:            jq,
+		config:            config,
+		logger:            logger,
+		steampipeConn:     steampipeConn,
+		esClient:          esClient,
+		jq:                jq,
+		integrationClient: integrationClient,
 	}
 
 	return w, nil

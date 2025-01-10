@@ -5,33 +5,34 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"github.com/jackc/pgtype"
+	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
-	openaiDescriberLocal "github.com/opengovern/opencomply/services/integration/integration-type/openai-integration/configs"
+	"github.com/opengovern/opencomply/services/integration/integration-type/openai-integration/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/openai-integration/healthcheck"
 	"github.com/opengovern/opencomply/services/integration/models"
 )
 
-type OpenAIIntegration struct{}
+type Integration struct{}
 
-func (i *OpenAIIntegration) GetConfiguration() interfaces.IntegrationConfiguration {
+func (i *Integration) GetConfiguration() interfaces.IntegrationConfiguration {
 	return interfaces.IntegrationConfiguration{
-		NatsScheduledJobsTopic:   openaiDescriberLocal.JobQueueTopic,
-		NatsManualJobsTopic:      openaiDescriberLocal.JobQueueTopicManuals,
-		NatsStreamName:           openaiDescriberLocal.StreamName,
-		NatsConsumerGroup:        openaiDescriberLocal.ConsumerGroup,
-		NatsConsumerGroupManuals: openaiDescriberLocal.ConsumerGroupManuals,
+		NatsScheduledJobsTopic:   configs.JobQueueTopic,
+		NatsManualJobsTopic:      configs.JobQueueTopicManuals,
+		NatsStreamName:           configs.StreamName,
+		NatsConsumerGroup:        configs.ConsumerGroup,
+		NatsConsumerGroupManuals: configs.ConsumerGroupManuals,
 
 		SteampipePluginName: "openai",
 
-		UISpecFileName: "openai-integration.json",
+		UISpec: configs.UISpec,
 
-		DescriberDeploymentName: openaiDescriberLocal.DescriberDeploymentName,
-		DescriberRunCommand:     openaiDescriberLocal.DescriberRunCommand,
+		DescriberDeploymentName: configs.DescriberDeploymentName,
+		DescriberRunCommand:     configs.DescriberRunCommand,
 	}
 }
 
-func (i *OpenAIIntegration) HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error) {
-	var credentials openaiDescriberLocal.IntegrationCredentials
+func (i *Integration) HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error) {
+	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		return false, err
@@ -41,8 +42,8 @@ func (i *OpenAIIntegration) HealthCheck(jsonData []byte, providerId string, labe
 	return isHealthy, err
 }
 
-func (i *OpenAIIntegration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
-	var credentials openaiDescriberLocal.IntegrationCredentials
+func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
+	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		return nil, err
@@ -74,20 +75,24 @@ func (i *OpenAIIntegration) DiscoverIntegrations(jsonData []byte) ([]models.Inte
 	return integrations, nil
 }
 
-func (i *OpenAIIntegration) GetResourceTypesByLabels(labels map[string]string) (map[string]*interfaces.ResourceTypeConfiguration, error) {
+func (i *Integration) GetResourceTypesByLabels(labels map[string]string) (map[string]*interfaces.ResourceTypeConfiguration, error) {
 	resourceTypesMap := make(map[string]*interfaces.ResourceTypeConfiguration)
-	for _, resourceType := range openaiDescriberLocal.ResourceTypesList {
+	for _, resourceType := range configs.ResourceTypesList {
 		resourceTypesMap[resourceType] = nil
 	}
 	return resourceTypesMap, nil
 }
 
-func (i *OpenAIIntegration) GetResourceTypeFromTableName(tableName string) string {
-	if v, ok := openaiDescriberLocal.TablesToResourceTypes[tableName]; ok {
+func (i *Integration) GetResourceTypeFromTableName(tableName string) string {
+	if v, ok := configs.TablesToResourceTypes[tableName]; ok {
 		return v
 	}
 
 	return ""
+}
+
+func (i *Integration) GetIntegrationType() integration.Type {
+	return configs.IntegrationTypeOpenaiIntegration
 }
 
 func hashSHA256(input string) string {

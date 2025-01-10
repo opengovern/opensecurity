@@ -1,13 +1,11 @@
 package db
 
 import (
-	"github.com/opengovern/opencomply/services/core/db/models"
-	"gorm.io/gorm/clause"
 	"errors"
+	"github.com/opengovern/opencomply/services/core/db/models"
 	"gorm.io/gorm"
-
+	"gorm.io/gorm/clause"
 )
-
 
 func (db Database) upsertConfigMetadata(configMetadata models.ConfigMetadata) error {
 	return db.orm.Clauses(clause.OnConflict{
@@ -81,7 +79,7 @@ func (db Database) upsertQueryParameter(queryParam models.PolicyParameterValues)
 
 func (db Database) upsertQueryParameters(queryParam []*models.PolicyParameterValues) error {
 	return db.orm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "key"}},
+		Columns:   []clause.Column{{Name: "key"}, {Name: "control_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"value"}),
 	}).Create(queryParam).Error
 }
@@ -109,9 +107,13 @@ func (db Database) GetQueryParameter(key string) (*models.PolicyParameterValues,
 	return &queryParam, nil
 }
 
-func (db Database) GetQueryParametersValues() ([]models.PolicyParameterValues, error) {
+func (db Database) GetQueryParametersValues(keyRegex *string) ([]models.PolicyParameterValues, error) {
 	var queryParams []models.PolicyParameterValues
-	err := db.orm.Find(&queryParams).Error
+	tx := db.orm.Model(&models.PolicyParameterValues{})
+	if keyRegex != nil {
+		tx = tx.Where("key ~* ?", *keyRegex)
+	}
+	err := tx.Find(&queryParams).Error
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +132,6 @@ func (db Database) GetQueryParametersByIds(ids []string) ([]models.PolicyParamet
 func (db Database) DeleteQueryParameter(key string) error {
 	return db.orm.Unscoped().Delete(&models.PolicyParameterValues{}, "key = ?", key).Error
 }
-
 
 func (db Database) ListQueryViews() ([]models.QueryView, error) {
 	var queryViews []models.QueryView

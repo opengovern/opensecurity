@@ -198,10 +198,10 @@ export default function SettingsEntitlement() {
             title: 'License',
             value: (
                 <a
-                    href="https://github.com/elastic/eui/blob/main/licenses/ELASTIC-LICENSE-2.0.md"
+                    href="https://opencomply.io/license"
                     className="text-blue-600 underline"
                 >
-                    Elastic License V2
+                    Business Source License v1.1
                 </a>
             ),
         },

@@ -69,7 +69,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		logger:             logger,
 		frameworksChildren: make(map[string][]string),
 		controlsPolicies:   make(map[string]db.Policy),
-		namedPolicies:      make(map[string]NamedPolicy),
+		namedPolicies:      make(map[string]NamedQuery),
 	}
 	if err := p.ExtractCompliance(config.ComplianceGitPath, config.ControlEnrichmentGitPath); err != nil {
 		logger.Error("failed to extract controls and benchmarks", zap.Error(err))
@@ -121,7 +121,10 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	err = dbCore.Orm.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, obj := range p.policyParamValues {
 			err := tx.Clauses(clause.OnConflict{
-				DoNothing: true,
+				Columns: []clause.Column{{Name: "key"}, {Name: "control_id"}},
+				DoUpdates: clause.Assignments(map[string]interface{}{
+					"value": gorm.Expr("CASE WHEN value = '' THEN ? ELSE value END", obj.Value),
+				}),
 			}).Create(&obj).Error
 			if err != nil {
 				return err
@@ -234,6 +237,8 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	err = dbCore.Orm.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		tx.Model(&models.QueryView{}).Where("1=1").Unscoped().Delete(&models.QueryView{})
 		tx.Model(&models.QueryParameter{}).Where("1=1").Unscoped().Delete(&models.QueryParameter{})
+		tx.Model(&models.NamedQuery{}).Where("1=1").Unscoped().Delete(&models.NamedQuery{})
+		tx.Model(&models.NamedQueryTag{}).Where("1=1").Unscoped().Delete(&models.NamedQueryTag{})
 		tx.Model(&models.Query{}).Where("1=1").Unscoped().Delete(&models.Query{})
 		for _, obj := range p.coreServiceQueries {
 			obj.QueryViews = nil
@@ -329,10 +334,6 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 
 func populateQueries(logger *zap.Logger, db db.Database) error {
 	err := db.Orm.Transaction(func(tx *gorm.DB) error {
-
-		tx.Model(&models.NamedQuery{}).Where("1=1").Unscoped().Delete(&models.NamedQuery{})
-		tx.Model(&models.NamedQueryTag{}).Where("1=1").Unscoped().Delete(&models.NamedQueryTag{})
-
 		err := filepath.Walk(config.QueriesGitPath, func(path string, info fs.FileInfo, err error) error {
 			if !info.IsDir() && strings.HasSuffix(path, ".yaml") {
 				return populateFinderItem(logger, tx, path, info)
@@ -359,7 +360,7 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		return err
 	}
 
-	var item NamedPolicy
+	var item NamedQuery
 	err = yaml.Unmarshal(content, &item)
 	if err != nil {
 		logger.Error("failure in unmarshal", zap.String("path", path), zap.Error(err))
@@ -391,7 +392,7 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		tags = append(tags, tag)
 	}
 
-	dbMetric := models.NamedQuery{
+	namedQuery := models.NamedQuery{
 		ID:               id,
 		IntegrationTypes: integrationTypes,
 		Title:            item.Title,
@@ -400,33 +401,16 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		QueryID:          &id,
 	}
 	queryParams := []models.QueryParameter{}
-	for _, qp := range item.Policy.Parameters {
-		queryParams = append(queryParams, models.QueryParameter{
-			Key:      qp.Key,
-			Required: qp.Required,
-			QueryID:  dbMetric.ID,
-		})
-		if qp.DefaultValue != "" {
-			queryParamObj := models.PolicyParameterValues{
-				Key:   qp.Key,
-				Value: qp.DefaultValue,
-			}
-			QueryParameters = append(QueryParameters, queryParamObj)
-		}
-	}
-	listOfTables, err := utils.ExtractTableRefsFromPolicy("sql", item.Policy.QueryToExecute)
+	listOfTables, err := utils.ExtractTableRefsFromPolicy("sql", item.Query)
 	if err != nil {
-		logger.Error("failed to extract table refs from query", zap.String("query-id", dbMetric.ID), zap.Error(err))
-		listOfTables = item.Policy.ListOfTables
+		logger.Error("failed to extract table refs from query", zap.String("query-id", namedQuery.ID), zap.Error(err))
 	}
 	query := models.Query{
-		ID:             dbMetric.ID,
-		QueryToExecute: item.Policy.QueryToExecute,
-		PrimaryTable:   item.Policy.PrimaryTable,
+		ID:             namedQuery.ID,
+		QueryToExecute: item.Query,
 		ListOfTables:   listOfTables,
-		Engine:         item.Policy.Engine,
+		Engine:         "sql",
 		Parameters:     queryParams,
-		Global:         item.Policy.Global,
 	}
 	err = tx.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}}, // key column
@@ -449,13 +433,11 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 	err = tx.Model(&models.NamedQuery{}).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}}, // key column
 		DoNothing: true,                          // column needed to be updated
-	}).Create(dbMetric).Error
+	}).Create(namedQuery).Error
 	if err != nil {
 		logger.Error("failure in insert query", zap.Error(err))
 		return err
 	}
-
-	// logger.Info("parsed the tags", zap.String("id", id), zap.Any("tags", tags))
 
 	if len(tags) > 0 {
 		for _, tag := range tags {

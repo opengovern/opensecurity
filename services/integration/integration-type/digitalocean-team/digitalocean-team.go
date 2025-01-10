@@ -3,34 +3,35 @@ package digitalocean_team
 import (
 	"context"
 	"encoding/json"
-	digitaloceanDescriberLocal "github.com/opengovern/opencomply/services/integration/integration-type/digitalocean-team/configs"
+	"github.com/opengovern/og-util/pkg/integration"
+	"github.com/opengovern/opencomply/services/integration/integration-type/digitalocean-team/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/digitalocean-team/discovery"
 	"github.com/opengovern/opencomply/services/integration/integration-type/digitalocean-team/healthcheck"
 	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
 	"github.com/opengovern/opencomply/services/integration/models"
 )
 
-type DigitaloceanTeamIntegration struct{}
+type Integration struct{}
 
-func (i *DigitaloceanTeamIntegration) GetConfiguration() interfaces.IntegrationConfiguration {
+func (i *Integration) GetConfiguration() interfaces.IntegrationConfiguration {
 	return interfaces.IntegrationConfiguration{
-		NatsScheduledJobsTopic:   digitaloceanDescriberLocal.JobQueueTopic,
-		NatsManualJobsTopic:      digitaloceanDescriberLocal.JobQueueTopicManuals,
-		NatsStreamName:           digitaloceanDescriberLocal.StreamName,
-		NatsConsumerGroup:        digitaloceanDescriberLocal.ConsumerGroup,
-		NatsConsumerGroupManuals: digitaloceanDescriberLocal.ConsumerGroupManuals,
+		NatsScheduledJobsTopic:   configs.JobQueueTopic,
+		NatsManualJobsTopic:      configs.JobQueueTopicManuals,
+		NatsStreamName:           configs.StreamName,
+		NatsConsumerGroup:        configs.ConsumerGroup,
+		NatsConsumerGroupManuals: configs.ConsumerGroupManuals,
 
 		SteampipePluginName: "digitalocean",
 
-		UISpecFileName: "digitalocean-team.json",
+		UISpec: configs.UISpec,
 
-		DescriberDeploymentName: digitaloceanDescriberLocal.DescriberDeploymentName,
-		DescriberRunCommand:     digitaloceanDescriberLocal.DescriberRunCommand,
+		DescriberDeploymentName: configs.DescriberDeploymentName,
+		DescriberRunCommand:     configs.DescriberRunCommand,
 	}
 }
 
-func (i *DigitaloceanTeamIntegration) HealthCheck(jsonData []byte, _ string, _ map[string]string, _ map[string]string) (bool, error) {
-	var credentials digitaloceanDescriberLocal.IntegrationCredentials
+func (i *Integration) HealthCheck(jsonData []byte, _ string, _ map[string]string, _ map[string]string) (bool, error) {
+	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		return false, err
@@ -41,8 +42,8 @@ func (i *DigitaloceanTeamIntegration) HealthCheck(jsonData []byte, _ string, _ m
 	})
 }
 
-func (i *DigitaloceanTeamIntegration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
-	var credentials digitaloceanDescriberLocal.IntegrationCredentials
+func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
+	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		return nil, err
@@ -63,18 +64,22 @@ func (i *DigitaloceanTeamIntegration) DiscoverIntegrations(jsonData []byte) ([]m
 	}, nil
 }
 
-func (i *DigitaloceanTeamIntegration) GetResourceTypesByLabels(labels map[string]string) (map[string]*interfaces.ResourceTypeConfiguration, error) {
+func (i *Integration) GetResourceTypesByLabels(labels map[string]string) (map[string]*interfaces.ResourceTypeConfiguration, error) {
 	resourceTypesMap := make(map[string]*interfaces.ResourceTypeConfiguration)
-	for _, resourceType := range digitaloceanDescriberLocal.ResourceTypesList {
+	for _, resourceType := range configs.ResourceTypesList {
 		resourceTypesMap[resourceType] = nil
 	}
 	return resourceTypesMap, nil
 }
 
-func (i *DigitaloceanTeamIntegration) GetResourceTypeFromTableName(tableName string) string {
-	if v, ok := digitaloceanDescriberLocal.TablesToResourceTypes[tableName]; ok {
+func (i *Integration) GetResourceTypeFromTableName(tableName string) string {
+	if v, ok := configs.TablesToResourceTypes[tableName]; ok {
 		return v
 	}
 
 	return ""
+}
+
+func (i *Integration) GetIntegrationType() integration.Type {
+	return configs.IntegrationTypeDigitalOceanTeam
 }

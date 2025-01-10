@@ -1,6 +1,9 @@
 package interfaces
 
-import "github.com/opengovern/opencomply/services/integration/models"
+import (
+	"github.com/opengovern/og-util/pkg/integration"
+	"github.com/opengovern/opencomply/services/integration/models"
+)
 
 type IntegrationConfiguration struct {
 	NatsScheduledJobsTopic   string
@@ -11,13 +14,14 @@ type IntegrationConfiguration struct {
 
 	SteampipePluginName string
 
-	UISpecFileName string
+	UISpec []byte
 
 	DescriberDeploymentName string
 	DescriberRunCommand     string
 }
 
 type IntegrationType interface {
+	GetIntegrationType() integration.Type
 	GetConfiguration() IntegrationConfiguration
 	GetResourceTypesByLabels(map[string]string) (map[string]*ResourceTypeConfiguration, error)
 	HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error)

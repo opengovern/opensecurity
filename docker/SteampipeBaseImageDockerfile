@@ -11,6 +11,7 @@ FROM ${PLUGIN_REGISTRY}/steampipe-plugin-cohereai:0.0.1 as cohereai
 FROM ${PLUGIN_REGISTRY}/steampipe-plugin-oci:0.0.1 as oci
 FROM ${PLUGIN_REGISTRY}/steampipe-plugin-render:0.0.1 as render
 FROM ${PLUGIN_REGISTRY}/steampipe-plugin-doppler:0.0.1 as doppler
+FROM ${PLUGIN_REGISTRY}/steampipe-plugin-googleworkspace:0.0.1 as googleworkspace
 
 
 
@@ -36,6 +37,7 @@ COPY --from=cohereai /steampipe-plugin-cohereai.plugin /home/steampipe/.steampip
 COPY --from=oci /steampipe-plugin-oci.plugin /home/steampipe/.steampipe/plugins/hub.steampipe.io/plugins/turbot/oci@latest/steampipe-plugin-oci.plugin
 COPY --from=render /steampipe-plugin-render.plugin /home/steampipe/.steampipe/plugins/hub.steampipe.io/plugins/turbot/render@latest/steampipe-plugin-render.plugin
 COPY --from=doppler /steampipe-plugin-doppler.plugin /home/steampipe/.steampipe/plugins/hub.steampipe.io/plugins/turbot/doppler@latest/steampipe-plugin-doppler.plugin
+COPY --from=googleworkspace /steampipe-plugin-googleworkspace.plugin /home/steampipe/.steampipe/plugins/hub.steampipe.io/plugins/turbot/googleworkspace@latest/steampipe-plugin-googleworkspace.plugin
 
 COPY --from=opengovernance /cloudql.plugin /home/steampipe/.steampipe/plugins/local/opengovernance/opengovernance.plugin
 

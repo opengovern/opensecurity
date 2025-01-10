@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jackc/pgtype"
-	awsDescriberLocal "github.com/opengovern/opencomply/services/integration/integration-type/aws-account/configs"
+	"github.com/opengovern/og-util/pkg/integration"
+	"github.com/opengovern/opencomply/services/integration/integration-type/aws-account/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/aws-account/discovery"
 	"github.com/opengovern/opencomply/services/integration/integration-type/aws-account/healthcheck"
 	labelsPackage "github.com/opengovern/opencomply/services/integration/integration-type/aws-account/labels"
@@ -14,27 +15,27 @@ import (
 	"strconv"
 )
 
-type AwsCloudAccountIntegration struct{}
+type Integration struct{}
 
-func (i *AwsCloudAccountIntegration) GetConfiguration() interfaces.IntegrationConfiguration {
+func (i *Integration) GetConfiguration() interfaces.IntegrationConfiguration {
 	return interfaces.IntegrationConfiguration{
-		NatsScheduledJobsTopic:   awsDescriberLocal.JobQueueTopic,
-		NatsManualJobsTopic:      awsDescriberLocal.JobQueueTopicManuals,
-		NatsStreamName:           awsDescriberLocal.StreamName,
-		NatsConsumerGroup:        awsDescriberLocal.ConsumerGroup,
-		NatsConsumerGroupManuals: awsDescriberLocal.ConsumerGroupManuals,
+		NatsScheduledJobsTopic:   configs.JobQueueTopic,
+		NatsManualJobsTopic:      configs.JobQueueTopicManuals,
+		NatsStreamName:           configs.StreamName,
+		NatsConsumerGroup:        configs.ConsumerGroup,
+		NatsConsumerGroupManuals: configs.ConsumerGroupManuals,
 
 		SteampipePluginName: "aws",
 
-		UISpecFileName: "aws-cloud-account.json",
+		UISpec: configs.UISpec,
 
-		DescriberDeploymentName: awsDescriberLocal.DescriberDeploymentName,
-		DescriberRunCommand:     awsDescriberLocal.DescriberRunCommand,
+		DescriberDeploymentName: configs.DescriberDeploymentName,
+		DescriberRunCommand:     configs.DescriberRunCommand,
 	}
 }
 
-func (i *AwsCloudAccountIntegration) HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error) {
-	var credentials awsDescriberLocal.IntegrationCredentials
+func (i *Integration) HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error) {
+	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		return false, err
@@ -49,9 +50,9 @@ func (i *AwsCloudAccountIntegration) HealthCheck(jsonData []byte, providerId str
 	}, providerId)
 }
 
-func (i *AwsCloudAccountIntegration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
+func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
 	ctx := context.Background()
-	var credentials awsDescriberLocal.IntegrationCredentials
+	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		return nil, err
@@ -105,10 +106,10 @@ func (i *AwsCloudAccountIntegration) DiscoverIntegrations(jsonData []byte) ([]mo
 	return integrations, nil
 }
 
-func (i *AwsCloudAccountIntegration) GetResourceTypesByLabels(labels map[string]string) (map[string]*interfaces.ResourceTypeConfiguration, error) {
-	resourceTypes := awsDescriberLocal.ResourceTypesList
+func (i *Integration) GetResourceTypesByLabels(labels map[string]string) (map[string]*interfaces.ResourceTypeConfiguration, error) {
+	resourceTypes := configs.ResourceTypesList
 	if labels["integration/aws/organization-master"] == "true" {
-		resourceTypes = append(resourceTypes, awsDescriberLocal.OrganizationMasterResourceTypesList...)
+		resourceTypes = append(resourceTypes, configs.OrganizationMasterResourceTypesList...)
 	}
 	resourceTypesMap := make(map[string]*interfaces.ResourceTypeConfiguration)
 	for _, resourceType := range resourceTypes {
@@ -117,9 +118,13 @@ func (i *AwsCloudAccountIntegration) GetResourceTypesByLabels(labels map[string]
 	return resourceTypesMap, nil
 }
 
-func (i *AwsCloudAccountIntegration) GetResourceTypeFromTableName(tableName string) string {
-	if v, ok := awsDescriberLocal.TablesToResourceTypes[tableName]; ok {
+func (i *Integration) GetResourceTypeFromTableName(tableName string) string {
+	if v, ok := configs.TablesToResourceTypes[tableName]; ok {
 		return v
 	}
 	return ""
+}
+
+func (i *Integration) GetIntegrationType() integration.Type {
+	return configs.IntegrationTypeAwsCloudAccount
 }

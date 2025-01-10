@@ -128,7 +128,7 @@ func (s *Scheduler) runNextJob(ctx context.Context, job model.JobSequencer) erro
 				continue
 			}
 
-			for _, connectionID := range parameters.ConnectionIDs {
+			for _, integrationID := range parameters.ConnectionIDs {
 				callers := make([]runner.Caller, 0, len(parentPaths))
 				for _, path := range parentPaths {
 					caller := runner.Caller{
@@ -143,8 +143,9 @@ func (s *Scheduler) runNextJob(ctx context.Context, job model.JobSequencer) erro
 
 				runnerJob := model.ComplianceRunner{
 					FrameworkID:    parameters.BenchmarkID,
-					QueryID:        control.Policy.ID,
-					IntegrationID:  &connectionID,
+					PolicyID:       control.Policy.ID,
+					ControlID:      control.ID,
+					IntegrationID:  &integrationID,
 					StartedAt:      time.Time{},
 					RetryCount:     0,
 					Status:         runner.ComplianceRunnerCreated,

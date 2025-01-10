@@ -3,34 +3,35 @@ package linode_account
 import (
 	"encoding/json"
 	"github.com/jackc/pgtype"
+	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
-	linodeDescriberLocal "github.com/opengovern/opencomply/services/integration/integration-type/linode-account/configs"
+	"github.com/opengovern/opencomply/services/integration/integration-type/linode-account/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/linode-account/discovery"
 	"github.com/opengovern/opencomply/services/integration/integration-type/linode-account/healthcheck"
 	"github.com/opengovern/opencomply/services/integration/models"
 )
 
-type LinodeAccountIntegration struct{}
+type Integration struct{}
 
-func (i *LinodeAccountIntegration) GetConfiguration() interfaces.IntegrationConfiguration {
+func (i *Integration) GetConfiguration() interfaces.IntegrationConfiguration {
 	return interfaces.IntegrationConfiguration{
-		NatsScheduledJobsTopic:   linodeDescriberLocal.JobQueueTopic,
-		NatsManualJobsTopic:      linodeDescriberLocal.JobQueueTopicManuals,
-		NatsStreamName:           linodeDescriberLocal.StreamName,
-		NatsConsumerGroup:        linodeDescriberLocal.ConsumerGroup,
-		NatsConsumerGroupManuals: linodeDescriberLocal.ConsumerGroupManuals,
+		NatsScheduledJobsTopic:   configs.JobQueueTopic,
+		NatsManualJobsTopic:      configs.JobQueueTopicManuals,
+		NatsStreamName:           configs.StreamName,
+		NatsConsumerGroup:        configs.ConsumerGroup,
+		NatsConsumerGroupManuals: configs.ConsumerGroupManuals,
 
 		SteampipePluginName: "linode",
 
-		UISpecFileName: "linode-account.json",
+		UISpec: configs.UISpec,
 
-		DescriberDeploymentName: linodeDescriberLocal.DescriberDeploymentName,
-		DescriberRunCommand:     linodeDescriberLocal.DescriberRunCommand,
+		DescriberDeploymentName: configs.DescriberDeploymentName,
+		DescriberRunCommand:     configs.DescriberRunCommand,
 	}
 }
 
-func (i *LinodeAccountIntegration) HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error) {
-	var credentials linodeDescriberLocal.IntegrationCredentials
+func (i *Integration) HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error) {
+	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		return false, err
@@ -40,8 +41,8 @@ func (i *LinodeAccountIntegration) HealthCheck(jsonData []byte, providerId strin
 	return isHealthy, err
 }
 
-func (i *LinodeAccountIntegration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
-	var credentials linodeDescriberLocal.IntegrationCredentials
+func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
+	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		return nil, err
@@ -72,18 +73,22 @@ func (i *LinodeAccountIntegration) DiscoverIntegrations(jsonData []byte) ([]mode
 	return integrations, nil
 }
 
-func (i *LinodeAccountIntegration) GetResourceTypesByLabels(labels map[string]string) (map[string]*interfaces.ResourceTypeConfiguration, error) {
+func (i *Integration) GetResourceTypesByLabels(labels map[string]string) (map[string]*interfaces.ResourceTypeConfiguration, error) {
 	resourceTypesMap := make(map[string]*interfaces.ResourceTypeConfiguration)
-	for _, resourceType := range linodeDescriberLocal.ResourceTypesList {
+	for _, resourceType := range configs.ResourceTypesList {
 		resourceTypesMap[resourceType] = nil
 	}
 	return resourceTypesMap, nil
 }
 
-func (i *LinodeAccountIntegration) GetResourceTypeFromTableName(tableName string) string {
-	if v, ok := linodeDescriberLocal.TablesToResourceTypes[tableName]; ok {
+func (i *Integration) GetResourceTypeFromTableName(tableName string) string {
+	if v, ok := configs.TablesToResourceTypes[tableName]; ok {
 		return v
 	}
 
 	return ""
+}
+
+func (i *Integration) GetIntegrationType() integration.Type {
+	return configs.IntegrationTypeLinodeProject
 }

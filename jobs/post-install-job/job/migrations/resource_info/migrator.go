@@ -10,7 +10,6 @@ import (
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/opencomply/jobs/post-install-job/config"
 	"github.com/opengovern/opencomply/jobs/post-install-job/db"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"github.com/opengovern/opencomply/services/core/db/models"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -87,7 +86,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			err = tx.Clauses(clause.OnConflict{
 				DoNothing: true,
 			}).Create(&models.ResourceTypeV2{
-				IntegrationType: integration_type.IntegrationTypeAWSAccount,
+				IntegrationType: "aws_cloud_account",
 				ResourceName:    record[0],
 				ResourceID:      record[1],
 				SteampipeTable:  record[2],

@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	authApi "github.com/opengovern/og-util/pkg/api"
+	"github.com/opengovern/og-util/pkg/httpclient"
+	"github.com/opengovern/opencomply/services/integration/client"
 	"os"
 	"time"
 
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"github.com/opengovern/opencomply/services/scheduler/db/model"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -25,20 +27,22 @@ type Config struct {
 	ElasticSearch config.ElasticSearch
 	NATS          config.NATS
 	Compliance    config.OpenGovernanceService
-	Core      config.OpenGovernanceService
+	Core          config.OpenGovernanceService
+	Onboard       config.OpenGovernanceService
 	EsSink        config.OpenGovernanceService
 	Steampipe     config.Postgres
 }
 
 type Worker struct {
-	config           Config
-	logger           *zap.Logger
-	steampipeConn    *steampipe.Database
-	esClient         opengovernance.Client
-	jq               *jq.JobQueue
-	complianceClient complianceClient.ComplianceServiceClient
-	coreClient   coreClient.CoreServiceClient
-	sinkClient       esSinkClient.EsSinkServiceClient
+	config            Config
+	logger            *zap.Logger
+	steampipeConn     *steampipe.Database
+	esClient          opengovernance.Client
+	jq                *jq.JobQueue
+	complianceClient  complianceClient.ComplianceServiceClient
+	coreClient        coreClient.CoreServiceClient
+	integrationClient client.IntegrationServiceClient
+	sinkClient        esSinkClient.EsSinkServiceClient
 }
 
 var (
@@ -50,9 +54,23 @@ func NewWorker(
 	logger *zap.Logger,
 	ctx context.Context,
 ) (*Worker, error) {
-	for _, integrationType := range integration_type.IntegrationTypes {
-		describerConfig := integrationType.GetConfiguration()
-		err := steampipe.PopulateSteampipeConfig(config.ElasticSearch, describerConfig.SteampipePluginName)
+	integrationClient := client.NewIntegrationServiceClient(config.Onboard.BaseURL)
+
+	httpCtx := httpclient.Context{Ctx: ctx, UserRole: authApi.ViewerRole}
+
+	integrationTypes, err := integrationClient.ListIntegrationTypes(&httpCtx)
+	if err != nil {
+		logger.Error("failed to list integration types", zap.Error(err))
+		return nil, err
+	}
+
+	for _, integrationType := range integrationTypes {
+		describerConfig, err := integrationClient.GetIntegrationConfiguration(&httpCtx, integrationType)
+		if err != nil {
+			logger.Error("failed to get integration configuration", zap.Error(err))
+			return nil, err
+		}
+		err = steampipe.PopulateSteampipeConfig(config.ElasticSearch, describerConfig.SteampipePluginName)
 		if err != nil {
 			return nil, err
 		}
@@ -92,14 +110,15 @@ func NewWorker(
 	}
 
 	return &Worker{
-		config:           config,
-		logger:           logger,
-		steampipeConn:    steampipeConn,
-		esClient:         esClient,
-		jq:               jq,
-		complianceClient: complianceClient.NewComplianceClient(config.Compliance.BaseURL),
-		coreClient:   coreClient.NewCoreServiceClient(config.Core.BaseURL),
-		sinkClient:       esSinkClient.NewEsSinkServiceClient(logger, config.EsSink.BaseURL),
+		config:            config,
+		logger:            logger,
+		steampipeConn:     steampipeConn,
+		esClient:          esClient,
+		jq:                jq,
+		complianceClient:  complianceClient.NewComplianceClient(config.Compliance.BaseURL),
+		coreClient:        coreClient.NewCoreServiceClient(config.Core.BaseURL),
+		sinkClient:        esSinkClient.NewEsSinkServiceClient(logger, config.EsSink.BaseURL),
+		integrationClient: integrationClient,
 	}, nil
 }
 

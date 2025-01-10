@@ -64,9 +64,9 @@ func (s *JobScheduler) runPublisher(ctx context.Context, manuals bool) error {
 		}
 
 		for _, it := range runners {
-			query, ok := queriesMap[it.QueryID]
+			query, ok := queriesMap[it.PolicyID]
 			if !ok || query == nil {
-				s.logger.Error("query not found", zap.String("queryId", it.QueryID), zap.Uint("runnerId", it.ID))
+				s.logger.Error("query not found", zap.String("queryId", it.PolicyID), zap.Uint("runnerId", it.ID))
 				_ = s.db.UpdateRunnerJob(it.ID, runner.ComplianceRunnerFailed, it.CreatedAt, nil, "query not found")
 				continue
 			}
@@ -94,6 +94,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context, manuals bool) error {
 				ExecutionPlan: runner.ExecutionPlan{
 					Callers:       callers,
 					Query:         *query,
+					ControlID:     it.ControlID,
 					IntegrationID: it.IntegrationID,
 					ProviderID:    providerID,
 				},

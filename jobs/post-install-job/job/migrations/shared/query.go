@@ -18,6 +18,9 @@ type Query struct {
 
 type Policy struct {
 	ID              *string              `json:"id,omitempty" yaml:"id,omitempty"`
+	Title           string               `json:"title,omitempty" yaml:"title,omitempty"`
+	Description     string               `json:"description,omitempty" yaml:"description,omitempty"`
+	Ref             *string              `json:"@ref,omitempty" yaml:"@ref,omitempty"`
 	Language        types.PolicyLanguage `json:"language" yaml:"language"`
 	PrimaryResource string               `json:"primary_resource" yaml:"primary_resource"`
 	ExampleData     *string              `json:"example_data,omitempty" yaml:"example_data,omitempty"`
@@ -34,4 +37,14 @@ type QueryParameter struct {
 	Key          string `json:"Key" yaml:"Key"`
 	Required     bool   `json:"Required" yaml:"Required"`
 	DefaultValue string `json:"DefaultValue" yaml:"DefaultValue"`
+}
+
+type ParameterDefaultValue struct {
+	Key      string   `json:"key" yaml:"key"`
+	Value    string   `json:"value" yaml:"value"`
+	Controls []string `json:"controls" yaml:"controls"`
+}
+
+type ParameterDefaultValueFile struct {
+	Parameters []ParameterDefaultValue `json:"parameters" yaml:"parameters"`
 }

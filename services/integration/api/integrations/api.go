@@ -41,6 +41,7 @@ type API struct {
 	database      db.Database
 	steampipeConn *steampipe.Database
 	kubeClient    client.Client
+	typesManager  *integration_type.IntegrationTypeManager
 }
 
 const (
@@ -57,6 +58,7 @@ func New(
 	logger *zap.Logger,
 	steampipeConn *steampipe.Database,
 	kubeClien client.Client,
+	typesManager *integration_type.IntegrationTypeManager,
 ) API {
 	return API{
 		vault:         vault,
@@ -64,6 +66,7 @@ func New(
 		logger:        logger.Named("integrations"),
 		steampipeConn: steampipeConn,
 		kubeClient:    kubeClien,
+		typesManager:  typesManager,
 	}
 }
 
@@ -120,9 +123,12 @@ func (h API) DiscoverIntegrations(c echo.Context) error {
 		for key, values := range c.Request().MultipartForm.Value {
 			if len(values) > 0 {
 				if key == "integrationType" || key == "integration_type" {
-					req.IntegrationType = integration_type.ParseType(values[0])
+					req.IntegrationType = h.typesManager.ParseType(values[0])
 				} else if key == "credentialType" || key == "credential_type" {
 					req.CredentialType = values[0]
+
+				} else if key == "description" || key == "Description" {
+					req.Description = values[0]
 				} else {
 					keys := strings.Split(key, ".")
 					formData[keys[1]] = values[0]
@@ -173,7 +179,7 @@ func (h API) DiscoverIntegrations(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to decrypt config")
 		}
 
-		if _, ok := integration_type.IntegrationTypes[req.IntegrationType]; !ok {
+		if _, ok := h.typesManager.GetIntegrationTypeMap()[req.IntegrationType]; !ok {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid integration type")
 		}
 
@@ -201,20 +207,20 @@ func (h API) DiscoverIntegrations(c echo.Context) error {
 		}
 		masked := make(map[string]any)
 		for key, value := range req.Credentials {
-		strValue, ok := value.(string) // Ensure the value is a string
-		if !ok {
-			// If it's not a string, just skip masking
-			masked[key] = "not available"
-			continue
-		}
-
-		// Get the last 5 characters, or the full string if it's shorter
-		if len(strValue) > 5 {
-			masked[key] = "*****" + strValue[len(strValue)-5:]
-		} else {
-			masked[key] = "*****" + strValue
-		}
+			strValue, ok := value.(string) // Ensure the value is a string
+			if !ok {
+				// If it's not a string, just skip masking
+				masked[key] = "not available"
+				continue
 			}
+
+			// Get the last 5 characters, or the full string if it's shorter
+			if len(strValue) > 5 {
+				masked[key] = "*****" + strValue[len(strValue)-5:]
+			} else {
+				masked[key] = "*****" + strValue
+			}
+		}
 		// convert to jsonb
 		maskedSecreyJsonData, err := json.Marshal(masked)
 		maskedSecretJsonb := pgtype.JSONB{}
@@ -223,21 +229,20 @@ func (h API) DiscoverIntegrations(c echo.Context) error {
 			h.logger.Error("failed to set masked secret", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to set masked secret")
 		}
-		
 
 		credentialID := uuid.New()
 
 		metadata := make(map[string]string)
 		metadataJsonData, err := json.Marshal(metadata)
 		credentialMetadataJsonb := pgtype.JSONB{}
-		
+
 		err = credentialMetadataJsonb.Set(metadataJsonData)
 		err = h.database.CreateCredential(&models2.Credential{
 			ID:              credentialID,
 			IntegrationType: req.IntegrationType,
 			CredentialType:  req.CredentialType,
-			Description:    req.Description,
-			MaskedSecret: maskedSecretJsonb,
+			Description:     req.Description,
+			MaskedSecret:    maskedSecretJsonb,
 			Secret:          secret,
 			Metadata:        credentialMetadataJsonb,
 		})
@@ -248,7 +253,7 @@ func (h API) DiscoverIntegrations(c echo.Context) error {
 		credentialIDStr = credentialID.String()
 	}
 
-	integration, ok := integration_type.IntegrationTypes[integrationType]
+	integration, ok := h.typesManager.GetIntegrationTypeMap()[integrationType]
 	if !ok {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid integrationType")
 	}
@@ -326,7 +331,7 @@ func (h API) AddIntegrations(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to decrypt config")
 	}
 
-	if _, ok := integration_type.IntegrationTypes[req.IntegrationType]; !ok {
+	if _, ok := h.typesManager.GetIntegrationTypeMap()[req.IntegrationType]; !ok {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid integration type")
 	}
 
@@ -345,7 +350,7 @@ func (h API) AddIntegrations(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to marshal json data")
 	}
 
-	integrationType := integration_type.IntegrationTypes[req.IntegrationType]
+	integrationType := h.typesManager.GetIntegrationTypeMap()[req.IntegrationType]
 	if integrationType == nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to marshal json data")
 	}
@@ -366,7 +371,7 @@ func (h API) AddIntegrations(c echo.Context) error {
 	for _, i := range integrationTypeIntegrations {
 		integrationTypeIntegrationsMap[i.ProviderID] = true
 	}
-	// 
+	//
 	var count = 0
 
 	for _, i := range integrations {
@@ -420,8 +425,7 @@ func (h API) AddIntegrations(c echo.Context) error {
 		count++
 		// update credentials
 	}
-	err= h.database.UpdateCredentialIntegrationCount(req.CredentialID,count)
-
+	err = h.database.UpdateCredentialIntegrationCount(req.CredentialID, count)
 
 	return c.NoContent(http.StatusOK)
 }
@@ -463,7 +467,7 @@ func (h API) IntegrationHealthcheck(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to decrypt config")
 	}
 
-	if _, ok := integration_type.IntegrationTypes[integration.IntegrationType]; !ok {
+	if _, ok := h.typesManager.GetIntegrationTypeMap()[integration.IntegrationType]; !ok {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid integration type")
 	}
 
@@ -473,7 +477,7 @@ func (h API) IntegrationHealthcheck(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to marshal json data")
 	}
 
-	integrationType := integration_type.IntegrationTypes[integration.IntegrationType]
+	integrationType := h.typesManager.GetIntegrationTypeMap()[integration.IntegrationType]
 
 	if integrationType == nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to marshal json data")
@@ -824,7 +828,7 @@ func (h API) Update(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to encrypt config")
 	}
 	masked := make(map[string]any)
-		for key, value := range req.Credentials {
+	for key, value := range req.Credentials {
 		strValue, ok := value.(string) // Ensure the value is a string
 		if !ok {
 			// If it's not a string, just skip masking
@@ -838,14 +842,13 @@ func (h API) Update(c echo.Context) error {
 		} else {
 			masked[key] = "*****" + strValue
 		}
-			}
+	}
 
-	err = h.database.UpdateCredential(integration.CredentialID.String(), secret,masked,req.Description)
+	err = h.database.UpdateCredential(integration.CredentialID.String(), secret, masked, req.Description)
 	if err != nil {
 		h.logger.Error("failed to update credential", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update credential")
 	}
-	
 
 	return c.NoContent(http.StatusOK)
 }
@@ -949,8 +952,8 @@ func (h API) ListIntegrationTypes(c echo.Context) error {
 				count.Demo += 1
 			}
 		}
-		if _, ok := integration_type.IntegrationTypes[integration_type.ParseType(integrationType.IntegrationType)]; ok {
-			if v, ok := integrationSetupsMap[integration_type.ParseType(integrationType.IntegrationType)]; ok {
+		if _, ok := h.typesManager.GetIntegrationTypeMap()[h.typesManager.ParseType(integrationType.IntegrationType)]; ok {
+			if v, ok := integrationSetupsMap[h.typesManager.ParseType(integrationType.IntegrationType)]; ok {
 				if v.Enabled {
 					enabled = true
 				}
@@ -1050,8 +1053,8 @@ func (h API) GetIntegrationType(c echo.Context) error {
 	}
 
 	enabled := false
-	if _, ok := integration_type.IntegrationTypes[integration_type.ParseType(integrationType.IntegrationType)]; ok {
-		if v, ok := integrationSetupsMap[integration_type.ParseType(integrationType.IntegrationType)]; ok {
+	if _, ok := h.typesManager.GetIntegrationTypeMap()[h.typesManager.ParseType(integrationType.IntegrationType)]; ok {
+		if v, ok := integrationSetupsMap[h.typesManager.ParseType(integrationType.IntegrationType)]; ok {
 			if v.Enabled {
 				enabled = true
 			}
@@ -1090,27 +1093,14 @@ func (h API) GetIntegrationTypeUiSpec(c echo.Context) error {
 		}
 	}
 
-	integrationType, ok := integration_type.IntegrationTypes[integration.Type(integrationTypeId)]
+	integrationType, ok := h.typesManager.GetIntegrationTypeMap()[integration.Type(integrationTypeId)]
 	if !ok {
 		return echo.NewHTTPError(http.StatusNotFound, "invalid integration type")
 	}
 	cnf := integrationType.GetConfiguration()
 
-	file, err := os.Open(UiSpecsPath + "/" + cnf.UISpecFileName)
-	if err != nil {
-		h.logger.Error("failed to open file", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open file")
-	}
-	defer file.Close()
-
-	content, err := ioutil.ReadFile(UiSpecsPath + "/" + cnf.UISpecFileName)
-	if err != nil {
-		h.logger.Error("failed to read the file", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to read the file")
-	}
-
 	var result interface{}
-	if err := json.Unmarshal(content, &result); err != nil {
+	if err := json.Unmarshal(cnf.UISpec, &result); err != nil {
 		h.logger.Error("failed to unmarshal the file", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to unmarshal the file")
 	}
@@ -1131,7 +1121,7 @@ func (h API) GetIntegrationTypeUiSpec(c echo.Context) error {
 func (h API) EnableIntegrationType(c echo.Context) error {
 	integrationTypeName := c.Param("integration_type")
 
-	err := EnableIntegrationType(c.Request().Context(), h.logger, h.kubeClient, h.database, integrationTypeName)
+	err := h.EnableIntegrationTypeHelper(c.Request().Context(), h.logger, h.kubeClient, h.database, integrationTypeName)
 	if err != nil {
 		return err
 	}
@@ -1175,7 +1165,7 @@ func (h API) DisableIntegrationType(c echo.Context) error {
 	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, "current namespace lookup failed")
 	}
-	integrationType, ok := integration_type.IntegrationTypes[integration.Type(integrationTypeName)]
+	integrationType, ok := h.typesManager.GetIntegrationTypeMap()[integration.Type(integrationTypeName)]
 	if !ok {
 		return echo.NewHTTPError(http.StatusNotFound, "invalid integration type")
 	}
@@ -1252,7 +1242,7 @@ func (h API) DisableIntegrationType(c echo.Context) error {
 	}
 
 	err = h.database.UpdateIntegrationTypeSetup(&models2.IntegrationTypeSetup{
-		IntegrationType: integration_type.ParseType(integrationTypeName),
+		IntegrationType: h.typesManager.ParseType(integrationTypeName),
 		Enabled:         false,
 	})
 	if err != nil {
@@ -1325,7 +1315,7 @@ func (h API) UpgradeIntegrationType(c echo.Context) error {
 	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, "current namespace lookup failed")
 	}
-	integrationType, ok := integration_type.IntegrationTypes[integration.Type(integrationTypeName)]
+	integrationType, ok := h.typesManager.GetIntegrationTypeMap()[integration.Type(integrationTypeName)]
 	if !ok {
 		return echo.NewHTTPError(http.StatusNotFound, "invalid integration type")
 	}
@@ -1426,7 +1416,7 @@ func (h API) UpgradeIntegrationType(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func EnableIntegrationType(ctx context.Context, logger *zap.Logger, kubeClient client.Client, database db.Database, integrationTypeName string) error {
+func (h API) EnableIntegrationTypeHelper(ctx context.Context, logger *zap.Logger, kubeClient client.Client, database db.Database, integrationTypeName string) error {
 	currentNamespace, ok := os.LookupEnv("CURRENT_NAMESPACE")
 	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, "current namespace lookup failed")
@@ -1469,7 +1459,7 @@ func EnableIntegrationType(ctx context.Context, logger *zap.Logger, kubeClient c
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to unmarshal template deployment file")
 	}
 
-	integrationType, ok := integration_type.IntegrationTypes[integration.Type(integrationTypeName)]
+	integrationType, ok := h.typesManager.GetIntegrationTypeMap()[integration.Type(integrationTypeName)]
 	if !ok {
 		return echo.NewHTTPError(http.StatusNotFound, "invalid integration type")
 	}
@@ -1664,7 +1654,7 @@ func EnableIntegrationType(ctx context.Context, logger *zap.Logger, kubeClient c
 	}
 
 	err = database.UpdateIntegrationTypeSetup(&models2.IntegrationTypeSetup{
-		IntegrationType: integration_type.ParseType(integrationTypeName),
+		IntegrationType: h.typesManager.ParseType(integrationTypeName),
 		Enabled:         true,
 	})
 	if err != nil {
@@ -1701,7 +1691,7 @@ func (h API) ListIntegrationTypeResourceTypes(c echo.Context) error {
 	}
 
 	var items []models.ResourceTypeConfiguration
-	if it, ok := integration_type.IntegrationTypes[integration_type.ParseType(integrationType)]; ok {
+	if it, ok := h.typesManager.GetIntegrationTypeMap()[h.typesManager.ParseType(integrationType)]; ok {
 		resourceTypes, err := it.GetResourceTypesByLabels(nil)
 		if err != nil {
 			h.logger.Error("failed to list integration type resource types", zap.Error(err))
@@ -1713,7 +1703,7 @@ func (h API) ListIntegrationTypeResourceTypes(c echo.Context) error {
 			} else {
 				items = append(items, models.ResourceTypeConfiguration{
 					Name:            rt,
-					IntegrationType: integration_type.ParseType(integrationType),
+					IntegrationType: h.typesManager.ParseType(integrationType),
 				})
 			}
 		}
@@ -1755,7 +1745,7 @@ func (h API) GetIntegrationTypeResourceType(c echo.Context) error {
 	integrationType := c.Param("integration_type")
 	resourceType := c.Param("resource_type")
 
-	if it, ok := integration_type.IntegrationTypes[integration_type.ParseType(integrationType)]; ok {
+	if it, ok := h.typesManager.GetIntegrationTypeMap()[h.typesManager.ParseType(integrationType)]; ok {
 		resourceTypes, err := it.GetResourceTypesByLabels(nil)
 		if err != nil {
 			h.logger.Error("failed to list integration type resource types", zap.Error(err))
@@ -1767,7 +1757,7 @@ func (h API) GetIntegrationTypeResourceType(c echo.Context) error {
 			} else {
 				return c.JSON(http.StatusOK, models.ResourceTypeConfiguration{
 					Name:            resourceType,
-					IntegrationType: integration_type.ParseType(integrationType),
+					IntegrationType: h.typesManager.ParseType(integrationType),
 				})
 			}
 		} else {

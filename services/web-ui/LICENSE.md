@@ -1,4 +1,4 @@
-Copyright (c) 2024 open governance, Inc. and Contributors
+Copyright (c) 2025 open governance, Inc. and Contributors
 
 Portions of this software are licensed as follows:
 

@@ -7,7 +7,6 @@ import (
 
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/opencomply/pkg/utils"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -150,7 +149,8 @@ type Control struct {
 	DocumentURI     string
 	Enabled         bool
 	PolicyID        *string
-	Policy          *Policy     `gorm:"foreignKey:PolicyID;references:ID;constraint:OnDelete:SET NULL"`
+	Policy          *Policy `gorm:"foreignKey:PolicyID;references:ID;constraint:OnDelete:SET NULL"`
+	ExternalPolicy  bool
 	Benchmarks      []Benchmark `gorm:"many2many:benchmark_controls;"`
 	Severity        types.ComplianceResultSeverity
 	CreatedAt       time.Time
@@ -276,6 +276,8 @@ func (qp PolicyParameter) ToApi() api.QueryParameter {
 
 type Policy struct {
 	ID              string `gorm:"primaryKey"`
+	Title           string
+	Description     string
 	Definition      string
 	IntegrationType pq.StringArray `gorm:"type:text[]"`
 	Language        types.PolicyLanguage
@@ -297,7 +299,7 @@ func (q Policy) ToApi() api.Policy {
 	query := api.Policy{
 		ID:              q.ID,
 		Definition:      q.Definition,
-		IntegrationType: integration_type.ParseTypes(q.IntegrationType),
+		IntegrationType: q.IntegrationType,
 		ListOfResources: q.ListOfResources,
 		PrimaryResource: &q.PrimaryResource,
 		Language:        api.PolicyLanguage(q.Language),

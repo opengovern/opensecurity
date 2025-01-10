@@ -7,10 +7,15 @@ import (
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/opencomply/services/integration/api/models"
+	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
 	"net/http"
 )
 
 type IntegrationServiceClient interface {
+	ListIntegrationTypes(ctx *httpclient.Context) ([]string, error)
+	GetResourceTypeFromTableName(ctx *httpclient.Context, integrationType string, tableName string) (string, error)
+	GetResourceTypesByLabels(ctx *httpclient.Context, integrationType string, labels map[string]string) (map[string]*models.ResourceTypeConfiguration, error)
+	GetIntegrationConfiguration(ctx *httpclient.Context, integrationType string) (interfaces.IntegrationConfiguration, error)
 	GetIntegration(ctx *httpclient.Context, integrationID string) (*models.Integration, error)
 	ListIntegrations(ctx *httpclient.Context, integrationTypes []string) (*models.ListIntegrationsResponse, error)
 	ListIntegrationsByFilters(ctx *httpclient.Context, req models.ListIntegrationsRequest) (*models.ListIntegrationsResponse, error)
@@ -28,6 +33,68 @@ type integrationClient struct {
 
 func NewIntegrationServiceClient(baseURL string) IntegrationServiceClient {
 	return &integrationClient{baseURL: baseURL}
+}
+
+func (c *integrationClient) ListIntegrationTypes(ctx *httpclient.Context) ([]string, error) {
+	url := fmt.Sprintf("%s/api/v1/integration-types", c.baseURL)
+	var response []string
+
+	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &response); err != nil {
+		if 400 <= statusCode && statusCode < 500 {
+			return nil, echo.NewHTTPError(statusCode, err.Error())
+		}
+		return nil, err
+	}
+	return response, nil
+}
+
+func (c *integrationClient) GetResourceTypeFromTableName(ctx *httpclient.Context, integrationType string, tableName string) (string, error) {
+	url := fmt.Sprintf("%s/api/v1/integration-types/%s/resource-type/table/%s", c.baseURL, integrationType, tableName)
+	var response models.GetResourceTypeFromTableNameResponse
+
+	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &response); err != nil {
+		if 400 <= statusCode && statusCode < 500 {
+			return "", echo.NewHTTPError(statusCode, err.Error())
+		}
+		return "", err
+	}
+	return response.ResourceType, nil
+}
+
+func (c *integrationClient) GetResourceTypesByLabels(ctx *httpclient.Context, integrationType string, labels map[string]string) (map[string]*models.ResourceTypeConfiguration, error) {
+	url := fmt.Sprintf("%s/api/v1/integration-types/%s/resource-type/label", c.baseURL, integrationType)
+
+	req := models.GetResourceTypesByLabelsRequest{
+		Labels: labels,
+	}
+
+	payload, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var response models.GetResourceTypesByLabelsResponse
+
+	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodPost, url, ctx.ToHeaders(), payload, &response); err != nil {
+		if 400 <= statusCode && statusCode < 500 {
+			return nil, echo.NewHTTPError(statusCode, err.Error())
+		}
+		return nil, err
+	}
+	return response.ResourceTypes, nil
+}
+
+func (c *integrationClient) GetIntegrationConfiguration(ctx *httpclient.Context, integrationType string) (interfaces.IntegrationConfiguration, error) {
+	url := fmt.Sprintf("%s/api/v1/integration-types/%s/configuration", c.baseURL, integrationType)
+	var response interfaces.IntegrationConfiguration
+
+	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &response); err != nil {
+		if 400 <= statusCode && statusCode < 500 {
+			return response, echo.NewHTTPError(statusCode, err.Error())
+		}
+		return response, err
+	}
+	return response, nil
 }
 
 func (c *integrationClient) GetIntegration(ctx *httpclient.Context, integrationID string) (*models.Integration, error) {

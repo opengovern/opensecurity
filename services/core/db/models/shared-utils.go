@@ -2,10 +2,6 @@ package models
 
 import "github.com/opengovern/opencomply/services/core/api"
 
-
-
-
-
 func (qp PolicyParameterValues) GetKey() string {
 	return qp.Key
 }
@@ -16,8 +12,9 @@ func (qp PolicyParameterValues) GetValue() string {
 
 func (qp PolicyParameterValues) ToAPI() api.QueryParameter {
 	return api.QueryParameter{
-		Key:   qp.Key,
-		Value: qp.Value,
+		Key:       qp.Key,
+		ControlID: qp.ControlID,
+		Value:     qp.Value,
 	}
 }
 
@@ -25,11 +22,9 @@ func QueryParameterFromAPI(apiQP api.QueryParameter) PolicyParameterValues {
 	var qp PolicyParameterValues
 	qp.Key = apiQP.Key
 	qp.Value = apiQP.Value
+	qp.ControlID = apiQP.ControlID
 	return qp
 }
-
-
-
 
 func (qp QueryParameter) ToApi() api.QueryParameter {
 	return api.QueryParameter{

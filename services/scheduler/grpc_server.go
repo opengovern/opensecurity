@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/opengovern/og-util/pkg/integration"
 
 	envoyAuth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"github.com/opengovern/og-util/pkg/describe/enums"
 	"github.com/opengovern/og-util/pkg/jq"
 	opengovernanceTrace "github.com/opengovern/og-util/pkg/trace"
 	"github.com/opengovern/og-util/proto/src/golang"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"github.com/opengovern/opencomply/services/scheduler/api"
 	"github.com/opengovern/opencomply/services/scheduler/config"
 	"github.com/opengovern/opencomply/services/scheduler/db"
@@ -73,7 +73,7 @@ func (s *GRPCDescribeServer) DeliverResult(ctx context.Context, req *golang.Deli
 			IntegrationID:   req.DescribeJob.IntegrationId,
 			ProviderID:      req.DescribeJob.ProviderId,
 			DescribedAt:     req.DescribeJob.DescribedAt,
-			IntegrationType: integration_type.ParseType(req.DescribeJob.IntegrationType),
+			IntegrationType: integration.Type(req.DescribeJob.IntegrationType),
 			CipherText:      req.DescribeJob.ConfigReg,
 			TriggerType:     enums.DescribeTriggerType(req.DescribeJob.TriggerType),
 			RetryCounter:    uint(req.DescribeJob.RetryCounter),

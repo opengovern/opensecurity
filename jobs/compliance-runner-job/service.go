@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/opengovern/opencomply/services/integration/client"
 	"os"
 	"time"
 
@@ -17,7 +18,6 @@ import (
 	"github.com/opengovern/og-util/pkg/steampipe"
 	complianceApi "github.com/opengovern/opencomply/services/compliance/api"
 	complianceClient "github.com/opengovern/opencomply/services/compliance/client"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	coreClient "github.com/opengovern/opencomply/services/core/client"
 	regoService "github.com/opengovern/opencomply/services/rego/service"
 	"go.uber.org/zap"
@@ -29,23 +29,24 @@ type Config struct {
 	Compliance            config.OpenGovernanceService
 	Onboard               config.OpenGovernanceService
 	Inventory             config.OpenGovernanceService
-	Core              config.OpenGovernanceService
+	Core                  config.OpenGovernanceService
 	EsSink                config.OpenGovernanceService
 	Steampipe             config.Postgres
 	PrometheusPushAddress string
 }
 
 type Worker struct {
-	config           Config
-	logger           *zap.Logger
-	steampipeConn    *steampipe.Database
-	esClient         opengovernance.Client
-	jq               *jq.JobQueue
-	regoEngine       *regoService.RegoEngine
-	complianceClient complianceClient.ComplianceServiceClient
+	config            Config
+	logger            *zap.Logger
+	steampipeConn     *steampipe.Database
+	esClient          opengovernance.Client
+	jq                *jq.JobQueue
+	regoEngine        *regoService.RegoEngine
+	complianceClient  complianceClient.ComplianceServiceClient
+	integrationClient client.IntegrationServiceClient
 
-	coreClient   coreClient.CoreServiceClient
-	sinkClient       esSinkClient.EsSinkServiceClient
+	coreClient coreClient.CoreServiceClient
+	sinkClient esSinkClient.EsSinkServiceClient
 
 	benchmarkCache map[string]complianceApi.Benchmark
 }
@@ -60,9 +61,23 @@ func NewWorker(
 	prometheusPushAddress string,
 	ctx context.Context,
 ) (*Worker, error) {
-	for _, integrationType := range integration_type.IntegrationTypes {
-		describerConfig := integrationType.GetConfiguration()
-		err := steampipe.PopulateSteampipeConfig(config.ElasticSearch, describerConfig.SteampipePluginName)
+	integrationClient := client.NewIntegrationServiceClient(config.Onboard.BaseURL)
+
+	httpCtx := httpclient.Context{Ctx: ctx, UserRole: api.ViewerRole}
+
+	integrationTypes, err := integrationClient.ListIntegrationTypes(&httpCtx)
+	if err != nil {
+		logger.Error("failed to list integration types", zap.Error(err))
+		return nil, err
+	}
+
+	for _, integrationType := range integrationTypes {
+		describerConfig, err := integrationClient.GetIntegrationConfiguration(&httpCtx, integrationType)
+		if err != nil {
+			logger.Error("failed to get integration configuration", zap.Error(err))
+			return nil, err
+		}
+		err = steampipe.PopulateSteampipeConfig(config.ElasticSearch, describerConfig.SteampipePluginName)
 		if err != nil {
 			return nil, err
 		}
@@ -111,17 +126,18 @@ func NewWorker(
 	}
 
 	w := &Worker{
-		config:           config,
-		logger:           logger,
-		steampipeConn:    steampipeConn,
-		esClient:         esClient,
-		jq:               jq,
-		regoEngine:       regoEngine,
-		complianceClient: complianceClient.NewComplianceClient(config.Compliance.BaseURL),
+		config:            config,
+		logger:            logger,
+		steampipeConn:     steampipeConn,
+		esClient:          esClient,
+		jq:                jq,
+		regoEngine:        regoEngine,
+		complianceClient:  complianceClient.NewComplianceClient(config.Compliance.BaseURL),
+		integrationClient: integrationClient,
 
-		coreClient:   coreClient.NewCoreServiceClient(config.Core.BaseURL),
-		sinkClient:       esSinkClient.NewEsSinkServiceClient(logger, config.EsSink.BaseURL),
-		benchmarkCache:   make(map[string]complianceApi.Benchmark),
+		coreClient:     coreClient.NewCoreServiceClient(config.Core.BaseURL),
+		sinkClient:     esSinkClient.NewEsSinkServiceClient(logger, config.EsSink.BaseURL),
+		benchmarkCache: make(map[string]complianceApi.Benchmark),
 	}
 	ctx2 := &httpclient.Context{Ctx: ctx, UserRole: api.AdminRole}
 	benchmarks, err := w.complianceClient.ListAllBenchmarks(ctx2, true)

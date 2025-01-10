@@ -179,7 +179,7 @@ func (s *JobScheduler) finishComplianceJob(job model.ComplianceJob) error {
 		builder := strings.Builder{}
 		builder.WriteString(fmt.Sprintf("%d runners failed: [", len(failedRunners)))
 		for i, runner := range failedRunners {
-			identify := fmt.Sprintf("query[%s]", runner.QueryID)
+			identify := fmt.Sprintf("query[%s]", runner.PolicyID)
 			if callers, cErr := runner.GetCallers(); cErr == nil {
 				ids := map[string]any{}
 				for _, c := range callers {
