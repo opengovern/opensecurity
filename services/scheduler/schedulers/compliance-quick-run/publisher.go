@@ -40,6 +40,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 				s.logger.Error("framework not exist", zap.String("frameworkID", job.FrameworkID))
 				continue
 			}
+			s.logger.Info("validating compliance job")
 			err = s.validateComplianceJob(*framework)
 			if err != nil {
 				s.logger.Error("framework validation failed", zap.String("frameworkID", job.FrameworkID), zap.Error(err))
