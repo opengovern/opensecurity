@@ -28,7 +28,7 @@ type Config struct {
 	NATS          config.NATS
 	Compliance    config.OpenGovernanceService
 	Core          config.OpenGovernanceService
-	Onboard       config.OpenGovernanceService
+	Integration   config.OpenGovernanceService
 	EsSink        config.OpenGovernanceService
 	Steampipe     config.Postgres
 }
@@ -54,7 +54,7 @@ func NewWorker(
 	logger *zap.Logger,
 	ctx context.Context,
 ) (*Worker, error) {
-	integrationClient := client.NewIntegrationServiceClient(config.Onboard.BaseURL)
+	integrationClient := client.NewIntegrationServiceClient(config.Integration.BaseURL)
 
 	httpCtx := httpclient.Context{Ctx: ctx, UserRole: authApi.ViewerRole}
 

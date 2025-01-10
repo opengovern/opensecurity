@@ -170,6 +170,7 @@ func InitializeScheduler(
 	}
 
 	s.conf = conf
+	s.integrationClient = integrationClient.NewIntegrationServiceClient(IntegrationBaseURL)
 
 	cfg := postgres.Config{
 		Host:    postgresHost,
@@ -259,7 +260,6 @@ func InitializeScheduler(
 
 	s.coreClient = coreClient.NewCoreServiceClient(CoreBaseURL)
 	s.complianceClient = client.NewComplianceClient(ComplianceBaseURL)
-	s.integrationClient = integrationClient.NewIntegrationServiceClient(IntegrationBaseURL)
 	s.sinkClient = esSinkClient.NewEsSinkServiceClient(s.logger, EsSinkBaseURL)
 	authGRPCConn, err := grpc.NewClient(AuthGRPCURI, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})))
 	if err != nil {

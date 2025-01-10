@@ -22,7 +22,7 @@ type Config struct {
 	ElasticSearch         config.ElasticSearch
 	NATS                  config.NATS
 	Compliance            config.OpenGovernanceService
-	Onboard               config.OpenGovernanceService
+	Integration           config.OpenGovernanceService
 	Inventory             config.OpenGovernanceService
 	Core                  config.OpenGovernanceService
 	EsSink                config.OpenGovernanceService
@@ -44,8 +44,7 @@ func NewWorker(
 	logger *zap.Logger,
 	ctx context.Context,
 ) (*Worker, error) {
-
-	integrationClient := client.NewIntegrationServiceClient(config.Onboard.BaseURL)
+	integrationClient := client.NewIntegrationServiceClient(config.Integration.BaseURL)
 
 	httpCtx := httpclient.Context{Ctx: ctx, UserRole: authApi.ViewerRole}
 
