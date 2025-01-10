@@ -13,8 +13,15 @@ import (
 )
 
 func (s *JobScheduler) validateComplianceJob(framework api.Benchmark) error {
+	s.logger.Info("validating compliance job started")
+
 	validation, err := s.db.GetFrameworkValidation(framework.ID)
+	if err != nil {
+		s.logger.Error("failed to get validation", zap.Error(err))
+		return err
+	}
 	if validation == nil {
+		s.logger.Info("getting framework tables")
 		listOfTables, err := s.getTablesUnderBenchmark(framework, make(map[string]FrameworkTablesCache))
 		if err != nil {
 			_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
@@ -24,6 +31,7 @@ func (s *JobScheduler) validateComplianceJob(framework api.Benchmark) error {
 			return err
 		}
 
+		s.logger.Info("getting integration types")
 		var integrationTypes []interfaces.IntegrationType
 		for _, itName := range framework.IntegrationTypes {
 			if it, ok := integration_type.IntegrationTypes[integration.Type(itName)]; ok {
@@ -37,6 +45,7 @@ func (s *JobScheduler) validateComplianceJob(framework api.Benchmark) error {
 			}
 		}
 
+		s.logger.Info("making tables map")
 		tablesMap := make(map[string]struct{})
 		for _, it := range integrationTypes {
 			tables, err := it.GetTablesByLabels(nil)
@@ -52,6 +61,7 @@ func (s *JobScheduler) validateComplianceJob(framework api.Benchmark) error {
 			}
 		}
 
+		s.logger.Info("checking tables")
 		for table := range listOfTables {
 			if _, ok := tablesMap[table]; !ok {
 				_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
@@ -62,6 +72,7 @@ func (s *JobScheduler) validateComplianceJob(framework api.Benchmark) error {
 			}
 		}
 
+		s.logger.Info("creating framework validation")
 		_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
 			FrameworkID:    framework.ID,
 			FailureMessage: "",
@@ -70,10 +81,13 @@ func (s *JobScheduler) validateComplianceJob(framework api.Benchmark) error {
 		return fmt.Errorf("framework %s has failed validation: %s", framework.ID, validation.FailureMessage)
 	}
 
+	s.logger.Info("getting framework parameters")
 	listOfParameters, err := s.getParametersUnderFramework(framework, make(map[string]FrameworkParametersCache))
 	if err != nil {
 		return err
 	}
+
+	s.logger.Info("getting core parameters values we have")
 	queryParams, err := s.coreClient.ListQueryParameters(&httpclient.Context{UserRole: api2.AdminRole})
 	if err != nil {
 		s.logger.Error("failed to get query parameters", zap.Error(err))
@@ -86,6 +100,7 @@ func (s *JobScheduler) validateComplianceJob(framework api.Benchmark) error {
 		}
 	}
 
+	s.logger.Info("checking parameters")
 	for param := range listOfParameters {
 		if _, ok := queryParamMap[param]; !ok {
 			return fmt.Errorf("query parameter %s not exists", param)
