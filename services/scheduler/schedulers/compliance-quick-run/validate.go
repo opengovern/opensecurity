@@ -119,13 +119,25 @@ type FrameworkParametersCache struct {
 
 // getTablesUnderBenchmark ctx context.Context, benchmarkId string -> primaryTables, listOfTables, error
 func (s *JobScheduler) getTablesUnderBenchmark(framework api.Benchmark, benchmarkCache map[string]FrameworkTablesCache) (map[string]bool, error) {
+	ctx := &httpclient.Context{UserRole: api2.AdminRole}
 	listOfTables := make(map[string]bool)
 
-	controls, err := s.complianceClient.ListControl(&httpclient.Context{UserRole: api2.AdminRole}, framework.Controls, nil)
+	controlIDsMap, err := s.getControlsUnderBenchmark(framework)
 	if err != nil {
 		s.logger.Error("failed to fetch controls", zap.Error(err))
 		return nil, err
 	}
+	var controlIDs []string
+	for controlID := range controlIDsMap {
+		controlIDs = append(controlIDs, controlID)
+	}
+
+	controls, err := s.complianceClient.ListControl(ctx, controlIDs, nil)
+	if err != nil {
+		s.logger.Error("failed to fetch controls", zap.Error(err))
+		return nil, err
+	}
+
 	for _, c := range controls {
 		if c.Policy != nil {
 			for _, t := range c.Policy.ListOfResources {
@@ -137,30 +149,32 @@ func (s *JobScheduler) getTablesUnderBenchmark(framework api.Benchmark, benchmar
 		}
 	}
 
-	children, err := s.complianceClient.ListBenchmarks(&httpclient.Context{UserRole: api2.AdminRole}, framework.Children, nil)
+	return listOfTables, nil
+}
+
+func (s *JobScheduler) getControlsUnderBenchmark(framework api.Benchmark) (map[string]bool, error) {
+	ctx := &httpclient.Context{UserRole: api2.AdminRole}
+
+	children, err := s.complianceClient.ListBenchmarks(ctx, framework.Children, nil)
 	if err != nil {
 		s.logger.Error("failed to fetch children", zap.Error(err))
 		return nil, err
 	}
+	controls := make(map[string]bool)
 	for _, child := range children {
-		var childListOfTables map[string]bool
-		if cache, ok := benchmarkCache[child.ID]; ok {
-			childListOfTables = cache.ListTables
-		} else {
-			childListOfTables, err = s.getTablesUnderBenchmark(child, benchmarkCache)
-			if err != nil {
-				return nil, err
-			}
-			benchmarkCache[child.ID] = FrameworkTablesCache{
-				ListTables: childListOfTables,
-			}
+		for _, c := range child.Controls {
+			controls[c] = true
 		}
-
-		for k, _ := range childListOfTables {
-			childListOfTables[k] = true
+		childControls, err := s.getControlsUnderBenchmark(child)
+		if err != nil {
+			s.logger.Error("failed to fetch controls", zap.Error(err))
+			return nil, err
+		}
+		for k, _ := range childControls {
+			controls[k] = true
 		}
 	}
-	return listOfTables, nil
+	return controls, nil
 }
 
 // getParametersUnderFramework ctx context.Context, benchmarkId string -> primaryTables, listOfTables, error
