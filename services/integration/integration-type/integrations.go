@@ -80,7 +80,7 @@ func NewIntegrationTypeManager(logger *zap.Logger) *IntegrationTypeManager {
 		}
 
 		// Request the plugin
-		raw, err := rpcClient.Dispense("greeter")
+		raw, err := rpcClient.Dispense(pluginName)
 		if err != nil {
 			logger.Error("failed to dispense plugin", zap.Error(err), zap.String("plugin", pluginName), zap.String("path", pluginPath))
 			continue
