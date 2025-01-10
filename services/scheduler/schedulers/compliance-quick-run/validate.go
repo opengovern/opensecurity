@@ -22,7 +22,7 @@ func (s *JobScheduler) validateComplianceJob(framework api.Benchmark) error {
 	}
 	if validation == nil {
 		s.logger.Info("getting framework tables")
-		listOfTables, err := s.getTablesUnderBenchmark(framework, make(map[string]FrameworkTablesCache))
+		listOfTables, err := s.getTablesUnderBenchmark(framework)
 		if err != nil {
 			_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
 				FrameworkID:    framework.ID,
@@ -109,19 +109,16 @@ func (s *JobScheduler) validateComplianceJob(framework api.Benchmark) error {
 	return nil
 }
 
-type FrameworkTablesCache struct {
-	ListTables map[string]bool
-}
-
 type FrameworkParametersCache struct {
 	ListParameters map[string]bool
 }
 
 // getTablesUnderBenchmark ctx context.Context, benchmarkId string -> primaryTables, listOfTables, error
-func (s *JobScheduler) getTablesUnderBenchmark(framework api.Benchmark, benchmarkCache map[string]FrameworkTablesCache) (map[string]bool, error) {
+func (s *JobScheduler) getTablesUnderBenchmark(framework api.Benchmark) (map[string]bool, error) {
 	ctx := &httpclient.Context{UserRole: api2.AdminRole}
 	listOfTables := make(map[string]bool)
 
+	s.logger.Info("getting framework controls")
 	controlIDsMap, err := s.getControlsUnderBenchmark(framework)
 	if err != nil {
 		s.logger.Error("failed to fetch controls", zap.Error(err))
@@ -132,12 +129,14 @@ func (s *JobScheduler) getTablesUnderBenchmark(framework api.Benchmark, benchmar
 		controlIDs = append(controlIDs, controlID)
 	}
 
+	s.logger.Info("listing getting controls", zap.Strings("controlIDs", controlIDs))
 	controls, err := s.complianceClient.ListControl(ctx, controlIDs, nil)
 	if err != nil {
 		s.logger.Error("failed to fetch controls", zap.Error(err))
 		return nil, err
 	}
 
+	s.logger.Info("getting controls resources")
 	for _, c := range controls {
 		if c.Policy != nil {
 			for _, t := range c.Policy.ListOfResources {
@@ -155,16 +154,17 @@ func (s *JobScheduler) getTablesUnderBenchmark(framework api.Benchmark, benchmar
 func (s *JobScheduler) getControlsUnderBenchmark(framework api.Benchmark) (map[string]bool, error) {
 	ctx := &httpclient.Context{UserRole: api2.AdminRole}
 
+	s.logger.Info("getting framework children", zap.Strings("children", framework.Children))
 	children, err := s.complianceClient.ListBenchmarks(ctx, framework.Children, nil)
 	if err != nil {
 		s.logger.Error("failed to fetch children", zap.Error(err))
 		return nil, err
 	}
 	controls := make(map[string]bool)
+	for _, c := range framework.Controls {
+		controls[c] = true
+	}
 	for _, child := range children {
-		for _, c := range child.Controls {
-			controls[c] = true
-		}
 		childControls, err := s.getControlsUnderBenchmark(child)
 		if err != nil {
 			s.logger.Error("failed to fetch controls", zap.Error(err))
@@ -174,6 +174,7 @@ func (s *JobScheduler) getControlsUnderBenchmark(framework api.Benchmark) (map[s
 			controls[k] = true
 		}
 	}
+	s.logger.Info("got framework controls", zap.Any("controls", controls))
 	return controls, nil
 }
 
