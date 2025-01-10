@@ -268,7 +268,9 @@ func (s *JobScheduler) enqueueRunnersCycle() error {
 			}
 			err = s.ValidateComplianceJob(*framework)
 			if err != nil {
+				s.logger.Error("framework validation failed", zap.String("frameworkID", job.FrameworkID), zap.Error(err))
 				_ = s.db.UpdateComplianceJob(job.ID, model.ComplianceJobFailed, err.Error())
+				continue
 			}
 		}
 		s.logger.Info("processing job with unqueued runners", zap.Uint("jobID", job.ID))
