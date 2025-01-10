@@ -91,3 +91,11 @@ func (i *GoogleWorkspaceAccountIntegration) GetResourceTypeFromTableName(tableNa
 
 	return ""
 }
+
+func (i *GoogleWorkspaceAccountIntegration) GetTablesByLabels(map[string]string) ([]string, error) {
+	var tables []string
+	for t, _ := range googleWorkspaceDescriberLocal.TablesToResourceTypes {
+		tables = append(tables, t)
+	}
+	return tables, nil
+}

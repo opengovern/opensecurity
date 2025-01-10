@@ -73,3 +73,11 @@ func (i *RenderAccountIntegration) GetResourceTypeFromTableName(tableName string
 
 	return ""
 }
+
+func (i *RenderAccountIntegration) GetTablesByLabels(map[string]string) ([]string, error) {
+	var tables []string
+	for t, _ := range renderDescriberLocal.TablesToResourceTypes {
+		tables = append(tables, t)
+	}
+	return tables, nil
+}
