@@ -801,9 +801,9 @@ export default function Query() {
                                             }}
                                             placeholder="-- write your SQL query here"
                                         /> */}
-                                            {isLoading && isExecuted && (
+                                            {/* {isLoading && isExecuted && (
                                                 <Spinner className="bg-white/30 backdrop-blur-sm top-0 left-0 absolute flex justify-center items-center w-full h-full" />
-                                            )}
+                                            )} */}
                                             {/* </Card> */}
                                             <Flex className="w-full mt-4">
                                                 <Flex
