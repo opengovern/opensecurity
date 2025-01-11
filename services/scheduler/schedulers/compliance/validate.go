@@ -140,25 +140,31 @@ func (s *JobScheduler) getTablesUnderBenchmark(framework api.Benchmark, benchmar
 func (s *JobScheduler) getControlsUnderBenchmark(framework api.Benchmark) (map[string]bool, error) {
 	ctx := &httpclient.Context{UserRole: api2.AdminRole}
 
-	children, err := s.complianceClient.ListBenchmarks(ctx, framework.Children, nil)
-	if err != nil {
-		s.logger.Error("failed to fetch children", zap.Error(err))
-		return nil, err
-	}
+	s.logger.Info("getting framework children", zap.String("framework_id", framework.ID), zap.Strings("children", framework.Children))
+
 	controls := make(map[string]bool)
-	for _, child := range children {
-		for _, c := range child.Controls {
-			controls[c] = true
-		}
-		childControls, err := s.getControlsUnderBenchmark(child)
+	for _, c := range framework.Controls {
+		controls[c] = true
+	}
+	if len(framework.Children) > 0 {
+		children, err := s.complianceClient.ListBenchmarks(ctx, framework.Children, nil)
 		if err != nil {
-			s.logger.Error("failed to fetch controls", zap.Error(err))
+			s.logger.Error("failed to fetch children", zap.Error(err))
 			return nil, err
 		}
-		for k, _ := range childControls {
-			controls[k] = true
+		for _, child := range children {
+			childControls, err := s.getControlsUnderBenchmark(child)
+			if err != nil {
+				s.logger.Error("failed to fetch controls", zap.Error(err))
+				return nil, err
+			}
+			for k, _ := range childControls {
+				controls[k] = true
+			}
 		}
 	}
+
+	s.logger.Info("got framework controls", zap.Any("controls", controls))
 	return controls, nil
 }
 
