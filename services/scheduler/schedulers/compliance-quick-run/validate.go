@@ -13,8 +13,38 @@ import (
 )
 
 func (s *JobScheduler) validateComplianceJob(framework api.Benchmark) error {
-	s.logger.Info("validating compliance job started")
 
+	//err := s.tableValidation(framework)
+	//if err != nil {
+	//	return err
+	//}
+
+	listOfParameters, err := s.getParametersUnderFramework(framework, make(map[string]FrameworkParametersCache))
+	if err != nil {
+		return err
+	}
+
+	queryParams, err := s.coreClient.ListQueryParameters(&httpclient.Context{UserRole: api2.AdminRole})
+	if err != nil {
+		s.logger.Error("failed to get query parameters", zap.Error(err))
+		return err
+	}
+	queryParamMap := make(map[string]string)
+	for _, qp := range queryParams.Items {
+		if qp.Value != "" {
+			queryParamMap[qp.Key] = qp.Value
+		}
+	}
+
+	for param := range listOfParameters {
+		if _, ok := queryParamMap[param]; !ok {
+			return fmt.Errorf("query parameter %s not exists", param)
+		}
+	}
+	return nil
+}
+
+func (s *JobScheduler) tableValidation(framework api.Benchmark) error {
 	validation, err := s.db.GetFrameworkValidation(framework.ID)
 	if err != nil {
 		s.logger.Error("failed to get validation", zap.Error(err))
@@ -79,32 +109,6 @@ func (s *JobScheduler) validateComplianceJob(framework api.Benchmark) error {
 		})
 	} else if validation.FailureMessage != "" {
 		return fmt.Errorf("framework %s has failed validation: %s", framework.ID, validation.FailureMessage)
-	}
-
-	s.logger.Info("getting framework parameters")
-	listOfParameters, err := s.getParametersUnderFramework(framework, make(map[string]FrameworkParametersCache))
-	if err != nil {
-		return err
-	}
-
-	s.logger.Info("getting core parameters values we have")
-	queryParams, err := s.coreClient.ListQueryParameters(&httpclient.Context{UserRole: api2.AdminRole})
-	if err != nil {
-		s.logger.Error("failed to get query parameters", zap.Error(err))
-		return err
-	}
-	queryParamMap := make(map[string]string)
-	for _, qp := range queryParams.Items {
-		if qp.Value != "" {
-			queryParamMap[qp.Key] = qp.Value
-		}
-	}
-
-	s.logger.Info("checking parameters")
-	for param := range listOfParameters {
-		if _, ok := queryParamMap[param]; !ok {
-			return fmt.Errorf("query parameter %s not exists", param)
-		}
 	}
 	return nil
 }

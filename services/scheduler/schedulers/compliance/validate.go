@@ -13,62 +13,10 @@ import (
 )
 
 func (s *JobScheduler) validateComplianceJob(framework api.Benchmark) error {
-	validation, err := s.db.GetFrameworkValidation(framework.ID)
-	if validation == nil {
-		listOfTables, err := s.getTablesUnderBenchmark(framework, make(map[string]FrameworkTablesCache))
-		if err != nil {
-			_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
-				FrameworkID:    framework.ID,
-				FailureMessage: err.Error(),
-			})
-			return err
-		}
-
-		var integrationTypes []interfaces.IntegrationType
-		for _, itName := range framework.IntegrationTypes {
-			if it, ok := integration_type.IntegrationTypes[integration.Type(itName)]; ok {
-				integrationTypes = append(integrationTypes, it)
-			} else {
-				_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
-					FrameworkID:    framework.ID,
-					FailureMessage: fmt.Errorf("integration type not valid: %s", itName).Error(),
-				})
-				return fmt.Errorf("integration type not valid: %s", itName)
-			}
-		}
-
-		tablesMap := make(map[string]struct{})
-		for _, it := range integrationTypes {
-			tables, err := it.GetTablesByLabels(nil)
-			if err != nil {
-				_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
-					FrameworkID:    framework.ID,
-					FailureMessage: err.Error(),
-				})
-				return err
-			}
-			for _, table := range tables {
-				tablesMap[table] = struct{}{}
-			}
-		}
-
-		for table := range listOfTables {
-			if _, ok := tablesMap[table]; !ok {
-				_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
-					FrameworkID:    framework.ID,
-					FailureMessage: fmt.Sprintf("table %s not exist", table),
-				})
-				return fmt.Errorf("table %s not exist", table)
-			}
-		}
-
-		_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
-			FrameworkID:    framework.ID,
-			FailureMessage: "",
-		})
-	} else if validation.FailureMessage != "" {
-		return fmt.Errorf("framework %s has failed validation: %s", framework.ID, validation.FailureMessage)
-	}
+	//err := s.tableValidation(framework)
+	//if err != nil {
+	//	return err
+	//}
 
 	listOfParameters, err := s.getParametersUnderFramework(framework, make(map[string]FrameworkParametersCache))
 	if err != nil {
@@ -94,8 +42,73 @@ func (s *JobScheduler) validateComplianceJob(framework api.Benchmark) error {
 	return nil
 }
 
-type FrameworkTablesCache struct {
-	ListTables map[string]bool
+func (s *JobScheduler) tableValidation(framework api.Benchmark) error {
+	validation, err := s.db.GetFrameworkValidation(framework.ID)
+	if err != nil {
+		s.logger.Error("failed to get validation", zap.Error(err))
+		return err
+	}
+	if validation == nil {
+		s.logger.Info("getting framework tables")
+		listOfTables, err := s.getTablesUnderBenchmark(framework)
+		if err != nil {
+			_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
+				FrameworkID:    framework.ID,
+				FailureMessage: err.Error(),
+			})
+			return err
+		}
+
+		s.logger.Info("getting integration types")
+		var integrationTypes []interfaces.IntegrationType
+		for _, itName := range framework.IntegrationTypes {
+			if it, ok := integration_type.IntegrationTypes[integration.Type(itName)]; ok {
+				integrationTypes = append(integrationTypes, it)
+			} else {
+				_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
+					FrameworkID:    framework.ID,
+					FailureMessage: fmt.Errorf("integration type not valid: %s", itName).Error(),
+				})
+				return fmt.Errorf("integration type not valid: %s", itName)
+			}
+		}
+
+		s.logger.Info("making tables map")
+		tablesMap := make(map[string]struct{})
+		for _, it := range integrationTypes {
+			tables, err := it.GetTablesByLabels(nil)
+			if err != nil {
+				_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
+					FrameworkID:    framework.ID,
+					FailureMessage: err.Error(),
+				})
+				return err
+			}
+			for _, table := range tables {
+				tablesMap[table] = struct{}{}
+			}
+		}
+
+		s.logger.Info("checking tables")
+		for table := range listOfTables {
+			if _, ok := tablesMap[table]; !ok {
+				_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
+					FrameworkID:    framework.ID,
+					FailureMessage: fmt.Sprintf("table %s not exist", table),
+				})
+				return fmt.Errorf("table %s not exist", table)
+			}
+		}
+
+		s.logger.Info("creating framework validation")
+		_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
+			FrameworkID:    framework.ID,
+			FailureMessage: "",
+		})
+	} else if validation.FailureMessage != "" {
+		return fmt.Errorf("framework %s has failed validation: %s", framework.ID, validation.FailureMessage)
+	}
+	return nil
 }
 
 type FrameworkParametersCache struct {
@@ -103,10 +116,11 @@ type FrameworkParametersCache struct {
 }
 
 // getTablesUnderBenchmark ctx context.Context, benchmarkId string -> primaryTables, listOfTables, error
-func (s *JobScheduler) getTablesUnderBenchmark(framework api.Benchmark, benchmarkCache map[string]FrameworkTablesCache) (map[string]bool, error) {
+func (s *JobScheduler) getTablesUnderBenchmark(framework api.Benchmark) (map[string]bool, error) {
 	ctx := &httpclient.Context{UserRole: api2.AdminRole}
 	listOfTables := make(map[string]bool)
 
+	s.logger.Info("getting framework controls")
 	controlIDsMap, err := s.getControlsUnderBenchmark(framework)
 	if err != nil {
 		s.logger.Error("failed to fetch controls", zap.Error(err))
@@ -117,12 +131,14 @@ func (s *JobScheduler) getTablesUnderBenchmark(framework api.Benchmark, benchmar
 		controlIDs = append(controlIDs, controlID)
 	}
 
+	s.logger.Info("listing getting controls", zap.Strings("controlIDs", controlIDs))
 	controls, err := s.complianceClient.ListControl(ctx, controlIDs, nil)
 	if err != nil {
 		s.logger.Error("failed to fetch controls", zap.Error(err))
 		return nil, err
 	}
 
+	s.logger.Info("getting controls resources")
 	for _, c := range controls {
 		if c.Policy != nil {
 			for _, t := range c.Policy.ListOfResources {
