@@ -123,10 +123,10 @@ func (h API) DiscoverIntegrations(c echo.Context) error {
 					req.IntegrationType = integration_type.ParseType(values[0])
 				} else if key == "credentialType" || key == "credential_type" {
 					req.CredentialType = values[0]
-					
-				}else if key == "description" || key == "Description" { 
+
+				} else if key == "description" || key == "Description" {
 					req.Description = values[0]
-				}else {
+				} else {
 					keys := strings.Split(key, ".")
 					formData[keys[1]] = values[0]
 				}
@@ -204,20 +204,20 @@ func (h API) DiscoverIntegrations(c echo.Context) error {
 		}
 		masked := make(map[string]any)
 		for key, value := range req.Credentials {
-		strValue, ok := value.(string) // Ensure the value is a string
-		if !ok {
-			// If it's not a string, just skip masking
-			masked[key] = "not available"
-			continue
-		}
-
-		// Get the last 5 characters, or the full string if it's shorter
-		if len(strValue) > 5 {
-			masked[key] = "*****" + strValue[len(strValue)-5:]
-		} else {
-			masked[key] = "*****" + strValue
-		}
+			strValue, ok := value.(string) // Ensure the value is a string
+			if !ok {
+				// If it's not a string, just skip masking
+				masked[key] = "not available"
+				continue
 			}
+
+			// Get the last 5 characters, or the full string if it's shorter
+			if len(strValue) > 5 {
+				masked[key] = "*****" + strValue[len(strValue)-5:]
+			} else {
+				masked[key] = "*****" + strValue
+			}
+		}
 		// convert to jsonb
 		maskedSecreyJsonData, err := json.Marshal(masked)
 		maskedSecretJsonb := pgtype.JSONB{}
@@ -226,21 +226,20 @@ func (h API) DiscoverIntegrations(c echo.Context) error {
 			h.logger.Error("failed to set masked secret", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to set masked secret")
 		}
-		
 
 		credentialID := uuid.New()
 
 		metadata := make(map[string]string)
 		metadataJsonData, err := json.Marshal(metadata)
 		credentialMetadataJsonb := pgtype.JSONB{}
-		
+
 		err = credentialMetadataJsonb.Set(metadataJsonData)
 		err = h.database.CreateCredential(&models2.Credential{
 			ID:              credentialID,
 			IntegrationType: req.IntegrationType,
 			CredentialType:  req.CredentialType,
-			Description:    req.Description,
-			MaskedSecret: maskedSecretJsonb,
+			Description:     req.Description,
+			MaskedSecret:    maskedSecretJsonb,
 			Secret:          secret,
 			Metadata:        credentialMetadataJsonb,
 		})
@@ -369,7 +368,7 @@ func (h API) AddIntegrations(c echo.Context) error {
 	for _, i := range integrationTypeIntegrations {
 		integrationTypeIntegrationsMap[i.ProviderID] = true
 	}
-	// 
+	//
 	var count = 0
 
 	for _, i := range integrations {
@@ -423,8 +422,7 @@ func (h API) AddIntegrations(c echo.Context) error {
 		count++
 		// update credentials
 	}
-	err= h.database.UpdateCredentialIntegrationCount(req.CredentialID,count)
-
+	err = h.database.UpdateCredentialIntegrationCount(req.CredentialID, count)
 
 	return c.NoContent(http.StatusOK)
 }
@@ -489,14 +487,16 @@ func (h API) IntegrationHealthcheck(c echo.Context) error {
 
 	healthy, err := integrationType.HealthCheck(jsonData, integrationApi.ProviderID, integrationApi.Labels, integrationApi.Annotations)
 	if err != nil || !healthy {
-		h.logger.Error("healthcheck failed", zap.Error(err))
 		if integration.State != models2.IntegrationStateArchived {
 			integration.State = models2.IntegrationStateInactive
 		}
-		_, err = integration.AddAnnotations("platform/integration/health-reason", err.Error())
 		if err != nil {
-			h.logger.Error("failed to add annotations", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to add annotations")
+			h.logger.Error("healthcheck failed", zap.Error(err))
+			_, err = integration.AddAnnotations("platform/integration/health-reason", err.Error())
+			if err != nil {
+				h.logger.Error("failed to add annotations", zap.Error(err))
+				return echo.NewHTTPError(http.StatusInternalServerError, "failed to add annotations")
+			}
 		}
 	} else {
 		if integration.State != models2.IntegrationStateArchived {
@@ -827,7 +827,7 @@ func (h API) Update(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to encrypt config")
 	}
 	masked := make(map[string]any)
-		for key, value := range req.Credentials {
+	for key, value := range req.Credentials {
 		strValue, ok := value.(string) // Ensure the value is a string
 		if !ok {
 			// If it's not a string, just skip masking
@@ -841,14 +841,13 @@ func (h API) Update(c echo.Context) error {
 		} else {
 			masked[key] = "*****" + strValue
 		}
-			}
+	}
 
-	err = h.database.UpdateCredential(integration.CredentialID.String(), secret,masked,req.Description)
+	err = h.database.UpdateCredential(integration.CredentialID.String(), secret, masked, req.Description)
 	if err != nil {
 		h.logger.Error("failed to update credential", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update credential")
 	}
-	
 
 	return c.NoContent(http.StatusOK)
 }
