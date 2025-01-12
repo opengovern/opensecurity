@@ -698,7 +698,6 @@ export default function IntegrationList({
                             <Flex className="gap-3" justifyContent="end">
                                 <Button
                                     onClick={() => {
-                                        setRunOpen(false)
                                          setRunOpen(false)
                                          setSelectedIntegrations([])
                                          setSelectedResourceType([])
