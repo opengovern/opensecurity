@@ -785,7 +785,8 @@ func (h HttpServer) CheckReEvaluateComplianceJob(ctx echo.Context) error {
 
 	var dependencyIDs []int64
 	for _, describeJob := range describeJobs {
-		daj, err := h.Scheduler.db.GetLastDescribeIntegrationJob(describeJob.Integration.IntegrationID, describeJob.ResourceType)
+		parametersJsonb := pgtype.JSONB{}
+		daj, err := h.Scheduler.db.GetLastDescribeIntegrationJob(describeJob.Integration.IntegrationID, describeJob.ResourceType, parametersJsonb)
 		if err != nil {
 			h.Scheduler.logger.Error("failed to describe connection", zap.String("integration_id", describeJob.Integration.IntegrationID), zap.Error(err))
 			continue
@@ -1573,13 +1574,11 @@ func (h HttpServer) RunDiscovery(ctx echo.Context) error {
 			job, err := h.Scheduler.describe(integration, resourceType.ResourceType, false, false, false, &integrationDiscovery.ID, userID, resourceType.Parameters)
 			if err != nil {
 				if err.Error() == "job already in progress" {
-					tmpJob, err := h.Scheduler.db.GetLastDescribeIntegrationJob(integration.IntegrationID, resourceType.ResourceType)
-					if err != nil {
-						h.Scheduler.logger.Error("failed to get last describe job", zap.String("resource_type", resourceType.ResourceType), zap.String("connection_id", integration.IntegrationID), zap.Error(err))
-					}
 					h.Scheduler.logger.Error("failed to describe connection", zap.String("integration_id", integration.IntegrationID), zap.Error(err))
 					status = "FAILED"
-					failureReason = fmt.Sprintf("job already in progress: %v", tmpJob.ID)
+					if job != nil {
+						failureReason = fmt.Sprintf("job already in progress: %v", job.ID)
+					}
 				} else {
 					failureReason = err.Error()
 				}

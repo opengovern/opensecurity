@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgtype"
 	"strings"
 	"time"
 
@@ -103,9 +104,23 @@ func (db Database) CountRunningDescribeJobsPerResourceType(manuals bool) ([]Reso
 	return count, nil
 }
 
-func (db Database) GetLastDescribeIntegrationJob(integrationId, resourceType string) (*model.DescribeIntegrationJob, error) {
+func (db Database) GetLastDescribeIntegrationJob(integrationId, resourceType string, parameters pgtype.JSONB) (*model.DescribeIntegrationJob, error) {
 	var job model.DescribeIntegrationJob
-	tx := db.ORM.Preload(clause.Associations).Where("integration_id = ? AND resource_type = ?", integrationId, resourceType).Order("updated_at DESC").First(&job)
+
+	// Ensure the parameters are correctly encoded as JSON
+	var parametersBytes []byte
+	if parameters.Status == pgtype.Present {
+		parametersBytes = parameters.Bytes
+	} else {
+		return nil, fmt.Errorf("parameters are not in a valid state: %v", parameters.Status)
+	}
+
+	// Query with JSONB condition
+	tx := db.ORM.Preload(clause.Associations).
+		Where("integration_id = ? AND resource_type = ? AND parameters @> ?", integrationId, resourceType, parametersBytes).
+		Order("updated_at DESC").
+		First(&job)
+
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 			return nil, nil
