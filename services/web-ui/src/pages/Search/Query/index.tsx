@@ -195,7 +195,7 @@ export default function Query() {
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)
     const [loaded, setLoaded] = useState(false)
     const [savedQuery, setSavedQuery] = useAtom(queryAtom)
-    const [code, setCode] = useState(savedQuery ? savedQuery : "")
+    const [code, setCode] = useState(savedQuery ? savedQuery : '')
     const [selectedIndex, setSelectedIndex] = useState(0)
     const [searchCategory, setSearchCategory] = useState('')
     const [selectedRow, setSelectedRow] = useState({})
@@ -205,9 +205,9 @@ export default function Query() {
     const isDemo = useAtomValue(isDemoAtom)
     const [pageSize, setPageSize] = useState(1000)
     const [autoRun, setAutoRun] = useState(false)
-    const [engine, setEngine] = useState('cloudql')
+
     const [page, setPage] = useState(0)
-    const [tab,setTab] = useState("0")
+    const [tab, setTab] = useState('0')
     const [preferences, setPreferences] = useState(undefined)
     const [integrations, setIntegrations] = useState([])
     const [selectedIntegration, setSelectedIntegration] = useState('')
@@ -219,7 +219,6 @@ export default function Query() {
     const [schemaLoading2, setSchemaLoading2] = useState(false)
     const [expanded, setExpanded] = useState(-1)
     const [expanded1, setExpanded1] = useState(-1)
-
 
     // const { response: categories, isLoading: categoryLoading } =
     //     useInventoryApiV2AnalyticsCategoriesList()
@@ -233,7 +232,8 @@ export default function Query() {
     } = useInventoryApiV1QueryRunCreate(
         {
             page: { no: 1, size: pageSize },
-            engine,
+            // @ts-ignore
+            engine: 'cloudql',
             query: code,
         },
         {},
@@ -285,10 +285,6 @@ export default function Query() {
             .finally(() => {})
     }, [])
 
-
-
-   
-
     const recordToArray = (record?: Record<string, string[]> | undefined) => {
         if (record === undefined) {
             return []
@@ -308,61 +304,59 @@ export default function Query() {
                 .count,
         [queryResponse, isDemo]
     )
-        useEffect(() => {
-            if(savedQuery.length >0 && savedQuery !== ""){
+    useEffect(() => {
+        if (savedQuery.length > 0 && savedQuery !== '') {
             setCode(savedQuery)
             setAutoRun(true)
+        }
+    }, [savedQuery])
 
-            }
-        }, [savedQuery])
-
- const getIntegrations =  () => {
-     setSchemaLoading(true)
-     axios
-         .get(
-             'https://raw.githubusercontent.com/opengovern/opengovernance/refs/heads/main/assets/integrations/integrations.json'
-         )
-         .then((res) => {
-             if (res.data) {
-                 const arr = res.data
-                 const temp :any =[]
-                 // arr.sort(() => Math.random() - 0.5);
-                 arr?.map((integration: any) => {
-                     if (
-                         integration.schema_ids &&
-                         integration.schema_ids.length > 0 &&
-                         integration.tier === 'Community' &&
-                         integration.SourceCode != ''
-                     ) {
+    const getIntegrations = () => {
+        setSchemaLoading(true)
+        axios
+            .get(
+                'https://raw.githubusercontent.com/opengovern/opengovernance/refs/heads/main/assets/integrations/integrations.json'
+            )
+            .then((res) => {
+                if (res.data) {
+                    const arr = res.data
+                    const temp: any = []
+                    // arr.sort(() => Math.random() - 0.5);
+                    arr?.map((integration: any) => {
+                        if (
+                            integration.schema_ids &&
+                            integration.schema_ids.length > 0 &&
+                            integration.tier === 'Community' &&
+                            integration.SourceCode != ''
+                        ) {
                             temp.push(integration)
-                     }
-                 })
-                 setIntegrations(temp)
-             }
-             setSchemaLoading(false)
-         })
-         .catch((err) => {
-             setSchemaLoading(false)
-         })
- }
-  const getMasterSchema = (id: string) => {
-      setSchemaLoading1(true)
-      axios
-          .get(
-              `https://raw.githubusercontent.com/opengovern/hub/refs/heads/main/schemas/${id}.json`
-          )
-          .then((res) => {
-              if (res.data) {
-                  setTables(res.data?.tables)
-                  
-              }
-              setSchemaLoading1(false)
-          })
-          .catch((err) => {
-              setSchemaLoading1(false)
-          })
-  }
-    const getTableData = (id:string,name: string) => {
+                        }
+                    })
+                    setIntegrations(temp)
+                }
+                setSchemaLoading(false)
+            })
+            .catch((err) => {
+                setSchemaLoading(false)
+            })
+    }
+    const getMasterSchema = (id: string) => {
+        setSchemaLoading1(true)
+        axios
+            .get(
+                `https://raw.githubusercontent.com/opengovern/hub/refs/heads/main/schemas/${id}.json`
+            )
+            .then((res) => {
+                if (res.data) {
+                    setTables(res.data?.tables)
+                }
+                setSchemaLoading1(false)
+            })
+            .catch((err) => {
+                setSchemaLoading1(false)
+            })
+    }
+    const getTableData = (id: string, name: string) => {
         setSchemaLoading2(true)
         axios
             .get(
@@ -379,10 +373,9 @@ export default function Query() {
             })
     }
 
- useEffect(()=>{
-    getIntegrations()
- },[])
-
+    useEffect(() => {
+        getIntegrations()
+    }, [])
 
     return (
         <>
@@ -859,7 +852,7 @@ export default function Query() {
                                                             10,000
                                                         </SelectItem>
                                                     </Select>
-                                                    <Text className="mr-2 w-fit">
+                                                    {/* <Text className="mr-2 w-fit">
                                                         Engine:
                                                     </Text>
                                                     <Select
@@ -877,15 +870,17 @@ export default function Query() {
                                                         >
                                                             CloudQL
                                                         </SelectItem>
-                                                        {/* <SelectItem
-                                            value="odysseus-rego"
-                                            onClick={() =>
-                                                setEngine('odysseus-rego')
-                                            }
-                                        >
-                                            Odysseus Rego
-                                        </SelectItem> */}
-                                                    </Select>
+                                                        <SelectItem
+                                                            value="odysseus-rego"
+                                                            onClick={() =>
+                                                                setEngine(
+                                                                    'odysseus-rego'
+                                                                )
+                                                            }
+                                                        >
+                                                            Odysseus Rego
+                                                        </SelectItem>
+                                                    </Select> */}
                                                 </Flex>
                                                 <Flex className="w-max gap-x-3">
                                                     {!!code.length && (
