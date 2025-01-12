@@ -117,7 +117,7 @@ func (db Database) GetLastDescribeIntegrationJob(integrationId, resourceType str
 
 	// Query with JSONB condition
 	tx := db.ORM.Preload(clause.Associations).
-		Where("integration_id = ? AND resource_type = ? AND parameters @> ?", integrationId, resourceType, parametersBytes).
+		Where("integration_id = ? AND resource_type = ? AND convert_from(parameters, 'UTF8')::JSONB @> ?::JSONB", integrationId, resourceType, parametersBytes).
 		Order("updated_at DESC").
 		First(&job)
 
