@@ -467,9 +467,9 @@ axios
                                 className='h-full'
                                     style={{
                                         "width": `calc(calc(100% - ${
-                                            rows.length >= 3 ? '2' : '1'
+                                            rows.length >= 4 ? '3' : (rows.length-1)
                                         }rem) / ${
-                                            rows.length >= 3 ? '3' : rows.length
+                                            rows.length >= 4 ? '4' : rows.length
                                         })`,
                                     }}
                                 >
