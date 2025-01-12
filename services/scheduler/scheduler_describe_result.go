@@ -63,7 +63,7 @@ func (s *Scheduler) RunDescribeJobResultsConsumer(ctx context.Context) error {
 				}
 			}
 			var deletedCount int64
-			if s.DoDeleteOldResources && result.Status == api.DescribeResourceJobSucceeded && hasParams {
+			if s.DoDeleteOldResources && result.Status == api.DescribeResourceJobSucceeded && !hasParams {
 				result.Status = api.DescribeResourceJobOldResourceDeletion
 
 				dlc, err := s.cleanupOldResources(ctx, result)
