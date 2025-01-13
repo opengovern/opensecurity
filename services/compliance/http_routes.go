@@ -3134,7 +3134,11 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 	}
 
 	isRoot := true
-	assigned :=true
+	if req.Root != nil {
+		isRoot = *req.Root
+	}
+
+
 	
 
 	benchmarkAssignmentsCount, err := h.db.GetBenchmarkAssignmentsCount()
@@ -3161,7 +3165,7 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 	
 
 	
-	benchmarks, err := h.db.ListBenchmarksFiltered(ctx, req.TitleRegex, isRoot, nil, nil, &assigned, req.IsBaseline, nil)
+	benchmarks, err := h.db.ListBenchmarksFiltered(ctx, req.TitleRegex, isRoot, nil, nil, req.Assigned, req.IsBaseline, nil)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
