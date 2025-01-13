@@ -101,8 +101,7 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger) error {
 			return fmt.Errorf("read cloudql-plugin file for url %s: %w", url, err)
 		}
 
-		logger.Info("done reading files", zap.String("url", url), zap.String("integrationType", m.IntegrationType.String()))
-
+		logger.Info("done reading files", zap.String("url", url), zap.String("integrationType", m.IntegrationType.String()), zap.Int("integrationPluginSize", len(integrationPlugin)), zap.Int("cloudqlPluginSize", len(cloudqlPlugin)))
 		g.IntegrationBinaries = append(g.IntegrationBinaries, models.IntegrationTypeBinaries{
 			IntegrationType:   m.IntegrationType,
 			IntegrationPlugin: integrationPlugin,
