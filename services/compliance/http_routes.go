@@ -3126,7 +3126,6 @@ func (h *HttpHandler) ListBenchmarksFiltered(echoCtx echo.Context) error {
 //	@Router		/compliance/api/v3/benchmarks/summary [post]
 func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 	ctx := echoCtx.Request().Context()
-	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
 
 	var req api.GetFrameworkSummaryListRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
