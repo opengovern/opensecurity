@@ -26,6 +26,7 @@ import (
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/og-util/pkg/steampipe"
 	"github.com/opengovern/og-util/pkg/vault"
+	models2 "github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/integration-type/models"
 	core "github.com/opengovern/opencomply/services/core/client"
 	"github.com/opengovern/opencomply/services/integration/api"
 	"github.com/opengovern/opencomply/services/integration/config"
@@ -70,6 +71,17 @@ func Command() *cobra.Command {
 				return err
 			}
 
+			cfg.DB = "integration_types"
+			integrationTypesDb, err := postgres.NewClient(&cfg, logger.Named("integration_types"))
+			if err != nil {
+				return err
+			}
+			err = integrationTypesDb.AutoMigrate(&models2.IntegrationTypeBinaries{})
+			if err != nil {
+				logger.Error("failed to auto migrate integration binaries", zap.Error(err))
+				return err
+			}
+
 			mClient := core.NewCoreServiceClient(cnf.Core.BaseURL)
 
 			_, err = mClient.VaultConfigured(&httpclient.Context{UserRole: api3.AdminRole})
@@ -99,7 +111,7 @@ func Command() *cobra.Command {
 				}
 			}
 
-			typeManager := integration_type.NewIntegrationTypeManager(logger)
+			typeManager := integration_type.NewIntegrationTypeManager(logger, integrationTypesDb)
 
 			err = IntegrationTypesMigration(logger, db, typeManager, IntegrationsJsonFilePath)
 			if err != nil {

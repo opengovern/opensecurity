@@ -1,11 +1,9 @@
 # syntax=docker/dockerfile:1
 FROM docker.io/golang:alpine as build
 RUN apk --no-cache add ca-certificates
-RUN mkdir -p /tmp
+
 
 FROM scratch
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=build /tmp /tmp
-COPY ./build/integration-service /
-COPY ./assets/integrations /integrations
-CMD [ "/integration-service" ]
+COPY ./build/cloudql-init-job /
+CMD [ "/cloudql-init-job" ]

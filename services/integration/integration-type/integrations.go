@@ -3,8 +3,12 @@ package integration_type
 import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/integration-type/models"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/opengovern/og-util/pkg/integration"
@@ -37,10 +41,9 @@ import (
 )
 
 var integrationTypes = map[integration.Type]interfaces.IntegrationType{
-	awsConfigs.IntegrationTypeAwsCloudAccount:      &aws_account.Integration{},
-	azureConfigs.IntegrationTypeAzureSubscription:  &azure_subscription.Integration{},
-	entraidConfigs.IntegrationTypeEntraidDirectory: &entra_id_directory.Integration{},
-	//githubConfigs.IntegrationTypeGithubAccount:          &githubaccount.Integration{},
+	awsConfigs.IntegrationTypeAwsCloudAccount:           &aws_account.Integration{},
+	azureConfigs.IntegrationTypeAzureSubscription:       &azure_subscription.Integration{},
+	entraidConfigs.IntegrationTypeEntraidDirectory:      &entra_id_directory.Integration{},
 	digitalOceanConfigs.IntegrationTypeDigitalOceanTeam: &digitalocean_team.Integration{},
 	cloudflareConfigs.IntegrationNameCloudflareAccount:  &cloudflareaccount.Integration{},
 	openaiConfigs.IntegrationTypeOpenaiIntegration:      &openaiproject.Integration{},
@@ -58,12 +61,37 @@ type IntegrationTypeManager struct {
 	IntegrationTypes map[integration.Type]interfaces.IntegrationType
 }
 
-func NewIntegrationTypeManager(logger *zap.Logger) *IntegrationTypeManager {
+func NewIntegrationTypeManager(logger *zap.Logger, integrationTypeDb *gorm.DB) *IntegrationTypeManager {
 	hcLogger := hczap.Wrap(logger)
 
-	// TODO Load plugins from scanning plugins folder for zip files
+	var types []models.IntegrationTypeBinaries
+	err := integrationTypeDb.Find(&types).Error
+	if err != nil {
+		logger.Error("failed to fetch integration types", zap.Error(err))
+		return nil
+	}
+
+	// create directory for plugins if not exists
+	baseDir := "/plugins"
+	if _, err := os.Stat(baseDir); os.IsNotExist(err) {
+		err := os.Mkdir(baseDir, os.ModePerm)
+		if err != nil {
+			logger.Error("failed to create plugins directory", zap.Error(err))
+			return nil
+		}
+	}
+
 	plugins := make(map[string]string)
-	plugins["github_account"] = "/plugins/github_account/integration-plugin"
+	for _, t := range types {
+		// write the plugin to the file system
+		pluginPath := filepath.Join(baseDir, t.IntegrationType.String()+".so")
+		err := os.WriteFile(pluginPath, t.IntegrationPlugin, 0755)
+		if err != nil {
+			logger.Error("failed to write plugin to file system", zap.Error(err), zap.String("plugin", t.IntegrationType.String()))
+			continue
+		}
+		plugins[t.IntegrationType.String()] = pluginPath
+	}
 
 	for pluginName, pluginPath := range plugins {
 		client := plugin.NewClient(&plugin.ClientConfig{

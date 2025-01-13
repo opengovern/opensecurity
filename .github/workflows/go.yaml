@@ -86,6 +86,7 @@ jobs:
       query-runner-job: ${{ steps.build_services.outputs.query-runner-job }}
       query-validator-job: ${{ steps.build_services.outputs.query-validator-job }}
       demo-importer-job: ${{ steps.build_services.outputs.demo-importer-job }}
+      cloudql-init-job: ${{ steps.build_services.outputs.cloudql-init-job }}
       task-service: ${{ steps.build_services.outputs.task-service }}
       rego-service: ${{ steps.build_services.outputs.rego-service }}
       
@@ -156,6 +157,7 @@ jobs:
       - build
       - tag
       - deploy-steampipe-base
+      - deploy-cloudql-init-job
     permissions:
       id-token: write
       contents: read
@@ -300,6 +302,41 @@ jobs:
           file: docker/TaskServiceDockerfile
           context: .
 
+  deploy-cloudql-init-job:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - tag
+    permissions:
+      id-token: write
+      contents: read
+    environment: docker
+    if: needs.build.outputs.cloudql-init-job == 'true' && github.event_name != 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: build
+          path: .
+      - name: Unpack artifact
+        run: |
+          tar -xvf build.tar.gz
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/cloudql-init-job:${{ needs.tag.outputs.latest_tag }}
+          file: docker/CloudQLInitJobDockerfile
+          context: .
 
   deploy-checkup-job:
     runs-on: ubuntu-latest
