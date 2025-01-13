@@ -20,6 +20,7 @@ import { ForbiddenAtom, meAtom, notificationAtom } from '../../store'
 import { useAuth } from '../../utilities/auth'
 import { useAuthApiV1UserInviteCreate } from '../../api/auth.gen'
 import Integrations from './Integrations'
+import { useComplianceApiV1QueriesSyncList } from '../../api/compliance.gen'
 
 export default function Overview() {
    
@@ -91,6 +92,9 @@ export default function Overview() {
                 //  const temp = []
                 if (res.data == 'CHANGE_REQUIRED') {
                     setChange(true)
+                    if (me?.email == 'admin@opencomply.io') {
+                        runSync()
+                    }
                 }
             })
             .catch((err) => {
@@ -170,11 +174,19 @@ export default function Overview() {
                 setLoadingChange(false)
             })
     }
+const {
+    isLoading: syncLoading,
+    isExecuted: syncExecuted,
+    error: syncError,
+    sendNow: runSync,
+} = useComplianceApiV1QueriesSyncList({}, {}, false)
+
     useEffect(() => {
        
          if (me?.connector_id === 'local') {
              PassCheck()
          }
+         
     }, [me])
     const CheckEmail = () => {
         if (!userData?.email || userData?.email == '') {
