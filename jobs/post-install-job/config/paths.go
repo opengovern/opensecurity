@@ -11,4 +11,5 @@ const (
 	QueryViewsGitPath         = ConfigzGitPath + "/views"
 	ResourceCollectionGitPath = ConfigzGitPath + "/resource-collections"
 	IntegrationsGitPath       = ConfigzGitPath + "/integrations"
+	IntegrationTypesJsonPath  = ConfigzGitPath + "/integrations-types/extraIntegrations.yaml"
 )
