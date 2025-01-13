@@ -150,7 +150,8 @@ type Control struct {
 	DocumentURI     string
 	Enabled         bool
 	PolicyID        *string
-	Policy          *Policy     `gorm:"foreignKey:PolicyID;references:ID;constraint:OnDelete:SET NULL"`
+	Policy          *Policy `gorm:"foreignKey:PolicyID;references:ID;constraint:OnDelete:SET NULL"`
+	ExternalPolicy  bool
 	Benchmarks      []Benchmark `gorm:"many2many:benchmark_controls;"`
 	Severity        types.ComplianceResultSeverity
 	CreatedAt       time.Time
@@ -276,9 +277,12 @@ func (qp PolicyParameter) ToApi() api.QueryParameter {
 
 type Policy struct {
 	ID              string `gorm:"primaryKey"`
+	Title           string
+	Description     string
 	Definition      string
 	IntegrationType pq.StringArray `gorm:"type:text[]"`
 	Language        types.PolicyLanguage
+	ExternalPolicy  bool
 
 	Controls []Control `gorm:"foreignKey:PolicyID"`
 

@@ -31,8 +31,8 @@ import (
 
 const (
 	MaxQueued           = 5000
-	MaxIn10Minutes      = 750
-	MaxGetQueuedAtATime = 75
+	MaxIn10Minutes      = 500
+	MaxGetQueuedAtATime = 50
 )
 
 var ErrJobInProgress = errors.New("job already in progress")
@@ -292,14 +292,23 @@ func (s *Scheduler) describe(integration integrationapi.Integration, resourceTyp
 		return nil, fmt.Errorf("invalid resource type for integration type: %s - %s", resourceType, integration.IntegrationType)
 	}
 
-	job, err := s.db.GetLastDescribeIntegrationJob(integration.IntegrationID, resourceType)
+	if parameters == nil {
+		parameters = make(map[string]string)
+	}
+	parametersJsonData, err := json.Marshal(parameters)
+	if err != nil {
+		return nil, err
+	}
+	parametersJsonb := pgtype.JSONB{}
+	err = parametersJsonb.Set(parametersJsonData)
+
+	job, err := s.db.GetLastDescribeIntegrationJob(integration.IntegrationID, resourceType, parametersJsonb)
 	if err != nil {
 		s.logger.Error("failed to get last describe job", zap.String("resource_type", resourceType), zap.String("integration_id", integration.IntegrationID), zap.Error(err))
 		DescribeSourceJobsCount.WithLabelValues("failure").Inc()
 		return nil, err
 	}
 
-	// TODO: get resource type list from integration type and annotations
 	if job != nil {
 		if scheduled {
 			interval := s.discoveryIntervalHours
@@ -313,7 +322,7 @@ func (s *Scheduler) describe(integration integrationapi.Integration, resourceTyp
 			job.Status == api.DescribeResourceJobQueued ||
 			job.Status == api.DescribeResourceJobInProgress ||
 			job.Status == api.DescribeResourceJobOldResourceDeletion {
-			return nil, ErrJobInProgress
+			return job, ErrJobInProgress
 		}
 	}
 
@@ -341,16 +350,6 @@ func (s *Scheduler) describe(integration integrationapi.Integration, resourceTyp
 	if costFullDiscovery {
 		triggerType = enums.DescribeTriggerTypeCostFullDiscovery
 	}
-
-	if parameters == nil {
-		parameters = make(map[string]string)
-	}
-	parametersJsonData, err := json.Marshal(parameters)
-	if err != nil {
-		return nil, err
-	}
-	parametersJsonb := pgtype.JSONB{}
-	err = parametersJsonb.Set(parametersJsonData)
 
 	s.logger.Debug("Connection is due for a describe. Creating a job now", zap.String("IntegrationID", integration.IntegrationID), zap.String("resourceType", resourceType))
 	daj := newDescribeConnectionJob(integration, resourceType, triggerType, parentId, createdBy, parametersJsonb)

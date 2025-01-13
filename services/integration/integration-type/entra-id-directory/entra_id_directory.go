@@ -89,3 +89,11 @@ func (i *EntraIdDirectoryIntegration) GetResourceTypeFromTableName(tableName str
 
 	return ""
 }
+
+func (i *EntraIdDirectoryIntegration) GetTablesByLabels(map[string]string) ([]string, error) {
+	var tables []string
+	for t, _ := range entraidDescriberLocal.TablesToResourceTypes {
+		tables = append(tables, t)
+	}
+	return tables, nil
+}

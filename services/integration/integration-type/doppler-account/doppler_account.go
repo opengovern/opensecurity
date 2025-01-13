@@ -87,3 +87,11 @@ func (i *DopplerAccountIntegration) GetResourceTypeFromTableName(tableName strin
 	}
 	return ""
 }
+
+func (i *DopplerAccountIntegration) GetTablesByLabels(map[string]string) ([]string, error) {
+	var tables []string
+	for t, _ := range dopplerDescriberLocal.TablesToResourceTypes {
+		tables = append(tables, t)
+	}
+	return tables, nil
+}

@@ -21,7 +21,7 @@ type ComplianceServiceClient interface {
 	GetControl(ctx *httpclient.Context, controlID string) (*compliance.Control, error)
 	GetQuery(ctx *httpclient.Context, queryID string) (*compliance.Policy, error)
 	GetComplianceResults(ctx *httpclient.Context, req compliance.GetComplianceResultsRequest) (compliance.GetComplianceResultsResponse, error)
-	ListBenchmarks(ctx *httpclient.Context, tags map[string][]string) ([]compliance.Benchmark, error)
+	ListBenchmarks(ctx *httpclient.Context, frameworkIDs []string, tags map[string][]string) ([]compliance.Benchmark, error)
 	ListAllBenchmarks(ctx *httpclient.Context, isBare bool) ([]compliance.Benchmark, error)
 	GetAccountsComplianceResultsSummary(ctx *httpclient.Context, benchmarkId string, connectionId []string, connector []source.Type) (compliance.GetAccountsComplianceResultsSummaryResponse, error)
 	CreateBenchmarkAssignment(ctx *httpclient.Context, benchmarkID, connectionId string) ([]compliance.BenchmarkAssignment, error)
@@ -263,10 +263,21 @@ func (s *complianceClient) GetComplianceResults(ctx *httpclient.Context, req com
 	return response, nil
 }
 
-func (s *complianceClient) ListBenchmarks(ctx *httpclient.Context, tags map[string][]string) ([]compliance.Benchmark, error) {
+func (s *complianceClient) ListBenchmarks(ctx *httpclient.Context, frameworkIDs []string, tags map[string][]string) ([]compliance.Benchmark, error) {
 	url := fmt.Sprintf("%s/api/v1/benchmarks", s.baseURL)
 
 	isFirstParamAttached := false
+	if len(frameworkIDs) > 0 {
+		for _, controlID := range frameworkIDs {
+			if !isFirstParamAttached {
+				url += "?"
+				isFirstParamAttached = true
+			} else {
+				url += "&"
+			}
+			url += fmt.Sprintf("framework_id=%s", controlID)
+		}
+	}
 	for tagKey, tagValues := range tags {
 		for _, tagValue := range tagValues {
 			if !isFirstParamAttached {

@@ -321,17 +321,6 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
 	complianceClient := complianceClient.NewComplianceClient(complianceURL)
 
-	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
-	if err != nil {
-		h.logger.Error("error listing controls", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
-	}
-	namedQueries, err := h.ListQueriesV2Internal(ctx, api.ListQueryV2Request{})
-	if err != nil {
-		h.logger.Error("error listing queries", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
-	}
-
 	var filteredQueryParams []string
 	if controlIDs != nil {
 		all_control, err := complianceClient.ListControl(clientCtx, controlIDs, nil)
@@ -362,14 +351,20 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	}
 
 	var queryParams []models.PolicyParameterValues
-	if len(filteredQueryParams) > 0 {
+	if request.KeyRegex != nil {
+		queryParams, err = h.db.GetQueryParametersValues(request.KeyRegex)
+		if err != nil {
+			h.logger.Error("error getting query parameters", zap.Error(err))
+			return err
+		}
+	} else if controlIDs != nil || queryIDs != nil {
 		queryParams, err = h.db.GetQueryParametersByIds(filteredQueryParams)
 		if err != nil {
 			h.logger.Error("error getting query parameters", zap.Error(err))
 			return err
 		}
 	} else {
-		queryParams, err = h.db.GetQueryParametersValues()
+		queryParams, err = h.db.GetQueryParametersValues(nil)
 		if err != nil {
 			h.logger.Error("error getting query parameters", zap.Error(err))
 			return err
@@ -379,13 +374,27 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	parametersMap := make(map[string]*api.QueryParameter)
 	for _, dbParam := range queryParams {
 		apiParam := dbParam.ToAPI()
-		parametersMap[apiParam.Key] = &apiParam
+		parametersMap[apiParam.Key+apiParam.ControlID] = &apiParam
+	}
+
+	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
+	if err != nil {
+		h.logger.Error("error listing controls", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
+	}
+	namedQueries, err := h.ListQueriesV2Internal(ctx, api.ListQueryV2Request{})
+	if err != nil {
+		h.logger.Error("error listing queries", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
 	}
 
 	for _, c := range controls {
 		for _, p := range c.Policy.Parameters {
 			if _, ok := parametersMap[p.Key]; ok {
 				parametersMap[p.Key].ControlsCount += 1
+			}
+			if _, ok := parametersMap[p.Key+c.ID]; ok {
+				parametersMap[p.Key+c.ID].ControlsCount += 1
 			}
 		}
 	}
@@ -403,9 +412,101 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	}
 
 	totalCount := len(items)
-	sort.Slice(items, func(i, j int) bool {
-		return items[i].Key < items[j].Key
-	})
+
+	sortOrder := "desc"
+	sortBy := "key"
+	if request.SortOrder != nil {
+		sortOrder = strings.ToLower(*request.SortOrder)
+	}
+	if request.SortBy != nil {
+		sortBy = strings.ToLower(*request.SortBy)
+	}
+
+	switch sortOrder {
+	case "asc":
+		switch sortBy {
+		case "key":
+			sort.Slice(items, func(i, j int) bool {
+				if items[i].Key == items[j].Key {
+					return items[i].ControlsCount < items[j].ControlsCount
+				}
+				return items[i].Key < items[j].Key
+			})
+		case "value":
+			sort.Slice(items, func(i, j int) bool {
+				if items[i].Value == items[j].Value {
+					if items[i].Key == items[j].Key {
+						return items[i].ControlsCount < items[j].ControlsCount
+					}
+					return items[i].Key < items[j].Key
+				}
+				return items[i].Value < items[j].Value
+			})
+		case "controlid", "control_id":
+			sort.Slice(items, func(i, j int) bool {
+				if items[i].ControlID == items[j].ControlID {
+					return items[i].Key < items[j].Key
+				}
+				return items[i].ControlID < items[j].ControlID
+			})
+		case "controlscount", "controls_count":
+			sort.Slice(items, func(i, j int) bool {
+				if items[i].ControlsCount == items[j].ControlsCount {
+					return items[i].Key < items[j].Key
+				}
+				return items[i].ControlsCount < items[j].ControlsCount
+			})
+		case "queriescount", "queries_count":
+			sort.Slice(items, func(i, j int) bool {
+				if items[i].QueriesCount == items[j].QueriesCount {
+					return items[i].Key < items[j].Key
+				}
+				return items[i].QueriesCount < items[j].QueriesCount
+			})
+		}
+	case "desc":
+		switch sortBy {
+		case "key":
+			sort.Slice(items, func(i, j int) bool {
+				if items[i].Key == items[j].Key {
+					return items[i].ControlsCount > items[j].ControlsCount
+				}
+				return items[i].Key > items[j].Key
+			})
+		case "value":
+			sort.Slice(items, func(i, j int) bool {
+				if items[i].Value == items[j].Value {
+					if items[i].Key == items[j].Key {
+						return items[i].ControlsCount > items[j].ControlsCount
+					}
+					return items[i].Key > items[j].Key
+				}
+				return items[i].Value > items[j].Value
+			})
+		case "controlid", "control_id":
+			sort.Slice(items, func(i, j int) bool {
+				if items[i].ControlID == items[j].ControlID {
+					return items[i].Key > items[j].Key
+				}
+				return items[i].ControlID > items[j].ControlID
+			})
+		case "controlscount", "controls_count":
+			sort.Slice(items, func(i, j int) bool {
+				if items[i].ControlsCount == items[j].ControlsCount {
+					return items[i].Key > items[j].Key
+				}
+				return items[i].ControlsCount > items[j].ControlsCount
+			})
+		case "queriescount", "queries_count":
+			sort.Slice(items, func(i, j int) bool {
+				if items[i].QueriesCount == items[j].QueriesCount {
+					return items[i].Key > items[j].Key
+				}
+				return items[i].QueriesCount > items[j].QueriesCount
+			})
+		}
+	}
+
 	if perPage != 0 {
 		if cursor == 0 {
 			items = utils.Paginate(1, perPage, items)
@@ -1211,13 +1312,20 @@ func (h HttpHandler) GetViews(echoCtx echo.Context) error {
 			}
 		}
 
-		apiViews = append(apiViews, api.View{
-			ID:           view.ID,
-			Title:        view.Title,
-			Description:  view.Description,
-			Query:        query,
-			Dependencies: view.Dependencies,
-		})
+		apiView := api.View{
+			ID:               view.ID,
+			Title:            view.Title,
+			Description:      view.Description,
+			LastTimeRendered: h.viewCheckpoint,
+			Query:            query,
+			Dependencies:     view.Dependencies,
+			Tags:             make(map[string][]string),
+		}
+		for _, tag := range view.Tags {
+			apiView.Tags[tag.Key] = tag.Value
+		}
+
+		apiViews = append(apiViews, apiView)
 	}
 
 	totalCount := len(apiViews)
@@ -1269,7 +1377,7 @@ func (h HttpHandler) ListQueryParametersInternal(ctx echo.Context) (api.ListQuer
 			return resp, err
 		}
 	} else {
-		queryParams, err = h.db.GetQueryParametersValues()
+		queryParams, err = h.db.GetQueryParametersValues(nil)
 		if err != nil {
 			h.logger.Error("error getting query parameters", zap.Error(err))
 			return resp, err

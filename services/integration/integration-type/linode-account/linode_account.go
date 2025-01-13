@@ -87,3 +87,11 @@ func (i *LinodeAccountIntegration) GetResourceTypeFromTableName(tableName string
 
 	return ""
 }
+
+func (i *LinodeAccountIntegration) GetTablesByLabels(map[string]string) ([]string, error) {
+	var tables []string
+	for t, _ := range linodeDescriberLocal.TablesToResourceTypes {
+		tables = append(tables, t)
+	}
+	return tables, nil
+}

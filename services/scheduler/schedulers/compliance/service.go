@@ -13,6 +13,7 @@ import (
 	"github.com/opengovern/og-util/pkg/ticker"
 	"github.com/opengovern/opencomply/pkg/utils"
 	"github.com/opengovern/opencomply/services/compliance/client"
+	coreClient "github.com/opengovern/opencomply/services/core/client"
 	integrationClient "github.com/opengovern/opencomply/services/integration/client"
 	"github.com/opengovern/opencomply/services/scheduler/config"
 	"github.com/opengovern/opencomply/services/scheduler/db"
@@ -27,6 +28,7 @@ type JobScheduler struct {
 	conf                    config.SchedulerConfig
 	logger                  *zap.Logger
 	complianceClient        client.ComplianceServiceClient
+	coreClient              coreClient.CoreServiceClient
 	integrationClient       integrationClient.IntegrationServiceClient
 	db                      db.Database
 	jq                      *jq.JobQueue
@@ -39,6 +41,7 @@ func New(
 	conf config.SchedulerConfig,
 	logger *zap.Logger,
 	complianceClient client.ComplianceServiceClient,
+	coreClient coreClient.CoreServiceClient,
 	integrationClient integrationClient.IntegrationServiceClient,
 	db db.Database,
 	jq *jq.JobQueue,
@@ -50,6 +53,7 @@ func New(
 		conf:                    conf,
 		logger:                  logger,
 		complianceClient:        complianceClient,
+		coreClient:              coreClient,
 		integrationClient:       integrationClient,
 		db:                      db,
 		jq:                      jq,
@@ -117,7 +121,6 @@ func (s *JobScheduler) RunScheduler() {
 	for ; ; <-t.C {
 		if err := s.runScheduler(); err != nil {
 			s.logger.Error("failed to run compliance scheduler", zap.Error(err))
-			ComplianceJobsCount.WithLabelValues("failure").Inc()
 			continue
 		}
 	}
@@ -146,7 +149,6 @@ func (s *JobScheduler) RunPublisher(ctx context.Context, manuals bool) {
 	for ; ; <-t.C {
 		if err := s.runPublisher(ctx, manuals); err != nil {
 			s.logger.Error("failed to run compliance publisher", zap.Error(err))
-			ComplianceJobsCount.WithLabelValues("failure").Inc()
 			continue
 		}
 	}
@@ -161,7 +163,6 @@ func (s *JobScheduler) RunSummarizer(ctx context.Context, manuals bool) {
 	for ; ; <-t.C {
 		if err := s.runSummarizer(ctx, manuals); err != nil {
 			s.logger.Error("failed to run compliance summarizer", zap.Error(err))
-			ComplianceJobsCount.WithLabelValues("failure").Inc()
 			continue
 		}
 	}

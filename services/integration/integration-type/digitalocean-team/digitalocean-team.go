@@ -78,3 +78,11 @@ func (i *DigitaloceanTeamIntegration) GetResourceTypeFromTableName(tableName str
 
 	return ""
 }
+
+func (i *DigitaloceanTeamIntegration) GetTablesByLabels(map[string]string) ([]string, error) {
+	var tables []string
+	for t, _ := range digitaloceanDescriberLocal.TablesToResourceTypes {
+		tables = append(tables, t)
+	}
+	return tables, nil
+}

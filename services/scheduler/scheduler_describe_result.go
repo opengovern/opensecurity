@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/jackc/pgtype"
 	"strings"
 	"time"
 
@@ -50,8 +51,19 @@ func (s *Scheduler) RunDescribeJobResultsConsumer(ctx context.Context) error {
 				zap.String("status", string(result.Status)),
 			)
 
+			hasParams := false
+			job, err := s.db.GetDescribeIntegrationJobByID(result.JobID)
+			if err != nil {
+				s.logger.Error("failed to get describe integration job by id", zap.Uint("job_id", result.JobID))
+			} else {
+				if job.Parameters.Status == pgtype.Present {
+					if !(string(job.Parameters.Bytes) == "{}" || string(job.Parameters.Bytes) == "[]") {
+						hasParams = true
+					}
+				}
+			}
 			var deletedCount int64
-			if s.DoDeleteOldResources && result.Status == api.DescribeResourceJobSucceeded {
+			if s.DoDeleteOldResources && result.Status == api.DescribeResourceJobSucceeded && !hasParams {
 				result.Status = api.DescribeResourceJobOldResourceDeletion
 
 				dlc, err := s.cleanupOldResources(ctx, result)

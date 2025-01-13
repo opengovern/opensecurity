@@ -102,3 +102,11 @@ func (i *GithubAccountIntegration) GetResourceTypeFromTableName(tableName string
 
 	return ""
 }
+
+func (i *GithubAccountIntegration) GetTablesByLabels(map[string]string) ([]string, error) {
+	var tables []string
+	for t, _ := range githubDescriberLocal.TablesToResourceTypes {
+		tables = append(tables, t)
+	}
+	return tables, nil
+}

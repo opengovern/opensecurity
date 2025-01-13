@@ -89,3 +89,11 @@ func (i *CloudFlareAccountIntegration) GetResourceTypeFromTableName(tableName st
 
 	return ""
 }
+
+func (i *CloudFlareAccountIntegration) GetTablesByLabels(map[string]string) ([]string, error) {
+	var tables []string
+	for t, _ := range cloudflareDescriberLocal.TablesToResourceTypes {
+		tables = append(tables, t)
+	}
+	return tables, nil
+}

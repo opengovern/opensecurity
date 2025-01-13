@@ -135,7 +135,7 @@ func (h HttpServer) ListJobs(ctx echo.Context) error {
 		return err
 	}
 
-	benchmarks, err := h.Scheduler.complianceClient.ListBenchmarks(&httpclient.Context{UserRole: apiAuth.AdminRole}, nil)
+	benchmarks, err := h.Scheduler.complianceClient.ListBenchmarks(&httpclient.Context{UserRole: apiAuth.AdminRole}, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -543,7 +543,7 @@ func (h HttpServer) TriggerConnectionsComplianceJobs(ctx echo.Context) error {
 	var benchmarks []complianceapi.Benchmark
 	var err error
 	if len(benchmarkIDs) == 0 {
-		benchmarks, err = h.Scheduler.complianceClient.ListBenchmarks(clientCtx, nil)
+		benchmarks, err = h.Scheduler.complianceClient.ListBenchmarks(clientCtx, nil, nil)
 		if err != nil {
 			return fmt.Errorf("error while getting benchmarks: %v", err)
 		}
@@ -596,7 +596,7 @@ func (h HttpServer) TriggerConnectionsComplianceJobSummary(ctx echo.Context) err
 	var benchmarks []complianceapi.Benchmark
 	var err error
 	if benchmarkID == "all" {
-		benchmarks, err = h.Scheduler.complianceClient.ListBenchmarks(clientCtx, nil)
+		benchmarks, err = h.Scheduler.complianceClient.ListBenchmarks(clientCtx, nil, nil)
 		if err != nil {
 			return fmt.Errorf("error while getting benchmarks: %v", err)
 		}
@@ -785,7 +785,8 @@ func (h HttpServer) CheckReEvaluateComplianceJob(ctx echo.Context) error {
 
 	var dependencyIDs []int64
 	for _, describeJob := range describeJobs {
-		daj, err := h.Scheduler.db.GetLastDescribeIntegrationJob(describeJob.Integration.IntegrationID, describeJob.ResourceType)
+		parametersJsonb := pgtype.JSONB{}
+		daj, err := h.Scheduler.db.GetLastDescribeIntegrationJob(describeJob.Integration.IntegrationID, describeJob.ResourceType, parametersJsonb)
 		if err != nil {
 			h.Scheduler.logger.Error("failed to describe connection", zap.String("integration_id", describeJob.Integration.IntegrationID), zap.Error(err))
 			continue
@@ -1400,7 +1401,7 @@ func (h HttpServer) RunBenchmark(ctx echo.Context) error {
 
 	var benchmarks []complianceapi.Benchmark
 	if len(request.BenchmarkIds) == 0 {
-		benchmarks, err = h.Scheduler.complianceClient.ListBenchmarks(clientCtx, nil)
+		benchmarks, err = h.Scheduler.complianceClient.ListBenchmarks(clientCtx, nil, nil)
 		if err != nil {
 			return fmt.Errorf("error while getting benchmarks: %v", err)
 		}
@@ -1573,13 +1574,11 @@ func (h HttpServer) RunDiscovery(ctx echo.Context) error {
 			job, err := h.Scheduler.describe(integration, resourceType.ResourceType, false, false, false, &integrationDiscovery.ID, userID, resourceType.Parameters)
 			if err != nil {
 				if err.Error() == "job already in progress" {
-					tmpJob, err := h.Scheduler.db.GetLastDescribeIntegrationJob(integration.IntegrationID, resourceType.ResourceType)
-					if err != nil {
-						h.Scheduler.logger.Error("failed to get last describe job", zap.String("resource_type", resourceType.ResourceType), zap.String("connection_id", integration.IntegrationID), zap.Error(err))
-					}
 					h.Scheduler.logger.Error("failed to describe connection", zap.String("integration_id", integration.IntegrationID), zap.Error(err))
 					status = "FAILED"
-					failureReason = fmt.Sprintf("job already in progress: %v", tmpJob.ID)
+					if job != nil {
+						failureReason = fmt.Sprintf("job already in progress: %v", job.ID)
+					}
 				} else {
 					failureReason = err.Error()
 				}
@@ -1956,7 +1955,7 @@ func (h HttpServer) ListComplianceJobs(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	benchmarks, err := h.Scheduler.complianceClient.ListBenchmarks(&httpclient.Context{UserRole: apiAuth.AdminRole}, nil)
+	benchmarks, err := h.Scheduler.complianceClient.ListBenchmarks(&httpclient.Context{UserRole: apiAuth.AdminRole}, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -2087,7 +2086,7 @@ func (h HttpServer) BenchmarkAuditHistory(ctx echo.Context) error {
 		integrations = append(integrations, connectionsTmp.Integrations...)
 	}
 
-	connectionInfo := make(map[string]api.IntegrationInfo)
+	integrationInfo := make(map[string]api.IntegrationInfo)
 	var connectionIDs []string
 	for _, c := range integrations {
 		connectionIDs = append(connectionIDs, c.IntegrationID)
@@ -2098,7 +2097,7 @@ func (h HttpServer) BenchmarkAuditHistory(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	for _, c := range connections2.Integrations {
-		connectionInfo[c.IntegrationID] = api.IntegrationInfo{
+		integrationInfo[c.IntegrationID] = api.IntegrationInfo{
 			IntegrationID:   c.IntegrationID,
 			IntegrationType: string(c.IntegrationType),
 			Name:            c.Name,
@@ -2132,9 +2131,9 @@ func (h HttpServer) BenchmarkAuditHistory(ctx echo.Context) error {
 			UpdatedAt:     j.UpdatedAt,
 		}
 		for _, i := range j.IntegrationIDs {
-			if info, ok := connectionInfo[i]; ok {
-				item.IntegrationInfo = []api.IntegrationInfo{info}
-				item.NumberOfIntegrations = 1
+			if info, ok := integrationInfo[i]; ok {
+				item.IntegrationInfo = append(item.IntegrationInfo, info)
+				item.NumberOfIntegrations += 1
 			}
 		}
 

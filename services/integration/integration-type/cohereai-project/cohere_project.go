@@ -94,3 +94,11 @@ func (i *CohereAIProjectIntegration) GetResourceTypeFromTableName(tableName stri
 
 	return ""
 }
+
+func (i *CohereAIProjectIntegration) GetTablesByLabels(map[string]string) ([]string, error) {
+	var tables []string
+	for t, _ := range cohereaiDescriberLocal.TablesToResourceTypes {
+		tables = append(tables, t)
+	}
+	return tables, nil
+}

@@ -146,56 +146,6 @@ type BenchmarkTablesCache struct {
 	ListTables    map[string]bool
 }
 
-// getTablesUnderBenchmark ctx context.Context, benchmarkId string -> primaryTables, listOfTables, error
-func (h *HttpHandler) getTablesUnderBenchmark(ctx context.Context, benchmarkId string, benchmarkCache map[string]BenchmarkTablesCache) (map[string]bool, map[string]bool, error) {
-	primaryTables := make(map[string]bool)
-	listOfTables := make(map[string]bool)
-
-	benchmark, err := h.db.GetBenchmarkWithControlQueries(ctx, benchmarkId)
-	if err != nil {
-		h.logger.Error("failed to fetch benchmarks", zap.Error(err))
-		return nil, nil, err
-	}
-	for _, c := range benchmark.Controls {
-		if c.Policy != nil {
-			if c.Policy.PrimaryResource != "" {
-				primaryTables[c.Policy.PrimaryResource] = true
-			}
-			for _, t := range c.Policy.ListOfResources {
-				if t == "" {
-					continue
-				}
-				listOfTables[t] = true
-			}
-		}
-	}
-
-	for _, child := range benchmark.Children {
-		var childPrimaryTables, childListOfTables map[string]bool
-		if cache, ok := benchmarkCache[child.ID]; ok {
-			childPrimaryTables = cache.PrimaryTables
-			childListOfTables = cache.ListTables
-		} else {
-			childPrimaryTables, childListOfTables, err = h.getTablesUnderBenchmark(ctx, child.ID, benchmarkCache)
-			if err != nil {
-				return nil, nil, err
-			}
-			benchmarkCache[child.ID] = BenchmarkTablesCache{
-				PrimaryTables: childPrimaryTables,
-				ListTables:    childListOfTables,
-			}
-		}
-
-		for k, _ := range childPrimaryTables {
-			primaryTables[k] = true
-		}
-		for k, _ := range childListOfTables {
-			childListOfTables[k] = true
-		}
-	}
-	return primaryTables, listOfTables, nil
-}
-
 func (h *HttpHandler) getChildBenchmarksWithDetails(ctx context.Context, benchmarkId string, req api.GetBenchmarkDetailsRequest) ([]api.GetBenchmarkDetailsChildren, error) {
 	var benchmarks []api.GetBenchmarkDetailsChildren
 	benchmark, err := h.db.GetBenchmark(ctx, benchmarkId)

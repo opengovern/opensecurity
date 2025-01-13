@@ -107,9 +107,13 @@ func (db Database) GetQueryParameter(key string) (*models.PolicyParameterValues,
 	return &queryParam, nil
 }
 
-func (db Database) GetQueryParametersValues() ([]models.PolicyParameterValues, error) {
+func (db Database) GetQueryParametersValues(keyRegex *string) ([]models.PolicyParameterValues, error) {
 	var queryParams []models.PolicyParameterValues
-	err := db.orm.Find(&queryParams).Error
+	tx := db.orm.Model(&models.PolicyParameterValues{})
+	if keyRegex != nil {
+		tx = tx.Where("key ~* ?", *keyRegex)
+	}
+	err := tx.Find(&queryParams).Error
 	if err != nil {
 		return nil, err
 	}

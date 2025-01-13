@@ -263,6 +263,16 @@ func getTenantInfo(ctx context.Context, credential azcore.TokenCredential, confi
 	tenantInfo.Healthy = hasPrimaryDomain && hasAllPermissions && hasAllLicenses
 	tenantInfo.HealthCheckDetails = healthDetails
 
+	if !hasPrimaryDomain {
+		return tenantInfo, fmt.Errorf("needs to have primary domain")
+	}
+	if !hasAllPermissions {
+		return tenantInfo, fmt.Errorf("needs to have all permissions: %v", requiredPermissions)
+	}
+	if !hasAllLicenses {
+		return tenantInfo, fmt.Errorf("needs to have all licenses: %v", requiredLicenses)
+	}
+
 	return tenantInfo, nil
 }
 
