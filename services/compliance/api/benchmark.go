@@ -225,6 +225,21 @@ type GetFrameworkListRequest struct {
 	PerPage                 *int64                          `json:"per_page"`
 }
 
+
+type GetFrameworkSummaryListRequest struct {
+	TitleRegex              *string                         `json:"title_regex"`
+	IntegrationTypes        []string                        `json:"integration_types"`
+	IsBaseline              *bool                           `json:"is_baseline"`
+	SortBy                  string                          `json:"sort_by"`
+	Cursor                  *int64                          `json:"cursor"`
+	PerPage                 *int64                          `json:"per_page"`
+	Root                    *bool                           `json:"root"`
+	Assigned                *bool                           `json:"assigned"`
+}
+
+
+
+
 type GetBenchmarkListMetadata struct {
 	ID                  string              `json:"id"`
 	Title               string              `json:"title"`
@@ -241,6 +256,8 @@ type GetBenchmarkListMetadata struct {
 	UpdatedAt           time.Time           `json:"updated_at"`
 }
 
+
+
 type GetBenchmarkListItem struct {
 	Benchmark     GetBenchmarkListMetadata `json:"benchmark"`
 	IncidentCount int                      `json:"incident_count"`
@@ -248,6 +265,32 @@ type GetBenchmarkListItem struct {
 
 type GetBenchmarkListResponse struct {
 	Items      []GetBenchmarkListItem `json:"items"`
+	TotalCount int                    `json:"total_count"`
+}
+
+type GetBenchmarkListSummaryMetadata struct {
+	ID                  string              `json:"id"`
+	Title               string              `json:"title"`
+	Description         string              `json:"description"`
+	IntegrationType     []string            `json:"connectors"`
+	Enabled             bool                `json:"enabled"`
+	CreatedAt           time.Time           `json:"created_at"`
+	UpdatedAt           time.Time           `json:"updated_at"`
+	ComplianceScore            float64                            `json:"compliance_score"`
+	SeveritySummaryByControl   BenchmarkControlsSeverityStatusV2  `json:"severity_summary_by_control"`
+	SeveritySummaryByResource  BenchmarkResourcesSeverityStatusV2 `json:"severity_summary_by_resource"`
+	SeveritySummaryByIncidents types.SeverityResultV2             `json:"severity_summary_by_incidents"`
+	CostImpact                 *float64                           `json:"cost_impact"`
+	ComplianceResultsSummary   ComplianceStatusSummaryV2          `json:"compliance_results_summary"`
+	IssuesCount                int                                `json:"issues_count"`
+	LastEvaluatedAt            *time.Time                         `json:"last_evaluated_at"`
+	LastJobStatus              string                             `json:"last_job_status"`
+}
+
+
+
+type GetBenchmarkSummaryListResponse struct {
+	Items      []GetBenchmarkListSummaryMetadata `json:"items"`
 	TotalCount int                    `json:"total_count"`
 }
 

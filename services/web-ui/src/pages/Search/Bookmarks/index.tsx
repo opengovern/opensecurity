@@ -206,24 +206,11 @@ export default function Bookmarks({ setTab }: Props) {
     // const [loading, setLoading] = useState(false)
     const [savedQuery, setSavedQuery] = useAtom(queryAtom)
     const [code, setCode] = useState(savedQuery || '')
-    const [selectedIndex, setSelectedIndex] = useState(0)
-    const [searchCategory, setSearchCategory] = useState('')
-    const [selectedRow, setSelectedRow] =
+
         useState<GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2>()
-    const [openDrawer, setOpenDrawer] = useState(false)
-    const [openSlider, setOpenSlider] = useState(false)
-    const [openSearch, setOpenSearch] = useState(true)
-    const [query, setQuery] =
-        useState<GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequestV2>()
-    const [selectedFilter, setSelectedFilters] = useState<string[]>([])
-
-    const [showEditor, setShowEditor] = useState(true)
-    const isDemo = useAtomValue(isDemoAtom)
+    
     const [pageSize, setPageSize] = useState(1000)
-    const [autoRun, setAutoRun] = useState(false)
-    const [listofTables, setListOfTables] = useState([])
-
-    const [engine, setEngine] = useState('odysseus-sql')
+ 
     const [page, setPage] = useState(1)
     const [totalCount, setTotalCount] = useState(0)
     const [totalPage, setTotalPage] = useState(0)
@@ -480,9 +467,9 @@ axios
                                 className='h-full'
                                     style={{
                                         "width": `calc(calc(100% - ${
-                                            rows.length >= 3 ? '2' : '1'
+                                            rows.length >= 4 ? '3' : (rows.length-1)
                                         }rem) / ${
-                                            rows.length >= 3 ? '3' : rows.length
+                                            rows.length >= 4 ? '4' : rows.length
                                         })`,
                                     }}
                                 >
@@ -494,7 +481,7 @@ axios
                                         onClick={() => {
                                             // @ts-ignore
                                             setSavedQuery(
-                                                q?.query?.queryToExecute
+                                                q?.query?.query_to_execute
                                             )
                                             setTab('3')
                                         }}

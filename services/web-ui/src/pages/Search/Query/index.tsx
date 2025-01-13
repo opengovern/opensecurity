@@ -195,7 +195,7 @@ export default function Query() {
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)
     const [loaded, setLoaded] = useState(false)
     const [savedQuery, setSavedQuery] = useAtom(queryAtom)
-    const [code, setCode] = useState(savedQuery ? savedQuery : "")
+    const [code, setCode] = useState(savedQuery ? savedQuery : '')
     const [selectedIndex, setSelectedIndex] = useState(0)
     const [searchCategory, setSearchCategory] = useState('')
     const [selectedRow, setSelectedRow] = useState({})
@@ -205,9 +205,9 @@ export default function Query() {
     const isDemo = useAtomValue(isDemoAtom)
     const [pageSize, setPageSize] = useState(1000)
     const [autoRun, setAutoRun] = useState(false)
-    const [engine, setEngine] = useState('cloudql')
+
     const [page, setPage] = useState(0)
-    const [tab,setTab] = useState("0")
+    const [tab, setTab] = useState('0')
     const [preferences, setPreferences] = useState(undefined)
     const [integrations, setIntegrations] = useState([])
     const [selectedIntegration, setSelectedIntegration] = useState('')
@@ -219,7 +219,6 @@ export default function Query() {
     const [schemaLoading2, setSchemaLoading2] = useState(false)
     const [expanded, setExpanded] = useState(-1)
     const [expanded1, setExpanded1] = useState(-1)
-
 
     // const { response: categories, isLoading: categoryLoading } =
     //     useInventoryApiV2AnalyticsCategoriesList()
@@ -233,7 +232,8 @@ export default function Query() {
     } = useInventoryApiV1QueryRunCreate(
         {
             page: { no: 1, size: pageSize },
-            engine,
+            // @ts-ignore
+            engine: 'cloudql',
             query: code,
         },
         {},
@@ -285,10 +285,6 @@ export default function Query() {
             .finally(() => {})
     }, [])
 
-
-
-   
-
     const recordToArray = (record?: Record<string, string[]> | undefined) => {
         if (record === undefined) {
             return []
@@ -308,61 +304,59 @@ export default function Query() {
                 .count,
         [queryResponse, isDemo]
     )
-        useEffect(() => {
-            if(savedQuery.length >0 && savedQuery !== ""){
+    useEffect(() => {
+        if (savedQuery.length > 0 && savedQuery !== '') {
             setCode(savedQuery)
             setAutoRun(true)
+        }
+    }, [savedQuery])
 
-            }
-        }, [savedQuery])
-
- const getIntegrations =  () => {
-     setSchemaLoading(true)
-     axios
-         .get(
-             'https://raw.githubusercontent.com/opengovern/opengovernance/refs/heads/main/assets/integrations/integrations.json'
-         )
-         .then((res) => {
-             if (res.data) {
-                 const arr = res.data
-                 const temp :any =[]
-                 // arr.sort(() => Math.random() - 0.5);
-                 arr?.map((integration: any) => {
-                     if (
-                         integration.schema_ids &&
-                         integration.schema_ids.length > 0 &&
-                         integration.tier === 'Community' &&
-                         integration.SourceCode != ''
-                     ) {
+    const getIntegrations = () => {
+        setSchemaLoading(true)
+        axios
+            .get(
+                'https://raw.githubusercontent.com/opengovern/opengovernance/refs/heads/main/assets/integrations/integrations.json'
+            )
+            .then((res) => {
+                if (res.data) {
+                    const arr = res.data
+                    const temp: any = []
+                    // arr.sort(() => Math.random() - 0.5);
+                    arr?.map((integration: any) => {
+                        if (
+                            integration.schema_ids &&
+                            integration.schema_ids.length > 0 &&
+                            integration.tier === 'Community' &&
+                            integration.SourceCode != ''
+                        ) {
                             temp.push(integration)
-                     }
-                 })
-                 setIntegrations(temp)
-             }
-             setSchemaLoading(false)
-         })
-         .catch((err) => {
-             setSchemaLoading(false)
-         })
- }
-  const getMasterSchema = (id: string) => {
-      setSchemaLoading1(true)
-      axios
-          .get(
-              `https://raw.githubusercontent.com/opengovern/hub/refs/heads/main/schemas/${id}.json`
-          )
-          .then((res) => {
-              if (res.data) {
-                  setTables(res.data?.tables)
-                  
-              }
-              setSchemaLoading1(false)
-          })
-          .catch((err) => {
-              setSchemaLoading1(false)
-          })
-  }
-    const getTableData = (id:string,name: string) => {
+                        }
+                    })
+                    setIntegrations(temp)
+                }
+                setSchemaLoading(false)
+            })
+            .catch((err) => {
+                setSchemaLoading(false)
+            })
+    }
+    const getMasterSchema = (id: string) => {
+        setSchemaLoading1(true)
+        axios
+            .get(
+                `https://raw.githubusercontent.com/opengovern/hub/refs/heads/main/schemas/${id}.json`
+            )
+            .then((res) => {
+                if (res.data) {
+                    setTables(res.data?.tables)
+                }
+                setSchemaLoading1(false)
+            })
+            .catch((err) => {
+                setSchemaLoading1(false)
+            })
+    }
+    const getTableData = (id: string, name: string) => {
         setSchemaLoading2(true)
         axios
             .get(
@@ -379,219 +373,224 @@ export default function Query() {
             })
     }
 
- useEffect(()=>{
-    getIntegrations()
- },[])
-
+    useEffect(() => {
+        getIntegrations()
+    }, [])
 
     return (
         <>
             <TopHeader />
-            {isLoading ? (
-                <Spinner className="mt-56" />
-            ) : (
-                <Flex className="w-full" alignItems="start" flexDirection="col">
-                    <Flex
-                        flexDirection="row"
-                        className="gap-5"
-                        justifyContent="start"
-                        alignItems="start"
-                        style={{ flex: '1 1 0' }}
+            <Flex className="w-full" alignItems="start" flexDirection="col">
+                <Flex
+                    flexDirection="row"
+                    className="gap-5"
+                    justifyContent="start"
+                    alignItems="start"
+                    style={{ flex: '1 1 0' }}
+                >
+                    <Modal
+                        visible={openDrawer}
+                        onDismiss={() => setOpenDrawer(false)}
+                        header="Query Result"
+                        className="min-w-[500px]"
+                        size="large"
                     >
-                        <Modal
-                            visible={openDrawer}
-                            onDismiss={() => setOpenDrawer(false)}
-                            header="Query Result"
-                            className="min-w-[500px]"
-                            size="large"
-                        >
-                            <RenderObject obj={selectedRow} />
-                        </Modal>
-                        {openSearch ? (
-                            <>
-                                <Card className="p-3 rounded-xl w-1/3 h-full  ">
-                                    <Flex
-                                        flexDirection="col"
-                                        justifyContent="start"
-                                        alignItems="start"
-                                        className="gap-2 overflow-y-scroll max-h-[500px]"
-                                    >
-                                        <Text className="font-bold text-xl text-black flex flex-row justify-between w-full">
-                                            Tables
-                                            <Flex
-                                                justifyContent="end"
-                                                // className="mt-12"
+                        <RenderObject obj={selectedRow} />
+                    </Modal>
+                    {openSearch ? (
+                        <>
+                            <Card className="p-3 rounded-xl w-1/3 h-full  ">
+                                <Flex
+                                    flexDirection="col"
+                                    justifyContent="start"
+                                    alignItems="start"
+                                    className="gap-2 overflow-y-scroll max-h-[500px]"
+                                >
+                                    <Text className="font-bold text-xl text-black flex flex-row justify-between w-full">
+                                        Tables
+                                        <Flex
+                                            justifyContent="end"
+                                            // className="mt-12"
+                                        >
+                                            <Button
+                                                variant="light"
+                                                onClick={() =>
+                                                    setOpenSearch(false)
+                                                }
                                             >
-                                                <Button
-                                                    variant="light"
-                                                    onClick={() =>
-                                                        setOpenSearch(false)
-                                                    }
-                                                >
-                                                    <ChevronDoubleLeftIcon className="h-4" />
-                                                </Button>
-                                            </Flex>
-                                        </Text>
-                                        <>
-                                            {schemaLoading ? (
-                                                <>
-                                                    <Spinner />
-                                                </>
-                                            ) : (
-                                                <>
-                                                    {integrations?.map(
-                                                        (
-                                                            integration: any,
-                                                            index
-                                                        ) => {
-                                                            return (
-                                                                <>
-                                                                    <ExpandableSection
-                                                                        expanded={
-                                                                            expanded ==
-                                                                            index
+                                                <ChevronDoubleLeftIcon className="h-4" />
+                                            </Button>
+                                        </Flex>
+                                    </Text>
+                                    <>
+                                        {schemaLoading ? (
+                                            <>
+                                                <Spinner />
+                                            </>
+                                        ) : (
+                                            <>
+                                                {integrations?.map(
+                                                    (
+                                                        integration: any,
+                                                        index
+                                                    ) => {
+                                                        return (
+                                                            <>
+                                                                <ExpandableSection
+                                                                    expanded={
+                                                                        expanded ==
+                                                                        index
+                                                                    }
+                                                                    onChange={({
+                                                                        detail,
+                                                                    }) => {
+                                                                        if (
+                                                                            detail.expanded
+                                                                        ) {
+                                                                            setExpanded(
+                                                                                index
+                                                                            )
+                                                                            setSelectedIntegration(
+                                                                                integration
+                                                                            )
+                                                                            getMasterSchema(
+                                                                                integration
+                                                                                    .schema_ids[0]
+                                                                            )
+                                                                        } else {
+                                                                            setExpanded(
+                                                                                -1
+                                                                            )
                                                                         }
-                                                                        onChange={({
-                                                                            detail,
-                                                                        }) => {
-                                                                            if (
-                                                                                detail.expanded
-                                                                            ) {
-                                                                                setExpanded(
-                                                                                    index
-                                                                                )
-                                                                                setSelectedIntegration(
-                                                                                    integration
-                                                                                )
-                                                                                getMasterSchema(
-                                                                                    integration
-                                                                                        .schema_ids[0]
-                                                                                )
+                                                                    }}
+                                                                    headerText={
+                                                                        <span className=" text-sm">
+                                                                            {
+                                                                                integration?.name
                                                                             }
-                                                                            else{
-                                                                                setExpanded(-1)
-                                                                            }
-                                                                        }}
-                                                                        headerText={
-                                                                            <span className=" text-sm">
-                                                                                {
-                                                                                    integration?.name
-                                                                                }
-                                                                            </span>
-                                                                        }
-                                                                    >
-                                                                        <>
-                                                                            {schemaLoading1 ? (
+                                                                        </span>
+                                                                    }
+                                                                >
+                                                                    <>
+                                                                        {schemaLoading1 ? (
+                                                                            <>
+                                                                                <Spinner />
+                                                                            </>
+                                                                        ) : (
+                                                                            <div className="ml-4">
+                                                                                {' '}
                                                                                 <>
-                                                                                    <Spinner />
-                                                                                </>
-                                                                            ) : (
-                                                                                <div className="ml-4">
-                                                                                    {' '}
-                                                                                    <>
-                                                                                        {tables?.map(
-                                                                                            (
-                                                                                                table: any,
-                                                                                                index1
-                                                                                            ) => {
-                                                                                                return (
-                                                                                                    <>
-                                                                                                        <ExpandableSection
-                                                                                                            expanded={
-                                                                                                                expanded1 ==
-                                                                                                                index1
+                                                                                    {tables?.map(
+                                                                                        (
+                                                                                            table: any,
+                                                                                            index1
+                                                                                        ) => {
+                                                                                            return (
+                                                                                                <>
+                                                                                                    <ExpandableSection
+                                                                                                        expanded={
+                                                                                                            expanded1 ==
+                                                                                                            index1
+                                                                                                        }
+                                                                                                        onChange={({
+                                                                                                            detail,
+                                                                                                        }) => {
+                                                                                                            if (
+                                                                                                                detail.expanded
+                                                                                                            ) {
+                                                                                                                setExpanded1(
+                                                                                                                    index1
+                                                                                                                )
+                                                                                                                setSelectedTable(
+                                                                                                                    table
+                                                                                                                )
+                                                                                                                getTableData(
+                                                                                                                    integration
+                                                                                                                        .schema_ids[0],
+                                                                                                                    table.table_name
+                                                                                                                )
+                                                                                                            } else {
+                                                                                                                setExpanded1(
+                                                                                                                    -1
+                                                                                                                )
                                                                                                             }
-                                                                                                            onChange={({
-                                                                                                                detail,
-                                                                                                            }) => {
-                                                                                                                if (
-                                                                                                                    detail.expanded
-                                                                                                                ) {
-                                                                                                                    setExpanded1(
-                                                                                                                        index1
-                                                                                                                    )
-                                                                                                                    setSelectedTable(
-                                                                                                                        table
-                                                                                                                    )
-                                                                                                                    getTableData(
-                                                                                                                        integration
-                                                                                                                            .schema_ids[0],
-                                                                                                                        table.table_name
-                                                                                                                    )
-                                                                                                                }
-                                                                                                                else{
-                                                                                                                    setExpanded1(-1)
-                                                                                                                }
-                                                                                                            }}
-                                                                                                            headerText={
-                                                                                                                <span onClick={(e)=>{
+                                                                                                        }}
+                                                                                                        headerText={
+                                                                                                            <span
+                                                                                                                onClick={(
+                                                                                                                    e
+                                                                                                                ) => {
                                                                                                                     e.preventDefault()
                                                                                                                     e.stopPropagation()
-                                                                                                                    setCode(code + `${table?.table_name}`)
+                                                                                                                    setCode(
+                                                                                                                        code +
+                                                                                                                            `${table?.table_name}`
+                                                                                                                    )
+                                                                                                                }}
+                                                                                                                className=" text-sm"
+                                                                                                            >
+                                                                                                                {
+                                                                                                                    table?.table_name
+                                                                                                                }
+                                                                                                            </span>
+                                                                                                        }
+                                                                                                    >
+                                                                                                        <>
+                                                                                                            {schemaLoading2 ? (
+                                                                                                                <>
+                                                                                                                    <Spinner />
+                                                                                                                </>
+                                                                                                            ) : (
+                                                                                                                <>
+                                                                                                                    {columns?.map(
+                                                                                                                        (
+                                                                                                                            column: any,
+                                                                                                                            index2
+                                                                                                                        ) => {
+                                                                                                                            return (
+                                                                                                                                <>
+                                                                                                                                    <Flex className="pl-8 w-full">
+                                                                                                                                        <span className=" font-semibold">
+                                                                                                                                            {
+                                                                                                                                                column.name
+                                                                                                                                            }
+                                                                                                                                        </span>
+                                                                                                                                        <span>
+                                                                                                                                            (
+                                                                                                                                            {
+                                                                                                                                                column.type
+                                                                                                                                            }
 
-                                                                                                                }} className=" text-sm">
-                                                                                                                    {
-                                                                                                                        table?.table_name
-                                                                                                                    }
-                                                                                                                </span>
-                                                                                                            }
-                                                                                                        >
-                                                                                                            <>
-                                                                                                                {schemaLoading2 ? (
-                                                                                                                    <>
-                                                                                                                        <Spinner />
-                                                                                                                    </>
-                                                                                                                ) : (
-                                                                                                                    <>
-                                                                                                                        {columns?.map(
-                                                                                                                            (
-                                                                                                                                column: any,
-                                                                                                                                index2
-                                                                                                                            ) => {
-                                                                                                                                return (
-                                                                                                                                    <>
-                                                                                                                                        <Flex className="pl-8 w-full">
-                                                                                                                                            <span className=" font-semibold">
-                                                                                                                                                {
-                                                                                                                                                    column.name
-                                                                                                                                                }
-                                                                                                                                            </span>
-                                                                                                                                            <span>
-                                                                                                                                                (
-                                                                                                                                                {
-                                                                                                                                                    column.type
-                                                                                                                                                }
-
-                                                                                                                                                )
-                                                                                                                                            </span>
-                                                                                                                                        </Flex>
-                                                                                                                                    </>
-                                                                                                                                )
-                                                                                                                            }
-                                                                                                                        )}
-                                                                                                                    </>
-                                                                                                                )}
-                                                                                                            </>
-                                                                                                        </ExpandableSection>
-                                                                                                    </>
-                                                                                                )
-                                                                                            }
-                                                                                        )}
-                                                                                    </>
-                                                                                </div>
-                                                                            )}
-                                                                        </>
-                                                                    </ExpandableSection>
-                                                                </>
-                                                            )
-                                                        }
-                                                    )}
-                                                </>
-                                            )}
-                                        </>
-                                    </Flex>
-                                </Card>
-                                {/* <Card className="sticky w-fit h-fit max-h-[550px] min-w-max   overflow-y-scroll">
+                                                                                                                                            )
+                                                                                                                                        </span>
+                                                                                                                                    </Flex>
+                                                                                                                                </>
+                                                                                                                            )
+                                                                                                                        }
+                                                                                                                    )}
+                                                                                                                </>
+                                                                                                            )}
+                                                                                                        </>
+                                                                                                    </ExpandableSection>
+                                                                                                </>
+                                                                                            )
+                                                                                        }
+                                                                                    )}
+                                                                                </>
+                                                                            </div>
+                                                                        )}
+                                                                    </>
+                                                                </ExpandableSection>
+                                                            </>
+                                                        )
+                                                    }
+                                                )}
+                                            </>
+                                        )}
+                                    </>
+                                </Flex>
+                            </Card>
+                            {/* <Card className="sticky w-fit h-fit max-h-[550px] min-w-max   overflow-y-scroll">
                                     <TextInput
                                         className="w-56 mb-6"
                                         icon={MagnifyingGlassIcon}
@@ -670,109 +669,105 @@ export default function Query() {
                                         </Button>
                                     </Flex>
                                 </Card> */}
-                            </>
-                        ) : (
-                            <Flex
-                                flexDirection="col"
-                                justifyContent="center"
-                                className="min-h-full w-fit"
+                        </>
+                    ) : (
+                        <Flex
+                            flexDirection="col"
+                            justifyContent="center"
+                            className="min-h-full w-fit"
+                        >
+                            <Button
+                                variant="light"
+                                onClick={() => setOpenSearch(true)}
                             >
-                                <Button
-                                    variant="light"
-                                    onClick={() => setOpenSearch(true)}
-                                >
-                                    <Flex
-                                        flexDirection="col"
-                                        className="gap-4 w-4"
-                                    >
-                                        <TableCellsIcon />
-                                        <Text className="rotate-90">
-                                            Tables
-                                        </Text>
-                                    </Flex>
-                                </Button>
-                            </Flex>
-                        )}
+                                <Flex flexDirection="col" className="gap-4 w-4">
+                                    <TableCellsIcon />
+                                    <Text className="rotate-90">Tables</Text>
+                                </Flex>
+                            </Button>
+                        </Flex>
+                    )}
 
-                        <Flex className="h-full">
-                            <CodeEditor
-                                ace={ace}
-                                language="sql"
-                                value={code}
-                                languageLabel="SQL"
-                                onChange={({ detail }) => {
+                    <Flex className="h-full">
+                        <CodeEditor
+                            ace={ace}
+                            language="sql"
+                            value={code}
+                            languageLabel="SQL"
+                            onChange={({ detail }) => {
+                                if (isLoading) {
+                                    return
+                                } else {
                                     setSavedQuery('')
                                     setCode(detail.value)
                                     if (tab !== '3') {
                                         setTab('3')
                                     }
-                                }}
-                                preferences={preferences}
-                                onPreferencesChange={(e) =>
-                                    // @ts-ignore
-                                    setPreferences(e.detail)
                                 }
-                                loading={isLoading}
-                                themes={{
-                                    light: [
-                                        'xcode',
-                                        'cloud_editor',
-                                        'sqlserver',
-                                    ],
-                                    dark: ['cloud_editor_dark', 'twilight'],
-                                    // @ts-ignore
-                                }}
-                            />
-                        </Flex>
+                            }}
+                            preferences={preferences}
+                            onPreferencesChange={(e) =>
+                                // @ts-ignore
+                                setPreferences(e.detail)
+                            }
+                            loading={false}
+                            
+                            themes={{
+                                light: ['xcode', 'cloud_editor', 'sqlserver'],
+                                dark: ['cloud_editor_dark', 'twilight'],
+                                // @ts-ignore
+                            }}
+                        />
                     </Flex>
-                    <Tabs
-                        className="mt-2"
-                        activeTabId={tab}
-                        onChange={(e) => setTab(e.detail.activeTabId)}
-                        tabs={[
-                            {
-                                id: '0',
-                                label: 'Getting Started',
-                                content: (
-                                    <>
-                                        <Bookmarks setTab={setTab} />
-                                    </>
-                                ),
-                            },
+                </Flex>
+                <Tabs
+                    className="mt-2"
+                    activeTabId={tab}
+                    onChange={(e) => setTab(e.detail.activeTabId)}
+                    tabs={[
+                        {
+                            id: '0',
+                            label: 'Getting Started',
+                            content: (
+                                <>
+                                    <Bookmarks setTab={setTab} />
+                                </>
+                            ),
+                        },
 
-                            {
-                                id: '1',
-                                label: 'All Queries',
-                                content: (
-                                    <>
-                                        <AllQueries setTab={setTab} />
-                                    </>
-                                ),
-                            },
-                            {
-                                id: '2',
-                                label: 'Views',
-                                content: (
-                                    <>
-                                        <View setTab={setTab} />
-                                    </>
-                                ),
-                            },
-                            {
-                                id: '3',
-                                label: 'Result',
-                                content: (
-                                    <>
+                        {
+                            id: '1',
+                            label: 'All Queries',
+                            content: (
+                                <>
+                                    <AllQueries setTab={setTab} />
+                                </>
+                            ),
+                        },
+                        {
+                            id: '2',
+                            label: 'Views',
+                            content: (
+                                <>
+                                    <View setTab={setTab} />
+                                </>
+                            ),
+                        },
+                        {
+                            id: '3',
+                            label: 'Result',
+                            content: (
+                                <>
+                                    <Flex
+                                        flexDirection="col"
+                                        className="w-full "
+                                    >
                                         <Flex
                                             flexDirection="col"
-                                            className="w-full "
+                                            className="mb-4"
                                         >
-                                            <Flex
-                                                flexDirection="col"
-                                                className="mb-4"
-                                            >
-                                                {/* <Card className="relative overflow-hidden"> */}
-                                                {/* <AceEditor
+                                            {/* <Card className="relative overflow-hidden"> */}
+                                            {/* <AceEditor
                                             mode="java"
                                             theme="github"
                                             onChange={(text) => {
@@ -783,7 +778,7 @@ export default function Query() {
                                             value={code}
                                         /> */}
 
-                                                {/* <Editor
+                                            {/* <Editor
                                             onValueChange={(text) => {
                                                 setSavedQuery('')
                                                 setCode(text)
@@ -804,308 +799,300 @@ export default function Query() {
                                             }}
                                             placeholder="-- write your SQL query here"
                                         /> */}
-                                                {isLoading && isExecuted && (
-                                                    <Spinner className="bg-white/30 backdrop-blur-sm top-0 left-0 absolute flex justify-center items-center w-full h-full" />
-                                                )}
-                                                {/* </Card> */}
-                                                <Flex className="w-full mt-4">
-                                                    <Flex
-                                                        justifyContent="start"
-                                                        className="gap-1"
+                                            {/* {isLoading && isExecuted && (
+                                                <Spinner className="bg-white/30 backdrop-blur-sm top-0 left-0 absolute flex justify-center items-center w-full h-full" />
+                                            )} */}
+                                            {/* </Card> */}
+                                            <Flex className="w-full mt-4">
+                                                <Flex
+                                                    justifyContent="start"
+                                                    className="gap-1"
+                                                >
+                                                    <Text className="mr-2 w-fit">
+                                                        Maximum rows:
+                                                    </Text>
+                                                    <Select
+                                                        enableClear={false}
+                                                        className="w-56"
+                                                        placeholder="1,000"
                                                     >
-                                                        <Text className="mr-2 w-fit">
-                                                            Maximum rows:
-                                                        </Text>
-                                                        <Select
-                                                            enableClear={false}
-                                                            className="w-56"
-                                                            placeholder="1,000"
-                                                        >
-                                                            <SelectItem
-                                                                value="1000"
-                                                                onClick={() =>
-                                                                    setPageSize(
-                                                                        1000
-                                                                    )
-                                                                }
-                                                            >
-                                                                1,000
-                                                            </SelectItem>
-                                                            <SelectItem
-                                                                value="3000"
-                                                                onClick={() =>
-                                                                    setPageSize(
-                                                                        3000
-                                                                    )
-                                                                }
-                                                            >
-                                                                3,000
-                                                            </SelectItem>
-                                                            <SelectItem
-                                                                value="5000"
-                                                                onClick={() =>
-                                                                    setPageSize(
-                                                                        5000
-                                                                    )
-                                                                }
-                                                            >
-                                                                5,000
-                                                            </SelectItem>
-                                                            <SelectItem
-                                                                value="10000"
-                                                                onClick={() =>
-                                                                    setPageSize(
-                                                                        10000
-                                                                    )
-                                                                }
-                                                            >
-                                                                10,000
-                                                            </SelectItem>
-                                                        </Select>
-                                                        <Text className="mr-2 w-fit">
-                                                            Engine:
-                                                        </Text>
-                                                        <Select
-                                                            enableClear={false}
-                                                            className="w-56"
-                                                            value={engine}
-                                                        >
-                                                            <SelectItem
-                                                                value="odysseus-sql"
-                                                                onClick={() =>
-                                                                    setEngine(
-                                                                        'odysseus-sql'
-                                                                    )
-                                                                }
-                                                            >
-                                                                CloudQL
-                                                            </SelectItem>
-                                                            {/* <SelectItem
-                                            value="odysseus-rego"
-                                            onClick={() =>
-                                                setEngine('odysseus-rego')
-                                            }
-                                        >
-                                            Odysseus Rego
-                                        </SelectItem> */}
-                                                        </Select>
-                                                    </Flex>
-                                                    <Flex className="w-max gap-x-3">
-                                                        {!!code.length && (
-                                                            <KButton
-                                                                className="  w-max min-w-max  "
-                                                                onClick={() =>
-                                                                    setCode('')
-                                                                }
-                                                                iconSvg={
-                                                                    <CommandLineIcon className="w-5 " />
-                                                                }
-                                                            >
-                                                                Clear editor
-                                                            </KButton>
-                                                        )}
-                                                        <KButton
-                                                            // icon={PlayCircleIcon}
-                                                            variant="primary"
-                                                            className="w-max  min-w-[300px]  "
+                                                        <SelectItem
+                                                            value="1000"
                                                             onClick={() =>
-                                                                sendNow()
-                                                            }
-                                                            disabled={
-                                                                !code.length
-                                                            }
-                                                            loading={
-                                                                isLoading &&
-                                                                isExecuted
-                                                            }
-                                                            loadingText="Running"
-                                                            iconSvg={
-                                                                <PlayCircleIcon className="w-5 " />
+                                                                setPageSize(
+                                                                    1000
+                                                                )
                                                             }
                                                         >
-                                                            Run
-                                                        </KButton>
-                                                    </Flex>
+                                                            1,000
+                                                        </SelectItem>
+                                                        <SelectItem
+                                                            value="3000"
+                                                            onClick={() =>
+                                                                setPageSize(
+                                                                    3000
+                                                                )
+                                                            }
+                                                        >
+                                                            3,000
+                                                        </SelectItem>
+                                                        <SelectItem
+                                                            value="5000"
+                                                            onClick={() =>
+                                                                setPageSize(
+                                                                    5000
+                                                                )
+                                                            }
+                                                        >
+                                                            5,000
+                                                        </SelectItem>
+                                                        <SelectItem
+                                                            value="10000"
+                                                            onClick={() =>
+                                                                setPageSize(
+                                                                    10000
+                                                                )
+                                                            }
+                                                        >
+                                                            10,000
+                                                        </SelectItem>
+                                                    </Select>
+                                                    {/* <Text className="mr-2 w-fit">
+                                                        Engine:
+                                                    </Text>
+                                                    <Select
+                                                        enableClear={false}
+                                                        className="w-56"
+                                                        value={engine}
+                                                    >
+                                                        <SelectItem
+                                                            value="odysseus-sql"
+                                                            onClick={() =>
+                                                                setEngine(
+                                                                    'odysseus-sql'
+                                                                )
+                                                            }
+                                                        >
+                                                            CloudQL
+                                                        </SelectItem>
+                                                        <SelectItem
+                                                            value="odysseus-rego"
+                                                            onClick={() =>
+                                                                setEngine(
+                                                                    'odysseus-rego'
+                                                                )
+                                                            }
+                                                        >
+                                                            Odysseus Rego
+                                                        </SelectItem>
+                                                    </Select> */}
                                                 </Flex>
-                                                <Flex className="w-full">
-                                                    {!isLoading &&
-                                                        isExecuted &&
-                                                        error && (
-                                                            <Flex
-                                                                justifyContent="start"
-                                                                className="w-fit"
-                                                            >
-                                                                <Icon
-                                                                    icon={
-                                                                        ExclamationCircleIcon
-                                                                    }
-                                                                    color="rose"
-                                                                />
-                                                                <Text color="rose">
-                                                                    {getErrorMessage(
-                                                                        error
-                                                                    )}
-                                                                </Text>
-                                                            </Flex>
-                                                        )}
-                                                    {!isLoading &&
-                                                        isExecuted &&
-                                                        queryResponse && (
-                                                            <Flex
-                                                                justifyContent="start"
-                                                                className="w-fit"
-                                                            >
-                                                                {memoCount ===
-                                                                pageSize ? (
-                                                                    <>
-                                                                        <Icon
-                                                                            icon={
-                                                                                ExclamationCircleIcon
-                                                                            }
-                                                                            color="amber"
-                                                                            className="ml-0 pl-0"
-                                                                        />
-                                                                        <Text color="amber">
-                                                                            {`Row limit of ${numberDisplay(
-                                                                                pageSize,
-                                                                                0
-                                                                            )} reached, results are truncated`}
-                                                                        </Text>
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <Icon
-                                                                            icon={
-                                                                                CheckCircleIcon
-                                                                            }
-                                                                            color="emerald"
-                                                                        />
-                                                                        <Text color="emerald">
-                                                                            Success
-                                                                        </Text>
-                                                                    </>
-                                                                )}
-                                                            </Flex>
-                                                        )}
+                                                <Flex className="w-max gap-x-3">
+                                                    {!!code.length && (
+                                                        <KButton
+                                                            className="  w-max min-w-max  "
+                                                            onClick={() =>
+                                                                setCode('')
+                                                            }
+                                                            iconSvg={
+                                                                <CommandLineIcon className="w-5 " />
+                                                            }
+                                                        >
+                                                            Clear editor
+                                                        </KButton>
+                                                    )}
+                                                    <KButton
+                                                        // icon={PlayCircleIcon}
+                                                        variant="primary"
+                                                        className="w-max  min-w-[300px]  "
+                                                        onClick={() =>
+                                                            sendNow()
+                                                        }
+                                                        disabled={!code.length}
+                                                        loading={
+                                                            isLoading &&
+                                                            isExecuted
+                                                        }
+                                                        loadingText="Running"
+                                                        iconSvg={
+                                                            <PlayCircleIcon className="w-5 " />
+                                                        }
+                                                    >
+                                                        Run
+                                                    </KButton>
                                                 </Flex>
                                             </Flex>
-                                            <Grid
-                                                numItems={1}
-                                                className="w-full"
-                                            >
-                                                <KTable
-                                                    className="   min-h-[450px]   "
-                                                    // resizableColumns
-                                                    // variant="full-page"
-                                                    renderAriaLive={({
-                                                        firstIndex,
-                                                        lastIndex,
-                                                        totalItemsCount,
-                                                    }) =>
-                                                        `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
-                                                    }
-                                                    onSortingChange={(
-                                                        event
-                                                    ) => {
-                                                        // setSort(event.detail.sortingColumn.sortingField)
-                                                        // setSortOrder(!sortOrder)
-                                                    }}
-                                                    // sortingColumn={sort}
-                                                    // sortingDescending={sortOrder}
-                                                    // sortingDescending={sortOrder == 'desc' ? true : false}
+                                            <Flex className="w-full">
+                                                {!isLoading &&
+                                                    isExecuted &&
+                                                    error && (
+                                                        <Flex
+                                                            justifyContent="start"
+                                                            className="w-fit"
+                                                        >
+                                                            <Icon
+                                                                icon={
+                                                                    ExclamationCircleIcon
+                                                                }
+                                                                color="rose"
+                                                            />
+                                                            <Text color="rose">
+                                                                {getErrorMessage(
+                                                                    error
+                                                                )}
+                                                            </Text>
+                                                        </Flex>
+                                                    )}
+                                                {!isLoading &&
+                                                    isExecuted &&
+                                                    queryResponse && (
+                                                        <Flex
+                                                            justifyContent="start"
+                                                            className="w-fit"
+                                                        >
+                                                            {memoCount ===
+                                                            pageSize ? (
+                                                                <>
+                                                                    <Icon
+                                                                        icon={
+                                                                            ExclamationCircleIcon
+                                                                        }
+                                                                        color="amber"
+                                                                        className="ml-0 pl-0"
+                                                                    />
+                                                                    <Text color="amber">
+                                                                        {`Row limit of ${numberDisplay(
+                                                                            pageSize,
+                                                                            0
+                                                                        )} reached, results are truncated`}
+                                                                    </Text>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Icon
+                                                                        icon={
+                                                                            CheckCircleIcon
+                                                                        }
+                                                                        color="emerald"
+                                                                    />
+                                                                    <Text color="emerald">
+                                                                        Success
+                                                                    </Text>
+                                                                </>
+                                                            )}
+                                                        </Flex>
+                                                    )}
+                                            </Flex>
+                                        </Flex>
+                                        <Grid numItems={1} className="w-full">
+                                            <KTable
+                                                className="   min-h-[450px]   "
+                                                // resizableColumns
+                                                // variant="full-page"
+                                                renderAriaLive={({
+                                                    firstIndex,
+                                                    lastIndex,
+                                                    totalItemsCount,
+                                                }) =>
+                                                    `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
+                                                }
+                                                onSortingChange={(event) => {
+                                                    // setSort(event.detail.sortingColumn.sortingField)
+                                                    // setSortOrder(!sortOrder)
+                                                }}
+                                                // sortingColumn={sort}
+                                                // sortingDescending={sortOrder}
+                                                // sortingDescending={sortOrder == 'desc' ? true : false}
+                                                // @ts-ignore
+                                                // stickyHeader={true}
+                                                resizableColumns={true}
+                                                // stickyColumns={
+                                                //  {   first:1,
+                                                //     last: 1}
+                                                // }
+                                                onRowClick={(event) => {
+                                                    const row =
+                                                        event.detail.item
                                                     // @ts-ignore
-                                                    // stickyHeader={true}
-                                                    resizableColumns={true}
-                                                    // stickyColumns={
-                                                    //  {   first:1,
-                                                    //     last: 1}
-                                                    // }
-                                                    onRowClick={(event) => {
-                                                        const row =
-                                                            event.detail.item
-                                                        // @ts-ignore
-                                                        setSelectedRow(row)
-                                                        setOpenDrawer(true)
-                                                    }}
-                                                    columnDefinitions={
-                                                        getTable(
-                                                            queryResponse?.headers,
-                                                            queryResponse?.result,
-                                                            isDemo
-                                                        ).columns
-                                                    }
-                                                    columnDisplay={
-                                                        getTable(
-                                                            queryResponse?.headers,
-                                                            queryResponse?.result,
-                                                            isDemo
-                                                        ).column_def
-                                                    }
-                                                    enableKeyboardNavigation
-                                                    // @ts-ignore
-                                                    items={getTable(
+                                                    setSelectedRow(row)
+                                                    setOpenDrawer(true)
+                                                }}
+                                                columnDefinitions={
+                                                    getTable(
                                                         queryResponse?.headers,
                                                         queryResponse?.result,
                                                         isDemo
-                                                    ).rows?.slice(
-                                                        page * 10,
-                                                        (page + 1) * 10
-                                                    )}
-                                                    loading={isLoading}
-                                                    loadingText="Loading resources"
-                                                    // stickyColumns={{ first: 0, last: 1 }}
-                                                    // stripedRows
-                                                    trackBy="id"
-                                                    empty={
-                                                        <Box
-                                                            margin={{
-                                                                vertical: 'xs',
-                                                            }}
-                                                            textAlign="center"
-                                                            color="inherit"
-                                                        >
-                                                            <SpaceBetween size="m">
-                                                                <b>
-                                                                    No Results
-                                                                </b>
-                                                            </SpaceBetween>
-                                                        </Box>
-                                                    }
-                                                    header={
-                                                        <Header className="w-full">
-                                                            Results{' '}
-                                                            <span className=" font-medium">
-                                                                ({memoCount})
-                                                            </span>
-                                                        </Header>
-                                                    }
-                                                    pagination={
-                                                        <Pagination
-                                                            currentPageIndex={
-                                                                page + 1
-                                                            }
-                                                            pagesCount={Math.ceil(
-                                                                // @ts-ignore
-                                                                getTable(
-                                                                    queryResponse?.headers,
-                                                                    queryResponse?.result,
-                                                                    isDemo
-                                                                ).rows.length /
-                                                                    10
-                                                            )}
-                                                            onChange={({
-                                                                detail,
-                                                            }) =>
-                                                                setPage(
-                                                                    detail.currentPageIndex -
-                                                                        1
-                                                                )
-                                                            }
-                                                        />
-                                                    }
-                                                />
-                                            </Grid>
-                                            {/* <TabGroup
+                                                    ).columns
+                                                }
+                                                columnDisplay={
+                                                    getTable(
+                                                        queryResponse?.headers,
+                                                        queryResponse?.result,
+                                                        isDemo
+                                                    ).column_def
+                                                }
+                                                enableKeyboardNavigation
+                                                // @ts-ignore
+                                                items={getTable(
+                                                    queryResponse?.headers,
+                                                    queryResponse?.result,
+                                                    isDemo
+                                                ).rows?.slice(
+                                                    page * 10,
+                                                    (page + 1) * 10
+                                                )}
+                                                loading={isLoading}
+                                                loadingText="Loading resources"
+                                                // stickyColumns={{ first: 0, last: 1 }}
+                                                // stripedRows
+                                                trackBy="id"
+                                                empty={
+                                                    <Box
+                                                        margin={{
+                                                            vertical: 'xs',
+                                                        }}
+                                                        textAlign="center"
+                                                        color="inherit"
+                                                    >
+                                                        <SpaceBetween size="m">
+                                                            <b>No Results</b>
+                                                        </SpaceBetween>
+                                                    </Box>
+                                                }
+                                                header={
+                                                    <Header className="w-full">
+                                                        Results{' '}
+                                                        <span className=" font-medium">
+                                                            ({memoCount})
+                                                        </span>
+                                                    </Header>
+                                                }
+                                                pagination={
+                                                    <Pagination
+                                                        currentPageIndex={
+                                                            page + 1
+                                                        }
+                                                        pagesCount={Math.ceil(
+                                                            // @ts-ignore
+                                                            getTable(
+                                                                queryResponse?.headers,
+                                                                queryResponse?.result,
+                                                                isDemo
+                                                            ).rows.length / 10
+                                                        )}
+                                                        onChange={({
+                                                            detail,
+                                                        }) =>
+                                                            setPage(
+                                                                detail.currentPageIndex -
+                                                                    1
+                                                            )
+                                                        }
+                                                    />
+                                                }
+                                            />
+                                        </Grid>
+                                        {/* <TabGroup
                             id="tabs"
                             index={selectedIndex}
                             onIndexChange={setSelectedIndex}
@@ -1257,14 +1244,13 @@ export default function Query() {
                                 </TabPanel>
                             </TabPanels>
                         </TabGroup> */}
-                                        </Flex>
-                                    </>
-                                ),
-                            },
-                        ]}
-                    />
-                </Flex>
-            )}
+                                    </Flex>
+                                </>
+                            ),
+                        },
+                    ]}
+                />
+            </Flex>
         </>
     )
 }

@@ -115,7 +115,6 @@ export default function DiscoveryJobs() {
 
     const [totalCount, setTotalCount] = useState(0)
     const [totalPage, setTotalPage] = useState(0)
-    const [propertyOptions, setPropertyOptions] = useState()
     const [date, setDate] = useState({
         key: 'previous-6-hours',
         amount: 6,
@@ -215,28 +214,7 @@ export default function DiscoveryJobs() {
             .apiV1JobsCreate(body)
             .then((resp) => {
                 const response = resp.data
-                const temp =
-                    response?.summaries
-                        ?.map((v) => {
-                            return { label: v.status, value: v.status }
-                        })
-                        .filter(
-                            (thing, i, arr) =>
-                                arr.findIndex(
-                                    (t) => t.label === thing.label
-                                ) === i
-                        ) || []
-                setAllStatuses(temp)
-                const temp_option = []
-                temp.map((item) => {
-                    temp_option.push({
-                        propertyKey: 'job_status',
-                        value: item.value,
-                    })
-                })
-               
-                setPropertyOptions(temp_option)
-
+                
                 if (resp.data.jobs) {
                     setJobs(resp.data.jobs)
                 } else {
@@ -542,7 +520,40 @@ export default function DiscoveryJobs() {
                                     // filteringOptions={filters}
                                     filteringPlaceholder="Job Filters"
                                     // @ts-ignore
-                                    filteringOptions={propertyOptions}
+                                    filteringOptions={[
+                                        {
+                                            propertyKey: 'job_status',
+                                            value: 'SUCCEEDED',
+                                        },
+                                        {
+                                            propertyKey: 'job_status',
+                                            value: 'FAILED',
+                                        },
+                                        {
+                                            propertyKey: 'job_status',
+                                            value: 'TIMEOUT',
+                                        },
+                                        {
+                                            propertyKey: 'job_status',
+                                            value: 'SUMMARIZER_IN_PROGRESS',
+                                        },
+                                        {
+                                            propertyKey: 'job_status',
+                                            value: 'RUNNERS_IN_PROGRESS',
+                                        },
+                                        {
+                                            propertyKey: 'job_status',
+                                            value: 'SINK_IN_PROGRESS',
+                                        },
+                                        {
+                                            propertyKey: 'job_status',
+                                            value: 'QUEUED',
+                                        },
+                                        {
+                                            propertyKey: 'job_status',
+                                            value: 'CREATED',
+                                        },
+                                    ]}
                                     // @ts-ignore
 
                                     filteringProperties={[

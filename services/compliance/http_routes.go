@@ -98,6 +98,7 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 	v3.GET("/policies/:policy_id", httpserver2.AuthorizeHandler(h.GetPolicy, authApi.ViewerRole))
 
 	v3.POST("/benchmarks", httpserver2.AuthorizeHandler(h.ListBenchmarksFiltered, authApi.ViewerRole))
+	v3.POST("/benchmarks/summary", httpserver2.AuthorizeHandler(h.GetBenchmarksSummary, authApi.ViewerRole))
 	v3.GET("/benchmarks/filters", httpserver2.AuthorizeHandler(h.ListBenchmarksFilters, authApi.ViewerRole))
 	v3.POST("/benchmark/:benchmark_id", httpserver2.AuthorizeHandler(h.GetBenchmarkDetails, authApi.ViewerRole))
 	v3.GET("/benchmark/:benchmark_id/assignments", httpserver2.AuthorizeHandler(h.GetBenchmarkAssignments, authApi.ViewerRole))
@@ -3109,6 +3110,251 @@ func (h *HttpHandler) ListBenchmarksFiltered(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, response)
 }
 
+
+
+
+
+// ListBenchmarksFiltered godoc
+//
+//	@Summary	List benchmarks filtered by integrations and other filters
+//	@Security	BearerToken
+//	@Tags		compliance
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body		api.GetFrameworkListRequest	true	"Request Body"
+//	@Success	200		{object}	[]api.GetBenchmarkListResponse
+//	@Router		/compliance/api/v3/benchmarks/summary [post]
+func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
+	ctx := echoCtx.Request().Context()
+	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
+
+	var req api.GetFrameworkSummaryListRequest
+	if err := bindValidate(echoCtx, &req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	isRoot := true
+	if req.Root != nil {
+		isRoot = *req.Root
+	}
+
+
+	
+
+	benchmarkAssignmentsCount, err := h.db.GetBenchmarkAssignmentsCount()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	benchmarkAssignmentsCountMap := make(map[string]int)
+	for _, ba := range benchmarkAssignmentsCount {
+		benchmarkAssignmentsCountMap[ba.BenchmarkId] = ba.Count
+	}
+	integrationsCountByType := make(map[string]int)
+	integrationsResp, err := h.integrationClient.ListIntegrations(clientCtx, nil)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	for _, s := range integrationsResp.Integrations {
+		if _, ok := integrationsCountByType[s.IntegrationType.String()]; ok {
+			integrationsCountByType[s.IntegrationType.String()]++
+		} else {
+			integrationsCountByType[s.IntegrationType.String()] = 1
+		}
+	}
+
+	
+
+	
+	benchmarks, err := h.db.ListBenchmarksFiltered(ctx, req.TitleRegex, isRoot, nil, nil, req.Assigned, req.IsBaseline, nil)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	var items []api.GetBenchmarkListSummaryMetadata
+
+	for _, b := range benchmarks {
+		
+
+		metadata := db.BenchmarkMetadata{}
+
+		if len(b.Metadata.Bytes) > 0 {
+			err := json.Unmarshal(b.Metadata.Bytes, &metadata)
+			if err != nil {
+				h.logger.Error("failed to unmarshal metadata", zap.Error(err))
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			}
+		}
+
+		benchmarkDetails := api.GetBenchmarkListSummaryMetadata{
+			ID:               b.ID,
+			Title:            b.Title,
+			Description:      b.Description,
+			Enabled:          b.Enabled,
+			CreatedAt:        b.CreatedAt,
+			UpdatedAt:        b.UpdatedAt,
+		}
+
+		if b.IntegrationType != nil {
+			benchmarkDetails.IntegrationType = b.IntegrationType
+		}
+		
+		items = append(items, benchmarkDetails)
+	}
+
+	totalCount := len(items)
+
+	switch strings.ToLower(req.SortBy) {
+	
+	case "title":
+		sort.Slice(items, func(i, j int) bool {
+			return items[i].Title < items[j].Title
+		})
+	}
+
+	if req.PerPage != nil {
+		if req.Cursor == nil {
+			items = utils.Paginate(1, *req.PerPage, items)
+		} else {
+			items = utils.Paginate(*req.Cursor, *req.PerPage, items)
+		}
+	}
+	// finding summary of paginated benchmarks
+	var new_items []api.GetBenchmarkListSummaryMetadata
+
+	for _, benchmark := range items {
+
+		controls, err := h.db.ListControlsByBenchmarkID(ctx, benchmark.ID)
+		if err != nil {
+			h.logger.Error("failed to get controls", zap.Error(err))
+			return err
+		}
+		controlsMap := make(map[string]*db.Control)
+		for _, control := range controls {
+			control := control
+			controlsMap[strings.ToLower(control.ID)] = &control
+		}
+		timeAt := time.Now()
+
+		summariesAtTime, err := es.ListBenchmarkSummariesAtTime(ctx, h.logger, h.client,
+			[]string{benchmark.ID}, nil, nil,
+			timeAt, true)
+		if err != nil {
+			return err
+		}
+
+		passedResourcesResult, err := es.GetPerBenchmarkResourceSeverityResult(ctx, h.logger, h.client, []string{benchmark.ID}, nil, nil, nil, opengovernanceTypes.GetPassedComplianceStatuses())
+		if err != nil {
+			h.logger.Error("failed to fetch per benchmark resource severity result for passed", zap.Error(err))
+			return err
+		}
+
+		allResourcesResult, err := es.GetPerBenchmarkResourceSeverityResult(ctx, h.logger, h.client, []string{benchmark.ID}, nil, nil, nil, nil)
+		if err != nil {
+			h.logger.Error("failed to fetch per benchmark resource severity result for all", zap.Error(err))
+			return err
+		}
+
+		summaryAtTime := summariesAtTime[benchmark.ID]
+
+		csResult := api.ComplianceStatusSummaryV2{}
+		sResult := opengovernanceTypes.SeverityResultV2{}
+		controlSeverityResult := api.BenchmarkControlsSeverityStatusV2{}
+		var costImpact *float64
+		addToResults := func(resultGroup types.ResultGroup) {
+			csResult.AddESComplianceStatusMap(resultGroup.Result.QueryResult)
+			sResult.AddResultMap(resultGroup.Result.SeverityResult)
+			costImpact = utils.PAdd(costImpact, resultGroup.Result.CostImpact)
+			for controlId, controlResult := range resultGroup.Controls {
+				control := controlsMap[strings.ToLower(controlId)]
+				controlSeverityResult = addToControlSeverityResultV2(controlSeverityResult, control, controlResult)
+			}
+		}
+
+		addToResults(summaryAtTime.Integrations.BenchmarkResult)
+
+		lastJob, err := h.schedulerClient.GetLatestComplianceJobForBenchmark(&httpclient.Context{UserRole: authApi.AdminRole}, benchmark.ID)
+		if err != nil {
+			h.logger.Error("failed to get latest compliance job for benchmark", zap.Error(err), zap.String("benchmarkID", benchmark.ID))
+			return err
+		}
+
+		var lastJobStatus string
+		if lastJob != nil {
+			lastJobStatus = string(lastJob.Status)
+		}
+
+		resourcesSeverityResult := api.BenchmarkResourcesSeverityStatusV2{}
+		allResources := allResourcesResult[benchmark.ID]
+		resourcesSeverityResult.Total.TotalCount = allResources.TotalCount
+		resourcesSeverityResult.Critical.TotalCount = allResources.CriticalCount
+		resourcesSeverityResult.High.TotalCount = allResources.HighCount
+		resourcesSeverityResult.Medium.TotalCount = allResources.MediumCount
+		resourcesSeverityResult.Low.TotalCount = allResources.LowCount
+		resourcesSeverityResult.None.TotalCount = allResources.NoneCount
+		passedResource := passedResourcesResult[benchmark.ID]
+		resourcesSeverityResult.Total.PassedCount = passedResource.TotalCount
+		resourcesSeverityResult.Critical.PassedCount = passedResource.CriticalCount
+		resourcesSeverityResult.High.PassedCount = passedResource.HighCount
+		resourcesSeverityResult.Medium.PassedCount = passedResource.MediumCount
+		resourcesSeverityResult.Low.PassedCount = passedResource.LowCount
+		resourcesSeverityResult.None.PassedCount = passedResource.NoneCount
+
+		resourcesSeverityResult.Total.FailedCount = allResources.TotalCount - passedResource.TotalCount
+		resourcesSeverityResult.Critical.FailedCount = allResources.CriticalCount - passedResource.CriticalCount
+		resourcesSeverityResult.High.FailedCount = allResources.HighCount - passedResource.HighCount
+		resourcesSeverityResult.Medium.FailedCount = allResources.MediumCount - passedResource.MediumCount
+		resourcesSeverityResult.Low.FailedCount = allResources.LowCount - passedResource.LowCount
+		resourcesSeverityResult.None.FailedCount = allResources.NoneCount - passedResource.NoneCount
+
+		
+
+		var complianceScore float64
+		if controlSeverityResult.Total.TotalCount > 0 {
+			complianceScore = float64(controlSeverityResult.Total.PassedCount) / float64(controlSeverityResult.Total.TotalCount)
+		} else {
+			complianceScore = 0
+		}
+
+		
+		new_items = append(new_items, api.GetBenchmarkListSummaryMetadata{
+			ComplianceScore:            complianceScore,
+			SeveritySummaryByControl:   controlSeverityResult,
+			SeveritySummaryByResource:  resourcesSeverityResult,
+			SeveritySummaryByIncidents: sResult,
+			CostImpact:                 costImpact,
+			ComplianceResultsSummary:   csResult,
+			IssuesCount:                csResult.FailedCount,
+			LastEvaluatedAt:            utils.GetPointer(time.Unix(summaryAtTime.EvaluatedAtEpoch, 0)),
+			LastJobStatus:              lastJobStatus,
+			ID:               benchmark.ID,
+			Title:            benchmark.Title,
+			Description:      benchmark.Description,
+			Enabled:          benchmark.Enabled,
+			CreatedAt:        benchmark.CreatedAt,
+			UpdatedAt:        benchmark.UpdatedAt,
+			IntegrationType: benchmark.IntegrationType,
+		})
+
+			
+	}
+
+	response := api.GetBenchmarkSummaryListResponse{
+		Items:      new_items,
+		TotalCount: totalCount,
+	}
+
+	return echoCtx.JSON(http.StatusOK, response)
+}
+
+
+
+
+
+
+
+
+
+
 // GetBenchmarkDetails godoc
 //
 //	@Summary	Get Benchmark Details by BenchmarkID
@@ -4135,6 +4381,8 @@ func (h *HttpHandler) ComplianceSummaryOfBenchmark(echoCtx echo.Context) error {
 
 	return echoCtx.JSON(http.StatusOK, response)
 }
+
+
 
 // ListControlsFilters godoc
 //
