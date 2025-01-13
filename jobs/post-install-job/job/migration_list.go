@@ -14,8 +14,7 @@ import (
 )
 
 var migrations = map[string]types.Migration{
-	"integration_type": integration_type.Migration{},
-	"elasticsearch":    elasticsearch.Migration{},
+	"elasticsearch": elasticsearch.Migration{},
 }
 
 var manualMigrations = map[string]types.Migration{
