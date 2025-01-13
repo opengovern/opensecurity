@@ -150,12 +150,12 @@ jobs:
           name: build
           path: build.tar.gz
           retention-days: 1
-  deploy-steampipe:
+  deploy-cloudql:
     runs-on: ubuntu-latest
     needs:
       - build
       - tag
-      - deploy-steampipe-base
+      - deploy-cloudql-base
     permissions:
       id-token: write
       contents: read
@@ -188,12 +188,12 @@ jobs:
           build-args: |
             PLUGIN_REGISTRY=ghcr.io/opengovern
           context: .
-  deploy-steampipe-base:
+  deploy-cloudql-base:
     runs-on: ubuntu-latest
     needs:
       - build
       - tag
-      - deploy-cloudql
+      - deploy-cloudql-plugin
     permissions:
       id-token: write
       contents: read
@@ -342,8 +342,8 @@ jobs:
     needs:
       - build
       - tag
+      - deploy-cloudql-plugin
       - deploy-cloudql
-      - deploy-steampipe
     permissions:
       id-token: write
       contents: read
@@ -382,8 +382,8 @@ jobs:
     needs:
       - build
       - tag
+      - deploy-cloudql-plugin
       - deploy-cloudql
-      - deploy-steampipe
     permissions:
       id-token: write
       contents: read
@@ -708,7 +708,7 @@ jobs:
           context: .
 
 
-  deploy-cloudql:
+  deploy-cloudql-plugin:
     runs-on: ubuntu-latest
     needs:
       - build
@@ -766,8 +766,8 @@ jobs:
     needs:
       - build
       - tag
+      - deploy-cloudql-plugin
       - deploy-cloudql
-      - deploy-steampipe
     permissions:
       id-token: write
       contents: read
@@ -806,8 +806,8 @@ jobs:
     needs:
       - build
       - tag
+      - deploy-cloudql-plugin
       - deploy-cloudql
-      - deploy-steampipe
     permissions:
       id-token: write
       contents: read
@@ -845,8 +845,8 @@ jobs:
     needs:
       - build
       - tag
+      - deploy-cloudql-plugin
       - deploy-cloudql
-      - deploy-steampipe
     permissions:
       id-token: write
       contents: read
