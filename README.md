@@ -31,12 +31,12 @@ By optimizing your compliance and governance processes, OpenGovernance helps red
 ### Add the Helm Repository:
 
 ```bash
-helm repo add opencomply https://opengovern.github.io/charts && helm repo update
+helm repo add opencomply https://charts.opencomply.io --force-update
 ```
 
 ### Install with Helm
 ```bash
-helm install -n opencomply opencomply opencomply/opencomply --create-namespace --timeout=10m
+helm install opencomply opencomply/opencomply --namespace opencomply --create-namespace --timeout 10m 
 ```
 
 ### Expose the app
