@@ -1592,7 +1592,9 @@ func (h HttpServer) RunDiscovery(ctx echo.Context) error {
 				}
 			} else {
 				jobId = job.ID
-				status = string(job.Status)
+				if status == "" {
+					status = string(job.Status)
+				}
 			}
 			jobs = append(jobs, api.RunDiscoveryJob{
 				JobId:         jobId,
