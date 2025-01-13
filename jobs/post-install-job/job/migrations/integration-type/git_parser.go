@@ -26,7 +26,7 @@ type ExtraIntegrations struct {
 func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger) error {
 	var extraIntegrations ExtraIntegrations
 	// read file from path
-	f, err := os.Open(config.IntegrationTypesJsonPath)
+	f, err := os.Open(config.IntegrationTypesYamlPath)
 	if err != nil {
 		logger.Error("failed to open file", zap.Error(err))
 		return fmt.Errorf("open file: %w", err)
@@ -65,7 +65,7 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger) error {
 		}
 
 		// read manifest file
-		manifestFile, err := os.Open("/tmp/integarion_type/manifest.json")
+		manifestFile, err := os.Open("/tmp/integarion_type/manifest.yaml")
 		if err != nil {
 			logger.Error("failed to open manifest file", zap.Error(err))
 			return fmt.Errorf("open manifest file: %w", err)
