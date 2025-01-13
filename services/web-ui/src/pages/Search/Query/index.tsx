@@ -695,10 +695,14 @@ export default function Query() {
                             value={code}
                             languageLabel="SQL"
                             onChange={({ detail }) => {
-                                setSavedQuery('')
-                                setCode(detail.value)
-                                if (tab !== '3') {
-                                    setTab('3')
+                                if (isLoading) {
+                                    return
+                                } else {
+                                    setSavedQuery('')
+                                    setCode(detail.value)
+                                    if (tab !== '3') {
+                                        setTab('3')
+                                    }
                                 }
                             }}
                             preferences={preferences}
@@ -706,7 +710,8 @@ export default function Query() {
                                 // @ts-ignore
                                 setPreferences(e.detail)
                             }
-                            loading={isLoading}
+                            loading={false}
+                            
                             themes={{
                                 light: ['xcode', 'cloud_editor', 'sqlserver'],
                                 dark: ['cloud_editor_dark', 'twilight'],
