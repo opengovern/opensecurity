@@ -233,6 +233,8 @@ type GetFrameworkSummaryListRequest struct {
 	SortBy                  string                          `json:"sort_by"`
 	Cursor                  *int64                          `json:"cursor"`
 	PerPage                 *int64                          `json:"per_page"`
+	Root                    *bool                           `json:"root"`
+	Assigned                *bool                           `json:"assigned"`
 }
 
 
