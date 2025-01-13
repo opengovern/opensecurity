@@ -3175,28 +3175,11 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 	for _, b := range benchmarks {
 		
 
-		metadata := db.BenchmarkMetadata{}
-
-		if len(b.Metadata.Bytes) > 0 {
-			err := json.Unmarshal(b.Metadata.Bytes, &metadata)
-			if err != nil {
-				h.logger.Error("failed to unmarshal metadata", zap.Error(err))
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-			}
-		}
-
 		benchmarkDetails := api.GetBenchmarkListSummaryMetadata{
 			ID:               b.ID,
-			Title:            b.Title,
-			Description:      b.Description,
-			Enabled:          b.Enabled,
-			CreatedAt:        b.CreatedAt,
-			UpdatedAt:        b.UpdatedAt,
 		}
 
-		if b.IntegrationType != nil {
-			benchmarkDetails.IntegrationType = b.IntegrationType
-		}
+		
 		
 		items = append(items, benchmarkDetails)
 	}
@@ -3220,8 +3203,18 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 	}
 	// finding summary of paginated benchmarks
 	var new_items []api.GetBenchmarkListSummaryMetadata
+	var benchmarkids []string
+	for _, item := range items {
+		benchmarkids = append(benchmarkids, item.ID)
+	}
+	h.logger.Info("benchmarkids", zap.Any("benchmarkids", benchmarkids))
+	all_benchmarks, err := h.db.GetBenchmarksBare(ctx, benchmarkids)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
 
-	for _, benchmark := range items {
+
+	for _, benchmark := range all_benchmarks {
 
 		controls, err := h.db.ListControlsByBenchmarkID(ctx, benchmark.ID)
 		if err != nil {
@@ -3314,6 +3307,7 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 		} else {
 			complianceScore = 0
 		}
+		
 
 		
 		new_items = append(new_items, api.GetBenchmarkListSummaryMetadata{
