@@ -36,7 +36,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 	dbm := db.Database{ORM: orm}
 
-	err := dbm.ORM.AutoMigrate(&models.IntegrationTypeBinaries{})
+	err = dbm.ORM.AutoMigrate(&models.IntegrationTypeBinaries{})
 	if err != nil {
 		logger.Error("failed to auto migrate integration binaries", zap.Error(err))
 		return err
