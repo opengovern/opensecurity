@@ -3149,18 +3149,7 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 	for _, ba := range benchmarkAssignmentsCount {
 		benchmarkAssignmentsCountMap[ba.BenchmarkId] = ba.Count
 	}
-	integrationsCountByType := make(map[string]int)
-	integrationsResp, err := h.integrationClient.ListIntegrations(clientCtx, nil)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-	for _, s := range integrationsResp.Integrations {
-		if _, ok := integrationsCountByType[s.IntegrationType.String()]; ok {
-			integrationsCountByType[s.IntegrationType.String()]++
-		} else {
-			integrationsCountByType[s.IntegrationType.String()] = 1
-		}
-	}
+	
 
 	
 
