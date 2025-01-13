@@ -16,7 +16,7 @@ type GitParser struct {
 }
 
 type manifest struct {
-	IntegrationType integration.Type `json:"integration_type" yaml:"integration_type"`
+	IntegrationType integration.Type `json:"IntegrationType" yaml:"IntegrationType"`
 }
 
 type ExtraIntegrations struct {
@@ -37,9 +37,11 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger) error {
 		return fmt.Errorf("decode json: %w", err)
 	}
 
+	baseDir := "/integration-types"
+
 	// create tmp directory if not exists
-	if _, err := os.Stat("/tmp"); os.IsNotExist(err) {
-		if err := os.Mkdir("/tmp", os.ModePerm); err != nil {
+	if _, err := os.Stat(baseDir); os.IsNotExist(err) {
+		if err := os.Mkdir(baseDir, os.ModePerm); err != nil {
 			logger.Error("failed to create tmp directory", zap.Error(err))
 			return fmt.Errorf("create tmp directory: %w", err)
 		}
@@ -48,14 +50,14 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger) error {
 	// download files from urls
 	for _, url := range extraIntegrations.URLs {
 		// remove existing files
-		if err := os.RemoveAll("/tmp/integarion_type"); err != nil {
-			logger.Error("failed to remove existing files", zap.Error(err), zap.String("url", url), zap.String("path", "/tmp/integarion_type"))
+		if err := os.RemoveAll(baseDir + "/integarion_type"); err != nil {
+			logger.Error("failed to remove existing files", zap.Error(err), zap.String("url", url), zap.String("path", baseDir+"/integarion_type"))
 			return fmt.Errorf("remove existing files for url %s: %w", url, err)
 		}
 
 		downloader := getter.Client{
 			Src:  url,
-			Dst:  "/tmp/integarion_type",
+			Dst:  baseDir + "/integarion_type",
 			Mode: getter.ClientModeDir,
 		}
 		err := downloader.Get()
@@ -65,7 +67,7 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger) error {
 		}
 
 		// read manifest file
-		manifestFile, err := os.Open("/tmp/integarion_type/manifest.yaml")
+		manifestFile, err := os.Open(baseDir + "/integarion_type/manifest.yaml")
 		if err != nil {
 			logger.Error("failed to open manifest file", zap.Error(err))
 			return fmt.Errorf("open manifest file: %w", err)
@@ -79,26 +81,15 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger) error {
 		}
 
 		// read integration-plugin file
-		integrationPluginFile, err := os.Open("/tmp/integarion_type/integration-plugin")
+		integrationPlugin, err := os.ReadFile(baseDir + "/integarion_type/integration-plugin")
 		if err != nil {
 			logger.Error("failed to open integration-plugin file", zap.Error(err), zap.String("url", url))
 			return fmt.Errorf("open integration-plugin file for url %s: %w", url, err)
 		}
-		cloudqlPluginFile, err := os.Open("/tmp/integarion_type/cloudql-plugin")
+		cloudqlPlugin, err := os.ReadFile(baseDir + "/integarion_type/cloudql-plugin")
 		if err != nil {
 			logger.Error("failed to open cloudql-plugin file", zap.Error(err), zap.String("url", url))
 			return fmt.Errorf("open cloudql-plugin file for url %s: %w", url, err)
-		}
-
-		var integrationPlugin []byte
-		if _, err := integrationPluginFile.Read(integrationPlugin); err != nil {
-			logger.Error("failed to read integration-plugin file", zap.Error(err), zap.String("url", url))
-			return fmt.Errorf("read integration-plugin file for url %s: %w", url, err)
-		}
-		var cloudqlPlugin []byte
-		if _, err := cloudqlPluginFile.Read(cloudqlPlugin); err != nil {
-			logger.Error("failed to read cloudql-plugin file", zap.Error(err), zap.String("url", url))
-			return fmt.Errorf("read cloudql-plugin file for url %s: %w", url, err)
 		}
 
 		logger.Info("done reading files", zap.String("url", url), zap.String("integrationType", m.IntegrationType.String()), zap.Int("integrationPluginSize", len(integrationPlugin)), zap.Int("cloudqlPluginSize", len(cloudqlPlugin)))
