@@ -47,6 +47,8 @@ integrationUserName="integration_service"
 taskDatabaseName="task"
 taskUserName="task_service"
 
+integrationTypesDatabaseName="integration_types"
+
 echo "$dt - Running: psql -v ON_ERROR_STOP=1 --username postgres --dbname postgres ...";
 
 PGPASSWORD="postgres" psql -v ON_ERROR_STOP=1 --username "postgres" --dbname "postgres" <<-EOSQL
@@ -62,6 +64,10 @@ GRANT ALL PRIVILEGES ON DATABASE "$informationDatabaseName" to $informationUserN
 \c "$informationDatabaseName"
 GRANT ALL ON SCHEMA public TO $informationUserName;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
+
+SELECT 'CREATE DATABASE $integrationTypesDatabaseName'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$integrationTypesDatabaseName')\gexec
+
 
 SELECT 'CREATE DATABASE $dexDatabaseName'
 WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$dexDatabaseName')\gexec
@@ -218,7 +224,11 @@ GRANT pg_read_all_data TO $migratorUserName;
 GRANT pg_write_all_data TO $migratorUserName;
 GRANT ALL ON SCHEMA public TO $migratorUserName;
 GRANT pg_read_all_data TO $steampipeUserName;
-
+\connect "$integrationTypesDatabaseName";
+GRANT pg_read_all_data TO $migrationUserName;
+GRANT pg_write_all_data TO $migrationUserName;
+GRANT pg_read_all_data TO $steampipeUserName;
+GRANT pg_read_all_data TO $integrationUserName;
 
 \connect "postgres";
 CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
