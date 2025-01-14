@@ -9,9 +9,9 @@
   </a>
 </p>
 
-<p align="center"> <em>🚀 Full Stack Governance,🚀 Goven across clouds, platforms, and tools 🚀 Maintain policies as Code,🚀 Steampipe Compatible, 🚀 Unify Security, Compliance, and Ops.</em> </p>
+<p align="center"> <em>🚀 Full Stack Governance,🚀 Goven across clouds, platforms, and tools 🚀 Maintain policies as Code,🚀 CloudQL Compatible, 🚀 Unify Security, Compliance, and Ops.</em> </p>
 
-OpenGovernance simplifies governance, compliance, security, and operations across clouds, platforms, and on-premises. Steampipe-compatible and Git-managed, it enforces top policies, optimizes costs, boosts efficiency and reliability, and aligns with the Well-Architected Framework.
+OpenGovernance simplifies governance, compliance, security, and operations across clouds, platforms, and on-premises. CloudQL-compatible and Git-managed, it enforces top policies, optimizes costs, boosts efficiency and reliability, and aligns with the Well-Architected Framework.
 
 ![App Screenshot](./assets/screenshots/app-%20screenshot%203.png)
 
@@ -22,8 +22,8 @@ Additionally, OpenGovernance replaces legacy compliance systems by providing a u
 By optimizing your compliance and governance processes, OpenGovernance helps reduce operational costs.
 
 ## 🌟 Features:
-- **Centralized Multi-Cloud Governance**: Manage AWS, Azure, and GCP policies from one platform.
-- **Steampipe Compatibility**: Leverage Steampipe Queries, and utilize vendor neutral polices
+- **Centralized Multi-Cloud Governance**: Manage Github, AWS, Azure, and GCP policies from one platform.
+- **CloudQL Compatibility**: Leverage CloudQL Queries, and utilize vendor neutral polices
 - **Batteries included**: Over 2,500 unique policies and 50+ benchmarks, including built-in support for NIST, HIPAA, SOC 2, CIS, and more across multiple clouds.
 - **Track History & Capture Evidence**: Keep an audit trail and ensure regulatory compliance, over time
 - **Customizable Policy Controls**: Use simple SQL to define and enforce your standards.
@@ -50,4 +50,4 @@ helm install opencomply opencomply/opencomply --namespace opencomply --create-na
 kubectl port-forward -n opencomply svc/nginx-proxy 8080:80
 ```
 Navigate to http://localhost:8080/ in your browser.
-To sign in, use admin@opencomply.io as the username and password as the password.
+To sign in, use `admin@opencomply.io` as the username and `password` as the password.
