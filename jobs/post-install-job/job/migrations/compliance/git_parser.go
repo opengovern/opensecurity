@@ -618,7 +618,6 @@ func (g *GitParser) HandleFrameworks(frameworks []Framework) error {
 			return err
 		}
 	}
-	// g.logger.Info("Extracted benchmarks 2", zap.Int("count", len(g.benchmarks)))
 
 	for idx, benchmark := range g.benchmarks {
 		for _, childID := range g.frameworksChildren[benchmark.ID] {
@@ -634,7 +633,6 @@ func (g *GitParser) HandleFrameworks(frameworks []Framework) error {
 		}
 		g.benchmarks[idx] = benchmark
 	}
-	// g.logger.Info("Extracted benchmarks 3", zap.Int("count", len(g.benchmarks)))
 	return nil
 }
 
