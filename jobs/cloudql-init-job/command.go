@@ -26,7 +26,7 @@ func JobCommand() *cobra.Command {
 				Port:    cnf.Postgres.Port,
 				User:    cnf.Postgres.Username,
 				Passwd:  cnf.Postgres.Password,
-				DB:      cnf.Postgres.DB,
+				DB:      "integration_types",
 				SSLMode: cnf.Postgres.SSLMode,
 			}, logger.Named("postgres"))
 			if err != nil {
