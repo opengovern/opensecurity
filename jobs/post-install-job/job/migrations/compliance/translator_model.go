@@ -13,21 +13,16 @@ type ControlGroupFile struct {
 	ControlGroup Framework `json:"control-group" yaml:"control-group"`
 }
 
-type FrameworkMetadata struct {
-	Defaults struct {
+type Framework struct {
+	ID          string `json:"id" yaml:"id"`
+	Title       string `json:"title" yaml:"title"`
+	Description string `json:"description" yaml:"description"`
+	SectionCode string `json:"section-code" yaml:"section-code"`
+	Defaults    *struct {
 		AutoAssign        *bool `json:"auto-assign" yaml:"auto-assign"`
 		Enabled           bool  `json:"enabled" yaml:"enabled"`
 		TracksDriftEvents bool  `json:"tracks-drift-events" yaml:"tracks-drift-events"`
 	} `json:"defaults"`
-	Tags map[string][]string `json:"tags" yaml:"tags"`
-}
-
-type Framework struct {
-	ID           string              `json:"id" yaml:"id"`
-	Title        string              `json:"title" yaml:"title"`
-	Description  string              `json:"description" yaml:"description"`
-	SectionCode  string              `json:"section-code" yaml:"section-code"`
-	Metadata     *FrameworkMetadata  `json:"metadata" yaml:"metadata"`
 	Tags         map[string][]string `json:"tags" yaml:"tags"`
 	ControlGroup []Framework         `json:"control-group" yaml:"control-group"`
 	Controls     []string            `json:"controls" yaml:"controls"`
