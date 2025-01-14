@@ -334,6 +334,7 @@ jobs:
         with:
           push: true
           tags: |
+            ghcr.io/${{ github.repository_owner }}/cloudql-init-job:0.0.1
             ghcr.io/${{ github.repository_owner }}/cloudql-init-job:${{ needs.tag.outputs.latest_tag }}
           file: docker/CloudQLInitJobDockerfile
           context: .

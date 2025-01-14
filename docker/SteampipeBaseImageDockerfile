@@ -1,8 +1,11 @@
 ARG PLUGIN_REGISTRY
+
+FROM ${PLUGIN_REGISTRY}/cloudql-init-job:0.0.1 as job
+
 FROM ${PLUGIN_REGISTRY}/steampipe-plugin-aws:0.0.1 as aws
 FROM ${PLUGIN_REGISTRY}/steampipe-plugin-azure:0.0.1 as azure
 FROM ${PLUGIN_REGISTRY}/steampipe-plugin-entraid:0.0.1 as entraid
-FROM ${PLUGIN_REGISTRY}/steampipe-plugin-github:0.0.1 as github
+#FROM ${PLUGIN_REGISTRY}/steampipe-plugin-github:0.0.1 as github
 FROM ${PLUGIN_REGISTRY}/steampipe-plugin-digitalocean:0.0.1 as digitalocean
 FROM ${PLUGIN_REGISTRY}/steampipe-plugin-cloudflare:0.0.1 as cloudflare
 FROM ${PLUGIN_REGISTRY}/steampipe-plugin-openai:0.0.1 as openai
@@ -25,10 +28,12 @@ RUN apt-get update && apt-get install -y \
 
 RUN sudo /bin/sh -c "$(curl -fsSL https://steampipe.io/install/steampipe.sh)"
 
+COPY --from=job /cloudql-init-job /cloudql-init-job
+
 COPY --from=aws /steampipe-plugin-aws.plugin /home/steampipe/.steampipe/plugins/hub.steampipe.io/plugins/turbot/aws@latest/steampipe-plugin-aws.plugin
 COPY --from=azure /steampipe-plugin-azure.plugin /home/steampipe/.steampipe/plugins/hub.steampipe.io/plugins/turbot/azure@latest/steampipe-plugin-azure.plugin
 COPY --from=entraid /steampipe-plugin-entraid.plugin /home/steampipe/.steampipe/plugins/hub.steampipe.io/plugins/turbot/entraid@latest/steampipe-plugin-entraid.plugin
-COPY --from=github /steampipe-plugin-github.plugin /home/steampipe/.steampipe/plugins/hub.steampipe.io/plugins/turbot/github@latest/steampipe-plugin-github.plugin
+#COPY --from=github /steampipe-plugin-github.plugin /home/steampipe/.steampipe/plugins/hub.steampipe.io/plugins/turbot/github@latest/steampipe-plugin-github.plugin
 COPY --from=digitalocean /steampipe-plugin-digitalocean.plugin /home/steampipe/.steampipe/plugins/hub.steampipe.io/plugins/turbot/digitalocean@latest/steampipe-plugin-digitalocean.plugin
 COPY --from=cloudflare /steampipe-plugin-cloudflare.plugin /home/steampipe/.steampipe/plugins/hub.steampipe.io/plugins/turbot/cloudflare@latest/steampipe-plugin-cloudflare.plugin
 COPY --from=openai /steampipe-plugin-openai.plugin /home/steampipe/.steampipe/plugins/hub.steampipe.io/plugins/turbot/openai@latest/steampipe-plugin-openai.plugin

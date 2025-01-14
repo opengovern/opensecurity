@@ -2,7 +2,7 @@ ARG PLUGIN_REGISTRY
 FROM ${PLUGIN_REGISTRY}/steampipe-plugin-base:0.0.1 as base
 
 RUN echo "connection \"digitalocean\" {\n  plugin = \"digitalocean\"\n  addresses = []\n  username = \"\"\n  password = \"\"\n}" > /home/steampipe/.steampipe/config/digitalocean.spc
-RUN echo "connection \"github\" {\n  plugin = \"github\"\n  addresses = []\n  username = \"\"\n  password = \"\"\n}" > /home/steampipe/.steampipe/config/github.spc
+#RUN echo "connection \"github\" {\n  plugin = \"github\"\n  addresses = []\n  username = \"\"\n  password = \"\"\n}" > /home/steampipe/.steampipe/config/github.spc
 RUN echo "connection \"cloudflare\" {\n  plugin = \"cloudflare\"\n  addresses = []\n  username = \"\"\n  password = \"\"\n}" > /home/steampipe/.steampipe/config/cloudflare.spc
 RUN echo "connection \"openai\" {\n  plugin = \"openai\"\n  addresses = []\n  username = \"\"\n  password = \"\"\n}" > /home/steampipe/.steampipe/config/openai.spc
 RUN echo "connection \"linode\" {\n  plugin = \"linode\"\n  addresses = []\n  username = \"\"\n  password = \"\"\n}" > /home/steampipe/.steampipe/config/linode.spc
