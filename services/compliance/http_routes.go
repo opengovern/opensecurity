@@ -3126,7 +3126,6 @@ func (h *HttpHandler) ListBenchmarksFiltered(echoCtx echo.Context) error {
 //	@Router		/compliance/api/v3/benchmarks/summary [post]
 func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 	ctx := echoCtx.Request().Context()
-	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
 
 	var req api.GetFrameworkSummaryListRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
@@ -3149,18 +3148,7 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 	for _, ba := range benchmarkAssignmentsCount {
 		benchmarkAssignmentsCountMap[ba.BenchmarkId] = ba.Count
 	}
-	integrationsCountByType := make(map[string]int)
-	integrationsResp, err := h.integrationClient.ListIntegrations(clientCtx, nil)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-	for _, s := range integrationsResp.Integrations {
-		if _, ok := integrationsCountByType[s.IntegrationType.String()]; ok {
-			integrationsCountByType[s.IntegrationType.String()]++
-		} else {
-			integrationsCountByType[s.IntegrationType.String()] = 1
-		}
-	}
+	
 
 	
 
