@@ -1,6 +1,11 @@
 <p align="right">
   <a href="https://opengovernance.io">
-    <img src="https://github.com/kaytu-io/website/blob/34af0c464c3a75b1382b63ae4d0f8024f008c858/connectors/icons/open-governance.svg" alt="OpenGovernance">
+    <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-dark.png">
+          <source media="(prefers-color-scheme: light)" srcset="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-light.png">
+          <img alt="OpenGovernance" src="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-light.png"
+    </picture>
+
   </a>
 </p>
 
