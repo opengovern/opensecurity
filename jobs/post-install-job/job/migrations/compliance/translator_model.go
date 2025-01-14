@@ -6,20 +6,20 @@ import (
 )
 
 type FrameworkFile struct {
-	Framework Framework `json:"framework"`
+	Framework Framework `json:"framework" yaml:"framework"`
 }
 
 type ControlGroupFile struct {
-	ControlGroup Framework `json:"control-group"`
+	ControlGroup Framework `json:"control-group" yaml:"control-group"`
 }
 
 type FrameworkMetadata struct {
 	Defaults struct {
-		AutoAssign        *bool `json:"auto-assign"`
-		Enabled           bool  `json:"enabled"`
-		TracksDriftEvents bool  `json:"tracks-drift-events"`
+		AutoAssign        *bool `json:"auto-assign" yaml:"auto-assign"`
+		Enabled           bool  `json:"enabled" yaml:"enabled"`
+		TracksDriftEvents bool  `json:"tracks-drift-events" yaml:"tracks-drift-events"`
 	} `json:"defaults"`
-	Tags map[string][]string `json:"tags"`
+	Tags map[string][]string `json:"tags" yaml:"tags"`
 }
 
 type Framework struct {
