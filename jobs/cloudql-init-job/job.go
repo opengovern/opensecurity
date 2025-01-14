@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"os"
+	"os/exec"
 )
 
 type Job struct {
@@ -89,6 +90,20 @@ func (j *Job) Run(ctx context.Context) error {
 	_, err = steampipe.StartSteampipeServiceAndGetConnection(j.logger)
 	if err != nil {
 		j.logger.Error("failed to start steampipe service", zap.Error(err))
+		return err
+	}
+
+	cmd := exec.Command("steampipe", "service", "stop", "--force")
+	err = cmd.Run()
+	if err != nil {
+		j.logger.Error("first stop failed", zap.Error(err))
+		return err
+	}
+	//NOTE: stop must be called twice. it's not a mistake
+	cmd = exec.Command("steampipe", "service", "stop", "--force")
+	err = cmd.Run()
+	if err != nil {
+		j.logger.Error("second stop failed", zap.Error(err))
 		return err
 	}
 
