@@ -62,7 +62,7 @@ func (j *Job) Run(ctx context.Context) error {
 		}
 
 		if integrationBin, ok := integrationMap[integrationType]; ok {
-			dirPath := basePath + "/" + integrationType + "@latest"
+			dirPath := basePath + "/" + describerConfig.SteampipePluginName + "@latest"
 			// create directory if not exists
 			if _, err := os.Stat(dirPath); os.IsNotExist(err) {
 				err := os.MkdirAll(dirPath, os.ModePerm)
