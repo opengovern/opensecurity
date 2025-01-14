@@ -52,7 +52,7 @@ RUN mkdir -p /home/steampipe/.steampipe/config
 RUN mkdir -p /home/steampipe/.steampipe/db
 RUN mkdir -p /home/steampipe/.steampipe/db/14.2.0
 RUN chown -R steampipe:steampipe /home/steampipe
-RUN chmod -R 755 /home/steampipe
+RUN chmod -R 777 /home/steampipe
 RUN apt update
 RUN apt install -y procps htop
 USER steampipe
