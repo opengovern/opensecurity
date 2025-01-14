@@ -219,6 +219,7 @@ export default function Query() {
     const [schemaLoading2, setSchemaLoading2] = useState(false)
     const [expanded, setExpanded] = useState(-1)
     const [expanded1, setExpanded1] = useState(-1)
+    
 
     // const { response: categories, isLoading: categoryLoading } =
     //     useInventoryApiV2AnalyticsCategoriesList()
