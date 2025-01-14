@@ -1,9 +1,9 @@
 <p align="right">
-  <a href="https://opengovernance.io">
-    <picture>
+  <a href="https://opencomply.io">
+    <picture style="width":80%">
           <source media="(prefers-color-scheme: dark)" srcset="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-dark.png">
           <source media="(prefers-color-scheme: light)" srcset="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-light.png">
-          <img alt="OpenGovernance" src="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-light.png"
+          <img style="width":80%" alt="opencomply" src="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-light.png" >
     </picture>
 
   </a>
