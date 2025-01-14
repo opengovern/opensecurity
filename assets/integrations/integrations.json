@@ -11,7 +11,7 @@
     "SourceCode": "https://github.com/opengovern/og-describer-aws",
     "schema_ids": ["aws"],
     "PackageURL": "ghcr.io/opengovern/og-describer-aws",
-    "PackageTag": "local-latest"
+    "PackageTag": "local-v0.2.6"
   },
   {
     "id": 2,
@@ -25,7 +25,7 @@
     "SourceCode": "https://github.com/opengovern/og-describer-azure",
     "schema_ids": ["azure"],
     "PackageURL": "ghcr.io/opengovern/og-describer-azure",
-    "PackageTag": "local-latest"
+    "PackageTag": "local-v0.1.17"
   },
   {
     "id": 3,
@@ -39,7 +39,7 @@
     "SourceCode": "https://github.com/opengovern/og-describer-entraid",
     "schema_ids": ["entraid"],
     "PackageURL": "ghcr.io/opengovern/og-describer-entraid",
-    "PackageTag": "local-latest"
+    "PackageTag": "local-v0.2.9"
   },
   {
     "id": 4,
@@ -53,7 +53,7 @@
     "SourceCode": "https://github.com/opengovern/og-describer-github",
     "schema_ids": ["github"],
     "PackageURL": "ghcr.io/opengovern/og-describer-github",
-    "PackageTag": "local-latest"
+    "PackageTag": "local-v0.43.4"
   },
   {
     "id": 5,
@@ -67,7 +67,7 @@
     "SourceCode": "https://github.com/opengovern/og-describer-digitalocean",
     "schema_ids": ["digitalocean"],
     "PackageURL": "ghcr.io/opengovern/og-describer-digitalocean",
-    "PackageTag": "local-latest"
+    "PackageTag": "local-v0.0.9"
   },
   {
     "id": 6,
@@ -81,7 +81,7 @@
     "SourceCode": "https://github.com/opengovern/og-describer-cloudflare",
     "schema_ids": ["cloudflare"],
     "PackageURL": "ghcr.io/opengovern/og-describer-cloudflare",
-    "PackageTag": "local-latest"
+    "PackageTag": "local-v0.4.1"
   },
 
   {
@@ -96,7 +96,7 @@
     "SourceCode": "https://github.com/opengovern/og-describer-openai",
     "schema_ids": ["openai"],
     "PackageURL": "ghcr.io/opengovern/og-describer-openai",
-    "PackageTag": "local-latest"
+    "PackageTag": "local-v0.3.1"
   },
   {
     "id": 8,
@@ -110,7 +110,7 @@
     "SourceCode": "https://github.com/opengovern/og-describer-linode",
     "schema_ids": ["linode"],
     "PackageURL": "ghcr.io/opengovern/og-describer-linode",
-    "PackageTag": "local-latest"
+    "PackageTag": "local-v0.8.2"
   },
   {
     "id": 9,
@@ -124,7 +124,7 @@
     "SourceCode": "https://github.com/opengovern/og-describer-cohereai",
     "schema_ids": ["cohereai"],
     "PackageURL": "ghcr.io/opengovern/og-describer-cohereai",
-    "PackageTag": "local-latest"
+    "PackageTag": "local-v0.3.3"
   },
   {
     "id": 10,
@@ -138,7 +138,7 @@
     "SourceCode": "https://github.com/opengovern/og-describer-googleworkspace",
     "schema_ids": ["googleworkspace"],
     "PackageURL": "ghcr.io/opengovern/og-describer-googleworkspace",
-    "PackageTag": "local-latest"
+    "PackageTag": "local-v0.4.11"
   },
   {
     "id": 11,
@@ -164,7 +164,7 @@
     "Availability": "GA",
     "SourceCode": "https://github.com/opengovern/og-describer-render",
     "PackageURL": "ghcr.io/opengovern/og-describer-render",
-    "PackageTag": "local-latest"
+    "PackageTag": "local-v0.2.4"
   },
   {
     "id": 13,
@@ -178,7 +178,7 @@
     "schema_ids": ["doppler"],
     "SourceCode": "https://github.com/opengovern/og-describer-doppler",
     "PackageURL": "ghcr.io/opengovern/og-describer-doppler",
-    "PackageTag": "local-latest"
+    "PackageTag": "local-v0.2.2"
   },
   {
     "id": 14,
