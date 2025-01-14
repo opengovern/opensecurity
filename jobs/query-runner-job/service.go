@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	cloudql_init_job "github.com/opengovern/opencomply/jobs/cloudql-init-job"
 	"github.com/opengovern/opencomply/services/integration/client"
 	"strconv"
 	"time"
@@ -31,6 +32,7 @@ type Config struct {
 	Core                  config.OpenGovernanceService
 	EsSink                config.OpenGovernanceService
 	Steampipe             config.Postgres
+	PostgresPlugin        config.Postgres
 	PrometheusPushAddress string
 }
 
@@ -56,27 +58,14 @@ func NewWorker(
 ) (*Worker, error) {
 	integrationClient := client.NewIntegrationServiceClient(config.Integration.BaseURL)
 
-	httpCtx := httpclient.Context{Ctx: ctx, UserRole: api.ViewerRole}
-
-	integrationTypes, err := integrationClient.ListIntegrationTypes(&httpCtx)
+	pluginJob := cloudql_init_job.NewJob(logger, cloudql_init_job.Config{
+		Postgres:      config.PostgresPlugin,
+		ElasticSearch: config.ElasticSearch,
+		Steampipe:     config.Steampipe,
+	}, integrationClient)
+	err := pluginJob.Run(ctx)
 	if err != nil {
-		logger.Error("failed to list integration types", zap.Error(err))
-		return nil, err
-	}
-
-	for _, integrationType := range integrationTypes {
-		describerConfig, err := integrationClient.GetIntegrationConfiguration(&httpCtx, integrationType)
-		if err != nil {
-			logger.Error("failed to get integration configuration", zap.Error(err))
-			return nil, err
-		}
-		err = steampipe.PopulateSteampipeConfig(config.ElasticSearch, describerConfig.SteampipePluginName)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if err := steampipe.PopulateOpenGovernancePluginSteampipeConfig(config.ElasticSearch, config.Steampipe); err != nil {
+		logger.Error("failed to run plugin job", zap.Error(err))
 		return nil, err
 	}
 

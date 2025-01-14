@@ -1,37 +1,48 @@
-package query_runner
+package cloudql_init_job
 
 import (
 	"context"
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
+	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/og-util/pkg/steampipe"
 	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/integration-type/models"
 	"github.com/opengovern/opencomply/services/integration/client"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 	"os"
 	"os/exec"
 )
 
 type Job struct {
 	logger            *zap.Logger
-	db                *gorm.DB
 	cfg               Config
 	integrationClient client.IntegrationServiceClient
 }
 
-func NewJob(logger *zap.Logger, cfg Config, db *gorm.DB, integrationClient client.IntegrationServiceClient) *Job {
+func NewJob(logger *zap.Logger, cfg Config, integrationClient client.IntegrationServiceClient) *Job {
 	return &Job{
 		logger:            logger,
-		db:                db,
 		cfg:               cfg,
 		integrationClient: integrationClient,
 	}
 }
 
 func (j *Job) Run(ctx context.Context) error {
+	db, err := postgres.NewClient(&postgres.Config{
+		Host:    j.cfg.Postgres.Host,
+		Port:    j.cfg.Postgres.Port,
+		User:    j.cfg.Postgres.Username,
+		Passwd:  j.cfg.Postgres.Password,
+		DB:      "integration_types",
+		SSLMode: j.cfg.Postgres.SSLMode,
+	}, j.logger.Named("postgres"))
+	if err != nil {
+		j.logger.Error("failed to create postgres client", zap.Error(err))
+		return err
+	}
+
 	var integrations []models.IntegrationTypeBinaries
-	err := j.db.Find(&integrations).Error
+	err = db.Find(&integrations).Error
 	if err != nil {
 		j.logger.Error("failed to get integration binaries", zap.Error(err))
 		return err

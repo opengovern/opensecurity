@@ -1,4 +1,4 @@
-package query_runner
+package cloudql_init_job
 
 import "github.com/opengovern/og-util/pkg/config"
 
