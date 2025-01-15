@@ -157,7 +157,7 @@ jobs:
       - build
       - tag
       - deploy-steampipe-base
-      - deploy-cloudql-init-job
+      
     permissions:
       id-token: write
       contents: read
@@ -196,6 +196,7 @@ jobs:
       - build
       - tag
       - deploy-cloudql
+      - deploy-cloudql-init-job
     permissions:
       id-token: write
       contents: read
