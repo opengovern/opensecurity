@@ -17,9 +17,7 @@ import {
     PlatformEnginePkgComplianceApiBenchmarkAssignedConnection,
     PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary,
 } from '../../../../../api/api'
-import DrawerPanel from '../../../../../components/DrawerPanel'
 import { isDemoAtom, notificationAtom } from '../../../../../store'
-import KFilter from '../../../../../components/Filter'
 import {
     Box,
     Checkbox,

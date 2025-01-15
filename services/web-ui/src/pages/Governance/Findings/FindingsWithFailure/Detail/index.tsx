@@ -24,9 +24,6 @@ import {
     PlatformEnginePkgComplianceApiFinding,
     PlatformEnginePkgComplianceApiResourceFinding,
 } from '../../../../../api/api'
-import DrawerPanel from '../../../../../components/DrawerPanel'
-import { getConnectorIcon } from '../../../../../components/Cards/ConnectorCard'
-import SummaryCard from '../../../../../components/Cards/SummaryCard'
 import {
     useComplianceApiV1BenchmarksControlsDetail,
     useComplianceApiV1ControlsSummaryDetail,

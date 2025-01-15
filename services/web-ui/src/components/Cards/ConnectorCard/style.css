@@ -1,0 +1,175 @@
+.integration-card {
+    position: relative;
+    padding: 0;
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 25px 50px -12px;
+    box-shadow: rgba(0, 0, 0, 0.4) 0px 30px 90px;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em, rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
+    /* padding-top: 20px; */
+/* border: 1px solid #ACACAC; */
+    .integration-name{
+        color: #3F3F40;
+font-family: Lato;
+font-size: 20px;
+font-style: normal;
+font-weight: 500;
+line-height: normal;
+transition: all ease-in-out 0.5s;
+    }
+    .integration-button {
+        top: -10px;
+        right: -10px;
+        /* width: 100%; */
+        position: absolute;
+        display: flex;
+        flex-direction: row;
+        /* display: hidden; */
+        /* height: 41px; */
+        justify-content: center;
+        align-items: center;
+        border-radius: 24px;
+        gap: 5px;
+        width: 40px;
+        height: 20px;
+        text-align: center;
+        padding: 7px;
+        border: 1px solid #aaaab7;
+        background: #fff;
+        font-size: 12px;
+        font-weight: 400;
+        svg{
+
+        }
+        /* gap: 8px; */
+        /* font-size: 16px;
+font-style: normal;
+font-weight: 400;
+        flex-shrink: 0;
+        align-self: stretch;
+        border: 1px solid #acacac; */
+        /* border-radius: 0px 0px 8px 8px;
+        border-bottom: 0px;
+        border-right: 0px;
+        border-left: 0px; */
+/* transition: all ease-in-out 0.5s; */
+
+
+        /* background: #f3f4f6; */
+    }
+    .integration-name{
+        font-size: 14px;
+    }
+}
+.integration-card:hover {
+    /* border-radius: 8px;
+    border: 1px solid #acacac;
+    box-shadow: 0px 10px 35px 4px rgba(22, 64, 133, 0.15);
+    .integration-button {
+        background: #164085;
+        color: #fff;
+    } */
+}
+
+.enterprise{
+    /* background-color: #fcfcfd; */
+
+box-shadow: rgba(9, 30, 66, 0.25) 0px 1px 1px, rgba(9, 30, 66, 0.13) 0px 0px 1px 1px;
+
+    transition: all ease-in-out 0.5s;
+     .integration-button {
+        top: -10px;
+        right: -10px;
+        /* width: 100%; */
+        position: absolute;
+        flex-direction: row;
+        /* display: hidden; */
+        /* height: 41px; */
+        justify-content: center;
+        display: none;
+        align-items: center;
+        border-radius: 24px;
+        gap: 5px;
+        width: 40px;
+        height: 20px;
+        text-align: center;
+        padding: 7px;
+        border: 1px solid #aaaab7;
+        background: #fff;
+        font-size: 12px;
+        font-weight: 400;
+     
+        /* gap: 8px; */
+        /* font-size: 16px;
+font-style: normal;
+font-weight: 400;
+        flex-shrink: 0;
+        align-self: stretch;
+        border: 1px solid #acacac; */
+        /* border-radius: 0px 0px 8px 8px;
+        border-bottom: 0px;
+        border-right: 0px;
+        border-left: 0px; */
+/* transition: all ease-in-out 0.5s; */
+
+
+        /* background: #f3f4f6; */
+    }
+     .integration-name{
+        font-size: 14px;
+        color: #000;
+
+    }
+    .coming-soon{
+        position: absolute;
+        top: -10px;
+        border-radius: 24px;
+        right: 4px;
+        padding: 4px;
+           border: 1px solid #aaaab7;
+        background: #fcfcfd;
+        color: #000;
+        font-size: 8px;
+        font-weight: 300;
+    }
+    .add-btn{
+        display: none;
+    }
+    .connector-logo{
+        /* filter: grayscale(70%) contrast(70%) invert(10%) brightness(70%) sepia(0%); */
+        /* filter: brightness(70%) saturate(100%) invert(80%) sepia(7%) saturate(50%) hue-rotate(166deg) brightness(113%) contrast(100%); */
+        /* filter: brightness(0) saturate(100%) invert(60%) sepia(0%) saturate(6002%) hue-rotate(306deg) brightness(97%) contrast(89%); */
+    }
+}
+
+.enterprise:hover{
+    background-color: #fff;
+    border: 1px solid #959597;
+    box-shadow: none;
+     .add-btn{
+         top: -10px;
+        right: -10px;
+        /* width: 100%; */
+        position: absolute;
+        /* display: flex; */
+        flex-direction: row;
+        /* display: hidden; */
+        /* height: 41px; */
+        justify-content: center;
+        display: flex;
+        align-items: center;
+        border-radius: 50%;
+        /* gap: 5px; */
+        width: 20px;
+        height: 20px;
+        /* text-align: center; */
+        padding: 7px;
+        border: 1px solid #6f6ce7;
+        color: white;
+        background: #6f6ce7;
+        font-size: 14px;
+        font-weight: 400;
+     }
+    .coming-soon{
+        display: none;
+    }
+}

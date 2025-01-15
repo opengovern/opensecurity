@@ -34,9 +34,6 @@ import {
     PlatformEnginePkgInventoryApiSmartQueryItem,
     PlatformEnginePkgInventoryApiSmartQueryItemV2,
 } from '../../../../../api/api'
-import DrawerPanel from '../../../../../components/DrawerPanel'
-import { getConnectorIcon } from '../../../../../components/Cards/ConnectorCard'
-import SummaryCard from '../../../../../components/Cards/SummaryCard'
 import { useComplianceApiV1FindingsResourceCreate } from '../../../../../api/compliance.gen'
 import Spinner from '../../../../../components/Spinner'
 // import { severityBadge } from '../Controls'

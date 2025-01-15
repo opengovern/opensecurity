@@ -19,8 +19,6 @@ import {
     PlatformEnginePkgComplianceApiConformanceStatus,
 } from '../../../../api/api'
 import { DateRange } from '../../../../utilities/urlstate'
-import FailingCloudAccounts from '../FailingCloudAccounts'
-import Events from '../Events'
 import FindingsWithFailure from '../FindingsWithFailure'
 interface ICount {
     connector: SourceType

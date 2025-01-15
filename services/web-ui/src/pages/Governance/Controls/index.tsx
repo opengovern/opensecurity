@@ -32,13 +32,13 @@ import { useAtomValue } from 'jotai'
 import { useComplianceApiV1BenchmarksControlsDetail } from '../../../api/compliance.gen'
 import Spinner from '../../../components/Spinner'
 import { numberDisplay } from '../../../utilities/numericDisplay'
-import DrawerPanel from '../../../components/DrawerPanel'
 import AnimatedAccordion from '../../../components/AnimatedAccordion'
 import { searchAtom } from '../../../utilities/urlstate'
 import {
     PlatformEnginePkgComplianceApiBenchmarkControlSummary,
     PlatformEnginePkgComplianceApiConformanceStatus,
 } from '../../../api/api'
+import { Modal } from '@cloudscape-design/components'
 
 interface IPolicies {
     id: string | undefined
@@ -242,10 +242,10 @@ export default function Controls({ id, assignments, enable }: IPolicies) {
                 )}
             </Flex>
 
-            <DrawerPanel
-                title={docTitle}
-                open={doc.length > 0}
-                onClose={() => setDoc('')}
+            <Modal
+                header={docTitle}
+                visible={doc.length > 0}
+                onDismiss={() => setDoc('')}
             >
                 <MarkdownPreview
                     source={doc}
@@ -270,7 +270,7 @@ export default function Controls({ id, assignments, enable }: IPolicies) {
                         }
                     }}
                 />
-            </DrawerPanel>
+            </Modal>
             {isLoading ? (
                 <Spinner className="mt-20" />
             ) : (

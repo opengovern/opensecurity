@@ -8,17 +8,12 @@ import {
     SourceType,
     TypesFindingSeverity,
 } from '../../../api/api'
-import ResourcesWithFailure from './ResourcesWithFailure'
-import ControlsWithFailure from './ControlsWithFailure'
-import FailingCloudAccounts from './FailingCloudAccounts'
 import {
     DateRange,
     useURLParam,
     useURLState,
 } from '../../../utilities/urlstate'
-import Events from './Events'
 import Spinner from '../../../components/Spinner'
-import Summary from './Summary'
 import AllIncidents from './AllIncidents'
 import { ChevronRightIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
 
@@ -107,14 +102,7 @@ export default function Findings() {
 
                     <Flex className="mt-2 w-full">
                         <>
-                            {tab == 1 && (
-                                <Summary
-                                    query={query}
-                                    setSelectedGroup={setSelectedGroup}
-                                    tab={secondTab}
-                                    setTab={setSecondTab}
-                                />
-                            )}
+                          
                             {tab == 0 && (
                                 <AllIncidents
                                     query={query}

@@ -50,7 +50,6 @@ import {
 } from '../../../../api/inventory.gen'
 import Spinner from '../../../../components/Spinner'
 import { getErrorMessage } from '../../../../types/apierror'
-import DrawerPanel from '../../../../components/DrawerPanel'
 import { RenderObject } from '../../../../components/RenderObject'
 
 import {
@@ -71,7 +70,6 @@ import { numberDisplay } from '../../../../utilities/numericDisplay'
 import TopHeader from '../../../../components/Layout/Header'
 import PolicyDetail from './PolicyDetail'
 import { useComplianceApiV3ControlListFilters } from '../../../../api/compliance.gen'
-import KFilter from '../../../../components/Filter'
 import KTable from '@cloudscape-design/components/table'
 import Box from '@cloudscape-design/components/box'
 import SpaceBetween from '@cloudscape-design/components/space-between'
@@ -85,7 +83,6 @@ import {
     PropertyFilter,
 } from '@cloudscape-design/components'
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
-import { getConnectorIcon } from '../../../../components/Cards/ConnectorCard'
 import { useIntegrationApiV1EnabledConnectorsList } from '../../../../api/integration.gen'
 import axios from 'axios'
 

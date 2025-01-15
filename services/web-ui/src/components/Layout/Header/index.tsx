@@ -15,21 +15,8 @@ import {
     useURLState,
     useUrlDateRangeState,
 } from '../../../utilities/urlstate'
-import FilterGroup, { IFilter } from '../../FilterGroup'
-import {
-    CloudAccountFilter,
-    ConnectorFilter,
-    DateFilter,
-    EnvironmentFilter,
-    ProductFilter,
-    ScoreCategory,
-    ScoreTagFilter,
-    ServiceNameFilter,
-    SeverityFilter,
-} from '../../FilterGroup/FilterTypes'
-import { CheckboxItem } from '../../FilterGroup/CheckboxSelector'
+
 // import { useIntegrationApiV1ConnectionsSummariesList } from '../../../api/integration.gen'
-import { DateSelectorOptions } from '../../FilterGroup/ConditionSelector/DateConditionSelector'
 
 interface IHeader {
     supportedFilters?: string[]
@@ -55,9 +42,7 @@ export default function TopHeader({
     const defaultActiveTimeRange = datePickerDefault || defaultTime(ws || '')
     const { value: activeTimeRange, setValue: setActiveTimeRange } =
         useUrlDateRangeState(defaultActiveTimeRange)
-    const [selectedDateCondition, setSelectedDateCondition] =
-        useState<DateSelectorOptions>('isBetween')
-
+  
     const defaultSelectedConnectors = ''
     const [selectedConnectors, setSelectedConnectors] = useURLParam<
         '' | 'AWS' | 'Azure'
@@ -187,164 +172,8 @@ export default function TopHeader({
     //     needResourceCount: false,
     // })
 
-    const filters: IFilter[] = [
-        ConnectorFilter(
-            selectedConnectors,
-            selectedConnectors !== '',
-            (sv) => setSelectedConnectors(parseConnector(sv)),
-            () => {
-                setAddedFilters(addedFilters.filter((a) => a !== 'Connector'))
-                setSelectedConnectors(defaultSelectedConnectors)
-            },
-            () => setSelectedConnectors(defaultSelectedConnectors)
-        ),
+  
 
-        SeverityFilter(
-            selectedSeverities,
-            selectedSeverities.length < 5,
-            (sv) => {
-                if (selectedSeverities.includes(sv)) {
-                    setSelectedSeverities(
-                        selectedSeverities.filter((i) => i !== sv)
-                    )
-                } else setSelectedSeverities([...selectedSeverities, sv])
-            },
-            () => {
-                setAddedFilters(addedFilters.filter((a) => a !== 'Severity'))
-                setSelectedSeverities(defaultSelectedSeverities)
-            },
-            () => setSelectedSeverities(defaultSelectedSeverities)
-        ),
-
-        // CloudAccountFilter(
-        //     response?.connections
-        //         ?.filter((v) => {
-        //             if (connectionSearch === '') {
-        //                 return true
-        //             }
-        //             return (
-        //                 v.providerConnectionID
-        //                     ?.toLowerCase()
-        //                     .includes(connectionSearch.toLowerCase()) ||
-        //                 v.providerConnectionName
-        //                     ?.toLowerCase()
-        //                     .includes(connectionSearch.toLowerCase())
-        //             )
-        //         })
-        //         .map((c) => {
-        //             const vc: CheckboxItem = {
-        //                 title: c.providerConnectionName || '',
-        //                 titleSecondLine: c.providerConnectionID || '',
-        //                 value: c.id || '',
-        //             }
-        //             return vc
-        //         }) || [],
-        //     (sv) => {
-        //         if (selectedCloudAccounts.includes(sv)) {
-        //             setSelectedCloudAccounts(
-        //                 selectedCloudAccounts.filter((i) => i !== sv)
-        //             )
-        //         } else setSelectedCloudAccounts([...selectedCloudAccounts, sv])
-        //     },
-        //     selectedCloudAccounts,
-        //     selectedCloudAccounts.length > 0,
-        //     () => {
-        //         setAddedFilters(
-        //             addedFilters.filter((a) => a !== 'Cloud Account')
-        //         )
-        //         setSelectedCloudAccounts(defaultSelectedCloudAccounts)
-        //     },
-        //     () => setSelectedCloudAccounts(defaultSelectedCloudAccounts),
-        //     (s) => setConnectionSearch(s)
-        // ),
-
-        ServiceNameFilter(
-            serviceNames?.map((i) => {
-                return {
-                    title: i,
-                    value: i,
-                }
-            }) || [],
-            (sv) => {
-                if (selectedServiceNames.includes(sv)) {
-                    setSelectedServiceNames(
-                        selectedServiceNames.filter((i) => i !== sv)
-                    )
-                } else setSelectedServiceNames([...selectedServiceNames, sv])
-            },
-            selectedServiceNames,
-            selectedServiceNames.length > 0,
-            () => {
-                setAddedFilters(
-                    addedFilters.filter((a) => a !== 'Service Name')
-                )
-                setSelectedServiceNames(defaultSelectedServiceNames)
-            },
-            () => setSelectedServiceNames(defaultSelectedServiceNames)
-        ),
-
-        ScoreTagFilter(
-            tags?.map((i) => {
-                return {
-                    title: i,
-                    value: i,
-                }
-            }) || [],
-            (sv) => {
-                if (selectedScoreTags.includes(sv)) {
-                    setSelectedScoreTags(
-                        selectedScoreTags.filter((i) => i !== sv)
-                    )
-                } else setSelectedScoreTags([...selectedScoreTags, sv])
-            },
-            selectedScoreTags,
-            selectedScoreTags.length > 0,
-            () => {
-                setAddedFilters(addedFilters.filter((a) => a !== 'Tag'))
-                setSelectedScoreTags(defaultSelectedScoreTags)
-            },
-            () => setSelectedScoreTags(defaultSelectedScoreTags)
-        ),
-
-        ScoreCategory(
-            selectedScoreCategory,
-            selectedScoreCategory.length > 0,
-            setSelectedScoreCategory,
-            () => {
-                setAddedFilters(
-                    addedFilters.filter((a) => a !== 'Score Category')
-                )
-                setSelectedScoreCategory(defaultSelectedScoreCategory)
-            },
-            () => setSelectedScoreCategory(defaultSelectedScoreCategory)
-        ),
-
-        DateFilter(
-            activeTimeRange,
-            setActiveTimeRange,
-            selectedDateCondition,
-            setSelectedDateCondition
-        ),
-
-        ProductFilter(() => {
-            setAddedFilters(addedFilters.filter((a) => a !== 'Product'))
-        }),
-
-        EnvironmentFilter(() => {
-            setAddedFilters(addedFilters.filter((a) => a !== 'Environment'))
-        }),
-
-        // EnvironmentFilter(
-        //     activeTimeRange,
-        //     setActiveTimeRange,
-        //     selectedDateCondition,
-        //     setSelectedDateCondition
-        // ),
-    ]
-
-    const activeFilters = filters.filter((v) => {
-        return supportedFilters?.includes(v.title)
-    })
 
     const navigate = useNavigate()
     const searchParams = useAtomValue(searchAtom)
@@ -443,18 +272,7 @@ export default function TopHeader({
                         {mainPage()}
                     </Title>
                 )}
-                <Flex className="gap-3 w-fit">
-                    {children}
-
-                    <FilterGroup
-                        filterList={activeFilters}
-                        addedFilters={addedFilters}
-                        onFilterAdded={(i) =>
-                            setAddedFilters([i, ...addedFilters])
-                        }
-                        alignment="right"
-                    />
-                </Flex>
+               
             </Flex>
         </div>
     )

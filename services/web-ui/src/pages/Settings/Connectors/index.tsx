@@ -6,7 +6,6 @@ import {
     useAuthApiV1KeysList,
 } from '../../../api/auth.gen'
 import Spinner from '../../../components/Spinner'
-import DrawerPanel from '../../../components/DrawerPanel'
 // import CreateAPIKey from './CreateAPIKey'
 // import APIKeyRecord from './APIKeyRecord'
 import Notification from '../../../components/Notification'
