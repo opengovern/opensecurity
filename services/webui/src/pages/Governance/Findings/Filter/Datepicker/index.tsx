@@ -1,31 +1,14 @@
+
 // @ts-nocheck
 
-import { getLocalTimeZone, parseDate, today } from '@internationalized/date'
 import dayjs from 'dayjs'
-import { AriaDateRangePickerProps, DateValue } from '@react-aria/datepicker'
-import { useDateRangePickerState } from 'react-stately'
+
 import { useEffect, useRef, useState } from 'react'
-import { useDateRangePicker } from 'react-aria'
-import { Checkbox } from 'pretty-checkbox-react'
-import { ClockIcon } from '@heroicons/react/24/outline'
-import { Flex, Select, SelectItem, Text, Title } from '@tremor/react'
-import { renderDateText } from '../../../../../components/Layout/Header/DatePicker'
-import { RangeCalendar } from '../../../../../components/Layout/Header/DatePicker/Calendar/RangePicker/RangeCalendar'
+
 import {
-    Box,
     DateRangePicker,
-    Icon,
-    SpaceBetween,
-    Spinner,
 } from '@cloudscape-design/components'
-function CustomDatePicker(props: AriaDateRangePickerProps<DateValue>) {
-    const state = useDateRangePickerState(props)
-    const ref = useRef(null)
 
-    const { calendarProps } = useDateRangePicker(props, state, ref)
-
-    return <RangeCalendar {...calendarProps} />
-}
 
 export interface IDate {
     start: dayjs.Dayjs
@@ -45,18 +28,13 @@ export default function Datepicker({
     setActiveTimeRange,
     name
 }: IDatepicker) {
-    const [startH, setStartH] = useState(activeTimeRange.start.hour())
-    const [startM, setStartM] = useState(activeTimeRange.start.minute())
-    const [endH, setEndH] = useState(activeTimeRange.end.hour())
-    const [endM, setEndM] = useState(activeTimeRange.end.minute())
-    const [checked, setChecked] = useState(
-        startH !== 0 || startM !== 0 || endH !== 23 || endM !== 59
-    )
-    const [val, setVal] = useState({
-        startDate: dayjs(activeTimeRange.start).toISOString(),
-        endDate: dayjs(activeTimeRange.end).toISOString(),
-        type: 'absolute'
-    })
+   
+       const [val, setVal] = useState({
+            startDate: dayjs(activeTimeRange.start).toISOString(),
+            endDate: dayjs(activeTimeRange.end).toISOString(),
+            type: 'absolute',
+        })
+  
 
     useEffect(() => {
         const start = val.startDate
@@ -66,75 +44,9 @@ export default function Datepicker({
             start: dayjs(val.startDate),
             end: dayjs(val.endDate),
         })
-    }, [val, checked, startH, startM, endH, endM])
+    }, [val])
 
-    const minValue = () => {
-        return parseDate('2022-12-01')
-    }
-    const maxValue = () => {
-        return today(getLocalTimeZone())
-    }
-
-    const last7Days = () => {
-        return {
-            start: dayjs().utc().subtract(1, 'week').startOf('day'),
-            end: dayjs().utc().endOf('day'),
-        }
-    }
-
-    const last30Days = () => {
-        return {
-            start: dayjs().utc().subtract(1, 'month').startOf('day'),
-            end: dayjs().utc().endOf('day'),
-        }
-    }
-
-    const thisMonth = () => {
-        return {
-            start: dayjs().utc().startOf('month').startOf('day'),
-            end: dayjs().utc().endOf('day'),
-        }
-    }
-
-    const lastMonth = () => {
-        return {
-            start: dayjs()
-                .utc()
-                .subtract(1, 'month')
-                .startOf('month')
-                .startOf('day'),
-            end: dayjs().utc().subtract(1, 'month').endOf('month').endOf('day'),
-        }
-    }
-
-    const thisQuarter = () => {
-        return {
-            start: dayjs().utc().startOf('quarter').startOf('day'),
-            end: dayjs().utc().endOf('day'),
-        }
-    }
-
-    const lastQuarter = () => {
-        return {
-            start: dayjs()
-                .utc()
-                .subtract(1, 'quarter')
-                .startOf('quarter')
-                .startOf('day'),
-            end: dayjs()
-                .utc()
-                .subtract(1, 'quarter')
-                .endOf('quarter')
-                .endOf('day'),
-        }
-    }
-
-    const thisYear = () => {
-        return {
-            start: dayjs().utc().startOf('year').startOf('day'),
-            end: dayjs().utc().endOf('day'),
-        }
-    }
+   
 
     return (
         <>

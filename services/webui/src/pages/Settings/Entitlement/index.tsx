@@ -31,7 +31,7 @@ import { numericDisplay } from '../../../utilities/numericDisplay'
 import { useAuthApiV1UserDetail } from '../../../api/auth.gen'
 import { dateDisplay, dateTimeDisplay } from '../../../utilities/dateDisplay'
 import { PlatformEnginePkgWorkspaceApiTier } from '../../../api/api'
-import {  isDemoAtom, previewAtom, sampleAtom } from '../../../store'
+import { isDemoAtom, previewAtom, sampleAtom } from '../../../store'
 import {
     useMetadataApiV1MetadataCreate,
     useMetadataApiV1MetadataDetail,
@@ -40,8 +40,11 @@ import { useComplianceApiV1QueriesSyncList } from '../../../api/compliance.gen'
 import { getErrorMessage } from '../../../types/apierror'
 import { ConvertToBoolean } from '../../../utilities/bool'
 import axios from 'axios'
-import { Alert, KeyValuePairs, ProgressBar } from '@cloudscape-design/components'
-
+import {
+    Alert,
+    KeyValuePairs,
+    ProgressBar,
+} from '@cloudscape-design/components'
 
 interface ITextMetric {
     title: string
@@ -156,13 +159,14 @@ export default function SettingsEntitlement() {
     const hostsPercentage = Math.ceil((noOfHosts / maxHosts) * 100.0)
     const [preview, setPreview] = useAtom(previewAtom)
     const [migrations_status, setMigrationsStatus] = useState()
- const {
-     response: customizationEnabled,
-     isLoading: loadingCustomizationEnabled,
- } = useMetadataApiV1MetadataDetail('customization_enabled')
- const isCustomizationEnabled =
-     ConvertToBoolean((customizationEnabled?.value || 'false').toLowerCase()) ||
-     false
+    const {
+        response: customizationEnabled,
+        isLoading: loadingCustomizationEnabled,
+    } = useMetadataApiV1MetadataDetail('customization_enabled')
+    const isCustomizationEnabled =
+        ConvertToBoolean(
+            (customizationEnabled?.value || 'false').toLowerCase()
+        ) || false
 
     const wsTier = (v?: PlatformEnginePkgWorkspaceApiTier) => {
         switch (v) {
@@ -218,199 +222,190 @@ export default function SettingsEntitlement() {
             value: wsTier(currentWorkspace?.tier),
         },
     ]
-       const {
-           isLoading: syncLoading,
-           isExecuted: syncExecuted,
-           error: syncError,
-           sendNow: runSync,
-       } = useComplianceApiV1QueriesSyncList({}, {}, false)
+    const {
+        isLoading: syncLoading,
+        isExecuted: syncExecuted,
+        error: syncError,
+        sendNow: runSync,
+    } = useComplianceApiV1QueriesSyncList({}, {}, false)
 
-     const {
-         isExecuted,
-         isLoading: isLoadingLoad,
-         error,
-         sendNow: loadData,
-     } = useWorkspaceApiV3LoadSampleData(
-       
-         {},
-         false
-     )
-      const {
-          isExecuted: isExecPurge,
-          isLoading: isLoadingPurge,
-          error: errorPurge,
-          sendNow: PurgeData,
-      } = useWorkspaceApiV3PurgeSampleData({}, false)
+    const {
+        isExecuted,
+        isLoading: isLoadingLoad,
+        error,
+        sendNow: loadData,
+    } = useWorkspaceApiV3LoadSampleData({}, false)
+    const {
+        isExecuted: isExecPurge,
+        isLoading: isLoadingPurge,
+        error: errorPurge,
+        sendNow: PurgeData,
+    } = useWorkspaceApiV3PurgeSampleData({}, false)
 
-        const [status,setStatus] = useState();
-        const [percentage, setPercentage] = useState()
-        const [intervalId, setIntervalId] = useState()
-        const [loaded, setLoaded] = useState()
+    const [status, setStatus] = useState()
+    const [percentage, setPercentage] = useState()
+    const [intervalId, setIntervalId] = useState()
+    const [loaded, setLoaded] = useState()
 
+    const GetStatus = () => {
+        let url = ''
+        //  setLoading(true)
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
 
- const GetStatus = () => {
-     let url = ''
-    //  setLoading(true)
-     if (window.location.origin === 'http://localhost:3000') {
-         url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-     } else {
-         url = window.location.origin
-     }
-     // @ts-ignore
-     const token = JSON.parse(localStorage.getItem('openg_auth')).token
+        axios
+            .get(`${url}/main/core/api/v3/migration/status `, config)
+            .then((res) => {
+                setStatus(res.data.status)
+                setMigrationsStatus(res.data)
+                setPercentage(res.data.Summary?.progress_percentage)
+                if (intervalId) {
+                    if (
+                        res.data.status === 'SUCCEEDED' ||
+                        res.data.status === 'FAILED'
+                    ) {
+                        clearInterval(intervalId)
+                    }
+                } else {
+                    if (
+                        res.data.status !== 'SUCCEEDED' &&
+                        res.data.status !== 'FAILED'
+                    ) {
+                        const id = setInterval(GetStatus, 30000)
+                        // @ts-ignore
+                        setIntervalId(id)
+                    }
+                }
+                //  const temp = []
+                //  if (!res.data.items) {
+                //      setLoading(false)
+                //  }
+                //  setBenchmarks(res.data.items)
+                //  setTotalPage(Math.ceil(res.data.total_count / 6))
+                //  setTotalCount(res.data.total_count)
+            })
+            .catch((err) => {
+                clearInterval(intervalId)
+                //  setLoading(false)
+                //  setBenchmarks([])
 
-     const config = {
-         headers: {
-             Authorization: `Bearer ${token}`,
-         },
-     }
-    
+                console.log(err)
+            })
+    }
+    const GetSample = () => {
+        let url = ''
+        //  setLoading(true)
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-     axios
-         .get(`${url}/main/core/api/v3/migration/status `, config)
-         .then((res) => {
-             setStatus(res.data.status)
-             setMigrationsStatus(res.data)
-             setPercentage(res.data.Summary?.progress_percentage)
-             if (intervalId) {
-                 if (
-                     res.data.status === 'SUCCEEDED' ||
-                     res.data.status === 'FAILED'
-                 ) {
-                     clearInterval(intervalId)
-                 }
-             } else {
-                 if (
-                     res.data.status !== 'SUCCEEDED' &&
-                     res.data.status !== 'FAILED'
-                 ) {
-                     const id = setInterval(GetStatus, 30000)
-                     // @ts-ignore
-                     setIntervalId(id)
-                 }
-             }
-             //  const temp = []
-             //  if (!res.data.items) {
-             //      setLoading(false)
-             //  }
-             //  setBenchmarks(res.data.items)
-             //  setTotalPage(Math.ceil(res.data.total_count / 6))
-             //  setTotalCount(res.data.total_count)
-         })
-         .catch((err) => {
-             clearInterval(intervalId)
-             //  setLoading(false)
-             //  setBenchmarks([])
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
 
-             console.log(err)
-         })
- }
- const GetSample = () => {
-     let url = ''
-     //  setLoading(true)
-     if (window.location.origin === 'http://localhost:3000') {
-         url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-     } else {
-         url = window.location.origin
-     }
-     // @ts-ignore
-     const token = JSON.parse(localStorage.getItem('openg_auth')).token
+        axios
+            .put(`${url}/main/core/api/v3/sample/loaded `, {}, config)
+            .then((res) => {
+                if (res.data === 'True') {
+                    // @ts-ignore
+                    setLoaded('True')
+                    localStorage.setItem('sample', 'true')
+                    setSample('true')
+                } else {
+                    GetSampleStatus()
+                }
+                //  const temp = []
+                //  if (!res.data.items) {
+                //      setLoading(false)
+                //  }
+                //  setBenchmarks(res.data.items)
+                //  setTotalPage(Math.ceil(res.data.total_count / 6))
+                //  setTotalCount(res.data.total_count)
+            })
+            .catch((err) => {
+                //  setLoading(false)
+                //  setBenchmarks([])
 
-     const config = {
-         headers: {
-             Authorization: `Bearer ${token}`,
-         },
-     }
+                console.log(err)
+            })
+    }
+    const GetSampleStatus = () => {
+        let url = ''
+        //  setLoading(true)
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-     axios
-         .put(`${url}/main/core/api/v3/sample/loaded `, {}, config)
-         .then((res) => {
-            if(res.data === 'True'){
-                // @ts-ignore
-                setLoaded('True')
-                localStorage.setItem('sample', 'true')
-                setSample('true')
-                
-            }
-            else{
-                GetSampleStatus()
-            }
-             //  const temp = []
-             //  if (!res.data.items) {
-             //      setLoading(false)
-             //  }
-             //  setBenchmarks(res.data.items)
-             //  setTotalPage(Math.ceil(res.data.total_count / 6))
-             //  setTotalCount(res.data.total_count)
-         })
-         .catch((err) => {
-             //  setLoading(false)
-             //  setBenchmarks([])
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
 
-             console.log(err)
-         })
- }
- const GetSampleStatus = () => {
-     let url = ''
-     //  setLoading(true)
-     if (window.location.origin === 'http://localhost:3000') {
-         url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-     } else {
-         url = window.location.origin
-     }
-     // @ts-ignore
-     const token = JSON.parse(localStorage.getItem('openg_auth')).token
+        axios
+            .get(`${url}/main/core/api/v3/sample/sync/status `, config)
+            .then((res) => {
+                if (res?.data?.progress !== 1 && res?.data?.progress !== 0) {
+                    // @ts-ignore
+                    setLoaded('True')
+                    localStorage.setItem('sample', 'true')
+                    setSample('true')
+                } else {
+                    // @ts-ignore
+                    setLoaded('False')
+                    localStorage.setItem('sample', 'false')
+                    setSample('false')
+                }
+                //  const temp = []
+                //  if (!res.data.items) {
+                //      setLoading(false)
+                //  }
+                //  setBenchmarks(res.data.items)
+                //  setTotalPage(Math.ceil(res.data.total_count / 6))
+                //  setTotalCount(res.data.total_count)
+            })
+            .catch((err) => {
+                //  setLoading(false)
+                //  setBenchmarks([])
 
-     const config = {
-         headers: {
-             Authorization: `Bearer ${token}`,
-         },
-     }
-
-     axios
-         .get(`${url}/main/core/api/v3/sample/sync/status `, config)
-         .then((res) => {
-             if (res?.data?.progress !== 1 && res?.data?.progress !== 0) {
-                 // @ts-ignore
-                 setLoaded('True')
-                 localStorage.setItem('sample', 'true')
-                 setSample('true')
-             } else {
-                 // @ts-ignore
-                 setLoaded('False')
-                 localStorage.setItem('sample', 'false')
-                 setSample('false')
-             }
-             //  const temp = []
-             //  if (!res.data.items) {
-             //      setLoading(false)
-             //  }
-             //  setBenchmarks(res.data.items)
-             //  setTotalPage(Math.ceil(res.data.total_count / 6))
-             //  setTotalCount(res.data.total_count)
-         })
-         .catch((err) => {
-             //  setLoading(false)
-             //  setBenchmarks([])
-
-             console.log(err)
-         })
- }
- useEffect(()=>{
-    GetStatus()
-    GetSample()
- },[])
-  useEffect(() => {
+                console.log(err)
+            })
+    }
+    useEffect(() => {
+        GetStatus()
+        GetSample()
+    }, [])
+    useEffect(() => {
         if (syncExecuted && !syncLoading) {
             GetStatus()
-            const id = setInterval(GetStatus,30000)
+            const id = setInterval(GetStatus, 30000)
             // @ts-ignore
             setIntervalId(id)
             // setValue(response?.value || '')
             // window.location.reload()
         }
-  }, [syncLoading, syncExecuted])
+    }, [syncLoading, syncExecuted])
     return isLoading || loadingCurrentWS ? (
         <Flex justifyContent="center" className="mt-56">
             <Spinner />
@@ -649,7 +644,6 @@ export default function SettingsEntitlement() {
                 {((error && error !== '') ||
                     (errorPurge && errorPurge !== '')) && (
                     <>
-                        {console.log(getErrorMessage(error))}
                         <Alert className="mt-2" type="error">
                             <>
                                 {getErrorMessage(error)}

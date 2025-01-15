@@ -4,7 +4,6 @@ import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { Checkbox, useCheckboxState } from 'pretty-checkbox-react'
 import { PlatformEnginePkgComplianceApiFindingFiltersWithMetadata } from '../../../../../../../api/api'
 import Spinner from '../../../../../../../components/Spinner'
-import { compareArrays } from '../../../../../../../components/Layout/Header/Filter'
 import Multiselect from '@cloudscape-design/components/multiselect'
 
 

@@ -21,7 +21,6 @@ import {
 import ConformanceStatus from './ConformanceStatus'
 import { useComplianceApiV1FindingsFiltersCreate } from '../../../../../../api/compliance.gen'
 import Others from './Others'
-import FindingLifecycle from './FindingLifecycle'
 
 import {
     CloudConnect,

@@ -2,7 +2,6 @@ import { Checkbox, useCheckboxState } from 'pretty-checkbox-react'
 import { Button, Flex, Text } from '@tremor/react'
 import { useEffect, useState } from 'react'
 import { TypesFindingSeverity } from '../../../../../api/api'
-import { compareArrays } from '../../../../../components/Layout/Header/Filter'
 import Multiselect from '@cloudscape-design/components/multiselect'
 
 interface ISeverity {
