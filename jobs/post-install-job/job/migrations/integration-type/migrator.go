@@ -19,7 +19,7 @@ func (m Migration) IsGitBased() bool {
 	return true
 }
 func (m Migration) AttachmentFolderPath() string {
-	return config.IntegrationsGitPath
+	return config.ConfigzGitPath
 }
 
 func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *zap.Logger) error {
