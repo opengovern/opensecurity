@@ -7,4 +7,4 @@ COPY ./services/webui/.env.example /usr/share/nginx/html/.env
 
 RUN npm install -g serve --force
 
-CMD ["serve","-s",".","-p" ,"3000"]
+CMD ["serve","-s",".","-p" ,"7298"]
