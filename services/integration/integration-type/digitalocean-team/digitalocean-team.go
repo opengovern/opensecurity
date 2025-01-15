@@ -83,3 +83,7 @@ func (i *Integration) GetResourceTypeFromTableName(tableName string) string {
 func (i *Integration) GetIntegrationType() integration.Type {
 	return configs.IntegrationTypeDigitalOceanTeam
 }
+
+func (i *Integration) ListAllTables() map[string][]string {
+	return make(map[string][]string)
+}

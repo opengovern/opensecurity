@@ -103,3 +103,7 @@ func hashSHA256(input string) string {
 	hashedBytes := hash.Sum(nil)
 	return hex.EncodeToString(hashedBytes)
 }
+
+func (i *Integration) ListAllTables() map[string][]string {
+	return make(map[string][]string)
+}

@@ -45,3 +45,7 @@ type GetResourceTypesByLabelsRequest struct {
 type GetResourceTypesByLabelsResponse struct {
 	ResourceTypes map[string]*ResourceTypeConfiguration
 }
+
+type ListTablesResponse struct {
+	Tables map[string][]string `json:"tables"`
+}

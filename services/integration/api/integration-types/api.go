@@ -25,6 +25,7 @@ func New(logger *zap.Logger, typeManager *integration_type.IntegrationTypeManage
 func (a *API) Register(e *echo.Group) {
 	e.GET("", httpserver.AuthorizeHandler(a.List, api.ViewerRole))
 	e.GET("/:integration_type/resource-type/table/:table_name", httpserver.AuthorizeHandler(a.GetResourceTypeFromTableName, api.ViewerRole))
+	e.GET("/:integration_type/table", httpserver.AuthorizeHandler(a.ListTables, api.ViewerRole))
 	e.POST("/:integration_type/resource-type/label", httpserver.AuthorizeHandler(a.GetResourceTypesByLabels, api.ViewerRole))
 	e.GET("/:integration_type/configuration", httpserver.AuthorizeHandler(a.GetConfiguration, api.ViewerRole))
 }
@@ -135,6 +136,28 @@ func (a *API) GetResourceTypesByLabels(c echo.Context) error {
 			res.ResourceTypes[k] = utils.GetPointer(v.ToAPI())
 		}
 		return c.JSON(200, res)
+	} else {
+		return echo.NewHTTPError(404, "integration type not found")
+	}
+}
+
+// ListTables godoc
+//
+// @Summary			List tables
+// @Description		List tables
+// @Security		BearerToken
+// @Tags			integration_types
+// @Produce			json
+// @Param			integration_type	path	string	true	"Integration type"
+// @Success			200	{object} models.ListTablesResponse
+// @Router			/integration/api/v1/integration_types/{integration_type}/table [get]
+func (a *API) ListTables(c echo.Context) error {
+	integrationType := c.Param("integration_type")
+
+	rtMap := a.typeManager.GetIntegrationTypeMap()
+	if value, ok := rtMap[a.typeManager.ParseType(integrationType)]; ok {
+		tables := value.ListAllTables()
+		return c.JSON(200, models.ListTablesResponse{Tables: tables})
 	} else {
 		return echo.NewHTTPError(404, "integration type not found")
 	}

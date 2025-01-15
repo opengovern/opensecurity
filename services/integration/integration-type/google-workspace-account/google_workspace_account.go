@@ -96,3 +96,7 @@ func (i *Integration) GetResourceTypeFromTableName(tableName string) string {
 func (i *Integration) GetIntegrationType() integration.Type {
 	return configs.IntegrationTypeGoogleWorkspaceAccount
 }
+
+func (i *Integration) ListAllTables() map[string][]string {
+	return make(map[string][]string)
+}

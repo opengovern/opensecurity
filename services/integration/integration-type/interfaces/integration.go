@@ -35,6 +35,7 @@ type IntegrationType interface {
 	HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error)
 	DiscoverIntegrations(jsonData []byte) ([]models.Integration, error)
 	GetResourceTypeFromTableName(tableName string) string
+	ListAllTables() map[string][]string
 }
 
 // IntegrationCreator IntegrationType interface, credentials, error
@@ -101,6 +102,15 @@ func (i *IntegrationTypeRPC) GetResourceTypeFromTableName(tableName string) stri
 	return resourceType
 }
 
+func (i *IntegrationTypeRPC) ListAllTables() map[string][]string {
+	var tables map[string][]string
+	err := i.client.Call("Plugin.ListAllTables", struct{}{}, &tables)
+	if err != nil {
+		panic(err)
+	}
+	return tables
+}
+
 type IntegrationTypeRPCServer struct {
 	Impl IntegrationType
 }
@@ -135,6 +145,11 @@ func (i *IntegrationTypeRPCServer) DiscoverIntegrations(jsonData []byte, integra
 
 func (i *IntegrationTypeRPCServer) GetResourceTypeFromTableName(tableName string, resourceType *string) error {
 	*resourceType = i.Impl.GetResourceTypeFromTableName(tableName)
+	return nil
+}
+
+func (i *IntegrationTypeRPCServer) ListAllTables(_ struct{}, tables *map[string][]string) error {
+	*tables = i.Impl.ListAllTables()
 	return nil
 }
 
