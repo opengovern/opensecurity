@@ -16,7 +16,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { useComplianceApiV1BenchmarksSummaryList } from '../../../api/compliance.gen'
 import {
-    GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationSummary,
+    PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary,
     SourceType,
 } from '../../../api/api'
 import ComplianceListCard from '../../../components/Cards/ComplianceListCard'

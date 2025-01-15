@@ -1,11 +1,11 @@
 import { Card, Flex, Text } from '@tremor/react'
-import { GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationSummary } from '../../api/api'
+import { PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary } from '../../api/api'
 import { benchmarkChecks } from '../Cards/ComplianceCard'
 import { numberDisplay } from '../../utilities/numericDisplay'
 
 interface ISeverityBar {
     benchmark:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationSummary
+        | PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary
         | undefined
 }
 

@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai'
 import { Flex, Text } from '@tremor/react'
 import { useComplianceApiV1FindingsTopDetail } from '../../../../../../api/compliance.gen'
-import { GithubComKaytuIoKaytuEnginePkgComplianceApiGetTopFieldResponse } from '../../../../../../api/api'
+import { PlatformEnginePkgComplianceApiGetTopFieldResponse } from '../../../../../../api/api'
 import { isDemoAtom } from '../../../../../../store'
 import { useState } from 'react'
 import {
@@ -31,7 +31,7 @@ interface IImpactedAccounts {
 
 export const topConnections = (
     input:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiGetTopFieldResponse
+        | PlatformEnginePkgComplianceApiGetTopFieldResponse
         | undefined
 ) => {
     const data = []

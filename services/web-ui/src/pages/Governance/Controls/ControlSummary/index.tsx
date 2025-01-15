@@ -47,13 +47,12 @@ import Detail from './Tabs/Detail'
 import ImpactedResources from './Tabs/ImpactedResources'
 import Benchmarks from './Tabs/Benchmarks'
 import ImpactedAccounts from './Tabs/ImpactedAccounts'
-import DrawerPanel from '../../../../components/DrawerPanel'
 import { dateTimeDisplay } from '../../../../utilities/dateDisplay'
 import TopHeader from '../../../../components/Layout/Header'
 import ControlFindings from './Tabs/ControlFindings'
 import { useMetadataApiV1QueryParameterList } from '../../../../api/metadata.gen'
 import { toErrorMessage } from '../../../../types/apierror'
-import { GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus } from '../../../../api/api'
+import { PlatformEnginePkgComplianceApiConformanceStatus } from '../../../../api/api'
 import CodeEditor from '@cloudscape-design/components/code-editor'
 import {
     Box,
@@ -62,6 +61,7 @@ import {
     CopyToClipboard,
     Header,
     KeyValuePairs,
+    Modal,
     SpaceBetween,
     Tabs,
 } from '@cloudscape-design/components'
@@ -126,21 +126,21 @@ export default function ControlDetail() {
     //     sendNow: refresh,
     // } = useMetadataApiV1QueryParameterList()
     // const [conformanceFilter, setConformanceFilter] = useState<
-    //     | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+    //     | PlatformEnginePkgComplianceApiConformanceStatus[]
     //     | undefined
     // >(undefined)
     // const conformanceFilterIdx = () => {
     //     if (
     //         conformanceFilter?.length === 1 &&
     //         conformanceFilter[0] ===
-    //             GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed
+    //             PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed
     //     ) {
     //         return '1'
     //     }
     //     if (
     //         conformanceFilter?.length === 1 &&
     //         conformanceFilter[0] ===
-    //             GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
+    //             PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
     //     ) {
     //         return '2'
     //     }
@@ -698,10 +698,10 @@ export default function ControlDetail() {
                                     justifyContent="start"
                                     className="h-full"
                                 >
-                                    <DrawerPanel
-                                        title={docTitle}
-                                        open={doc.length > 0}
-                                        onClose={() => setDoc('')}
+                                    <Modal
+                                        header={docTitle}
+                                        visible={doc.length > 0}
+                                        onDismiss={() => setDoc('')}
                                     >
                                         <MarkdownPreview
                                             source={doc}
@@ -731,7 +731,7 @@ export default function ControlDetail() {
                                                 }
                                             }}
                                         />
-                                    </DrawerPanel>
+                                    </Modal>
                                     {/* <Title className="font-semibold mt-2 mb-2">
                                 Remediation
                             </Title>
@@ -931,12 +931,12 @@ export default function ControlDetail() {
                                                 switch (detail.selectedId) {
                                                     case '1':
                                                         setConformanceFilter([
-                                                            GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+                                                            PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
                                                         ])
                                                         break
                                                     case '2':
                                                         setConformanceFilter([
-                                                            GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
+                                                            PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
                                                         ])
                                                         break
                                                     default:
@@ -965,12 +965,12 @@ export default function ControlDetail() {
                                 switch (detail.selectedId) {
                                     case '1':
                                         setConformanceFilter([
-                                            GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+                                            PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
                                         ])
                                         break
                                     case '2':
                                         setConformanceFilter([
-                                            GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
+                                            PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
                                         ])
                                         break
                                     default:
@@ -991,12 +991,12 @@ export default function ControlDetail() {
                                 switch (tabIndex) {
                                     case 1:
                                         setConformanceFilter([
-                                            GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+                                            PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
                                         ])
                                         break
                                     case 2:
                                         setConformanceFilter([
-                                            GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
+                                            PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
                                         ])
                                         break
                                     default:

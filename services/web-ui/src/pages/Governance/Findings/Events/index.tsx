@@ -7,14 +7,13 @@ import { isDemoAtom, notificationAtom } from '../../../../store'
 import { dateTimeDisplay } from '../../../../utilities/dateDisplay'
 import {
     Api,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEvent,
+    PlatformEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgComplianceApiFindingEvent,
     SourceType,
     TypesFindingSeverity,
 } from '../../../../api/api'
 import AxiosAPI from '../../../../api/ApiConfig'
 import { severityBadge, statusBadge } from '../../Controls'
-import { getConnectorIcon } from '../../../../components/Cards/ConnectorCard'
 import { DateRange } from '../../../../utilities/urlstate'
 import EventDetail from './Detail'
 import KTable from '@cloudscape-design/components/table'
@@ -38,7 +37,7 @@ interface ICount {
     query: {
         connector: SourceType
         conformanceStatus:
-            | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+            | PlatformEnginePkgComplianceApiConformanceStatus[]
             | undefined
         severity: TypesFindingSeverity[] | undefined
         connectionID: string[] | undefined
@@ -56,7 +55,7 @@ export default function Events({ query }: ICount) {
     const [loading, setLoading] = useState(false)
     const [open, setOpen] = useState(false)
     const [finding, setFinding] = useState<
-        GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEvent | undefined
+        PlatformEnginePkgComplianceApiFindingEvent | undefined
     >(undefined)
     const [rows, setRows] = useState<any[]>()
     const [page, setPage] = useState(1)
@@ -164,7 +163,6 @@ export default function Events({ query }: ICount) {
                             finding ? (
                                 <>
                                     <Flex justifyContent="start">
-                                        {getConnectorIcon(finding?.connector)}
                                         <Title className="text-lg font-semibold ml-2 my-1">
                                             {finding?.providerConnectionName}
                                         </Title>

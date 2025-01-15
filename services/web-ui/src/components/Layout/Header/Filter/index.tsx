@@ -11,7 +11,7 @@ import Spinner from '../../../Spinner'
 import { AWSIcon, AzureIcon } from '../../../../icons/icons'
 import { useFilterState } from '../../../../utilities/urlstate'
 import {
-    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnection,
+    PlatformEngineServicesIntegrationApiEntityConnection,
     SourceType,
 } from '../../../../api/api'
 
@@ -27,7 +27,7 @@ export const compareArrays = (a: any[], b: any[]) => {
 
 const filteredConnectionsList = (
     connection:
-        | GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnection[]
+        | PlatformEngineServicesIntegrationApiEntityConnection[]
         | undefined,
     filter: string
 ) => {

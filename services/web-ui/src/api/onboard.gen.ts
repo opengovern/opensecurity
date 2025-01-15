@@ -2,24 +2,24 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
     Api,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiCreateAwsConnectionRequest,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiCreateCredentialResponse,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiSourceAwsRequest,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiCreateSourceResponse,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiCatalogMetrics,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiListConnectionSummaryResponse,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiCredential,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiUpdateCredentialRequest,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiConnectionGroup,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiCreateConnectionResponse,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiChangeConnectionLifecycleStateRequest,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiListCredentialResponse,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiV2CreateCredentialV2Request,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiV2CreateCredentialV2Response,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiConnectorCount,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiCreateCredentialRequest,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiConnection,
-    GithubComKaytuIoKaytuEnginePkgOnboardApiSourceAzureRequest,
+    PlatformEnginePkgOnboardApiCreateAwsConnectionRequest,
+    PlatformEnginePkgOnboardApiCreateCredentialResponse,
+    PlatformEnginePkgOnboardApiSourceAwsRequest,
+    PlatformEnginePkgOnboardApiCreateSourceResponse,
+    PlatformEnginePkgOnboardApiCatalogMetrics,
+    PlatformEnginePkgOnboardApiListConnectionSummaryResponse,
+    PlatformEnginePkgOnboardApiCredential,
+    PlatformEnginePkgOnboardApiUpdateCredentialRequest,
+    PlatformEnginePkgOnboardApiConnectionGroup,
+    PlatformEnginePkgOnboardApiCreateConnectionResponse,
+    PlatformEnginePkgOnboardApiChangeConnectionLifecycleStateRequest,
+    PlatformEnginePkgOnboardApiListCredentialResponse,
+    PlatformEnginePkgOnboardApiV2CreateCredentialV2Request,
+    PlatformEnginePkgOnboardApiV2CreateCredentialV2Response,
+    PlatformEnginePkgOnboardApiConnectorCount,
+    PlatformEnginePkgOnboardApiCreateCredentialRequest,
+    PlatformEnginePkgOnboardApiConnection,
+    PlatformEnginePkgOnboardApiSourceAzureRequest,
     RequestParams,
 } from './api'
 
@@ -28,7 +28,7 @@ import AxiosAPI, { setWorkspace } from './ApiConfig'
 interface IuseOnboardApiV1CatalogMetricsListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgOnboardApiCatalogMetrics
+    response?: PlatformEnginePkgOnboardApiCatalogMetrics
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -177,7 +177,7 @@ export const useOnboardApiV1CatalogMetricsList = (
 interface IuseOnboardApiV1ConnectionGroupsListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgOnboardApiConnectionGroup[]
+    response?: PlatformEnginePkgOnboardApiConnectionGroup[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -325,7 +325,7 @@ export const useOnboardApiV1ConnectionGroupsList = (
 interface IuseOnboardApiV1ConnectionGroupsDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgOnboardApiConnectionGroup
+    response?: PlatformEnginePkgOnboardApiConnectionGroup
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -485,7 +485,7 @@ export const useOnboardApiV1ConnectionGroupsDetail = (
 interface IuseOnboardApiV1ConnectionsAwsCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgOnboardApiCreateConnectionResponse
+    response?: PlatformEnginePkgOnboardApiCreateConnectionResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -494,7 +494,7 @@ interface IuseOnboardApiV1ConnectionsAwsCreateState {
  * URL:
  */
 export const useOnboardApiV1ConnectionsAwsCreate = (
-    request: GithubComKaytuIoKaytuEnginePkgOnboardApiCreateAwsConnectionRequest,
+    request: PlatformEnginePkgOnboardApiCreateAwsConnectionRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -516,7 +516,7 @@ export const useOnboardApiV1ConnectionsAwsCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgOnboardApiCreateAwsConnectionRequest,
+        reqrequest: PlatformEnginePkgOnboardApiCreateAwsConnectionRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -601,7 +601,7 @@ export const useOnboardApiV1ConnectionsAwsCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgOnboardApiCreateAwsConnectionRequest,
+        reqrequest: PlatformEnginePkgOnboardApiCreateAwsConnectionRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -623,7 +623,7 @@ export const useOnboardApiV1ConnectionsAwsCreate = (
 interface IuseOnboardApiV1ConnectionsSummaryListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgOnboardApiListConnectionSummaryResponse
+    response?: PlatformEnginePkgOnboardApiListConnectionSummaryResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -895,7 +895,7 @@ interface IuseOnboardApiV1ConnectionsStateCreateState {
  */
 export const useOnboardApiV1ConnectionsStateCreate = (
     connectionId: string,
-    request: GithubComKaytuIoKaytuEnginePkgOnboardApiChangeConnectionLifecycleStateRequest,
+    request: PlatformEnginePkgOnboardApiChangeConnectionLifecycleStateRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -918,7 +918,7 @@ export const useOnboardApiV1ConnectionsStateCreate = (
     const sendRequest = (
         abortCtrl: AbortController,
         reqconnectionId: string,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgOnboardApiChangeConnectionLifecycleStateRequest,
+        reqrequest: PlatformEnginePkgOnboardApiChangeConnectionLifecycleStateRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -1013,7 +1013,7 @@ export const useOnboardApiV1ConnectionsStateCreate = (
 
     const sendNowWithParams = (
         reqconnectionId: string,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgOnboardApiChangeConnectionLifecycleStateRequest,
+        reqrequest: PlatformEnginePkgOnboardApiChangeConnectionLifecycleStateRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -1035,7 +1035,7 @@ export const useOnboardApiV1ConnectionsStateCreate = (
 interface IuseOnboardApiV1ConnectorListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgOnboardApiConnectorCount[]
+    response?: PlatformEnginePkgOnboardApiConnectorCount[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1167,7 +1167,7 @@ export const useOnboardApiV1ConnectorList = (
 interface IuseOnboardApiV1CredentialListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgOnboardApiListCredentialResponse
+    response?: PlatformEnginePkgOnboardApiListCredentialResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1353,7 +1353,7 @@ export const useOnboardApiV1CredentialList = (
 interface IuseOnboardApiV1CredentialCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgOnboardApiCreateCredentialResponse
+    response?: PlatformEnginePkgOnboardApiCreateCredentialResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1362,7 +1362,7 @@ interface IuseOnboardApiV1CredentialCreateState {
  * URL:
  */
 export const useOnboardApiV1CredentialCreate = (
-    config: GithubComKaytuIoKaytuEnginePkgOnboardApiCreateCredentialRequest,
+    config: PlatformEnginePkgOnboardApiCreateCredentialRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -1383,7 +1383,7 @@ export const useOnboardApiV1CredentialCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqconfig: GithubComKaytuIoKaytuEnginePkgOnboardApiCreateCredentialRequest,
+        reqconfig: PlatformEnginePkgOnboardApiCreateCredentialRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -1468,7 +1468,7 @@ export const useOnboardApiV1CredentialCreate = (
     }
 
     const sendNowWithParams = (
-        reqconfig: GithubComKaytuIoKaytuEnginePkgOnboardApiCreateCredentialRequest,
+        reqconfig: PlatformEnginePkgOnboardApiCreateCredentialRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -1490,7 +1490,7 @@ export const useOnboardApiV1CredentialCreate = (
 interface IuseOnboardApiV1CredentialDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgOnboardApiCredential
+    response?: PlatformEnginePkgOnboardApiCredential
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1637,7 +1637,7 @@ interface IuseOnboardApiV1CredentialUpdateState {
  */
 export const useOnboardApiV1CredentialUpdate = (
     credentialId: string,
-    config: GithubComKaytuIoKaytuEnginePkgOnboardApiUpdateCredentialRequest,
+    config: PlatformEnginePkgOnboardApiUpdateCredentialRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -1659,7 +1659,7 @@ export const useOnboardApiV1CredentialUpdate = (
     const sendRequest = (
         abortCtrl: AbortController,
         reqcredentialId: string,
-        reqconfig: GithubComKaytuIoKaytuEnginePkgOnboardApiUpdateCredentialRequest,
+        reqconfig: PlatformEnginePkgOnboardApiUpdateCredentialRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -1754,7 +1754,7 @@ export const useOnboardApiV1CredentialUpdate = (
 
     const sendNowWithParams = (
         reqcredentialId: string,
-        reqconfig: GithubComKaytuIoKaytuEnginePkgOnboardApiUpdateCredentialRequest,
+        reqconfig: PlatformEnginePkgOnboardApiUpdateCredentialRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -1913,7 +1913,7 @@ export const useOnboardApiV1CredentialDelete = (
 interface IuseOnboardApiV1CredentialAutoonboardCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgOnboardApiConnection[]
+    response?: PlatformEnginePkgOnboardApiConnection[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2054,7 +2054,7 @@ export const useOnboardApiV1CredentialAutoonboardCreate = (
 interface IuseOnboardApiV1SourceAwsCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgOnboardApiCreateSourceResponse
+    response?: PlatformEnginePkgOnboardApiCreateSourceResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2063,7 +2063,7 @@ interface IuseOnboardApiV1SourceAwsCreateState {
  * URL:
  */
 export const useOnboardApiV1SourceAwsCreate = (
-    request: GithubComKaytuIoKaytuEnginePkgOnboardApiSourceAwsRequest,
+    request: PlatformEnginePkgOnboardApiSourceAwsRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -2084,7 +2084,7 @@ export const useOnboardApiV1SourceAwsCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgOnboardApiSourceAwsRequest,
+        reqrequest: PlatformEnginePkgOnboardApiSourceAwsRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -2169,7 +2169,7 @@ export const useOnboardApiV1SourceAwsCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgOnboardApiSourceAwsRequest,
+        reqrequest: PlatformEnginePkgOnboardApiSourceAwsRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -2191,7 +2191,7 @@ export const useOnboardApiV1SourceAwsCreate = (
 interface IuseOnboardApiV1SourceAzureCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgOnboardApiCreateSourceResponse
+    response?: PlatformEnginePkgOnboardApiCreateSourceResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2200,7 +2200,7 @@ interface IuseOnboardApiV1SourceAzureCreateState {
  * URL:
  */
 export const useOnboardApiV1SourceAzureCreate = (
-    request: GithubComKaytuIoKaytuEnginePkgOnboardApiSourceAzureRequest,
+    request: PlatformEnginePkgOnboardApiSourceAzureRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -2221,7 +2221,7 @@ export const useOnboardApiV1SourceAzureCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgOnboardApiSourceAzureRequest,
+        reqrequest: PlatformEnginePkgOnboardApiSourceAzureRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -2306,7 +2306,7 @@ export const useOnboardApiV1SourceAzureCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgOnboardApiSourceAzureRequest,
+        reqrequest: PlatformEnginePkgOnboardApiSourceAzureRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -2465,7 +2465,7 @@ export const useOnboardApiV1SourceDelete = (
 interface IuseOnboardApiV1SourceHealthcheckDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgOnboardApiConnection
+    response?: PlatformEnginePkgOnboardApiConnection
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2620,7 +2620,7 @@ export const useOnboardApiV1SourceHealthcheckDetail = (
 interface IuseOnboardApiV2CredentialCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgOnboardApiV2CreateCredentialV2Response
+    response?: PlatformEnginePkgOnboardApiV2CreateCredentialV2Response
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2629,7 +2629,7 @@ interface IuseOnboardApiV2CredentialCreateState {
  * URL:
  */
 export const useOnboardApiV2CredentialCreate = (
-    config: GithubComKaytuIoKaytuEnginePkgOnboardApiV2CreateCredentialV2Request,
+    config: PlatformEnginePkgOnboardApiV2CreateCredentialV2Request,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -2650,7 +2650,7 @@ export const useOnboardApiV2CredentialCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqconfig: GithubComKaytuIoKaytuEnginePkgOnboardApiV2CreateCredentialV2Request,
+        reqconfig: PlatformEnginePkgOnboardApiV2CreateCredentialV2Request,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -2735,7 +2735,7 @@ export const useOnboardApiV2CredentialCreate = (
     }
 
     const sendNowWithParams = (
-        reqconfig: GithubComKaytuIoKaytuEnginePkgOnboardApiV2CreateCredentialV2Request,
+        reqconfig: PlatformEnginePkgOnboardApiV2CreateCredentialV2Request,
         reqparams: RequestParams
     ) => {
         controller.abort()

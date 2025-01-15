@@ -17,7 +17,7 @@ import {
 import ReactJson from '@microlink/react-json-view'
 import { useEffect, useState } from 'react'
 import { ArrowRightIcon } from '@heroicons/react/24/outline'
-import { GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEvent } from '../../../../../api/api'
+import { PlatformEnginePkgComplianceApiFindingEvent } from '../../../../../api/api'
 import { getConnectorIcon } from '../../../../../components/Cards/ConnectorCard'
 import DrawerPanel from '../../../../../components/DrawerPanel'
 import SummaryCard from '../../../../../components/Cards/SummaryCard'
@@ -30,7 +30,7 @@ import { Tabs } from '@cloudscape-design/components'
 import { RenderObject } from '../../../../../components/RenderObject'
 
 interface IFindingDetail {
-    event: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEvent | undefined
+    event: PlatformEnginePkgComplianceApiFindingEvent | undefined
     open: boolean
     onClose: () => void
 }

@@ -4,7 +4,7 @@ import { Card, Flex, Text } from '@tremor/react'
 import { useEffect, useState } from 'react'
 import { useComplianceApiV1FindingsTopDetail } from '../../../../api/compliance.gen'
 import {
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgComplianceApiConformanceStatus,
     SourceType,
     TypesFindingSeverity,
 } from '../../../../api/api'
@@ -34,7 +34,7 @@ interface ICount {
     query: {
         connector: SourceType
         conformanceStatus:
-            | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+            | PlatformEnginePkgComplianceApiConformanceStatus[]
             | undefined
         severity: TypesFindingSeverity[] | undefined
         connectionID: string[] | undefined

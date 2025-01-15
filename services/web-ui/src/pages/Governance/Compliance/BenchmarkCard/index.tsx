@@ -3,7 +3,7 @@ import { useAtomValue } from 'jotai'
 
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronRightIcon } from '@heroicons/react/24/solid'
-import { GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationSummary } from '../../../../api/api'
+import { PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary } from '../../../../api/api'
 import { benchmarkChecks } from './SeverityBar'
 import SummaryCard from '../../../../components/Cards/SummaryCard'
 import {

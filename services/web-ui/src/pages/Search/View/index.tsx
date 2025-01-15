@@ -52,14 +52,13 @@ import {
 } from '../../../api/inventory.gen'
 import Spinner from '../../../components/Spinner'
 import { getErrorMessage } from '../../../types/apierror'
-import DrawerPanel from '../../../components/DrawerPanel'
 import { RenderObject } from '../../../components/RenderObject'
 
 import {
-    GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryResponse,
+    PlatformEnginePkgInventoryApiRunQueryResponse,
     Api,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequestV2,
+    PlatformEnginePkgInventoryApiSmartQueryItemV2,
+    PlatformEnginePkgInventoryApiListQueryRequestV2,
 } from '../../../api/api'
 import { isDemoAtom, queryAtom, runQueryAtom } from '../../../store'
 import AxiosAPI from '../../../api/ApiConfig'
@@ -68,7 +67,6 @@ import { snakeCaseToLabel } from '../../../utilities/labelMaker'
 import { numberDisplay } from '../../../utilities/numericDisplay'
 import TopHeader from '../../../components/Layout/Header'
 import { array } from 'prop-types'
-import KFilter from '../../../components/Filter'
 import KTable from '@cloudscape-design/components/table'
 import Box from '@cloudscape-design/components/box'
 import SpaceBetween from '@cloudscape-design/components/space-between'
@@ -101,12 +99,12 @@ export default function View({ setTab }: Props) {
     const [selectedIndex, setSelectedIndex] = useState(0)
     const [searchCategory, setSearchCategory] = useState('')
     const [selectedRow, setSelectedRow] =
-        useState<GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2>()
+        useState<PlatformEnginePkgInventoryApiSmartQueryItemV2>()
     const [openDrawer, setOpenDrawer] = useState(false)
     const [openSlider, setOpenSlider] = useState(false)
     const [openSearch, setOpenSearch] = useState(true)
     const [query, setQuery] =
-        useState<GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequestV2>()
+        useState<PlatformEnginePkgInventoryApiListQueryRequestV2>()
     const [selectedFilter, setSelectedFilters] = useState<string[]>([])
 
     const [showEditor, setShowEditor] = useState(true)

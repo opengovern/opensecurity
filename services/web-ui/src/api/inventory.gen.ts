@@ -2,31 +2,31 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
     Api,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryHistory,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiAssetTableRow,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequest,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryRequest,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiListMetricsResponse,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiListResourceTypeCompositionResponse,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiAnalyticsMetric,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiListCostCompositionResponse,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiCountAnalyticsSpendResponse,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiListCostMetricsResponse,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItem,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryResponse,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSpendTableRow,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiCostTrendDatapoint,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiResourceTypeTrendDatapoint,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollection,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollectionLandscape,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiAnalyticsCategoriesResponse,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiCountAnalyticsMetricsResponse,
+    PlatformEnginePkgInventoryApiSmartQueryHistory,
+    PlatformEnginePkgInventoryApiAssetTableRow,
+    PlatformEnginePkgInventoryApiListQueryRequest,
+    PlatformEnginePkgInventoryApiRunQueryRequest,
+    PlatformEnginePkgInventoryApiListMetricsResponse,
+    PlatformEnginePkgInventoryApiListResourceTypeCompositionResponse,
+    PlatformEnginePkgInventoryApiAnalyticsMetric,
+    PlatformEnginePkgInventoryApiListCostCompositionResponse,
+    PlatformEnginePkgInventoryApiCountAnalyticsSpendResponse,
+    PlatformEnginePkgInventoryApiListCostMetricsResponse,
+    PlatformEnginePkgInventoryApiSmartQueryItem,
+    PlatformEnginePkgInventoryApiRunQueryResponse,
+    PlatformEnginePkgInventoryApiSpendTableRow,
+    PlatformEnginePkgInventoryApiCostTrendDatapoint,
+    PlatformEnginePkgInventoryApiResourceTypeTrendDatapoint,
+    PlatformEnginePkgInventoryApiResourceCollection,
+    PlatformEnginePkgInventoryApiResourceCollectionLandscape,
+    PlatformEnginePkgInventoryApiAnalyticsCategoriesResponse,
+    PlatformEnginePkgInventoryApiCountAnalyticsMetricsResponse,
     RequestParams,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequestV2,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2Response,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryFilters,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiInventoryCategoriesResponse,
+    PlatformEnginePkgInventoryApiListQueryRequestV2,
+    PlatformEnginePkgInventoryApiSmartQueryItemV2,
+    PlatformEnginePkgInventoryApiSmartQueryItemV2Response,
+    PlatformEnginePkgInventoryApiSmartQueryFilters,
+    PlatformEnginePkgInventoryApiInventoryCategoriesResponse,
 } from './api'
 
 import AxiosAPI, { setWorkspace } from './ApiConfig'
@@ -34,14 +34,14 @@ import AxiosAPI, { setWorkspace } from './ApiConfig'
 interface IuseInventoryApiV1QueryListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItem[]
+    response?: PlatformEnginePkgInventoryApiSmartQueryItem[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
 interface IuseInventoryApiV1QueryListStateV2 {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2Response
+    response?: PlatformEnginePkgInventoryApiSmartQueryItemV2Response
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -50,7 +50,7 @@ interface IuseInventoryApiV1QueryListStateV2 {
  * URL:
  */
 export const useInventoryApiV1QueryList = (
-    request: GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequest,
+    request: PlatformEnginePkgInventoryApiListQueryRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -71,7 +71,7 @@ export const useInventoryApiV1QueryList = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequest,
+        reqrequest: PlatformEnginePkgInventoryApiListQueryRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -156,7 +156,7 @@ export const useInventoryApiV1QueryList = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequest,
+        reqrequest: PlatformEnginePkgInventoryApiListQueryRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -178,7 +178,7 @@ export const useInventoryApiV1QueryList = (
  * URL:
  */
 export const useInventoryApiV2QueryList = (
-    request: GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequestV2,
+    request: PlatformEnginePkgInventoryApiListQueryRequestV2,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -199,7 +199,7 @@ export const useInventoryApiV2QueryList = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequestV2,
+        reqrequest: PlatformEnginePkgInventoryApiListQueryRequestV2,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -284,7 +284,7 @@ export const useInventoryApiV2QueryList = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequestV2,
+        reqrequest: PlatformEnginePkgInventoryApiListQueryRequestV2,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -306,7 +306,7 @@ export const useInventoryApiV2QueryList = (
 interface IuseInventoryApiV1QueryRunCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryResponse
+    response?: PlatformEnginePkgInventoryApiRunQueryResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -315,7 +315,7 @@ interface IuseInventoryApiV1QueryRunCreateState {
  * URL:
  */
 export const useInventoryApiV1QueryRunCreate = (
-    request: GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryRequest,
+    request: PlatformEnginePkgInventoryApiRunQueryRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -336,7 +336,7 @@ export const useInventoryApiV1QueryRunCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryRequest,
+        reqrequest: PlatformEnginePkgInventoryApiRunQueryRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -421,7 +421,7 @@ export const useInventoryApiV1QueryRunCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryRequest,
+        reqrequest: PlatformEnginePkgInventoryApiRunQueryRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -443,7 +443,7 @@ export const useInventoryApiV1QueryRunCreate = (
 interface IuseInventoryApiV1QueryRunHistoryListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryHistory[]
+    response?: PlatformEnginePkgInventoryApiSmartQueryHistory[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -576,7 +576,7 @@ export const useInventoryApiV1QueryRunHistoryList = (
 interface IuseInventoryApiV2AnalyticsCategoriesListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiAnalyticsCategoriesResponse
+    response?: PlatformEnginePkgInventoryApiAnalyticsCategoriesResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -730,7 +730,7 @@ export const useInventoryApiV2AnalyticsCategoriesList = (
 interface IuseInventoryApiV3InvenoryCategoryList {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiInventoryCategoriesResponse
+    response?: PlatformEnginePkgInventoryApiInventoryCategoriesResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -862,7 +862,7 @@ export const useInventoryApiV3AllQueryCategory = (
 interface IuseInventoryApiV3SmartQueryListFilters {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryFilters
+    response?: PlatformEnginePkgInventoryApiSmartQueryFilters
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1009,7 +1009,7 @@ export const useInventoryApiV3QueryFiltersList = (
 interface IuseInventoryApiV2AnalyticsCompositionDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiListResourceTypeCompositionResponse
+    response?: PlatformEnginePkgInventoryApiListResourceTypeCompositionResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1202,7 +1202,7 @@ export const useInventoryApiV2AnalyticsCompositionDetail = (
 interface IuseInventoryApiV2AnalyticsCountListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiCountAnalyticsMetricsResponse
+    response?: PlatformEnginePkgInventoryApiCountAnalyticsMetricsResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1335,7 +1335,7 @@ export const useInventoryApiV2AnalyticsCountList = (
 interface IuseInventoryApiV2AnalyticsMetricListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiListMetricsResponse
+    response?: PlatformEnginePkgInventoryApiListMetricsResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1555,7 +1555,7 @@ export const useInventoryApiV2AnalyticsMetricList = (
 interface IuseInventoryApiV2AnalyticsMetricsListListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiAnalyticsMetric[]
+    response?: PlatformEnginePkgInventoryApiAnalyticsMetric[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1709,7 +1709,7 @@ export const useInventoryApiV2AnalyticsMetricsListList = (
 interface IuseInventoryApiV2AnalyticsMetricsDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiAnalyticsMetric
+    response?: PlatformEnginePkgInventoryApiAnalyticsMetric
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1847,7 +1847,7 @@ export const useInventoryApiV2AnalyticsMetricsDetail = (
 interface IuseInventoryApiV2AnalyticsSpendCompositionListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiListCostCompositionResponse
+    response?: PlatformEnginePkgInventoryApiListCostCompositionResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2025,7 +2025,7 @@ export const useInventoryApiV2AnalyticsSpendCompositionList = (
 interface IuseInventoryApiV2AnalyticsSpendCountListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiCountAnalyticsSpendResponse
+    response?: PlatformEnginePkgInventoryApiCountAnalyticsSpendResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2158,7 +2158,7 @@ export const useInventoryApiV2AnalyticsSpendCountList = (
 interface IuseInventoryApiV2AnalyticsSpendMetricListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiListCostMetricsResponse
+    response?: PlatformEnginePkgInventoryApiListCostMetricsResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2360,7 +2360,7 @@ export const useInventoryApiV2AnalyticsSpendMetricList = (
 interface IuseInventoryApiV2AnalyticsSpendTableListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiSpendTableRow[]
+    response?: PlatformEnginePkgInventoryApiSpendTableRow[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2550,7 +2550,7 @@ export const useInventoryApiV2AnalyticsSpendTableList = (
 interface IuseInventoryApiV2AnalyticsSpendTrendListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiCostTrendDatapoint[]
+    response?: PlatformEnginePkgInventoryApiCostTrendDatapoint[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2734,7 +2734,7 @@ export const useInventoryApiV2AnalyticsSpendTrendList = (
 interface IuseInventoryApiV2AnalyticsTableListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiAssetTableRow[]
+    response?: PlatformEnginePkgInventoryApiAssetTableRow[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -3091,7 +3091,7 @@ export const useInventoryApiV2AnalyticsTagList = (
 interface IuseInventoryApiV2AnalyticsTrendListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiResourceTypeTrendDatapoint[]
+    response?: PlatformEnginePkgInventoryApiResourceTypeTrendDatapoint[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -3293,7 +3293,7 @@ export const useInventoryApiV2AnalyticsTrendList = (
 interface IuseInventoryApiV2MetadataResourceCollectionListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollection[]
+    response?: PlatformEnginePkgInventoryApiResourceCollection[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -3447,7 +3447,7 @@ export const useInventoryApiV2MetadataResourceCollectionList = (
 interface IuseInventoryApiV2MetadataResourceCollectionDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollection
+    response?: PlatformEnginePkgInventoryApiResourceCollection
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -3593,7 +3593,7 @@ export const useInventoryApiV2MetadataResourceCollectionDetail = (
 interface IuseInventoryApiV2ResourceCollectionListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollection[]
+    response?: PlatformEnginePkgInventoryApiResourceCollection[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -3747,7 +3747,7 @@ export const useInventoryApiV2ResourceCollectionList = (
 interface IuseInventoryApiV2ResourceCollectionDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollection
+    response?: PlatformEnginePkgInventoryApiResourceCollection
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -3893,7 +3893,7 @@ export const useInventoryApiV2ResourceCollectionDetail = (
 interface IuseInventoryApiV2ResourceCollectionLandscapeDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollectionLandscape
+    response?: PlatformEnginePkgInventoryApiResourceCollectionLandscape
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }

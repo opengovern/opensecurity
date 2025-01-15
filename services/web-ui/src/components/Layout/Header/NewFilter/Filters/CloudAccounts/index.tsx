@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Button, Flex, Text, TextInput } from '@tremor/react'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { Checkbox, useCheckboxState } from 'pretty-checkbox-react'
-import { GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityListConnectionsSummaryResponse } from '../../../../../../api/api'
+import { PlatformEngineServicesIntegrationApiEntityListConnectionsSummaryResponse } from '../../../../../../api/api'
 import Spinner from '../../../../../Spinner'
 import { isDemoAtom } from '../../../../../../store'
 
@@ -21,7 +21,7 @@ interface IOthers {
     value: string[] | undefined
     defaultValue: string[]
     data:
-        | GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityListConnectionsSummaryResponse
+        | PlatformEngineServicesIntegrationApiEntityListConnectionsSummaryResponse
         | undefined
     condition: string
     onChange: (o: string[]) => void

@@ -2,33 +2,33 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
     Api,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiFindingFiltersWithMetadata,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiGetAccountsFindingsSummaryResponse,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkAssignedEntities,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiControlSummary,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationSummary,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingEventsResponse,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingsResponse,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiListResourceFindingsRequest,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEventFilters,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiGetSingleResourceFindingRequest,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiGetSingleResourceFindingResponse,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiGetTopFieldResponse,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiListResourceFindingsResponse,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingEventsRequest,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEventFiltersWithMetadata,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEvent,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiFinding,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiCountFindingEventsResponse,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingEventsByFindingIDResponse,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiFindingFilters,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkControlSummary,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingsRequest,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiGetServicesFindingsSummaryResponse,
+    PlatformEnginePkgComplianceApiFindingFiltersWithMetadata,
+    PlatformEnginePkgComplianceApiGetAccountsFindingsSummaryResponse,
+    PlatformEnginePkgComplianceApiBenchmarkAssignedEntities,
+    PlatformEnginePkgComplianceApiControlSummary,
+    PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary,
+    PlatformEnginePkgComplianceApiGetFindingEventsResponse,
+    PlatformEnginePkgComplianceApiGetFindingsResponse,
+    PlatformEnginePkgComplianceApiListResourceFindingsRequest,
+    PlatformEnginePkgComplianceApiFindingEventFilters,
+    PlatformEnginePkgComplianceApiGetSingleResourceFindingRequest,
+    PlatformEnginePkgComplianceApiGetSingleResourceFindingResponse,
+    PlatformEnginePkgComplianceApiGetTopFieldResponse,
+    PlatformEnginePkgComplianceApiListResourceFindingsResponse,
+    PlatformEnginePkgComplianceApiGetFindingEventsRequest,
+    PlatformEnginePkgComplianceApiFindingEventFiltersWithMetadata,
+    PlatformEnginePkgComplianceApiFindingEvent,
+    PlatformEnginePkgComplianceApiFinding,
+    PlatformEnginePkgComplianceApiCountFindingEventsResponse,
+    PlatformEnginePkgComplianceApiGetFindingEventsByFindingIDResponse,
+    PlatformEnginePkgComplianceApiFindingFilters,
+    PlatformEnginePkgComplianceApiBenchmarkControlSummary,
+    PlatformEnginePkgComplianceApiGetFindingsRequest,
+    PlatformEnginePkgComplianceApiGetServicesFindingsSummaryResponse,
     RequestParams,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiV3BenchmarkListFilters,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiV3ControlListFilters,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiInventoryCategoriesResponse,
+    PlatformEnginePkgInventoryApiV3BenchmarkListFilters,
+    PlatformEnginePkgInventoryApiV3ControlListFilters,
+    PlatformEnginePkgInventoryApiInventoryCategoriesResponse,
 } from './api'
 
 import AxiosAPI, { setWorkspace } from './ApiConfig'
@@ -36,7 +36,7 @@ import AxiosAPI, { setWorkspace } from './ApiConfig'
 interface IuseComplianceApiV1AssignmentsBenchmarkDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkAssignedEntities
+    response?: PlatformEnginePkgComplianceApiBenchmarkAssignedEntities
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -177,7 +177,7 @@ export const useComplianceApiV1AssignmentsBenchmarkDetail = (
 interface IuseComplianceApiV1BenchmarksControlsDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkControlSummary
+    response?: PlatformEnginePkgComplianceApiBenchmarkControlSummary
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -352,7 +352,7 @@ export const useComplianceApiV1BenchmarksControlsDetail = (
 interface IuseComplianceApiV3ControlListFilters {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiV3ControlListFilters
+    response?: PlatformEnginePkgInventoryApiV3ControlListFilters
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -483,7 +483,7 @@ export const useComplianceApiV3ControlListFilters = (
 interface IuseComplianceApiV3BenchmarkListFilters {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiV3BenchmarkListFilters
+    response?: PlatformEnginePkgInventoryApiV3BenchmarkListFilters
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -773,7 +773,7 @@ export const useComplianceApiV1BenchmarksSettingsCreate = (
 interface IuseComplianceApiV1BenchmarksSummaryDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationSummary
+    response?: PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -960,7 +960,7 @@ export const useComplianceApiV1BenchmarksSummaryDetail = (
 interface IuseComplianceApiV1ControlsSummaryDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiControlSummary
+    response?: PlatformEnginePkgComplianceApiControlSummary
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1121,7 +1121,7 @@ export const useComplianceApiV1ControlsSummaryDetail = (
 interface IuseComplianceApiV1FindingEventsCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingEventsResponse
+    response?: PlatformEnginePkgComplianceApiGetFindingEventsResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1130,7 +1130,7 @@ interface IuseComplianceApiV1FindingEventsCreateState {
  * URL:
  */
 export const useComplianceApiV1FindingEventsCreate = (
-    request: GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingEventsRequest,
+    request: PlatformEnginePkgComplianceApiGetFindingEventsRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -1152,7 +1152,7 @@ export const useComplianceApiV1FindingEventsCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingEventsRequest,
+        reqrequest: PlatformEnginePkgComplianceApiGetFindingEventsRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -1237,7 +1237,7 @@ export const useComplianceApiV1FindingEventsCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingEventsRequest,
+        reqrequest: PlatformEnginePkgComplianceApiGetFindingEventsRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -1259,7 +1259,7 @@ export const useComplianceApiV1FindingEventsCreate = (
 interface IuseComplianceApiV1FindingEventsCountListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiCountFindingEventsResponse
+    response?: PlatformEnginePkgComplianceApiCountFindingEventsResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1431,7 +1431,7 @@ export const useComplianceApiV1FindingEventsCountList = (
 interface IuseComplianceApiV1FindingEventsFiltersCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEventFiltersWithMetadata
+    response?: PlatformEnginePkgComplianceApiFindingEventFiltersWithMetadata
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1440,7 +1440,7 @@ interface IuseComplianceApiV1FindingEventsFiltersCreateState {
  * URL:
  */
 export const useComplianceApiV1FindingEventsFiltersCreate = (
-    request: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEventFilters,
+    request: PlatformEnginePkgComplianceApiFindingEventFilters,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -1462,7 +1462,7 @@ export const useComplianceApiV1FindingEventsFiltersCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEventFilters,
+        reqrequest: PlatformEnginePkgComplianceApiFindingEventFilters,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -1547,7 +1547,7 @@ export const useComplianceApiV1FindingEventsFiltersCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEventFilters,
+        reqrequest: PlatformEnginePkgComplianceApiFindingEventFilters,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -1569,7 +1569,7 @@ export const useComplianceApiV1FindingEventsFiltersCreate = (
 interface IuseComplianceApiV1FindingEventsSingleDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEvent
+    response?: PlatformEnginePkgComplianceApiFindingEvent
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1714,7 +1714,7 @@ export const useComplianceApiV1FindingEventsSingleDetail = (
 interface IuseComplianceApiV1FindingsCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingsResponse
+    response?: PlatformEnginePkgComplianceApiGetFindingsResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1723,7 +1723,7 @@ interface IuseComplianceApiV1FindingsCreateState {
  * URL:
  */
 export const useComplianceApiV1FindingsCreate = (
-    request: GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingsRequest,
+    request: PlatformEnginePkgComplianceApiGetFindingsRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -1744,7 +1744,7 @@ export const useComplianceApiV1FindingsCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingsRequest,
+        reqrequest: PlatformEnginePkgComplianceApiGetFindingsRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -1829,7 +1829,7 @@ export const useComplianceApiV1FindingsCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingsRequest,
+        reqrequest: PlatformEnginePkgComplianceApiGetFindingsRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -1851,7 +1851,7 @@ export const useComplianceApiV1FindingsCreate = (
 interface IuseComplianceApiV1FindingsEventsDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingEventsByFindingIDResponse
+    response?: PlatformEnginePkgComplianceApiGetFindingEventsByFindingIDResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1986,7 +1986,7 @@ export const useComplianceApiV1FindingsEventsDetail = (
 interface IuseComplianceApiV1FindingsFiltersCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingFiltersWithMetadata
+    response?: PlatformEnginePkgComplianceApiFindingFiltersWithMetadata
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1995,7 +1995,7 @@ interface IuseComplianceApiV1FindingsFiltersCreateState {
  * URL:
  */
 export const useComplianceApiV1FindingsFiltersCreate = (
-    request: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingFilters,
+    request: PlatformEnginePkgComplianceApiFindingFilters,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -2017,7 +2017,7 @@ export const useComplianceApiV1FindingsFiltersCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingFilters,
+        reqrequest: PlatformEnginePkgComplianceApiFindingFilters,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -2102,7 +2102,7 @@ export const useComplianceApiV1FindingsFiltersCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingFilters,
+        reqrequest: PlatformEnginePkgComplianceApiFindingFilters,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -2124,7 +2124,7 @@ export const useComplianceApiV1FindingsFiltersCreate = (
 interface IuseComplianceApiV1FindingsResourceCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiGetSingleResourceFindingResponse
+    response?: PlatformEnginePkgComplianceApiGetSingleResourceFindingResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2133,7 +2133,7 @@ interface IuseComplianceApiV1FindingsResourceCreateState {
  * URL:
  */
 export const useComplianceApiV1FindingsResourceCreate = (
-    request: GithubComKaytuIoKaytuEnginePkgComplianceApiGetSingleResourceFindingRequest,
+    request: PlatformEnginePkgComplianceApiGetSingleResourceFindingRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -2155,7 +2155,7 @@ export const useComplianceApiV1FindingsResourceCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgComplianceApiGetSingleResourceFindingRequest,
+        reqrequest: PlatformEnginePkgComplianceApiGetSingleResourceFindingRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -2240,7 +2240,7 @@ export const useComplianceApiV1FindingsResourceCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgComplianceApiGetSingleResourceFindingRequest,
+        reqrequest: PlatformEnginePkgComplianceApiGetSingleResourceFindingRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -2262,7 +2262,7 @@ export const useComplianceApiV1FindingsResourceCreate = (
 interface IuseComplianceApiV1FindingsSingleDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiFinding
+    response?: PlatformEnginePkgComplianceApiFinding
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2397,7 +2397,7 @@ export const useComplianceApiV1FindingsSingleDetail = (
 interface IuseComplianceApiV1FindingsTopDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiGetTopFieldResponse
+    response?: PlatformEnginePkgComplianceApiGetTopFieldResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2633,7 +2633,7 @@ export const useComplianceApiV1FindingsTopDetail = (
 interface IuseComplianceApiV1FindingsAccountsDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiGetAccountsFindingsSummaryResponse
+    response?: PlatformEnginePkgComplianceApiGetAccountsFindingsSummaryResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2796,7 +2796,7 @@ export const useComplianceApiV1FindingsAccountsDetail = (
 interface IuseComplianceApiV1FindingsServicesDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiGetServicesFindingsSummaryResponse
+    response?: PlatformEnginePkgComplianceApiGetServicesFindingsSummaryResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -3108,7 +3108,7 @@ export const useComplianceApiV1QueriesSyncList = (
 interface IuseComplianceApiV1ResourceFindingsCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgComplianceApiListResourceFindingsResponse
+    response?: PlatformEnginePkgComplianceApiListResourceFindingsResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -3117,7 +3117,7 @@ interface IuseComplianceApiV1ResourceFindingsCreateState {
  * URL:
  */
 export const useComplianceApiV1ResourceFindingsCreate = (
-    request: GithubComKaytuIoKaytuEnginePkgComplianceApiListResourceFindingsRequest,
+    request: PlatformEnginePkgComplianceApiListResourceFindingsRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -3139,7 +3139,7 @@ export const useComplianceApiV1ResourceFindingsCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgComplianceApiListResourceFindingsRequest,
+        reqrequest: PlatformEnginePkgComplianceApiListResourceFindingsRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -3224,7 +3224,7 @@ export const useComplianceApiV1ResourceFindingsCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgComplianceApiListResourceFindingsRequest,
+        reqrequest: PlatformEnginePkgComplianceApiListResourceFindingsRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -3246,7 +3246,7 @@ export const useComplianceApiV1ResourceFindingsCreate = (
 interface IuseInventoryApiV3InvenoryCategoryList {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgInventoryApiInventoryCategoriesResponse
+    response?: PlatformEnginePkgInventoryApiInventoryCategoriesResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }

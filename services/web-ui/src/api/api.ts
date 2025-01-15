@@ -61,17 +61,17 @@ export interface EsTag {
     value?: string
 }
 
-export enum GithubComKaytuIoKaytuEnginePkgAnalyticsDbMetricType {
+export enum PlatformEnginePkgAnalyticsDbMetricType {
     MetricTypeAssets = 'assets',
     MetricTypeSpend = 'spend',
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgAuthApiChangeUserPreferencesRequest {
+export interface PlatformEnginePkgAuthApiChangeUserPreferencesRequest {
     enableColorBlindMode?: boolean
-    theme?: GithubComKaytuIoKaytuEnginePkgAuthApiTheme
+    theme?: PlatformEnginePkgAuthApiTheme
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgAuthApiCreateAPIKeyRequest {
+export interface PlatformEnginePkgAuthApiCreateAPIKeyRequest {
     /** Name of the key */
     name?: string
     /**
@@ -81,7 +81,7 @@ export interface GithubComKaytuIoKaytuEnginePkgAuthApiCreateAPIKeyRequest {
     role?: 'admin' | 'editor' | 'viewer'
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgAuthApiCreateAPIKeyResponse {
+export interface PlatformEnginePkgAuthApiCreateAPIKeyResponse {
     /**
      * Activity state of the key
      * @example true
@@ -111,7 +111,7 @@ export interface GithubComKaytuIoKaytuEnginePkgAuthApiCreateAPIKeyResponse {
     token?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgAuthApiGetMeResponse {
+export interface PlatformEnginePkgAuthApiGetMeResponse {
     /**
      * Is the user blocked or not
      * @example false
@@ -145,7 +145,7 @@ export interface GithubComKaytuIoKaytuEnginePkgAuthApiGetMeResponse {
      * @example "accepted"
      */
     status?: 'accepted' | 'pending'
-    theme?: GithubComKaytuIoKaytuEnginePkgAuthApiTheme
+    theme?: PlatformEnginePkgAuthApiTheme
     /**
      * Unique identifier for the user
      * @example "auth|123456789"
@@ -162,17 +162,17 @@ export interface GithubComKaytuIoKaytuEnginePkgAuthApiGetMeResponse {
     ConnectorId?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgAuthApiGetRoleBindingsResponse {
+export interface PlatformEnginePkgAuthApiGetRoleBindingsResponse {
     /**
      * Global Access
      * @example "admin"
      */
     globalRoles?: 'admin' | 'editor' | 'viewer'
     /** List of user roles in each workspace */
-    roleBindings?: GithubComKaytuIoKaytuEnginePkgAuthApiUserRoleBinding[]
+    roleBindings?: PlatformEnginePkgAuthApiUserRoleBinding[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgAuthApiGetUserResponse {
+export interface PlatformEnginePkgAuthApiGetUserResponse {
     /**
      * Is the user blocked or not
      * @example false
@@ -220,7 +220,7 @@ export interface GithubComKaytuIoKaytuEnginePkgAuthApiGetUserResponse {
     userName?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgAuthApiGetUsersRequest {
+export interface PlatformEnginePkgAuthApiGetUsersRequest {
     /** @example "johndoe@example.com" */
     email?: string
     /**
@@ -235,7 +235,7 @@ export interface GithubComKaytuIoKaytuEnginePkgAuthApiGetUsersRequest {
     roleName?: 'admin' | 'editor' | 'viewer'
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgAuthApiGetUsersResponse {
+export interface PlatformEnginePkgAuthApiGetUsersResponse {
     /**
      * Email address of the user
      * @example "johndoe@example.com"
@@ -263,7 +263,7 @@ export interface GithubComKaytuIoKaytuEnginePkgAuthApiGetUsersResponse {
     userName?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgAuthApiInviteRequest {
+export interface PlatformEnginePkgAuthApiInviteRequest {
     /**
      * User email address
      * @example "johndoe@example.com"
@@ -278,12 +278,12 @@ export interface GithubComKaytuIoKaytuEnginePkgAuthApiInviteRequest {
     is_active: boolean
 }
 
-export enum GithubComKaytuIoKaytuEnginePkgAuthApiInviteStatus {
+export enum PlatformEnginePkgAuthApiInviteStatus {
     InviteStatusACCEPTED = 'accepted',
     InviteStatusPENDING = 'pending',
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgAuthApiPutRoleBindingRequest {
+export interface PlatformEnginePkgAuthApiPutRoleBindingRequest {
     /** Name of the role */
     // connectionIDs?: string[]
     email_address: string
@@ -302,13 +302,13 @@ export interface GithubComKaytuIoKaytuEnginePkgAuthApiPutRoleBindingRequest {
     is_active: boolean
 }
 
-export enum GithubComKaytuIoKaytuEnginePkgAuthApiTheme {
+export enum PlatformEnginePkgAuthApiTheme {
     ThemeSystem = 'system',
     ThemeLight = 'light',
     ThemeDark = 'dark',
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgAuthApiUserRoleBinding {
+export interface PlatformEnginePkgAuthApiUserRoleBinding {
     /**
      * Name of the binding Role
      * @example "admin"
@@ -321,7 +321,7 @@ export interface GithubComKaytuIoKaytuEnginePkgAuthApiUserRoleBinding {
     workspaceID?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgAuthApiWorkspaceApiKey {
+export interface PlatformEnginePkgAuthApiWorkspaceApiKey {
     /**
      * Activity state of the key
      * @example true
@@ -364,7 +364,7 @@ export interface GithubComKaytuIoKaytuEnginePkgAuthApiWorkspaceApiKey {
     updated_at?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgAuthApiWorkspaceRoleBinding {
+export interface PlatformEnginePkgAuthApiWorkspaceRoleBinding {
     /**
      * Creation timestamp in UTC
      * @example "2023-03-31T09:36:09.855Z"
@@ -405,7 +405,7 @@ export interface GithubComKaytuIoKaytuEnginePkgAuthApiWorkspaceRoleBinding {
     connector_id?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiAccountsFindingsSummary {
+export interface PlatformEnginePkgComplianceApiAccountsFindingsSummary {
     accountId?: string
     accountName?: string
     conformanceStatusesCount?: {
@@ -426,8 +426,8 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiAccountsFindingsSumm
     }
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiAssignedBenchmark {
-    benchmarkId?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmark
+export interface PlatformEnginePkgComplianceApiAssignedBenchmark {
+    benchmarkId?: PlatformEnginePkgComplianceApiBenchmark
     /**
      * Status
      * @example true
@@ -435,7 +435,7 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiAssignedBenchmark {
     status?: boolean
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmark {
+export interface PlatformEnginePkgComplianceApiBenchmark {
     /**
      * Whether the benchmark is auto assigned or not
      * @example true
@@ -504,7 +504,7 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmark {
     updatedAt?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkAssignedConnection {
+export interface PlatformEnginePkgComplianceApiBenchmarkAssignedConnection {
     /**
      * Connection ID
      * @example "8e0f8e7a-1b1c-4e6f-b7e4-9c6af9d2b1c8"
@@ -529,11 +529,11 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkAssignedCon
     status?: boolean
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkAssignedEntities {
-    connections?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkAssignedConnection[]
+export interface PlatformEnginePkgComplianceApiBenchmarkAssignedEntities {
+    connections?: PlatformEnginePkgComplianceApiBenchmarkAssignedConnection[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkAssignment {
+export interface PlatformEnginePkgComplianceApiBenchmarkAssignment {
     /** Unix timestamp */
     assignedAt?: string
     /**
@@ -553,22 +553,22 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkAssignment 
     resourceCollectionId?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkControlSummary {
-    benchmark?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmark
-    children?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkControlSummary[]
-    control?: GithubComKaytuIoKaytuEnginePkgComplianceApiControlSummary[]
+export interface PlatformEnginePkgComplianceApiBenchmarkControlSummary {
+    benchmark?: PlatformEnginePkgComplianceApiBenchmark
+    children?: PlatformEnginePkgComplianceApiBenchmarkControlSummary[]
+    control?: PlatformEnginePkgComplianceApiControlSummary[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkControlsSeverityStatus {
-    critical?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkStatusResult
-    high?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkStatusResult
-    low?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkStatusResult
-    medium?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkStatusResult
-    none?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkStatusResult
-    total?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkStatusResult
+export interface PlatformEnginePkgComplianceApiBenchmarkControlsSeverityStatus {
+    critical?: PlatformEnginePkgComplianceApiBenchmarkStatusResult
+    high?: PlatformEnginePkgComplianceApiBenchmarkStatusResult
+    low?: PlatformEnginePkgComplianceApiBenchmarkStatusResult
+    medium?: PlatformEnginePkgComplianceApiBenchmarkStatusResult
+    none?: PlatformEnginePkgComplianceApiBenchmarkStatusResult
+    total?: PlatformEnginePkgComplianceApiBenchmarkStatusResult
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationSummary {
+export interface PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary {
     /**
      * Whether the benchmark is auto assigned or not
      * @example true
@@ -582,8 +582,8 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationS
      * @example ["[azure_cis_v140_1"," azure_cis_v140_2]"]
      */
     children?: string[]
-    conformanceStatusSummary?: GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatusSummary
-    connectionsStatus?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkStatusResult
+    conformanceStatusSummary?: PlatformEnginePkgComplianceApiConformanceStatusSummary
+    connectionsStatus?: PlatformEnginePkgComplianceApiBenchmarkStatusResult
     /**
      * Benchmark connectors
      * @example ["[azure]"]
@@ -594,7 +594,7 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationS
      * @example ["[azure_cis_v140_1_1"," azure_cis_v140_1_2]"]
      */
     controls?: string[]
-    controlsSeverityStatus?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkControlsSeverityStatus
+    controlsSeverityStatus?: PlatformEnginePkgComplianceApiBenchmarkControlsSeverityStatus
     costOptimization?: number
     /**
      * Benchmark creation date
@@ -627,7 +627,7 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationS
      * @example "CIS 1.4.0"
      */
     referenceCode?: string
-    resourcesSeverityStatus?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkResourcesSeverityStatus
+    resourcesSeverityStatus?: PlatformEnginePkgComplianceApiBenchmarkResourcesSeverityStatus
     /** Benchmark tags */
     tags?: Record<string, string[]>
     /**
@@ -635,7 +635,7 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationS
      * @example "Azure CIS v1.4.0"
      */
     title?: string
-    topConnections?: GithubComKaytuIoKaytuEnginePkgComplianceApiTopFieldRecord[]
+    topConnections?: PlatformEnginePkgComplianceApiTopFieldRecord[]
     /**
      * Whether the benchmark tracks drift events or not
      * @example true
@@ -648,43 +648,43 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationS
     updatedAt?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkRemediation {
+export interface PlatformEnginePkgComplianceApiBenchmarkRemediation {
     remediation?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkResourcesSeverityStatus {
-    critical?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkStatusResult
-    high?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkStatusResult
-    low?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkStatusResult
-    medium?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkStatusResult
-    none?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkStatusResult
-    total?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkStatusResult
+export interface PlatformEnginePkgComplianceApiBenchmarkResourcesSeverityStatus {
+    critical?: PlatformEnginePkgComplianceApiBenchmarkStatusResult
+    high?: PlatformEnginePkgComplianceApiBenchmarkStatusResult
+    low?: PlatformEnginePkgComplianceApiBenchmarkStatusResult
+    medium?: PlatformEnginePkgComplianceApiBenchmarkStatusResult
+    none?: PlatformEnginePkgComplianceApiBenchmarkStatusResult
+    total?: PlatformEnginePkgComplianceApiBenchmarkStatusResult
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkStatusResult {
+export interface PlatformEnginePkgComplianceApiBenchmarkStatusResult {
     passed?: number
     total?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkTrendDatapoint {
+export interface PlatformEnginePkgComplianceApiBenchmarkTrendDatapoint {
     checks?: TypesSeverityResult
-    conformanceStatusSummary?: GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatusSummary
-    controlsSeverityStatus?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkControlsSeverityStatus
+    conformanceStatusSummary?: PlatformEnginePkgComplianceApiConformanceStatusSummary
+    controlsSeverityStatus?: PlatformEnginePkgComplianceApiBenchmarkControlsSeverityStatus
     /** @example "1686346668" */
     timestamp?: string
 }
 
-export enum GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus {
+export enum PlatformEnginePkgComplianceApiConformanceStatus {
     ConformanceStatusFailed = 'failed',
     ConformanceStatusPassed = 'passed',
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatusSummary {
+export interface PlatformEnginePkgComplianceApiConformanceStatusSummary {
     failed?: number
     passed?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiControl {
+export interface PlatformEnginePkgComplianceApiControl {
     /** @example "To enable multi-factor authentication for a user, run the following command..." */
     cliRemediation?: string
     /** @example ["Azure"] */
@@ -713,7 +713,7 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiControl {
     nonComplianceCost?: string
     /** @example "To enable multi-factor authentication for a user, run the following command..." */
     programmaticRemediation?: string
-    policy?: GithubComKaytuIoKaytuEnginePkgComplianceApiQuery
+    policy?: PlatformEnginePkgComplianceApiQuery
     /** @example "low" */
     severity?: TypesFindingSeverity
     tags?: Record<string, string[]>
@@ -725,20 +725,20 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiControl {
     usefulExample?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiControlSummary {
-    benchmarks?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmark[]
-    control?: GithubComKaytuIoKaytuEnginePkgComplianceApiControl
+export interface PlatformEnginePkgComplianceApiControlSummary {
+    benchmarks?: PlatformEnginePkgComplianceApiBenchmark[]
+    control?: PlatformEnginePkgComplianceApiControl
     costOptimization?: number
     evaluatedAt?: string
     failedConnectionCount?: number
     failedResourcesCount?: number
     passed?: boolean
-    resourceType?: GithubComKaytuIoKaytuEnginePkgInventoryApiResourceType
+    resourceType?: PlatformEnginePkgInventoryApiResourceType
     totalConnectionCount?: number
     totalResourcesCount?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiControlTrendDatapoint {
+export interface PlatformEnginePkgComplianceApiControlTrendDatapoint {
     failedConnectionCount?: number
     failedResourcesCount?: number
     /**
@@ -750,15 +750,15 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiControlTrendDatapoin
     totalResourcesCount?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiCountFindingEventsResponse {
+export interface PlatformEnginePkgComplianceApiCountFindingEventsResponse {
     count?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiCountFindingsResponse {
+export interface PlatformEnginePkgComplianceApiCountFindingsResponse {
     count?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata {
+export interface PlatformEnginePkgComplianceApiFilterWithMetadata {
     /** @example 10 */
     count?: number
     /** @example "displayName" */
@@ -767,13 +767,13 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata {
     key?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiFinding {
+export interface PlatformEnginePkgComplianceApiFinding {
     /** @example "azure_cis_v140" */
     benchmarkID?: string
     /** @example 1 */
     complianceJobID?: number
     /** @example "alarm" */
-    complianceStatus?: GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus
+    complianceStatus?: PlatformEnginePkgComplianceApiConformanceStatus
     /** @example "8e0f8e7a-1b1c-4e6f-b7e4-9c6af9d2b1c8" */
     integrationID?: string
     /** @example "Azure" */
@@ -828,11 +828,11 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiFinding {
     stateActive?: boolean
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEvent {
+export interface PlatformEnginePkgComplianceApiFindingEvent {
     /** @example "azure_cis_v140" */
     benchmarkID?: string
     complianceJobID?: number
-    conformanceStatus?: GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus
+    conformanceStatus?: PlatformEnginePkgComplianceApiConformanceStatus
     /** @example "8e0f8e7a-1b1c-4e6f-b7e4-9c6af9d2b1c8" */
     connectionID?: string
     /** @example "Azure" */
@@ -847,7 +847,7 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEvent {
     platformResourceID?: string
     parentBenchmarkReferences?: string[]
     parentComplianceJobID?: number
-    previousConformanceStatus?: GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus
+    previousConformanceStatus?: PlatformEnginePkgComplianceApiConformanceStatus
     previousStateActive?: boolean
     /** @example "8e0f8e7a-1b1c-4e6f-b7e4-9c6af9d2b1c8" */
     providerConnectionID?: string
@@ -873,11 +873,11 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEvent {
     stateActive?: boolean
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEventFilters {
+export interface PlatformEnginePkgComplianceApiFindingEventFilters {
     /** @example ["azure_cis_v140"] */
     benchmarkID?: string[]
     /** @example ["alarm"] */
-    conformanceStatus?: GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+    conformanceStatus?: PlatformEnginePkgComplianceApiConformanceStatus[]
     /** @example ["8e0f8e7a-1b1c-4e6f-b7e4-9c6af9d2b1c8"] */
     connectionID?: string[]
     /** @example ["Azure"] */
@@ -902,35 +902,35 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEventFilters 
     stateActive?: boolean[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEventFiltersWithMetadata {
-    benchmarkID?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
-    conformanceStatus?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
-    connectionID?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
-    connector?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
-    controlID?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
-    resourceCollection?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
-    resourceTypeID?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
-    severity?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
-    stateActive?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
+export interface PlatformEnginePkgComplianceApiFindingEventFiltersWithMetadata {
+    benchmarkID?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
+    conformanceStatus?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
+    connectionID?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
+    connector?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
+    controlID?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
+    resourceCollection?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
+    resourceTypeID?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
+    severity?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
+    stateActive?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEventsSort {
-    benchmarkID?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    conformanceStatus?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    connectionID?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    connector?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    controlID?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    platformResourceID?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    resourceType?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    severity?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    stateActive?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
+export interface PlatformEnginePkgComplianceApiFindingEventsSort {
+    benchmarkID?: PlatformEnginePkgComplianceApiSortDirection
+    conformanceStatus?: PlatformEnginePkgComplianceApiSortDirection
+    connectionID?: PlatformEnginePkgComplianceApiSortDirection
+    connector?: PlatformEnginePkgComplianceApiSortDirection
+    controlID?: PlatformEnginePkgComplianceApiSortDirection
+    platformResourceID?: PlatformEnginePkgComplianceApiSortDirection
+    resourceType?: PlatformEnginePkgComplianceApiSortDirection
+    severity?: PlatformEnginePkgComplianceApiSortDirection
+    stateActive?: PlatformEnginePkgComplianceApiSortDirection
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiFindingFilters {
+export interface PlatformEnginePkgComplianceApiFindingFilters {
     /** @example ["azure_cis_v140"] */
     benchmarkID?: string[]
     /** @example ["alarm"] */
-    conformanceStatus?: GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+    conformanceStatus?: PlatformEnginePkgComplianceApiConformanceStatus[]
     /** @example ["8e0f8e7a-1b1c-4e6f-b7e4-9c6af9d2b1c8"] */
     integrationID?: string[]
     /** @example ["Azure"] */
@@ -960,117 +960,117 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiFindingFilters {
     connectionGroup?: string[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiFindingFiltersWithMetadata {
-    benchmarkID?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
-    conformanceStatus?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
-    integrationID?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
-    connector?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
-    controlID?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
-    resourceCollection?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
-    resourceTypeID?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
-    severity?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
-    stateActive?: GithubComKaytuIoKaytuEnginePkgComplianceApiFilterWithMetadata[]
+export interface PlatformEnginePkgComplianceApiFindingFiltersWithMetadata {
+    benchmarkID?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
+    conformanceStatus?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
+    integrationID?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
+    connector?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
+    controlID?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
+    resourceCollection?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
+    resourceTypeID?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
+    severity?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
+    stateActive?: PlatformEnginePkgComplianceApiFilterWithMetadata[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiFindingKPIResponse {
+export interface PlatformEnginePkgComplianceApiFindingKPIResponse {
     failedConnectionCount?: number
     failedControlCount?: number
     failedFindingsCount?: number
     failedResourceCount?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiFindingsSort {
-    benchmarkID?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    conformanceStatus?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    connectionID?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    connector?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    controlID?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    platformResourceID?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    resourceID?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    resourceTypeID?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    severity?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    stateActive?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
+export interface PlatformEnginePkgComplianceApiFindingsSort {
+    benchmarkID?: PlatformEnginePkgComplianceApiSortDirection
+    conformanceStatus?: PlatformEnginePkgComplianceApiSortDirection
+    connectionID?: PlatformEnginePkgComplianceApiSortDirection
+    connector?: PlatformEnginePkgComplianceApiSortDirection
+    controlID?: PlatformEnginePkgComplianceApiSortDirection
+    platformResourceID?: PlatformEnginePkgComplianceApiSortDirection
+    resourceID?: PlatformEnginePkgComplianceApiSortDirection
+    resourceTypeID?: PlatformEnginePkgComplianceApiSortDirection
+    severity?: PlatformEnginePkgComplianceApiSortDirection
+    stateActive?: PlatformEnginePkgComplianceApiSortDirection
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiGetAccountsFindingsSummaryResponse {
-    accounts?: GithubComKaytuIoKaytuEnginePkgComplianceApiAccountsFindingsSummary[]
+export interface PlatformEnginePkgComplianceApiGetAccountsFindingsSummaryResponse {
+    accounts?: PlatformEnginePkgComplianceApiAccountsFindingsSummary[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingEventsByFindingIDResponse {
-    findingEvents?: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEvent[]
+export interface PlatformEnginePkgComplianceApiGetFindingEventsByFindingIDResponse {
+    findingEvents?: PlatformEnginePkgComplianceApiFindingEvent[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingEventsRequest {
+export interface PlatformEnginePkgComplianceApiGetFindingEventsRequest {
     afterSortKey?: any[]
-    filters?: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEventFilters
+    filters?: PlatformEnginePkgComplianceApiFindingEventFilters
     /** @example 100 */
     limit?: number
-    sort?: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEventsSort[]
+    sort?: PlatformEnginePkgComplianceApiFindingEventsSort[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingEventsResponse {
-    findingEvents?: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEvent[]
+export interface PlatformEnginePkgComplianceApiGetFindingEventsResponse {
+    findingEvents?: PlatformEnginePkgComplianceApiFindingEvent[]
     /** @example 100 */
     totalCount?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingsRequest {
+export interface PlatformEnginePkgComplianceApiGetFindingsRequest {
     afterSortKey?: any[]
-    filters?: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingFilters
+    filters?: PlatformEnginePkgComplianceApiFindingFilters
     /** @example 100 */
     limit?: number
-    sort?: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingsSort[]
+    sort?: PlatformEnginePkgComplianceApiFindingsSort[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingsResponse {
-    findings?: GithubComKaytuIoKaytuEnginePkgComplianceApiFinding[]
+export interface PlatformEnginePkgComplianceApiGetFindingsResponse {
+    findings?: PlatformEnginePkgComplianceApiFinding[]
     /** @example 100 */
     totalCount?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiGetServicesFindingsSummaryResponse {
-    services?: GithubComKaytuIoKaytuEnginePkgComplianceApiServiceFindingsSummary[]
+export interface PlatformEnginePkgComplianceApiGetServicesFindingsSummaryResponse {
+    services?: PlatformEnginePkgComplianceApiServiceFindingsSummary[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiGetSingleResourceFindingRequest {
+export interface PlatformEnginePkgComplianceApiGetSingleResourceFindingRequest {
     /** @example "/subscriptions/123/resourceGroups/rg-1/providers/Microsoft.Compute/virtualMachines/vm-1" */
     platformResourceID?: string
     /** @example "Microsoft.Compute/virtualMachines" */
     resourceType?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiGetSingleResourceFindingResponse {
-    controls?: GithubComKaytuIoKaytuEnginePkgComplianceApiFinding[]
-    findingEvents?: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEvent[]
+export interface PlatformEnginePkgComplianceApiGetSingleResourceFindingResponse {
+    controls?: PlatformEnginePkgComplianceApiFinding[]
+    findingEvents?: PlatformEnginePkgComplianceApiFindingEvent[]
     resource?: EsResource
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiGetTopFieldResponse {
-    records?: GithubComKaytuIoKaytuEnginePkgComplianceApiTopFieldRecord[]
+export interface PlatformEnginePkgComplianceApiGetTopFieldResponse {
+    records?: PlatformEnginePkgComplianceApiTopFieldRecord[]
     /** @example 100 */
     totalCount?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiListBenchmarksSummaryResponse {
-    benchmarkSummary?: GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationSummary[]
+export interface PlatformEnginePkgComplianceApiListBenchmarksSummaryResponse {
+    benchmarkSummary?: PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary[]
     totalChecks?: TypesSeverityResult
-    totalConformanceStatusSummary?: GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatusSummary
+    totalConformanceStatusSummary?: PlatformEnginePkgComplianceApiConformanceStatusSummary
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiListResourceFindingsRequest {
+export interface PlatformEnginePkgComplianceApiListResourceFindingsRequest {
     afterSortKey?: any[]
-    filters?: GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFindingFilters
+    filters?: PlatformEnginePkgComplianceApiResourceFindingFilters
     /** @example 100 */
     limit?: number
-    sort?: GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFindingsSort[]
+    sort?: PlatformEnginePkgComplianceApiResourceFindingsSort[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiListResourceFindingsResponse {
-    resourceFindings?: GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFinding[]
+export interface PlatformEnginePkgComplianceApiListResourceFindingsResponse {
+    resourceFindings?: PlatformEnginePkgComplianceApiResourceFinding[]
     totalCount?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiQuery {
+export interface PlatformEnginePkgComplianceApiQuery {
     Global?: boolean
     /** @example ["Azure"] */
     connector?: SourceType[]
@@ -1082,7 +1082,7 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiQuery {
     id?: string
     /** @example ["null"] */
     listOfTables?: string[]
-    listOfResources?: GithubComKaytuIoKaytuEnginePkgComplianceApiQueryParameter[]
+    listOfResources?: PlatformEnginePkgComplianceApiQueryParameter[]
     /** @example "null" */
     primaryResource?: string
     /**
@@ -1099,14 +1099,14 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiQuery {
     integrationType: string[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiQueryParameter {
+export interface PlatformEnginePkgComplianceApiQueryParameter {
     /** @example "key" */
     key?: string
     /** @example true */
     required?: boolean
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFinding {
+export interface PlatformEnginePkgComplianceApiResourceFinding {
     /**
      * Connection ID
      * @example "8e0f8e7a-1b1c-4e6f-b7e4-9c6af9d2b1c8"
@@ -1115,7 +1115,7 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFinding {
     integrationType?: string
     evaluatedAt?: string
     failedCount?: number
-    findings?: GithubComKaytuIoKaytuEnginePkgComplianceApiFinding[]
+    findings?: PlatformEnginePkgComplianceApiFinding[]
     id?: string
     platformResourceID?: string
     /**
@@ -1136,11 +1136,11 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFinding {
     totalCount?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFindingFilters {
+export interface PlatformEnginePkgComplianceApiResourceFindingFilters {
     /** @example ["azure_cis_v140"] */
     benchmarkID?: string[]
     /** @example ["alarm"] */
-    complianceStatus?: GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+    complianceStatus?: PlatformEnginePkgComplianceApiConformanceStatus[]
     /** @example ["8e0f8e7a-1b1c-4e6f-b7e4-9c6af9d2b1c8"] */
     connectionID?: string[]
     /** @example ["Azure"] */
@@ -1163,16 +1163,16 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFindingFilte
     severity?: TypesFindingSeverity[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFindingsSort {
-    conformanceStatus?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    failedCount?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    platformResourceID?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    resourceLocation?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    resourceName?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
-    resourceType?: GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection
+export interface PlatformEnginePkgComplianceApiResourceFindingsSort {
+    conformanceStatus?: PlatformEnginePkgComplianceApiSortDirection
+    failedCount?: PlatformEnginePkgComplianceApiSortDirection
+    platformResourceID?: PlatformEnginePkgComplianceApiSortDirection
+    resourceLocation?: PlatformEnginePkgComplianceApiSortDirection
+    resourceName?: PlatformEnginePkgComplianceApiSortDirection
+    resourceType?: PlatformEnginePkgComplianceApiSortDirection
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiServiceFindingsSummary {
+export interface PlatformEnginePkgComplianceApiServiceFindingsSummary {
     conformanceStatusesCount?: {
         failed?: number
         passed?: number
@@ -1189,26 +1189,26 @@ export interface GithubComKaytuIoKaytuEnginePkgComplianceApiServiceFindingsSumma
     }
 }
 
-export enum GithubComKaytuIoKaytuEnginePkgComplianceApiSortDirection {
+export enum PlatformEnginePkgComplianceApiSortDirection {
     SortDirectionAscending = 'asc',
     SortDirectionDescending = 'desc',
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgComplianceApiTopFieldRecord {
-    connection?: GithubComKaytuIoKaytuEnginePkgOnboardApiConnection
-    control?: GithubComKaytuIoKaytuEnginePkgComplianceApiControl
+export interface PlatformEnginePkgComplianceApiTopFieldRecord {
+    connection?: PlatformEnginePkgOnboardApiConnection
+    control?: PlatformEnginePkgComplianceApiControl
     controlCount?: number
     controlTotalCount?: number
     count?: number
     field?: string
     resourceCount?: number
     resourceTotalCount?: number
-    resourceType?: GithubComKaytuIoKaytuEnginePkgInventoryApiResourceType
+    resourceType?: PlatformEnginePkgInventoryApiResourceType
     service?: string
     totalCount?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgDescribeApiJob {
+export interface PlatformEnginePkgDescribeApiJob {
     connectionID?: string
     connectionProviderID?: string
     connectionProviderName?: string
@@ -1217,32 +1217,32 @@ export interface GithubComKaytuIoKaytuEnginePkgDescribeApiJob {
     id?: number
     status?: string
     title?: string
-    type?: GithubComKaytuIoKaytuEnginePkgDescribeApiJobType
+    type?: PlatformEnginePkgDescribeApiJobType
     updatedAt?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgDescribeApiJobSeqCheckResponse {
+export interface PlatformEnginePkgDescribeApiJobSeqCheckResponse {
     isRunning?: boolean
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgDescribeApiJobSummary {
+export interface PlatformEnginePkgDescribeApiJobSummary {
     count?: number
     status?: string
-    type?: GithubComKaytuIoKaytuEnginePkgDescribeApiJobType
+    type?: PlatformEnginePkgDescribeApiJobType
 }
 
-export enum GithubComKaytuIoKaytuEnginePkgDescribeApiJobType {
+export enum PlatformEnginePkgDescribeApiJobType {
     JobTypeDiscovery = 'discovery',
     JobTypeAnalytics = 'analytics',
     JobTypeCompliance = 'compliance',
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgDescribeApiListDiscoveryResourceTypes {
+export interface PlatformEnginePkgDescribeApiListDiscoveryResourceTypes {
     awsResourceTypes?: string[]
     azureResourceTypes?: string[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgDescribeApiListJobsRequest {
+export interface PlatformEnginePkgDescribeApiListJobsRequest {
     hours?: number
     pageEnd?: number
     pageStart?: number
@@ -1252,30 +1252,30 @@ export interface GithubComKaytuIoKaytuEnginePkgDescribeApiListJobsRequest {
     typeFilters?: string[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgDescribeApiListJobsResponse {
-    jobs?: GithubComKaytuIoKaytuEnginePkgDescribeApiJob[]
-    summaries?: GithubComKaytuIoKaytuEnginePkgDescribeApiJobSummary[]
+export interface PlatformEnginePkgDescribeApiListJobsResponse {
+    jobs?: PlatformEnginePkgDescribeApiJob[]
+    summaries?: PlatformEnginePkgDescribeApiJobSummary[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiAnalyticsCategoriesResponse {
+export interface PlatformEnginePkgInventoryApiAnalyticsCategoriesResponse {
     categoryResourceType?: Record<string, string[]>
 }
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiInventoryCategoriesResponse {
-    categories: GithubComKaytuIoKaytuEnginePkgInventoryApiInventoryCategoriesResponseCategory[]
+export interface PlatformEnginePkgInventoryApiInventoryCategoriesResponse {
+    categories: PlatformEnginePkgInventoryApiInventoryCategoriesResponseCategory[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiInventoryCategoriesResponseCategory {
+export interface PlatformEnginePkgInventoryApiInventoryCategoriesResponseCategory {
     category: string
-    tables: GithubComKaytuIoKaytuEnginePkgInventoryApiInventoryCategoriesResponseTable[]
+    tables: PlatformEnginePkgInventoryApiInventoryCategoriesResponseTable[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiInventoryCategoriesResponseTable {
+export interface PlatformEnginePkgInventoryApiInventoryCategoriesResponseTable {
     name: string
     table: string
     resource_type: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiAnalyticsMetric {
+export interface PlatformEnginePkgInventoryApiAnalyticsMetric {
     connectors?: SourceType[]
     finderPerConnectionQuery?: string
     finderQuery?: string
@@ -1284,10 +1284,10 @@ export interface GithubComKaytuIoKaytuEnginePkgInventoryApiAnalyticsMetric {
     query?: string
     tables?: string[]
     tags?: Record<string, string[]>
-    type?: GithubComKaytuIoKaytuEnginePkgAnalyticsDbMetricType
+    type?: PlatformEnginePkgAnalyticsDbMetricType
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiAssetTableRow {
+export interface PlatformEnginePkgInventoryApiAssetTableRow {
     connector?: SourceType
     /** @example "compute" */
     dimensionId?: string
@@ -1296,7 +1296,7 @@ export interface GithubComKaytuIoKaytuEnginePkgInventoryApiAssetTableRow {
     resourceCount?: Record<string, number>
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiCostMetric {
+export interface PlatformEnginePkgInventoryApiCostMetric {
     /** @example ["Azure"] */
     connector?: SourceType[]
     /** @example "microsoft_compute_disks" */
@@ -1322,46 +1322,46 @@ export interface GithubComKaytuIoKaytuEnginePkgInventoryApiCostMetric {
     total_cost?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiCostStackedItem {
+export interface PlatformEnginePkgInventoryApiCostStackedItem {
     category?: string[]
     cost?: number
     metricID?: string
     metricName?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiCostTrendDatapoint {
+export interface PlatformEnginePkgInventoryApiCostTrendDatapoint {
     /** @min 0 */
     cost?: number
-    costStacked?: GithubComKaytuIoKaytuEnginePkgInventoryApiCostStackedItem[]
+    costStacked?: PlatformEnginePkgInventoryApiCostStackedItem[]
     /** @format date-time */
     date?: string
     totalConnectionCount?: number
     totalSuccessfulDescribedConnectionCount?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiCountAnalyticsMetricsResponse {
+export interface PlatformEnginePkgInventoryApiCountAnalyticsMetricsResponse {
     connectionCount?: number
     metricCount?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiCountAnalyticsSpendResponse {
+export interface PlatformEnginePkgInventoryApiCountAnalyticsSpendResponse {
     connectionCount?: number
     metricCount?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiCountPair {
+export interface PlatformEnginePkgInventoryApiCountPair {
     /** @min 0 */
     count?: number
     /** @min 0 */
     old_count?: number
 }
 
-export enum GithubComKaytuIoKaytuEnginePkgInventoryApiDirectionType {
+export enum PlatformEnginePkgInventoryApiDirectionType {
     DirectionAscending = 'asc',
     DirectionDescending = 'desc',
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiListCostCompositionResponse {
+export interface PlatformEnginePkgInventoryApiListCostCompositionResponse {
     /**
      * @min 0
      * @example 100
@@ -1380,8 +1380,8 @@ export interface GithubComKaytuIoKaytuEnginePkgInventoryApiListCostCompositionRe
     total_count?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiListCostMetricsResponse {
-    metrics?: GithubComKaytuIoKaytuEnginePkgInventoryApiCostMetric[]
+export interface PlatformEnginePkgInventoryApiListCostMetricsResponse {
+    metrics?: PlatformEnginePkgInventoryApiCostMetric[]
     /**
      * @min 0
      * @example 1000
@@ -1394,23 +1394,23 @@ export interface GithubComKaytuIoKaytuEnginePkgInventoryApiListCostMetricsRespon
     total_count?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiListMetricsResponse {
-    metrics?: GithubComKaytuIoKaytuEnginePkgInventoryApiMetric[]
+export interface PlatformEnginePkgInventoryApiListMetricsResponse {
+    metrics?: PlatformEnginePkgInventoryApiMetric[]
     total_count?: number
     total_metrics?: number
     total_old_count?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequest {
+export interface PlatformEnginePkgInventoryApiListQueryRequest {
     /** Specifies the Title */
     titleFilter?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiListResourceTypeCompositionResponse {
-    others?: GithubComKaytuIoKaytuEnginePkgInventoryApiCountPair
+export interface PlatformEnginePkgInventoryApiListResourceTypeCompositionResponse {
+    others?: PlatformEnginePkgInventoryApiCountPair
     top_values?: Record<
         string,
-        GithubComKaytuIoKaytuEnginePkgInventoryApiCountPair
+        PlatformEnginePkgInventoryApiCountPair
     >
     /** @min 0 */
     total_count?: number
@@ -1418,7 +1418,7 @@ export interface GithubComKaytuIoKaytuEnginePkgInventoryApiListResourceTypeCompo
     total_value_count?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiMetric {
+export interface PlatformEnginePkgInventoryApiMetric {
     /**
      * Cloud Provider
      * @example ["[Azure]"]
@@ -1454,12 +1454,12 @@ export interface GithubComKaytuIoKaytuEnginePkgInventoryApiMetric {
     tags?: Record<string, string[]>
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiPage {
+export interface PlatformEnginePkgInventoryApiPage {
     no?: number
     size?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollection {
+export interface PlatformEnginePkgInventoryApiResourceCollection {
     connection_count?: number
     connectors?: SourceType[]
     created_at?: string
@@ -1470,49 +1470,49 @@ export interface GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollection {
     metric_count?: number
     name?: string
     resource_count?: number
-    status?: GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollectionStatus
+    status?: PlatformEnginePkgInventoryApiResourceCollectionStatus
     tags?: Record<string, string[]>
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollectionLandscape {
-    categories?: GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollectionLandscapeCategory[]
+export interface PlatformEnginePkgInventoryApiResourceCollectionLandscape {
+    categories?: PlatformEnginePkgInventoryApiResourceCollectionLandscapeCategory[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollectionLandscapeCategory {
+export interface PlatformEnginePkgInventoryApiResourceCollectionLandscapeCategory {
     description?: string
     id?: string
     name?: string
-    subcategories?: GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollectionLandscapeSubcategory[]
+    subcategories?: PlatformEnginePkgInventoryApiResourceCollectionLandscapeSubcategory[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollectionLandscapeItem {
+export interface PlatformEnginePkgInventoryApiResourceCollectionLandscapeItem {
     description?: string
     id?: string
     logo_uri?: string
     name?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollectionLandscapeSubcategory {
+export interface PlatformEnginePkgInventoryApiResourceCollectionLandscapeSubcategory {
     description?: string
     id?: string
-    items?: GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollectionLandscapeItem[]
+    items?: PlatformEnginePkgInventoryApiResourceCollectionLandscapeItem[]
     name?: string
 }
 
-export enum GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollectionStatus {
+export enum PlatformEnginePkgInventoryApiResourceCollectionStatus {
     ResourceCollectionStatusUnknown = '',
     ResourceCollectionStatusActive = 'active',
     ResourceCollectionStatusInactive = 'inactive',
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCountStackedItem {
+export interface PlatformEnginePkgInventoryApiResourceCountStackedItem {
     category?: string[]
     count?: number
     metricID?: string
     metricName?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiResourceType {
+export interface PlatformEnginePkgInventoryApiResourceType {
     /** List supported steampipe Attributes (columns) for this resource type - Metadata (GET only) */
     attributes?: string[]
     /** List of Compliance that support this Resource Type - Metadata (GET only) */
@@ -1566,29 +1566,29 @@ export interface GithubComKaytuIoKaytuEnginePkgInventoryApiResourceType {
     tags?: string[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiResourceTypeTrendDatapoint {
+export interface PlatformEnginePkgInventoryApiResourceTypeTrendDatapoint {
     /**
      * @min 0
      * @example 100
      */
     count?: number
-    countStacked?: GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCountStackedItem[]
+    countStacked?: PlatformEnginePkgInventoryApiResourceCountStackedItem[]
     /** @format date-time */
     date?: string
     totalConnectionCount?: number
     totalSuccessfulDescribedConnectionCount?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryRequest {
+export interface PlatformEnginePkgInventoryApiRunQueryRequest {
     account_id?: string
     engine?: string
-    page: GithubComKaytuIoKaytuEnginePkgInventoryApiPage
+    page: PlatformEnginePkgInventoryApiPage
     query?: string
-    sorts?: GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQuerySortItem[]
+    sorts?: PlatformEnginePkgInventoryApiSmartQuerySortItem[]
     source_id?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryResponse {
+export interface PlatformEnginePkgInventoryApiRunQueryResponse {
     /** Column names */
     headers?: string[]
     /** Query */
@@ -1599,12 +1599,12 @@ export interface GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryResponse {
     title?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryHistory {
+export interface PlatformEnginePkgInventoryApiSmartQueryHistory {
     executed_at?: string
     query?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItem {
+export interface PlatformEnginePkgInventoryApiSmartQueryItem {
     /** Category (Tags[category]) */
     category?: string
     /** Provider */
@@ -1619,13 +1619,13 @@ export interface GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItem {
     title?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQuerySortItem {
+export interface PlatformEnginePkgInventoryApiSmartQuerySortItem {
     direction?: 'asc' | 'desc'
     /** fill this with column name */
     field?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiSpendTableRow {
+export interface PlatformEnginePkgInventoryApiSpendTableRow {
     /** @example "1239042" */
     accountID?: string
     /** @example "Compute" */
@@ -1639,43 +1639,43 @@ export interface GithubComKaytuIoKaytuEnginePkgInventoryApiSpendTableRow {
     dimensionName?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgMetadataApiListQueryParametersResponse {
-    queryParameters?: GithubComKaytuIoKaytuEnginePkgMetadataApiQueryParameter[]
+export interface PlatformEnginePkgMetadataApiListQueryParametersResponse {
+    queryParameters?: PlatformEnginePkgMetadataApiQueryParameter[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgMetadataApiQueryParameter {
+export interface PlatformEnginePkgMetadataApiQueryParameter {
     key?: string
     value?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgMetadataApiSetConfigMetadataRequest {
+export interface PlatformEnginePkgMetadataApiSetConfigMetadataRequest {
     key?: string
     value?: any
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgMetadataApiSetQueryParameterRequest {
-    queryParameters?: GithubComKaytuIoKaytuEnginePkgMetadataApiQueryParameter[]
+export interface PlatformEnginePkgMetadataApiSetQueryParameterRequest {
+    queryParameters?: PlatformEnginePkgMetadataApiQueryParameter[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgMetadataModelsConfigMetadata {
-    key?: GithubComKaytuIoKaytuEnginePkgMetadataModelsMetadataKey
-    type?: GithubComKaytuIoKaytuEnginePkgMetadataModelsConfigMetadataType
+export interface PlatformEnginePkgMetadataModelsConfigMetadata {
+    key?: PlatformEnginePkgMetadataModelsMetadataKey
+    type?: PlatformEnginePkgMetadataModelsConfigMetadataType
     value?: string
 }
 
-export enum GithubComKaytuIoKaytuEnginePkgMetadataModelsConfigMetadataType {
+export enum PlatformEnginePkgMetadataModelsConfigMetadataType {
     ConfigMetadataTypeString = 'string',
     ConfigMetadataTypeInt = 'int',
     ConfigMetadataTypeBool = 'bool',
     ConfigMetadataTypeJSON = 'json',
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgMetadataModelsFilter {
+export interface PlatformEnginePkgMetadataModelsFilter {
     kayValue?: Record<string, string>
     name?: string
 }
 
-export enum GithubComKaytuIoKaytuEnginePkgMetadataModelsMetadataKey {
+export enum PlatformEnginePkgMetadataModelsMetadataKey {
     MetadataKeyWorkspaceOwnership = 'workspace_ownership',
     MetadataKeyWorkspaceID = 'workspace_id',
     MetadataKeyWorkspaceName = 'workspace_name',
@@ -1715,7 +1715,7 @@ export enum GithubComKaytuIoKaytuEnginePkgMetadataModelsMetadataKey {
     MetadataKeySpendDiscoveryEnabled = 'spend_discovery_enabled',
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiAWSCredentialConfig {
+export interface PlatformEnginePkgOnboardApiAWSCredentialConfig {
     accessKey: string
     accountId?: string
     assumeAdminRoleName?: string
@@ -1725,7 +1725,7 @@ export interface GithubComKaytuIoKaytuEnginePkgOnboardApiAWSCredentialConfig {
     secretKey: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiAzureCredentialConfig {
+export interface PlatformEnginePkgOnboardApiAzureCredentialConfig {
     clientId: string
     clientSecret: string
     objectId: string
@@ -1734,7 +1734,7 @@ export interface GithubComKaytuIoKaytuEnginePkgOnboardApiAzureCredentialConfig {
     tenantId: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiCatalogMetrics {
+export interface PlatformEnginePkgOnboardApiCatalogMetrics {
     /**
      * @min 0
      * @example 20
@@ -1762,11 +1762,11 @@ export interface GithubComKaytuIoKaytuEnginePkgOnboardApiCatalogMetrics {
     unhealthyConnections?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiChangeConnectionLifecycleStateRequest {
-    state?: GithubComKaytuIoKaytuEnginePkgOnboardApiConnectionLifecycleState
+export interface PlatformEnginePkgOnboardApiChangeConnectionLifecycleStateRequest {
+    state?: PlatformEnginePkgOnboardApiConnectionLifecycleState
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiConnection {
+export interface PlatformEnginePkgOnboardApiConnection {
     assetDiscovery?: boolean
     /** @example "scheduled" */
     assetDiscoveryMethod?: SourceAssetDiscoveryMethodType
@@ -1778,12 +1778,12 @@ export interface GithubComKaytuIoKaytuEnginePkgOnboardApiConnection {
      * @example 1000
      */
     cost?: number
-    credential?: GithubComKaytuIoKaytuEnginePkgOnboardApiCredential
+    credential?: PlatformEnginePkgOnboardApiCredential
     /** @example "7r6123ac-ca1c-434f-b1a3-91w2w9d277c8" */
     credentialID?: string
     credentialName?: string
     /** @example "manual" */
-    credentialType?: GithubComKaytuIoKaytuEnginePkgOnboardApiCredentialType
+    credentialType?: PlatformEnginePkgOnboardApiCredentialType
     /**
      * @min 0
      * @max 10000000
@@ -1811,7 +1811,7 @@ export interface GithubComKaytuIoKaytuEnginePkgOnboardApiConnection {
     /** @example "2023-05-07T00:00:00Z" */
     lastInventory?: string
     /** @example "enabled" */
-    lifecycleState?: GithubComKaytuIoKaytuEnginePkgOnboardApiConnectionLifecycleState
+    lifecycleState?: PlatformEnginePkgOnboardApiConnectionLifecycleState
     metadata?: Record<string, any>
     /**
      * @min 0
@@ -1834,17 +1834,17 @@ export interface GithubComKaytuIoKaytuEnginePkgOnboardApiConnection {
     spendDiscovery?: boolean
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiConnectionGroup {
+export interface PlatformEnginePkgOnboardApiConnectionGroup {
     /** @example ["[\"1e8ac3bf-c268-4a87-9374-ce04cc40a596\"]"] */
     connectionIds?: string[]
-    connections?: GithubComKaytuIoKaytuEnginePkgOnboardApiConnection[]
+    connections?: PlatformEnginePkgOnboardApiConnection[]
     /** @example "UltraSightApplication" */
     name?: string
     /** @example "SELECT kaytu_id FROM kaytu_connections WHERE tags->'application' IS NOT NULL AND tags->'application' @> '"UltraSight"'" */
     query?: string
 }
 
-export enum GithubComKaytuIoKaytuEnginePkgOnboardApiConnectionLifecycleState {
+export enum PlatformEnginePkgOnboardApiConnectionLifecycleState {
     ConnectionLifecycleStateOnboard = 'ONBOARD',
     ConnectionLifecycleStateDisabled = 'DISABLED',
     ConnectionLifecycleStateDiscovered = 'DISCOVERED',
@@ -1852,7 +1852,7 @@ export enum GithubComKaytuIoKaytuEnginePkgOnboardApiConnectionLifecycleState {
     ConnectionLifecycleStateArchived = 'ARCHIVED',
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiConnectorCount {
+export interface PlatformEnginePkgOnboardApiConnectorCount {
     /** @example true */
     allowNewConnections?: boolean
     /** @example false */
@@ -1883,30 +1883,30 @@ export interface GithubComKaytuIoKaytuEnginePkgOnboardApiConnectorCount {
     tags?: Record<string, any>
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiCreateAwsConnectionRequest {
-    awsConfig?: GithubComKaytuIoKaytuEnginePkgOnboardApiV2AWSCredentialV2Config
+export interface PlatformEnginePkgOnboardApiCreateAwsConnectionRequest {
+    awsConfig?: PlatformEnginePkgOnboardApiV2AWSCredentialV2Config
     name?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiCreateConnectionResponse {
+export interface PlatformEnginePkgOnboardApiCreateConnectionResponse {
     id?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiCreateCredentialRequest {
+export interface PlatformEnginePkgOnboardApiCreateCredentialRequest {
     config?: any
     /** @example "Azure" */
     source_type?: SourceType
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiCreateCredentialResponse {
+export interface PlatformEnginePkgOnboardApiCreateCredentialResponse {
     id?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiCreateSourceResponse {
+export interface PlatformEnginePkgOnboardApiCreateSourceResponse {
     id?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiCredential {
+export interface PlatformEnginePkgOnboardApiCredential {
     /**
      * @min 0
      * @max 1000
@@ -1916,11 +1916,11 @@ export interface GithubComKaytuIoKaytuEnginePkgOnboardApiCredential {
     /** @example false */
     autoOnboardEnabled?: boolean
     config?: any
-    connections?: GithubComKaytuIoKaytuEnginePkgOnboardApiConnection[]
+    connections?: PlatformEnginePkgOnboardApiConnection[]
     /** @example "AWS" */
     connectorType?: SourceType
     /** @example "manual-aws-org" */
-    credentialType?: GithubComKaytuIoKaytuEnginePkgOnboardApiCredentialType
+    credentialType?: PlatformEnginePkgOnboardApiCredentialType
     /**
      * @min 0
      * @max 1000
@@ -1976,21 +1976,21 @@ export interface GithubComKaytuIoKaytuEnginePkgOnboardApiCredential {
     version?: number
 }
 
-export enum GithubComKaytuIoKaytuEnginePkgOnboardApiCredentialType {
+export enum PlatformEnginePkgOnboardApiCredentialType {
     CredentialTypeAutoAzure = 'auto-azure',
     CredentialTypeAutoAws = 'auto-aws',
     CredentialTypeManualAwsOrganization = 'manual-aws-org',
     CredentialTypeManualAzureSpn = 'manual-azure-spn',
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiListConnectionSummaryResponse {
+export interface PlatformEnginePkgOnboardApiListConnectionSummaryResponse {
     /**
      * @min 0
      * @max 1000
      * @example 10
      */
     connectionCount?: number
-    connections?: GithubComKaytuIoKaytuEnginePkgOnboardApiConnection[]
+    connections?: PlatformEnginePkgOnboardApiConnection[]
     /**
      * @min 0
      * @max 100
@@ -2042,8 +2042,8 @@ export interface GithubComKaytuIoKaytuEnginePkgOnboardApiListConnectionSummaryRe
     totalUnhealthyCount?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiListCredentialResponse {
-    credentials?: GithubComKaytuIoKaytuEnginePkgOnboardApiCredential[]
+export interface PlatformEnginePkgOnboardApiListCredentialResponse {
+    credentials?: PlatformEnginePkgOnboardApiCredential[]
     /**
      * @min 0
      * @max 20
@@ -2052,27 +2052,27 @@ export interface GithubComKaytuIoKaytuEnginePkgOnboardApiListCredentialResponse 
     totalCredentialCount?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiSourceAwsRequest {
-    config?: GithubComKaytuIoKaytuEnginePkgOnboardApiAWSCredentialConfig
+export interface PlatformEnginePkgOnboardApiSourceAwsRequest {
+    config?: PlatformEnginePkgOnboardApiAWSCredentialConfig
     description?: string
     email?: string
     name?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiSourceAzureRequest {
-    config?: GithubComKaytuIoKaytuEnginePkgOnboardApiAzureCredentialConfig
+export interface PlatformEnginePkgOnboardApiSourceAzureRequest {
+    config?: PlatformEnginePkgOnboardApiAzureCredentialConfig
     description?: string
     name?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiUpdateCredentialRequest {
+export interface PlatformEnginePkgOnboardApiUpdateCredentialRequest {
     config?: any
     /** @example "Azure" */
     connector?: SourceType
     name?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiV2AWSCredentialV2Config {
+export interface PlatformEnginePkgOnboardApiV2AWSCredentialV2Config {
     accessKey?: string
     accountID?: string
     assumeRoleName?: string
@@ -2080,49 +2080,49 @@ export interface GithubComKaytuIoKaytuEnginePkgOnboardApiV2AWSCredentialV2Config
     secretKey?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiV2CreateCredentialV2Request {
-    awsConfig?: GithubComKaytuIoKaytuEnginePkgOnboardApiV2AWSCredentialV2Config
+export interface PlatformEnginePkgOnboardApiV2CreateCredentialV2Request {
+    awsConfig?: PlatformEnginePkgOnboardApiV2AWSCredentialV2Config
     /** @example "Azure" */
     connector?: SourceType
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgOnboardApiV2CreateCredentialV2Response {
+export interface PlatformEnginePkgOnboardApiV2CreateCredentialV2Response {
     id?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgWorkspaceApiAddCredentialRequest {
-    awsConfig?: GithubComKaytuIoKaytuEnginePkgOnboardApiV2AWSCredentialV2Config
-    azureConfig?: GithubComKaytuIoKaytuEnginePkgOnboardApiAzureCredentialConfig
+export interface PlatformEnginePkgWorkspaceApiAddCredentialRequest {
+    awsConfig?: PlatformEnginePkgOnboardApiV2AWSCredentialV2Config
+    azureConfig?: PlatformEnginePkgOnboardApiAzureCredentialConfig
     connectorType?: SourceType
     singleConnection?: boolean
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgWorkspaceApiBootstrapProgress {
+export interface PlatformEnginePkgWorkspaceApiBootstrapProgress {
     done?: number
     total?: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgWorkspaceApiBootstrapStatusResponse {
-    analyticsStatus?: GithubComKaytuIoKaytuEnginePkgWorkspaceApiBootstrapProgress
-    complianceStatus?: GithubComKaytuIoKaytuEnginePkgWorkspaceApiBootstrapProgress
+export interface PlatformEnginePkgWorkspaceApiBootstrapStatusResponse {
+    analyticsStatus?: PlatformEnginePkgWorkspaceApiBootstrapProgress
+    complianceStatus?: PlatformEnginePkgWorkspaceApiBootstrapProgress
     connection_count?: Record<string, number>
-    discoveryStatus?: GithubComKaytuIoKaytuEnginePkgWorkspaceApiBootstrapProgress
+    discoveryStatus?: PlatformEnginePkgWorkspaceApiBootstrapProgress
     maxConnections?: number
     minRequiredConnections?: number
-    workspaceCreationStatus?: GithubComKaytuIoKaytuEnginePkgWorkspaceApiBootstrapProgress
+    workspaceCreationStatus?: PlatformEnginePkgWorkspaceApiBootstrapProgress
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgWorkspaceApiCreateWorkspaceRequest {
+export interface PlatformEnginePkgWorkspaceApiCreateWorkspaceRequest {
     name?: string
     organization_id?: number
     tier?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgWorkspaceApiCreateWorkspaceResponse {
+export interface PlatformEnginePkgWorkspaceApiCreateWorkspaceResponse {
     id?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgWorkspaceApiOrganization {
+export interface PlatformEnginePkgWorkspaceApiOrganization {
     address?: string
     city?: string
     companyName?: string
@@ -2135,7 +2135,7 @@ export interface GithubComKaytuIoKaytuEnginePkgWorkspaceApiOrganization {
     url?: string
 }
 
-export enum GithubComKaytuIoKaytuEnginePkgWorkspaceApiStateID {
+export enum PlatformEnginePkgWorkspaceApiStateID {
     StateIDReserving = 'RESERVING',
     StateIDReserved = 'RESERVED',
     StateIDWaitingForCredential = 'WAITING_FOR_CREDENTIAL',
@@ -2145,13 +2145,13 @@ export enum GithubComKaytuIoKaytuEnginePkgWorkspaceApiStateID {
     StateIDDeleted = 'DELETED',
 }
 
-export enum GithubComKaytuIoKaytuEnginePkgWorkspaceApiTier {
+export enum PlatformEnginePkgWorkspaceApiTier {
     TierFree = 'FREE',
     TierTeams = 'TEAMS',
     TierEnterprise = 'ENTERPRISE',
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceLimitsUsage {
+export interface PlatformEnginePkgWorkspaceApiWorkspaceLimitsUsage {
     /** @example 100 */
     currentConnections?: number
     /** @example 10000 */
@@ -2170,7 +2170,7 @@ export interface GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceLimitsUsage 
     name?: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceResponse {
+export interface PlatformEnginePkgWorkspaceApiWorkspaceResponse {
     /** @example "kaytu" */
     aws_unique_id?: string
     /** @example "kaytu" */
@@ -2183,27 +2183,27 @@ export interface GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceResponse {
     is_created?: boolean
     /** @example "kaytu" */
     name?: string
-    organization?: GithubComKaytuIoKaytuEnginePkgWorkspaceApiOrganization
+    organization?: PlatformEnginePkgWorkspaceApiOrganization
     /** @example "google-oauth2|204590896945502695694" */
     ownerId?: string
     /** @example "sm" */
-    size?: GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceSize
+    size?: PlatformEnginePkgWorkspaceApiWorkspaceSize
     /** @example "PROVISIONED" */
-    status?: GithubComKaytuIoKaytuEnginePkgWorkspaceApiStateID
+    status?: PlatformEnginePkgWorkspaceApiStateID
     /** @example "ENTERPRISE" */
-    tier?: GithubComKaytuIoKaytuEnginePkgWorkspaceApiTier
+    tier?: PlatformEnginePkgWorkspaceApiTier
     /** @example "v0.45.4" */
     version?: string
 }
 
-export enum GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceSize {
+export enum PlatformEnginePkgWorkspaceApiWorkspaceSize {
     SizeXS = 'xs',
     SizeSM = 'sm',
     SizeMD = 'md',
     SizeLG = 'lg',
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityAWSCredentialConfig {
+export interface PlatformEngineServicesIntegrationApiEntityAWSCredentialConfig {
     accessKey?: string
     accountID?: string
     assumeRoleName?: string
@@ -2211,14 +2211,14 @@ export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityAWSCrede
     secretKey?: string
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityAzureCredentialConfig {
+export interface PlatformEngineServicesIntegrationApiEntityAzureCredentialConfig {
     clientId: string
     clientSecret: string
     objectId: string
     tenantId: string
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCatalogMetrics {
+export interface PlatformEngineServicesIntegrationApiEntityCatalogMetrics {
     /**
      * @min 0
      * @example 20
@@ -2246,7 +2246,7 @@ export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCatalogM
     unhealthyConnections?: number
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnection {
+export interface PlatformEngineServicesIntegrationApiEntityConnection {
     assetDiscovery?: boolean
     /** @example "scheduled" */
     assetDiscoveryMethod?: SourceAssetDiscoveryMethodType
@@ -2258,12 +2258,12 @@ export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnecti
      * @example 1000
      */
     cost?: number
-    credential?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCredential
+    credential?: PlatformEngineServicesIntegrationApiEntityCredential
     /** @example "7r6123ac-ca1c-434f-b1a3-91w2w9d277c8" */
     credentialID?: string
     credentialName?: string
     /** @example "manual" */
-    credentialType?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCredentialType
+    credentialType?: PlatformEngineServicesIntegrationApiEntityCredentialType
     /**
      * @min 0
      * @max 10000000
@@ -2291,7 +2291,7 @@ export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnecti
     /** @example "2023-05-07T00:00:00Z" */
     lastInventory?: string
     /** @example "enabled" */
-    lifecycleState?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnectionLifecycleState
+    lifecycleState?: PlatformEngineServicesIntegrationApiEntityConnectionLifecycleState
     metadata?: Record<string, any>
     /**
      * @min 0
@@ -2314,7 +2314,7 @@ export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnecti
     spendDiscovery?: boolean
 }
 
-export enum GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnectionLifecycleState {
+export enum PlatformEngineServicesIntegrationApiEntityConnectionLifecycleState {
     ConnectionLifecycleStateOnboard = 'ONBOARD',
     ConnectionLifecycleStateDisabled = 'DISABLED',
     ConnectionLifecycleStateDiscovered = 'DISCOVERED',
@@ -2330,7 +2330,7 @@ export interface ConnectorCountField {
 }
 
 
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnectorCount {
+export interface PlatformEngineServicesIntegrationApiEntityConnectorCount {
     id: number
     name: string
     platform_name: string
@@ -2347,42 +2347,42 @@ export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnecto
 }
 
 
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnectorResponse {
+export interface PlatformEngineServicesIntegrationApiEntityConnectorResponse {
     total_count: number
-    integration_types: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnectorCount[]
+    integration_types: PlatformEngineServicesIntegrationApiEntityConnectorCount[]
 }
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCountConnectionsResponse {
+export interface PlatformEngineServicesIntegrationApiEntityCountConnectionsResponse {
     count?: number
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAWSConnectionRequest {
-    config?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityAWSCredentialConfig
+export interface PlatformEngineServicesIntegrationApiEntityCreateAWSConnectionRequest {
+    config?: PlatformEngineServicesIntegrationApiEntityAWSCredentialConfig
     description?: string
     email?: string
     name?: string
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAWSCredentialRequest {
-    config?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityAWSCredentialConfig
+export interface PlatformEngineServicesIntegrationApiEntityCreateAWSCredentialRequest {
+    config?: PlatformEngineServicesIntegrationApiEntityAWSCredentialConfig
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAzureCredentialRequest {
-    config?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityAzureCredentialConfig
+export interface PlatformEngineServicesIntegrationApiEntityCreateAzureCredentialRequest {
+    config?: PlatformEngineServicesIntegrationApiEntityAzureCredentialConfig
     description?: string
     name?: string
-    type?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCredentialType
+    type?: PlatformEngineServicesIntegrationApiEntityCredentialType
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateConnectionResponse {
+export interface PlatformEngineServicesIntegrationApiEntityCreateConnectionResponse {
     id?: string
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateCredentialResponse {
-    connections?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnection[]
+export interface PlatformEngineServicesIntegrationApiEntityCreateCredentialResponse {
+    connections?: PlatformEngineServicesIntegrationApiEntityConnection[]
     id?: string
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCredential {
+export interface PlatformEngineServicesIntegrationApiEntityCredential {
     /**
      * @min 0
      * @max 1000
@@ -2392,11 +2392,11 @@ export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCredenti
     /** @example false */
     autoOnboardEnabled?: boolean
     config?: any
-    connections?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnection[]
+    connections?: PlatformEngineServicesIntegrationApiEntityConnection[]
     /** @example "AWS" */
     connectorType?: SourceType
     /** @example "manual-aws-org" */
-    credentialType?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCredentialType
+    credentialType?: PlatformEngineServicesIntegrationApiEntityCredentialType
     /**
      * @min 0
      * @max 1000
@@ -2452,21 +2452,21 @@ export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCredenti
     version?: number
 }
 
-export enum GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCredentialType {
+export enum PlatformEngineServicesIntegrationApiEntityCredentialType {
     CredentialTypeAutoAzure = 'auto-azure',
     CredentialTypeAutoAws = 'auto-aws',
     CredentialTypeManualAwsOrganization = 'manual-aws-org',
     CredentialTypeManualAzureSpn = 'manual-azure-spn',
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityListConnectionsSummaryResponse {
+export interface PlatformEngineServicesIntegrationApiEntityListConnectionsSummaryResponse {
     /**
      * @min 0
      * @max 1000
      * @example 10
      */
     connectionCount?: number
-    connections?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnection[]
+    connections?: PlatformEngineServicesIntegrationApiEntityConnection[]
     /**
      * @min 0
      * @max 100
@@ -2518,8 +2518,8 @@ export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityListConn
     totalUnhealthyCount?: number
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityListCredentialResponse {
-    credentials?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCredential[]
+export interface PlatformEngineServicesIntegrationApiEntityListCredentialResponse {
+    credentials?: PlatformEngineServicesIntegrationApiEntityCredential[]
     /**
      * @min 0
      * @max 20
@@ -2528,26 +2528,26 @@ export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityListCred
     totalCredentialCount?: number
 }
 
-export enum GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityTier {
+export enum PlatformEngineServicesIntegrationApiEntityTier {
     TierCommunity = 'Community',
     TierEnterprise = 'Enterprise',
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityUpdateAWSCredentialRequest {
-    config?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityAWSCredentialConfig
+export interface PlatformEngineServicesIntegrationApiEntityUpdateAWSCredentialRequest {
+    config?: PlatformEngineServicesIntegrationApiEntityAWSCredentialConfig
     name?: string
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityUpdateAzureCredentialRequest {
-    config?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityAzureCredentialConfig
+export interface PlatformEngineServicesIntegrationApiEntityUpdateAzureCredentialRequest {
+    config?: PlatformEngineServicesIntegrationApiEntityAzureCredentialConfig
     name?: string
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsClusterWastageRequest {
+export interface PlatformEngineServicesWastageApiEntityAwsClusterWastageRequest {
     cliVersion?: string
-    cluster?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsCluster
+    cluster?: PlatformEngineServicesWastageApiEntityAwsRdsCluster
     identification?: Record<string, string>
-    instances?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRds[]
+    instances?: PlatformEngineServicesWastageApiEntityAwsRds[]
     loading?: boolean
     metrics?: Record<string, Record<string, TypesDatapoint[]>>
     preferences?: Record<string, string>
@@ -2555,17 +2555,17 @@ export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsClusterWa
     requestId?: string
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsClusterWastageResponse {
+export interface PlatformEngineServicesWastageApiEntityAwsClusterWastageResponse {
     rightSizing?: Record<
         string,
-        GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsRightsizingRecommendation
+        PlatformEngineServicesWastageApiEntityAwsRdsRightsizingRecommendation
     >
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRds {
+export interface PlatformEngineServicesWastageApiEntityAwsRds {
     availabilityZone?: string
     backupRetentionPeriod?: number
-    clusterType?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsClusterType
+    clusterType?: PlatformEngineServicesWastageApiEntityAwsRdsClusterType
     engine?: string
     engineVersion?: string
     hashedInstanceId?: string
@@ -2579,34 +2579,34 @@ export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRds {
     storageType?: string
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsCluster {
+export interface PlatformEngineServicesWastageApiEntityAwsRdsCluster {
     engine?: string
     hashedClusterId?: string
 }
 
-export enum GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsClusterType {
+export enum PlatformEngineServicesWastageApiEntityAwsRdsClusterType {
     AwsRdsClusterTypeSingleInstance = 'Single-AZ',
     AwsRdsClusterTypeMultiAzOneInstance = 'Multi-AZ',
     AwsRdsClusterTypeMultiAzTwoInstance = 'Multi-AZ (readable standbys)',
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsRightsizingRecommendation {
-    current?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityRightsizingAwsRds
+export interface PlatformEngineServicesWastageApiEntityAwsRdsRightsizingRecommendation {
+    current?: PlatformEngineServicesWastageApiEntityRightsizingAwsRds
     description?: string
-    freeMemoryBytes?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityUsage
-    freeStorageBytes?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityUsage
-    networkThroughputBytes?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityUsage
-    recommended?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityRightsizingAwsRds
-    storageIops?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityUsage
-    storageThroughputBytes?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityUsage
-    vCPU?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityUsage
-    volumeBytesUsed?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityUsage
+    freeMemoryBytes?: PlatformEngineServicesWastageApiEntityUsage
+    freeStorageBytes?: PlatformEngineServicesWastageApiEntityUsage
+    networkThroughputBytes?: PlatformEngineServicesWastageApiEntityUsage
+    recommended?: PlatformEngineServicesWastageApiEntityRightsizingAwsRds
+    storageIops?: PlatformEngineServicesWastageApiEntityUsage
+    storageThroughputBytes?: PlatformEngineServicesWastageApiEntityUsage
+    vCPU?: PlatformEngineServicesWastageApiEntityUsage
+    volumeBytesUsed?: PlatformEngineServicesWastageApiEntityUsage
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsWastageRequest {
+export interface PlatformEngineServicesWastageApiEntityAwsRdsWastageRequest {
     cliVersion?: string
     identification?: Record<string, string>
-    instance?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRds
+    instance?: PlatformEngineServicesWastageApiEntityAwsRds
     loading?: boolean
     metrics?: Record<string, TypesDatapoint[]>
     preferences?: Record<string, string>
@@ -2614,26 +2614,26 @@ export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsWastag
     requestId?: string
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsWastageResponse {
-    rightSizing?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsRightsizingRecommendation
+export interface PlatformEngineServicesWastageApiEntityAwsRdsWastageResponse {
+    rightSizing?: PlatformEngineServicesWastageApiEntityAwsRdsRightsizingRecommendation
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityEBSVolumeRecommendation {
-    current?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityRightsizingEBSVolume
+export interface PlatformEngineServicesWastageApiEntityEBSVolumeRecommendation {
+    current?: PlatformEngineServicesWastageApiEntityRightsizingEBSVolume
     description?: string
-    iops?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityUsage
-    recommended?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityRightsizingEBSVolume
-    throughput?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityUsage
+    iops?: PlatformEngineServicesWastageApiEntityUsage
+    recommended?: PlatformEngineServicesWastageApiEntityRightsizingEBSVolume
+    throughput?: PlatformEngineServicesWastageApiEntityUsage
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2Instance {
+export interface PlatformEngineServicesWastageApiEntityEC2Instance {
     coreCount?: number
     ebsOptimized?: boolean
     hashedInstanceId?: string
     instanceLifecycle?: TypesInstanceLifecycleType
     instanceType?: TypesInstanceType
     monitoring?: TypesMonitoringState
-    placement?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2Placement
+    placement?: PlatformEngineServicesWastageApiEntityEC2Placement
     platform?: string
     state?: TypesInstanceStateName
     tenancy?: TypesTenancy
@@ -2641,10 +2641,10 @@ export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2Instance 
     usageOperation?: string
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2InstanceWastageRequest {
+export interface PlatformEngineServicesWastageApiEntityEC2InstanceWastageRequest {
     cliVersion?: string
     identification?: Record<string, string>
-    instance?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2Instance
+    instance?: PlatformEngineServicesWastageApiEntityEC2Instance
     loading?: boolean
     metrics?: Record<string, TypesDatapoint[]>
     preferences?: Record<string, string>
@@ -2652,24 +2652,24 @@ export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2InstanceW
     requestId?: string
     volumeCount?: number
     volumeMetrics?: Record<string, Record<string, TypesDatapoint[]>>
-    volumes?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2Volume[]
+    volumes?: PlatformEngineServicesWastageApiEntityEC2Volume[]
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2InstanceWastageResponse {
-    rightSizing?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityRightSizingRecommendation
+export interface PlatformEngineServicesWastageApiEntityEC2InstanceWastageResponse {
+    rightSizing?: PlatformEngineServicesWastageApiEntityRightSizingRecommendation
     volumes?: Record<
         string,
-        GithubComKaytuIoKaytuEngineServicesWastageApiEntityEBSVolumeRecommendation
+        PlatformEngineServicesWastageApiEntityEBSVolumeRecommendation
     >
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2Placement {
+export interface PlatformEngineServicesWastageApiEntityEC2Placement {
     availabilityZone?: string
     hashedHostId?: string
     tenancy?: TypesTenancy
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2Volume {
+export interface PlatformEngineServicesWastageApiEntityEC2Volume {
     availabilityZone?: string
     hashedVolumeId?: string
     iops?: number
@@ -2678,20 +2678,20 @@ export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2Volume {
     volumeType?: TypesVolumeType
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityRightSizingRecommendation {
-    current?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityRightsizingEC2Instance
+export interface PlatformEngineServicesWastageApiEntityRightSizingRecommendation {
+    current?: PlatformEngineServicesWastageApiEntityRightsizingEC2Instance
     description?: string
-    ebsBandwidth?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityUsage
-    ebsIops?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityUsage
-    memory?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityUsage
-    networkThroughput?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityUsage
-    recommended?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityRightsizingEC2Instance
-    vCPU?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityUsage
+    ebsBandwidth?: PlatformEngineServicesWastageApiEntityUsage
+    ebsIops?: PlatformEngineServicesWastageApiEntityUsage
+    memory?: PlatformEngineServicesWastageApiEntityUsage
+    networkThroughput?: PlatformEngineServicesWastageApiEntityUsage
+    recommended?: PlatformEngineServicesWastageApiEntityRightsizingEC2Instance
+    vCPU?: PlatformEngineServicesWastageApiEntityUsage
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityRightsizingAwsRds {
+export interface PlatformEngineServicesWastageApiEntityRightsizingAwsRds {
     architecture?: string
-    clusterType?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsClusterType
+    clusterType?: PlatformEngineServicesWastageApiEntityAwsRdsClusterType
     computeCost?: number
     computeCostComponents?: Record<string, number>
     cost?: number
@@ -2711,7 +2711,7 @@ export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityRightsizingA
     vCPU?: number
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityRightsizingEBSVolume {
+export interface PlatformEngineServicesWastageApiEntityRightsizingEBSVolume {
     baselineIOPS?: number
     baselineThroughput?: number
     cost?: number
@@ -2722,7 +2722,7 @@ export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityRightsizingE
     volumeSize?: number
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityRightsizingEC2Instance {
+export interface PlatformEngineServicesWastageApiEntityRightsizingEC2Instance {
     architecture?: string
     cost?: number
     costComponents?: Record<string, number>
@@ -2739,7 +2739,7 @@ export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityRightsizingE
     vCPU?: number
 }
 
-export interface GithubComKaytuIoKaytuEngineServicesWastageApiEntityUsage {
+export interface PlatformEngineServicesWastageApiEntityUsage {
     avg?: number
     last?: TypesDatapoint
     max?: number
@@ -2753,16 +2753,16 @@ export interface KaytuResourceCollectionFilter {
     resource_types?: string[]
     tags?: Record<string, string>
 }
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiV3ControlListFilters {
+export interface PlatformEnginePkgInventoryApiV3ControlListFilters {
     provider: string[]
     severity: string[]
     root_benchmark: string[]
     parent_benchmark: string[]
     primary_table: string[]
     list_of_tables: string[]
-    tags: GithubComKaytuIoKaytuEnginePkgInventoryApiV3ControlListFiltersTags[]
+    tags: PlatformEnginePkgInventoryApiV3ControlListFiltersTags[]
 }
-export interface GithubComKaytuIoKaytuEnginePkgControlApiListV2 {
+export interface PlatformEnginePkgControlApiListV2 {
     cursor: number
     per_page: number
     primary_table?: string
@@ -2772,50 +2772,50 @@ export interface GithubComKaytuIoKaytuEnginePkgControlApiListV2 {
     parent_benchmark?: string[]
     root_benchmark?: string[]
     has_parameters?: boolean
-    tags?: GithubComKaytuIoKaytuEnginePkgControlApiListV2Tags[]
+    tags?: PlatformEnginePkgControlApiListV2Tags[]
     list_of_tables?: string[]
 }
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiV3ControlListFiltersTags {
+export interface PlatformEnginePkgInventoryApiV3ControlListFiltersTags {
     Key: string
     UniqueValues: string[]
 }
-export interface GithubComKaytuIoKaytuEnginePkgControlApiListV2Tags {
+export interface PlatformEnginePkgControlApiListV2Tags {
     [key: string]: string[]
 }
-export interface GithubComKaytuIoKaytuEnginePkgControlApiListV2Response {
-    items: GithubComKaytuIoKaytuEnginePkgControlApiListV2ResponseItem[]
+export interface PlatformEnginePkgControlApiListV2Response {
+    items: PlatformEnginePkgControlApiListV2ResponseItem[]
     total_count: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgControlApiListV2ResponseItem {
+export interface PlatformEnginePkgControlApiListV2ResponseItem {
     id: string
     title: string
     description: string
     connector: string[]
     severity: string
-    tags: GithubComKaytuIoKaytuEnginePkgControlApiListV2ResponseItemTags
-    query: GithubComKaytuIoKaytuEnginePkgControlApiListV2ResponseItemQuery
+    tags: PlatformEnginePkgControlApiListV2ResponseItemTags
+    query: PlatformEnginePkgControlApiListV2ResponseItemQuery
     findings_summary?: {
         non_incident_count?: number
         incident_count?: number
     }
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgControlApiListV2ResponseItemQuery {
+export interface PlatformEnginePkgControlApiListV2ResponseItemQuery {
     primary_table: string
     list_of_tables: string[]
     parameters: any[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgControlApiListV2ResponseItemTags {
+export interface PlatformEnginePkgControlApiListV2ResponseItemTags {
     score_service_name: string[]
     score_tags: string[]
 }
-export interface GithubComKaytuIoKaytuEnginePkgBenchmarkApiListV3Response {
-    items: GithubComKaytuIoKaytuEnginePkgBenchmarkApiListV3ResponseItem[]
+export interface PlatformEnginePkgBenchmarkApiListV3Response {
+    items: PlatformEnginePkgBenchmarkApiListV3ResponseItem[]
     total_count: number
 }
-export interface GithubComKaytuIoKaytuEnginePkgBenchmarkApiListV3 {
+export interface PlatformEnginePkgBenchmarkApiListV3 {
     /** Specifies the Title */
     parent_benchmark_id?: string[]
     root: boolean
@@ -2824,15 +2824,15 @@ export interface GithubComKaytuIoKaytuEnginePkgBenchmarkApiListV3 {
     per_page: number
     primary_table?: string[]
     list_of_tables?: string[]
-    tags?: GithubComKaytuIoKaytuEnginePkgBenchmarkApiListV3ResponseTags
+    tags?: PlatformEnginePkgBenchmarkApiListV3ResponseTags
     finding_summary?: boolean
 }
-export interface GithubComKaytuIoKaytuEnginePkgBenchmarkApiListV3ResponseItem {
-    benchmark: GithubComKaytuIoKaytuEnginePkgBenchmarkApiListV3ResponseMetaData
+export interface PlatformEnginePkgBenchmarkApiListV3ResponseItem {
+    benchmark: PlatformEnginePkgBenchmarkApiListV3ResponseMetaData
     findings: null
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgBenchmarkApiListV3ResponseMetaData {
+export interface PlatformEnginePkgBenchmarkApiListV3ResponseMetaData {
     id: string
     title: string
     description: string
@@ -2841,72 +2841,72 @@ export interface GithubComKaytuIoKaytuEnginePkgBenchmarkApiListV3ResponseMetaDat
     enabled: boolean
     track_drift_events: boolean
     primary_tables: string[]
-    tags: GithubComKaytuIoKaytuEnginePkgBenchmarkApiListV3ResponseTags
+    tags: PlatformEnginePkgBenchmarkApiListV3ResponseTags
     created_at: string
     updated_at: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgBenchmarkApiListV3ResponseTags {
+export interface PlatformEnginePkgBenchmarkApiListV3ResponseTags {
     [key: string]: string[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgControlDetailV3 {
-    benchmarks: GithubComKaytuIoKaytuEnginePkgControlDetailV3Benchmarks
+export interface PlatformEnginePkgControlDetailV3 {
+    benchmarks: PlatformEnginePkgControlDetailV3Benchmarks
     integrationType: string[]
     description: string
     id: string
-    policy: GithubComKaytuIoKaytuEnginePkgControlDetailV3Query
+    policy: PlatformEnginePkgControlDetailV3Query
     severity: string
-    tags: GithubComKaytuIoKaytuEnginePkgControlDetailV3Tags
+    tags: PlatformEnginePkgControlDetailV3Tags
     title: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgControlDetailV3Benchmarks {
+export interface PlatformEnginePkgControlDetailV3Benchmarks {
     fullPath: string[]
     roots: string[]
 }
-export interface GithubComKaytuIoKaytuEnginePkgControlDetailV3Tags {
+export interface PlatformEnginePkgControlDetailV3Tags {
     [key: string]: string[]
 }
-export interface GithubComKaytuIoKaytuEnginePkgControlDetailV3QueryParams {
+export interface PlatformEnginePkgControlDetailV3QueryParams {
     key: string
     value: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgControlDetailV3Query {
+export interface PlatformEnginePkgControlDetailV3Query {
     language: string
     listOfResources: string[]
     primaryResource: string
     definition: string
-    parameters: GithubComKaytuIoKaytuEnginePkgControlDetailV3QueryParams[]
+    parameters: PlatformEnginePkgControlDetailV3QueryParams[]
     reference: string
     type: string
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequestV2 {
+export interface PlatformEnginePkgInventoryApiListQueryRequestV2 {
     /** Specifies the Title */
     title_filter?: string
     cursor: number
     per_page: number
     providers?: string[]
-    tags?: GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequestV2TagsFilter
+    tags?: PlatformEnginePkgInventoryApiListQueryRequestV2TagsFilter
     list_of_tables?: string[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequestV2TagsFilter {
+export interface PlatformEnginePkgInventoryApiListQueryRequestV2TagsFilter {
     [key: string]: string[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2 {
+export interface PlatformEnginePkgInventoryApiSmartQueryItemV2 {
     id: string
     title: string
     description: string
     integration_types: string[]
-    query: GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2Query
-    tags: GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequestV2TagsFilter
+    query: PlatformEnginePkgInventoryApiSmartQueryItemV2Query
+    tags: PlatformEnginePkgInventoryApiListQueryRequestV2TagsFilter
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2Query {
+export interface PlatformEnginePkgInventoryApiSmartQueryItemV2Query {
     id: string
     queryToExecute: string
     primaryTable: string
@@ -2918,30 +2918,30 @@ export interface GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2Query
     updatedAt: Date
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2Response {
+export interface PlatformEnginePkgInventoryApiSmartQueryItemV2Response {
     /** List of items */
-    items: GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2[]
+    items: PlatformEnginePkgInventoryApiSmartQueryItemV2[]
     /** total caount of data */
     total_count: number
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryFilters {
+export interface PlatformEnginePkgInventoryApiSmartQueryFilters {
     providers: string[]
-    tags: GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryFiltersTag[]
+    tags: PlatformEnginePkgInventoryApiSmartQueryFiltersTag[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryFiltersTag {
+export interface PlatformEnginePkgInventoryApiSmartQueryFiltersTag {
     Key: string
     UniqueValues: string[]
 }
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiV3BenchmarkListFilters {
+export interface PlatformEnginePkgInventoryApiV3BenchmarkListFilters {
     parent_benchmark_id: string[]
     primary_table: string[]
     list_of_tables: string[]
-    tags: GithubComKaytuIoKaytuEnginePkgInventoryApiV3BenchmarkListFiltersTag[]
+    tags: PlatformEnginePkgInventoryApiV3BenchmarkListFiltersTag[]
 }
 
-export interface GithubComKaytuIoKaytuEnginePkgInventoryApiV3BenchmarkListFiltersTag {
+export interface PlatformEnginePkgInventoryApiV3BenchmarkListFiltersTag {
     Key: string
     UniqueValues: string[]
 }
@@ -4117,11 +4117,11 @@ export class Api<
          * @secure
          */
         apiV1KeyCreateCreate: (
-            request: GithubComKaytuIoKaytuEnginePkgAuthApiCreateAPIKeyRequest,
+            request: PlatformEnginePkgAuthApiCreateAPIKeyRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgAuthApiCreateAPIKeyResponse,
+                PlatformEnginePkgAuthApiCreateAPIKeyResponse,
                 EchoHTTPError
             >({
                 path: `/auth/api/v1/keys/`,
@@ -4161,7 +4161,7 @@ export class Api<
          */
         apiV1KeysList: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgAuthApiWorkspaceApiKey[],
+                PlatformEnginePkgAuthApiWorkspaceApiKey[],
                 any
             >({
                 path: `/auth/api/v1/keys`,
@@ -4182,7 +4182,7 @@ export class Api<
          */
         apiV1MeList: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgAuthApiGetMeResponse,
+                PlatformEnginePkgAuthApiGetMeResponse,
                 any
             >({
                 path: `/auth/api/v1/me`,
@@ -4202,7 +4202,7 @@ export class Api<
          * @secure
          */
         apiV1UserInviteCreate: (
-            request: GithubComKaytuIoKaytuEnginePkgAuthApiInviteRequest,
+            request: PlatformEnginePkgAuthApiInviteRequest,
             params: RequestParams = {}
         ) =>
             this.request<void, any>({
@@ -4224,7 +4224,7 @@ export class Api<
          * @secure
          */
         apiV1UserPreferencesUpdate: (
-            request: GithubComKaytuIoKaytuEnginePkgAuthApiChangeUserPreferencesRequest,
+            request: PlatformEnginePkgAuthApiChangeUserPreferencesRequest,
             params: RequestParams = {}
         ) =>
             this.request<void, any>({
@@ -4246,7 +4246,7 @@ export class Api<
          * @secure
          */
         apiV1UserRoleBindingUpdate: (
-            request: GithubComKaytuIoKaytuEnginePkgAuthApiPutRoleBindingRequest,
+            request: PlatformEnginePkgAuthApiPutRoleBindingRequest,
             params: RequestParams = {}
         ) =>
             this.request<void, any>({
@@ -4294,7 +4294,7 @@ export class Api<
          */
         apiV1UserRoleBindingsList: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgAuthApiGetRoleBindingsResponse,
+                PlatformEnginePkgAuthApiGetRoleBindingsResponse,
                 any
             >({
                 path: `/auth/api/v1/user/role/bindings`,
@@ -4315,7 +4315,7 @@ export class Api<
          */
         apiV1UserDetail: (userId: string, params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgAuthApiGetUserResponse,
+                PlatformEnginePkgAuthApiGetUserResponse,
                 any
             >({
                 path: `/auth/api/v1/user/${userId}`,
@@ -4335,11 +4335,11 @@ export class Api<
          * @secure
          */
         apiV1UsersList: (
-            request: GithubComKaytuIoKaytuEnginePkgAuthApiGetUsersRequest,
+            request: PlatformEnginePkgAuthApiGetUsersRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgAuthApiGetUsersResponse[],
+                PlatformEnginePkgAuthApiGetUsersResponse[],
                 any
             >({
                 path: `/auth/api/v1/users`,
@@ -4362,7 +4362,7 @@ export class Api<
          */
         apiV1WorkspaceRoleBindingsList: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgAuthApiWorkspaceRoleBinding[],
+                PlatformEnginePkgAuthApiWorkspaceRoleBinding[],
                 any
             >({
                 path: `/auth/api/v1/users`,
@@ -4384,11 +4384,11 @@ export class Api<
          * @secure
          */
         apiV2ControlList: (
-            request: GithubComKaytuIoKaytuEnginePkgControlApiListV2,
+            request: PlatformEnginePkgControlApiListV2,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgControlApiListV2Response,
+                PlatformEnginePkgControlApiListV2Response,
                 any
             >({
                 path: `/compliance/api/v3/controls`,
@@ -4409,11 +4409,11 @@ export class Api<
          * @secure
          */
         apiV3BenchmarkList: (
-            request: GithubComKaytuIoKaytuEnginePkgBenchmarkApiListV3,
+            request: PlatformEnginePkgBenchmarkApiListV3,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgBenchmarkApiListV3Response,
+                PlatformEnginePkgBenchmarkApiListV3Response,
                 any
             >({
                 path: `/compliance/api/v3/benchmarks`,
@@ -4434,7 +4434,7 @@ export class Api<
          * @secure
          */
         apiV3ControlDetail: (id: string, params: RequestParams = {}) =>
-            this.request<GithubComKaytuIoKaytuEnginePkgControlDetailV3, any>({
+            this.request<PlatformEnginePkgControlDetailV3, any>({
                 path: `compliance/api/v3/control/${id}?showReferences=true`,
                 method: 'GET',
                 secure: true,
@@ -4453,7 +4453,7 @@ export class Api<
          */
         apiV3ControlFilters: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiV3ControlListFilters,
+                PlatformEnginePkgInventoryApiV3ControlListFilters,
                 any
             >({
                 path: `/compliance/api/v3/controls/filters`,
@@ -4474,7 +4474,7 @@ export class Api<
          */
         apiV3BenchmarkFilters: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiV3BenchmarkListFilters,
+                PlatformEnginePkgInventoryApiV3BenchmarkListFilters,
                 any
             >({
                 path: `/compliance/api/v3/benchmarks/filters`,
@@ -4499,7 +4499,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkAssignedEntities,
+                PlatformEnginePkgComplianceApiBenchmarkAssignedEntities,
                 any
             >({
                 path: `/compliance/api/v1/assignments/benchmark/${benchmarkId}`,
@@ -4538,7 +4538,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkControlSummary,
+                PlatformEnginePkgComplianceApiBenchmarkControlSummary,
                 any
             >({
                 path: `/compliance/api/v1/benchmarks/${benchmarkId}/controls`,
@@ -4608,7 +4608,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationSummary,
+                PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary,
                 any
             >({
                 path: `/compliance/api/v1/benchmarks/${benchmarkId}/summary`,
@@ -4642,7 +4642,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiControlSummary,
+                PlatformEnginePkgComplianceApiControlSummary,
                 any
             >({
                 path: `/compliance/api/v1/controls/${controlId}/summary`,
@@ -4664,11 +4664,11 @@ export class Api<
          * @secure
          */
         apiV1FindingEventsCreate: (
-            request: GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingEventsRequest,
+            request: PlatformEnginePkgComplianceApiGetFindingEventsRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingEventsResponse,
+                PlatformEnginePkgComplianceApiGetFindingEventsResponse,
                 any
             >({
                 path: `/compliance/api/v1/finding_events`,
@@ -4705,7 +4705,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiCountFindingEventsResponse,
+                PlatformEnginePkgComplianceApiCountFindingEventsResponse,
                 any
             >({
                 path: `/compliance/api/v1/finding_events/count`,
@@ -4727,11 +4727,11 @@ export class Api<
          * @secure
          */
         apiV1FindingEventsFiltersCreate: (
-            request: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEventFilters,
+            request: PlatformEnginePkgComplianceApiFindingEventFilters,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEventFiltersWithMetadata,
+                PlatformEnginePkgComplianceApiFindingEventFiltersWithMetadata,
                 any
             >({
                 path: `/compliance/api/v1/finding_events/filters`,
@@ -4758,7 +4758,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEvent,
+                PlatformEnginePkgComplianceApiFindingEvent,
                 any
             >({
                 path: `/compliance/api/v1/finding_events/single/${id}`,
@@ -4779,11 +4779,11 @@ export class Api<
          * @secure
          */
         apiV1FindingsCreate: (
-            request: GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingsRequest,
+            request: PlatformEnginePkgComplianceApiGetFindingsRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingsResponse,
+                PlatformEnginePkgComplianceApiGetFindingsResponse,
                 any
             >({
                 path: `/compliance/api/v1/compliance_result`,
@@ -4808,7 +4808,7 @@ export class Api<
          */
         apiV1FindingsEventsDetail: (id: string, params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingEventsByFindingIDResponse,
+                PlatformEnginePkgComplianceApiGetFindingEventsByFindingIDResponse,
                 any
             >({
                 path: `/compliance/api/v1/compliance_result/events/${id}`,
@@ -4829,11 +4829,11 @@ export class Api<
          * @secure
          */
         apiV1FindingsFiltersCreate: (
-            request: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingFilters,
+            request: PlatformEnginePkgComplianceApiFindingFilters,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiFindingFiltersWithMetadata,
+                PlatformEnginePkgComplianceApiFindingFiltersWithMetadata,
                 any
             >({
                 path: `/compliance/api/v1/compliance_result/filters`,
@@ -4856,11 +4856,11 @@ export class Api<
          * @secure
          */
         apiV1FindingsResourceCreate: (
-            request: GithubComKaytuIoKaytuEnginePkgComplianceApiGetSingleResourceFindingRequest,
+            request: PlatformEnginePkgComplianceApiGetSingleResourceFindingRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiGetSingleResourceFindingResponse,
+                PlatformEnginePkgComplianceApiGetSingleResourceFindingResponse,
                 any
             >({
                 path: `/compliance/api/v1/compliance_result/resource`,
@@ -4883,7 +4883,7 @@ export class Api<
          */
         apiV1FindingsSingleDetail: (id: string, params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiFinding,
+                PlatformEnginePkgComplianceApiFinding,
                 any
             >({
                 path: `/compliance/api/v1/compliance_result/single/${id}`,
@@ -4934,7 +4934,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiGetTopFieldResponse,
+                PlatformEnginePkgComplianceApiGetTopFieldResponse,
                 any
             >({
                 path: `/compliance/api/v1/compliance_result/top/${field}/${count}`,
@@ -4966,7 +4966,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiGetAccountsFindingsSummaryResponse,
+                PlatformEnginePkgComplianceApiGetAccountsFindingsSummaryResponse,
                 any
             >({
                 path: `/compliance/api/v1/compliance_result/${benchmarkId}/accounts`,
@@ -4998,7 +4998,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiGetServicesFindingsSummaryResponse,
+                PlatformEnginePkgComplianceApiGetServicesFindingsSummaryResponse,
                 any
             >({
                 path: `/compliance/api/v1/compliance_result/${benchmarkId}/services`,
@@ -5047,11 +5047,11 @@ export class Api<
          * @secure
          */
         apiV1ResourceFindingsCreate: (
-            request: GithubComKaytuIoKaytuEnginePkgComplianceApiListResourceFindingsRequest,
+            request: PlatformEnginePkgComplianceApiListResourceFindingsRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgComplianceApiListResourceFindingsResponse,
+                PlatformEnginePkgComplianceApiListResourceFindingsResponse,
                 any
             >({
                 path: `/compliance/api/v1/resource_findings`,
@@ -5075,11 +5075,11 @@ export class Api<
          * @secure
          */
         apiV1ConnectionsAwsCreate: (
-            request: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAWSConnectionRequest,
+            request: PlatformEngineServicesIntegrationApiEntityCreateAWSConnectionRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateConnectionResponse,
+                PlatformEngineServicesIntegrationApiEntityCreateConnectionResponse,
                 any
             >({
                 path: `/integration/api/v1/connections/aws`,
@@ -5108,7 +5108,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCountConnectionsResponse,
+                PlatformEngineServicesIntegrationApiEntityCountConnectionsResponse,
                 any
             >({
                 path: `/integration/api/v1/connections/count`,
@@ -5181,7 +5181,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityListConnectionsSummaryResponse,
+                PlatformEngineServicesIntegrationApiEntityListConnectionsSummaryResponse,
                 any
             >({
                 path: `/integration/api/v1/connections/summaries`,
@@ -5227,7 +5227,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnection,
+                PlatformEngineServicesIntegrationApiEntityConnection,
                 any
             >({
                 path: `/integration/api/v1/connections/${connectionId}/aws/healthcheck`,
@@ -5258,7 +5258,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnection,
+                PlatformEngineServicesIntegrationApiEntityConnection,
                 any
             >({
                 path: `/integration/api/v1/connections/${connectionId}/azure/healthcheck`,
@@ -5287,7 +5287,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnectorResponse,
+                PlatformEngineServicesIntegrationApiEntityConnectorResponse,
                 any
             >({
                 path: `/integration/api/v1/integrations/types?per_page=${per_page}&cursor=${cursor}&sort_by=${sort_by}&sort_order=${sort_order}&has_integration=${has_integration}`,
@@ -5312,7 +5312,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnectorResponse,
+                PlatformEngineServicesIntegrationApiEntityConnectorResponse,
                 any
             >({
                 path: `/integration/api/v1/integrations/types?enabled=true`,
@@ -5346,7 +5346,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCatalogMetrics,
+                PlatformEngineServicesIntegrationApiEntityCatalogMetrics,
                 any
             >({
                 path: `/integration/api/v1/connectors/metrics`,
@@ -5413,7 +5413,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityListCredentialResponse,
+                PlatformEngineServicesIntegrationApiEntityListCredentialResponse,
                 any
             >({
                 path: `/integration/api/v1/credentials`,
@@ -5434,11 +5434,11 @@ export class Api<
          * @secure
          */
         apiV1CredentialsAwsCreate: (
-            request: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAWSCredentialRequest,
+            request: PlatformEngineServicesIntegrationApiEntityCreateAWSCredentialRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateCredentialResponse,
+                PlatformEngineServicesIntegrationApiEntityCreateCredentialResponse,
                 any
             >({
                 path: `/integration/api/v1/credentials/aws`,
@@ -5461,7 +5461,7 @@ export class Api<
          */
         apiV1CredentialsAwsUpdate: (
             credentialId: string,
-            config: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityUpdateAWSCredentialRequest,
+            config: PlatformEngineServicesIntegrationApiEntityUpdateAWSCredentialRequest,
             params: RequestParams = {}
         ) =>
             this.request<void, any>({
@@ -5487,7 +5487,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnection[],
+                PlatformEngineServicesIntegrationApiEntityConnection[],
                 any
             >({
                 path: `/integration/api/v1/credentials/aws/${credentialId}/autoonboard`,
@@ -5507,11 +5507,11 @@ export class Api<
          * @secure
          */
         apiV1CredentialsAzureCreate: (
-            request: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAzureCredentialRequest,
+            request: PlatformEngineServicesIntegrationApiEntityCreateAzureCredentialRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateCredentialResponse,
+                PlatformEngineServicesIntegrationApiEntityCreateCredentialResponse,
                 any
             >({
                 path: `/integration/api/v1/credentials/azure`,
@@ -5534,7 +5534,7 @@ export class Api<
          */
         apiV1CredentialsAzureUpdate: (
             credentialId: string,
-            config: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityUpdateAzureCredentialRequest,
+            config: PlatformEngineServicesIntegrationApiEntityUpdateAzureCredentialRequest,
             params: RequestParams = {}
         ) =>
             this.request<void, any>({
@@ -5560,7 +5560,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnection[],
+                PlatformEngineServicesIntegrationApiEntityConnection[],
                 any
             >({
                 path: `/integration/api/v1/credentials/azure/${credentialId}/autoonboard`,
@@ -5584,7 +5584,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCredential,
+                PlatformEngineServicesIntegrationApiEntityCredential,
                 any
             >({
                 path: `/integration/api/v1/credentials/${credentialId}`,
@@ -5605,11 +5605,11 @@ export class Api<
          * @secure
          */
         apiV1QueryList: (
-            request: GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequest,
+            request: PlatformEnginePkgInventoryApiListQueryRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItem[],
+                PlatformEnginePkgInventoryApiSmartQueryItem[],
                 any
             >({
                 path: `/core/api/v1/query`,
@@ -5630,11 +5630,11 @@ export class Api<
          * @secure
          */
         apiV2QueryList: (
-            request: GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequestV2,
+            request: PlatformEnginePkgInventoryApiListQueryRequestV2,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2Response,
+                PlatformEnginePkgInventoryApiSmartQueryItemV2Response,
                 any
             >({
                 path: `/core/api/v3/queries`,
@@ -5656,7 +5656,7 @@ export class Api<
          */
         apiV3QueryListFilter: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryFilters,
+                PlatformEnginePkgInventoryApiSmartQueryFilters,
                 any
             >({
                 path: `/core/api/v3/queries/filters`,
@@ -5677,11 +5677,11 @@ export class Api<
          * @secure
          */
         apiV1QueryRunCreate: (
-            request: GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryRequest,
+            request: PlatformEnginePkgInventoryApiRunQueryRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryResponse,
+                PlatformEnginePkgInventoryApiRunQueryResponse,
                 any
             >({
                 path: `/core/api/v1/query/run`,
@@ -5704,7 +5704,7 @@ export class Api<
          */
         apiV1QueryRunHistoryList: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryHistory[],
+                PlatformEnginePkgInventoryApiSmartQueryHistory[],
                 any
             >({
                 path: `/core/api/v1/query/run/history`,
@@ -5733,7 +5733,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiAnalyticsCategoriesResponse,
+                PlatformEnginePkgInventoryApiAnalyticsCategoriesResponse,
                 any
             >({
                 path: `/core/api/v2/analytics/categories`,
@@ -5755,7 +5755,7 @@ export class Api<
          */
         apiV3InventoryCategoryList: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiInventoryCategoriesResponse,
+                PlatformEnginePkgInventoryApiInventoryCategoriesResponse,
                 any
             >({
                 path: `/core/api/v3/queries/categories`,
@@ -5798,7 +5798,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiListResourceTypeCompositionResponse,
+                PlatformEnginePkgInventoryApiListResourceTypeCompositionResponse,
                 any
             >({
                 path: `/core/api/v2/analytics/composition/${key}`,
@@ -5821,7 +5821,7 @@ export class Api<
          */
         apiV2AnalyticsCountList: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiCountAnalyticsMetricsResponse,
+                PlatformEnginePkgInventoryApiCountAnalyticsMetricsResponse,
                 any
             >({
                 path: `/core/api/v2/analytics/count`,
@@ -5873,7 +5873,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiListMetricsResponse,
+                PlatformEnginePkgInventoryApiListMetricsResponse,
                 any
             >({
                 path: `/core/api/v2/analytics/metric`,
@@ -5904,7 +5904,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiAnalyticsMetric[],
+                PlatformEnginePkgInventoryApiAnalyticsMetric[],
                 any
             >({
                 path: `/core/api/v2/analytics/metrics/list`,
@@ -5930,7 +5930,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiAnalyticsMetric,
+                PlatformEnginePkgInventoryApiAnalyticsMetric,
                 any
             >({
                 path: `/core/api/v2/analytics/metrics/${metricId}`,
@@ -5968,7 +5968,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiListCostCompositionResponse,
+                PlatformEnginePkgInventoryApiListCostCompositionResponse,
                 any
             >({
                 path: `/core/api/v2/analytics/spend/composition`,
@@ -5991,7 +5991,7 @@ export class Api<
          */
         apiV2AnalyticsSpendCountList: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiCountAnalyticsSpendResponse,
+                PlatformEnginePkgInventoryApiCountAnalyticsSpendResponse,
                 any
             >({
                 path: `/core/api/v2/analytics/spend/count`,
@@ -6037,7 +6037,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiListCostMetricsResponse,
+                PlatformEnginePkgInventoryApiListCostMetricsResponse,
                 any
             >({
                 path: `/core/api/v2/analytics/spend/metric`,
@@ -6080,7 +6080,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiSpendTableRow[],
+                PlatformEnginePkgInventoryApiSpendTableRow[],
                 any
             >({
                 path: `/core/api/v2/analytics/spend/table`,
@@ -6121,7 +6121,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiCostTrendDatapoint[],
+                PlatformEnginePkgInventoryApiCostTrendDatapoint[],
                 any
             >({
                 path: `/core/api/v2/analytics/spend/trend`,
@@ -6156,7 +6156,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiAssetTableRow[],
+                PlatformEnginePkgInventoryApiAssetTableRow[],
                 any
             >({
                 path: `/core/api/v2/analytics/table`,
@@ -6243,7 +6243,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiResourceTypeTrendDatapoint[],
+                PlatformEnginePkgInventoryApiResourceTypeTrendDatapoint[],
                 any
             >({
                 path: `/core/api/v2/analytics/trend`,
@@ -6274,7 +6274,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollection[],
+                PlatformEnginePkgInventoryApiResourceCollection[],
                 any
             >({
                 path: `/core/api/v2/metadata/resource-collection`,
@@ -6299,7 +6299,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollection,
+                PlatformEnginePkgInventoryApiResourceCollection,
                 any
             >({
                 path: `/core/api/v2/metadata/resource-collection/${resourceCollectionId}`,
@@ -6328,7 +6328,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollection[],
+                PlatformEnginePkgInventoryApiResourceCollection[],
                 any
             >({
                 path: `/core/api/v2/resource-collection`,
@@ -6353,7 +6353,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollection,
+                PlatformEnginePkgInventoryApiResourceCollection,
                 any
             >({
                 path: `/core/api/v2/resource-collection/${resourceCollectionId}`,
@@ -6377,7 +6377,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollectionLandscape,
+                PlatformEnginePkgInventoryApiResourceCollectionLandscape,
                 any
             >({
                 path: `/core/api/v2/resource-collection/${resourceCollectionId}/landscape`,
@@ -6399,7 +6399,7 @@ export class Api<
          */
         apiV1FilterList: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgMetadataModelsFilter[],
+                PlatformEnginePkgMetadataModelsFilter[],
                 any
             >({
                 path: `/core/api/v1/filter`,
@@ -6419,7 +6419,7 @@ export class Api<
          * @secure
          */
         apiV1FilterCreate: (
-            req: GithubComKaytuIoKaytuEnginePkgMetadataModelsFilter,
+            req: PlatformEnginePkgMetadataModelsFilter,
             params: RequestParams = {}
         ) =>
             this.request<void, any>({
@@ -6441,7 +6441,7 @@ export class Api<
          * @secure
          */
         apiV1MetadataCreate: (
-            req: GithubComKaytuIoKaytuEnginePkgMetadataApiSetConfigMetadataRequest,
+            req: PlatformEnginePkgMetadataApiSetConfigMetadataRequest,
             params: RequestParams = {}
         ) =>
             this.request<void, any>({
@@ -6464,7 +6464,7 @@ export class Api<
          */
         apiV1MetadataDetail: (key: string, params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgMetadataModelsConfigMetadata,
+                PlatformEnginePkgMetadataModelsConfigMetadata,
                 any
             >({
                 path: `/core/api/v1/metadata/${key}`,
@@ -6485,7 +6485,7 @@ export class Api<
          */
         apiV1QueryParameterList: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgMetadataApiListQueryParametersResponse,
+                PlatformEnginePkgMetadataApiListQueryParametersResponse,
                 any
             >({
                 path: `/core/api/v1/query_parameter`,
@@ -6505,7 +6505,7 @@ export class Api<
          * @secure
          */
         apiV1QueryParameterCreate: (
-            req: GithubComKaytuIoKaytuEnginePkgMetadataApiSetQueryParameterRequest,
+            req: PlatformEnginePkgMetadataApiSetQueryParameterRequest,
             params: RequestParams = {}
         ) =>
             this.request<void, any>({
@@ -6535,7 +6535,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgOnboardApiCatalogMetrics,
+                PlatformEnginePkgOnboardApiCatalogMetrics,
                 any
             >({
                 path: `/onboard/api/v1/catalog/metrics`,
@@ -6566,7 +6566,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgOnboardApiConnectionGroup[],
+                PlatformEnginePkgOnboardApiConnectionGroup[],
                 any
             >({
                 path: `/onboard/api/v1/connection-groups`,
@@ -6599,7 +6599,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgOnboardApiConnectionGroup,
+                PlatformEnginePkgOnboardApiConnectionGroup,
                 any
             >({
                 path: `/onboard/api/v1/connection-groups/${connectionGroupName}`,
@@ -6621,11 +6621,11 @@ export class Api<
          * @secure
          */
         apiV1ConnectionsAwsCreate: (
-            request: GithubComKaytuIoKaytuEnginePkgOnboardApiCreateAwsConnectionRequest,
+            request: PlatformEnginePkgOnboardApiCreateAwsConnectionRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgOnboardApiCreateConnectionResponse,
+                PlatformEnginePkgOnboardApiCreateConnectionResponse,
                 any
             >({
                 path: `/onboard/api/v1/connections/aws`,
@@ -6692,7 +6692,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgOnboardApiListConnectionSummaryResponse,
+                PlatformEnginePkgOnboardApiListConnectionSummaryResponse,
                 any
             >({
                 path: `/onboard/api/v1/connections/summary`,
@@ -6715,7 +6715,7 @@ export class Api<
          */
         apiV1ConnectionsStateCreate: (
             connectionId: string,
-            request: GithubComKaytuIoKaytuEnginePkgOnboardApiChangeConnectionLifecycleStateRequest,
+            request: PlatformEnginePkgOnboardApiChangeConnectionLifecycleStateRequest,
             params: RequestParams = {}
         ) =>
             this.request<void, any>({
@@ -6738,7 +6738,7 @@ export class Api<
          */
         apiV1ConnectorList: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgOnboardApiConnectorCount[],
+                PlatformEnginePkgOnboardApiConnectorCount[],
                 any
             >({
                 path: `/onboard/api/v1/connector`,
@@ -6784,7 +6784,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgOnboardApiListCredentialResponse,
+                PlatformEnginePkgOnboardApiListCredentialResponse,
                 any
             >({
                 path: `/onboard/api/v1/credential`,
@@ -6805,11 +6805,11 @@ export class Api<
          * @secure
          */
         apiV1CredentialCreate: (
-            config: GithubComKaytuIoKaytuEnginePkgOnboardApiCreateCredentialRequest,
+            config: PlatformEnginePkgOnboardApiCreateCredentialRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgOnboardApiCreateCredentialResponse,
+                PlatformEnginePkgOnboardApiCreateCredentialResponse,
                 any
             >({
                 path: `/onboard/api/v1/credential`,
@@ -6835,7 +6835,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgOnboardApiCredential,
+                PlatformEnginePkgOnboardApiCredential,
                 any
             >({
                 path: `/onboard/api/v1/credential/${credentialId}`,
@@ -6856,7 +6856,7 @@ export class Api<
          */
         apiV1CredentialUpdate: (
             credentialId: string,
-            config: GithubComKaytuIoKaytuEnginePkgOnboardApiUpdateCredentialRequest,
+            config: PlatformEnginePkgOnboardApiUpdateCredentialRequest,
             params: RequestParams = {}
         ) =>
             this.request<void, any>({
@@ -6902,7 +6902,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgOnboardApiConnection[],
+                PlatformEnginePkgOnboardApiConnection[],
                 any
             >({
                 path: `/onboard/api/v1/credential/${credentialId}/autoonboard`,
@@ -6922,11 +6922,11 @@ export class Api<
          * @secure
          */
         apiV1SourceAwsCreate: (
-            request: GithubComKaytuIoKaytuEnginePkgOnboardApiSourceAwsRequest,
+            request: PlatformEnginePkgOnboardApiSourceAwsRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgOnboardApiCreateSourceResponse,
+                PlatformEnginePkgOnboardApiCreateSourceResponse,
                 any
             >({
                 path: `/onboard/api/v1/source/aws`,
@@ -6948,11 +6948,11 @@ export class Api<
          * @secure
          */
         apiV1SourceAzureCreate: (
-            request: GithubComKaytuIoKaytuEnginePkgOnboardApiSourceAzureRequest,
+            request: PlatformEnginePkgOnboardApiSourceAzureRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgOnboardApiCreateSourceResponse,
+                PlatformEnginePkgOnboardApiCreateSourceResponse,
                 any
             >({
                 path: `/onboard/api/v1/source/azure`,
@@ -7002,7 +7002,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgOnboardApiConnection,
+                PlatformEnginePkgOnboardApiConnection,
                 any
             >({
                 path: `/onboard/api/v1/source/${sourceId}/healthcheck`,
@@ -7023,11 +7023,11 @@ export class Api<
          * @secure
          */
         apiV2CredentialCreate: (
-            config: GithubComKaytuIoKaytuEnginePkgOnboardApiV2CreateCredentialV2Request,
+            config: PlatformEnginePkgOnboardApiV2CreateCredentialV2Request,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgOnboardApiV2CreateCredentialV2Response,
+                PlatformEnginePkgOnboardApiV2CreateCredentialV2Response,
                 any
             >({
                 path: `/onboard/api/v2/credential`,
@@ -7077,7 +7077,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgDescribeApiJobSeqCheckResponse,
+                PlatformEnginePkgDescribeApiJobSeqCheckResponse,
                 any
             >({
                 path: `/schedule/api/v1/compliance/re-evaluate/${benchmarkId}`,
@@ -7252,7 +7252,7 @@ export class Api<
          */
         apiV1DiscoveryResourcetypesListList: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgDescribeApiListDiscoveryResourceTypes,
+                PlatformEnginePkgDescribeApiListDiscoveryResourceTypes,
                 any
             >({
                 path: `/schedule/api/v1/discovery/resourcetypes/list`,
@@ -7272,11 +7272,11 @@ export class Api<
          * @secure
          */
         apiV1JobsCreate: (
-            request: GithubComKaytuIoKaytuEnginePkgDescribeApiListJobsRequest,
+            request: PlatformEnginePkgDescribeApiListJobsRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgDescribeApiListJobsResponse,
+                PlatformEnginePkgDescribeApiListJobsResponse,
                 any
             >({
                 path: `/schedule/api/v1/jobs`,
@@ -7299,11 +7299,11 @@ export class Api<
          * @secure
          */
         apiV1WastageAwsRdsCreate: (
-            request: GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsWastageRequest,
+            request: PlatformEngineServicesWastageApiEntityAwsRdsWastageRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsWastageResponse,
+                PlatformEngineServicesWastageApiEntityAwsRdsWastageResponse,
                 any
             >({
                 path: `/wastage/api/v1/wastage/aws-rds`,
@@ -7325,11 +7325,11 @@ export class Api<
          * @secure
          */
         apiV1WastageAwsRdsClusterCreate: (
-            request: GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsClusterWastageRequest,
+            request: PlatformEngineServicesWastageApiEntityAwsClusterWastageRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsClusterWastageResponse,
+                PlatformEngineServicesWastageApiEntityAwsClusterWastageResponse,
                 any
             >({
                 path: `/wastage/api/v1/wastage/aws-rds-cluster`,
@@ -7351,11 +7351,11 @@ export class Api<
          * @secure
          */
         apiV1WastageEc2InstanceCreate: (
-            request: GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2InstanceWastageRequest,
+            request: PlatformEngineServicesWastageApiEntityEC2InstanceWastageRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2InstanceWastageResponse,
+                PlatformEngineServicesWastageApiEntityEC2InstanceWastageResponse,
                 any
             >({
                 path: `/wastage/api/v1/wastage/ec2-instance`,
@@ -7382,7 +7382,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgWorkspaceApiBootstrapStatusResponse,
+                PlatformEnginePkgWorkspaceApiBootstrapStatusResponse,
                 any
             >({
                 path: `/workspace/api/v1/bootstrap/${workspaceName}`,
@@ -7404,7 +7404,7 @@ export class Api<
          */
         apiV1BootstrapCredentialCreate: (
             workspaceName: string,
-            request: GithubComKaytuIoKaytuEnginePkgWorkspaceApiAddCredentialRequest,
+            request: PlatformEnginePkgWorkspaceApiAddCredentialRequest,
             params: RequestParams = {}
         ) =>
             this.request<number, any>({
@@ -7449,11 +7449,11 @@ export class Api<
          * @secure
          */
         apiV1WorkspaceCreate: (
-            request: GithubComKaytuIoKaytuEnginePkgWorkspaceApiCreateWorkspaceRequest,
+            request: PlatformEnginePkgWorkspaceApiCreateWorkspaceRequest,
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgWorkspaceApiCreateWorkspaceResponse,
+                PlatformEnginePkgWorkspaceApiCreateWorkspaceResponse,
                 any
             >({
                 path: `/workspace/api/v1/workspace`,
@@ -7476,7 +7476,7 @@ export class Api<
          */
         apiV1WorkspaceCurrentList: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceResponse,
+                PlatformEnginePkgWorkspaceApiWorkspaceResponse,
                 any
             >({
                 path: `/core/api/v3/about`,
@@ -7519,7 +7519,7 @@ export class Api<
          */
         apiV1WorkspacesList: (params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceResponse[],
+                PlatformEnginePkgWorkspaceApiWorkspaceResponse[],
                 any
             >({
                 path: `/workspace/api/v1/workspaces`,
@@ -7548,7 +7548,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceLimitsUsage,
+                PlatformEnginePkgWorkspaceApiWorkspaceLimitsUsage,
                 any
             >({
                 path: `/workspace/api/v1/workspaces/limits/${workspaceName}`,
@@ -7570,7 +7570,7 @@ export class Api<
          */
         apiV3LoadSampleData: (data: any, params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceLimitsUsage,
+                PlatformEnginePkgWorkspaceApiWorkspaceLimitsUsage,
                 any
             >({
                 path: `/core/api/v3/sample/sync`,
@@ -7592,7 +7592,7 @@ export class Api<
          */
         apiV3PurgeSampleData: (data: any, params: RequestParams = {}) =>
             this.request<
-                GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceLimitsUsage,
+                PlatformEnginePkgWorkspaceApiWorkspaceLimitsUsage,
                 any
             >({
                 path: `/core/api/v3/sample/purge`,

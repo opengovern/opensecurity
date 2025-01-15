@@ -19,10 +19,10 @@ import { useEffect } from 'react'
 import ReactJson from '@microlink/react-json-view'
 import { CheckCircleIcon, PlayCircleIcon, TagIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import {
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFinding,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItem,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2,
+    PlatformEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgComplianceApiResourceFinding,
+    PlatformEnginePkgInventoryApiSmartQueryItem,
+    PlatformEnginePkgInventoryApiSmartQueryItemV2,
 } from '../../../../api/api'
 import DrawerPanel from '../../../../components/DrawerPanel'
 import { getConnectorIcon } from '../../../../components/Cards/ConnectorCard'
@@ -42,7 +42,7 @@ import { Badge, KeyValuePairs } from '@cloudscape-design/components'
 
 interface IResourceFindingDetail {
     query:
-        | GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2
+        | PlatformEnginePkgInventoryApiSmartQueryItemV2
         | undefined
     open: boolean
     onClose: () => void
@@ -85,7 +85,7 @@ export default function QueryDetail({
     // const conformance = () => {
     //     if (showOnlyOneControl) {
     //         return (finding?.conformanceStatus || 0) ===
-    //             GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed ? (
+    //             PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed ? (
     //             <Flex className="w-fit gap-1.5">
     //                 <XCircleIcon className="h-4 text-rose-600" />
     //                 <Text>Failed</Text>

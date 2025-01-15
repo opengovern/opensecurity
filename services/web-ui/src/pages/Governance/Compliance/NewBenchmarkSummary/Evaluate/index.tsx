@@ -14,8 +14,8 @@ import {
 } from '@heroicons/react/24/outline'
 import { useComplianceApiV1AssignmentsBenchmarkDetail } from '../../../../../api/compliance.gen'
 import {
-    GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkAssignedConnection,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationSummary,
+    PlatformEnginePkgComplianceApiBenchmarkAssignedConnection,
+    PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary,
 } from '../../../../../api/api'
 import DrawerPanel from '../../../../../components/DrawerPanel'
 import { isDemoAtom, notificationAtom } from '../../../../../store'
@@ -37,7 +37,7 @@ interface IEvaluate {
     id: string | undefined
     assignmentsCount: number
     benchmarkDetail:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationSummary
+        | PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary
         | undefined
     onEvaluate: (c: string[],b: boolean) => void
     opened: boolean | undefined

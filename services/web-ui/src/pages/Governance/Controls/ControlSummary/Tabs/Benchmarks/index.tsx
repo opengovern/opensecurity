@@ -2,13 +2,13 @@ import { useAtomValue } from 'jotai'
 import { Badge, Card, Flex, Text, Title } from '@tremor/react'
 import { ChevronRightIcon } from '@heroicons/react/24/solid'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmark } from '../../../../../../api/api'
+import { PlatformEnginePkgComplianceApiBenchmark } from '../../../../../../api/api'
 import { getConnectorIcon } from '../../../../../../components/Cards/ConnectorCard'
 import { searchAtom } from '../../../../../../utilities/urlstate'
 
 interface IBenchmarks {
     benchmarks:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmark[]
+        | PlatformEnginePkgComplianceApiBenchmark[]
         | undefined
 }
 

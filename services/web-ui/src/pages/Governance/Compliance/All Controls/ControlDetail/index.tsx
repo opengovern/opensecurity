@@ -27,12 +27,12 @@ import {
     XCircleIcon,
 } from '@heroicons/react/24/outline'
 import {
-    GithubComKaytuIoKaytuEnginePkgBenchmarkApiListV3ResponseMetaData,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFinding,
-    GithubComKaytuIoKaytuEnginePkgControlDetailV3,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItem,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2,
+    PlatformEnginePkgBenchmarkApiListV3ResponseMetaData,
+    PlatformEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgComplianceApiResourceFinding,
+    PlatformEnginePkgControlDetailV3,
+    PlatformEnginePkgInventoryApiSmartQueryItem,
+    PlatformEnginePkgInventoryApiSmartQueryItemV2,
 } from '../../../../../api/api'
 import DrawerPanel from '../../../../../components/DrawerPanel'
 import { getConnectorIcon } from '../../../../../components/Cards/ConnectorCard'
@@ -53,7 +53,7 @@ import { Badge, KeyValuePairs, Tabs } from '@cloudscape-design/components'
 import axios from 'axios'
 
 interface IResourceFindingDetail {
-    selectedItem: GithubComKaytuIoKaytuEnginePkgControlDetailV3 | undefined
+    selectedItem: PlatformEnginePkgControlDetailV3 | undefined
     open: boolean
     onClose: () => void
     onRefresh: () => void

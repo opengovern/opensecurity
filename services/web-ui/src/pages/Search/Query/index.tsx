@@ -31,7 +31,6 @@ import { Fragment, useEffect, useMemo, useState } from 'react' // eslint-disable
 import { highlight, languages } from 'prismjs' // eslint-disable-next-line import/no-extraneous-dependencies
 import 'prismjs/components/prism-sql' // eslint-disable-next-line import/no-extraneous-dependencies
 import 'prismjs/themes/prism.css'
-import Editor from 'react-simple-code-editor'
 import {
     CheckCircleIcon,
     ExclamationCircleIcon,
@@ -45,12 +44,8 @@ import {
 } from '../../../api/inventory.gen'
 import Spinner from '../../../components/Spinner'
 import { getErrorMessage } from '../../../types/apierror'
-import DrawerPanel from '../../../components/DrawerPanel'
 import { RenderObject } from '../../../components/RenderObject'
-import {
-    GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryResponse,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItem,
-} from '../../../api/api'
+
 import { isDemoAtom, queryAtom, runQueryAtom } from '../../../store'
 import { snakeCaseToLabel } from '../../../utilities/labelMaker'
 import { numberDisplay } from '../../../utilities/numericDisplay'

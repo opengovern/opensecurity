@@ -17,8 +17,8 @@ import {
 import { Checkbox, useCheckboxState } from 'pretty-checkbox-react'
 import { useComplianceApiV1AssignmentsBenchmarkDetail } from '../../../../../api/compliance.gen'
 import {
-    GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkAssignedConnection,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationSummary,
+    PlatformEnginePkgComplianceApiBenchmarkAssignedConnection,
+    PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary,
 } from '../../../../../api/api'
 import DrawerPanel from '../../../../../components/DrawerPanel'
 import Table, { IColumn } from '../../../../../components/Table'
@@ -66,7 +66,7 @@ interface IEvaluate {
     id: string | undefined
     assignmentsCount: number
     benchmarkDetail:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationSummary
+        | PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary
         | undefined
     onEvaluate: (c: string[]) => void
 }

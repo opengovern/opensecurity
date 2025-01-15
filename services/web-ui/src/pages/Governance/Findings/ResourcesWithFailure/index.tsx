@@ -5,8 +5,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useAtomValue, useSetAtom } from 'jotai/index'
 import {
     Api,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFinding,
+    PlatformEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgComplianceApiResourceFinding,
     SourceType,
     TypesFindingSeverity,
 } from '../../../../api/api'
@@ -38,7 +38,7 @@ interface ICount {
     query: {
         connector: SourceType
         conformanceStatus:
-            | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+            | PlatformEnginePkgComplianceApiConformanceStatus[]
             | undefined
         severity: TypesFindingSeverity[] | undefined
         connectionID: string[] | undefined
@@ -55,7 +55,7 @@ export default function ResourcesWithFailure({ query }: ICount) {
 
     const [open, setOpen] = useState(false)
     const [finding, setFinding] = useState<
-        GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFinding | undefined
+        PlatformEnginePkgComplianceApiResourceFinding | undefined
     >(undefined)
     const [rows, setRows] = useState<any[]>()
     const [page, setPage] = useState(1)

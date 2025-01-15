@@ -1,10 +1,10 @@
 import { Card, Col, Divider, Flex, Grid, Text, Title } from '@tremor/react'
-import { GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollectionLandscape } from '../../api/api'
+import { PlatformEnginePkgInventoryApiResourceCollectionLandscape } from '../../api/api'
 import Spinner from '../Spinner'
 
 interface ILandscape {
     data:
-        | GithubComKaytuIoKaytuEnginePkgInventoryApiResourceCollectionLandscape
+        | PlatformEnginePkgInventoryApiResourceCollectionLandscape
         | undefined
     isLoading: boolean
 }

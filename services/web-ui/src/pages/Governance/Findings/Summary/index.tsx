@@ -15,7 +15,7 @@ import Spinner from '../../../../components/Spinner'
 import {
     SourceType,
     TypesFindingSeverity,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgComplianceApiConformanceStatus,
 } from '../../../../api/api'
 import { DateRange } from '../../../../utilities/urlstate'
 import FailingCloudAccounts from '../FailingCloudAccounts'
@@ -25,7 +25,7 @@ import Tabs from '@cloudscape-design/components/tabs'
 interface ICount {
     connector: SourceType
     conformanceStatus:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+        | PlatformEnginePkgComplianceApiConformanceStatus[]
         | undefined
     severity: TypesFindingSeverity[] | undefined
     connectionID: string[] | undefined

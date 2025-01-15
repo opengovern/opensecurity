@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
     Api,
-    GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsWastageRequest,
-    GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsWastageResponse,
-    GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsClusterWastageRequest,
-    GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsClusterWastageResponse,
-    GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2InstanceWastageRequest,
-    GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2InstanceWastageResponse,
+    PlatformEngineServicesWastageApiEntityAwsRdsWastageRequest,
+    PlatformEngineServicesWastageApiEntityAwsRdsWastageResponse,
+    PlatformEngineServicesWastageApiEntityAwsClusterWastageRequest,
+    PlatformEngineServicesWastageApiEntityAwsClusterWastageResponse,
+    PlatformEngineServicesWastageApiEntityEC2InstanceWastageRequest,
+    PlatformEngineServicesWastageApiEntityEC2InstanceWastageResponse,
     RequestParams,
 } from './api'
 
@@ -16,7 +16,7 @@ import AxiosAPI, { setWorkspace } from './ApiConfig'
 interface IuseWastageApiV1WastageAwsRdsCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsWastageResponse
+    response?: PlatformEngineServicesWastageApiEntityAwsRdsWastageResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -25,7 +25,7 @@ interface IuseWastageApiV1WastageAwsRdsCreateState {
  * URL:
  */
 export const useWastageApiV1WastageAwsRdsCreate = (
-    request: GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsWastageRequest,
+    request: PlatformEngineServicesWastageApiEntityAwsRdsWastageRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -47,7 +47,7 @@ export const useWastageApiV1WastageAwsRdsCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsWastageRequest,
+        reqrequest: PlatformEngineServicesWastageApiEntityAwsRdsWastageRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -132,7 +132,7 @@ export const useWastageApiV1WastageAwsRdsCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsRdsWastageRequest,
+        reqrequest: PlatformEngineServicesWastageApiEntityAwsRdsWastageRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -154,7 +154,7 @@ export const useWastageApiV1WastageAwsRdsCreate = (
 interface IuseWastageApiV1WastageAwsRdsClusterCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsClusterWastageResponse
+    response?: PlatformEngineServicesWastageApiEntityAwsClusterWastageResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -163,7 +163,7 @@ interface IuseWastageApiV1WastageAwsRdsClusterCreateState {
  * URL:
  */
 export const useWastageApiV1WastageAwsRdsClusterCreate = (
-    request: GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsClusterWastageRequest,
+    request: PlatformEngineServicesWastageApiEntityAwsClusterWastageRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -185,7 +185,7 @@ export const useWastageApiV1WastageAwsRdsClusterCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsClusterWastageRequest,
+        reqrequest: PlatformEngineServicesWastageApiEntityAwsClusterWastageRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -270,7 +270,7 @@ export const useWastageApiV1WastageAwsRdsClusterCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEngineServicesWastageApiEntityAwsClusterWastageRequest,
+        reqrequest: PlatformEngineServicesWastageApiEntityAwsClusterWastageRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -292,7 +292,7 @@ export const useWastageApiV1WastageAwsRdsClusterCreate = (
 interface IuseWastageApiV1WastageEc2InstanceCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2InstanceWastageResponse
+    response?: PlatformEngineServicesWastageApiEntityEC2InstanceWastageResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -301,7 +301,7 @@ interface IuseWastageApiV1WastageEc2InstanceCreateState {
  * URL:
  */
 export const useWastageApiV1WastageEc2InstanceCreate = (
-    request: GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2InstanceWastageRequest,
+    request: PlatformEngineServicesWastageApiEntityEC2InstanceWastageRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -323,7 +323,7 @@ export const useWastageApiV1WastageEc2InstanceCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2InstanceWastageRequest,
+        reqrequest: PlatformEngineServicesWastageApiEntityEC2InstanceWastageRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -408,7 +408,7 @@ export const useWastageApiV1WastageEc2InstanceCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEngineServicesWastageApiEntityEC2InstanceWastageRequest,
+        reqrequest: PlatformEngineServicesWastageApiEntityEC2InstanceWastageRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()

@@ -53,15 +53,14 @@ import {
 } from '../../../api/inventory.gen'
 import Spinner from '../../../components/Spinner'
 import { getErrorMessage } from '../../../types/apierror'
-import DrawerPanel from '../../../components/DrawerPanel'
 import { RenderObject } from '../../../components/RenderObject'
 
 import {
-    GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryResponse,
+    PlatformEnginePkgInventoryApiRunQueryResponse,
     Api,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiListQueryRequestV2,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItem,
+    PlatformEnginePkgInventoryApiSmartQueryItemV2,
+    PlatformEnginePkgInventoryApiListQueryRequestV2,
+    PlatformEnginePkgInventoryApiSmartQueryItem,
 } from '../../../api/api'
 import { isDemoAtom, queryAtom, runQueryAtom } from '../../../store'
 import AxiosAPI from '../../../api/ApiConfig'
@@ -70,22 +69,7 @@ import { snakeCaseToLabel } from '../../../utilities/labelMaker'
 import { numberDisplay } from '../../../utilities/numericDisplay'
 import TopHeader from '../../../components/Layout/Header'
 import { array } from 'prop-types'
-import KFilter from '../../../components/Filter'
-import KTable from '@cloudscape-design/components/table'
-import Box from '@cloudscape-design/components/box'
-import SpaceBetween from '@cloudscape-design/components/space-between'
-import Badge from '@cloudscape-design/components/badge'
-import {
-    BreadcrumbGroup,
-    DateRangePicker,
-    Header,
-    Link,
-    Multiselect,
-    Pagination,
-    PropertyFilter,
-} from '@cloudscape-design/components'
-import { AppLayout, SplitPanel } from '@cloudscape-design/components'
-import { useIntegrationApiV1EnabledConnectorsList } from '../../../api/integration.gen'
+
 import axios from 'axios'
 import UseCaseCard from '../../../components/Cards/BookmarkCard'
 
@@ -100,7 +84,7 @@ export default function Bookmarks({ setTab }: Props) {
     const [savedQuery, setSavedQuery] = useAtom(queryAtom)
     const [code, setCode] = useState(savedQuery || '')
 
-        useState<GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2>()
+        useState<PlatformEnginePkgInventoryApiSmartQueryItemV2>()
     
     const [pageSize, setPageSize] = useState(1000)
  

@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
     Api,
-    GithubComKaytuIoKaytuEnginePkgWorkspaceApiBootstrapStatusResponse,
-    GithubComKaytuIoKaytuEnginePkgWorkspaceApiAddCredentialRequest,
-    GithubComKaytuIoKaytuEnginePkgWorkspaceApiCreateWorkspaceRequest,
-    GithubComKaytuIoKaytuEnginePkgWorkspaceApiCreateWorkspaceResponse,
-    GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceResponse,
-    GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceLimitsUsage,
+    PlatformEnginePkgWorkspaceApiBootstrapStatusResponse,
+    PlatformEnginePkgWorkspaceApiAddCredentialRequest,
+    PlatformEnginePkgWorkspaceApiCreateWorkspaceRequest,
+    PlatformEnginePkgWorkspaceApiCreateWorkspaceResponse,
+    PlatformEnginePkgWorkspaceApiWorkspaceResponse,
+    PlatformEnginePkgWorkspaceApiWorkspaceLimitsUsage,
     RequestParams,
 } from './api'
 
@@ -16,7 +16,7 @@ import AxiosAPI, { setWorkspace } from './ApiConfig'
 interface IuseWorkspaceApiV1BootstrapDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgWorkspaceApiBootstrapStatusResponse
+    response?: PlatformEnginePkgWorkspaceApiBootstrapStatusResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -157,7 +157,7 @@ interface IuseWorkspaceApiV1BootstrapCredentialCreateState {
  */
 export const useWorkspaceApiV1BootstrapCredentialCreate = (
     workspaceName: string,
-    request: GithubComKaytuIoKaytuEnginePkgWorkspaceApiAddCredentialRequest,
+    request: PlatformEnginePkgWorkspaceApiAddCredentialRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -180,7 +180,7 @@ export const useWorkspaceApiV1BootstrapCredentialCreate = (
     const sendRequest = (
         abortCtrl: AbortController,
         reqworkspaceName: string,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgWorkspaceApiAddCredentialRequest,
+        reqrequest: PlatformEnginePkgWorkspaceApiAddCredentialRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -269,7 +269,7 @@ export const useWorkspaceApiV1BootstrapCredentialCreate = (
 
     const sendNowWithParams = (
         reqworkspaceName: string,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgWorkspaceApiAddCredentialRequest,
+        reqrequest: PlatformEnginePkgWorkspaceApiAddCredentialRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -423,7 +423,7 @@ export const useWorkspaceApiV1BootstrapFinishCreate = (
 interface IuseWorkspaceApiV1WorkspaceCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgWorkspaceApiCreateWorkspaceResponse
+    response?: PlatformEnginePkgWorkspaceApiCreateWorkspaceResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -432,7 +432,7 @@ interface IuseWorkspaceApiV1WorkspaceCreateState {
  * URL:
  */
 export const useWorkspaceApiV1WorkspaceCreate = (
-    request: GithubComKaytuIoKaytuEnginePkgWorkspaceApiCreateWorkspaceRequest,
+    request: PlatformEnginePkgWorkspaceApiCreateWorkspaceRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -453,7 +453,7 @@ export const useWorkspaceApiV1WorkspaceCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgWorkspaceApiCreateWorkspaceRequest,
+        reqrequest: PlatformEnginePkgWorkspaceApiCreateWorkspaceRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -532,7 +532,7 @@ export const useWorkspaceApiV1WorkspaceCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgWorkspaceApiCreateWorkspaceRequest,
+        reqrequest: PlatformEnginePkgWorkspaceApiCreateWorkspaceRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -554,7 +554,7 @@ export const useWorkspaceApiV1WorkspaceCreate = (
 interface IuseWorkspaceApiV1WorkspaceCurrentListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceResponse
+    response?: PlatformEnginePkgWorkspaceApiWorkspaceResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -818,7 +818,7 @@ export const useWorkspaceApiV1WorkspaceDelete = (
 interface IuseWorkspaceApiV1WorkspacesListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceResponse[]
+    response?: PlatformEnginePkgWorkspaceApiWorkspaceResponse[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -944,7 +944,7 @@ export const useWorkspaceApiV1WorkspacesList = (
 interface IuseWorkspaceApiV1WorkspacesLimitsDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceLimitsUsage
+    response?: PlatformEnginePkgWorkspaceApiWorkspaceLimitsUsage
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1097,7 +1097,7 @@ export const useWorkspaceApiV1WorkspacesLimitsDetail = (
 interface IuseWorkspaceApiV1WorkspacesSampleData {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgWorkspaceApiWorkspaceLimitsUsage
+    response?: PlatformEnginePkgWorkspaceApiWorkspaceLimitsUsage
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }

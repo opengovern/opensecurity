@@ -19,7 +19,6 @@ import SettingsWorkspaceAPIKeys from '../pages/Settings/APIKeys'
 import SettingsParameters from '../pages/Settings/Parameters'
 import SettingsMembers from '../pages/Settings/Members'
 import NewBenchmarkSummary from '../pages/Governance/Compliance/NewBenchmarkSummary'
-import Dashboard from '../pages/Dashboard'
 import Search from '../pages/Search'
 import SettingsAccess from '../pages/Settings/Access'
 import SettingsProfile from '../pages/Settings/Profile'
@@ -65,12 +64,7 @@ const authRoutes = [
         path: '/automation',
         element: <RequestAccess />,
     },
-    {
-        key: 'dashboards',
-        path: '/dashboard',
-        element: <Dashboard />,
-    },
-    
+ 
    
     
     {

@@ -30,7 +30,7 @@ import Spinner from '../../../components/Spinner'
 import { numericDisplay } from '../../../utilities/numericDisplay'
 import { useAuthApiV1UserDetail } from '../../../api/auth.gen'
 import { dateDisplay, dateTimeDisplay } from '../../../utilities/dateDisplay'
-import { GithubComKaytuIoKaytuEnginePkgWorkspaceApiTier } from '../../../api/api'
+import { PlatformEnginePkgWorkspaceApiTier } from '../../../api/api'
 import {  isDemoAtom, previewAtom, sampleAtom } from '../../../store'
 import {
     useMetadataApiV1MetadataCreate,
@@ -164,9 +164,9 @@ export default function SettingsEntitlement() {
      ConvertToBoolean((customizationEnabled?.value || 'false').toLowerCase()) ||
      false
 
-    const wsTier = (v?: GithubComKaytuIoKaytuEnginePkgWorkspaceApiTier) => {
+    const wsTier = (v?: PlatformEnginePkgWorkspaceApiTier) => {
         switch (v) {
-            // case GithubComKaytuIoKaytuEnginePkgWorkspaceApiTier.TierEnterprise:
+            // case PlatformEnginePkgWorkspaceApiTier.TierEnterprise:
             //     return 'Enterprise'
             default:
                 return 'Community'

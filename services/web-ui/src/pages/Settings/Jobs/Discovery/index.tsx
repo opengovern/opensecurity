@@ -19,7 +19,7 @@ import { useSearchParams } from 'react-router-dom'
 import Table, { IColumn } from '../../../../components/Table'
 import {
     Api,
-    GithubComKaytuIoKaytuEnginePkgDescribeApiJob,
+    PlatformEnginePkgDescribeApiJob,
 } from '../../../../api/api'
 import AxiosAPI from '../../../../api/ApiConfig'
 import { useScheduleApiV1JobsCreate } from '../../../../api/schedule.gen'
@@ -95,7 +95,7 @@ export default function DiscoveryJobs() {
      })
 
     const [clickedJob, setClickedJob] =
-        useState<GithubComKaytuIoKaytuEnginePkgDescribeApiJob>()
+        useState<PlatformEnginePkgDescribeApiJob>()
     const [searchParams, setSearchParams] = useSearchParams()
     const [jobTypeFilter, setJobTypeFilter] = useState<string[] | undefined>(
         findParmas('type')

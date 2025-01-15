@@ -8,16 +8,16 @@ import App from './App'
 import reportWebVitals from './reportWebVitals'
 import { AuthProviderWithNavigate } from './auth-provider-with-navigate'
 import { applyTheme, currentTheme } from './utilities/theme'
-import { GithubComKaytuIoKaytuEnginePkgAuthApiTheme } from './api/api'
+import { PlatformEnginePkgAuthApiTheme } from './api/api'
 import enMessages from '@cloudscape-design/components/i18n/messages/all.en'
 import { I18nProvider } from '@cloudscape-design/components/i18n'
 import { AxiosInterceptor } from './api/ApiConfig'
 const currentThemeValue = currentTheme()
 if (
     currentThemeValue ===
-        GithubComKaytuIoKaytuEnginePkgAuthApiTheme.ThemeDark ||
+        PlatformEnginePkgAuthApiTheme.ThemeDark ||
     (currentThemeValue ===
-        GithubComKaytuIoKaytuEnginePkgAuthApiTheme.ThemeSystem &&
+        PlatformEnginePkgAuthApiTheme.ThemeSystem &&
         window.matchMedia('(prefers-color-scheme:dark)').matches)
 ) {
     document.documentElement.classList.add('dark')

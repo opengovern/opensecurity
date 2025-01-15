@@ -2,7 +2,7 @@ import { Flex, Text } from '@tremor/react'
 import { TrashIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react'
 import { useSetAtom } from 'jotai'
-import { GithubComKaytuIoKaytuEnginePkgAuthApiWorkspaceApiKey } from '../../../../api/api'
+import { PlatformEnginePkgAuthApiWorkspaceApiKey } from '../../../../api/api'
 import {
     useAuthApiV1KeyDeleteDelete,
     useAuthApiV1UserDetail,
@@ -13,7 +13,7 @@ import Spinner from '../../../../components/Spinner'
 import { notificationAtom } from '../../../../store'
 
 interface APIKeyRecordProps {
-    item: GithubComKaytuIoKaytuEnginePkgAuthApiWorkspaceApiKey
+    item: PlatformEnginePkgAuthApiWorkspaceApiKey
     refresh: () => void
 }
 

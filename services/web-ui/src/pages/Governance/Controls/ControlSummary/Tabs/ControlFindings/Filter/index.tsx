@@ -13,7 +13,7 @@ import { Fragment, useEffect, useState } from 'react'
 import dayjs from 'dayjs'
 import { useParams } from 'react-router-dom'
 import {
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgComplianceApiConformanceStatus,
     SourceType,
     TypesFindingSeverity,
 } from '../../../../../../../api/api'
@@ -42,7 +42,7 @@ interface IFilters {
     onApply: (obj: {
         connector: SourceType
         conformanceStatus:
-            | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+            | PlatformEnginePkgComplianceApiConformanceStatus[]
             | undefined
         severity: TypesFindingSeverity[] | undefined
         connectionID: string[] | undefined
@@ -65,14 +65,14 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
     const [connector, setConnector] = useState<SourceType>(defConnector)
 
     const defConformanceStatus = [
-        GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
-        GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
+        PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+        PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
     ]
     const [conformanceStatus, setConformanceStatus] = useState<
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+        | PlatformEnginePkgComplianceApiConformanceStatus[]
         | undefined
     >([
-        GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+        PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
     ])
 
     const defLifecycle = [true]
@@ -286,13 +286,13 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
     const confarmance_data = [
         {
             label: 'Failed',
-            value: GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+            value: PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
 
             iconSvg: <XCircleIcon className="h-5 text-rose-600" />,
         },
         {
             label: 'Passed',
-            value: GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
+            value: PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
 
             iconSvg: <CheckCircleIcon className="h-5 text-emerald-500" />,
         },

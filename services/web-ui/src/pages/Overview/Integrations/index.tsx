@@ -24,7 +24,7 @@ import { useEffect, useState } from 'react'
 import { useInventoryApiV1QueryList } from '../../../api/inventory.gen'
 import { runQueryAtom } from '../../../store'
 import { getErrorMessage } from '../../../types/apierror'
-import { GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItem, GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityTier } from '../../../api/api'
+import { PlatformEnginePkgInventoryApiSmartQueryItem, PlatformEngineServicesIntegrationApiEntityTier } from '../../../api/api'
 import { useIntegrationApiV1ConnectorsList } from '../../../api/integration.gen'
 import { Box, Cards, Link, Modal, SpaceBetween } from '@cloudscape-design/components'
 import axios from 'axios'
@@ -204,7 +204,7 @@ export default function Integrations({ height }: IQuery) {
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)
     const [loading, setLoading] = useState(false)
 
-    const [open, setOpen] = useState(0)
+    const [open, setOpen] = useState(false)
     const {
         response: responseConnectors,
         isLoading: connectorsLoading,
@@ -247,12 +247,14 @@ export default function Integrations({ height }: IQuery) {
                 config
             )
             .then((res) => {
-                getList(9, pageNo)
-                setLoading(false)
+                getList(4, 1, 'count', 'desc', false)
+                 setLoading(false)
                 setOpen(false)
             })
             .catch((err) => {
                 setLoading(false)
+               getList(4, 1, 'count', 'desc', false)
+                setOpen(false)
             })
     }
     return (
@@ -435,7 +437,7 @@ export default function Integrations({ height }: IQuery) {
                         if (
                             connector.enabled === false &&
                             connector?.tier ===
-                                GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityTier.TierCommunity
+                                PlatformEngineServicesIntegrationApiEntityTier.TierCommunity
                         ) {
                             setOpen(true)
                             setSelected(connector)
@@ -444,7 +446,7 @@ export default function Integrations({ height }: IQuery) {
 
                         if (
                             connector?.tier ===
-                            GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityTier.TierCommunity
+                            PlatformEngineServicesIntegrationApiEntityTier.TierCommunity
                         ) {
                             const name = connector?.name
                             const id = connector?.id

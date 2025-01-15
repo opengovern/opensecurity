@@ -22,7 +22,7 @@ import { useState } from 'react'
 import { useInventoryApiV1QueryList } from '../../../api/inventory.gen'
 import { queryAtom } from '../../../store'
 import { getErrorMessage } from '../../../types/apierror'
-import { GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItem } from '../../../api/api'
+import { PlatformEnginePkgInventoryApiSmartQueryItem } from '../../../api/api'
 
 interface IQuery {
     height: any
@@ -30,7 +30,7 @@ interface IQuery {
 
 const getQueries = (
     response:
-        | GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItem[]
+        | PlatformEnginePkgInventoryApiSmartQueryItem[]
         | undefined
 ) => {
     const data = []

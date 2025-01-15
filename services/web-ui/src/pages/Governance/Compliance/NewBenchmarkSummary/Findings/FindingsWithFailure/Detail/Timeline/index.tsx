@@ -3,10 +3,10 @@ import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEvent,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingEventsByFindingIDResponse,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiGetSingleResourceFindingResponse,
+    PlatformEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgComplianceApiFindingEvent,
+    PlatformEnginePkgComplianceApiGetFindingEventsByFindingIDResponse,
+    PlatformEnginePkgComplianceApiGetSingleResourceFindingResponse,
 } from '../../../../../../../../api/api'
 import Spinner from '../../../../../../../../components/Spinner'
 import { dateTimeDisplay } from '../../../../../../../../utilities/dateDisplay'
@@ -15,15 +15,15 @@ dayjs.extend(relativeTime)
 
 interface ITimeline {
     data:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiGetSingleResourceFindingResponse
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiGetFindingEventsByFindingIDResponse
+        | PlatformEnginePkgComplianceApiGetSingleResourceFindingResponse
+        | PlatformEnginePkgComplianceApiGetFindingEventsByFindingIDResponse
         | undefined
     isLoading: boolean
 }
 
 export default function Timeline({ data, isLoading }: ITimeline) {
     const prefix = (
-        event: GithubComKaytuIoKaytuEnginePkgComplianceApiFindingEvent,
+        event: PlatformEnginePkgComplianceApiFindingEvent,
         idx: number
     ) => {
         const str = []
@@ -44,12 +44,12 @@ export default function Timeline({ data, isLoading }: ITimeline) {
         if (event.previousConformanceStatus !== event.conformanceStatus) {
             if (
                 event.conformanceStatus ===
-                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
+                PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
             ) {
                 str.push('Got fixed')
             } else if (
                 event.conformanceStatus ===
-                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed
+                PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed
             ) {
                 str.push('Failed')
             } else {

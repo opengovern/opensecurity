@@ -38,10 +38,10 @@ import DrawerPanel from '../../../../../components/DrawerPanel'
 import AnimatedAccordion from '../../../../../components/AnimatedAccordion'
 import { searchAtom } from '../../../../../utilities/urlstate'
 import {
-    GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkControlSummary,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
-    GithubComKaytuIoKaytuEnginePkgControlApiListV2,
-    GithubComKaytuIoKaytuEnginePkgControlApiListV2ResponseItem,
+    PlatformEnginePkgComplianceApiBenchmarkControlSummary,
+    PlatformEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgControlApiListV2,
+    PlatformEnginePkgControlApiListV2ResponseItem,
 } from '../../../../../api/api'
 import SideNavigation from '@cloudscape-design/components/side-navigation'
 import { Api } from '../../../../../api/api'
@@ -88,12 +88,12 @@ export const activeBadge = (status: boolean) => {
 
 export const statusBadge = (
     status:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus
+        | PlatformEnginePkgComplianceApiConformanceStatus
         | undefined
 ) => {
     if (
         status ===
-        GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
+        PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
     ) {
         return (
             <Flex className="w-fit gap-1.5">
@@ -112,7 +112,7 @@ export const statusBadge = (
 
 export const treeRows = (
     json:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkControlSummary
+        | PlatformEnginePkgComplianceApiBenchmarkControlSummary
         | undefined
 ) => {
     let arr: any = []
@@ -152,7 +152,7 @@ export const groupBy = (input: any[], key: string) => {
 
 export const countControls = (
     v:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkControlSummary
+        | PlatformEnginePkgComplianceApiBenchmarkControlSummary
         | undefined
 ) => {
     const countChildren = v?.children
@@ -172,7 +172,7 @@ export default function Controls({
         useComplianceApiV1BenchmarksControlsDetail(String(id))
     const [page, setPage] = useState<number>(1)
     const [rows, setRows] = useState<
-        GithubComKaytuIoKaytuEnginePkgControlApiListV2ResponseItem[]
+        PlatformEnginePkgControlApiListV2ResponseItem[]
     >([])
     const navigate = useNavigate()
     const searchParams = useAtomValue(searchAtom)
@@ -186,7 +186,7 @@ export default function Controls({
     const [totalPage, setTotalPage] = useState<number>(0)
     const [totalCount, setTotalCount] = useState<number>(0)
     const [query, setQuery] =
-        useState<GithubComKaytuIoKaytuEnginePkgControlApiListV2>()
+        useState<PlatformEnginePkgControlApiListV2>()
     const [queries, setQueries] = useState({
         tokens: [],
         operation: 'and',
@@ -244,7 +244,7 @@ export default function Controls({
 
     const countBenchmarks = (
         v:
-            | GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkControlSummary
+            | PlatformEnginePkgComplianceApiBenchmarkControlSummary
             | undefined
     ) => {
         const countChildren = v?.children

@@ -6,13 +6,12 @@ import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import { isDemoAtom, notificationAtom } from '../../../../../../store'
 import {
     Api,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFinding,
+    PlatformEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgComplianceApiResourceFinding,
 } from '../../../../../../api/api'
 import AxiosAPI from '../../../../../../api/ApiConfig'
 import { statusBadge } from '../../../index'
 import { dateTimeDisplay } from '../../../../../../utilities/dateDisplay'
-import { getConnectorIcon } from '../../../../../../components/Cards/ConnectorCard'
 import ResourceFindingDetail from '../../../../Findings/ResourceFindingDetail'
 import KTable from '@cloudscape-design/components/table'
 import Box from '@cloudscape-design/components/box'
@@ -31,7 +30,7 @@ let sortKey: any[] = []
 
 interface IImpactedResources {
     controlId: string
-    // conformanceFilter?: GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+    // conformanceFilter?: PlatformEnginePkgComplianceApiConformanceStatus[]
     linkPrefix?: string
     isCostOptimization?: boolean
 }
@@ -49,30 +48,30 @@ export default function ImpactedResources({
 
     const [open, setOpen] = useState(false)
     const [finding, setFinding] = useState<
-        GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFinding | undefined
+        PlatformEnginePkgComplianceApiResourceFinding | undefined
     >(undefined)
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
  const [rows, setRows] =
-     useState<GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFinding[]>()
+     useState<PlatformEnginePkgComplianceApiResourceFinding[]>()
  const [page, setPage] = useState(1)
  const [totalCount, setTotalCount] = useState(0)
  const [totalPage, setTotalPage] = useState(0)
  const [conformanceFilter, setConformanceFilter] = useState<
-     GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[] | undefined
+     PlatformEnginePkgComplianceApiConformanceStatus[] | undefined
  >(undefined)
  const conformanceFilterIdx = () => {
      if (
          conformanceFilter?.length === 1 &&
          conformanceFilter[0] ===
-             GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed
+             PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed
      ) {
          return '1'
      }
      if (
          conformanceFilter?.length === 1 &&
          conformanceFilter[0] ===
-             GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
+             PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
      ) {
          return '2'
      }
@@ -109,8 +108,8 @@ export default function ImpactedResources({
     //                         conformanceStatus:
     //                             conformanceFilter === undefined
     //                                 ? [
-    //                                       GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
-    //                                       GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+    //                                       PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
+    //                                       PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
     //                                   ]
     //                                 : conformanceFilter,
     //                     },
@@ -159,8 +158,8 @@ export default function ImpactedResources({
                   complianceStatus:
                       conformanceFilter === undefined
                           ? [
-                                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
-                                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+                                PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
+                                PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
                             ]
                           : conformanceFilter,
                   // @ts-ignore
@@ -522,12 +521,12 @@ export default function ImpactedResources({
                                     switch (detail.selectedId) {
                                         case '1':
                                             setConformanceFilter([
-                                                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+                                                PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
                                             ])
                                             break
                                         case '2':
                                             setConformanceFilter([
-                                                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
+                                                PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
                                             ])
                                             break
                                         default:

@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react'
 import { useAtom, useAtomValue } from 'jotai'
 import dayjs from 'dayjs'
 import { useAuthApiV1UserPreferencesUpdate } from '../../../api/auth.gen'
-import { GithubComKaytuIoKaytuEnginePkgAuthApiTheme } from '../../../api/api'
+import { PlatformEnginePkgAuthApiTheme } from '../../../api/api'
 import { colorBlindModeAtom, isDemoAtom, meAtom } from '../../../store'
 import { applyTheme, currentTheme, parseTheme } from '../../../utilities/theme'
 import { useAuth } from '../../../utilities/auth'
@@ -31,7 +31,7 @@ export default function SettingsProfile() {
     const [enableColorBlindMode, setEnableColorBlindMode] =
         useState<boolean>(colorBlindMode)
     const [theme, setTheme] =
-        useState<GithubComKaytuIoKaytuEnginePkgAuthApiTheme>(currentTheme())
+        useState<PlatformEnginePkgAuthApiTheme>(currentTheme())
 
     const { response, isLoading, isExecuted, error, sendNow } =
         useAuthApiV1UserPreferencesUpdate(

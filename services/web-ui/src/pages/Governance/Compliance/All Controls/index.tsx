@@ -54,13 +54,13 @@ import DrawerPanel from '../../../../components/DrawerPanel'
 import { RenderObject } from '../../../../components/RenderObject'
 
 import {
-    GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryResponse,
+    PlatformEnginePkgInventoryApiRunQueryResponse,
     Api,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItemV2,
-    GithubComKaytuIoKaytuEnginePkgControlApiListV2ResponseItem,
-    GithubComKaytuIoKaytuEnginePkgControlApiListV2ResponseItemQuery,
-    GithubComKaytuIoKaytuEnginePkgControlApiListV2,
-    GithubComKaytuIoKaytuEnginePkgControlDetailV3,
+    PlatformEnginePkgInventoryApiSmartQueryItemV2,
+    PlatformEnginePkgControlApiListV2ResponseItem,
+    PlatformEnginePkgControlApiListV2ResponseItemQuery,
+    PlatformEnginePkgControlApiListV2,
+    PlatformEnginePkgControlDetailV3,
     TypesFindingSeverity,
 } from '../../../../api/api'
 import { isDemoAtom, queryAtom, runQueryAtom } from '../../../../store'
@@ -96,7 +96,7 @@ export default function AllControls() {
     const [savedQuery, setSavedQuery] = useAtom(queryAtom)
     const [code, setCode] = useState(savedQuery || '')
     const [selectedRow, setSelectedRow] =
-        useState<GithubComKaytuIoKaytuEnginePkgControlDetailV3>()
+        useState<PlatformEnginePkgControlDetailV3>()
     const [openDrawer, setOpenDrawer] = useState(false)
     const [openSlider, setOpenSlider] = useState(false)
     const [open, setOpen] = useState(false)
@@ -109,7 +109,7 @@ export default function AllControls() {
     const [selectedFilter, setSelectedFilters] = useState<string[]>([])
     const [engine, setEngine] = useState('odysseus-sql')
     const [query, setQuery] =
-        useState<GithubComKaytuIoKaytuEnginePkgControlApiListV2>()
+        useState<PlatformEnginePkgControlApiListV2>()
     const [rows, setRows] = useState<any[]>()
     const [page, setPage] = useState(1)
     const [totalCount, setTotalCount] = useState(0)

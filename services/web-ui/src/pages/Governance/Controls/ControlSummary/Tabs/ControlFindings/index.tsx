@@ -9,9 +9,9 @@ import FindingDetail from '../../../../Findings/FindingsWithFailure/Detail'
 import { isDemoAtom, notificationAtom } from '../../../../../../store'
 import {
     Api,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiFinding,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFinding,
+    PlatformEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgComplianceApiFinding,
+    PlatformEnginePkgComplianceApiResourceFinding,
     TypesFindingSeverity,
 } from '../../../../../../api/api'
 import AxiosAPI from '../../../../../../api/ApiConfig'
@@ -42,7 +42,7 @@ interface IControlFindings {
 
 const columns = (isDemo: boolean) => {
     const temp: IColumn<
-        GithubComKaytuIoKaytuEnginePkgComplianceApiFinding,
+        PlatformEnginePkgComplianceApiFinding,
         any
     >[] = [
         {
@@ -57,7 +57,7 @@ const columns = (isDemo: boolean) => {
             flex: 1,
             cellRenderer: (
                 param: ICellRendererParams<
-                    GithubComKaytuIoKaytuEnginePkgComplianceApiFinding,
+                    PlatformEnginePkgComplianceApiFinding,
                     any
                 >
             ) => (
@@ -86,7 +86,7 @@ const columns = (isDemo: boolean) => {
             flex: 1,
             cellRenderer: (
                 param: ICellRendererParams<
-                    GithubComKaytuIoKaytuEnginePkgComplianceApiFinding,
+                    PlatformEnginePkgComplianceApiFinding,
                     any
                 >
             ) => (
@@ -109,7 +109,7 @@ const columns = (isDemo: boolean) => {
             resizable: true,
             flex: 1,
             cellRenderer: (
-                param: ICellRendererParams<GithubComKaytuIoKaytuEnginePkgComplianceApiFinding>
+                param: ICellRendererParams<PlatformEnginePkgComplianceApiFinding>
             ) => (
                 <Flex flexDirection="col" alignItems="start">
                     <Text className="text-gray-800">
@@ -131,7 +131,7 @@ const columns = (isDemo: boolean) => {
             flex: 1,
             cellRenderer: (
                 param: ICellRendererParams<
-                    GithubComKaytuIoKaytuEnginePkgComplianceApiFinding,
+                    PlatformEnginePkgComplianceApiFinding,
                     any
                 >
             ) => (
@@ -213,7 +213,7 @@ export default function ControlFindings({
 
     const [open, setOpen] = useState(false)
     const [finding, setFinding] = useState<
-        GithubComKaytuIoKaytuEnginePkgComplianceApiFinding | undefined
+        PlatformEnginePkgComplianceApiFinding | undefined
     >(undefined)
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
@@ -224,7 +224,7 @@ export default function ControlFindings({
     const [queries, setQuery] = useState<{
         connector: SourceType
         conformanceStatus:
-            | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+            | PlatformEnginePkgComplianceApiConformanceStatus[]
             | undefined
         severity: TypesFindingSeverity[] | undefined
         connectionID: string[] | undefined
@@ -241,11 +241,11 @@ export default function ControlFindings({
       conformanceStatus:
                                 onlyFailed === true
                                     ? [
-                                          GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+                                          PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
                                       ]
                                     : [
-                                          GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
-                                          GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+                                          PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
+                                          PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
                                       ],
         severity: [
             TypesFindingSeverity.FindingSeverityCritical,
@@ -295,11 +295,11 @@ export default function ControlFindings({
     //                         conformanceStatus:
     //                             onlyFailed === true
     //                                 ? [
-    //                                       GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+    //                                       PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
     //                                   ]
     //                                 : [
-    //                                       GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
-    //                                       GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+    //                                       PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
+    //                                       PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
     //                                   ],
     //                     },
     //                     sort: params.request.sortModel.length

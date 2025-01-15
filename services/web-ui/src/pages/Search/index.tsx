@@ -47,11 +47,10 @@ import {
 } from '../../api/inventory.gen'
 import Spinner from '../../components/Spinner'
 import { getErrorMessage } from '../../types/apierror'
-import DrawerPanel from '../../components/DrawerPanel'
 import { RenderObject } from '../../components/RenderObject'
 import {
-    GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryResponse,
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItem,
+    PlatformEnginePkgInventoryApiRunQueryResponse,
+    PlatformEnginePkgInventoryApiSmartQueryItem,
 } from '../../api/api'
 import { isDemoAtom, queryAtom, runQueryAtom } from '../../store'
 import { snakeCaseToLabel } from '../../utilities/labelMaker'

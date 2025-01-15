@@ -12,8 +12,8 @@ import {
 import { BarList, Button, Card, Color, Flex, Text, Title } from '@tremor/react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-    GithubComKaytuIoKaytuEnginePkgDescribeApiJobSummary,
-    GithubComKaytuIoKaytuEnginePkgDescribeApiJobType,
+    PlatformEnginePkgDescribeApiJobSummary,
+    PlatformEnginePkgDescribeApiJobType,
 } from '../../../../../api/api'
 import { numberDisplay } from '../../../../../utilities/numericDisplay'
 import { useScheduleApiV1JobsCreate } from '../../../../../api/schedule.gen'
@@ -23,7 +23,7 @@ import { useAuth } from '../../../../../utilities/auth'
 interface IJobCategoryItem {
     title: string
     jobType: string
-    summaries?: GithubComKaytuIoKaytuEnginePkgDescribeApiJobSummary[]
+    summaries?: PlatformEnginePkgDescribeApiJobSummary[]
 }
 
 const inProgressStatuses = [
@@ -304,7 +304,7 @@ export default function JobsMenu({ isCollapsed, workspace }: IJobsMenu) {
                                     summaries={jobs?.summaries?.filter(
                                         (v) =>
                                             v.type ===
-                                            GithubComKaytuIoKaytuEnginePkgDescribeApiJobType.JobTypeDiscovery
+                                            PlatformEnginePkgDescribeApiJobType.JobTypeDiscovery
                                     )}
                                 />
                                 <JobCategoryItem
@@ -313,7 +313,7 @@ export default function JobsMenu({ isCollapsed, workspace }: IJobsMenu) {
                                     summaries={jobs?.summaries?.filter(
                                         (v) =>
                                             v.type ===
-                                            GithubComKaytuIoKaytuEnginePkgDescribeApiJobType.JobTypeAnalytics
+                                            PlatformEnginePkgDescribeApiJobType.JobTypeAnalytics
                                     )}
                                 />
                                 <JobCategoryItem
@@ -322,7 +322,7 @@ export default function JobsMenu({ isCollapsed, workspace }: IJobsMenu) {
                                     summaries={jobs?.summaries?.filter(
                                         (v) =>
                                             v.type ===
-                                            GithubComKaytuIoKaytuEnginePkgDescribeApiJobType.JobTypeCompliance
+                                            PlatformEnginePkgDescribeApiJobType.JobTypeCompliance
                                     )}
                                 />
                             </Flex>

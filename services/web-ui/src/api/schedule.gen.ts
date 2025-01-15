@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
     Api,
-    GithubComKaytuIoKaytuEnginePkgDescribeApiListJobsResponse,
-    GithubComKaytuIoKaytuEnginePkgDescribeApiJobSeqCheckResponse,
-    GithubComKaytuIoKaytuEnginePkgDescribeApiListDiscoveryResourceTypes,
-    GithubComKaytuIoKaytuEnginePkgDescribeApiListJobsRequest,
+    PlatformEnginePkgDescribeApiListJobsResponse,
+    PlatformEnginePkgDescribeApiJobSeqCheckResponse,
+    PlatformEnginePkgDescribeApiListDiscoveryResourceTypes,
+    PlatformEnginePkgDescribeApiListJobsRequest,
     RequestParams,
 } from './api'
 
@@ -147,7 +147,7 @@ export const useScheduleApiV1AnalyticsTriggerUpdate = (
 interface IuseScheduleApiV1ComplianceReEvaluateDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgDescribeApiJobSeqCheckResponse
+    response?: PlatformEnginePkgDescribeApiJobSeqCheckResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1226,7 +1226,7 @@ export const useScheduleApiV1DescribeTriggerUpdate = (
 interface IuseScheduleApiV1DiscoveryResourcetypesListListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgDescribeApiListDiscoveryResourceTypes
+    response?: PlatformEnginePkgDescribeApiListDiscoveryResourceTypes
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1359,7 +1359,7 @@ export const useScheduleApiV1DiscoveryResourcetypesListList = (
 interface IuseScheduleApiV1JobsCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgDescribeApiListJobsResponse
+    response?: PlatformEnginePkgDescribeApiListJobsResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1368,7 +1368,7 @@ interface IuseScheduleApiV1JobsCreateState {
  * URL:
  */
 export const useScheduleApiV1JobsCreate = (
-    request: GithubComKaytuIoKaytuEnginePkgDescribeApiListJobsRequest,
+    request: PlatformEnginePkgDescribeApiListJobsRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -1389,7 +1389,7 @@ export const useScheduleApiV1JobsCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgDescribeApiListJobsRequest,
+        reqrequest: PlatformEnginePkgDescribeApiListJobsRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -1474,7 +1474,7 @@ export const useScheduleApiV1JobsCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgDescribeApiListJobsRequest,
+        reqrequest: PlatformEnginePkgDescribeApiListJobsRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()

@@ -22,7 +22,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
     Api,
-    GithubComKaytuIoKaytuEnginePkgDescribeApiJob,
+    PlatformEnginePkgDescribeApiJob,
 } from '../../../api/api'
 import AxiosAPI from '../../../api/ApiConfig'
 import { useScheduleApiV1JobsCreate } from '../../../api/schedule.gen'
@@ -125,7 +125,7 @@ const columns = () => {
             filter: false,
             resizable: true,
             cellRenderer: (
-                param: ValueFormatterParams<GithubComKaytuIoKaytuEnginePkgDescribeApiJob>
+                param: ValueFormatterParams<PlatformEnginePkgDescribeApiJob>
             ) => {
                 let jobStatus = ''
                 let jobColor: Color = 'gray'

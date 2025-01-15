@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Popover, Transition } from '@headlessui/react'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { notificationAtom, workspaceAtom } from '../../../../../store'
-import { GithubComKaytuIoKaytuEnginePkgAuthApiTheme } from '../../../../../api/api'
+import { PlatformEnginePkgAuthApiTheme } from '../../../../../api/api'
 import { applyTheme, currentTheme } from '../../../../../utilities/theme'
 import { useAuthApiV1UserPreferencesUpdate } from '../../../../../api/auth.gen'
 import { useAuth } from '../../../../../utilities/auth'
@@ -32,7 +32,7 @@ export default function Profile({ isCollapsed }: IProfile) {
     )
     const [isPageLoading, setIsPageLoading] = useState<boolean>(true)
     const [theme, setTheme] =
-        useState<GithubComKaytuIoKaytuEnginePkgAuthApiTheme>(currentTheme())
+        useState<PlatformEnginePkgAuthApiTheme>(currentTheme())
     const [change, setChange] = useState<boolean>(false)
     const [password, setPassword] = useState<any>({
         current: '',
@@ -135,16 +135,16 @@ export default function Profile({ isCollapsed }: IProfile) {
     useEffect(() => {
         switch (index) {
             case 0:
-                setTheme(GithubComKaytuIoKaytuEnginePkgAuthApiTheme.ThemeLight)
+                setTheme(PlatformEnginePkgAuthApiTheme.ThemeLight)
                 break
             case 1:
-                setTheme(GithubComKaytuIoKaytuEnginePkgAuthApiTheme.ThemeDark)
+                setTheme(PlatformEnginePkgAuthApiTheme.ThemeDark)
                 break
             case 2:
-                setTheme(GithubComKaytuIoKaytuEnginePkgAuthApiTheme.ThemeSystem)
+                setTheme(PlatformEnginePkgAuthApiTheme.ThemeSystem)
                 break
             default:
-                setTheme(GithubComKaytuIoKaytuEnginePkgAuthApiTheme.ThemeLight)
+                setTheme(PlatformEnginePkgAuthApiTheme.ThemeLight)
                 break
         }
     }, [index])

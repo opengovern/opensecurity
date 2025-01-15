@@ -2,18 +2,18 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
     Api,
-    GithubComKaytuIoKaytuEnginePkgAuthApiCreateAPIKeyResponse,
-    GithubComKaytuIoKaytuEnginePkgAuthApiWorkspaceApiKey,
-    GithubComKaytuIoKaytuEnginePkgAuthApiChangeUserPreferencesRequest,
-    GithubComKaytuIoKaytuEnginePkgAuthApiPutRoleBindingRequest,
-    GithubComKaytuIoKaytuEnginePkgAuthApiGetRoleBindingsResponse,
-    GithubComKaytuIoKaytuEnginePkgAuthApiGetUserResponse,
-    GithubComKaytuIoKaytuEnginePkgAuthApiGetUsersRequest,
-    GithubComKaytuIoKaytuEnginePkgAuthApiGetUsersResponse,
-    GithubComKaytuIoKaytuEnginePkgAuthApiCreateAPIKeyRequest,
-    GithubComKaytuIoKaytuEnginePkgAuthApiGetMeResponse,
-    GithubComKaytuIoKaytuEnginePkgAuthApiInviteRequest,
-    GithubComKaytuIoKaytuEnginePkgAuthApiWorkspaceRoleBinding,
+    PlatformEnginePkgAuthApiCreateAPIKeyResponse,
+    PlatformEnginePkgAuthApiWorkspaceApiKey,
+    PlatformEnginePkgAuthApiChangeUserPreferencesRequest,
+    PlatformEnginePkgAuthApiPutRoleBindingRequest,
+    PlatformEnginePkgAuthApiGetRoleBindingsResponse,
+    PlatformEnginePkgAuthApiGetUserResponse,
+    PlatformEnginePkgAuthApiGetUsersRequest,
+    PlatformEnginePkgAuthApiGetUsersResponse,
+    PlatformEnginePkgAuthApiCreateAPIKeyRequest,
+    PlatformEnginePkgAuthApiGetMeResponse,
+    PlatformEnginePkgAuthApiInviteRequest,
+    PlatformEnginePkgAuthApiWorkspaceRoleBinding,
     RequestParams,
 } from './api'
 
@@ -22,7 +22,7 @@ import AxiosAPI, { setWorkspace } from './ApiConfig'
 interface IuseAuthApiV1KeyCreateCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgAuthApiCreateAPIKeyResponse
+    response?: PlatformEnginePkgAuthApiCreateAPIKeyResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -31,7 +31,7 @@ interface IuseAuthApiV1KeyCreateCreateState {
  * URL:
  */
 export const useAuthApiV1KeyCreateCreate = (
-    request: GithubComKaytuIoKaytuEnginePkgAuthApiCreateAPIKeyRequest,
+    request: PlatformEnginePkgAuthApiCreateAPIKeyRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -52,7 +52,7 @@ export const useAuthApiV1KeyCreateCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgAuthApiCreateAPIKeyRequest,
+        reqrequest: PlatformEnginePkgAuthApiCreateAPIKeyRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -137,7 +137,7 @@ export const useAuthApiV1KeyCreateCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgAuthApiCreateAPIKeyRequest,
+        reqrequest: PlatformEnginePkgAuthApiCreateAPIKeyRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -293,7 +293,7 @@ export const useAuthApiV1KeyDeleteDelete = (
 interface IuseAuthApiV1KeysListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgAuthApiWorkspaceApiKey[]
+    response?: PlatformEnginePkgAuthApiWorkspaceApiKey[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -425,7 +425,7 @@ export const useAuthApiV1KeysList = (
 interface IuseAuthApiV1MeListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgAuthApiGetMeResponse
+    response?: PlatformEnginePkgAuthApiGetMeResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -566,7 +566,7 @@ interface IuseAuthApiV1UserInviteCreateState {
  * URL:
  */
 export const useAuthApiV1UserInviteCreate = (
-    request: GithubComKaytuIoKaytuEnginePkgAuthApiInviteRequest,
+    request: PlatformEnginePkgAuthApiInviteRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -587,7 +587,7 @@ export const useAuthApiV1UserInviteCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgAuthApiInviteRequest,
+        reqrequest: PlatformEnginePkgAuthApiInviteRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -672,7 +672,7 @@ export const useAuthApiV1UserInviteCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgAuthApiInviteRequest,
+        reqrequest: PlatformEnginePkgAuthApiInviteRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -703,7 +703,7 @@ interface IuseAuthApiV1UserPreferencesUpdateState {
  * URL:
  */
 export const useAuthApiV1UserPreferencesUpdate = (
-    request: GithubComKaytuIoKaytuEnginePkgAuthApiChangeUserPreferencesRequest,
+    request: PlatformEnginePkgAuthApiChangeUserPreferencesRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -726,7 +726,7 @@ export const useAuthApiV1UserPreferencesUpdate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgAuthApiChangeUserPreferencesRequest,
+        reqrequest: PlatformEnginePkgAuthApiChangeUserPreferencesRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -811,7 +811,7 @@ export const useAuthApiV1UserPreferencesUpdate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgAuthApiChangeUserPreferencesRequest,
+        reqrequest: PlatformEnginePkgAuthApiChangeUserPreferencesRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -842,7 +842,7 @@ interface IuseAuthApiV1UserRoleBindingUpdateState {
  * URL:
  */
 export const useAuthApiV1UserRoleBindingUpdate = (
-    request: GithubComKaytuIoKaytuEnginePkgAuthApiPutRoleBindingRequest,
+    request: PlatformEnginePkgAuthApiPutRoleBindingRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -865,7 +865,7 @@ export const useAuthApiV1UserRoleBindingUpdate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgAuthApiPutRoleBindingRequest,
+        reqrequest: PlatformEnginePkgAuthApiPutRoleBindingRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -950,7 +950,7 @@ export const useAuthApiV1UserRoleBindingUpdate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgAuthApiPutRoleBindingRequest,
+        reqrequest: PlatformEnginePkgAuthApiPutRoleBindingRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -1108,7 +1108,7 @@ export const useAuthApiV1UserRoleBindingDelete = (
 interface IuseAuthApiV1UserRoleBindingsListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgAuthApiGetRoleBindingsResponse
+    response?: PlatformEnginePkgAuthApiGetRoleBindingsResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1240,7 +1240,7 @@ export const useAuthApiV1UserRoleBindingsList = (
 interface IuseAuthApiV1UserDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgAuthApiGetUserResponse
+    response?: PlatformEnginePkgAuthApiGetUserResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1374,7 +1374,7 @@ export const useAuthApiV1UserDetail = (
 interface IuseAuthApiV1UsersListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgAuthApiGetUsersResponse[]
+    response?: PlatformEnginePkgAuthApiGetUsersResponse[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1383,7 +1383,7 @@ interface IuseAuthApiV1UsersListState {
  * URL:
  */
 export const useAuthApiV1UsersList = (
-    request: GithubComKaytuIoKaytuEnginePkgAuthApiGetUsersRequest,
+    request: PlatformEnginePkgAuthApiGetUsersRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -1404,7 +1404,7 @@ export const useAuthApiV1UsersList = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEnginePkgAuthApiGetUsersRequest,
+        reqrequest: PlatformEnginePkgAuthApiGetUsersRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -1489,7 +1489,7 @@ export const useAuthApiV1UsersList = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEnginePkgAuthApiGetUsersRequest,
+        reqrequest: PlatformEnginePkgAuthApiGetUsersRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -1511,7 +1511,7 @@ export const useAuthApiV1UsersList = (
 interface IuseAuthApiV1WorkspaceRoleBindingsListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgAuthApiWorkspaceRoleBinding[]
+    response?: PlatformEnginePkgAuthApiWorkspaceRoleBinding[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }

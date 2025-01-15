@@ -1,10 +1,10 @@
 import { Flex, Text } from '@tremor/react'
 import { useState } from 'react'
 import MarkdownPreview from '@uiw/react-markdown-preview'
-import { GithubComKaytuIoKaytuEnginePkgComplianceApiControl } from '../../../../../../api/api'
+import { PlatformEnginePkgComplianceApiControl } from '../../../../../../api/api'
 
 interface IDetail {
-    control: GithubComKaytuIoKaytuEnginePkgComplianceApiControl | undefined
+    control: PlatformEnginePkgComplianceApiControl | undefined
 }
 
 export default function Detail({ control }: IDetail) {

@@ -2,22 +2,22 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
     Api,
-    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityListConnectionsSummaryResponse,
-    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateCredentialResponse,
-    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCredential,
-    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAWSConnectionRequest,
-    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCountConnectionsResponse,
-    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnection,
-    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnectorCount,
-    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityUpdateAWSCredentialRequest,
-    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAzureCredentialRequest,
-    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityListCredentialResponse,
-    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAWSCredentialRequest,
-    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityUpdateAzureCredentialRequest,
-    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateConnectionResponse,
-    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCatalogMetrics,
+    PlatformEngineServicesIntegrationApiEntityListConnectionsSummaryResponse,
+    PlatformEngineServicesIntegrationApiEntityCreateCredentialResponse,
+    PlatformEngineServicesIntegrationApiEntityCredential,
+    PlatformEngineServicesIntegrationApiEntityCreateAWSConnectionRequest,
+    PlatformEngineServicesIntegrationApiEntityCountConnectionsResponse,
+    PlatformEngineServicesIntegrationApiEntityConnection,
+    PlatformEngineServicesIntegrationApiEntityConnectorCount,
+    PlatformEngineServicesIntegrationApiEntityUpdateAWSCredentialRequest,
+    PlatformEngineServicesIntegrationApiEntityCreateAzureCredentialRequest,
+    PlatformEngineServicesIntegrationApiEntityListCredentialResponse,
+    PlatformEngineServicesIntegrationApiEntityCreateAWSCredentialRequest,
+    PlatformEngineServicesIntegrationApiEntityUpdateAzureCredentialRequest,
+    PlatformEngineServicesIntegrationApiEntityCreateConnectionResponse,
+    PlatformEngineServicesIntegrationApiEntityCatalogMetrics,
     RequestParams,
-    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnectorResponse,
+    PlatformEngineServicesIntegrationApiEntityConnectorResponse,
 } from './api'
 
 import AxiosAPI, { setWorkspace } from './ApiConfig'
@@ -25,7 +25,7 @@ import AxiosAPI, { setWorkspace } from './ApiConfig'
 interface IuseIntegrationApiV1ConnectionsAwsCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateConnectionResponse
+    response?: PlatformEngineServicesIntegrationApiEntityCreateConnectionResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -34,7 +34,7 @@ interface IuseIntegrationApiV1ConnectionsAwsCreateState {
  * URL:
  */
 export const useIntegrationApiV1ConnectionsAwsCreate = (
-    request: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAWSConnectionRequest,
+    request: PlatformEngineServicesIntegrationApiEntityCreateAWSConnectionRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -56,7 +56,7 @@ export const useIntegrationApiV1ConnectionsAwsCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAWSConnectionRequest,
+        reqrequest: PlatformEngineServicesIntegrationApiEntityCreateAWSConnectionRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -141,7 +141,7 @@ export const useIntegrationApiV1ConnectionsAwsCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAWSConnectionRequest,
+        reqrequest: PlatformEngineServicesIntegrationApiEntityCreateAWSConnectionRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -163,7 +163,7 @@ export const useIntegrationApiV1ConnectionsAwsCreate = (
 interface IuseIntegrationApiV1ConnectionsCountListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCountConnectionsResponse
+    response?: PlatformEngineServicesIntegrationApiEntityCountConnectionsResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -311,7 +311,7 @@ export const useIntegrationApiV1ConnectionsCountList = (
 interface IuseIntegrationApiV1ConnectionsSummariesListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityListConnectionsSummaryResponse
+    response?: PlatformEngineServicesIntegrationApiEntityListConnectionsSummaryResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -732,7 +732,7 @@ export const useIntegrationApiV1ConnectionsDelete = (
 interface IuseIntegrationApiV1ConnectionsAwsHealthcheckDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnection
+    response?: PlatformEngineServicesIntegrationApiEntityConnection
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -873,7 +873,7 @@ export const useIntegrationApiV1ConnectionsAwsHealthcheckDetail = (
 interface IuseIntegrationApiV1ConnectionsAzureHealthcheckDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnection
+    response?: PlatformEngineServicesIntegrationApiEntityConnection
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1030,7 +1030,7 @@ export const useIntegrationApiV1ConnectionsAzureHealthcheckDetail = (
 interface IuseIntegrationApiV1ConnectorsListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnectorResponse
+    response?: PlatformEngineServicesIntegrationApiEntityConnectorResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1353,7 +1353,7 @@ export const useIntegrationApiV1EnabledConnectorsList = (
 interface IuseIntegrationApiV1ConnectorsMetricsListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCatalogMetrics
+    response?: PlatformEngineServicesIntegrationApiEntityCatalogMetrics
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1660,7 +1660,7 @@ export const useIntegrationApiV1CredentialDelete = (
 interface IuseIntegrationApiV1CredentialsListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityListCredentialResponse
+    response?: PlatformEngineServicesIntegrationApiEntityListCredentialResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1847,7 +1847,7 @@ export const useIntegrationApiV1CredentialsList = (
 interface IuseIntegrationApiV1CredentialsAwsCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateCredentialResponse
+    response?: PlatformEngineServicesIntegrationApiEntityCreateCredentialResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -1856,7 +1856,7 @@ interface IuseIntegrationApiV1CredentialsAwsCreateState {
  * URL:
  */
 export const useIntegrationApiV1CredentialsAwsCreate = (
-    request: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAWSCredentialRequest,
+    request: PlatformEngineServicesIntegrationApiEntityCreateAWSCredentialRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -1878,7 +1878,7 @@ export const useIntegrationApiV1CredentialsAwsCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAWSCredentialRequest,
+        reqrequest: PlatformEngineServicesIntegrationApiEntityCreateAWSCredentialRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -1963,7 +1963,7 @@ export const useIntegrationApiV1CredentialsAwsCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAWSCredentialRequest,
+        reqrequest: PlatformEngineServicesIntegrationApiEntityCreateAWSCredentialRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -1995,7 +1995,7 @@ interface IuseIntegrationApiV1CredentialsAwsUpdateState {
  */
 export const useIntegrationApiV1CredentialsAwsUpdate = (
     credentialId: string,
-    config: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityUpdateAWSCredentialRequest,
+    config: PlatformEngineServicesIntegrationApiEntityUpdateAWSCredentialRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -2018,7 +2018,7 @@ export const useIntegrationApiV1CredentialsAwsUpdate = (
     const sendRequest = (
         abortCtrl: AbortController,
         reqcredentialId: string,
-        reqconfig: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityUpdateAWSCredentialRequest,
+        reqconfig: PlatformEngineServicesIntegrationApiEntityUpdateAWSCredentialRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -2113,7 +2113,7 @@ export const useIntegrationApiV1CredentialsAwsUpdate = (
 
     const sendNowWithParams = (
         reqcredentialId: string,
-        reqconfig: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityUpdateAWSCredentialRequest,
+        reqconfig: PlatformEngineServicesIntegrationApiEntityUpdateAWSCredentialRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -2135,7 +2135,7 @@ export const useIntegrationApiV1CredentialsAwsUpdate = (
 interface IuseIntegrationApiV1CredentialsAwsAutoonboardCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnection[]
+    response?: PlatformEngineServicesIntegrationApiEntityConnection[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2276,7 +2276,7 @@ export const useIntegrationApiV1CredentialsAwsAutoonboardCreate = (
 interface IuseIntegrationApiV1CredentialsAzureCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateCredentialResponse
+    response?: PlatformEngineServicesIntegrationApiEntityCreateCredentialResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2285,7 +2285,7 @@ interface IuseIntegrationApiV1CredentialsAzureCreateState {
  * URL:
  */
 export const useIntegrationApiV1CredentialsAzureCreate = (
-    request: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAzureCredentialRequest,
+    request: PlatformEngineServicesIntegrationApiEntityCreateAzureCredentialRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -2307,7 +2307,7 @@ export const useIntegrationApiV1CredentialsAzureCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqrequest: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAzureCredentialRequest,
+        reqrequest: PlatformEngineServicesIntegrationApiEntityCreateAzureCredentialRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -2392,7 +2392,7 @@ export const useIntegrationApiV1CredentialsAzureCreate = (
     }
 
     const sendNowWithParams = (
-        reqrequest: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCreateAzureCredentialRequest,
+        reqrequest: PlatformEngineServicesIntegrationApiEntityCreateAzureCredentialRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -2424,7 +2424,7 @@ interface IuseIntegrationApiV1CredentialsAzureUpdateState {
  */
 export const useIntegrationApiV1CredentialsAzureUpdate = (
     credentialId: string,
-    config: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityUpdateAzureCredentialRequest,
+    config: PlatformEngineServicesIntegrationApiEntityUpdateAzureCredentialRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -2447,7 +2447,7 @@ export const useIntegrationApiV1CredentialsAzureUpdate = (
     const sendRequest = (
         abortCtrl: AbortController,
         reqcredentialId: string,
-        reqconfig: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityUpdateAzureCredentialRequest,
+        reqconfig: PlatformEngineServicesIntegrationApiEntityUpdateAzureCredentialRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -2542,7 +2542,7 @@ export const useIntegrationApiV1CredentialsAzureUpdate = (
 
     const sendNowWithParams = (
         reqcredentialId: string,
-        reqconfig: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityUpdateAzureCredentialRequest,
+        reqconfig: PlatformEngineServicesIntegrationApiEntityUpdateAzureCredentialRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -2564,7 +2564,7 @@ export const useIntegrationApiV1CredentialsAzureUpdate = (
 interface IuseIntegrationApiV1CredentialsAzureAutoonboardCreateState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityConnection[]
+    response?: PlatformEngineServicesIntegrationApiEntityConnection[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -2705,7 +2705,7 @@ export const useIntegrationApiV1CredentialsAzureAutoonboardCreate = (
 interface IuseIntegrationApiV1CredentialsDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityCredential
+    response?: PlatformEngineServicesIntegrationApiEntityCredential
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }

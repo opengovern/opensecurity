@@ -1,21 +1,21 @@
 import { Radio } from 'pretty-checkbox-react'
 import { Button, Flex, Text } from '@tremor/react'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
-import { GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus } from '../../../../../../../api/api'
+import { PlatformEnginePkgComplianceApiConformanceStatus } from '../../../../../../../api/api'
 import { compareArrays } from '../../../../../../../components/Layout/Header/Filter'
 import Multiselect from '@cloudscape-design/components/multiselect'
 import { useEffect, useState } from 'react'
 
 interface IConformanceStatus {
     value:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+        | PlatformEnginePkgComplianceApiConformanceStatus[]
         | undefined
     defaultValue:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+        | PlatformEnginePkgComplianceApiConformanceStatus[]
         | undefined
     onChange: (
         c:
-            | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+            | PlatformEnginePkgComplianceApiConformanceStatus[]
             | undefined
     ) => void
 }
@@ -30,14 +30,14 @@ export default function ConformanceStatus({
         {
             label: 'Failed',
             value: 
-                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+                PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
             
             iconSvg: <XCircleIcon className="h-5 text-rose-600" />,
         },
         {
             label: 'Passed',
             value: 
-                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
+                PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
             
             iconSvg: <CheckCircleIcon className="h-5 text-emerald-500" />,
         },
@@ -46,7 +46,7 @@ export default function ConformanceStatus({
       {
           label: 'Failed',
           value: 
-              GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+              PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
           
           iconSvg: <XCircleIcon className="h-5 text-rose-600" />,
       },

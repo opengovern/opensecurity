@@ -22,8 +22,16 @@ import ConnectorCard from '../../components/Cards/ConnectorCard'
 import Spinner from '../../components/Spinner'
 import { useIntegrationApiV1ConnectorsList } from '../../api/integration.gen'
 import TopHeader from '../../components/Layout/Header'
-import { Box, Button, Cards, Link, Modal, Pagination, SpaceBetween } from '@cloudscape-design/components'
-import { GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityTier } from '../../api/api'
+import {
+    Box,
+    Button,
+    Cards,
+    Link,
+    Modal,
+    Pagination,
+    SpaceBetween,
+} from '@cloudscape-design/components'
+import { PlatformEngineServicesIntegrationApiEntityTier } from '../../api/api'
 import { useNavigate } from 'react-router-dom'
 import { get } from 'http'
 import axios from 'axios'
@@ -38,58 +46,59 @@ export default function Integrations() {
         sendNow: getList,
     } = useIntegrationApiV1ConnectorsList(9, pageNo, undefined, 'count', 'desc')
     const [open, setOpen] = useState(false)
-    const navigate = useNavigate();
+    const navigate = useNavigate()
     const [selected, setSelected] = useState()
     const [loading, setLoading] = useState(false)
     const connectorList = responseConnectors?.integration_types || []
     const setNotification = useSetAtom(notificationAtom)
-
 
     // @ts-ignore
 
     //@ts-ignore
     const totalPages = Math.ceil(responseConnectors?.total_count / 9)
     useEffect(() => {
-        getList(9, pageNo,'count','desc',undefined)
+        getList(9, pageNo, 'count', 'desc', undefined)
     }, [pageNo])
-    const EnableIntegration = ()=>{
-         setLoading(true)
-         let url = ''
-         if (window.location.origin === 'http://localhost:3000') {
-             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-         } else {
-             url = window.location.origin
-         }
-         // @ts-ignore
-         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+    const EnableIntegration = () => {
+        setLoading(true)
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-         const config = {
-             headers: {
-                 Authorization: `Bearer ${token}`,
-             },
-         }
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
 
-         axios
-             .put(
-                 `${url}/main/integration/api/v1/integrations/types/${selected?.platform_name}/enable`,
-                {}, config
-             )
-             .then((res) => {
-                getList(9,pageNo)
-                 setLoading(false)
-                 setOpen(false)
-                    setNotification({
-                        text: `Integration enabled`,
-                        type: 'success',
-                    })
-             })
-             .catch((err) => {
+        axios
+            .put(
+                `${url}/main/integration/api/v1/integrations/types/${selected?.platform_name}/enable`,
+                {},
+                config
+            )
+            .then((res) => {
+                getList(9, pageNo, 'count', 'desc', undefined)
+                setLoading(false)
+                setOpen(false)
+                setNotification({
+                    text: `Integration enabled`,
+                    type: 'success',
+                })
+            })
+            .catch((err) => {
                 setNotification({
                     text: `Failed to enable integration`,
                     type: 'error',
                 })
-                 setLoading(false)
-             })
+                getList(9, pageNo, 'count', 'desc', undefined)
+                setLoading(false)
+            })
     }
     return (
         <>
@@ -245,7 +254,7 @@ export default function Integrations() {
                                                     connector.enabled ===
                                                         false &&
                                                     connector?.tier ===
-                                                        GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityTier.TierCommunity
+                                                        PlatformEngineServicesIntegrationApiEntityTier.TierCommunity
                                                 ) {
                                                     setOpen(true)
                                                     setSelected(connector)
@@ -254,7 +263,7 @@ export default function Integrations() {
 
                                                 if (
                                                     connector?.tier ===
-                                                    GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityTier.TierCommunity
+                                                    PlatformEngineServicesIntegrationApiEntityTier.TierCommunity
                                                 ) {
                                                     const name = connector?.name
                                                     const id = connector?.id
@@ -484,7 +493,7 @@ export default function Integrations() {
 
                                                                         if (
                                                                             connector?.tier ===
-                                                                            GithubComKaytuIoKaytuEngineServicesIntegrationApiEntityTier.TierCommunity
+                                                                            PlatformEngineServicesIntegrationApiEntityTier.TierCommunity
                                                                         ) {
                                                                             const name =
                                                                                 connector?.name

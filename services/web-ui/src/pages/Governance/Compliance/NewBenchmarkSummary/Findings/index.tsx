@@ -15,7 +15,7 @@ import FindingsWithFailure from './FindingsWithFailure'
 import TopHeader from '../../../../../components/Layout/Header'
 // import Filter from './Filter'
 import {
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgComplianceApiConformanceStatus,
     SourceType,
     TypesFindingSeverity,
 } from '../../../../../api/api'
@@ -68,7 +68,7 @@ export default function Findings({ id }: Props) {
     const [query, setQuery] = useState<{
         connector: SourceType
         conformanceStatus:
-            | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+            | PlatformEnginePkgComplianceApiConformanceStatus[]
             | undefined
         severity: TypesFindingSeverity[] | undefined
         connectionID: string[] | undefined
@@ -82,7 +82,7 @@ export default function Findings({ id }: Props) {
     }>({
         connector: SourceType.Nil,
         conformanceStatus: [
-            GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+            PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
         ],
         severity: [
             TypesFindingSeverity.FindingSeverityCritical,

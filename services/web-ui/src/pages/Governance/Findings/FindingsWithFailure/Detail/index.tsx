@@ -20,9 +20,9 @@ import { useEffect, useState } from 'react'
 import ReactJson from '@microlink/react-json-view'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import {
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiFinding,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFinding,
+    PlatformEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgComplianceApiFinding,
+    PlatformEnginePkgComplianceApiResourceFinding,
 } from '../../../../../api/api'
 import DrawerPanel from '../../../../../components/DrawerPanel'
 import { getConnectorIcon } from '../../../../../components/Cards/ConnectorCard'
@@ -49,7 +49,7 @@ import { RenderObject } from '../../../../../components/RenderObject'
 
 
 interface IFindingDetail {
-    finding: GithubComKaytuIoKaytuEnginePkgComplianceApiFinding | undefined
+    finding: PlatformEnginePkgComplianceApiFinding | undefined
     type: 'finding' | 'resource'
     open: boolean
     onClose: () => void
@@ -105,7 +105,7 @@ export default function FindingDetail({
         findingTimeline?.findingEvents?.filter(
             (v) =>
                 v.conformanceStatus ===
-                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed
+                PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed
         ) || []
 
     const {
@@ -312,7 +312,7 @@ export default function FindingDetail({
                                                     value: (
                                                         <>
                                                             {finding?.complianceStatus ===
-                                                            GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed ? (
+                                                            PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed ? (
                                                                 <Flex className="w-fit gap-1.5">
                                                                     <CheckCircleIcon className="h-4 text-emerald-500" />
                                                                     <Text>
@@ -374,7 +374,7 @@ export default function FindingDetail({
                                             <ListItem className="py-6">
                                                 <Text>Conformance Status</Text>
                                                 {finding?.conformanceStatus ===
-                                                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed ? (
+                                                PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed ? (
                                                     <Flex className="w-fit gap-1.5">
                                                         <CheckCircleIcon className="h-4 text-emerald-500" />
                                                         <Text>Passed</Text>
@@ -540,7 +540,7 @@ export default function FindingDetail({
                                 <ListItem className="py-6">
                                     <Text>Conformance Status</Text>
                                     {finding?.conformanceStatus ===
-                                    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed ? (
+                                    PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed ? (
                                         <Flex className="w-fit gap-1.5">
                                             <CheckCircleIcon className="h-4 text-emerald-500" />
                                             <Text>Passed</Text>
@@ -606,7 +606,7 @@ export default function FindingDetail({
                                                 </Text>
                                                 <Flex justifyContent="start">
                                                     {control.conformanceStatus ===
-                                                    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed ? (
+                                                    PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed ? (
                                                         <Flex className="w-fit gap-1.5">
                                                             <CheckCircleIcon className="h-4 text-emerald-500" />
                                                             <Text>Passed</Text>

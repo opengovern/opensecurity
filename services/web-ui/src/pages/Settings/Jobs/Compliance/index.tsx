@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
     Api,
-    GithubComKaytuIoKaytuEnginePkgDescribeApiJob,
+    PlatformEnginePkgDescribeApiJob,
 } from '../../../../api/api'
 import AxiosAPI from '../../../../api/ApiConfig'
 import { useScheduleApiV1JobsCreate } from '../../../../api/schedule.gen'
@@ -94,7 +94,7 @@ export default function ComplianceJobs() {
      })
 
     const [clickedJob, setClickedJob] =
-        useState<GithubComKaytuIoKaytuEnginePkgDescribeApiJob>()
+        useState<PlatformEnginePkgDescribeApiJob>()
     const [searchParams, setSearchParams] = useSearchParams()
     
     const [statusFilter, setStatusFilter] = useState<string[] | undefined>(

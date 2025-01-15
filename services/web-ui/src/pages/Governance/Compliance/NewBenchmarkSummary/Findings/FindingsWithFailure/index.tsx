@@ -8,8 +8,8 @@ import Table, { IColumn } from '../../../../../../components/Table'
 import { dateTimeDisplay } from '../../../../../../utilities/dateDisplay'
 import {
     Api,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiFinding,
+    PlatformEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgComplianceApiFinding,
     SourceType,
     TypesFindingSeverity,
 } from '../../../../../../api/api'
@@ -42,7 +42,7 @@ interface ICount {
     query: {
         connector: SourceType
         conformanceStatus:
-            | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+            | PlatformEnginePkgComplianceApiConformanceStatus[]
             | undefined
         severity: TypesFindingSeverity[] | undefined
         connectionID: string[] | undefined
@@ -62,7 +62,7 @@ export default function FindingsWithFailure({ query }: ICount) {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [finding, setFinding] = useState<
-        GithubComKaytuIoKaytuEnginePkgComplianceApiFinding | undefined
+        PlatformEnginePkgComplianceApiFinding | undefined
     >(undefined)
     const [rows, setRows] = useState<any[]>()
     const [page, setPage] = useState(1)

@@ -36,8 +36,8 @@ import DrawerPanel from '../../../components/DrawerPanel'
 import AnimatedAccordion from '../../../components/AnimatedAccordion'
 import { searchAtom } from '../../../utilities/urlstate'
 import {
-    GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkControlSummary,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgComplianceApiBenchmarkControlSummary,
+    PlatformEnginePkgComplianceApiConformanceStatus,
 } from '../../../api/api'
 
 interface IPolicies {
@@ -116,12 +116,12 @@ export const activeBadge = (status: boolean) => {
 
 export const statusBadge = (
     status:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus
+        | PlatformEnginePkgComplianceApiConformanceStatus
         | undefined
 ) => {
     if (
         status ===
-        GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
+        PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
     ) {
         return (
             <Flex className="w-fit gap-1.5">
@@ -140,7 +140,7 @@ export const statusBadge = (
 
 export const treeRows = (
     json:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkControlSummary
+        | PlatformEnginePkgComplianceApiBenchmarkControlSummary
         | undefined
 ) => {
     let arr: any = []
@@ -180,7 +180,7 @@ export const groupBy = (input: any[], key: string) => {
 
 export const countControls = (
     v:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkControlSummary
+        | PlatformEnginePkgComplianceApiBenchmarkControlSummary
         | undefined
 ) => {
     const countChildren = v?.children
@@ -205,7 +205,7 @@ export default function Controls({ id, assignments, enable }: IPolicies) {
 
     const countBenchmarks = (
         v:
-            | GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkControlSummary
+            | PlatformEnginePkgComplianceApiBenchmarkControlSummary
             | undefined
     ) => {
         const countChildren = v?.children

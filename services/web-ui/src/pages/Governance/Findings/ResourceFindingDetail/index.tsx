@@ -18,8 +18,8 @@ import { useEffect, useState } from 'react'
 import ReactJson from '@microlink/react-json-view'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import {
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
-    GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFinding,
+    PlatformEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgComplianceApiResourceFinding,
 } from '../../../../api/api'
 import DrawerPanel from '../../../../components/DrawerPanel'
 import { getConnectorIcon } from '../../../../components/Cards/ConnectorCard'
@@ -40,7 +40,7 @@ import { RenderObject } from '../../../../components/RenderObject'
 
 interface IResourceFindingDetail {
     resourceFinding:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiResourceFinding
+        | PlatformEnginePkgComplianceApiResourceFinding
         | undefined
     controlID?: string
     showOnlyOneControl: boolean
@@ -82,7 +82,7 @@ export default function ResourceFindingDetail({
     const conformance = () => {
         if (showOnlyOneControl) {
             return (finding?.complianceStatus || 0) ===
-                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed ? (
+                PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed ? (
                 <Flex className="w-fit gap-1.5">
                     <XCircleIcon className="h-4 text-rose-600" />
                     <Text>Failed</Text>
@@ -136,13 +136,13 @@ export default function ResourceFindingDetail({
                                 <StatusIndicator
                                     type={
                                         control.complianceStatus ===
-                                        GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
+                                        PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
                                             ? 'success'
                                             : 'error'
                                     }
                                 >
                                     {control.complianceStatus ===
-                                    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
+                                    PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
                                         ? 'Passed'
                                         : 'Failed'}
                                 </StatusIndicator>
@@ -358,7 +358,7 @@ export default function ResourceFindingDetail({
                                                                 </Text>
                                                                 <Flex justifyContent="start">
                                                                     {control.conformanceStatus ===
-                                                                    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed ? (
+                                                                    PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed ? (
                                                                         <Flex className="w-full gap-1.5">
                                                                             <CheckCircleIcon className="h-4 text-emerald-500" />
                                                                             <Text>

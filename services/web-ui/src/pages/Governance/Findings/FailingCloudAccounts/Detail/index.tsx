@@ -7,7 +7,7 @@ import { getConnectorIcon } from '../../../../../components/Cards/ConnectorCard'
 import SummaryCard from '../../../../../components/Cards/SummaryCard'
 import { useComplianceApiV1FindingsFiltersCreate } from '../../../../../api/compliance.gen'
 import {
-    GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus,
+    PlatformEnginePkgComplianceApiConformanceStatus,
     TypesFindingSeverity,
 } from '../../../../../api/api'
 import { isDemoAtom } from '../../../../../store'

@@ -19,7 +19,7 @@ import {
     useAuthApiV1UserRoleBindingDelete,
     useAuthApiV1UserRoleBindingUpdate,
 } from '../../../../api/auth.gen'
-import { GithubComKaytuIoKaytuEnginePkgAuthApiWorkspaceRoleBinding } from '../../../../api/api'
+import { PlatformEnginePkgAuthApiWorkspaceRoleBinding } from '../../../../api/api'
 import ConfirmModal from '../../../../components/Modal/ConfirmModal'
 import { notificationAtom } from '../../../../store'
 import { dateTimeDisplay } from '../../../../utilities/dateDisplay'
@@ -32,7 +32,7 @@ import { Checkbox, KeyValuePairs, Modal, RadioGroup, Toggle } from '@cloudscape-
 import axios from 'axios'
 
 interface IMemberDetails {
-    user?: GithubComKaytuIoKaytuEnginePkgAuthApiWorkspaceRoleBinding
+    user?: PlatformEnginePkgAuthApiWorkspaceRoleBinding
     close: () => void
 }
 

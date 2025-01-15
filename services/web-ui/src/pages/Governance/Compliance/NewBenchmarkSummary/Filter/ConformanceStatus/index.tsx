@@ -1,19 +1,19 @@
 import { Radio } from 'pretty-checkbox-react'
 import { Button, Flex, Text } from '@tremor/react'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
-import { GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus } from '../../../../../../api/api'
+import { PlatformEnginePkgComplianceApiConformanceStatus } from '../../../../../../api/api'
 import { compareArrays } from '../../../../../../components/Layout/Header/Filter'
 
 interface IConformanceStatus {
     value:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+        | PlatformEnginePkgComplianceApiConformanceStatus[]
         | undefined
     defaultValue:
-        | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+        | PlatformEnginePkgComplianceApiConformanceStatus[]
         | undefined
     onChange: (
         c:
-            | GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus[]
+            | PlatformEnginePkgComplianceApiConformanceStatus[]
             | undefined
     ) => void
 }
@@ -27,22 +27,22 @@ export default function ConformanceStatus({
         {
             name: 'All',
             value: [
-                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
-                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
+                PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+                PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
             ],
             icon: undefined,
         },
         {
             name: 'Failed',
             value: [
-                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
+                PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed,
             ],
             icon: <XCircleIcon className="h-5 text-rose-600" />,
         },
         {
             name: 'Passed',
             value: [
-                GithubComKaytuIoKaytuEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
+                PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed,
             ],
             icon: <CheckCircleIcon className="h-5 text-emerald-500" />,
         },

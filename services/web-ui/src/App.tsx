@@ -12,7 +12,7 @@ import { applyTheme } from './utilities/theme'
 import { OpenGovernance } from './icons/icons'
 import { useAuth } from './utilities/auth'
 import { useAuthApiV1MeList, useAuthApiV1UserDetail } from './api/auth.gen'
-import { GithubComKaytuIoKaytuEnginePkgAuthApiTheme } from './api/api'
+import { PlatformEnginePkgAuthApiTheme } from './api/api'
 import { Modal } from '@cloudscape-design/components'
 
 // Sentry.init({
@@ -90,7 +90,7 @@ export default function App() {
         
             setMe(meResponse)
             applyTheme(
-                    GithubComKaytuIoKaytuEnginePkgAuthApiTheme.ThemeLight
+                    PlatformEnginePkgAuthApiTheme.ThemeLight
             )
             setColorBlindMode( false)
         }

@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
     Api,
-    GithubComKaytuIoKaytuEnginePkgMetadataModelsFilter,
-    GithubComKaytuIoKaytuEnginePkgMetadataApiSetConfigMetadataRequest,
-    GithubComKaytuIoKaytuEnginePkgMetadataModelsConfigMetadata,
-    GithubComKaytuIoKaytuEnginePkgMetadataApiListQueryParametersResponse,
-    GithubComKaytuIoKaytuEnginePkgMetadataApiSetQueryParameterRequest,
+    PlatformEnginePkgMetadataModelsFilter,
+    PlatformEnginePkgMetadataApiSetConfigMetadataRequest,
+    PlatformEnginePkgMetadataModelsConfigMetadata,
+    PlatformEnginePkgMetadataApiListQueryParametersResponse,
+    PlatformEnginePkgMetadataApiSetQueryParameterRequest,
     RequestParams,
 } from './api'
 
@@ -15,7 +15,7 @@ import AxiosAPI, { setWorkspace } from './ApiConfig'
 interface IuseMetadataApiV1FilterListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgMetadataModelsFilter[]
+    response?: PlatformEnginePkgMetadataModelsFilter[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -156,7 +156,7 @@ interface IuseMetadataApiV1FilterCreateState {
  * URL:
  */
 export const useMetadataApiV1FilterCreate = (
-    req: GithubComKaytuIoKaytuEnginePkgMetadataModelsFilter,
+    req: PlatformEnginePkgMetadataModelsFilter,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -177,7 +177,7 @@ export const useMetadataApiV1FilterCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqreq: GithubComKaytuIoKaytuEnginePkgMetadataModelsFilter,
+        reqreq: PlatformEnginePkgMetadataModelsFilter,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -262,7 +262,7 @@ export const useMetadataApiV1FilterCreate = (
     }
 
     const sendNowWithParams = (
-        reqreq: GithubComKaytuIoKaytuEnginePkgMetadataModelsFilter,
+        reqreq: PlatformEnginePkgMetadataModelsFilter,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -293,7 +293,7 @@ interface IuseMetadataApiV1MetadataCreateState {
  * URL:
  */
 export const useMetadataApiV1MetadataCreate = (
-    req: GithubComKaytuIoKaytuEnginePkgMetadataApiSetConfigMetadataRequest,
+    req: PlatformEnginePkgMetadataApiSetConfigMetadataRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -314,7 +314,7 @@ export const useMetadataApiV1MetadataCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqreq: GithubComKaytuIoKaytuEnginePkgMetadataApiSetConfigMetadataRequest,
+        reqreq: PlatformEnginePkgMetadataApiSetConfigMetadataRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -399,7 +399,7 @@ export const useMetadataApiV1MetadataCreate = (
     }
 
     const sendNowWithParams = (
-        reqreq: GithubComKaytuIoKaytuEnginePkgMetadataApiSetConfigMetadataRequest,
+        reqreq: PlatformEnginePkgMetadataApiSetConfigMetadataRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
@@ -421,7 +421,7 @@ export const useMetadataApiV1MetadataCreate = (
 interface IuseMetadataApiV1MetadataDetailState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgMetadataModelsConfigMetadata
+    response?: PlatformEnginePkgMetadataModelsConfigMetadata
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -555,7 +555,7 @@ export const useMetadataApiV1MetadataDetail = (
 interface IuseMetadataApiV1QueryParameterListState {
     isLoading: boolean
     isExecuted: boolean
-    response?: GithubComKaytuIoKaytuEnginePkgMetadataApiListQueryParametersResponse
+    response?: PlatformEnginePkgMetadataApiListQueryParametersResponse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error?: any
 }
@@ -697,7 +697,7 @@ interface IuseMetadataApiV1QueryParameterCreateState {
  * URL:
  */
 export const useMetadataApiV1QueryParameterCreate = (
-    req: GithubComKaytuIoKaytuEnginePkgMetadataApiSetQueryParameterRequest,
+    req: PlatformEnginePkgMetadataApiSetQueryParameterRequest,
     params: RequestParams = {},
     autoExecute = true,
     overwriteWorkspace: string | undefined = undefined
@@ -719,7 +719,7 @@ export const useMetadataApiV1QueryParameterCreate = (
 
     const sendRequest = (
         abortCtrl: AbortController,
-        reqreq: GithubComKaytuIoKaytuEnginePkgMetadataApiSetQueryParameterRequest,
+        reqreq: PlatformEnginePkgMetadataApiSetQueryParameterRequest,
         reqparams: RequestParams
     ) => {
         if (!api.instance.defaults.headers.common.Authorization) {
@@ -804,7 +804,7 @@ export const useMetadataApiV1QueryParameterCreate = (
     }
 
     const sendNowWithParams = (
-        reqreq: GithubComKaytuIoKaytuEnginePkgMetadataApiSetQueryParameterRequest,
+        reqreq: PlatformEnginePkgMetadataApiSetQueryParameterRequest,
         reqparams: RequestParams
     ) => {
         controller.abort()
