@@ -1,5 +1,5 @@
 {
-    "name": "web-ui",
+    "name": "webui",
     "version": "0.1.0",
     "private": true,
     "dependencies": {
@@ -10,6 +10,7 @@
         "@cloudscape-design/global-styles": "^1.0.32",
         "@djthoms/pretty-checkbox": "^3.1.0",
         "@headlessui/react": "^1.7.17",
+        "@headlessui/tailwindcss": "^0.2.1",
         "@heroicons/react": "^2.0.18",
         "@internationalized/date": "^3.5.0",
         "@microlink/react-json-view": "^1.23.0",
@@ -30,7 +31,6 @@
         "@types/react-dom": "^18.2.17",
         "@uiw/react-markdown-preview": "^5.0.7",
         "@visx/xychart": "^3.11.0",
-      
         "axios": "^1.6.2",
         "clipboard-copy": "^4.0.1",
         "cookie": "^1.0.1",
@@ -49,7 +49,6 @@
         "react": "^18.2.0",
         "react-ace-builds": "^7.4.1",
         "react-aria": "^3.30.0",
-        "react-complex-tree": "^2.4.5",
         "react-csv": "^2.2.2",
         "react-dom": "^18.2.0",
         "react-markdown": "^8.0.6",
@@ -96,12 +95,16 @@
             "last 1 safari version"
         ]
     },
+    "overrides": {
+        "body-parser": "1.20.3",
+        "nth-check": ">=2.0.2",
+        "serve-static": "2.1.0"
+    },
     "devDependencies": {
         "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
         "@types/prismjs": "^1.26.3",
         "babel-plugin-named-exports-order": "^0.0.2",
         "chromatic": "^6.24.1",
-        "eslint": "^8.55.0",
         "eslint-config-airbnb": "^19.0.4",
         "eslint-config-prettier": "^8.10.0",
         "eslint-import-resolver-typescript": "^3.6.1",
