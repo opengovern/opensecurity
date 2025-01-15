@@ -618,7 +618,6 @@ func (g *GitParser) HandleFrameworks(frameworks []Framework) error {
 			return err
 		}
 	}
-	// g.logger.Info("Extracted benchmarks 2", zap.Int("count", len(g.benchmarks)))
 
 	for idx, benchmark := range g.benchmarks {
 		for _, childID := range g.frameworksChildren[benchmark.ID] {
@@ -634,45 +633,34 @@ func (g *GitParser) HandleFrameworks(frameworks []Framework) error {
 		}
 		g.benchmarks[idx] = benchmark
 	}
-	// g.logger.Info("Extracted benchmarks 3", zap.Int("count", len(g.benchmarks)))
 	return nil
 }
 
 func (g *GitParser) HandleSingleFramework(framework Framework) error {
 	var tags []db.BenchmarkTag
-	if framework.Metadata != nil {
-		tags = make([]db.BenchmarkTag, 0, len(framework.Metadata.Tags))
-		for tagKey, tagValue := range framework.Metadata.Tags {
-			tags = append(tags, db.BenchmarkTag{
-				Tag: model.Tag{
-					Key:   tagKey,
-					Value: tagValue,
-				},
-				BenchmarkID: framework.ID,
-			})
-		}
-	} else {
-		tags = make([]db.BenchmarkTag, 0, len(framework.Tags))
-		for tagKey, tagValue := range framework.Tags {
-			tags = append(tags, db.BenchmarkTag{
-				Tag: model.Tag{
-					Key:   tagKey,
-					Value: tagValue,
-				},
-				BenchmarkID: framework.ID,
-			})
-		}
+
+	tags = make([]db.BenchmarkTag, 0, len(framework.Tags))
+	for tagKey, tagValue := range framework.Tags {
+		tags = append(tags, db.BenchmarkTag{
+			Tag: model.Tag{
+				Key:   tagKey,
+				Value: tagValue,
+			},
+			BenchmarkID: framework.ID,
+		})
 	}
 
 	autoAssign := true
-	if framework.Metadata != nil {
-		if framework.Metadata.Defaults.AutoAssign != nil {
-			autoAssign = *framework.Metadata.Defaults.AutoAssign
-		}
-	}
 	tracksDriftEvents := false
-	if framework.Metadata != nil {
-		tracksDriftEvents = framework.Metadata.Defaults.TracksDriftEvents
+	enabled := false
+
+	if framework.Defaults != nil {
+		if framework.Defaults.AutoAssign != nil {
+			autoAssign = *framework.Defaults.AutoAssign
+		}
+
+		tracksDriftEvents = framework.Defaults.TracksDriftEvents
+		enabled = framework.Defaults.Enabled
 	}
 
 	b := db.Benchmark{
@@ -681,6 +669,7 @@ func (g *GitParser) HandleSingleFramework(framework Framework) error {
 		DisplayCode:       framework.SectionCode,
 		Description:       framework.Description,
 		AutoAssign:        autoAssign,
+		Enabled:           enabled,
 		TracksDriftEvents: tracksDriftEvents,
 		Tags:              tags,
 		Children:          nil,

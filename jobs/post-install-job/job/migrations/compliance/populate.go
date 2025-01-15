@@ -400,11 +400,25 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		IsBookmarked:     isBookmarked,
 		QueryID:          &id,
 	}
-	queryParams := []models.QueryParameter{}
+
 	listOfTables, err := utils.ExtractTableRefsFromPolicy("sql", item.Query)
 	if err != nil {
 		logger.Error("failed to extract table refs from query", zap.String("query-id", namedQuery.ID), zap.Error(err))
 	}
+
+	parameters, err := utils.ExtractParameters("sql", item.Query)
+	if err != nil {
+		logger.Error("extract control failed: failed to extract parameters from query", zap.String("control-id", namedQuery.ID), zap.Error(err))
+		return nil
+	}
+	queryParams := []models.QueryParameter{}
+	for _, p := range parameters {
+		queryParams = append(queryParams, models.QueryParameter{
+			QueryID: namedQuery.ID,
+			Key:     p,
+		})
+	}
+
 	query := models.Query{
 		ID:             namedQuery.ID,
 		QueryToExecute: item.Query,
@@ -446,6 +460,22 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 				logger.Error("failure in insert tags", zap.Error(err))
 				return err
 			}
+		}
+	}
+
+	for _, p := range item.Parameters {
+		err := tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "key"}, {Name: "control_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{
+				"value": gorm.Expr("CASE WHEN policy_parameter_values.value = '' THEN ? ELSE policy_parameter_values.value END", p.Value),
+			}),
+		}).Create(&models.PolicyParameterValues{
+			Key:       p.Key,
+			ControlID: "",
+			Value:     p.Value,
+		}).Error
+		if err != nil {
+			return err
 		}
 	}
 

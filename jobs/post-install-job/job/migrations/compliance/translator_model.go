@@ -6,28 +6,23 @@ import (
 )
 
 type FrameworkFile struct {
-	Framework Framework `json:"framework"`
+	Framework Framework `json:"framework" yaml:"framework"`
 }
 
 type ControlGroupFile struct {
-	ControlGroup Framework `json:"control-group"`
-}
-
-type FrameworkMetadata struct {
-	Defaults struct {
-		AutoAssign        *bool `json:"auto-assign"`
-		Enabled           bool  `json:"enabled"`
-		TracksDriftEvents bool  `json:"tracks-drift-events"`
-	} `json:"defaults"`
-	Tags map[string][]string `json:"tags"`
+	ControlGroup Framework `json:"control-group" yaml:"control-group"`
 }
 
 type Framework struct {
-	ID           string              `json:"id" yaml:"id"`
-	Title        string              `json:"title" yaml:"title"`
-	Description  string              `json:"description" yaml:"description"`
-	SectionCode  string              `json:"section-code" yaml:"section-code"`
-	Metadata     *FrameworkMetadata  `json:"metadata" yaml:"metadata"`
+	ID          string `json:"id" yaml:"id"`
+	Title       string `json:"title" yaml:"title"`
+	Description string `json:"description" yaml:"description"`
+	SectionCode string `json:"section-code" yaml:"section-code"`
+	Defaults    *struct {
+		AutoAssign        *bool `json:"auto-assign" yaml:"auto-assign"`
+		Enabled           bool  `json:"enabled" yaml:"enabled"`
+		TracksDriftEvents bool  `json:"tracks-drift-events" yaml:"tracks-drift-events"`
+	} `json:"defaults"`
 	Tags         map[string][]string `json:"tags" yaml:"tags"`
 	ControlGroup []Framework         `json:"control-group" yaml:"control-group"`
 	Controls     []string            `json:"controls" yaml:"controls"`
@@ -66,10 +61,11 @@ type QueryView struct {
 }
 
 type NamedQuery struct {
-	ID               string              `json:"id" yaml:"id"`
-	Title            string              `json:"title" yaml:"title"`
-	Description      string              `json:"description" yaml:"description"`
-	IntegrationTypes []integration.Type  `json:"integration_type" yaml:"integration_type"`
-	Query            string              `json:"query" yaml:"query"`
-	Tags             map[string][]string `json:"tags" yaml:"tags"`
+	ID               string                    `json:"id" yaml:"id"`
+	Title            string                    `json:"title" yaml:"title"`
+	Description      string                    `json:"description" yaml:"description"`
+	Parameters       []shared.ControlParameter `json:"parameters" yaml:"parameters"`
+	IntegrationTypes []integration.Type        `json:"integration_type" yaml:"integration_type"`
+	Query            string                    `json:"query" yaml:"query"`
+	Tags             map[string][]string       `json:"tags" yaml:"tags"`
 }

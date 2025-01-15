@@ -21,13 +21,13 @@ var ResourceTypeConfigs = map[string]*interfaces.ResourceTypeConfiguration{
 		Description:     "",
 		Params: []interfaces.Param{
 			{
-				Name:        "repository",
-				Description: `Please provide the repo name (i.e. "internal-tools")`,
+				Name:        "organization",
+				Description: `Please provide the organization name`,
 				Required:    false,
 			},
 			{
-				Name:        "organization",
-				Description: `Please provide the organization name`,
+				Name:        "repository",
+				Description: `Please provide the repo name (i.e. "internal-tools")`,
 				Required:    false,
 			},
 		},
@@ -38,13 +38,13 @@ var ResourceTypeConfigs = map[string]*interfaces.ResourceTypeConfiguration{
 		Description:     "",
 		Params: []interfaces.Param{
 			{
-				Name:        "repository",
-				Description: `Please provide the repo name (i.e. "internal-tools")`,
+				Name:        "organization",
+				Description: `Please provide the organization name`,
 				Required:    false,
 			},
 			{
-				Name:        "organization",
-				Description: `Please provide the organization name`,
+				Name:        "repository",
+				Description: `Please provide the repo name (i.e. "internal-tools")`,
 				Required:    false,
 			},
 		},
@@ -55,18 +55,35 @@ var ResourceTypeConfigs = map[string]*interfaces.ResourceTypeConfiguration{
 		Description:     "",
 		Params: []interfaces.Param{
 			{
+				Name:        "organization",
+				Description: `Please provide the organization name`,
+				Required:    false,
+			},
+			{
 				Name:        "repository",
 				Description: `Please provide the repo name (i.e. "internal-tools")`,
 				Required:    false,
 			},
+			{
+				Name:        "run_number",
+				Description: `Please provide the run number`,
+				Required:    false,
+			},
+		},
+	},
+	"Github/PullRequest": {
+		Name:            "Github/PullRequest",
+		IntegrationType: IntegrationTypeGithubAccount,
+		Description:     "",
+		Params: []interfaces.Param{
 			{
 				Name:        "organization",
 				Description: `Please provide the organization name`,
 				Required:    false,
 			},
 			{
-				Name:        "run_number",
-				Description: `Please provide the run number`,
+				Name:        "repository",
+				Description: `Please provide the repo name (i.e. "internal-tools")`,
 				Required:    false,
 			},
 		},
