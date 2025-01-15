@@ -436,91 +436,7 @@ export default function Integrations() {
                                                 </Box>
                                             }
                                         />
-                                        {/* <Grid
-                                            numItemsMd={3}
-                                            numItemsLg={3}
-                                            className="gap-[70px] mt-6 w-full justify-items-center"
-                                        >
-                                            {connectorList.map(
-                                                (connector, index) => {
-                                                    return (
-                                                        <>
-                                                            <>
-                                                                <ConnectorCard
-                                                                    connector={
-                                                                        connector.platform_name
-                                                                    }
-                                                                    id={
-                                                                        connector.id
-                                                                    }
-                                                                    name={
-                                                                        connector?.name
-                                                                    }
-                                                                    title={
-                                                                        connector.label
-                                                                    }
-                                                                    status={
-                                                                        connector.enabled
-                                                                    }
-                                                                    count={
-                                                                        connector.connection_count
-                                                                    }
-                                                                    description={
-                                                                        connector.description
-                                                                    }
-                                                                    tier={
-                                                                        connector.tier
-                                                                    }
-                                                                    logo={
-                                                                        connector.logo
-                                                                    }
-                                                                    // logo={
-                                                                    //     'https://raw.githubusercontent.com/kaytu-io/website/main/connectors/icons/azure.svg'
-                                                                    // }
-                                                                    onClickCard={() => {
-                                                                        if (
-                                                                            connector.enabled ===
-                                                                            false
-                                                                        ) {
-                                                                            setOpen(
-                                                                                true
-                                                                            )
-                                                                            setSelected(
-                                                                                connector
-                                                                            )
-                                                                            return
-                                                                        }
-
-                                                                        if (
-                                                                            connector?.tier ===
-                                                                            PlatformEngineServicesIntegrationApiEntityTier.TierCommunity
-                                                                        ) {
-                                                                            const name =
-                                                                                connector?.name
-                                                                            const id =
-                                                                                connector?.id
-                                                                            navigate(
-                                                                                `${connector.platform_name}`,
-                                                                                {
-                                                                                    state: {
-                                                                                        name,
-                                                                                        id,
-                                                                                    },
-                                                                                }
-                                                                            )
-                                                                            return
-                                                                        }
-                                                                        navigate(
-                                                                            `${connector.platform_name}/../../request-access?connector=${title}`
-                                                                        )
-                                                                    }}
-                                                                />
-                                                            </>
-                                                        </>
-                                                    )
-                                                }
-                                            )}
-                                        </Grid> */}
+                                     
                                     </div>
                                 </main>
                             </div>
@@ -533,53 +449,7 @@ export default function Integrations() {
                             }}
                         />
                     </Flex>
-                    {/* <Title className="font-semibold">Installed</Title> */}
-                    {/* <Grid
-                        numItemsMd={3}
-                        numItemsLg={4}
-                        className="gap-[60px] mt-6"
-                    >
-                        {connectorList.map((connector, index) => {
-                            return (
-                                <>
-                                    {index < 12 && (
-                                        <>
-                                            <ConnectorCard
-                                                connector={connector.name}
-                                                title={connector.label}
-                                                status={connector.status}
-                                                count={
-                                                    connector.connection_count
-                                                }
-                                                description={
-                                                    connector.description
-                                                }
-                                                tier={connector.tier}
-                                                // logo={connector.logo}
-                                                logo={
-                                                    'https://raw.githubusercontent.com/kaytu-io/website/main/connectors/icons/azure.svg'
-                                                }
-                                            />
-                                        </>
-                                    )}
-                                </>
-                            )
-                        })}
-                    </Grid> */}
-                    {/* <Title className="font-semibold mt-8">Available</Title> */}
-                    {/* <Grid numItemsMd={2} numItemsLg={3} className="gap-14 mt-6">
-                        {availableConnectorsPage.map((connector) => (
-                            <ConnectorCard
-                                connector={connector.name}
-                                title={connector.label}
-                                status={connector.status}
-                                count={connector.connection_count}
-                                description={connector.description}
-                                tier={connector.tier}
-                                logo={connector.logo}
-                            />
-                        ))}
-                    </Grid> */}
+               
                 </>
             )}
         </>

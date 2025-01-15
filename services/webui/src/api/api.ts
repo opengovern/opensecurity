@@ -11,7 +11,6 @@
 
 export enum ApiRole {
     InternalRole = 'internal',
-    KaytuAdminRole = 'kaytu-admin',
     AdminRole = 'admin',
     EditorRole = 'editor',
     ViewerRole = 'viewer',
@@ -1429,9 +1428,7 @@ export interface PlatformEnginePkgInventoryApiMetric {
      * @example 100
      */
     count?: number
-    /** @example "select * from kaytu_resources where resource_type = 'aws::ec2::instance' AND connection_id IN <CONNECTION_ID_LIST>" */
     finderPerConnectionQuery?: string
-    /** @example "select * from kaytu_resources where resource_type = 'aws::ec2::instance'" */
     finderQuery?: string
     /** @example "vms" */
     id?: string
@@ -1464,7 +1461,7 @@ export interface PlatformEnginePkgInventoryApiResourceCollection {
     connectors?: SourceType[]
     created_at?: string
     description?: string
-    filters?: KaytuResourceCollectionFilter[]
+    filters?: PlatformResourceCollectionFilter[]
     id?: string
     last_evaluated_at?: string
     metric_count?: number
@@ -1535,7 +1532,6 @@ export interface PlatformEnginePkgInventoryApiResourceType {
     count?: number
     /**
      * Logo URI
-     * @example "https://kaytu.io/logo.png"
      */
     logo_uri?: string
     /**
@@ -1840,7 +1836,6 @@ export interface PlatformEnginePkgOnboardApiConnectionGroup {
     connections?: PlatformEnginePkgOnboardApiConnection[]
     /** @example "UltraSightApplication" */
     name?: string
-    /** @example "SELECT kaytu_id FROM kaytu_connections WHERE tags->'application' IS NOT NULL AND tags->'application' @> '"UltraSight"'" */
     query?: string
 }
 
@@ -1867,7 +1862,6 @@ export interface PlatformEnginePkgOnboardApiConnectorCount {
     direction?: SourceConnectorDirectionType
     /** @example "Azure" */
     label?: string
-    /** @example "https://kaytu.io/logo.png" */
     logo?: string
     /**
      * @min 0
@@ -2166,14 +2160,11 @@ export interface PlatformEnginePkgWorkspaceApiWorkspaceLimitsUsage {
     maxResources?: number
     /** @example 100 */
     maxUsers?: number
-    /** @example "kaytu" */
     name?: string
 }
 
 export interface PlatformEnginePkgWorkspaceApiWorkspaceResponse {
-    /** @example "kaytu" */
     aws_unique_id?: string
-    /** @example "kaytu" */
     aws_user_arn?: string
     /** @example "2023-05-17T14:39:02.707659Z" */
     createdAt?: string
@@ -2181,7 +2172,6 @@ export interface PlatformEnginePkgWorkspaceApiWorkspaceResponse {
     id?: string
     is_bootstrap_input_finished?: boolean
     is_created?: boolean
-    /** @example "kaytu" */
     name?: string
     organization?: PlatformEnginePkgWorkspaceApiOrganization
     /** @example "google-oauth2|204590896945502695694" */
@@ -2746,7 +2736,7 @@ export interface PlatformEngineServicesWastageApiEntityUsage {
     min?: number
 }
 
-export interface KaytuResourceCollectionFilter {
+export interface PlatformResourceCollectionFilter {
     account_ids?: string[]
     connectors?: string[]
     regions?: string[]
@@ -3975,7 +3965,7 @@ export class HttpClient<SecurityDataType = unknown> {
     }: ApiConfig<SecurityDataType> = {}) {
         this.instance = axios.create({
             ...axiosConfig,
-            baseURL: axiosConfig.baseURL || 'https://api.kaytu.io',
+            baseURL: axiosConfig.baseURL || 'https://api.platform.io',
         })
         this.secure = secure
         this.format = format
@@ -4100,7 +4090,7 @@ export class HttpClient<SecurityDataType = unknown> {
 /**
  * @title OpenGovernance Service API
  * @version 1.0
- * @baseUrl https://api.kaytu.io
+ * @baseUrl https://api.platform.io
  * @contact
  */
 export class Api<
@@ -4352,7 +4342,7 @@ export class Api<
             }),
 
         /**
-         * @description Get all the RoleBindings of the workspace. RoleBinding defines the roles and actions a user can perform. There are currently three roles (admin, editor, viewer). The workspace path is based on the DNS such as (workspace1.app.kaytu.io)
+         * @description Get all the RoleBindings of the workspace. RoleBinding defines the roles and actions a user can perform. There are currently three roles (admin, editor, viewer). The workspace path is based on the DNS such as (workspace1.app.platform.io)
          *
          * @tags users
          * @name ApiV1WorkspaceRoleBindingsList

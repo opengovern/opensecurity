@@ -1,8 +1,8 @@
 <svg width="270" height="270" viewBox="0 0 270 270" fill="none" xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink">
-    <rect width="270" height="270" fill="url(#kaytu)"/>
+    <rect width="270" height="270" fill="url(#platform)"/>
     <defs>
-        <pattern id="kaytu" patternContentUnits="objectBoundingBox" width="1" height="1">
+        <pattern id="platform" patternContentUnits="objectBoundingBox" width="1" height="1">
             <use xlink:href="#image0_1612_19995" transform="scale(0.0037037)"/>
         </pattern>
         <image id="image0_1612_19995" width="270" height="270"

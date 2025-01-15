@@ -48,10 +48,7 @@ const (
 	KafkaPageSize   = 5000
 )
 
-const (
-	AWSLogoURI   = "https://raw.githubusercontent.com/kaytu-io/awsicons/master/svg-export/icons/AWS.svg"
-	AzureLogoURI = "https://raw.githubusercontent.com/kaytu-io/Azure-Design/master/SVG_Azure_All/Azure.svg"
-)
+
 
 const (
 	IntegrationIdParam    = "integrationId"

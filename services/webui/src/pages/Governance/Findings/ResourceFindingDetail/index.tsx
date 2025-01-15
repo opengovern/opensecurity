@@ -208,34 +208,7 @@ export default function ResourceFindingDetail({
                     },
                 ]}
             />
-            {/* <Grid className="w-full gap-4 mb-6" numItems={2}>
-                <SummaryCard
-                    title="Account"
-                    metric={resourceFinding?.providerConnectionName}
-                    secondLine={resourceFinding?.providerConnectionID}
-                    blur={isDemo}
-                    blurSecondLine={isDemo}
-                    isString
-                />
-                <SummaryCard
-                    title="Resource"
-                    metric={resourceFinding?.resourceName}
-                    secondLine={resourceFinding?.kaytuResourceID}
-                    blurSecondLine={isDemo}
-                    isString
-                />
-                <SummaryCard
-                    title="Resource Type"
-                    metric={resourceFinding?.resourceTypeLabel}
-                    secondLine={resourceFinding?.resourceType}
-                    isString
-                />
-                <SummaryCard
-                    title="Conformance Status"
-                    metric={conformance()}
-                    isString
-                />
-            </Grid> */}
+           
             <Tabs
                 tabs={[
                     {

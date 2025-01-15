@@ -59,12 +59,7 @@ export default function QueryDetail({
     const { ws } = useParams()
     const setQuery = useSetAtom(queryAtom)
 
-    // const { response, isLoading, sendNow } =
-    //     useComplianceApiV1FindingsResourceCreate(
-    //         { kaytuResourceId: resourceFinding?.kaytuResourceID || '' },
-    //         {},
-    //         false
-    //     )
+    
     const searchParams = useAtomValue(searchAtom)
 
     // useEffect(() => {

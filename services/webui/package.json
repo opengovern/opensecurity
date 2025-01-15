@@ -79,9 +79,7 @@
         "lint": "eslint .",
         "lint:fix": "eslint --fix .",
         "format": "prettier --write \"**/*.+(js|jsx|ts|tsx|json|css|md)\"",
-        "chromatic": "npx chromatic --project-token=2ae656df246a --allow-console-errors",
-        "codegen": "npx swagger-typescript-api --axios -p https://swagger.kaytu.dev/swagger/doc.json -o ./src/api -n api.ts && go run codegen/generate.go && prettier --write \"**/*.+(js|jsx|ts|tsx|json|css|md)\"",
-        "codegen:local": "npx swagger-typescript-api --axios -p ../kaytu-engine/docs/swagger.json -o ./src/api -n api.ts && go run codegen/generate.go && prettier --write \"**/*.+(js|jsx|ts|tsx|json|css|md)\""
+        "chromatic": "npx chromatic --project-token=2ae656df246a --allow-console-errors"
     },
     "browserslist": {
         "production": [
