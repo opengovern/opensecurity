@@ -22,8 +22,6 @@ import ConformanceStatus from './ConformanceStatus'
 import { useComplianceApiV1FindingsFiltersCreate } from '../../../../api/compliance.gen'
 import Others from './Others'
 import FindingLifecycle from './FindingLifecycle'
-import { compareArrays } from '../../../../components/Layout/Header/Filter'
-import ConditionDropdown from '../../../../components/ConditionDropdown'
 
 import {
     CloudConnect,
@@ -43,7 +41,6 @@ import {
     useURLParam,
     useUrlDateRangeState,
 } from '../../../../utilities/urlstate'
-import { renderDateText } from '../../../../components/Layout/Header/DatePicker'
 import LimitHealthy from './LimitHealthy'
 import { PropertyFilter, Select } from '@cloudscape-design/components'
 import axios from 'axios'

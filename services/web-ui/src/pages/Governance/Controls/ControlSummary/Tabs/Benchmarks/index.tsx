@@ -16,6 +16,8 @@ export default function Benchmarks({ benchmarks }: IBenchmarks) {
     const navigate = useNavigate()
     const searchParams = useAtomValue(searchAtom)
     const workspace = useParams<{ ws: string }>().ws
+                                   
+
 
     return (
         <Flex flexDirection="col" className="gap-3">

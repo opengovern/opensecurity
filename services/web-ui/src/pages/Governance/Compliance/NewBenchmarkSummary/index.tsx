@@ -39,11 +39,11 @@ import {
     useFilterState,
     useUrlDateRangeState,
 } from '../../../../utilities/urlstate'
-import BenchmarkChart from '../../../../components/Benchmark/Chart'
+
 import { toErrorMessage } from '../../../../types/apierror'
-import SummaryCard from '../../../../components/Cards/SummaryCard'
+
 import Evaluate from './Evaluate'
-import Table, { IColumn } from '../../../../components/Table'
+
 import Findings from './Findings'
 import axios from 'axios'
 import { get } from 'http'
@@ -55,7 +55,6 @@ import Container from '@cloudscape-design/components/container'
 import Header from '@cloudscape-design/components/header'
 import Link from '@cloudscape-design/components/link'
 import Button from '@cloudscape-design/components/button'
-import Filter from './Filter'
 // import { LineChart } from '@tremor/react'
 import {
     BreadcrumbGroup,

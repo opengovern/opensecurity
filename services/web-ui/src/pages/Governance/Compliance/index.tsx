@@ -14,24 +14,17 @@ import {
     PuzzlePieceIcon,
     ShieldCheckIcon,
 } from '@heroicons/react/24/outline'
-import { useComplianceApiV1BenchmarksSummaryList } from '../../../api/compliance.gen'
+
 import {
     PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary,
     SourceType,
 } from '../../../api/api'
-import ComplianceListCard from '../../../components/Cards/ComplianceListCard'
+
 import TopHeader from '../../../components/Layout/Header'
-import FilterGroup, { IFilter } from '../../../components/FilterGroup'
 import { useURLParam, useURLState } from '../../../utilities/urlstate'
-import {
-    BenchmarkStateFilter,
-    ConnectorFilter,
-} from '../../../components/FilterGroup/FilterTypes'
+
 import { errorHandling } from '../../../types/apierror'
-import RadioSelector, {
-    RadioItem,
-} from '../../../components/FilterGroup/RadioSelector'
-import { benchmarkChecks } from '../../../components/Cards/ComplianceCard'
+
 import Spinner from '../../../components/Spinner'
 import axios from 'axios'
 import BenchmarkCard from './BenchmarkCard'
@@ -83,15 +76,14 @@ export default function Compliance() {
     const [totalCount, setTotalCount] = useState<number>(0)
     const [response, setResponse] = useState()
     const [isLoading, setIsLoading] = useState(false)
-const {
-    response: Types,
-    isLoading: TypesLoading,
-    isExecuted: TypesExec,
-} = useIntegrationApiV1EnabledConnectorsList(0, 0)
+    const {
+        response: Types,
+        isLoading: TypesLoading,
+        isExecuted: TypesExec,
+    } = useIntegrationApiV1EnabledConnectorsList(0, 0)
 
-    const getFilterOptions =() =>{
+    const getFilterOptions = () => {
         const temp = [
-          
             {
                 propertyKey: 'enable',
                 value: 'Yes',
@@ -100,19 +92,15 @@ const {
                 propertyKey: 'enable',
                 value: 'No',
             },
-          
         ]
         Types?.integration_types?.map((item) => {
             temp.push({
                 propertyKey: 'integrationType',
                 value: item.platform_name,
             })
-
         })
 
-
         return temp
-
     }
     const GetCard = () => {
         let url = ''
@@ -133,7 +121,7 @@ const {
         const connectors = []
         const enable = []
         const isSRE = []
-        const title =[]
+        const title = []
         query.tokens.map((item) => {
             if (item.propertyKey == 'integrationType') {
                 connectors.push(item.value)
@@ -144,7 +132,7 @@ const {
             if (item.propertyKey == 'title_regex') {
                 title.push(item.value)
             }
-            
+
             // if(item.propertyKey == 'family'){
             //     isSRE.push(item.value)
             // }
@@ -164,7 +152,6 @@ const {
                 enable_filter = false
             }
         }
-
 
         const body = {
             cursor: page,
@@ -258,8 +245,7 @@ const {
                 config
             )
             .then((res) => {
-                const temp = [
-                ]
+                const temp = []
                 setIsLoading(false)
                 res.data?.map((item) => {
                     temp.push(item)
@@ -434,17 +420,13 @@ const {
                                                               )
                                                           })}
                                             </Grid>
-                                          
                                         </header>
                                     </div>
                                     <div className="w-full">
                                         <div className="p-4 sm:p-6 lg:p-8">
                                             <main>
                                                 <div className="flex items-center justify-between">
-                                                   
-                                                    <div className="flex items-center space-x-2">
-                                                      
-                                                    </div>
+                                                    <div className="flex items-center space-x-2"></div>
                                                 </div>
                                                 <div className="flex items-center w-full">
                                                     <Grid
