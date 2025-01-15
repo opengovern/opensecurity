@@ -105,6 +105,7 @@ func NewIntegrationTypeManager(logger *zap.Logger, integrationTypeDb *gorm.DB) *
 		rpcClient, err := client.Client()
 		if err != nil {
 			logger.Error("failed to create plugin client", zap.Error(err), zap.String("plugin", pluginName), zap.String("path", pluginPath))
+			client.Kill()
 			continue
 		}
 
@@ -112,6 +113,7 @@ func NewIntegrationTypeManager(logger *zap.Logger, integrationTypeDb *gorm.DB) *
 		raw, err := rpcClient.Dispense(pluginName)
 		if err != nil {
 			logger.Error("failed to dispense plugin", zap.Error(err), zap.String("plugin", pluginName), zap.String("path", pluginPath))
+			client.Kill()
 			continue
 		}
 
@@ -119,6 +121,7 @@ func NewIntegrationTypeManager(logger *zap.Logger, integrationTypeDb *gorm.DB) *
 		itInterface, ok := raw.(interfaces.IntegrationType)
 		if !ok {
 			logger.Error("failed to cast plugin to integration type", zap.String("plugin", pluginName), zap.String("path", pluginPath))
+			client.Kill()
 			continue
 		}
 
