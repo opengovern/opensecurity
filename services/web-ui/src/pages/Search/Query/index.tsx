@@ -85,8 +85,7 @@ import Bookmarks from '../Bookmarks'
 import axios from 'axios'
 export const getTable = (
     headers: string[] | undefined,
-    details: any[][] | undefined,
-    isDemo: boolean
+    details: any[][] | undefined
 ) => {
     const columns: any[] = []
     const rows: any[] = []
@@ -202,11 +201,11 @@ export default function Query() {
     const [openDrawer, setOpenDrawer] = useState(false)
     const [openSearch, setOpenSearch] = useState(true)
     const [showEditor, setShowEditor] = useState(true)
-    const isDemo = useAtomValue(isDemoAtom)
     const [pageSize, setPageSize] = useState(1000)
     const [autoRun, setAutoRun] = useState(false)
 
     const [page, setPage] = useState(0)
+
     const [tab, setTab] = useState('0')
     const [preferences, setPreferences] = useState(undefined)
     const [integrations, setIntegrations] = useState([])
@@ -219,7 +218,6 @@ export default function Query() {
     const [schemaLoading2, setSchemaLoading2] = useState(false)
     const [expanded, setExpanded] = useState(-1)
     const [expanded1, setExpanded1] = useState(-1)
-    
 
     // const { response: categories, isLoading: categoryLoading } =
     //     useInventoryApiV2AnalyticsCategoriesList()
@@ -286,25 +284,11 @@ export default function Query() {
             .finally(() => {})
     }, [])
 
-    const recordToArray = (record?: Record<string, string[]> | undefined) => {
-        if (record === undefined) {
-            return []
-        }
-
-        return Object.keys(record).map((key) => {
-            return {
-                value: key,
-                resource_types: record[key],
-            }
-        })
-    }
-
     const memoCount = useMemo(
-        () =>
-            getTable(queryResponse?.headers, queryResponse?.result, isDemo)
-                .count,
-        [queryResponse, isDemo]
+        () => getTable(queryResponse?.headers, queryResponse?.result).count,
+        [queryResponse]
     )
+
     useEffect(() => {
         if (savedQuery.length > 0 && savedQuery !== '') {
             setCode(savedQuery)
@@ -591,85 +575,6 @@ export default function Query() {
                                     </>
                                 </Flex>
                             </Card>
-                            {/* <Card className="sticky w-fit h-fit max-h-[550px] min-w-max   overflow-y-scroll">
-                                    <TextInput
-                                        className="w-56 mb-6"
-                                        icon={MagnifyingGlassIcon}
-                                        placeholder="Search..."
-                                        value={searchCategory}
-                                        onChange={(e) =>
-                                            setSearchCategory(e.target.value)
-                                        }
-                                    />
-                                    {recordToArray(
-                                        categories?.categoryResourceType
-                                    ).map(
-                                        (cat) =>
-                                            !!cat.resource_types?.filter(
-                                                (catt) =>
-                                                    catt
-                                                        .toLowerCase()
-                                                        .includes(
-                                                            searchCategory.toLowerCase()
-                                                        )
-                                            ).length && (
-                                                <Accordion className="w-56 border-0 rounded-none bg-transparent mb-1">
-                                                    <AccordionHeader className="pl-0 pr-0.5 py-1 w-full bg-transparent">
-                                                        <Text className="text-gray-800">
-                                                            {cat.value}
-                                                        </Text>
-                                                    </AccordionHeader>
-                                                    <AccordionBody className="p-0 w-full pr-0.5 cursor-default bg-transparent">
-                                                        <Flex
-                                                            flexDirection="col"
-                                                            justifyContent="start"
-                                                        >
-                                                            {cat.resource_types
-                                                                ?.filter(
-                                                                    (catt) =>
-                                                                        catt
-                                                                            .toLowerCase()
-                                                                            .includes(
-                                                                                searchCategory.toLowerCase()
-                                                                            )
-                                                                )
-                                                                .map(
-                                                                    (
-                                                                        subCat
-                                                                    ) => (
-                                                                        <Flex
-                                                                            justifyContent="start"
-                                                                            onClick={() =>
-                                                                                setCode(
-                                                                                    `select * from platform_resources where resource_type = '${subCat}'`
-                                                                                )
-                                                                            }
-                                                                        >
-                                                                            <Text className="ml-4 w-full truncate text-start py-2 cursor-pointer hover:text-openg-600">
-                                                                                {
-                                                                                    subCat
-                                                                                }
-                                                                            </Text>
-                                                                        </Flex>
-                                                                    )
-                                                                )}
-                                                        </Flex>
-                                                    </AccordionBody>
-                                                </Accordion>
-                                            )
-                                    )}
-                                    <Flex
-                                        justifyContent="end"
-                                        className="mt-12"
-                                    >
-                                        <Button
-                                            variant="light"
-                                            onClick={() => setOpenSearch(false)}
-                                        >
-                                            <ChevronDoubleLeftIcon className="h-4" />
-                                        </Button>
-                                    </Flex>
-                                </Card> */}
                         </>
                     ) : (
                         <Flex
@@ -696,14 +601,10 @@ export default function Query() {
                             value={code}
                             languageLabel="SQL"
                             onChange={({ detail }) => {
-                                if (isLoading) {
-                                    return
-                                } else {
-                                    setSavedQuery('')
-                                    setCode(detail.value)
-                                    if (tab !== '3') {
-                                        setTab('3')
-                                    }
+                                setSavedQuery('')
+                                setCode(detail.value)
+                                if (tab !== '3') {
+                                    setTab('3')
                                 }
                             }}
                             preferences={preferences}
@@ -712,7 +613,6 @@ export default function Query() {
                                 setPreferences(e.detail)
                             }
                             loading={false}
-                            
                             themes={{
                                 light: ['xcode', 'cloud_editor', 'sqlserver'],
                                 dark: ['cloud_editor_dark', 'twilight'],
@@ -906,9 +806,11 @@ export default function Query() {
                                                         // icon={PlayCircleIcon}
                                                         variant="primary"
                                                         className="w-max  min-w-[300px]  "
-                                                        onClick={() =>
+                                                        onClick={() => {
                                                             sendNow()
-                                                        }
+                                                            setLoaded(true)
+                                                            setPage(0)
+                                                        }}
                                                         disabled={!code.length}
                                                         loading={
                                                             isLoading &&
@@ -1021,23 +923,20 @@ export default function Query() {
                                                 columnDefinitions={
                                                     getTable(
                                                         queryResponse?.headers,
-                                                        queryResponse?.result,
-                                                        isDemo
+                                                        queryResponse?.result
                                                     ).columns
                                                 }
                                                 columnDisplay={
                                                     getTable(
                                                         queryResponse?.headers,
-                                                        queryResponse?.result,
-                                                        isDemo
+                                                        queryResponse?.result
                                                     ).column_def
                                                 }
                                                 enableKeyboardNavigation
                                                 // @ts-ignore
                                                 items={getTable(
                                                     queryResponse?.headers,
-                                                    queryResponse?.result,
-                                                    isDemo
+                                                    queryResponse?.result
                                                 ).rows?.slice(
                                                     page * 10,
                                                     (page + 1) * 10
@@ -1064,7 +963,10 @@ export default function Query() {
                                                     <Header className="w-full">
                                                         Results{' '}
                                                         <span className=" font-medium">
-                                                            ({memoCount})
+                                                            {isLoading &&
+                                                            isExecuted
+                                                                ? '(?)'
+                                                                : `(${memoCount})`}{' '}
                                                         </span>
                                                     </Header>
                                                 }
@@ -1073,14 +975,21 @@ export default function Query() {
                                                         currentPageIndex={
                                                             page + 1
                                                         }
-                                                        pagesCount={Math.ceil(
-                                                            // @ts-ignore
-                                                            getTable(
-                                                                queryResponse?.headers,
-                                                                queryResponse?.result,
-                                                                isDemo
-                                                            ).rows.length / 10
-                                                        )}
+                                                        pagesCount={
+                                                            // prettier-ignore
+                                                            (isLoading &&
+                                                            isExecuted)
+                                                                ? 0
+                                                                : Math.ceil(
+                                                                      // @ts-ignore
+                                                                      getTable(
+                                                                          queryResponse?.headers,
+                                                                          queryResponse?.result
+                                                                      ).rows
+                                                                          .length /
+                                                                          10
+                                                                  )
+                                                        }
                                                         onChange={({
                                                             detail,
                                                         }) =>

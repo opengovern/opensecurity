@@ -141,13 +141,13 @@ export default function SingleMetric({
 
     const memoColumns = useMemo(
         () =>
-            getTable(queryResponse?.headers, queryResponse?.result, isDemo)
+            getTable(queryResponse?.headers, queryResponse?.result)
                 .columns,
         [queryResponse, isDemo]
     )
     const memoCount = useMemo(
         () =>
-            getTable(queryResponse?.headers, queryResponse?.result, isDemo)
+            getTable(queryResponse?.headers, queryResponse?.result)
                 .count,
         [queryResponse, isDemo]
     )
@@ -291,7 +291,7 @@ export default function SingleMetric({
                             getTable(
                                 queryResponse?.headers,
                                 queryResponse?.result,
-                                isDemo
+                                
                             ).rows
                         }
                         downloadable
