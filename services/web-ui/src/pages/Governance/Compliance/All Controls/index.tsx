@@ -35,11 +35,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react' // eslint-disable
 // import 'prismjs/components/prism-sql' // eslint-disable-next-line import/no-extraneous-dependencies
 // import 'prismjs/themes/prism.css'
 import Editor from 'react-simple-code-editor'
-import {
-    IServerSideGetRowsParams,
-    RowClickedEvent,
-    ValueFormatterParams,
-} from 'ag-grid-community'
+
 import {
     CheckCircleIcon,
     ExclamationCircleIcon,
@@ -56,7 +52,6 @@ import Spinner from '../../../../components/Spinner'
 import { getErrorMessage } from '../../../../types/apierror'
 import DrawerPanel from '../../../../components/DrawerPanel'
 import { RenderObject } from '../../../../components/RenderObject'
-import Table, { IColumn } from '../../../../components/Table'
 
 import {
     GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryResponse,
@@ -92,138 +87,7 @@ import {
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import { getConnectorIcon } from '../../../../components/Cards/ConnectorCard'
 import { useIntegrationApiV1EnabledConnectorsList } from '../../../../api/integration.gen'
-export const getTable = (
-    headers: string[] | undefined,
-    details: any[][] | undefined,
-    isDemo: boolean
-) => {
-    const columns: IColumn<any, any>[] = []
-    const rows: any[] = []
-    const headerField = headers?.map((value, idx) => {
-        if (headers.filter((v) => v === value)?.length > 1) {
-            return `${value}-${idx}`
-        }
-        return value
-    })
-    if (headers && headers.length) {
-        for (let i = 0; i < headers.length; i += 1) {
-            const isHide = headers[i][0] === '_'
-            columns.push({
-                field: headerField?.at(i),
-                headerName: snakeCaseToLabel(headers[i]),
-                type: 'string',
-                sortable: true,
-                hide: isHide,
-                resizable: true,
-                filter: true,
-                width: 170,
-                cellRenderer: (param: ValueFormatterParams) => (
-                    <span className={isDemo ? 'blur-sm' : ''}>
-                        {param.value}
-                    </span>
-                ),
-            })
-        }
-    }
-    if (details && details.length) {
-        for (let i = 0; i < details.length; i += 1) {
-            const row: any = {}
-            for (let j = 0; j < columns.length; j += 1) {
-                row[headerField?.at(j) || ''] =
-                    typeof details[i][j] === 'string'
-                        ? details[i][j]
-                        : JSON.stringify(details[i][j])
-            }
-            rows.push(row)
-        }
-    }
-    const count = rows.length
-    return {
-        columns,
-        rows,
-        count,
-    }
-}
 
-const columns: IColumn<
-    GithubComKaytuIoKaytuEnginePkgControlApiListV2ResponseItem,
-    any
->[] = [
-    {
-        field: 'id',
-        headerName: 'ID',
-        type: 'string',
-        sortable: true,
-        resizable: false,
-    },
-    {
-        field: 'title',
-        headerName: 'Title',
-        type: 'string',
-        sortable: true,
-        resizable: false,
-    },
-    {
-        field: 'connector',
-        headerName: 'Connector',
-        type: 'connector',
-        sortable: true,
-        resizable: false,
-        // cellRenderer: (params: any) =>
-        //     params.value.map((item: string, index: number) => {
-        //         return `${item} `
-        //     }),
-    },
-    {
-        field: 'query',
-        headerName: 'Primary Table',
-        type: 'string',
-        sortable: true,
-        resizable: false,
-        cellRenderer: (params: any) => params.value?.primary_table,
-    },
-    {
-        field: 'severity',
-        headerName: 'Severity',
-        type: 'string',
-        sortable: true,
-        resizable: false,
-    },
-    {
-        field: 'query.parameters',
-        headerName: 'Has Parametrs',
-        type: 'string',
-        sortable: true,
-        resizable: false,
-        cellRenderer: (params: any) => {
-            return <>{params.value.length > 0 ? 'True' : 'False'}</>
-        },
-    },
-
-    // {
-    //     field: 'connectors',
-    //     headerName: 'Primary Table',
-    //     type: 'string',
-    //     sortable: true,
-    //     resizable: false,
-    // },
-    // {
-    //     type: 'string',
-    //     width: 130,
-    //     resizable: false,
-    //     sortable: false,
-    //     cellRenderer: (params: any) => (
-    //         <Flex
-    //             justifyContent="center"
-    //             alignItems="center"
-    //             className="h-full"
-    //         >
-    //             <PlayCircleIcon className="h-5 text-openg-500 mr-1" />
-    //             <Text className="text-openg-500">Run query</Text>
-    //         </Flex>
-    //     ),
-    // },
-]
 
 
 export default function AllControls() {

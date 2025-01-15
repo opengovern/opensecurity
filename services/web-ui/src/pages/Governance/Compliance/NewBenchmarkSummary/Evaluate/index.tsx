@@ -1,5 +1,4 @@
 import { useAtomValue, useSetAtom } from 'jotai'
-import { ICellRendererParams, ValueFormatterParams } from 'ag-grid-community'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
     Button,
@@ -19,7 +18,6 @@ import {
     GithubComKaytuIoKaytuEnginePkgComplianceApiBenchmarkEvaluationSummary,
 } from '../../../../../api/api'
 import DrawerPanel from '../../../../../components/DrawerPanel'
-import Table, { IColumn } from '../../../../../components/Table'
 import { isDemoAtom, notificationAtom } from '../../../../../store'
 import KFilter from '../../../../../components/Filter'
 import {

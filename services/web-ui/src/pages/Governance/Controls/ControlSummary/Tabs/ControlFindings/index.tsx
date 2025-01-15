@@ -1,12 +1,7 @@
 // @ts-nocheck
 import { useEffect, useMemo, useState } from 'react'
 import { useAtomValue, useSetAtom } from 'jotai/index'
-import {
-    ICellRendererParams,
-    RowClickedEvent,
-    ValueFormatterParams,
-    IServerSideGetRowsParams,
-} from 'ag-grid-community'
+
 import { Flex, Text, Title } from '@tremor/react'
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import Table, { IColumn } from '../../../../../../components/Table'

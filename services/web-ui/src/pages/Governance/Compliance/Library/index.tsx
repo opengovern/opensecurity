@@ -2,7 +2,6 @@ import { Card, Divider, Flex, Grid, Icon, Tab, TabGroup, TabList, TabPanel, TabP
 import TopHeader from '../../../../components/Layout/Header'
 import { useState } from 'react'
 import AllControls from '../All Controls';
-import AllBenchmarks from '../All Benchmarks';
 import SettingsParameters from '../../../Settings/Parameters';
 import { ChevronRightIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import { Tabs } from '@cloudscape-design/components';

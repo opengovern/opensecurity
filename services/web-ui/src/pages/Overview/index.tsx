@@ -1,7 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { Col, Flex, Grid } from '@tremor/react'
 import Governance from './Governance'
-import Spend from './Spend'
 import TopHeader from '../../components/Layout/Header'
 import ScoreKPIs from './ScoreKPIs'
 import { defaultHomepageTime } from '../../utilities/urlstate'

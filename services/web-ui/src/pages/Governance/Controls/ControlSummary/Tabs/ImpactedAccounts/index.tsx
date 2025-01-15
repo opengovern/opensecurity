@@ -1,8 +1,6 @@
 import { useAtomValue } from 'jotai'
-import { ICellRendererParams, ValueFormatterParams } from 'ag-grid-community'
 import { Flex, Text } from '@tremor/react'
 import { useComplianceApiV1FindingsTopDetail } from '../../../../../../api/compliance.gen'
-import Table, { IColumn } from '../../../../../../components/Table'
 import { GithubComKaytuIoKaytuEnginePkgComplianceApiGetTopFieldResponse } from '../../../../../../api/api'
 import { isDemoAtom } from '../../../../../../store'
 import { useState } from 'react'
@@ -29,63 +27,7 @@ interface IImpactedAccounts {
     controlId: string | undefined
 }
 
-export const cloudAccountColumns = (isDemo: boolean) => {
-    const temp: IColumn<any, any>[] = [
-        {
-            field: 'connector',
-            headerName: 'Cloud provider',
-            type: 'string',
-            width: 140,
-            hide: true,
-            sortable: true,
-            filter: true,
-            enableRowGroup: true,
-        },
-        {
-            field: 'providerConnectionName',
-            headerName: 'Account name',
-            resizable: true,
-            type: 'string',
-            sortable: true,
-            filter: true,
-            cellRenderer: (param: ValueFormatterParams) => (
-                <span className={isDemo ? 'blur-sm' : ''}>{param.value}</span>
-            ),
-        },
-        {
-            field: 'providerConnectionID',
-            headerName: 'Account ID',
-            type: 'string',
-            resizable: true,
-            sortable: true,
-            filter: true,
-            cellRenderer: (param: ValueFormatterParams) => (
-                <span className={isDemo ? 'blur-sm' : ''}>{param.value}</span>
-            ),
-        },
-        {
-            headerName: 'Resources',
-            field: 'count',
-            type: 'number',
-            sortable: true,
-            filter: true,
-            resizable: true,
-            width: 150,
-            cellRenderer: (param: ICellRendererParams) => (
-                <Flex flexDirection="col" alignItems="start">
-                    <Text className="text-gray-800">
-                        {param.value || 0} issues
-                    </Text>
-                    <Text>
-                        {(param.data.totalCount || 0) - (param.value || 0)}{' '}
-                        passed
-                    </Text>
-                </Flex>
-            ),
-        },
-    ]
-    return temp
-}
+
 
 export const topConnections = (
     input:

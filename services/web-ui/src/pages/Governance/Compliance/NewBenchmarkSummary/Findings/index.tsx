@@ -19,15 +19,11 @@ import {
     SourceType,
     TypesFindingSeverity,
 } from '../../../../../api/api'
-import ResourcesWithFailure from './ResourcesWithFailure'
-import ControlsWithFailure from './ControlsWithFailure'
-import FailingCloudAccounts from './FailingCloudAccounts'
 import {
     DateRange,
     useURLParam,
     useURLState,
 } from '../../../../../utilities/urlstate'
-import Events from './Events'
 import Spinner from '../../../../../components/Spinner'
 interface Props {
     id: string
@@ -64,14 +60,6 @@ export default function Findings({ id }: Props) {
         switch (tab) {
             case 0:
                 return <FindingsWithFailure query={query} />
-            case 1:
-                return <Events query={query} />
-            case 2:
-                return <ControlsWithFailure query={query} />
-            case 3:
-                return <ResourcesWithFailure query={query} />
-            case 4:
-                return <FailingCloudAccounts query={query} />
             default:
                 return <Spinner />
         }

@@ -11,10 +11,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { useAtomValue } from 'jotai'
 
-import {
-    ConnectorToCredentialType,
-    StringToProvider,
-} from '../../../types/provider'
+
 import {
     useIntegrationApiV1ConnectorsMetricsList,
     useIntegrationApiV1CredentialsList,

@@ -30,9 +30,7 @@
         "@types/react-dom": "^18.2.17",
         "@uiw/react-markdown-preview": "^5.0.7",
         "@visx/xychart": "^3.11.0",
-        "ag-grid-community": "^31.0.0",
-        "ag-grid-enterprise": "^31.0.0",
-        "ag-grid-react": "^31.0.0",
+      
         "axios": "^1.6.2",
         "clipboard-copy": "^4.0.1",
         "cookie": "^1.0.1",

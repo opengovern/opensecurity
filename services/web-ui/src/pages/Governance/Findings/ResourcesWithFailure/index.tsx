@@ -1,11 +1,6 @@
 // @ts-nocheck
 import { Card, Flex, Text, Title } from '@tremor/react'
-import {
-    ICellRendererParams,
-    RowClickedEvent,
-    ValueFormatterParams,
-    IServerSideGetRowsParams,
-} from 'ag-grid-community'
+
 import { useEffect, useMemo, useState } from 'react'
 import { useAtomValue, useSetAtom } from 'jotai/index'
 import {
@@ -17,7 +12,6 @@ import {
 } from '../../../../api/api'
 import AxiosAPI from '../../../../api/ApiConfig'
 import { isDemoAtom, notificationAtom } from '../../../../store'
-import Table, { IColumn } from '../../../../components/Table'
 import { dateTimeDisplay } from '../../../../utilities/dateDisplay'
 import { getConnectorIcon } from '../../../../components/Cards/ConnectorCard'
 import ResourceFindingDetail from '../ResourceFindingDetail'
@@ -36,130 +30,7 @@ import {
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import Filter from '../Filter'
 import dayjs from 'dayjs'
-const columns = (isDemo: boolean) => {
-    const temp: IColumn<any, any>[] = [
-        {
-            field: 'resourceName',
-            headerName: 'Resource name',
-            hide: false,
-            type: 'string',
-            enableRowGroup: true,
-            sortable: false,
-            filter: true,
-            resizable: true,
-            flex: 1,
-            cellRenderer: (param: ICellRendererParams) => (
-                <Flex
-                    flexDirection="col"
-                    alignItems="start"
-                    justifyContent="center"
-                    className="h-full"
-                >
-                    <Text className="text-gray-800">{param.value}</Text>
-                    <Text className={isDemo ? 'blur-sm' : ''}>
-                        {param.data.platformResourceID}
-                    </Text>
-                </Flex>
-            ),
-        },
-        {
-            field: 'resourceType',
-            headerName: 'Resource type',
-            type: 'string',
-            enableRowGroup: true,
-            sortable: true,
-            hide: false,
-            filter: true,
-            resizable: true,
-            flex: 1,
-            cellRenderer: (param: ICellRendererParams) => (
-                <Flex
-                    flexDirection="col"
-                    alignItems="start"
-                    justifyContent="center"
-                >
-                    <Text className="text-gray-800">{param.value}</Text>
-                    <Text>{param.data.resourceTypeLabel}</Text>
-                </Flex>
-            ),
-        },
-        {
-            field: 'resourceLocation',
-            headerName: 'Resource location',
-            type: 'string',
-            enableRowGroup: true,
-            sortable: false,
-            hide: true,
-            filter: true,
-            resizable: true,
-            flex: 1,
-        },
-        {
-            field: 'providerConnectionName',
-            headerName: 'Cloud account',
-            sortable: false,
-            filter: true,
-            hide: false,
-            enableRowGroup: true,
-            type: 'string',
-            cellRenderer: (param: ICellRendererParams) => (
-                <Flex
-                    justifyContent="start"
-                    className={`h-full gap-3 group relative ${
-                        isDemo ? 'blur-sm' : ''
-                    }`}
-                >
-                    {getConnectorIcon(param.data.connector)}
-                    <Flex flexDirection="col" alignItems="start">
-                        <Text className="text-gray-800">{param.value}</Text>
-                        <Text>{param.data.providerConnectionID}</Text>
-                    </Flex>
-                    <Card className="cursor-pointer absolute w-fit h-fit z-40 right-1 scale-0 transition-all py-1 px-4 group-hover:scale-100">
-                        <Text color="blue">Open</Text>
-                    </Card>
-                </Flex>
-            ),
-        },
-        {
-            field: 'totalCount',
-            headerName: 'Findings',
-            type: 'number',
-            hide: false,
-            enableRowGroup: true,
-            sortable: false,
-            filter: true,
-            resizable: true,
-            width: 140,
-            cellRenderer: (param: ICellRendererParams) => (
-                <Flex
-                    flexDirection="col"
-                    alignItems="start"
-                    justifyContent="center"
-                    className="h-full"
-                >
-                    <Text className="text-gray-800">{`${param.value} issues`}</Text>
-                    <Text>{`${
-                        param.value - param.data.failedCount
-                    } passed`}</Text>
-                </Flex>
-            ),
-        },
-        {
-            field: 'evaluatedAt',
-            headerName: 'Last checked',
-            type: 'datetime',
-            sortable: false,
-            filter: true,
-            resizable: true,
-            flex: 1,
-            valueFormatter: (param: ValueFormatterParams) => {
-                return param.value ? dateTimeDisplay(param.value) : ''
-            },
-            hide: true,
-        },
-    ]
-    return temp
-}
+
 
 let sortKey: any[] = []
 

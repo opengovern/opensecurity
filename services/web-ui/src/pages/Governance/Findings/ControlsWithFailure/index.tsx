@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { Card, Flex, Text } from '@tremor/react'
 import { useNavigate } from 'react-router-dom'
-import { ICellRendererParams, RowClickedEvent } from 'ag-grid-community'
 import { useAtomValue } from 'jotai'
 import { useComplianceApiV1FindingsTopDetail } from '../../../../api/compliance.gen'
 import {
@@ -28,90 +27,7 @@ import {
 import Filter from '../Filter'
 import dayjs from 'dayjs'
 
-const policyColumns: IColumn<any, any>[] = [
-    {
-        headerName: 'Control',
-        field: 'title',
-        type: 'string',
-        sortable: true,
-        filter: true,
-        resizable: true,
-        cellRenderer: (param: ICellRendererParams) => (
-            <Flex
-                flexDirection="col"
-                alignItems="start"
-                justifyContent="center"
-                className="h-full"
-            >
-                <Text className="text-gray-800">{param.value}</Text>
-                <Text>{param.data.id}</Text>
-            </Flex>
-        ),
-    },
-    {
-        headerName: 'Severity',
-        field: 'sev',
-        width: 120,
-        type: 'string',
-        sortable: true,
-        filter: true,
-        resizable: true,
-        cellRenderer: (params: ICellRendererParams) => (
-            <Flex
-                className="h-full w-full"
-                justifyContent="center"
-                alignItems="center"
-            >
-                {severityBadge(params.data.severity)}
-            </Flex>
-        ),
-    },
-    {
-        headerName: 'Findings',
-        field: 'count',
-        type: 'number',
-        sortable: true,
-        filter: true,
-        resizable: true,
-        width: 150,
-        cellRenderer: (param: ICellRendererParams) => (
-            <Flex
-                flexDirection="col"
-                alignItems="start"
-                justifyContent="center"
-                className="h-full"
-            >
-                <Text className="text-gray-800">{param.value || 0} issues</Text>
-                <Text>
-                    {(param.data.totalCount || 0) - (param.value || 0)} passed
-                </Text>
-            </Flex>
-        ),
-    },
-    {
-        headerName: 'Resources',
-        field: 'resourceCount',
-        type: 'number',
-        sortable: true,
-        filter: true,
-        resizable: true,
-        width: 150,
-        cellRenderer: (param: ICellRendererParams) => (
-            <Flex
-                flexDirection="col"
-                alignItems="start"
-                justifyContent="center"
-                className="h-full"
-            >
-                <Text className="text-gray-800">{param.value || 0} issues</Text>
-                <Text>
-                    {(param.data.resourceTotalCount || 0) - (param.value || 0)}{' '}
-                    passed
-                </Text>
-            </Flex>
-        ),
-    },
-]
+
 
 interface ICount {
     query: {

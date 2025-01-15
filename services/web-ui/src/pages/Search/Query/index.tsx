@@ -32,7 +32,6 @@ import { highlight, languages } from 'prismjs' // eslint-disable-next-line impor
 import 'prismjs/components/prism-sql' // eslint-disable-next-line import/no-extraneous-dependencies
 import 'prismjs/themes/prism.css'
 import Editor from 'react-simple-code-editor'
-import { RowClickedEvent, ValueFormatterParams } from 'ag-grid-community'
 import {
     CheckCircleIcon,
     ExclamationCircleIcon,
@@ -48,7 +47,6 @@ import Spinner from '../../../components/Spinner'
 import { getErrorMessage } from '../../../types/apierror'
 import DrawerPanel from '../../../components/DrawerPanel'
 import { RenderObject } from '../../../components/RenderObject'
-import Table, { IColumn } from '../../../components/Table'
 import {
     GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryResponse,
     GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItem,
@@ -161,34 +159,6 @@ export const getTable = (
     }
 }
 
-const columns: IColumn<
-    GithubComKaytuIoKaytuEnginePkgInventoryApiSmartQueryItem,
-    any
->[] = [
-    {
-        field: 'title',
-        headerName: 'Smart queries',
-        type: 'string',
-        sortable: true,
-        resizable: false,
-    },
-    {
-        type: 'string',
-        width: 130,
-        resizable: false,
-        sortable: false,
-        cellRenderer: (params: any) => (
-            <Flex
-                justifyContent="center"
-                alignItems="center"
-                className="h-full"
-            >
-                <PlayCircleIcon className="h-5 text-openg-500 mr-1" />
-                <Text className="text-openg-500">Run query</Text>
-            </Flex>
-        ),
-    },
-]
 
 export default function Query() {
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)

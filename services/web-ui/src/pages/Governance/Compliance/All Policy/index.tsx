@@ -35,11 +35,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react' // eslint-disable
 // import 'prismjs/components/prism-sql' // eslint-disable-next-line import/no-extraneous-dependencies
 // import 'prismjs/themes/prism.css'
 import Editor from 'react-simple-code-editor'
-import {
-    IServerSideGetRowsParams,
-    RowClickedEvent,
-    ValueFormatterParams,
-} from 'ag-grid-community'
+
 import {
     CheckCircleIcon,
     ExclamationCircleIcon,
@@ -56,7 +52,6 @@ import Spinner from '../../../../components/Spinner'
 import { getErrorMessage } from '../../../../types/apierror'
 import DrawerPanel from '../../../../components/DrawerPanel'
 import { RenderObject } from '../../../../components/RenderObject'
-import Table, { IColumn } from '../../../../components/Table'
 
 import {
     GithubComKaytuIoKaytuEnginePkgInventoryApiRunQueryResponse,

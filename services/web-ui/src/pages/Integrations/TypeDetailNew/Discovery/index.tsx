@@ -12,10 +12,7 @@ import {
     Text,
     Title,
 } from '@tremor/react'
-import {
-    IServerSideGetRowsParams,
-    ValueFormatterParams,
-} from 'ag-grid-community'
+
 import { Radio } from 'pretty-checkbox-react'
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'

@@ -34,7 +34,6 @@ import { highlight, languages } from 'prismjs' // eslint-disable-next-line impor
 import 'prismjs/components/prism-sql' // eslint-disable-next-line import/no-extraneous-dependencies
 import 'prismjs/themes/prism.css'
 import Editor from 'react-simple-code-editor'
-import { RowClickedEvent, ValueFormatterParams } from 'ag-grid-community'
 import {
     CheckCircleIcon,
     ExclamationCircleIcon,

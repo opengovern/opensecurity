@@ -5,8 +5,6 @@ import {
     MagnifyingGlassIcon,
     XMarkIcon,
 } from '@heroicons/react/24/outline'
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
 import { Checkbox, Radio, useCheckboxState } from 'pretty-checkbox-react'
 import { useIntegrationApiV1ConnectionsSummariesList } from '../../../../api/integration.gen'
 import Spinner from '../../../Spinner'
