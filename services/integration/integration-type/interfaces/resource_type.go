@@ -32,6 +32,10 @@ func (c *ResourceTypeConfiguration) ToAPI() models.ResourceTypeConfiguration {
 	}
 }
 
+func (p *ResourceTypeConfiguration) IsEmpty() bool {
+	return p.Name == "" && p.Description == "" && len(p.Params) == 0 && p.IntegrationType == ""
+}
+
 func (p *Param) ToAPI() models.Param {
 	return models.Param{
 		Name:        p.Name,

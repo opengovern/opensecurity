@@ -106,14 +106,14 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integratio
 	return integrations, nil
 }
 
-func (i *Integration) GetResourceTypesByLabels(labels map[string]string) (map[string]*interfaces.ResourceTypeConfiguration, error) {
+func (i *Integration) GetResourceTypesByLabels(labels map[string]string) (map[string]interfaces.ResourceTypeConfiguration, error) {
 	resourceTypes := configs.ResourceTypesList
 	if labels["integration/aws/organization-master"] == "true" {
 		resourceTypes = append(resourceTypes, configs.OrganizationMasterResourceTypesList...)
 	}
-	resourceTypesMap := make(map[string]*interfaces.ResourceTypeConfiguration)
+	resourceTypesMap := make(map[string]interfaces.ResourceTypeConfiguration)
 	for _, resourceType := range resourceTypes {
-		resourceTypesMap[resourceType] = nil
+		resourceTypesMap[resourceType] = interfaces.ResourceTypeConfiguration{}
 	}
 	return resourceTypesMap, nil
 }

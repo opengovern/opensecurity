@@ -99,6 +99,7 @@ func NewIntegrationTypeManager(logger *zap.Logger, integrationTypeDb *gorm.DB) *
 			Plugins:         map[string]plugin.Plugin{pluginName: &interfaces.IntegrationTypePlugin{}},
 			Cmd:             exec.Command(pluginPath),
 			Logger:          hcLogger,
+			Managed:         true,
 		})
 
 		rpcClient, err := client.Client()

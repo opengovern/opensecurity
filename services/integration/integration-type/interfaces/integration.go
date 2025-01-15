@@ -31,7 +31,7 @@ type IntegrationConfiguration struct {
 type IntegrationType interface {
 	GetIntegrationType() integration.Type
 	GetConfiguration() IntegrationConfiguration
-	GetResourceTypesByLabels(map[string]string) (map[string]*ResourceTypeConfiguration, error)
+	GetResourceTypesByLabels(map[string]string) (map[string]ResourceTypeConfiguration, error)
 	HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error)
 	DiscoverIntegrations(jsonData []byte) ([]models.Integration, error)
 	GetResourceTypeFromTableName(tableName string) string
@@ -62,8 +62,8 @@ func (i *IntegrationTypeRPC) GetConfiguration() IntegrationConfiguration {
 	return configuration
 }
 
-func (i *IntegrationTypeRPC) GetResourceTypesByLabels(labels map[string]string) (map[string]*ResourceTypeConfiguration, error) {
-	var resourceTypes map[string]*ResourceTypeConfiguration
+func (i *IntegrationTypeRPC) GetResourceTypesByLabels(labels map[string]string) (map[string]ResourceTypeConfiguration, error) {
+	var resourceTypes map[string]ResourceTypeConfiguration
 	err := i.client.Call("Plugin.GetResourceTypesByLabels", labels, &resourceTypes)
 	return resourceTypes, err
 }
@@ -115,7 +115,7 @@ func (i *IntegrationTypeRPCServer) GetConfiguration(_ struct{}, configuration *I
 	return nil
 }
 
-func (i *IntegrationTypeRPCServer) GetResourceTypesByLabels(labels map[string]string, resourceTypes *map[string]*ResourceTypeConfiguration) error {
+func (i *IntegrationTypeRPCServer) GetResourceTypesByLabels(labels map[string]string, resourceTypes *map[string]ResourceTypeConfiguration) error {
 	var err error
 	*resourceTypes, err = i.Impl.GetResourceTypesByLabels(labels)
 	return err

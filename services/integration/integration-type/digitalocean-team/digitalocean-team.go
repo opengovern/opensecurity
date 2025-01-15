@@ -64,10 +64,10 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integratio
 	}, nil
 }
 
-func (i *Integration) GetResourceTypesByLabels(labels map[string]string) (map[string]*interfaces.ResourceTypeConfiguration, error) {
-	resourceTypesMap := make(map[string]*interfaces.ResourceTypeConfiguration)
+func (i *Integration) GetResourceTypesByLabels(labels map[string]string) (map[string]interfaces.ResourceTypeConfiguration, error) {
+	resourceTypesMap := make(map[string]interfaces.ResourceTypeConfiguration)
 	for _, resourceType := range configs.ResourceTypesList {
-		resourceTypesMap[resourceType] = nil
+		resourceTypesMap[resourceType] = interfaces.ResourceTypeConfiguration{}
 	}
 	return resourceTypesMap, nil
 }

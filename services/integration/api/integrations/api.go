@@ -45,7 +45,6 @@ type API struct {
 }
 
 const (
-	UiSpecsPath                     string = "/ui-specs"
 	TemplateDeploymentPath          string = "/integrations/deployment-template.yaml"
 	TemplateManualsDeploymentPath   string = "/integrations/deployment-template-manuals.yaml"
 	TemplateScaledObjectPath        string = "/integrations/scaled-object-template.yaml"
@@ -1698,7 +1697,7 @@ func (h API) ListIntegrationTypeResourceTypes(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to list integration type resource types")
 		}
 		for rt, rtConfig := range resourceTypes {
-			if rtConfig != nil {
+			if !rtConfig.IsEmpty() {
 				items = append(items, rtConfig.ToAPI())
 			} else {
 				items = append(items, models.ResourceTypeConfiguration{
@@ -1752,7 +1751,7 @@ func (h API) GetIntegrationTypeResourceType(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to list integration type resource types")
 		}
 		if rt, ok := resourceTypes[resourceType]; ok {
-			if rt != nil {
+			if !rt.IsEmpty() {
 				return c.JSON(http.StatusOK, rt.ToAPI())
 			} else {
 				return c.JSON(http.StatusOK, models.ResourceTypeConfiguration{
