@@ -12,12 +12,7 @@ import {
     Title,
     Switch,
 } from '@tremor/react'
-import {
-    UncontrolledTreeEnvironment,
-    Tree,
-    StaticTreeDataProvider,
-    ControlledTreeEnvironment,
-} from 'react-complex-tree'
+
 import Tabs from '@cloudscape-design/components/tabs'
 import Box from '@cloudscape-design/components/box'
 // import Button from '@cloudscape-design/components/button'
