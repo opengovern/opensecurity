@@ -1,5 +1,4 @@
 import axios from 'axios'
-import { isDemo } from '../utilities/demo'
 import { atom, useAtom, useSetAtom } from 'jotai'
 import { useEffect } from 'react'
 import { ForbiddenAtom, RoleAccess } from '../store'
@@ -22,7 +21,6 @@ const instance = axios.create({
     baseURL: `${apiHostname()}${'/main/'}`,
     headers: {
         'Content-Type': 'application/json',
-        'X-Kaytu-Demo': isDemo() ? 'true' : 'false',
         Accept: 'application/json',
     },
 

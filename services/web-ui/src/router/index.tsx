@@ -7,7 +7,6 @@ import Logout from '../pages/Logout'
 import Integrations from '../pages/Integrations'
 import Compliance from '../pages/Governance/Compliance'
 import Overview from '../pages/Overview'
-import Stack from '../pages/Stack'
 // import Boostrap from '../pages/Workspaces/Bootstrap'
 import ControlDetail from '../pages/Governance/Controls/ControlSummary'
 import Findings from '../pages/Governance/Findings'
@@ -21,7 +20,6 @@ import SettingsParameters from '../pages/Settings/Parameters'
 import SettingsMembers from '../pages/Settings/Members'
 import NewBenchmarkSummary from '../pages/Governance/Compliance/NewBenchmarkSummary'
 import Dashboard from '../pages/Dashboard'
-import Library from '../pages/Governance/Compliance/Library'
 import Search from '../pages/Search'
 import SettingsAccess from '../pages/Settings/Access'
 import SettingsProfile from '../pages/Settings/Profile'
@@ -32,18 +30,7 @@ import Tasks from '../pages/Tasks'
 import TaskDetail from '../pages/Tasks/TaskDetail'
 
 const authRoutes = [
-    // {
-    //     key: 'url',
-    //     path: '/',
-    //     element: <Navigate to="/ws/workspaces?onLogin" replace />,
-    //     noAuth: true,
-    // },
-    // {
-    //     key: 'ws name',
-    //     path: '/',
-    //     element: <Navigate to="overview" />,
-    //     noAuth: true,
-    // },
+  
     {
         key: 'callback',
         path: '/callback',
@@ -62,11 +49,7 @@ const authRoutes = [
         element: <NotFound />,
         noAuth: true,
     },
-    // {
-    //     key: 'workspaces',
-    //     path: '/ws/workspaces',
-    //     element: <Workspaces />,
-    // },
+
     {
         key: 'workload optimizer',
         path: '/workload-optimizer',
@@ -127,11 +110,7 @@ const authRoutes = [
         path: '/settings/api-keys',
         element: <SettingsWorkspaceAPIKeys />,
     },
-    // {
-    //     key: 'settings variables',
-    //     path: '/settings/variables',
-    //     element: <SettingsParameters />,
-    // },
+   
     {
         key: 'settings Authentications',
         path: '/settings/authentication',
@@ -154,21 +133,13 @@ const authRoutes = [
         path: '/compliance/:benchmarkId',
         element: <NewBenchmarkSummary />,
     },
-    {
-        key: 'allControls',
-        path: '/compliance/library',
-        element: <Library />,
-    },
+ 
     {
         key: 'allControls',
         path: '/compliance/library/parameters',
         element: <SettingsParameters />,
     },
-    // {
-    //     key: 'allBenchmarks',
-    //     path: '/compliance/benchmarks',
-    //     element: <AllBenchmarks />,
-    // },
+  
     {
         key: 'benchmark summary',
         path: '/compliance/:benchmarkId/:controlId',
@@ -185,32 +156,20 @@ const authRoutes = [
         path: '/incidents',
         element: <Findings />,
     },
-    // {
-    //     key: 'Resource summary',
-    //     path: '/incidents/resource-summary',
-    //     element: <Findings />,
-    // },
+   
     {
         key: ' summary',
         path: '/incidents/summary',
         element: <Findings />,
     },
 
-    // {
-    //     key: 'Drift Events',
-    //     path: '/incidents/drift-events',
-    //     element: <Findings />,
-    // },
+   
     {
         key: 'Account Posture',
         path: '/incidents/account-posture',
         element: <Findings />,
     },
-    // {
-    //     key: 'Control Summary',
-    //     path: '/incidents/control-summary',
-    //     element: <Findings />,
-    // },
+    
     {
         key: 'incidents',
         path: '/incidents/:controlId',
@@ -222,33 +181,7 @@ const authRoutes = [
         path: '/',
         element: <Overview />,
     },
-    {
-        key: 'deployment',
-        path: '/deployment',
-        element: <Stack />,
-    },
-    // {
-    //     key: 'query',
-    //     path: '/query',
-    //     element: <Query />,
-    // },
-    // {
-    //     key: 'bootstrap',
-    //     path: '/bootstrap',
-    //     element: <Boostrap />,
-    // },
-    // {
-    //     key: 'new-ws',
-    //     path: '/ws/new-ws',
-    //     element: <Boostrap />,
-    // },
-
     
-    // {
-    //     key: 'resource collection assets metrics',
-    //     path: '/:ws/resource-collection/:resourceId/assets-details',
-    //     component: AssetDetails,
-    // },
   
     {
         key: 'request a demo',
@@ -271,16 +204,7 @@ const authRoutes = [
         path: '/tasks/:id',
         element: <TaskDetail />,
     },
-    // {
-    //     key: 'Search Main',
-    //     path: '/cloudql-dashboard',
-    //     element: <SearchLanding />,
-    // },
-    // {
-    //     key: 'test',
-    //     path: '/test',
-    //     element: <Test />,
-    // },
+    
 ]
 
 export default function Router() {

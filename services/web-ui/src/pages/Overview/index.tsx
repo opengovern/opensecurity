@@ -97,7 +97,7 @@ export default function Overview() {
                 }
             })
             .catch((err) => {
-                if( err.response.status === 401){
+                if( err?.response?.status === 401){
                         setForbbiden(true)
                 }
 
