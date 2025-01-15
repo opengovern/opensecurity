@@ -64,59 +64,14 @@ export default function ViewDetail({
     const { ws } = useParams()
     const setQuery = useSetAtom(queryAtom)
 
-    // const { response, isLoading, sendNow } =
-    //     useComplianceApiV1FindingsResourceCreate(
-    //         { kaytuResourceId: resourceFinding?.kaytuResourceID || '' },
-    //         {},
-    //         false
-    //     )
+   
     const searchParams = useAtomValue(searchAtom)
 
-    // useEffect(() => {
-    //     if (resourceFinding && open) {
-    //         sendNow()
-    //     }
-    // }, [resourceFinding, open])
+  
 
     const isDemo = useAtomValue(isDemoAtom)
 
-    // const finding = resourceFinding?.findings
-    //     ?.filter((f) => f.controlID === controlID)
-    //     .at(0)
-
-    // const conformance = () => {
-    //     if (showOnlyOneControl) {
-    //         return (finding?.conformanceStatus || 0) ===
-    //             PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusFailed ? (
-    //             <Flex className="w-fit gap-1.5">
-    //                 <XCircleIcon className="h-4 text-rose-600" />
-    //                 <Text>Failed</Text>
-    //             </Flex>
-    //         ) : (
-    //             <Flex className="w-fit gap-1.5">
-    //                 <CheckCircleIcon className="h-4 text-emerald-500" />
-    //                 <Text>Passed</Text>
-    //             </Flex>
-    //         )
-    //     }
-
-    //     const failingControls = new Map<string, string>()
-    //     resourceFinding?.findings?.forEach((f) => {
-    //         failingControls.set(f.controlID || '', '')
-    //     })
-
-    //     return failingControls.size > 0 ? (
-    //         <Flex className="w-fit gap-1.5">
-    //             <XCircleIcon className="h-4 text-rose-600" />
-    //             <Text>{failingControls.size} Failing</Text>
-    //         </Flex>
-    //     ) : (
-    //         <Flex className="w-fit gap-1.5">
-    //             <CheckCircleIcon className="h-4 text-emerald-500" />
-    //             <Text>Passed</Text>
-    //         </Flex>
-    //     )
-    // }
+  
 
     return (
         <>

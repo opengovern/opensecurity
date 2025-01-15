@@ -61,7 +61,7 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                     className={`bg-gray-100 dark:bg-gray-900 h-screen ${
                         current === 'assistant' ? '' : 'overflow-y-scroll'
                     } overflow-x-hidden`}
-                    id="kaytu-container"
+                    id="platform-container"
                     onScroll={(e) => {
                         if (onScroll) {
                             onScroll(e)
