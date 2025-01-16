@@ -4835,9 +4835,9 @@ func parseTimeInterval(intervalStr string) (*time.Time, *time.Time, error) {
 //	@Tags			workspace
 //	@Accept			json
 //	@Produce		json
-//	@Param			view		query		string	false	"Result View options: [control,resource,both] (default resource)"
-//	@Param			with_incidents	query		bool	false	"Whether the job was with incidents or not"
-//	@Param			run_id		path		string	true	"Benchmark ID"
+//	@Param			view			query	string	false	"Result View options: [control,resource,both] (default resource)"
+//	@Param			with_incidents	query	bool	false	"Whether the job was with incidents or not"
+//	@Param			run_id			path	string	true	"Benchmark ID"
 //	@Success		200
 //	@Router			/compliance/api/v3/quick/scan/{run_id} [get]
 func (h HttpHandler) GetQuickScanSummary(c echo.Context) error {
@@ -4929,8 +4929,8 @@ func (h HttpHandler) GetQuickScanSummary(c echo.Context) error {
 //	@Tags			workspace
 //	@Accept			json
 //	@Produce		json
-//	@Param			view		query		string	false	"Result View options: [control,resource] (default resource)"
-//	@Param			run_id		path		string	true	"Benchmark ID"
+//	@Param			view	query	string	false	"Result View options: [control,resource] (default resource)"
+//	@Param			run_id	path	string	true	"Benchmark ID"
 //	@Success		200
 //	@Router			/compliance/api/v3/quick/sequence/{run_id} [get]
 func (h HttpHandler) GetQuickSequenceSummary(c echo.Context) error {
@@ -5022,9 +5022,9 @@ func (h HttpHandler) GetQuickSequenceSummary(c echo.Context) error {
 //	@Tags			workspace
 //	@Accept			json
 //	@Produce		json
-//	@Param			controls		query		[]string	false	"List of controls to get results"
-//	@Param			with_incidents	query		bool	false	"Whether the job was with incidents or not"
-//	@Param			run_id			path		string		true	"compliance summary job id"
+//	@Param			controls		query	[]string	false	"List of controls to get results"
+//	@Param			with_incidents	query	bool		false	"Whether the job was with incidents or not"
+//	@Param			run_id			path	string		true	"compliance summary job id"
 //	@Success		200
 //	@Router			/compliance/api/v3/job-report/:run_id/details/by-control [get]
 func (h HttpHandler) GetComplianceJobReport(c echo.Context) error {
@@ -5063,9 +5063,9 @@ func (h HttpHandler) GetComplianceJobReport(c echo.Context) error {
 //	@Tags			workspace
 //	@Accept			json
 //	@Produce		json
-//	@Param			controls		query		[]string	false	"List of controls to get results"
-//	@Param			with_incidents	query		bool	false	"Whether the job was with incidents or not"
-//	@Param			run_id			path		string		true	"compliance summary job id"
+//	@Param			controls		query	[]string	false	"List of controls to get results"
+//	@Param			with_incidents	query	bool		false	"Whether the job was with incidents or not"
+//	@Param			run_id			path	string		true	"compliance summary job id"
 //	@Success		200
 //	@Router			/compliance/api/v3/job-report/:run_id/summary [get]
 func (h HttpHandler) GetJobReportSummary(ctx echo.Context) error {
@@ -5174,8 +5174,8 @@ func (h HttpHandler) GetJobReportSummary(ctx echo.Context) error {
 //	@Tags			workspace
 //	@Accept			json
 //	@Produce		json
-//	@Param			cursor		query	int		false	"Cursor"
-//	@Param			per_page	query	int		false	"Per Page"
+//	@Param			cursor		query	int	false	"Cursor"
+//	@Param			per_page	query	int	false	"Per Page"
 //	@Success		200
 //	@Router			/compliance/api/v3/policies [get]
 func (h HttpHandler) ListPolicies(c echo.Context) error {
@@ -5246,7 +5246,7 @@ func (h HttpHandler) ListPolicies(c echo.Context) error {
 //	@Tags			workspace
 //	@Accept			json
 //	@Produce		json
-//	@Param			policy_id	path		string	true	"Policy ID"
+//	@Param			policy_id	path	string	true	"Policy ID"
 //	@Success		200
 //	@Router			/compliance/api/v3/policies/{policy_id} [get]
 func (h HttpHandler) GetPolicy(c echo.Context) error {

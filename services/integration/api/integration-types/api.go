@@ -138,7 +138,7 @@ func (a *API) GetResourceTypesByLabels(c echo.Context) error {
 			ResourceTypes: make(map[string]*models.ResourceTypeConfiguration),
 		}
 		for k, v := range rts {
-			res.ResourceTypes[k] = utils.GetPointer(v.ToAPI())
+			res.ResourceTypes[k] = utils.GetPointer(models.ApiResourceTypeConfiguration(v))
 		}
 		return c.JSON(200, res)
 	} else {

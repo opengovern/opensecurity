@@ -295,11 +295,11 @@ func (h HttpHandler) SetQueryParameter(ctx echo.Context) error {
 //	@Security		BearerToken
 //	@Tags			metadata
 //	@Produce		json
-//	@Param			query_id	query	string	false	"Policy ID to filter with"
-//	@Param			control_id	query	string	false	"Control ID to filter with"
-//	@Param			cursor		query	int		false	"Cursor"
-//	@Param			per_page	query	int		false	"Per Page"
-//	@Success		200	{object}	api.ListQueryParametersResponse
+//	@Param			query_id	query		string	false	"Policy ID to filter with"
+//	@Param			control_id	query		string	false	"Control ID to filter with"
+//	@Param			cursor		query		int		false	"Cursor"
+//	@Param			per_page	query		int		false	"Per Page"
+//	@Success		200			{object}	api.ListQueryParametersResponse
 //	@Router			/metadata/api/v1/query_parameter [post]
 func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	clientCtx := &httpclient.Context{UserRole: api3.AdminRole}
@@ -528,7 +528,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 //	@Security		BearerToken
 //	@Tags			metadata
 //	@Produce		json
-//	@Param			id	path	string	true	"ID"
+//	@Param			id	path		string	true	"ID"
 //	@Success		200	{object}	models.PolicyParameterValues
 //	@Router			/metadata/api/v1/query_parameter/{id} [get]
 func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
@@ -1263,9 +1263,9 @@ func (h HttpHandler) GetViewsCheckpoint(echoCtx echo.Context) error {
 //	@Tags			compliance
 //	@Accept			json
 //	@Produce		json
-//	@Param			cursor		query	int		false	"Cursor"
-//	@Param			per_page	query	int		false	"Per Page"
-//	@Success		200	{object}	api.GetViewsResponse
+//	@Param			cursor		query		int	false	"Cursor"
+//	@Param			per_page	query		int	false	"Per Page"
+//	@Success		200			{object}	api.GetViewsResponse
 //	@Router			/metadata/api/v3/views [get]
 func (h HttpHandler) GetViews(echoCtx echo.Context) error {
 	views, err := h.db.ListQueryViews()

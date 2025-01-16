@@ -398,7 +398,7 @@ func (h *HttpHandler) ListQueriesTags(ctx echo.Context) error {
 //	@Accepts		json
 //	@Produce		json
 //	@Param			request	body		api.RunQueryRequest	true	"Request Body"
-//	@Param			accept	header		string							true	"Accept header"	Enums(application/json,text/csv)
+//	@Param			accept	header		string				true	"Accept header"	Enums(application/json,text/csv)
 //	@Success		200		{object}	api.RunQueryResponse
 //	@Router			/inventory/api/v1/query/run [post]
 func (h *HttpHandler) RunQuery(ctx echo.Context) error {
@@ -783,7 +783,7 @@ func (h *HttpHandler) ListResourceTypeMetadata(ctx echo.Context) error {
 //	@Security		BearerToken
 //	@Tags			resource_collection
 //	@Produce		json
-//	@Param			id		query		[]string								false	"Resource collection IDs"
+//	@Param			id		query		[]string						false	"Resource collection IDs"
 //	@Param			status	query		[]api.ResourceCollectionStatus	false	"Resource collection status"
 //	@Success		200		{object}	[]api.ResourceCollection
 //	@Router			/inventory/api/v2/metadata/resource-collection [get]
@@ -1032,7 +1032,7 @@ func arrayContains(array []string, key string) bool {
 //	@Accepts		json
 //	@Produce		json
 //	@Param			request	body		api.RunQueryByIDRequest	true	"Request Body"
-//	@Param			accept	header		string								true	"Accept header"	Enums(application/json,text/csv)
+//	@Param			accept	header		string					true	"Accept header"	Enums(application/json,text/csv)
 //	@Success		200		{object}	api.RunQueryResponse
 //	@Router			/inventory/api/v3/query/run [post]
 func (h *HttpHandler) RunQueryByID(ctx echo.Context) error {
@@ -1306,8 +1306,8 @@ func (h *HttpHandler) GetResourceCategories(ctx echo.Context) error {
 //	@Description	Get list of unique resource categories for the give queries
 //	@Security		BearerToken
 //	@Tags			named_query
-//	@Param			queries	query	[]string	false	"Connection group to filter by - mutually exclusive with connectionId"
-//	 	@Param 			is_bookmarked 	query 	bool 		false	"is bookmarked filter"
+//	@Param			queries			query	[]string	false	"Connection group to filter by - mutually exclusive with connectionId"
+//	@Param			is_bookmarked	query	bool		false	"is bookmarked filter"
 //	@Accepts		json
 //	@Produce		json
 //	@Success		200	{object}	api.GetResourceCategoriesResponse
@@ -1397,16 +1397,16 @@ func (h *HttpHandler) GetTablesResourceCategories(ctx echo.Context) error {
 
 // GetCategoriesQueries godoc
 //
-//		@Summary		Get list of controls for given categories
-//		@Description	Get list of controls for given categories
-//		@Security		BearerToken
-//		@Tags			named_query
-//		@Param			categories		query	[]string	false	"Connection group to filter by - mutually exclusive with connectionId"
-//	 	@Param 			is_bookmarked 	query 	bool 		false	"is bookmarked filter"
-//		@Accepts		json
-//		@Produce		json
-//		@Success		200	{object}	[]string
-//		@Router			/inventory/api/v3/categories/queries [get]
+//	@Summary		Get list of controls for given categories
+//	@Description	Get list of controls for given categories
+//	@Security		BearerToken
+//	@Tags			named_query
+//	@Param			categories		query	[]string	false	"Connection group to filter by - mutually exclusive with connectionId"
+//	@Param			is_bookmarked	query	bool		false	"is bookmarked filter"
+//	@Accepts		json
+//	@Produce		json
+//	@Success		200	{object}	[]string
+//	@Router			/inventory/api/v3/categories/queries [get]
 func (h *HttpHandler) GetCategoriesQueries(ctx echo.Context) error {
 	categories, err := h.db.ListUniqueCategoriesAndTablesForTables(nil)
 	if err != nil {
@@ -1514,8 +1514,8 @@ func (h *HttpHandler) GetCategoriesQueries(ctx echo.Context) error {
 //	@Description	Get list of queries for given parameters
 //	@Security		BearerToken
 //	@Tags			compliance
-//	@Param			parameters	query	[]string	false	"Parameters filter by"
-//	 	@Param 			is_bookmarked 	query 	bool 		false	"is bookmarked filter"
+//	@Param			parameters		query	[]string	false	"Parameters filter by"
+//	@Param			is_bookmarked	query	bool		false	"is bookmarked filter"
 //	@Accepts		json
 //	@Produce		json
 //	@Success		200	{object}	api.GetParametersQueriesResponse

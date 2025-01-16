@@ -1673,10 +1673,10 @@ func (h API) EnableIntegrationTypeHelper(ctx context.Context, logger *zap.Logger
 //	@Security		BearerToken
 //	@Tags			credentials
 //	@Produce		json
-//	@Param			per_page		query		int		false	"PerPage"
-//	@Param			cursor			query		int		false	"Cursor"
-//	@Param			integration_type	path	string	true	"integration_type"
-//	@Success		200				{object}	models.ListIntegrationTypesResponse
+//	@Param			per_page			query		int		false	"PerPage"
+//	@Param			cursor				query		int		false	"Cursor"
+//	@Param			integration_type	path		string	true	"integration_type"
+//	@Success		200					{object}	models.ListIntegrationTypesResponse
 //	@Router			/integration/api/v1/integrations/types/:integration_type/resource_types [get]
 func (h API) ListIntegrationTypeResourceTypes(c echo.Context) error {
 	integrationType := c.Param("integration_type")
@@ -1738,9 +1738,9 @@ func (h API) ListIntegrationTypeResourceTypes(c echo.Context) error {
 //	@Security		BearerToken
 //	@Tags			credentials
 //	@Produce		json
-//	@Param			integration_type	path	string	true	"integration_type"
-//	@Param			resource_type		path	string	true	"resource_type"
-//	@Success		200				{object}	models.ListIntegrationTypesResponse
+//	@Param			integration_type	path		string	true	"integration_type"
+//	@Param			resource_type		path		string	true	"resource_type"
+//	@Success		200					{object}	models.ListIntegrationTypesResponse
 //	@Router			/integration/api/v1/integrations/types/:integration_type/resource_types/:resource_type [get]
 func (h API) GetIntegrationTypeResourceType(c echo.Context) error {
 	integrationType := c.Param("integration_type")
