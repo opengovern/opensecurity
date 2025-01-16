@@ -34,8 +34,8 @@ type IntegrationType interface {
 	GetResourceTypesByLabels(map[string]string) (map[string]ResourceTypeConfiguration, error)
 	HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error)
 	DiscoverIntegrations(jsonData []byte) ([]models.Integration, error)
-	GetResourceTypeFromTableName(tableName string) string
-	ListAllTables() map[string][]string
+	GetResourceTypeFromTableName(tableName string) (string, error)
+	ListAllTables() (map[string][]string, error)
 }
 
 // IntegrationCreator IntegrationType interface, credentials, error
@@ -93,22 +93,22 @@ func (i *IntegrationTypeRPC) DiscoverIntegrations(jsonData []byte) ([]models.Int
 	return integrations, err
 }
 
-func (i *IntegrationTypeRPC) GetResourceTypeFromTableName(tableName string) string {
+func (i *IntegrationTypeRPC) GetResourceTypeFromTableName(tableName string) (string, error) {
 	var resourceType string
 	err := i.client.Call("Plugin.GetResourceTypeFromTableName", tableName, &resourceType)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	return resourceType
+	return resourceType, nil
 }
 
-func (i *IntegrationTypeRPC) ListAllTables() map[string][]string {
+func (i *IntegrationTypeRPC) ListAllTables() (map[string][]string, error) {
 	var tables map[string][]string
 	err := i.client.Call("Plugin.ListAllTables", struct{}{}, &tables)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return tables
+	return tables, nil
 }
 
 type IntegrationTypeRPCServer struct {
@@ -144,13 +144,15 @@ func (i *IntegrationTypeRPCServer) DiscoverIntegrations(jsonData []byte, integra
 }
 
 func (i *IntegrationTypeRPCServer) GetResourceTypeFromTableName(tableName string, resourceType *string) error {
-	*resourceType = i.Impl.GetResourceTypeFromTableName(tableName)
-	return nil
+	var err error
+	*resourceType, err = i.Impl.GetResourceTypeFromTableName(tableName)
+	return err
 }
 
 func (i *IntegrationTypeRPCServer) ListAllTables(_ struct{}, tables *map[string][]string) error {
-	*tables = i.Impl.ListAllTables()
-	return nil
+	var err error
+	*tables, err = i.Impl.ListAllTables()
+	return err
 }
 
 type IntegrationTypePlugin struct {

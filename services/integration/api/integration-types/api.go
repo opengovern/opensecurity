@@ -8,6 +8,7 @@ import (
 	"github.com/opengovern/opencomply/services/integration/api/models"
 	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"go.uber.org/zap"
+	"net/http"
 )
 
 type API struct {
@@ -67,7 +68,11 @@ func (a *API) GetResourceTypeFromTableName(c echo.Context) error {
 
 	rtMap := a.typeManager.GetIntegrationTypeMap()
 	if value, ok := rtMap[a.typeManager.ParseType(integrationType)]; ok {
-		resourceType := value.GetResourceTypeFromTableName(tableName)
+		resourceType, err := value.GetResourceTypeFromTableName(tableName)
+		if err != nil {
+			a.logger.Error("failed to get list of tables", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get list of tables")
+		}
 		if resourceType != "" {
 			res := models.GetResourceTypeFromTableNameResponse{
 				ResourceType: resourceType,
@@ -156,7 +161,11 @@ func (a *API) ListTables(c echo.Context) error {
 
 	rtMap := a.typeManager.GetIntegrationTypeMap()
 	if value, ok := rtMap[a.typeManager.ParseType(integrationType)]; ok {
-		tables := value.ListAllTables()
+		tables, err := value.ListAllTables()
+		if err != nil {
+			a.logger.Error("failed to get list of tables", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get list of tables")
+		}
 		return c.JSON(200, models.ListTablesResponse{Tables: tables})
 	} else {
 		return echo.NewHTTPError(404, "integration type not found")

@@ -118,17 +118,17 @@ func (i *Integration) GetResourceTypesByLabels(labels map[string]string) (map[st
 	return resourceTypesMap, nil
 }
 
-func (i *Integration) GetResourceTypeFromTableName(tableName string) string {
+func (i *Integration) GetResourceTypeFromTableName(tableName string) (string, error) {
 	if v, ok := configs.TablesToResourceTypes[tableName]; ok {
-		return v
+		return v, nil
 	}
-	return ""
+	return "", nil
 }
 
 func (i *Integration) GetIntegrationType() integration.Type {
 	return configs.IntegrationTypeAwsCloudAccount
 }
 
-func (i *Integration) ListAllTables() map[string][]string {
-	return make(map[string][]string)
+func (i *Integration) ListAllTables() (map[string][]string, error) {
+	return make(map[string][]string), nil
 }
