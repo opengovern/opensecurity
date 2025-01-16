@@ -22,7 +22,6 @@ import (
 	queryrunner "github.com/opengovern/opencomply/jobs/query-runner-job"
 	"github.com/opengovern/opencomply/pkg/types"
 	"github.com/opengovern/opencomply/services/core/rego_runner"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 
 	"github.com/labstack/echo/v4"
@@ -47,8 +46,6 @@ const (
 	MaxConns        = 100
 	KafkaPageSize   = 5000
 )
-
-
 
 const (
 	IntegrationIdParam    = "integrationId"

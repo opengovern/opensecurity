@@ -471,6 +471,7 @@ func (s *Scheduler) Run(ctx context.Context) error {
 		s.es,
 		s.complianceClient,
 		s.coreClient,
+		s.integrationClient,
 	)
 	s.auditScheduler.Run(ctx)
 

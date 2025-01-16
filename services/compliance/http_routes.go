@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/opengovern/og-util/pkg/integration"
 	"net/http"
 	"net/url"
 	"os"
@@ -23,7 +24,6 @@ import (
 	"github.com/opengovern/og-util/pkg/httpclient"
 	httpserver2 "github.com/opengovern/og-util/pkg/httpserver"
 	"github.com/opengovern/og-util/pkg/model"
-	runner "github.com/opengovern/opencomply/jobs/compliance-runner-job"
 	"github.com/opengovern/opencomply/jobs/compliance-summarizer-job/types"
 	model2 "github.com/opengovern/opencomply/jobs/post-install-job/db/model"
 	opengovernanceTypes "github.com/opengovern/opencomply/pkg/types"
@@ -35,7 +35,6 @@ import (
 	coreApi "github.com/opengovern/opencomply/services/core/api"
 	"github.com/opengovern/opencomply/services/core/db/models"
 	integrationapi "github.com/opengovern/opencomply/services/integration/api/models"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	schedulerapi "github.com/opengovern/opencomply/services/scheduler/api"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -772,7 +771,7 @@ func (h *HttpHandler) GetComplianceResultFilterValues(echoCtx echo.Context) erro
 	}
 	if len(possibleFilters.Aggregations.IntegrationTypeFilter.Buckets) > 0 {
 		for _, bucket := range possibleFilters.Aggregations.IntegrationTypeFilter.Buckets {
-			integrationType := integration_type.ParseType(bucket.Key)
+			integrationType := integration.Type(bucket.Key)
 			response.IntegrationType = append(response.IntegrationType, api.FilterWithMetadata{
 				Key:         integrationType.String(),
 				DisplayName: integrationType.String(),
@@ -2359,11 +2358,15 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			}
 		}
 
+		integrationTypes := make([]integration.Type, 0, len(control.IntegrationType))
+		for _, t := range control.IntegrationType {
+			integrationTypes = append(integrationTypes, integration.Type(t))
+		}
 		apiControl := api.ListControlsFilterResultControl{
 			ID:              control.ID,
 			Title:           control.Title,
 			Description:     control.Description,
-			IntegrationType: integration_type.ParseTypes(control.IntegrationType),
+			IntegrationType: integrationTypes,
 			Severity:        control.Severity,
 			Tags:            filterTagsByRegex(req.TagsRegex, model.TrimPrivateTags(control.GetTagsMap())),
 			Policy: struct {
@@ -2586,11 +2589,16 @@ func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 		parameters = append(parameters, qp.ToApi())
 	}
 
+	integrationTypes := make([]integration.Type, 0, len(control.IntegrationType))
+	for _, t := range control.IntegrationType {
+		integrationTypes = append(integrationTypes, integration.Type(t))
+	}
+
 	response := api.GetControlDetailsResponse{
 		ID:              control.ID,
 		Title:           control.Title,
 		Description:     control.Description,
-		IntegrationType: integration_type.ParseTypes(control.IntegrationType),
+		IntegrationType: integrationTypes,
 		Severity:        control.Severity.String(),
 		Policy: struct {
 			Type            string               `json:"type"`
@@ -2727,7 +2735,7 @@ func (h *HttpHandler) getControlSummary(ctx context.Context, controlID string, b
 	if control.Policy != nil {
 		apiControl.IntegrationType = control.Policy.IntegrationType
 		if len(control.Policy.IntegrationType) == 1 {
-			rtName, _, err := runner.GetResourceTypeFromTableName(control.Policy.PrimaryResource, integration_type.ParseTypes(control.Policy.IntegrationType))
+			rtName, err := h.integrationClient.GetResourceTypeFromTableName(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}, control.Policy.IntegrationType[0], control.Policy.PrimaryResource)
 			if err != nil {
 				h.logger.Error("failed to get resource type from table name", zap.Error(err))
 				return nil, err
@@ -2838,18 +2846,18 @@ func (h *HttpHandler) ListAssignmentsByBenchmark(echoCtx echo.Context) error {
 			return err
 		}
 
-		for _, integration := range integrations.Integrations {
-			if integration.State != integrationapi.IntegrationStateActive {
+		for _, integ := range integrations.Integrations {
+			if integ.State != integrationapi.IntegrationStateActive {
 				continue
 			}
 			if err != nil {
 				return err
 			}
 			ba := api.BenchmarkAssignedIntegration{
-				IntegrationID:   integration.IntegrationID,
-				ProviderID:      integration.ProviderID,
-				IntegrationName: integration.Name,
-				IntegrationType: integration_type.ParseType(c),
+				IntegrationID:   integ.IntegrationID,
+				ProviderID:      integ.ProviderID,
+				IntegrationName: integ.Name,
+				IntegrationType: integration.Type(c),
 				Status:          false,
 			}
 			assignedIntegrations = append(assignedIntegrations, ba)
@@ -3110,10 +3118,6 @@ func (h *HttpHandler) ListBenchmarksFiltered(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, response)
 }
 
-
-
-
-
 // ListBenchmarksFiltered godoc
 //
 //	@Summary	List benchmarks filtered by integrations and other filters
@@ -3137,9 +3141,6 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 		isRoot = *req.Root
 	}
 
-
-	
-
 	benchmarkAssignmentsCount, err := h.db.GetBenchmarkAssignmentsCount()
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -3148,11 +3149,7 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 	for _, ba := range benchmarkAssignmentsCount {
 		benchmarkAssignmentsCountMap[ba.BenchmarkId] = ba.Count
 	}
-	
 
-	
-
-	
 	benchmarks, err := h.db.ListBenchmarksFiltered(ctx, req.TitleRegex, isRoot, nil, nil, req.Assigned, req.IsBaseline, nil)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -3161,21 +3158,18 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 	var items []api.GetBenchmarkListSummaryMetadata
 
 	for _, b := range benchmarks {
-		
 
 		benchmarkDetails := api.GetBenchmarkListSummaryMetadata{
-			ID:               b.ID,
+			ID: b.ID,
 		}
 
-		
-		
 		items = append(items, benchmarkDetails)
 	}
 
 	totalCount := len(items)
 
 	switch strings.ToLower(req.SortBy) {
-	
+
 	case "title":
 		sort.Slice(items, func(i, j int) bool {
 			return items[i].Title < items[j].Title
@@ -3197,10 +3191,9 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 	}
 	h.logger.Info("benchmarkids", zap.Any("benchmarkids", benchmarkids))
 	all_benchmarks, err := h.db.GetBenchmarksBare(ctx, benchmarkids)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-		}
-
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 
 	for _, benchmark := range all_benchmarks {
 
@@ -3287,17 +3280,13 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 		resourcesSeverityResult.Low.FailedCount = allResources.LowCount - passedResource.LowCount
 		resourcesSeverityResult.None.FailedCount = allResources.NoneCount - passedResource.NoneCount
 
-		
-
 		var complianceScore float64
 		if controlSeverityResult.Total.TotalCount > 0 {
 			complianceScore = float64(controlSeverityResult.Total.PassedCount) / float64(controlSeverityResult.Total.TotalCount)
 		} else {
 			complianceScore = 0
 		}
-		
 
-		
 		new_items = append(new_items, api.GetBenchmarkListSummaryMetadata{
 			ComplianceScore:            complianceScore,
 			SeveritySummaryByControl:   controlSeverityResult,
@@ -3308,16 +3297,15 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 			IssuesCount:                csResult.FailedCount,
 			LastEvaluatedAt:            utils.GetPointer(time.Unix(summaryAtTime.EvaluatedAtEpoch, 0)),
 			LastJobStatus:              lastJobStatus,
-			ID:               benchmark.ID,
-			Title:            benchmark.Title,
-			Description:      benchmark.Description,
-			Enabled:          benchmark.Enabled,
-			CreatedAt:        benchmark.CreatedAt,
-			UpdatedAt:        benchmark.UpdatedAt,
-			IntegrationType: benchmark.IntegrationType,
+			ID:                         benchmark.ID,
+			Title:                      benchmark.Title,
+			Description:                benchmark.Description,
+			Enabled:                    benchmark.Enabled,
+			CreatedAt:                  benchmark.CreatedAt,
+			UpdatedAt:                  benchmark.UpdatedAt,
+			IntegrationType:            benchmark.IntegrationType,
 		})
 
-			
 	}
 
 	response := api.GetBenchmarkSummaryListResponse{
@@ -3327,15 +3315,6 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 
 	return echoCtx.JSON(http.StatusOK, response)
 }
-
-
-
-
-
-
-
-
-
 
 // GetBenchmarkDetails godoc
 //
@@ -3408,7 +3387,10 @@ func (h *HttpHandler) GetBenchmarkDetails(echoCtx echo.Context) error {
 		UpdatedAt:         benchmark.UpdatedAt,
 	}
 	if benchmark.IntegrationType != nil {
-		benchmarkMetadata.IntegrationTypes = integration_type.ParseTypes(benchmark.IntegrationType)
+		integrationTypes := make([]integration.Type, 0, len(benchmark.IntegrationType))
+		for _, it := range benchmark.IntegrationType {
+			integrationTypes = append(integrationTypes, integration.Type(it))
+		}
 	}
 
 	children, err := h.getChildBenchmarksWithDetails(ctx, benchmark.ID, req)
@@ -4363,8 +4345,6 @@ func (h *HttpHandler) ComplianceSummaryOfBenchmark(echoCtx echo.Context) error {
 
 	return echoCtx.JSON(http.StatusOK, response)
 }
-
-
 
 // ListControlsFilters godoc
 //
