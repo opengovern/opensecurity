@@ -157,6 +157,26 @@ func (db Database) GetDescribeIntegrationJobByID(id uint) (*model.DescribeIntegr
 	return &job, nil
 }
 
+// ListDescribeJobsWithParamsByIntegrationID List only describe jobs that contain parameters
+func (db Database) ListDescribeJobsWithParamsByIntegrationID(integrationId string) ([]model.DescribeIntegrationJobWithParams, error) {
+	var jobs []model.DescribeIntegrationJobWithParams
+	query := `
+SELECT resource_type, parameters FROM describe_integration_jobs 
+                                 WHERE integration_id = ? AND parameters <> '\x7b7d'
+                                 GROUP BY resource_type, parameters 
+`
+
+	tx := db.ORM.Raw(query, integrationId).Find(&jobs)
+	if tx.Error != nil {
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, tx.Error
+	}
+
+	return jobs, nil
+}
+
 func (db Database) RetryDescribeIntegrationJob(id uint) error {
 	tx := db.ORM.Exec("update describe_integration_jobs set status = ? where id = ?", api.DescribeResourceJobCreated, id)
 	if tx.Error != nil {

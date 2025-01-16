@@ -221,6 +221,13 @@ func (s *Scheduler) scheduleDescribeJob(ctx context.Context) {
 			continue
 		}
 
+		resourceTypesWithParams, err := s.db.ListDescribeJobsWithParamsByIntegrationID(integration.IntegrationID)
+		if err != nil {
+			s.logger.Error("failed to list describe jobs with parameters for this integration", zap.String("integration_id", integration.IntegrationID),
+				zap.Error(err))
+			continue
+		}
+
 		s.logger.Info("running describe job scheduler for connection for number of resource types",
 			zap.String("integration_id", integration.IntegrationID),
 			zap.String("integration_type", string(integration.IntegrationType)),
@@ -229,6 +236,24 @@ func (s *Scheduler) scheduleDescribeJob(ctx context.Context) {
 			_, err = s.describe(integration, resourceType, true, false, false, nil, "system", nil)
 			if err != nil {
 				s.logger.Error("failed to describe connection", zap.String("integration_id", integration.IntegrationID), zap.String("resource_type", resourceType), zap.Error(err))
+			}
+		}
+		for _, resourceType := range resourceTypesWithParams {
+			var parameters map[string]string
+			if resourceType.Parameters.Status == pgtype.Present {
+				if err := json.Unmarshal(resourceType.Parameters.Bytes, &parameters); err != nil {
+					s.logger.Error("failed to unmarshal parameters into map",
+						zap.String("integration_id", integration.IntegrationID),
+						zap.String("resource_type", resourceType.ResourceType),
+						zap.Any("parameters", parameters),
+						zap.Error(err))
+					continue
+				}
+			}
+			_, err = s.describe(integration, resourceType.ResourceType, true, false, false, nil, "system", parameters)
+			if err != nil {
+				s.logger.Error("failed to describe connection", zap.String("integration_id", integration.IntegrationID),
+					zap.String("resource_type", resourceType.ResourceType), zap.Any("parameters", resourceType.Parameters), zap.Error(err))
 			}
 		}
 	}
