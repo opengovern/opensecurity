@@ -46,7 +46,7 @@ jobs:
     if:   github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')  && ( ! contains(github.event.head_commit.message, 'ui-changes') )
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Tag version
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.1
@@ -101,7 +101,7 @@ jobs:
           packages: musl-tools musl-dev musl
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 5
 
@@ -164,7 +164,7 @@ jobs:
     if: (needs.build.outputs.steampipe-base == 'true' || needs.build.outputs.steampipe == 'true') && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -202,7 +202,7 @@ jobs:
     if: (needs.build.outputs.cloudql == 'true' || needs.build.outputs.steampipe == 'true') && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -241,7 +241,7 @@ jobs:
     if: needs.build.outputs.auth-service == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -277,7 +277,7 @@ jobs:
     if: needs.build.outputs.task-service == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -313,7 +313,7 @@ jobs:
     if: needs.build.outputs.cloudql-init-job == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -350,7 +350,7 @@ jobs:
     if: needs.build.outputs.checkup-job == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -388,7 +388,7 @@ jobs:
     if: (needs.build.outputs.cloudql == 'true' || needs.build.outputs.compliance-report-job == 'true') && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -428,7 +428,7 @@ jobs:
     if: (needs.build.outputs.cloudql == 'true' || needs.build.outputs.rego-service == 'true') && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -466,7 +466,7 @@ jobs:
     if: needs.build.outputs.compliance-summarizer-job == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -504,7 +504,7 @@ jobs:
     if: needs.build.outputs.compliance-service == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -540,7 +540,7 @@ jobs:
     if: needs.build.outputs.scheduler-service == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -576,7 +576,7 @@ jobs:
     if: needs.build.outputs.integration-service == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -611,7 +611,7 @@ jobs:
     if: needs.build.outputs.es-sink-service == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -649,7 +649,7 @@ jobs:
     if: needs.build.outputs.core-service == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -685,7 +685,7 @@ jobs:
     if: needs.build.outputs.post-install-job == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -720,7 +720,7 @@ jobs:
     if: needs.build.outputs.swagger-ui == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -768,7 +768,7 @@ jobs:
           fi
       - name: Checkout code
         if: steps.check_if_push.outputs.do_build == 'true'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         if: steps.check_if_push.outputs.do_build == 'true'
         uses: actions/download-artifact@v4
@@ -812,7 +812,7 @@ jobs:
     if: needs.build.outputs.query-runner-job == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -852,7 +852,7 @@ jobs:
     if: needs.build.outputs.query-validator-job == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -891,7 +891,7 @@ jobs:
     if: needs.build.outputs.query-validator-job == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -928,7 +928,7 @@ jobs:
     environment: docker
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
@@ -956,7 +956,7 @@ jobs:
     environment: docker
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
@@ -985,7 +985,7 @@ jobs:
     if: needs.build.outputs.demo-importer-job == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -1020,7 +1020,7 @@ jobs:
     environment: docker
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
@@ -1049,7 +1049,7 @@ jobs:
     environment: docker
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
