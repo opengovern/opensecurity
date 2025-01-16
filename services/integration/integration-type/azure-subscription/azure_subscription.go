@@ -84,22 +84,18 @@ func (i *Integration) GetResourceTypesByLabels(labels map[string]string) (map[st
 	return resourceTypesMap, nil
 }
 
-func (i *Integration) GetResourceTypeFromTableName(tableName string) (string, error) {
+func (i *Integration) GetResourceTypeFromTableName(tableName string) string {
 	if v, ok := configs.TablesToResourceTypes[tableName]; ok {
-		return v, nil
+		return v
 	}
 
-	return "", nil
+	return ""
 }
 
 func (i *Integration) GetIntegrationType() integration.Type {
 	return configs.IntegrationTypeAzureSubscription
 }
 
-func (i *Integration) ListAllTables() (map[string][]string, error) {
-	tables := make(map[string][]string)
-	for t, _ := range configs.TablesToResourceTypes {
-		tables[t] = make([]string, 0)
-	}
-	return tables, nil
+func (i *Integration) ListAllTables() map[string][]interfaces.CloudQLColumn {
+	return make(map[string][]interfaces.CloudQLColumn)
 }
