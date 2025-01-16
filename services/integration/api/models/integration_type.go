@@ -1,5 +1,7 @@
 package models
 
+import "github.com/opengovern/og-util/pkg/integration/interfaces"
+
 type IntegrationType struct {
 	ID           int64  `json:"id"`
 	Name         string `json:"name"`
@@ -47,5 +49,5 @@ type GetResourceTypesByLabelsResponse struct {
 }
 
 type ListTablesResponse struct {
-	Tables map[string][]string `json:"tables"`
+	Tables map[string][]interfaces.CloudQLColumn `json:"tables"`
 }

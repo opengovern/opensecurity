@@ -55,8 +55,8 @@ func bindValidate(ctx echo.Context, i interface{}) error {
 //	@Summary	List tasks
 //	@Security	BearerToken
 //	@Tags		scheduler
-//	@Param		cursor			query	int		false	"cursor"
-//	@Param		per_page		query	int		false	"per page"
+//	@Param		cursor		query	int	false	"cursor"
+//	@Param		per_page	query	int	false	"per page"
 //	@Produce	json
 //	@Success	200	{object}	api.ListTaskRunsResponse
 //	@Router		/tasks/api/v1/tasks [get]
@@ -119,7 +119,7 @@ func (r *httpRoutes) ListTasks(ctx echo.Context) error {
 //	@Summary	Get task by id
 //	@Security	BearerToken
 //	@Tags		scheduler
-//	@Param		id			path	string		true	"run id"
+//	@Param		id	path	string	true	"run id"
 //	@Produce	json
 //	@Success	200	{object}	models.Task
 //	@Router		/tasks/api/v1/tasks/:id [get]
@@ -199,7 +199,7 @@ func (r *httpRoutes) RunTask(ctx echo.Context) error {
 //	@Summary	Get task run
 //	@Security	BearerToken
 //	@Tags		scheduler
-//	@Param		id			path	string		true	"run id"
+//	@Param		id	path	string	true	"run id"
 //	@Produce	json
 //	@Success	200	{object}	models.TaskRun
 //	@Router		/tasks/api/v1/tasks/run/:id [get]
@@ -271,8 +271,8 @@ func (r *httpRoutes) GetTaskRunResult(ctx echo.Context) error {
 //	@Summary	List task runs
 //	@Security	BearerToken
 //	@Tags		scheduler
-//	@Param		cursor			query	int		false	"cursor"
-//	@Param		per_page		query	int		false	"per page"
+//	@Param		cursor		query	int	false	"cursor"
+//	@Param		per_page	query	int	false	"per page"
 //	@Produce	json
 //	@Success	200	{object}	api.ListTaskRunsResponse
 //	@Router		/tasks/api/v1/tasks/run [get]

@@ -24,14 +24,14 @@ func (r API) Register(g *echo.Group) {
 }
 
 // EvaluateEndpoint godoc
-// @Summary Evaluate a rego policy
-// @Description Evaluate a rego policy
-// @Tags rego
-// @Accept json
-// @Produce json
-// @Param request body RegoEvaluateRequest true "Rego Evaluate Request"
-// @Success 200 {object} RegoEvaluateResponse
-// @Router /evaluate [post]
+//	@Summary		Evaluate a rego policy
+//	@Description	Evaluate a rego policy
+//	@Tags			rego
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		RegoEvaluateRequest	true	"Rego Evaluate Request"
+//	@Success		200		{object}	RegoEvaluateResponse
+//	@Router			/evaluate [post]
 func (r *API) EvaluateEndpoint(c echo.Context) error {
 	req := new(models.RegoEvaluateRequest)
 	if err := c.Bind(req); err != nil {

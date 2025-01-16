@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-util/pkg/integration"
-	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
+	"github.com/opengovern/og-util/pkg/integration/interfaces"
 	"github.com/opengovern/opencomply/services/integration/integration-type/linode-account/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/linode-account/discovery"
 	"github.com/opengovern/opencomply/services/integration/integration-type/linode-account/healthcheck"
-	"github.com/opengovern/opencomply/services/integration/models"
 )
 
 type Integration struct{}
@@ -41,13 +40,13 @@ func (i *Integration) HealthCheck(jsonData []byte, providerId string, labels map
 	return isHealthy, err
 }
 
-func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
+func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]integration.Integration, error) {
 	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		return nil, err
 	}
-	var integrations []models.Integration
+	var integrations []integration.Integration
 	account, err := discovery.LinodeIntegrationDiscovery(credentials.Token)
 	if err != nil {
 		return nil, err
@@ -64,7 +63,7 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integratio
 	if err != nil {
 		return nil, err
 	}
-	integrations = append(integrations, models.Integration{
+	integrations = append(integrations, integration.Integration{
 		ProviderID: account.Euuid,
 		Name:       account.Email,
 		Labels:     integrationLabelsJsonb,
@@ -81,22 +80,18 @@ func (i *Integration) GetResourceTypesByLabels(labels map[string]string) (map[st
 	return resourceTypesMap, nil
 }
 
-func (i *Integration) GetResourceTypeFromTableName(tableName string) (string, error) {
+func (i *Integration) GetResourceTypeFromTableName(tableName string) string {
 	if v, ok := configs.TablesToResourceTypes[tableName]; ok {
-		return v, nil
+		return v
 	}
 
-	return "", nil
+	return ""
 }
 
 func (i *Integration) GetIntegrationType() integration.Type {
 	return configs.IntegrationTypeLinodeProject
 }
 
-func (i *Integration) ListAllTables() (map[string][]string, error) {
-	tables := make(map[string][]string)
-	for t, _ := range configs.TablesToResourceTypes {
-		tables[t] = make([]string, 0)
-	}
-	return tables, nil
+func (i *Integration) ListAllTables() map[string][]interfaces.CloudQLColumn {
+	return make(map[string][]interfaces.CloudQLColumn)
 }

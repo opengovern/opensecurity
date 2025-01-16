@@ -273,7 +273,8 @@ func (h API) DiscoverIntegrations(c echo.Context) error {
 	integrations, err := integration.DiscoverIntegrations(jsonData)
 	h.logger.Info("discovered integrations", zap.Any("integrations", integrations))
 	var integrationsAPI []models.Integration
-	for _, i := range integrations {
+	for _, in := range integrations {
+		i := models2.Integration{Integration: in}
 		integrationAPI, err := i.ToApi()
 		if err != nil {
 			h.logger.Error("failed to create integration api", zap.Error(err))
@@ -373,7 +374,8 @@ func (h API) AddIntegrations(c echo.Context) error {
 	//
 	var count = 0
 
-	for _, i := range integrations {
+	for _, in := range integrations {
+		i := models2.Integration{Integration: in}
 		if _, ok := providerIDs[i.ProviderID]; !ok {
 			continue
 		}
@@ -411,9 +413,9 @@ func (h API) AddIntegrations(c echo.Context) error {
 		healthy, err := integrationType.HealthCheck(jsonData, i.ProviderID, iApi.Labels, iApi.Annotations)
 		if err != nil || !healthy {
 			h.logger.Info("integration is not healthy", zap.String("integration_id", i.IntegrationID.String()), zap.Error(err))
-			i.State = models2.IntegrationStateInactive
+			i.State = integration.IntegrationStateInactive
 		} else {
-			i.State = models2.IntegrationStateActive
+			i.State = integration.IntegrationStateActive
 		}
 
 		err = h.database.CreateIntegration(&i)
@@ -444,19 +446,19 @@ func (h API) IntegrationHealthcheck(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
 	}
 
-	integration, err := h.database.GetIntegration(IntegrationID)
+	integ, err := h.database.GetIntegration(IntegrationID)
 	if err != nil {
 		h.logger.Error("failed to get integration", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration")
 	}
 
-	credential, err := h.database.GetCredential(integration.CredentialID.String())
+	credential, err := h.database.GetCredential(integ.CredentialID.String())
 	if err != nil {
 		h.logger.Error("failed to get credential", zap.Error(err))
 		return echo.NewHTTPError(http.StatusNotFound, "credential not found")
 	}
 	if credential == nil {
-		h.logger.Error("credential not found", zap.Any("credentialId", integration.CredentialID))
+		h.logger.Error("credential not found", zap.Any("credentialId", integ.CredentialID))
 		return echo.NewHTTPError(http.StatusNotFound, "credential not found")
 	}
 
@@ -466,7 +468,7 @@ func (h API) IntegrationHealthcheck(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to decrypt config")
 	}
 
-	if _, ok := h.typesManager.GetIntegrationTypeMap()[integration.IntegrationType]; !ok {
+	if _, ok := h.typesManager.GetIntegrationTypeMap()[integ.IntegrationType]; !ok {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid integration type")
 	}
 
@@ -476,12 +478,12 @@ func (h API) IntegrationHealthcheck(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to marshal json data")
 	}
 
-	integrationType := h.typesManager.GetIntegrationTypeMap()[integration.IntegrationType]
+	integrationType := h.typesManager.GetIntegrationTypeMap()[integ.IntegrationType]
 
 	if integrationType == nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to marshal json data")
 	}
-	integrationApi, err := integration.ToApi()
+	integrationApi, err := integ.ToApi()
 	if err != nil {
 		h.logger.Error("failed to create integration api", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create integration api")
@@ -489,31 +491,29 @@ func (h API) IntegrationHealthcheck(c echo.Context) error {
 
 	healthy, err := integrationType.HealthCheck(jsonData, integrationApi.ProviderID, integrationApi.Labels, integrationApi.Annotations)
 	if err != nil || !healthy {
-		if integration.State != models2.IntegrationStateArchived {
-			integration.State = models2.IntegrationStateInactive
+		h.logger.Error("healthcheck failed", zap.Error(err))
+		if integ.State != integration.IntegrationStateArchived {
+			integ.State = integration.IntegrationStateInactive
 		}
+		_, err = integ.AddAnnotations("platform/integration/health-reason", err.Error())
 		if err != nil {
-			h.logger.Error("healthcheck failed", zap.Error(err))
-			_, err = integration.AddAnnotations("platform/integration/health-reason", err.Error())
-			if err != nil {
-				h.logger.Error("failed to add annotations", zap.Error(err))
-				return echo.NewHTTPError(http.StatusInternalServerError, "failed to add annotations")
-			}
+			h.logger.Error("failed to add annotations", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to add annotations")
 		}
 	} else {
-		if integration.State != models2.IntegrationStateArchived {
-			integration.State = models2.IntegrationStateActive
+		if integ.State != integration.IntegrationStateArchived {
+			integ.State = integration.IntegrationStateActive
 		}
 	}
 	healthcheckTime := time.Now()
-	integration.LastCheck = &healthcheckTime
-	err = h.database.UpdateIntegration(integration)
+	integ.LastCheck = &healthcheckTime
+	err = h.database.UpdateIntegration(integ)
 	if err != nil {
-		h.logger.Error("failed to update integration", zap.Error(err), zap.Any("integration", *integration))
+		h.logger.Error("failed to update integration", zap.Error(err), zap.Any("integration", *integ))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update integration")
 	}
 
-	integrationApi, err = integration.ToApi()
+	integrationApi, err = integ.ToApi()
 	if err != nil {
 		h.logger.Error("failed to create integration api", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create integration api")
@@ -940,16 +940,16 @@ func (h API) ListIntegrationTypes(c echo.Context) error {
 		count := models.IntegrationTypeIntegrationCount{}
 		for _, i := range integrations {
 			count.Total += 1
-			if i.State == models2.IntegrationStateActive {
+			if i.State == integration.IntegrationStateActive {
 				count.Active += 1
 			}
-			if i.State == models2.IntegrationStateInactive {
+			if i.State == integration.IntegrationStateInactive {
 				count.Inactive += 1
 			}
-			if i.State == models2.IntegrationStateArchived {
+			if i.State == integration.IntegrationStateArchived {
 				count.Archived += 1
 			}
-			if i.State == models2.IntegrationStateSample {
+			if i.State == integration.IntegrationStateSample {
 				count.Demo += 1
 			}
 		}
@@ -1673,10 +1673,10 @@ func (h API) EnableIntegrationTypeHelper(ctx context.Context, logger *zap.Logger
 //	@Security		BearerToken
 //	@Tags			credentials
 //	@Produce		json
-//	@Param			per_page		query		int		false	"PerPage"
-//	@Param			cursor			query		int		false	"Cursor"
-//	@Param			integration_type	path	string	true	"integration_type"
-//	@Success		200				{object}	models.ListIntegrationTypesResponse
+//	@Param			per_page			query		int		false	"PerPage"
+//	@Param			cursor				query		int		false	"Cursor"
+//	@Param			integration_type	path		string	true	"integration_type"
+//	@Success		200					{object}	models.ListIntegrationTypesResponse
 //	@Router			/integration/api/v1/integrations/types/:integration_type/resource_types [get]
 func (h API) ListIntegrationTypeResourceTypes(c echo.Context) error {
 	integrationType := c.Param("integration_type")
@@ -1700,7 +1700,7 @@ func (h API) ListIntegrationTypeResourceTypes(c echo.Context) error {
 		}
 		for rt, rtConfig := range resourceTypes {
 			if !rtConfig.IsEmpty() {
-				items = append(items, rtConfig.ToAPI())
+				items = append(items, models.ApiResourceTypeConfiguration(rtConfig))
 			} else {
 				items = append(items, models.ResourceTypeConfiguration{
 					Name:            rt,
@@ -1738,9 +1738,9 @@ func (h API) ListIntegrationTypeResourceTypes(c echo.Context) error {
 //	@Security		BearerToken
 //	@Tags			credentials
 //	@Produce		json
-//	@Param			integration_type	path	string	true	"integration_type"
-//	@Param			resource_type		path	string	true	"resource_type"
-//	@Success		200				{object}	models.ListIntegrationTypesResponse
+//	@Param			integration_type	path		string	true	"integration_type"
+//	@Param			resource_type		path		string	true	"resource_type"
+//	@Success		200					{object}	models.ListIntegrationTypesResponse
 //	@Router			/integration/api/v1/integrations/types/:integration_type/resource_types/:resource_type [get]
 func (h API) GetIntegrationTypeResourceType(c echo.Context) error {
 	integrationType := c.Param("integration_type")
@@ -1754,7 +1754,7 @@ func (h API) GetIntegrationTypeResourceType(c echo.Context) error {
 		}
 		if rt, ok := resourceTypes[resourceType]; ok {
 			if !rt.IsEmpty() {
-				return c.JSON(http.StatusOK, rt.ToAPI())
+				return c.JSON(http.StatusOK, models.ApiResourceTypeConfiguration(rt))
 			} else {
 				return c.JSON(http.StatusOK, models.ResourceTypeConfiguration{
 					Name:            resourceType,

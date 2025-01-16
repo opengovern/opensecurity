@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/opengovern/og-util/pkg/integration"
-	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
+	"github.com/opengovern/og-util/pkg/integration/interfaces"
 	"github.com/opengovern/opencomply/services/integration/integration-type/oci-repository/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/oci-repository/healthcheck"
-	"github.com/opengovern/opencomply/services/integration/models"
 )
 
 type Integration struct{}
@@ -40,7 +39,7 @@ func (i *Integration) HealthCheck(jsonData []byte, _ string, _ map[string]string
 	return healthcheck.IntegrationHealthcheck(context.TODO(), healthcheck.Config{})
 }
 
-func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
+func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]integration.Integration, error) {
 	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
@@ -52,7 +51,7 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integratio
 		if credentials.DockerhubCredentials == nil {
 			return nil, fmt.Errorf("dockerhub credentials are required with registry type: %s", credentials.GetRegistryType())
 		}
-		return []models.Integration{
+		return []integration.Integration{
 			{
 				ProviderID: fmt.Sprintf("dockerhub/%s", credentials.DockerhubCredentials.Owner),
 				Name:       fmt.Sprintf("Dockerhub - %s", credentials.DockerhubCredentials.Owner),
@@ -62,7 +61,7 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integratio
 		if credentials.GhcrCredentials == nil {
 			return nil, fmt.Errorf("ghcr credentials are required with registry type: %s", credentials.GetRegistryType())
 		}
-		return []models.Integration{
+		return []integration.Integration{
 			{
 				ProviderID: fmt.Sprintf("ghcr/%s", credentials.GhcrCredentials.Owner),
 				Name:       fmt.Sprintf("GitHub Container Registry - %s", credentials.GhcrCredentials.Owner),
@@ -72,7 +71,7 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integratio
 		if credentials.GcrCredentials == nil {
 			return nil, fmt.Errorf("gcr credentials are required with registry type: %s", credentials.GetRegistryType())
 		}
-		return []models.Integration{
+		return []integration.Integration{
 			{
 				ProviderID: fmt.Sprintf("gcr/%s/%s", credentials.GcrCredentials.ProjectID, credentials.GcrCredentials.Location),
 				Name:       fmt.Sprintf("Google Container Registry - %s/%s", credentials.GcrCredentials.ProjectID, credentials.GcrCredentials.Location),
@@ -82,7 +81,7 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integratio
 		if credentials.EcrCredentials == nil {
 			return nil, fmt.Errorf("ecr credentials are required with registry type: %s", credentials.GetRegistryType())
 		}
-		return []models.Integration{
+		return []integration.Integration{
 			{
 				ProviderID: fmt.Sprintf("ecr/%s/%s", credentials.EcrCredentials.AccountID, credentials.EcrCredentials.Region),
 				Name:       fmt.Sprintf("AWS ECR (%s) - %s", credentials.EcrCredentials.Region, credentials.EcrCredentials.AccountID),
@@ -92,7 +91,7 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integratio
 		if credentials.AcrCredentials == nil {
 			return nil, fmt.Errorf("acr credentials are required with registry type: %s", credentials.GetRegistryType())
 		}
-		return []models.Integration{
+		return []integration.Integration{
 			{
 				ProviderID: fmt.Sprintf("acr/%s/%s", credentials.AcrCredentials.TenantID, credentials.AcrCredentials.LoginServer),
 				Name:       fmt.Sprintf("Azure Container Registry - %s", credentials.AcrCredentials.LoginServer),
@@ -111,22 +110,18 @@ func (i *Integration) GetResourceTypesByLabels(labels map[string]string) (map[st
 	return resourceTypesMap, nil
 }
 
-func (i *Integration) GetResourceTypeFromTableName(tableName string) (string, error) {
+func (i *Integration) GetResourceTypeFromTableName(tableName string) string {
 	if v, ok := configs.TablesToResourceTypes[tableName]; ok {
-		return v, nil
+		return v
 	}
 
-	return "", nil
+	return ""
 }
 
 func (i *Integration) GetIntegrationType() integration.Type {
 	return configs.IntegrationTypeOciRepository
 }
 
-func (i *Integration) ListAllTables() (map[string][]string, error) {
-	tables := make(map[string][]string)
-	for t, _ := range configs.TablesToResourceTypes {
-		tables[t] = make([]string, 0)
-	}
-	return tables, nil
+func (i *Integration) ListAllTables() map[string][]interfaces.CloudQLColumn {
+	return make(map[string][]interfaces.CloudQLColumn)
 }

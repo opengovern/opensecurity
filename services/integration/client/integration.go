@@ -6,8 +6,8 @@ import (
 	"github.com/labstack/echo/v4"
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
+	"github.com/opengovern/og-util/pkg/integration/interfaces"
 	"github.com/opengovern/opencomply/services/integration/api/models"
-	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
 	"net/http"
 )
 
@@ -15,6 +15,7 @@ type IntegrationServiceClient interface {
 	ListIntegrationTypes(ctx *httpclient.Context) ([]string, error)
 	GetResourceTypeFromTableName(ctx *httpclient.Context, integrationType string, tableName string) (string, error)
 	GetResourceTypesByLabels(ctx *httpclient.Context, integrationType string, labels map[string]string) (map[string]*models.ResourceTypeConfiguration, error)
+	GetIntegrationTypeTables(ctx *httpclient.Context, integrationType string) (map[string][]interfaces.CloudQLColumn, error)
 	GetIntegrationConfiguration(ctx *httpclient.Context, integrationType string) (interfaces.IntegrationConfiguration, error)
 	GetIntegration(ctx *httpclient.Context, integrationID string) (*models.Integration, error)
 	ListIntegrations(ctx *httpclient.Context, integrationTypes []string) (*models.ListIntegrationsResponse, error)
@@ -82,6 +83,19 @@ func (c *integrationClient) GetResourceTypesByLabels(ctx *httpclient.Context, in
 		return nil, err
 	}
 	return response.ResourceTypes, nil
+}
+
+func (c *integrationClient) GetIntegrationTypeTables(ctx *httpclient.Context, integrationType string) (map[string][]interfaces.CloudQLColumn, error) {
+	url := fmt.Sprintf("%s/api/v1/integration-types/%s/table", c.baseURL, integrationType)
+	var response models.ListTablesResponse
+
+	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &response); err != nil {
+		if 400 <= statusCode && statusCode < 500 {
+			return nil, echo.NewHTTPError(statusCode, err.Error())
+		}
+		return nil, err
+	}
+	return response.Tables, nil
 }
 
 func (c *integrationClient) GetIntegrationConfiguration(ctx *httpclient.Context, integrationType string) (interfaces.IntegrationConfiguration, error) {
