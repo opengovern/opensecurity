@@ -78,7 +78,7 @@ func (s *JobScheduler) tableValidation(framework api.Benchmark) error {
 		s.logger.Info("making tables map")
 		tablesMap := make(map[string]struct{})
 		for _, it := range integrationTypes {
-			tables, err := it.GetTablesByLabels(nil)
+			tables, err := it.ListAllTables()
 			if err != nil {
 				_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
 					FrameworkID:    framework.ID,
@@ -86,7 +86,7 @@ func (s *JobScheduler) tableValidation(framework api.Benchmark) error {
 				})
 				return err
 			}
-			for _, table := range tables {
+			for table := range tables {
 				tablesMap[table] = struct{}{}
 			}
 		}

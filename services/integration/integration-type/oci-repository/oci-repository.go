@@ -124,13 +124,9 @@ func (i *Integration) GetIntegrationType() integration.Type {
 }
 
 func (i *Integration) ListAllTables() (map[string][]string, error) {
-	return make(map[string][]string), nil
-}
-
-func (i *Integration) GetTablesByLabels(map[string]string) ([]string, error) {
-	var tables []string
+	tables := make(map[string][]string)
 	for t, _ := range configs.TablesToResourceTypes {
-		tables = append(tables, t)
+		tables[t] = make([]string, 0)
 	}
 	return tables, nil
 }

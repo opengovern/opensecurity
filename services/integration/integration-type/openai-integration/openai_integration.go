@@ -105,5 +105,9 @@ func hashSHA256(input string) string {
 }
 
 func (i *Integration) ListAllTables() (map[string][]string, error) {
-	return make(map[string][]string), nil
+	tables := make(map[string][]string)
+	for t, _ := range configs.TablesToResourceTypes {
+		tables[t] = make([]string, 0)
+	}
+	return tables, nil
 }
