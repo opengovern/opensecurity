@@ -95,7 +95,7 @@ jobs:
     steps:
   
       - name: Install musl cc
-        uses: awalsh128/cache-apt-pkgs-action@v1
+        uses: awalsh128/cache-apt-pkgs-action@latest
         with:
           packages: musl-tools musl-dev musl
 
