@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-util/pkg/integration"
+	"github.com/opengovern/og-util/pkg/integration/interfaces"
 	"github.com/opengovern/opencomply/services/integration/integration-type/cloudflare-account/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/cloudflare-account/discovery"
 	"github.com/opengovern/opencomply/services/integration/integration-type/cloudflare-account/healthcheck"
-	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
-	"github.com/opengovern/opencomply/services/integration/models"
 )
 
 type Integration struct{}
@@ -44,13 +43,13 @@ func (i *Integration) HealthCheck(jsonData []byte, providerId string, labels map
 	return isHealthy, err
 }
 
-func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
+func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]integration.Integration, error) {
 	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		return nil, err
 	}
-	var integrations []models.Integration
+	var integrations []integration.Integration
 	account, err := discovery.CloudflareIntegrationDiscovery(discovery.Config{
 		Token:     credentials.Token,
 		AccountID: credentials.AccountID,
@@ -67,7 +66,7 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integratio
 	if err != nil {
 		return nil, err
 	}
-	integrations = append(integrations, models.Integration{
+	integrations = append(integrations, integration.Integration{
 		ProviderID: account.ID,
 		Name:       account.Name,
 		Labels:     integrationLabelsJsonb,

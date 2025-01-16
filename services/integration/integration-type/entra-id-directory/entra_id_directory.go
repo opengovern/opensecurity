@@ -3,11 +3,10 @@ package entra_id_directory
 import (
 	"encoding/json"
 	"github.com/opengovern/og-util/pkg/integration"
+	"github.com/opengovern/og-util/pkg/integration/interfaces"
 	"github.com/opengovern/opencomply/services/integration/integration-type/entra-id-directory/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/entra-id-directory/discovery"
 	"github.com/opengovern/opencomply/services/integration/integration-type/entra-id-directory/healthcheck"
-	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
-	"github.com/opengovern/opencomply/services/integration/models"
 )
 
 type Integration struct{}
@@ -46,14 +45,14 @@ func (i *Integration) HealthCheck(jsonData []byte, providerId string, labels map
 	})
 }
 
-func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
+func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]integration.Integration, error) {
 	var configs configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &configs)
 	if err != nil {
 		return nil, err
 	}
 
-	var integrations []models.Integration
+	var integrations []integration.Integration
 	directories, err := discovery.EntraidIntegrationDiscovery(discovery.Config{
 		TenantID:     configs.TenantID,
 		ClientID:     configs.ClientID,
@@ -66,7 +65,7 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integratio
 		return nil, err
 	}
 	for _, s := range directories {
-		integrations = append(integrations, models.Integration{
+		integrations = append(integrations, integration.Integration{
 			ProviderID: s.TenantID,
 			Name:       s.Name,
 		})

@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-util/pkg/integration"
+	"github.com/opengovern/og-util/pkg/integration/interfaces"
 	"github.com/opengovern/opencomply/services/integration/integration-type/aws-account/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/aws-account/discovery"
 	"github.com/opengovern/opencomply/services/integration/integration-type/aws-account/healthcheck"
 	labelsPackage "github.com/opengovern/opencomply/services/integration/integration-type/aws-account/labels"
-	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
-	"github.com/opengovern/opencomply/services/integration/models"
 	"golang.org/x/net/context"
 	"strconv"
 )
@@ -50,7 +49,7 @@ func (i *Integration) HealthCheck(jsonData []byte, providerId string, labels map
 	}, providerId)
 }
 
-func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
+func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]integration.Integration, error) {
 	ctx := context.Background()
 	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
@@ -58,7 +57,7 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integratio
 		return nil, err
 	}
 
-	var integrations []models.Integration
+	var integrations []integration.Integration
 	accounts := discovery.AWSIntegrationDiscovery(discovery.Config{
 		AWSAccessKeyID:                credentials.AwsAccessKeyID,
 		AWSSecretAccessKey:            credentials.AwsSecretAccessKey,
@@ -96,7 +95,7 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integratio
 			return nil, err
 		}
 
-		integrations = append(integrations, models.Integration{
+		integrations = append(integrations, integration.Integration{
 			ProviderID: a.AccountID,
 			Name:       a.AccountName,
 			Labels:     integrationLabelsJsonb,

@@ -4,11 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/opengovern/og-util/pkg/integration"
+	"github.com/opengovern/og-util/pkg/integration/interfaces"
 	"github.com/opengovern/opencomply/services/integration/integration-type/digitalocean-team/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/digitalocean-team/discovery"
 	"github.com/opengovern/opencomply/services/integration/integration-type/digitalocean-team/healthcheck"
-	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
-	"github.com/opengovern/opencomply/services/integration/models"
 )
 
 type Integration struct{}
@@ -42,7 +41,7 @@ func (i *Integration) HealthCheck(jsonData []byte, _ string, _ map[string]string
 	})
 }
 
-func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
+func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]integration.Integration, error) {
 	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
@@ -56,7 +55,7 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integratio
 		return nil, err
 	}
 
-	return []models.Integration{
+	return []integration.Integration{
 		{
 			ProviderID: team.ID,
 			Name:       team.Name,

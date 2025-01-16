@@ -3,11 +3,10 @@ package google_workspace_account
 import (
 	"encoding/json"
 	"github.com/opengovern/og-util/pkg/integration"
-	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
-	configs "github.com/opengovern/opencomply/services/integration/integration-type/render-account/configs"
+	"github.com/opengovern/og-util/pkg/integration/interfaces"
+	"github.com/opengovern/opencomply/services/integration/integration-type/render-account/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/render-account/discovery"
 	"github.com/opengovern/opencomply/services/integration/integration-type/render-account/healthcheck"
-	"github.com/opengovern/opencomply/services/integration/models"
 )
 
 type Integration struct{}
@@ -42,17 +41,17 @@ func (i *Integration) HealthCheck(jsonData []byte, providerId string, labels map
 	return isHealthy, err
 }
 
-func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
+func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]integration.Integration, error) {
 	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		return nil, err
 	}
-	var integrations []models.Integration
+	var integrations []integration.Integration
 	user, err := discovery.RenderIntegrationDiscovery(discovery.Config{
 		APIKey: credentials.APIKey,
 	})
-	integrations = append(integrations, models.Integration{
+	integrations = append(integrations, integration.Integration{
 		ProviderID: user.Email,
 		Name:       user.Name,
 	})

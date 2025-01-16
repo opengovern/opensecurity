@@ -4,12 +4,10 @@ import (
 	"encoding/json"
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-util/pkg/integration"
+	"github.com/opengovern/og-util/pkg/integration/interfaces"
 	"github.com/opengovern/opencomply/services/integration/integration-type/cohereai-project/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/cohereai-project/discovery"
 	"github.com/opengovern/opencomply/services/integration/integration-type/cohereai-project/healthcheck"
-	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
-
-	"github.com/opengovern/opencomply/services/integration/models"
 )
 
 type Integration struct{}
@@ -42,13 +40,13 @@ func (i *Integration) HealthCheck(jsonData []byte, providerId string, labels map
 	return isHealthy, err
 }
 
-func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integration, error) {
+func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]integration.Integration, error) {
 	var credentials configs.IntegrationCredentials
 	err := json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		return nil, err
 	}
-	var integrations []models.Integration
+	var integrations []integration.Integration
 	connectors, err1 := discovery.CohereAIIntegrationDiscovery(credentials.APIKey)
 	if err1 != nil {
 		return nil, err1
@@ -70,7 +68,7 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]models.Integratio
 	}
 	// for in esponse
 	for _, connector := range connectors {
-		integrations = append(integrations, models.Integration{
+		integrations = append(integrations, integration.Integration{
 			ProviderID: connector.ID,
 			Name:       connector.Name,
 			Labels:     integrationLabelsJsonb,

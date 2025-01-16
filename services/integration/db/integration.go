@@ -40,7 +40,7 @@ func (db Database) DeleteIntegration(IntegrationID uuid.UUID) error {
 // DeleteSampleIntegrations deletes sample integrations
 func (db Database) DeleteSampleIntegrations() error {
 	tx := db.Orm.
-		Where("state = ?", models.IntegrationStateSample).
+		Where("state = ?", integration.IntegrationStateSample).
 		Unscoped().
 		Delete(&models.Integration{})
 	if tx.Error != nil {
@@ -55,7 +55,7 @@ func (db Database) ListSampleIntegrations() ([]models.Integration, error) {
 	var integrations []models.Integration
 
 	tx := db.Orm.
-		Where("state = ?", models.IntegrationStateSample).
+		Where("state = ?", integration.IntegrationStateSample).
 		Find(&integrations)
 	if tx.Error != nil {
 		return integrations, tx.Error

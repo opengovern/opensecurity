@@ -3,7 +3,6 @@ package integration_type
 import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
-	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/integration-type/models"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"os"
@@ -12,6 +11,8 @@ import (
 	"strings"
 
 	"github.com/opengovern/og-util/pkg/integration"
+	"github.com/opengovern/og-util/pkg/integration/interfaces"
+	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/integration-type/models"
 	"github.com/opengovern/opencomply/services/integration/integration-type/aws-account"
 	awsConfigs "github.com/opengovern/opencomply/services/integration/integration-type/aws-account/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/azure-subscription"
@@ -28,7 +29,6 @@ import (
 	entraidConfigs "github.com/opengovern/opencomply/services/integration/integration-type/entra-id-directory/configs"
 	google_workspace_account "github.com/opengovern/opencomply/services/integration/integration-type/google-workspace-account"
 	googleConfig "github.com/opengovern/opencomply/services/integration/integration-type/google-workspace-account/configs"
-	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
 	linodeaccount "github.com/opengovern/opencomply/services/integration/integration-type/linode-account"
 	linodeConfigs "github.com/opengovern/opencomply/services/integration/integration-type/linode-account/configs"
 	oci "github.com/opengovern/opencomply/services/integration/integration-type/oci-repository"
