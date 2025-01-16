@@ -489,14 +489,16 @@ func (h API) IntegrationHealthcheck(c echo.Context) error {
 
 	healthy, err := integrationType.HealthCheck(jsonData, integrationApi.ProviderID, integrationApi.Labels, integrationApi.Annotations)
 	if err != nil || !healthy {
-		h.logger.Error("healthcheck failed", zap.Error(err))
 		if integration.State != models2.IntegrationStateArchived {
 			integration.State = models2.IntegrationStateInactive
 		}
-		_, err = integration.AddAnnotations("platform/integration/health-reason", err.Error())
 		if err != nil {
-			h.logger.Error("failed to add annotations", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to add annotations")
+			h.logger.Error("healthcheck failed", zap.Error(err))
+			_, err = integration.AddAnnotations("platform/integration/health-reason", err.Error())
+			if err != nil {
+				h.logger.Error("failed to add annotations", zap.Error(err))
+				return echo.NewHTTPError(http.StatusInternalServerError, "failed to add annotations")
+			}
 		}
 	} else {
 		if integration.State != models2.IntegrationStateArchived {

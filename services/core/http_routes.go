@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/opengovern/og-util/pkg/integration"
 	"net/http"
 	"net/url"
 	"sort"
@@ -322,17 +321,6 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
 	complianceClient := complianceClient.NewComplianceClient(complianceURL)
 
-	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
-	if err != nil {
-		h.logger.Error("error listing controls", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
-	}
-	namedQueries, err := h.ListQueriesV2Internal(ctx, api.ListQueryV2Request{})
-	if err != nil {
-		h.logger.Error("error listing queries", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
-	}
-
 	var filteredQueryParams []string
 	if controlIDs != nil {
 		all_control, err := complianceClient.ListControl(clientCtx, controlIDs, nil)
@@ -369,7 +357,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 			h.logger.Error("error getting query parameters", zap.Error(err))
 			return err
 		}
-	} else if len(filteredQueryParams) > 0 {
+	} else if controlIDs != nil || queryIDs != nil {
 		queryParams, err = h.db.GetQueryParametersByIds(filteredQueryParams)
 		if err != nil {
 			h.logger.Error("error getting query parameters", zap.Error(err))
@@ -389,13 +377,24 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 		parametersMap[apiParam.Key+apiParam.ControlID] = &apiParam
 	}
 
+	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
+	if err != nil {
+		h.logger.Error("error listing controls", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
+	}
+	namedQueries, err := h.ListQueriesV2Internal(ctx, api.ListQueryV2Request{})
+	if err != nil {
+		h.logger.Error("error listing queries", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
+	}
+
 	for _, c := range controls {
 		for _, p := range c.Policy.Parameters {
 			if _, ok := parametersMap[p.Key]; ok {
 				parametersMap[p.Key].ControlsCount += 1
 			}
 			if _, ok := parametersMap[p.Key+c.ID]; ok {
-				parametersMap[p.Key].ControlsCount += 1
+				parametersMap[p.Key+c.ID].ControlsCount += 1
 			}
 		}
 	}
@@ -428,22 +427,40 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 		switch sortBy {
 		case "key":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].Key == items[j].Key {
+					return items[i].ControlsCount < items[j].ControlsCount
+				}
 				return items[i].Key < items[j].Key
 			})
 		case "value":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].Value == items[j].Value {
+					if items[i].Key == items[j].Key {
+						return items[i].ControlsCount < items[j].ControlsCount
+					}
+					return items[i].Key < items[j].Key
+				}
 				return items[i].Value < items[j].Value
 			})
 		case "controlid", "control_id":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].ControlID == items[j].ControlID {
+					return items[i].Key < items[j].Key
+				}
 				return items[i].ControlID < items[j].ControlID
 			})
 		case "controlscount", "controls_count":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].ControlsCount == items[j].ControlsCount {
+					return items[i].Key < items[j].Key
+				}
 				return items[i].ControlsCount < items[j].ControlsCount
 			})
 		case "queriescount", "queries_count":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].QueriesCount == items[j].QueriesCount {
+					return items[i].Key < items[j].Key
+				}
 				return items[i].QueriesCount < items[j].QueriesCount
 			})
 		}
@@ -451,22 +468,40 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 		switch sortBy {
 		case "key":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].Key == items[j].Key {
+					return items[i].ControlsCount > items[j].ControlsCount
+				}
 				return items[i].Key > items[j].Key
 			})
 		case "value":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].Value == items[j].Value {
+					if items[i].Key == items[j].Key {
+						return items[i].ControlsCount > items[j].ControlsCount
+					}
+					return items[i].Key > items[j].Key
+				}
 				return items[i].Value > items[j].Value
 			})
 		case "controlid", "control_id":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].ControlID == items[j].ControlID {
+					return items[i].Key > items[j].Key
+				}
 				return items[i].ControlID > items[j].ControlID
 			})
 		case "controlscount", "controls_count":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].ControlsCount == items[j].ControlsCount {
+					return items[i].Key > items[j].Key
+				}
 				return items[i].ControlsCount > items[j].ControlsCount
 			})
 		case "queriescount", "queries_count":
 			sort.Slice(items, func(i, j int) bool {
+				if items[i].QueriesCount == items[j].QueriesCount {
+					return items[i].Key > items[j].Key
+				}
 				return items[i].QueriesCount > items[j].QueriesCount
 			})
 		}
@@ -545,15 +580,11 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 				Required: parameter.Required,
 			})
 		}
-		integrationTypes := make([]integration.Type, 0, len(control.Policy.IntegrationType))
-		for _, i := range control.Policy.IntegrationType {
-			integrationTypes = append(integrationTypes, integration.Type(i))
-		}
 		query := api.Policy{
 			ID:              control.Policy.ID,
 			Language:        api.PolicyLanguage(control.Policy.Language),
 			Definition:      control.Policy.Definition,
-			IntegrationType: integrationTypes,
+			IntegrationType: control.Policy.IntegrationType,
 			PrimaryResource: control.Policy.PrimaryResource,
 			ListOfResources: control.Policy.ListOfResources,
 			Parameters:      parameters,

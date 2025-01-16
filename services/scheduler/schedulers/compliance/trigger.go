@@ -1,7 +1,6 @@
 package compliance
 
 import (
-	"strings"
 	"time"
 
 	"github.com/opengovern/og-util/pkg/api"
@@ -71,8 +70,7 @@ func (s *JobScheduler) buildRunners(
 		if integrationType != nil && len(control.Policy.IntegrationType) > 0 {
 			supportsConnector := false
 			for _, c := range control.Policy.IntegrationType {
-				if strings.ToLower(
-					integrationType.String()) == strings.ToLower(c) {
+				if *integrationType == c {
 					supportsConnector = true
 					break
 				}
@@ -258,6 +256,23 @@ func (s *JobScheduler) enqueueRunnersCycle() error {
 	}
 	s.logger.Info("jobs with unqueued runners", zap.Int("count", len(jobsWithUnqueuedRunners)))
 	for _, job := range jobsWithUnqueuedRunners {
+		//if job.Status == model.ComplianceJobCreated {
+		//	framework, err := s.complianceClient.GetBenchmark(&httpclient.Context{UserRole: api.AdminRole}, job.FrameworkID)
+		//	if err != nil {
+		//		s.logger.Error("error while getting framework", zap.String("frameworkID", job.FrameworkID), zap.Error(err))
+		//		continue
+		//	}
+		//	if framework == nil {
+		//		s.logger.Error("framework not exist", zap.String("frameworkID", job.FrameworkID))
+		//		continue
+		//	}
+		//	err = s.validateComplianceJob(*framework)
+		//	if err != nil {
+		//		s.logger.Error("framework validation failed", zap.String("frameworkID", job.FrameworkID), zap.Error(err))
+		//		_ = s.db.UpdateComplianceJob(job.ID, model.ComplianceJobFailed, err.Error())
+		//		continue
+		//	}
+		//}
 		s.logger.Info("processing job with unqueued runners", zap.Uint("jobID", job.ID))
 		var allRunners []*model.ComplianceRunner
 		var assignments *complianceApi.BenchmarkAssignedEntities

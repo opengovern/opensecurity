@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgtype"
 	"strings"
 	"time"
 
@@ -103,9 +104,23 @@ func (db Database) CountRunningDescribeJobsPerResourceType(manuals bool) ([]Reso
 	return count, nil
 }
 
-func (db Database) GetLastDescribeIntegrationJob(integrationId, resourceType string) (*model.DescribeIntegrationJob, error) {
+func (db Database) GetLastDescribeIntegrationJob(integrationId, resourceType string, parameters pgtype.JSONB) (*model.DescribeIntegrationJob, error) {
 	var job model.DescribeIntegrationJob
-	tx := db.ORM.Preload(clause.Associations).Where("integration_id = ? AND resource_type = ?", integrationId, resourceType).Order("updated_at DESC").First(&job)
+
+	// Ensure the parameters are correctly encoded as JSON
+	var parametersBytes []byte
+	if parameters.Status == pgtype.Present {
+		parametersBytes = parameters.Bytes
+	} else {
+		return nil, fmt.Errorf("parameters are not in a valid state: %v", parameters.Status)
+	}
+
+	// Query with JSONB condition
+	tx := db.ORM.Preload(clause.Associations).
+		Where("integration_id = ? AND resource_type = ? AND convert_from(parameters, 'UTF8')::JSONB @> ?::JSONB", integrationId, resourceType, parametersBytes).
+		Order("updated_at DESC").
+		First(&job)
+
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -247,7 +262,7 @@ UNION ALL
 )
 ) AS t %s ORDER BY %s %s LIMIT ? OFFSET ?;
 `, whereQuery, sortBy, sortOrder)
-	} else{
+	} else {
 		rawQuery = fmt.Sprintf(`
 SELECT * FROM (
 (SELECT id, created_at, updated_at, 'discovery' AS job_type, integration_id, resource_type AS title, status, failure_message FROM describe_integration_jobs)
@@ -325,7 +340,7 @@ UNION ALL
 (SELECT 'compliance' AS job_type, status, count(*) AS count FROM compliance_jobs WHERE created_at >= ? AND created_at <= ? GROUP BY status )
 )
 ) AS t %s;`, whereQuery)
-	}else{
+	} else {
 		rawQuery = fmt.Sprintf(`
 SELECT * FROM (
 	(
@@ -603,9 +618,9 @@ func (db Database) UpdateDescribeIntegrationJobsTimedOut(describeIntervalHours i
 
 	tx = db.ORM.
 		Model(&model.DescribeIntegrationJob{}).
-		Where(fmt.Sprintf("updated_at < NOW() - INTERVAL '1 hour'")).
+		Where(fmt.Sprintf("updated_at < NOW() - INTERVAL '2 hour'")).
 		Where("status IN ?", []string{string(api.DescribeResourceJobQueued)}).
-		Updates(model.DescribeIntegrationJob{Status: api.DescribeResourceJobFailed, FailureMessage: "Queued job didn't run"})
+		Updates(model.DescribeIntegrationJob{Status: api.DescribeResourceJobTimeout, FailureMessage: "Queued job didn't run"})
 	if tx.Error != nil {
 		return tx.Error
 	}
@@ -614,7 +629,7 @@ func (db Database) UpdateDescribeIntegrationJobsTimedOut(describeIntervalHours i
 		Model(&model.DescribeIntegrationJob{}).
 		Where(fmt.Sprintf("updated_at < NOW() - INTERVAL '%d hours'", describeIntervalHours)).
 		Where("status IN ?", []string{string(api.DescribeResourceJobCreated)}).
-		Updates(model.DescribeIntegrationJob{Status: api.DescribeResourceJobFailed, FailureMessage: "Job is aborted"})
+		Updates(model.DescribeIntegrationJob{Status: api.DescribeResourceJobTimeout, FailureMessage: "Job is aborted"})
 	if tx.Error != nil {
 		return tx.Error
 	}

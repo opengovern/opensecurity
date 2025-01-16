@@ -281,6 +281,7 @@ type Policy struct {
 	Definition      string
 	IntegrationType pq.StringArray `gorm:"type:text[]"`
 	Language        types.PolicyLanguage
+	ExternalPolicy  bool
 
 	Controls []Control `gorm:"foreignKey:PolicyID"`
 

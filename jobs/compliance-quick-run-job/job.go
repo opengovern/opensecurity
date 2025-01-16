@@ -137,7 +137,6 @@ func (w *Worker) RunJobForIntegration(ctx context.Context, job *AuditJob, integr
 	job.JobReportResourceView.Integrations[integrationId] = types.AuditIntegrationResult{
 		ResourceTypes: make(map[string]types.AuditResourceTypesResult),
 	}
-	ctx2 := &httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}
 
 	err := w.Initialize(ctx, integrationId)
 	if err != nil {
@@ -147,7 +146,14 @@ func (w *Worker) RunJobForIntegration(ctx context.Context, job *AuditJob, integr
 	defer w.steampipeConn.UnsetConfigTableValue(ctx, steampipe.OpenGovernanceConfigKeyIntegrationID)
 	defer w.steampipeConn.UnsetConfigTableValue(ctx, steampipe.OpenGovernanceConfigKeyClientType)
 
-	framework, err := w.complianceClient.GetBenchmark(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}, job.FrameworkID)
+	return nil
+}
+
+func (w *Worker) runJobForFramework(ctx context.Context, job *AuditJob, integrationId string, frameworkId string,
+	totalControls, failedControls *map[string]bool, include map[string]bool) error {
+	ctx2 := &httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}
+
+	framework, err := w.complianceClient.GetBenchmark(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}, frameworkId)
 	if err != nil {
 		return err
 	}
@@ -259,6 +265,14 @@ func (w *Worker) RunJobForIntegration(ctx context.Context, job *AuditJob, integr
 			}
 		}
 	}
+
+	for _, child := range framework.Children {
+		err = w.runJobForFramework(ctx, job, integrationId, child, totalControls, failedControls, include)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

@@ -87,3 +87,11 @@ func (i *Integration) GetIntegrationType() integration.Type {
 func (i *Integration) ListAllTables() (map[string][]string, error) {
 	return make(map[string][]string), nil
 }
+
+func (i *DigitaloceanTeamIntegration) GetTablesByLabels(map[string]string) ([]string, error) {
+	var tables []string
+	for t, _ := range digitaloceanDescriberLocal.TablesToResourceTypes {
+		tables = append(tables, t)
+	}
+	return tables, nil
+}

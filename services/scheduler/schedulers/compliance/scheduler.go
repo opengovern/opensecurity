@@ -17,7 +17,7 @@ func (s *JobScheduler) runScheduler() error {
 	}
 	clientCtx := &httpclient.Context{UserRole: api.AdminRole}
 
-	benchmarks, err := s.complianceClient.ListBenchmarks(clientCtx, nil)
+	benchmarks, err := s.complianceClient.ListBenchmarks(clientCtx, nil,nil)
 	if err != nil {
 		s.logger.Error("error while listing benchmarks", zap.Error(err))
 		return fmt.Errorf("error while listing benchmarks: %v", err)
@@ -78,8 +78,6 @@ func (s *JobScheduler) runScheduler() error {
 				s.logger.Error("error while creating compliance job", zap.Error(err))
 				return err
 			}
-
-			ComplianceJobsCount.WithLabelValues("successful").Inc()
 		}
 	}
 

@@ -3,6 +3,7 @@ package api
 type ListPolicyItem struct {
 	ID            string `gorm:"id"`
 	Title         string `json:"title"`
+	Type          string `json:"type"`
 	Language      string `json:"language"`
 	ControlsCount int    `json:"controls_count"`
 }
@@ -15,6 +16,7 @@ type ListPoliciesResponse struct {
 type GetPolicyItem struct {
 	ID             string   `gorm:"id"`
 	Title          string   `json:"title"`
+	Type           string   `json:"type"`
 	Description    string   `json:"description"`
 	Language       string   `json:"language"`
 	Definition     string   `json:"definition"`
