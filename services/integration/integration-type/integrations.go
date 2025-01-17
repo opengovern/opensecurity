@@ -12,7 +12,6 @@ import (
 
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/og-util/pkg/integration/interfaces"
-	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/integration-type/models"
 	"github.com/opengovern/opencomply/services/integration/integration-type/aws-account"
 	awsConfigs "github.com/opengovern/opencomply/services/integration/integration-type/aws-account/configs"
 	"github.com/opengovern/opencomply/services/integration/integration-type/azure-subscription"
@@ -37,6 +36,7 @@ import (
 	openaiConfigs "github.com/opengovern/opencomply/services/integration/integration-type/openai-integration/configs"
 	render "github.com/opengovern/opencomply/services/integration/integration-type/render-account"
 	renderConfigs "github.com/opengovern/opencomply/services/integration/integration-type/render-account/configs"
+	"github.com/opengovern/opencomply/services/integration/models"
 	hczap "github.com/zaffka/zap-to-hclog"
 )
 
@@ -56,16 +56,17 @@ var integrationTypes = map[integration.Type]interfaces.IntegrationType{
 }
 
 type IntegrationTypeManager struct {
-	logger           *zap.Logger
-	hcLogger         hclog.Logger
-	IntegrationTypes map[integration.Type]interfaces.IntegrationType
+	logger            *zap.Logger
+	hcLogger          hclog.Logger
+	IntegrationTypeDb *gorm.DB
+	IntegrationTypes  map[integration.Type]interfaces.IntegrationType
 }
 
 func NewIntegrationTypeManager(logger *zap.Logger, integrationTypeDb *gorm.DB) *IntegrationTypeManager {
 	hcLogger := hczap.Wrap(logger)
 
-	var types []models.IntegrationTypeBinaries
-	err := integrationTypeDb.Find(&types).Error
+	var types []models.IntegrationPlugin
+	err := integrationTypeDb.Where("install_state = ?", models.IntegrationTypeInstallStateInstalled).Find(&types).Error
 	if err != nil {
 		logger.Error("failed to fetch integration types", zap.Error(err))
 		return nil
@@ -136,9 +137,10 @@ func NewIntegrationTypeManager(logger *zap.Logger, integrationTypeDb *gorm.DB) *
 	}
 
 	return &IntegrationTypeManager{
-		logger:           logger,
-		hcLogger:         hcLogger,
-		IntegrationTypes: integrationTypes,
+		logger:            logger,
+		hcLogger:          hcLogger,
+		IntegrationTypes:  integrationTypes,
+		IntegrationTypeDb: integrationTypeDb,
 	}
 }
 

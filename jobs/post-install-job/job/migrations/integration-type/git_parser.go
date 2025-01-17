@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/go-getter"
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/opencomply/jobs/post-install-job/config"
-	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/integration-type/models"
+	"github.com/opengovern/opencomply/services/integration/models"
 	"go.uber.org/zap"
 	"os"
 )
@@ -56,7 +56,7 @@ func (g *GitParser) ExtractIntegrations(logger *zap.Logger) error {
 	return nil
 }
 
-func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin IntegrationPlugin) (*models.IntegrationTypeBinaries, error) {
+func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin IntegrationPlugin) (*models.IntegrationPlugin, error) {
 	baseDir := "/integration-types"
 
 	// create tmp directory if not exists
@@ -117,7 +117,7 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 	}
 
 	logger.Info("done reading files", zap.String("url", url), zap.String("integrationType", iPlugin.IntegrationType.String()), zap.Int("integrationPluginSize", len(integrationPlugin)), zap.Int("cloudqlPluginSize", len(cloudqlPlugin)))
-	return &models.IntegrationTypeBinaries{
+	return &models.IntegrationPlugin{
 		IntegrationType:   iPlugin.IntegrationType,
 		URL:               url,
 		IntegrationPlugin: integrationPlugin,

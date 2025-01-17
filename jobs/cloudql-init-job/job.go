@@ -6,8 +6,8 @@ import (
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/og-util/pkg/steampipe"
-	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/integration-type/models"
 	"github.com/opengovern/opencomply/services/integration/client"
+	"github.com/opengovern/opencomply/services/integration/models"
 	"go.uber.org/zap"
 	"os"
 	"os/exec"
@@ -41,13 +41,13 @@ func (j *Job) Run(ctx context.Context) error {
 		return err
 	}
 
-	var integrations []models.IntegrationTypeBinaries
+	var integrations []models.IntegrationPlugin
 	err = db.Find(&integrations).Error
 	if err != nil {
 		j.logger.Error("failed to get integration binaries", zap.Error(err))
 		return err
 	}
-	var integrationMap = make(map[string]*models.IntegrationTypeBinaries)
+	var integrationMap = make(map[string]*models.IntegrationPlugin)
 	for _, integration := range integrations {
 		integration := integration
 		integrationMap[integration.IntegrationType.String()] = &integration
