@@ -45,7 +45,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/nats-io/nats.go v1.36.0
 	github.com/open-policy-agent/opa v0.69.0
-	github.com/opengovern/og-util v1.10.1
+	github.com/opengovern/og-util v1.11.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/opensearch-project/opensearch-go/v4 v4.2.0
 	github.com/ory/dockertest/v3 v3.10.0

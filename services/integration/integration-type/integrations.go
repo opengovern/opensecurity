@@ -125,7 +125,14 @@ func NewIntegrationTypeManager(logger *zap.Logger, integrationTypeDb *gorm.DB) *
 			continue
 		}
 
-		integrationTypes[itInterface.GetIntegrationType()] = itInterface
+		iType, err := itInterface.GetIntegrationType()
+		if err != nil {
+			logger.Error("failed to get integration type from plugin", zap.Error(err))
+			client.Kill()
+			continue
+		}
+
+		integrationTypes[iType] = itInterface
 	}
 
 	return &IntegrationTypeManager{

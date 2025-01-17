@@ -13,7 +13,7 @@ import (
 
 type Integration struct{}
 
-func (i *Integration) GetConfiguration() interfaces.IntegrationConfiguration {
+func (i *Integration) GetConfiguration() (interfaces.IntegrationConfiguration, error) {
 	return interfaces.IntegrationConfiguration{
 		NatsScheduledJobsTopic:   configs.JobQueueTopic,
 		NatsManualJobsTopic:      configs.JobQueueTopicManuals,
@@ -27,7 +27,7 @@ func (i *Integration) GetConfiguration() interfaces.IntegrationConfiguration {
 
 		DescriberDeploymentName: configs.DescriberDeploymentName,
 		DescriberRunCommand:     configs.DescriberRunCommand,
-	}
+	}, nil
 }
 
 func (i *Integration) HealthCheck(jsonData []byte, providerId string, labels map[string]string, annotations map[string]string) (bool, error) {
@@ -82,16 +82,16 @@ func (i *Integration) GetResourceTypesByLabels(labels map[string]string) (map[st
 	return resourceTypesMap, nil
 }
 
-func (i *Integration) GetResourceTypeFromTableName(tableName string) string {
+func (i *Integration) GetResourceTypeFromTableName(tableName string) (string, error) {
 	if v, ok := configs.TablesToResourceTypes[tableName]; ok {
-		return v
+		return v, nil
 	}
 
-	return ""
+	return "", nil
 }
 
-func (i *Integration) GetIntegrationType() integration.Type {
-	return configs.IntegrationTypeOpenaiIntegration
+func (i *Integration) GetIntegrationType() (integration.Type, error) {
+	return configs.IntegrationTypeOpenaiIntegration, nil
 }
 
 func hashSHA256(input string) string {
@@ -103,6 +103,10 @@ func hashSHA256(input string) string {
 	return hex.EncodeToString(hashedBytes)
 }
 
-func (i *Integration) ListAllTables() map[string][]interfaces.CloudQLColumn {
-	return make(map[string][]interfaces.CloudQLColumn)
+func (i *Integration) ListAllTables() (map[string][]interfaces.CloudQLColumn, error) {
+	return make(map[string][]interfaces.CloudQLColumn), nil
+}
+
+func (i *Integration) Ping() error {
+	return nil
 }

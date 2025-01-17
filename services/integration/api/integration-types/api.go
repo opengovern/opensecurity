@@ -67,7 +67,10 @@ func (a *API) GetResourceTypeFromTableName(c echo.Context) error {
 
 	rtMap := a.typeManager.GetIntegrationTypeMap()
 	if value, ok := rtMap[a.typeManager.ParseType(integrationType)]; ok {
-		resourceType := value.GetResourceTypeFromTableName(tableName)
+		resourceType, err := value.GetResourceTypeFromTableName(tableName)
+		if err != nil {
+			return echo.NewHTTPError(500, err.Error())
+		}
 		if resourceType != "" {
 			res := models.GetResourceTypeFromTableNameResponse{
 				ResourceType: resourceType,
@@ -96,7 +99,12 @@ func (a *API) GetConfiguration(c echo.Context) error {
 
 	rtMap := a.typeManager.GetIntegrationTypeMap()
 	if value, ok := rtMap[a.typeManager.ParseType(integrationType)]; ok {
-		return c.JSON(200, value.GetConfiguration())
+		conf, err := value.GetConfiguration()
+		if err != nil {
+			return echo.NewHTTPError(500, err.Error())
+		}
+
+		return c.JSON(200, conf)
 	} else {
 		return echo.NewHTTPError(404, "integration type not found")
 	}
@@ -156,7 +164,10 @@ func (a *API) ListTables(c echo.Context) error {
 
 	rtMap := a.typeManager.GetIntegrationTypeMap()
 	if value, ok := rtMap[a.typeManager.ParseType(integrationType)]; ok {
-		tables := value.ListAllTables()
+		tables, err := value.ListAllTables()
+		if err != nil {
+			return echo.NewHTTPError(500, err.Error())
+		}
 		return c.JSON(200, models.ListTablesResponse{Tables: tables})
 	} else {
 		return echo.NewHTTPError(404, "integration type not found")

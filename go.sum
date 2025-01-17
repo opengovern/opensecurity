@@ -1001,6 +1001,8 @@ github.com/opengovern/og-util v1.10.0 h1:Fj3GIl9fpLzoWUwVbZsZ4pc6wlV8SZj5PIfL8wX
 github.com/opengovern/og-util v1.10.0/go.mod h1:9uNpGalixRoQkUzPPBdT+JG1epg8FTRx/qmkfTyUZHE=
 github.com/opengovern/og-util v1.10.1 h1:D51GVWKI1J1d9v50z6Eg4gG0Q79+aFLGrxe4ynJCAck=
 github.com/opengovern/og-util v1.10.1/go.mod h1:9uNpGalixRoQkUzPPBdT+JG1epg8FTRx/qmkfTyUZHE=
+github.com/opengovern/og-util v1.11.0 h1:Amct1bHXDF5TBnymstPUEWpWaC+Lji5dnJ8Mr6fkbMA=
+github.com/opengovern/og-util v1.11.0/go.mod h1:9uNpGalixRoQkUzPPBdT+JG1epg8FTRx/qmkfTyUZHE=
 github.com/opensearch-project/opensearch-go/v2 v2.3.0 h1:nQIEMr+A92CkhHrZgUhcfsrZjibvB3APXf2a1VwCmMQ=
 github.com/opensearch-project/opensearch-go/v2 v2.3.0/go.mod h1:8LDr9FCgUTVoT+5ESjc2+iaZuldqE+23Iq0r1XeNue8=
 github.com/opensearch-project/opensearch-go/v4 v4.2.0 h1:uaBexfVdeSU15yOUPYF+IY059koVP0oNQPyoSde6N/A=

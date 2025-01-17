@@ -1098,7 +1098,11 @@ func (h API) GetIntegrationTypeUiSpec(c echo.Context) error {
 	if !ok {
 		return echo.NewHTTPError(http.StatusNotFound, "invalid integration type")
 	}
-	cnf := integrationType.GetConfiguration()
+	cnf, err := integrationType.GetConfiguration()
+	if err != nil {
+		h.logger.Error("failed to get configuration", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get configuration")
+	}
 
 	var result interface{}
 	if err := json.Unmarshal(cnf.UISpec, &result); err != nil {
@@ -1170,7 +1174,11 @@ func (h API) DisableIntegrationType(c echo.Context) error {
 	if !ok {
 		return echo.NewHTTPError(http.StatusNotFound, "invalid integration type")
 	}
-	cnf := integrationType.GetConfiguration()
+	cnf, err := integrationType.GetConfiguration()
+	if err != nil {
+		h.logger.Error("failed to get configuration", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get configuration"+err.Error())
+	}
 
 	// Scheduled deployment
 	var describerDeployment appsv1.Deployment
@@ -1320,7 +1328,11 @@ func (h API) UpgradeIntegrationType(c echo.Context) error {
 	if !ok {
 		return echo.NewHTTPError(http.StatusNotFound, "invalid integration type")
 	}
-	cnf := integrationType.GetConfiguration()
+	cnf, err := integrationType.GetConfiguration()
+	if err != nil {
+		h.logger.Error("failed to get configuration", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get configuration")
+	}
 
 	integrationTypeInfo, err := h.database.GetIntegrationType(integrationTypeName)
 	if err != nil {
@@ -1464,7 +1476,11 @@ func (h API) EnableIntegrationTypeHelper(ctx context.Context, logger *zap.Logger
 	if !ok {
 		return echo.NewHTTPError(http.StatusNotFound, "invalid integration type")
 	}
-	cnf := integrationType.GetConfiguration()
+	cnf, err := integrationType.GetConfiguration()
+	if err != nil {
+		logger.Error("failed to get integration type configuration", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration type configuration")
+	}
 
 	describerDeployment.ObjectMeta.Name = cnf.DescriberDeploymentName
 	describerDeployment.ObjectMeta.Namespace = currentNamespace
