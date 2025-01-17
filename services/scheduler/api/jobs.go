@@ -105,6 +105,7 @@ type GetDescribeJobsHistoryResponse struct {
 	Title           string                    `json:"title"`
 	FailureMessage  string                    `json:"failure_message"`
 	IntegrationInfo *IntegrationInfo          `json:"integration_info"`
+	Parameters      map[string]string         `json:"parameters"`
 }
 type GetDescribeJobsHistoryFinalResponse struct {
 	Items      []GetDescribeJobsHistoryResponse `json:"items"`

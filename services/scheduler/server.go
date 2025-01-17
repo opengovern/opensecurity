@@ -1897,6 +1897,14 @@ func (h HttpServer) ListDescribeJobs(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	for _, j := range jobs {
+		var params map[string]string
+		if j.Parameters.Status == pgtype.Present {
+			if err := json.Unmarshal(j.Parameters.Bytes, &params); err != nil {
+				h.Scheduler.logger.Error("failed to unmarshal parameters", zap.Uint("job_id", j.ID))
+			}
+		} else {
+			params = make(map[string]string)
+		}
 		jobResult := api.GetDescribeJobsHistoryResponse{
 			JobId:          j.ID,
 			ResourceType:   j.ResourceType,
@@ -1905,6 +1913,7 @@ func (h HttpServer) ListDescribeJobs(ctx echo.Context) error {
 			CreatedAt:      j.CreatedAt,
 			FailureMessage: j.FailureMessage,
 			Title:          j.ResourceType,
+			Parameters:     params,
 		}
 		if info, ok := connectionInfo[j.IntegrationID]; ok {
 			jobResult.IntegrationInfo = &info
