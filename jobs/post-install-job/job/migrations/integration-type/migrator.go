@@ -43,7 +43,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 
 	parser := GitParser{}
-	err = parser.ExtractIntegrationBinaries(logger)
+	err = parser.ExtractIntegrations(logger)
 	if err != nil {
 		return err
 	}
@@ -55,10 +55,17 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			return err
 		}
 
-		for _, integrationBinary := range parser.IntegrationBinaries {
+		for _, iPlugin := range parser.Integrations.Plugins {
+			integrationBinary, err := parser.ExtractIntegrationBinaries(logger, iPlugin)
+			if err != nil {
+				return err
+			}
+			if integrationBinary == nil {
+				continue
+			}
 			err = tx.Clauses(clause.OnConflict{
 				DoNothing: true,
-			}).Create(&integrationBinary).Error
+			}).Create(integrationBinary).Error
 			if err != nil {
 				logger.Error("failed to create integration binary", zap.Error(err))
 				return err
