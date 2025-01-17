@@ -793,7 +793,7 @@ export default function IntegrationList({
                                 }
                                 checked={enableSchedule}
                             >
-                                Schedule Runing
+                               Discovery a Recurring  job
                             </Checkbox>
                             {selectedResourceType?.length == 1 && (
                                 <>
