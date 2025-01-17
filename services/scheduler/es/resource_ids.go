@@ -27,13 +27,15 @@ type ResourceIdentifierFetchHit struct {
 	Sort    []any             `json:"sort"`
 }
 
-func GetResourceIDsForAccountResourceTypeFromES(ctx context.Context, client opengovernance.Client, integrationID, resourceType string, additionalFilters []map[string]any, searchAfter []any, size int) (*ResourceIdentifierFetchResponse, error) {
+func GetResourceIDsForAccountResourceTypeFromES(ctx context.Context, client opengovernance.Client, integrationID,
+	resourceType string, parameters string, additionalFilters []map[string]any, searchAfter []any, size int) (*ResourceIdentifierFetchResponse, error) {
 	root := map[string]any{}
 	root["query"] = map[string]any{
 		"bool": map[string]any{
 			"filter": append([]map[string]any{
 				{"term": map[string]string{"integration_id": integrationID}},
 				{"term": map[string]string{"resource_type": strings.ToLower(resourceType)}},
+				{"term": map[string]string{"metadata.parameters": parameters}},
 			}, additionalFilters...),
 		},
 	}

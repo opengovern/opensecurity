@@ -221,7 +221,7 @@ func (s *Scheduler) scheduleDescribeJob(ctx context.Context) {
 			continue
 		}
 
-		resourceTypesWithParams, err := s.db.ListDescribeJobsWithParamsByIntegrationID(integration.IntegrationID)
+		resourceTypesWithParams, err := s.db.ListManualDiscoverySchedule(integration.IntegrationID)
 		if err != nil {
 			s.logger.Error("failed to list describe jobs with parameters for this integration", zap.String("integration_id", integration.IntegrationID),
 				zap.Error(err))
