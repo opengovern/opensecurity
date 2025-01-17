@@ -1626,6 +1626,34 @@ func (h HttpServer) RunDiscovery(ctx echo.Context) error {
 					failureReason = err.Error()
 				}
 			}
+			if resourceType.EnableSchedule {
+				parameters := resourceType.Parameters
+				if parameters == nil {
+					parameters = make(map[string]string)
+				}
+				parametersJsonData, err := json.Marshal(parameters)
+				if err != nil {
+					h.Scheduler.logger.Error("failed to marshal parameters", zap.Error(err))
+					return echo.NewHTTPError(http.StatusInternalServerError, "failed to marshal parameters")
+				}
+				parametersJsonb := pgtype.JSONB{}
+				err = parametersJsonb.Set(parametersJsonData)
+				if err != nil {
+					h.Scheduler.logger.Error("failed to set parameters jsonb", zap.Error(err))
+					return echo.NewHTTPError(http.StatusInternalServerError, "failed to set parameters jsonb")
+				}
+				err = h.DB.CreateManualDiscoverySchedule(&model2.ManualDiscoverySchedule{
+					ResourceType:    resourceType.ResourceType,
+					IntegrationID:   integration.IntegrationID,
+					IntegrationType: integration.IntegrationType,
+					CreatedBy:       userID,
+					Parameters:      parametersJsonb,
+				})
+				if err != nil {
+					h.Scheduler.logger.Error("failed to create manual discovery schedule", zap.Error(err))
+					return echo.NewHTTPError(http.StatusInternalServerError, "failed to create manual discovery schedule")
+				}
+			}
 
 			var jobId uint
 			if job == nil {

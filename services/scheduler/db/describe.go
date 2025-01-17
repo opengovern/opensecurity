@@ -157,26 +157,6 @@ func (db Database) GetDescribeIntegrationJobByID(id uint) (*model.DescribeIntegr
 	return &job, nil
 }
 
-// ListDescribeJobsWithParamsByIntegrationID List only describe jobs that contain parameters
-func (db Database) ListDescribeJobsWithParamsByIntegrationID(integrationId string) ([]model.DescribeIntegrationJobWithParams, error) {
-	var jobs []model.DescribeIntegrationJobWithParams
-	query := `
-SELECT resource_type, parameters FROM describe_integration_jobs 
-                                 WHERE integration_id = ? AND parameters <> '\x7b7d'
-                                 GROUP BY resource_type, parameters 
-`
-
-	tx := db.ORM.Raw(query, integrationId).Find(&jobs)
-	if tx.Error != nil {
-		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, tx.Error
-	}
-
-	return jobs, nil
-}
-
 func (db Database) RetryDescribeIntegrationJob(id uint) error {
 	tx := db.ORM.Exec("update describe_integration_jobs set status = ? where id = ?", api.DescribeResourceJobCreated, id)
 	if tx.Error != nil {
@@ -877,6 +857,37 @@ func (db Database) CreateIntegrationDiscovery(discovery *model.IntegrationDiscov
 	}
 
 	return nil
+}
+
+func (db Database) CreateManualDiscoverySchedule(s *model.ManualDiscoverySchedule) error {
+	tx := db.ORM.
+		Model(&model.ManualDiscoverySchedule{}).
+		Create(s)
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	return nil
+}
+
+// ListManualDiscoverySchedule List only describe jobs that contain parameters
+func (db Database) ListManualDiscoverySchedule(integrationId string) ([]model.ManualDiscoveryScheduleUnique, error) {
+	var jobs []model.ManualDiscoveryScheduleUnique
+	query := `
+SELECT resource_type, parameters FROM manual_discovery_schedule_unique 
+                                 WHERE integration_id = ? AND parameters <> '\x7b7d'
+                                 GROUP BY resource_type, parameters 
+`
+
+	tx := db.ORM.Raw(query, integrationId).Find(&jobs)
+	if tx.Error != nil {
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, tx.Error
+	}
+
+	return jobs, nil
 }
 
 func (db Database) ListIntegrationDiscovery(triggerId string, integrationIds []string) ([]model.IntegrationDiscovery, error) {

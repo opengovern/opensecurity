@@ -51,22 +51,24 @@ func (s *Scheduler) RunDescribeJobResultsConsumer(ctx context.Context) error {
 				zap.String("status", string(result.Status)),
 			)
 
-			hasParams := false
 			job, err := s.db.GetDescribeIntegrationJobByID(result.JobID)
 			if err != nil {
 				s.logger.Error("failed to get describe integration job by id", zap.Uint("job_id", result.JobID))
-			} else {
-				if job.Parameters.Status == pgtype.Present {
-					if !(string(job.Parameters.Bytes) == "{}" || string(job.Parameters.Bytes) == "[]") {
-						hasParams = true
-					}
-				}
 			}
+			var params map[string]string
+			if job.Parameters.Status == pgtype.Present {
+				if err := json.Unmarshal(job.Parameters.Bytes, &params); err != nil {
+					s.logger.Error("failed to unmarshal parameters", zap.Uint("job_id", result.JobID))
+				}
+			} else {
+				params = make(map[string]string)
+			}
+
 			var deletedCount int64
-			if s.DoDeleteOldResources && result.Status == api.DescribeResourceJobSucceeded && !hasParams {
+			if s.DoDeleteOldResources && result.Status == api.DescribeResourceJobSucceeded {
 				result.Status = api.DescribeResourceJobOldResourceDeletion
 
-				dlc, err := s.cleanupOldResources(ctx, result)
+				dlc, err := s.cleanupOldResources(ctx, result, params)
 				if err != nil {
 					ResultsProcessedCount.WithLabelValues(string(result.DescribeJob.IntegrationType), "failure").Inc()
 					s.logger.Error("failed to cleanupOldResources", zap.Error(err))
@@ -141,7 +143,7 @@ func (s *Scheduler) handleTimeoutForDiscoveryJobs() {
 	}
 }
 
-func (s *Scheduler) cleanupOldResources(ctx context.Context, res DescribeJobResult) (int64, error) {
+func (s *Scheduler) cleanupOldResources(ctx context.Context, res DescribeJobResult, jobParams map[string]string) (int64, error) {
 	var searchAfter []any
 
 	var additionalFilters []map[string]any
@@ -160,6 +162,7 @@ func (s *Scheduler) cleanupOldResources(ctx context.Context, res DescribeJobResu
 			s.es,
 			res.DescribeJob.IntegrationID,
 			res.DescribeJob.ResourceType,
+			es2.ConvertMapToString(jobParams),
 			additionalFilters,
 			searchAfter,
 			1000)
@@ -222,13 +225,6 @@ func (s *Scheduler) cleanupOldResources(ctx context.Context, res DescribeJobResu
 					ResourceID: esResourceID,
 					Index:      lookUpIdx,
 				})
-
-				if err != nil {
-					CleanupJobCount.WithLabelValues("failure").Inc()
-					s.logger.Error("CleanJob failed",
-						zap.Error(err))
-					return 0, err
-				}
 			}
 		}
 

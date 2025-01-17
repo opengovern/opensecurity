@@ -37,7 +37,16 @@ type IntegrationDiscovery struct {
 	ResourceTypes pq.StringArray `gorm:"type:text[]" json:"resourceTypes"`
 }
 
-type DescribeIntegrationJobWithParams struct {
+type ManualDiscoverySchedule struct {
+	gorm.Model
+	ResourceType    string
+	IntegrationID   string
+	IntegrationType integration.Type
+	Parameters      pgtype.JSONB
+	CreatedBy       string
+}
+
+type ManualDiscoveryScheduleUnique struct {
 	ResourceType string
 	Parameters   pgtype.JSONB
 }

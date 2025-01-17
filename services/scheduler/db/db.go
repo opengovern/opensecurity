@@ -14,6 +14,6 @@ func (db Database) Initialize() error {
 		&model.ComplianceJob{}, &model.ComplianceSummarizer{}, &model.ComplianceRunner{}, &model.CheckupJob{},
 		&model.DescribeIntegrationJob{}, &model.IntegrationDiscovery{},
 		&model.JobSequencer{}, &model.QueryRunnerJob{}, &model.QueryValidatorJob{},
-		&model.QuickScanSequence{}, &model.FrameworkValidation{},
+		&model.QuickScanSequence{}, &model.FrameworkValidation{}, &model.ManualDiscoveryScheduleUnique{},
 	)
 }
