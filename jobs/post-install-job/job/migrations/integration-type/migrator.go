@@ -6,7 +6,7 @@ import (
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/opencomply/jobs/post-install-job/config"
 	"github.com/opengovern/opencomply/jobs/post-install-job/db"
-	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/integration-type/models"
+	"github.com/opengovern/opencomply/services/integration/models"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -36,7 +36,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 	dbm := db.Database{ORM: orm}
 
-	err = dbm.ORM.AutoMigrate(&models.IntegrationTypeBinaries{})
+	err = dbm.ORM.AutoMigrate(&models.IntegrationPlugin{})
 	if err != nil {
 		logger.Error("failed to auto migrate integration binaries", zap.Error(err))
 		return err
@@ -49,7 +49,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 
 	err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(&models.IntegrationTypeBinaries{}).Where("1 = 1").Unscoped().Delete(&models.IntegrationTypeBinaries{}).Error
+		err := tx.Model(&models.IntegrationPlugin{}).Where("1 = 1").Unscoped().Delete(&models.IntegrationPlugin{}).Error
 		if err != nil {
 			logger.Error("failed to delete integration binaries", zap.Error(err))
 			return err

@@ -1,24 +1,33 @@
 package integration_types
 
 import (
+	"github.com/goccy/go-yaml"
+	"github.com/hashicorp/go-getter"
 	"github.com/labstack/echo/v4"
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpserver"
+	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/opencomply/pkg/utils"
 	"github.com/opengovern/opencomply/services/integration/api/models"
+	"github.com/opengovern/opencomply/services/integration/db"
 	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
+	models2 "github.com/opengovern/opencomply/services/integration/models"
 	"go.uber.org/zap"
+	"net/http"
+	"os"
 )
 
 type API struct {
 	logger      *zap.Logger
 	typeManager *integration_type.IntegrationTypeManager
+	database    db.Database
 }
 
-func New(logger *zap.Logger, typeManager *integration_type.IntegrationTypeManager) *API {
+func New(typeManager *integration_type.IntegrationTypeManager, database db.Database, logger *zap.Logger) *API {
 	return &API{
 		logger:      logger.Named("integration_types"),
 		typeManager: typeManager,
+		database:    database,
 	}
 }
 
@@ -28,6 +37,17 @@ func (a *API) Register(e *echo.Group) {
 	e.GET("/:integration_type/table", httpserver.AuthorizeHandler(a.ListTables, api.ViewerRole))
 	e.POST("/:integration_type/resource-type/label", httpserver.AuthorizeHandler(a.GetResourceTypesByLabels, api.ViewerRole))
 	e.GET("/:integration_type/configuration", httpserver.AuthorizeHandler(a.GetConfiguration, api.ViewerRole))
+
+	plugin := e.Group("/plugin")
+	plugin.POST("/load/id/:id", httpserver.AuthorizeHandler(a.LoadPluginWithID, api.EditorRole))
+	plugin.POST("/load/url/:http_url", httpserver.AuthorizeHandler(a.LoadPluginWithURL, api.EditorRole))
+	plugin.DELETE("/uninstall/id/:id", httpserver.AuthorizeHandler(a.UninstallPlugin, api.EditorRole))
+	plugin.DELETE("/plugin/:id/enable", httpserver.AuthorizeHandler(a.EnablePlugin, api.EditorRole))
+	plugin.DELETE("/plugin/:id/disable", httpserver.AuthorizeHandler(a.DisablePlugin, api.EditorRole))
+	plugin.GET("", httpserver.AuthorizeHandler(a.ListPlugins, api.ViewerRole))
+	plugin.GET("/:id", httpserver.AuthorizeHandler(a.GetPlugin, api.ViewerRole))
+	plugin.GET("/:id/integrations", httpserver.AuthorizeHandler(a.ListPluginIntegrations, api.ViewerRole))
+	plugin.GET("/:id/credentials", httpserver.AuthorizeHandler(a.ListPluginCredentials, api.ViewerRole))
 }
 
 // List godoc
@@ -172,4 +192,403 @@ func (a *API) ListTables(c echo.Context) error {
 	} else {
 		return echo.NewHTTPError(404, "integration type not found")
 	}
+}
+
+// LoadPluginWithID godoc
+//
+// @Summary			Load plugin with the given plugin ID
+// @Description		Load plugin with the given plugin ID
+// @Security		BearerToken
+// @Tags			integration_types
+// @Produce			json
+// @Param			id	path	string	true	"plugin id"
+// @Success			200
+// @Router			/integration/api/v1/plugin/load/id/{id} [post]
+func (a *API) LoadPluginWithID(c echo.Context) error {
+	pluginID := c.Param("id")
+
+	plugin, err := a.database.GetPluginByID(pluginID)
+	if err != nil {
+		a.logger.Error("failed to get plugin", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get plugin")
+	}
+	if plugin == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
+	}
+	baseDir := "/integration-types"
+
+	// create tmp directory if not exists
+	if _, err = os.Stat(baseDir); os.IsNotExist(err) {
+		if err = os.Mkdir(baseDir, os.ModePerm); err != nil {
+			a.logger.Error("failed to create tmp directory", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create tmp directory")
+		}
+	}
+
+	// download files from urls
+
+	if plugin.URL == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "plugin url is empty")
+	}
+	url := plugin.URL
+	// remove existing files
+	if err = os.RemoveAll(baseDir + "/integarion_type"); err != nil {
+		a.logger.Error("failed to remove existing files", zap.Error(err), zap.String("id", pluginID), zap.String("path", baseDir+"/integarion_type"))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to remove existing files")
+	}
+
+	downloader := getter.Client{
+		Src:  url,
+		Dst:  baseDir + "/integarion_type",
+		Mode: getter.ClientModeDir,
+	}
+	err = downloader.Get()
+	if err != nil {
+		a.logger.Error("failed to get integration binaries", zap.Error(err), zap.String("id", pluginID))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration binaries")
+	}
+
+	// read integration-plugin file
+	integrationPlugin, err := os.ReadFile(baseDir + "/integarion_type/integration-plugin")
+	if err != nil {
+		a.logger.Error("failed to open integration-plugin file", zap.Error(err), zap.String("id", pluginID))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open integration-plugin file")
+	}
+	cloudqlPlugin, err := os.ReadFile(baseDir + "/integarion_type/cloudql-plugin")
+	if err != nil {
+		a.logger.Error("failed to open cloudql-plugin file", zap.Error(err), zap.String("id", pluginID))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open cloudql-plugin file")
+	}
+
+	a.logger.Info("done reading files", zap.String("id", pluginID), zap.String("url", url), zap.String("integrationType", plugin.IntegrationType.String()), zap.Int("integrationPluginSize", len(integrationPlugin)), zap.Int("cloudqlPluginSize", len(cloudqlPlugin)))
+
+	err = a.database.UpdatePlugin(models2.IntegrationPlugin{
+		PluginID:        pluginID,
+		IntegrationType: plugin.IntegrationType,
+		InstallState:    models2.IntegrationTypeInstallStateInstalled,
+		URL:             plugin.URL,
+
+		IntegrationPlugin: integrationPlugin,
+		CloudQlPlugin:     cloudqlPlugin,
+	})
+	if err != nil {
+		a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", pluginID))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
+	}
+	return c.NoContent(http.StatusOK)
+}
+
+// LoadPluginWithURL godoc
+//
+// @Summary			Load plugin with the given plugin URL
+// @Description		Load plugin with the given plugin URL
+// @Security		BearerToken
+// @Tags			integration_types
+// @Produce			json
+// @Param			http_url 	path	string	true	"plugin url"
+// @Success			200
+// @Router			/integration/api/v1/plugin/load/url/{http_url} [post]
+func (a *API) LoadPluginWithURL(c echo.Context) error {
+	pluginURL := c.Param("http_url")
+
+	var err error
+
+	baseDir := "/integration-types"
+
+	// create tmp directory if not exists
+	if _, err = os.Stat(baseDir); os.IsNotExist(err) {
+		if err = os.Mkdir(baseDir, os.ModePerm); err != nil {
+			a.logger.Error("failed to create tmp directory", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create tmp directory")
+		}
+	}
+
+	// download files from urls
+
+	if pluginURL == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "plugin url is empty")
+	}
+	url := pluginURL
+	// remove existing files
+	if err = os.RemoveAll(baseDir + "/integarion_type"); err != nil {
+		a.logger.Error("failed to remove existing files", zap.Error(err), zap.String("url", url), zap.String("path", baseDir+"/integarion_type"))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to remove existing files")
+	}
+
+	downloader := getter.Client{
+		Src:  url,
+		Dst:  baseDir + "/integarion_type",
+		Mode: getter.ClientModeDir,
+	}
+	err = downloader.Get()
+	if err != nil {
+		a.logger.Error("failed to get integration binaries", zap.Error(err), zap.String("url", url))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration binaries")
+	}
+
+	// read integration-plugin file
+	integrationPlugin, err := os.ReadFile(baseDir + "/integarion_type/integration-plugin")
+	if err != nil {
+		a.logger.Error("failed to open integration-plugin file", zap.Error(err), zap.String("url", url))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open integration-plugin file")
+	}
+	cloudqlPlugin, err := os.ReadFile(baseDir + "/integarion_type/cloudql-plugin")
+	if err != nil {
+		a.logger.Error("failed to open cloudql-plugin file", zap.Error(err), zap.String("url", url))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open cloudql-plugin file")
+	}
+	// read manifest file
+	manifestFile, err := os.Open(baseDir + "/integarion_type/manifest.yaml")
+	if err != nil {
+		a.logger.Error("failed to open manifest file", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open manifest file")
+	}
+	defer manifestFile.Close()
+	var m models2.Manifest
+	// decode yaml
+	if err = yaml.NewDecoder(manifestFile).Decode(&m); err != nil {
+		a.logger.Error("failed to decode manifest", zap.Error(err), zap.String("url", url))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to decode manifest file")
+	}
+
+	a.logger.Info("done reading files", zap.String("url", url), zap.String("url", url), zap.String("integrationType", m.IntegrationType.String()), zap.Int("integrationPluginSize", len(integrationPlugin)), zap.Int("cloudqlPluginSize", len(cloudqlPlugin)))
+
+	err = a.database.UpdatePlugin(models2.IntegrationPlugin{
+		PluginID:          m.PluginID,
+		IntegrationType:   m.IntegrationType,
+		InstallState:      models2.IntegrationTypeInstallStateInstalled,
+		OperationalStatus: models2.IntegrationPluginOperationalStatusEnabled,
+		URL:               url,
+
+		IntegrationPlugin: integrationPlugin,
+		CloudQlPlugin:     cloudqlPlugin,
+	})
+	if err != nil {
+		a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", m.PluginID))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
+	}
+	return c.NoContent(http.StatusOK)
+}
+
+// UninstallPlugin godoc
+//
+// @Summary			Load plugin with the given plugin URL
+// @Description		Load plugin with the given plugin URL
+// @Security		BearerToken
+// @Tags			integration_types
+// @Produce			json
+// @Param			id	path	string	true	"plugin id"
+// @Success			200
+// @Router			/integration/api/v1/plugin/uninstall/id/{id} [delete]
+func (a *API) UninstallPlugin(c echo.Context) error {
+	id := c.Param("id")
+
+	plugin, err := a.database.GetPluginByID(id)
+	if err != nil {
+		a.logger.Error("failed to get plugin", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get plugin")
+	}
+	if plugin == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
+	}
+
+	integrations, err := a.database.ListIntegration([]integration.Type{plugin.IntegrationType})
+	if err != nil {
+		a.logger.Error("failed to list integrations", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list integrations")
+	}
+	if len(integrations) > 0 {
+		return echo.NewHTTPError(http.StatusNotFound, "integration type has integrations")
+	}
+
+	credentials, err := a.database.ListCredentialsFiltered(nil, []string{plugin.IntegrationType.String()})
+	if err != nil {
+		a.logger.Error("failed to list credentials", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list credentials")
+	}
+	if len(credentials) > 0 {
+		return echo.NewHTTPError(http.StatusNotFound, "integration type has credentials")
+	}
+
+	plugin.InstallState = models2.IntegrationTypeInstallStateNotInstalled
+
+	err = a.database.UpdatePlugin(*plugin)
+	if err != nil {
+		a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", plugin.PluginID))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+// EnablePlugin godoc
+//
+// @Summary			Enable plugin with the given plugin id
+// @Description		Enable plugin with the given plugin id
+// @Security		BearerToken
+// @Tags			integration_types
+// @Produce			json
+// @Param			id	path	string	true	"plugin id"
+// @Success			200
+// @Router			/integration/api/v1/plugin/{id}/enable [put]
+func (a *API) EnablePlugin(c echo.Context) error {
+	id := c.Param("id")
+
+	plugin, err := a.database.GetPluginByID(id)
+	if err != nil {
+		a.logger.Error("failed to get plugin", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get plugin")
+	}
+	if plugin == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
+	}
+
+	plugin.OperationalStatus = models2.IntegrationPluginOperationalStatusEnabled
+
+	err = a.database.UpdatePlugin(*plugin)
+	if err != nil {
+		a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", plugin.PluginID))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+// DisablePlugin godoc
+//
+// @Summary			Disable plugin with the given plugin id
+// @Description		Disable plugin with the given plugin id
+// @Security		BearerToken
+// @Tags			integration_types
+// @Produce			json
+// @Param			id	path	string	true	"plugin id"
+// @Success			200
+// @Router			/integration/api/v1/plugin/{id}/disable [put]
+func (a *API) DisablePlugin(c echo.Context) error {
+	id := c.Param("id")
+
+	plugin, err := a.database.GetPluginByID(id)
+	if err != nil {
+		a.logger.Error("failed to get plugin", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get plugin")
+	}
+	if plugin == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
+	}
+
+	plugin.OperationalStatus = models2.IntegrationPluginOperationalStatusDisabled
+
+	err = a.database.UpdatePlugin(*plugin)
+	if err != nil {
+		a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", plugin.PluginID))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+// ListPlugins godoc
+//
+// @Summary			List plugins
+// @Description		List plugins
+// @Security		BearerToken
+// @Tags			integration_types
+// @Produce			json
+// @Success			200
+// @Router			/integration/api/v1/plugin [get]
+func (a *API) ListPlugins(c echo.Context) error {
+	plugins, err := a.database.ListPlugins()
+	if err != nil {
+		a.logger.Error("failed to list plugins", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list plugins")
+	}
+
+	return c.JSON(http.StatusOK, plugins)
+}
+
+// GetPlugin godoc
+//
+// @Summary			Get plugin
+// @Description		Get plugin
+// @Security		BearerToken
+// @Tags			integration_types
+// @Produce			json
+// @Param			id	path	string	true	"plugin id"
+// @Success			200
+// @Router			/integration/api/v1/plugin/{id} [get]
+func (a *API) GetPlugin(c echo.Context) error {
+	id := c.Param("id")
+
+	plugin, err := a.database.GetPluginByID(id)
+	if err != nil {
+		a.logger.Error("failed to get plugin", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get plugin")
+	}
+	if plugin == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
+	}
+
+	return c.JSON(http.StatusOK, plugin)
+}
+
+// ListPluginIntegrations godoc
+//
+// @Summary			List plugin integrations
+// @Description		List plugin integrations
+// @Security		BearerToken
+// @Tags			integration_types
+// @Produce			json
+// @Param			id	path	string	true	"plugin id"
+// @Success			200
+// @Router			/integration/api/v1/plugin/{id}/integrations [get]
+func (a *API) ListPluginIntegrations(c echo.Context) error {
+	id := c.Param("id")
+
+	plugin, err := a.database.GetPluginByID(id)
+	if err != nil {
+		a.logger.Error("failed to get plugin", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get plugin")
+	}
+	if plugin == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
+	}
+
+	integrations, err := a.database.ListIntegration([]integration.Type{plugin.IntegrationType})
+	if err != nil {
+		a.logger.Error("failed to list integrations", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list integrations")
+	}
+
+	return c.JSON(http.StatusOK, integrations)
+}
+
+// ListPluginCredentials godoc
+//
+// @Summary			List plugin credentials
+// @Description		List plugin credentials
+// @Security		BearerToken
+// @Tags			integration_types
+// @Produce			json
+// @Param			id	path	string	true	"plugin id"
+// @Success			200
+// @Router			/integration/api/v1/plugin/{id}/credentials [get]
+func (a *API) ListPluginCredentials(c echo.Context) error {
+	id := c.Param("id")
+
+	plugin, err := a.database.GetPluginByID(id)
+	if err != nil {
+		a.logger.Error("failed to get plugin", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get plugin")
+	}
+	if plugin == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
+	}
+
+	credentials, err := a.database.ListCredentialsFiltered(nil, []string{plugin.IntegrationType.String()})
+	if err != nil {
+		a.logger.Error("failed to list credentials", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list credentials")
+	}
+
+	return c.JSON(http.StatusOK, credentials)
 }
