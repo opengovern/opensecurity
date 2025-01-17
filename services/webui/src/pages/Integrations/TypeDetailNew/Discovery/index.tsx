@@ -51,28 +51,7 @@ import KeyValuePairs from '@cloudscape-design/components/key-value-pairs'
 import axios from 'axios'
 import { title } from 'process'
 
-const ShowHours = [
-    {
-        label: '1h',
-        value: '1',
-    },
-    {
-        label: '3h',
-        value: '3',
-    },
-    {
-        label: '6h',
-        value: '6',
-    },
-    {
-        label: '24h',
-        value: '24',
-    },
-    // {
-    //     label: 'all',
-    //     value: 'all',
-    // },
-]
+
 interface Option {
     label: string | undefined
     value: string | undefined
