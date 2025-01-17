@@ -291,10 +291,24 @@ export default function Query() {
             })
     }
     const getMasterSchema = (id: string) => {
+         let url = ''
+         if (window.location.origin === 'http://localhost:3000') {
+             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+         } else {
+             url = window.location.origin
+         }
+         // @ts-ignore
+         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+         const config = {
+             headers: {
+                 Authorization: `Bearer ${token}`,
+             },
+         }
         setSchemaLoading1(true)
         axios
             .get(
-                `https://raw.githubusercontent.com/opengovern/hub/refs/heads/main/schemas/${id}.json`
+                `${url}/main/integration/api/v1/integration-types/${id}/table`,config
             )
             .then((res) => {
                 if (res.data) {
@@ -306,22 +320,7 @@ export default function Query() {
                 setSchemaLoading1(false)
             })
     }
-    const getTableData = (id: string, name: string) => {
-        setSchemaLoading2(true)
-        axios
-            .get(
-                `https://raw.githubusercontent.com/opengovern/hub/refs/heads/main/schemas/${id}/${name}.json`
-            )
-            .then((res) => {
-                if (res.data) {
-                    setColumns(res.data?.columns)
-                }
-                setSchemaLoading2(false)
-            })
-            .catch((err) => {
-                setSchemaLoading2(false)
-            })
-    }
+   
 
     useEffect(() => {
         getIntegrations()
@@ -404,8 +403,7 @@ export default function Query() {
                                                                                 integration
                                                                             )
                                                                             getMasterSchema(
-                                                                                integration
-                                                                                    .schema_ids[0]
+                                                                                integration.integration_type
                                                                             )
                                                                         } else {
                                                                             setExpanded(
@@ -430,9 +428,9 @@ export default function Query() {
                                                                             <div className="ml-4">
                                                                                 {' '}
                                                                                 <>
-                                                                                    {tables?.map(
+                                                                                    {tables && Object.entries(tables)?.map(
                                                                                         (
-                                                                                            table: any,
+                                                                                            item: any,
                                                                                             index1
                                                                                         ) => {
                                                                                             return (
@@ -452,12 +450,10 @@ export default function Query() {
                                                                                                                     index1
                                                                                                                 )
                                                                                                                 setSelectedTable(
-                                                                                                                    table
+                                                                                                                    item[0]
                                                                                                                 )
-                                                                                                                getTableData(
-                                                                                                                    integration
-                                                                                                                        .schema_ids[0],
-                                                                                                                    table.table_name
+                                                                                                                setColumns(
+                                                                                                                    item[1]
                                                                                                                 )
                                                                                                             } else {
                                                                                                                 setExpanded1(
@@ -474,13 +470,13 @@ export default function Query() {
                                                                                                                     e.stopPropagation()
                                                                                                                     setCode(
                                                                                                                         code +
-                                                                                                                            `${table?.table_name}`
+                                                                                                                            `${item[0]}`
                                                                                                                     )
                                                                                                                 }}
                                                                                                                 className=" text-sm"
                                                                                                             >
                                                                                                                 {
-                                                                                                                    table?.table_name
+                                                                                                                    item[0]
                                                                                                                 }
                                                                                                             </span>
                                                                                                         }
@@ -499,16 +495,16 @@ export default function Query() {
                                                                                                                         ) => {
                                                                                                                             return (
                                                                                                                                 <>
-                                                                                                                                    <Flex className="pl-8 w-full">
+                                                                                                                                    <Flex className="pl-6 w-full">
                                                                                                                                         <span className=" font-semibold">
                                                                                                                                             {
-                                                                                                                                                column.name
+                                                                                                                                                column.Name
                                                                                                                                             }
                                                                                                                                         </span>
                                                                                                                                         <span>
                                                                                                                                             (
                                                                                                                                             {
-                                                                                                                                                column.type
+                                                                                                                                                column.Type
                                                                                                                                             }
 
                                                                                                                                             )

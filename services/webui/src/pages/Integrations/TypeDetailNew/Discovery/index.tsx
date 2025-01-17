@@ -49,29 +49,9 @@ import {
 import KButton from '@cloudscape-design/components/button'
 import KeyValuePairs from '@cloudscape-design/components/key-value-pairs'
 import axios from 'axios'
+import { title } from 'process'
 
-const ShowHours = [
-    {
-        label: '1h',
-        value: '1',
-    },
-    {
-        label: '3h',
-        value: '3',
-    },
-    {
-        label: '6h',
-        value: '6',
-    },
-    {
-        label: '24h',
-        value: '24',
-    },
-    // {
-    //     label: 'all',
-    //     value: 'all',
-    // },
-]
+
 interface Option {
     label: string | undefined
     value: string | undefined
@@ -263,14 +243,10 @@ export default function DiscoveryJobs({
         { title: 'Type', value: clickedJob?.type },
         { title: 'Created At', value: clickedJob?.created_at },
         { title: 'Updated At', value: clickedJob?.updated_at },
-        // {
-        //     title: 'OpenGovernance Connection ID',
-        //     value: clickedJob?.connectionID,
-        // },
-        // { title: 'Account ID', value: clickedJob?.connectionProviderID },
-        // { title: 'Account Name', value: clickedJob?.connectionProviderName },
+
         { title: 'Status', value: clickedJob?.job_status },
         { title: 'Failure Reason', value: clickedJob?.failure_message },
+       
     ]
 
     return (
@@ -307,6 +283,32 @@ export default function DiscoveryJobs({
                                     }
                                 })}
                             />
+                            {clickedJob?.parameters && Object.entries(
+                                clickedJob?.parameters
+                            ).length > 0 && (
+                                <>
+                                    <Flex
+                                        flexDirection="col"
+                                        className="w-full gap-2 justify-start items-start mt-2"
+                                    >
+                                        <Title className=" font-semibold font-sans text-lg">
+                                            Parameters:
+                                        </Title>
+                                        <KeyValuePairs
+                                            columns={4}
+                                            className="w-full"
+                                            items={Object.entries(
+                                                clickedJob?.parameters
+                                            )?.map((item) => {
+                                                return {
+                                                    label: item[0],
+                                                    value: item[1],
+                                                }
+                                            })}
+                                        />
+                                    </Flex>
+                                </>
+                            )}
                         </Flex>
                     </SplitPanel>
                 }
@@ -680,191 +682,3 @@ export default function DiscoveryJobs({
     )
 }
 
-{
-    /**
-       <Flex flexDirection="col">
-                <Flex
-                    flexDirection="row"
-                    alignItems="start"
-                    justifyContent="between"
-                    className="gap-2"
-                >
-                    <Flex
-                        flexDirection="row"
-                        alignItems="start"
-                        justifyContent="start"
-                        className="gap-2"
-                    >
-                        <KFilter
-                            options={jobTypes}
-                            type="multi"
-                            hasCondition={true}
-                            condition={jobTypeContains}
-                            selectedItems={jobTypeFilter}
-                            onChange={(values: string[]) => {
-                                console.log(values, 'values')
-                                console.log(jobTypeFilter, 'filter')
-
-                                setJobTypeFilter(values)
-                            }}
-                            label="Job Types"
-                            icon={CloudIcon}
-                        />
-                        <KFilter
-                            options={allStatuses}
-                            type="multi"
-                            selectedItems={statusFilter}
-                            condition={jobStatusContains}
-                            hasCondition={true}
-                            onChange={(values: string[]) => {
-                                setStatusFilter(values)
-                            }}
-                            label="Job Status"
-                            icon={CloudIcon}
-                        />
-                        <KFilter
-                            options={ShowHours}
-                            type="multi"
-                            hasCondition={false}
-                            selectedItems={showHoursFilter}
-                            onChange={(values: string[]) => {
-                                if (values.length == 0) {
-                                    setShowHourFilter([])
-                                } else {
-                                    setShowHourFilter([values.pop()])
-                                }
-                            }}
-                            label="Show jobs in"
-                            icon={CloudIcon}
-                        />
-                    </Flex>
-
-                    <Button
-                        onClick={() => {
-                            // @ts-ignore
-                            ssr()
-                        }}
-                        disabled={false}
-                        loading={false}
-                        loadingText="Running"
-                    >
-                        Refresh
-                    </Button>
-                </Flex>
-                <Card className="mt-4">
-                    <Title className="font-semibold mb-5">Jobs</Title>
-
-                    <Flex alignItems="start">
-                        {/* <Card className="sticky top-6 min-w-[200px] max-w-[200px]">
-                    <Accordion
-                        defaultOpen
-                        className="border-0 rounded-none bg-transparent mb-1"
-                    >
-                        <AccordionHeader className="pl-0 pr-0.5 py-1 w-full bg-transparent">
-                            <Text className="font-semibold text-gray-800">
-                                Job Type
-                            </Text>
-                        </AccordionHeader>
-                        <AccordionBody className="pt-3 pb-1 px-0.5 w-full cursor-default bg-transparent">
-                            <Flex
-                                flexDirection="col"
-                                alignItems="start"
-                                className="gap-1.5"
-                            >
-                                {jobTypes.map((jobType) => (
-                                    <Radio
-                                        name="jobType"
-                                        onClick={() =>
-                                            setJobTypeFilter(jobType.value)
-                                        }
-                                        checked={
-                                            jobTypeFilter === jobType.value
-                                        }
-                                    >
-                                        {jobType.label}
-                                    </Radio>
-                                ))}
-                            </Flex>
-                        </AccordionBody>
-                    </Accordion>
-                    <Divider className="my-3" />
-                    <Accordion
-                        defaultOpen
-                        className="border-0 rounded-none bg-transparent mb-1"
-                    >
-                        <AccordionHeader className="pl-0 pr-0.5 py-1 w-full bg-transparent">
-                            <Text className="font-semibold text-gray-800">
-                                Status
-                            </Text>
-                        </AccordionHeader>
-                        <AccordionBody className="pt-3 pb-1 px-0.5 w-full cursor-default bg-transparent">
-                            <Flex
-                                flexDirection="col"
-                                alignItems="start"
-                                className="gap-1.5"
-                            >
-                                <Radio
-                                    name="status"
-                                    onClick={() => setStatusFilter('')}
-                                    checked={statusFilter === ''}
-                                >
-                                    All
-                                </Radio>
-                                {allStatuses.map((status) => (
-                                    <Radio
-                                        name="status"
-                                        onClick={() => setStatusFilter(status)}
-                                        checked={statusFilter === status}
-                                    >
-                                        {status}
-                                    </Radio>
-                                ))}
-                            </Flex>
-                        </AccordionBody>
-                    </Accordion>
-                </Card> 
-                        <Flex className="pl-4">
-                            <Table
-                                id="jobs"
-                                columns={columns()}
-                                serverSideDatasource={serverSideRows}
-                                onCellClicked={(event) => {
-                                    setClickedJob(event.data)
-                                    setOpen(true)
-                                }}
-                                options={{
-                                    rowModelType: 'serverSide',
-                                    serverSideDatasource: serverSideRows,
-                                }}
-                            />
-                        </Flex>
-                    </Flex>
-                    <DrawerPanel
-                        open={open}
-                        onClose={() => setOpen(false)}
-                        title="Job Details"
-                    >
-                        <Flex flexDirection="col">
-                            {clickedJobDetails.map((item) => {
-                                return (
-                                    <Flex
-                                        flexDirection="row"
-                                        justifyContent="between"
-                                        alignItems="start"
-                                        className="mt-2"
-                                    >
-                                        <Text className="w-56 font-bold">
-                                            {item.title}
-                                        </Text>
-                                        <Text className="w-full">
-                                            {item.value}
-                                        </Text>
-                                    </Flex>
-                                )
-                            })}
-                        </Flex>
-                    </DrawerPanel>
-                </Card>
-            </Flex>
-    */
-}
