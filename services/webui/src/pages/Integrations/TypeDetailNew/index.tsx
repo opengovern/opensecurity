@@ -91,7 +91,7 @@ export default function TypeDetail() {
                                 content: (
                                     <IntegrationList
                                         schema={shcema}
-                                        name={state.name}
+                                        name={state?.name}
                                         integration_type={type}
                                     />
                                 ),
@@ -102,7 +102,7 @@ export default function TypeDetail() {
                                 content: (
                                     <CredentialsList
                                         schema={shcema}
-                                        name={state.name}
+                                        name={state?.name}
                                         integration_type={type}
                                     />
                                 ),
@@ -112,7 +112,7 @@ export default function TypeDetail() {
                                 label: 'Discovery Jobs',
                                 content: (
                                     <DiscoveryJobs
-                                        name={state.name}
+                                        name={state?.name}
                                         integration_type={type}
                                     />
                                 ),
