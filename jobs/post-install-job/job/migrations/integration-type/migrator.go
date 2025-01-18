@@ -49,6 +49,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 
 	err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
+		logger.Info("number of integration types", zap.Int("num", len(parser.Integrations.Plugins)))
 		for _, iPlugin := range parser.Integrations.Plugins {
 			integrationBinary, err := parser.ExtractIntegrationBinaries(logger, iPlugin)
 			if err != nil {
