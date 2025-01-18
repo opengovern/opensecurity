@@ -2,6 +2,10 @@ package integration_types
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"strconv"
+
 	"github.com/goccy/go-yaml"
 	"github.com/hashicorp/go-getter"
 	"github.com/labstack/echo/v4"
@@ -14,8 +18,6 @@ import (
 	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	models2 "github.com/opengovern/opencomply/services/integration/models"
 	"go.uber.org/zap"
-	"net/http"
-	"os"
 )
 
 type API struct {
@@ -527,13 +529,47 @@ func (a *API) DisablePlugin(c echo.Context) error {
 // @Success			200
 // @Router			/integration/api/v1/plugin [get]
 func (a *API) ListPlugins(c echo.Context) error {
+	perPageStr := c.QueryParam("per_page")
+	cursorStr := c.QueryParam("cursor")
+	var perPage, cursor int64
+	if perPageStr != "" {
+		perPage, _ = strconv.ParseInt(perPageStr, 10, 64)
+	}
+	if cursorStr != "" {
+		cursor, _ = strconv.ParseInt(cursorStr, 10, 64)
+	}
 	plugins, err := a.database.ListPlugins()
 	if err != nil {
 		a.logger.Error("failed to list plugins", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list plugins")
 	}
+	var items = []models.IntegrationPlugin{}
+	for _, plugin := range plugins {
+		items = append(items, models.IntegrationPlugin{
+			PluginId:                plugin.PluginID,
+			IntegrationType:         plugin.IntegrationType.String(),
+			InstallState:            string(plugin.InstallState),
+			OperationalStatus:       string(plugin.OperationalStatus),
+			OperationalStatusUpdates: plugin.OperationalStatusUpdates,
+			URL:                     plugin.URL,
+		})
+	}
+	totalCount := len(items)
+	if perPage != 0 {
+		if cursor == 0 {
+			items = utils.Paginate(1, perPage, items)
+		} else {
+			items = utils.Paginate(cursor, perPage, items)
+		}
+	}
 
-	return c.JSON(http.StatusOK, plugins)
+
+
+
+	return c.JSON(http.StatusOK, models.IntegrationPluginListResponse{
+		Items: items,
+		TotalCount: totalCount,
+	})
 }
 
 // GetPlugin godoc
@@ -558,7 +594,14 @@ func (a *API) GetPlugin(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
 	}
 
-	return c.JSON(http.StatusOK, plugin)
+	return c.JSON(http.StatusOK, models.IntegrationPlugin{
+			PluginId:                plugin.PluginID,
+			IntegrationType:         plugin.IntegrationType.String(),
+			InstallState:            string(plugin.InstallState),
+			OperationalStatus:       string(plugin.OperationalStatus),
+			OperationalStatusUpdates: plugin.OperationalStatusUpdates,
+			URL:                     plugin.URL,
+		})
 }
 
 // ListPluginIntegrations godoc
