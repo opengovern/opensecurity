@@ -134,3 +134,16 @@ func (db Database) UpdateIntegration(integration *models.Integration) error {
 
 	return nil
 }
+
+// InactiveIntegrationType inactive integrations for an integration type
+func (db Database) InactiveIntegrationType(it integration.Type) error {
+	tx := db.Orm.
+		Model(&models.Integration{}).
+		Where("integration_type = ?", it).
+		Update("state", integration.IntegrationStateInactive)
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	return nil
+}
