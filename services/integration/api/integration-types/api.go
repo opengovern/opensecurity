@@ -478,6 +478,12 @@ func (a *API) DisablePlugin(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
 	}
 
+	err = a.database.InactiveIntegrationType(plugin.IntegrationType)
+	if err != nil {
+		a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", plugin.PluginID))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
+	}
+
 	plugin.OperationalStatus = models2.IntegrationPluginOperationalStatusDisabled
 
 	err = a.database.UpdatePlugin(*plugin)
