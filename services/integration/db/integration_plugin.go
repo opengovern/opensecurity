@@ -30,6 +30,18 @@ func (db Database) GetPluginByID(pluginID string) (*models.IntegrationPlugin, er
 	return &plugin, nil
 }
 
+func (db Database) GetPluginByIntegrationType(pluginID string) (*models.IntegrationPlugin, error) {
+	var plugin models.IntegrationPlugin
+	err := db.IntegrationTypeOrm.Model(models.IntegrationPlugin{}).Where("plugin_id = ?", pluginID).Find(&plugin).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &plugin, nil
+}
+
 func (db Database) GetPluginByURL(url string) (*models.IntegrationPlugin, error) {
 	var plugin models.IntegrationPlugin
 	err := db.IntegrationTypeOrm.Model(models.IntegrationPlugin{}).Where("url = ?", url).Find(&plugin).Error

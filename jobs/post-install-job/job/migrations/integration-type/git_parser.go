@@ -1,9 +1,11 @@
 package integration_type
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/goccy/go-yaml"
 	"github.com/hashicorp/go-getter"
+	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/opencomply/jobs/post-install-job/config"
 	"github.com/opengovern/opencomply/services/integration/models"
@@ -15,8 +17,10 @@ type GitParser struct {
 	Integrations IntegrationYaml
 }
 
-type manifest struct {
+type Manifest struct {
 	IntegrationType integration.Type `json:"IntegrationType" yaml:"IntegrationType"`
+	DescriberURL    string           `json:"DescriberURL" yaml:"DescriberURL"`
+	DescriberTag    string           `json:"DescriberTag" yaml:"DescriberTag"`
 }
 
 type IntegrationPlugin struct {
@@ -91,18 +95,18 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 	}
 
 	//// read manifest file
-	//manifestFile, err := os.Open(baseDir + "/integarion_type/manifest.yaml")
-	//if err != nil {
-	//	logger.Error("failed to open manifest file", zap.Error(err))
-	//	return fmt.Errorf("open manifest file: %w", err)
-	//}
-	//defer manifestFile.Close()
-	//var m manifest
-	//// decode yaml
-	//if err := yaml.NewDecoder(manifestFile).Decode(&m); err != nil {
-	//	logger.Error("failed to decode manifest", zap.Error(err), zap.String("url", url))
-	//	return fmt.Errorf("decode manifest for url %s: %w", iPlugin, err)
-	//}
+	manifestFile, err := os.Open(baseDir + "/integarion_type/manifest.yaml")
+	if err != nil {
+		logger.Error("failed to open manifest file", zap.Error(err))
+		return nil, fmt.Errorf("open manifest file: %w", err)
+	}
+	defer manifestFile.Close()
+	var m models.Manifest
+	// decode yaml
+	if err := yaml.NewDecoder(manifestFile).Decode(&m); err != nil {
+		logger.Error("failed to decode manifest", zap.Error(err), zap.String("url", url))
+		return nil, fmt.Errorf("decode manifest for url %s: %w", iPlugin, err)
+	}
 
 	// read integration-plugin file
 	integrationPlugin, err := os.ReadFile(baseDir + "/integarion_type/integration-plugin")
@@ -117,13 +121,32 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 	}
 
 	logger.Info("done reading files", zap.String("url", url), zap.String("integrationType", iPlugin.IntegrationType.String()), zap.Int("integrationPluginSize", len(integrationPlugin)), zap.Int("cloudqlPluginSize", len(cloudqlPlugin)))
+
+	tagsJsonData, err := json.Marshal(iPlugin.Tags)
+	if err != nil {
+		return nil, err
+	}
+	tagsJsonb := pgtype.JSONB{}
+	err = tagsJsonb.Set(tagsJsonData)
+
 	return &models.IntegrationPlugin{
+		ID:                iPlugin.ID,
 		PluginID:          iPlugin.IntegrationType.String(),
+		IntegrationType:   iPlugin.IntegrationType,
+		Name:              iPlugin.Name,
+		Tier:              iPlugin.Tier,
+		Description:       iPlugin.Description,
+		Icon:              iPlugin.Icon,
+		Availability:      iPlugin.Availability,
+		SourceCode:        iPlugin.SourceCode,
+		PackageType:       iPlugin.PackageType,
 		InstallState:      models.IntegrationTypeInstallStateInstalled,
 		OperationalStatus: models.IntegrationPluginOperationalStatusEnabled,
-		IntegrationType:   iPlugin.IntegrationType,
 		URL:               url,
+		DescriberURL:      m.DescriberURL,
+		DescriberTag:      m.DescriberTag,
 		IntegrationPlugin: integrationPlugin,
 		CloudQlPlugin:     cloudqlPlugin,
+		Tags:              tagsJsonb,
 	}, nil
 }

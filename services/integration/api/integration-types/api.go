@@ -364,7 +364,7 @@ func (a *API) LoadPluginWithURL(c echo.Context) error {
 	}
 	if plugin == nil {
 		err = a.database.CreatePlugin(models2.IntegrationPlugin{
-			PluginID:          m.PluginID,
+			PluginID:          m.IntegrationType.String(),
 			IntegrationType:   m.IntegrationType,
 			InstallState:      models2.IntegrationTypeInstallStateInstalled,
 			OperationalStatus: models2.IntegrationPluginOperationalStatusEnabled,
@@ -374,12 +374,12 @@ func (a *API) LoadPluginWithURL(c echo.Context) error {
 			CloudQlPlugin:     cloudqlPlugin,
 		})
 		if err != nil {
-			a.logger.Error("failed to create plugin", zap.Error(err), zap.String("id", m.PluginID))
+			a.logger.Error("failed to create plugin", zap.Error(err), zap.String("id", m.IntegrationType.String()))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create plugin")
 		}
 	} else {
 		err = a.database.UpdatePlugin(models2.IntegrationPlugin{
-			PluginID:          m.PluginID,
+			PluginID:          m.IntegrationType.String(),
 			IntegrationType:   m.IntegrationType,
 			InstallState:      models2.IntegrationTypeInstallStateInstalled,
 			OperationalStatus: models2.IntegrationPluginOperationalStatusEnabled,
@@ -389,7 +389,7 @@ func (a *API) LoadPluginWithURL(c echo.Context) error {
 			CloudQlPlugin:     cloudqlPlugin,
 		})
 		if err != nil {
-			a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", m.PluginID))
+			a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", m.IntegrationType.String()))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
 		}
 	}

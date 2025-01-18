@@ -86,7 +86,6 @@ func (h API) Register(g *echo.Group) {
 	types.GET("", httpserver.AuthorizeHandler(h.ListIntegrationTypes, api.ViewerRole))
 	types.GET("/:integrationTypeId", httpserver.AuthorizeHandler(h.GetIntegrationType, api.ViewerRole))
 	types.GET("/:integrationTypeId/ui/spec", httpserver.AuthorizeHandler(h.GetIntegrationTypeUiSpec, api.ViewerRole))
-	types.DELETE("/:integrationTypeId", httpserver.AuthorizeHandler(h.DeleteIntegrationType, api.EditorRole))
 	types.PUT("/:integration_type/enable", httpserver.AuthorizeHandler(h.EnableIntegrationType, api.EditorRole))
 	types.PUT("/:integration_type/disable", httpserver.AuthorizeHandler(h.DisableIntegrationType, api.EditorRole))
 	types.PUT("/:integration_type/upgrade", httpserver.AuthorizeHandler(h.UpgradeIntegrationType, api.EditorRole))
@@ -261,12 +260,13 @@ func (h API) DiscoverIntegrations(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to marshal json data")
 	}
 
-	integrationTypeSetup, err := h.database.GetIntegrationTypeSetup(integrationType.String())
+	plugin, err := h.database.GetPluginByID(integrationType.String())
 	if err != nil {
-		h.logger.Error("failed to get integrationTypeSetup", zap.Error(err))
+		h.logger.Error("failed to get plugin", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration setup")
 	}
-	if !integrationTypeSetup.Enabled {
+	if plugin.OperationalStatus != models2.IntegrationPluginOperationalStatusEnabled ||
+		plugin.InstallState == models2.IntegrationTypeInstallStateNotInstalled {
 		return echo.NewHTTPError(http.StatusBadRequest, "integration type is not enabled")
 	}
 
@@ -335,12 +335,13 @@ func (h API) AddIntegrations(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid integration type")
 	}
 
-	integrationTypeSetup, err := h.database.GetIntegrationTypeSetup(req.IntegrationType.String())
+	plugin, err := h.database.GetPluginByID(req.IntegrationType.String())
 	if err != nil {
-		h.logger.Error("failed to get integrationTypeSetup", zap.Error(err))
+		h.logger.Error("failed to get plugin", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration setup")
 	}
-	if !integrationTypeSetup.Enabled {
+	if plugin.OperationalStatus != models2.IntegrationPluginOperationalStatusEnabled ||
+		plugin.InstallState == models2.IntegrationTypeInstallStateNotInstalled {
 		return echo.NewHTTPError(http.StatusBadRequest, "integration type is not enabled")
 	}
 
@@ -854,28 +855,6 @@ func (h API) Update(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-// DeleteIntegrationType godoc
-//
-//	@Summary		Delete credential
-//	@Description	Delete credential
-//	@Security		BearerToken
-//	@Tags			credentials
-//	@Produce		json
-//	@Success		200
-//	@Param			integrationTypeId	path	string	true	"integrationTypeId"
-//	@Router			/integration/api/v1/integrations/types/{integrationTypeId} [delete]
-func (h API) DeleteIntegrationType(c echo.Context) error {
-	integrationTypeId := c.Param("integrationTypeId")
-
-	err := h.database.DeleteIntegrationType(integrationTypeId)
-	if err != nil {
-		h.logger.Error("failed to delete integration type", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete integration type")
-	}
-
-	return c.NoContent(http.StatusOK)
-}
-
 // ListIntegrationTypes godoc
 //
 //	@Summary		List integration types
@@ -907,27 +886,15 @@ func (h API) ListIntegrationTypes(c echo.Context) error {
 		cursor, _ = strconv.ParseInt(cursorStr, 10, 64)
 	}
 
-	integrationTypes, err := h.database.ListIntegrationTypes()
+	plugins, err := h.database.ListPlugins()
 	if err != nil {
 		h.logger.Error("failed to list integration types", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list integration types")
 	}
 
-	integrationSetups, err := h.database.ListIntegrationTypeSetup()
-	if err != nil {
-		h.logger.Error("failed to get integration setups", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration setups")
-	}
-
-	integrationSetupsMap := make(map[integration.Type]models2.IntegrationTypeSetup)
-	for _, is := range integrationSetups {
-		integrationSetupsMap[is.IntegrationType] = is
-	}
-
 	var items []models.ListIntegrationTypesItem
-	for _, integrationType := range integrationTypes {
-		enabled := false
-		integrations, err := h.database.ListIntegrationsByFilters(nil, []string{integrationType.IntegrationType}, nil, nil)
+	for _, plugin := range plugins {
+		integrations, err := h.database.ListIntegrationsByFilters(nil, []string{plugin.IntegrationType.String()}, nil, nil)
 		if err != nil {
 			h.logger.Error("failed to list integrations", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to list integrations")
@@ -953,26 +920,19 @@ func (h API) ListIntegrationTypes(c echo.Context) error {
 				count.Demo += 1
 			}
 		}
-		if _, ok := h.typesManager.GetIntegrationTypeMap()[h.typesManager.ParseType(integrationType.IntegrationType)]; ok {
-			if v, ok := integrationSetupsMap[h.typesManager.ParseType(integrationType.IntegrationType)]; ok {
-				if v.Enabled {
-					enabled = true
-				}
-			}
-		}
-		if !enabled {
+		if plugin.OperationalStatus == models2.IntegrationPluginOperationalStatusDisabled {
 			if filteredEnabled == "true" {
 				continue
 			}
 		}
 		items = append(items, models.ListIntegrationTypesItem{
-			ID:           integrationType.ID,
-			Name:         integrationType.Name,
-			Title:        integrationType.Label,
-			PlatformName: integrationType.IntegrationType,
-			Tier:         integrationType.Tier,
-			Logo:         integrationType.Logo,
-			Enabled:      enabled,
+			ID:           int64(plugin.ID),
+			Name:         plugin.Name,
+			Title:        plugin.Name,
+			PlatformName: plugin.IntegrationType.String(),
+			Tier:         plugin.Tier,
+			Logo:         plugin.Icon,
+			Enabled:      plugin.OperationalStatus == models2.IntegrationPluginOperationalStatusEnabled,
 			Count:        count,
 		})
 	}
@@ -1031,37 +991,15 @@ func (h API) ListIntegrationTypes(c echo.Context) error {
 func (h API) GetIntegrationType(c echo.Context) error {
 	integrationTypeId := c.Param("integrationTypeId")
 
-	integrationType, err := h.database.GetIntegrationType(integrationTypeId)
+	plugin, err := h.database.GetPluginByIntegrationType(integrationTypeId)
 	if err != nil {
 		h.logger.Error("failed to get credential", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get credential")
 	}
 
-	item, err := integrationType.ToApi()
-	if err != nil {
-		h.logger.Error("failed to convert credentials to API model", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to convert integration to API model")
+	item := models.IntegrationType{
+		Name: plugin.Name,
 	}
-	integrationSetups, err := h.database.ListIntegrationTypeSetup()
-	if err != nil {
-		h.logger.Error("failed to get integration setups", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration setups")
-	}
-
-	integrationSetupsMap := make(map[integration.Type]models2.IntegrationTypeSetup)
-	for _, is := range integrationSetups {
-		integrationSetupsMap[is.IntegrationType] = is
-	}
-
-	enabled := false
-	if _, ok := h.typesManager.GetIntegrationTypeMap()[h.typesManager.ParseType(integrationType.IntegrationType)]; ok {
-		if v, ok := integrationSetupsMap[h.typesManager.ParseType(integrationType.IntegrationType)]; ok {
-			if v.Enabled {
-				enabled = true
-			}
-		}
-	}
-	item.Enabled = enabled
 
 	return c.JSON(http.StatusOK, item)
 }
@@ -1126,7 +1064,7 @@ func (h API) GetIntegrationTypeUiSpec(c echo.Context) error {
 func (h API) EnableIntegrationType(c echo.Context) error {
 	integrationTypeName := c.Param("integration_type")
 
-	err := h.EnableIntegrationTypeHelper(c.Request().Context(), h.logger, h.kubeClient, h.database, integrationTypeName)
+	err := h.EnableIntegrationTypeHelper(c.Request().Context(), integrationTypeName)
 	if err != nil {
 		return err
 	}
@@ -1149,8 +1087,8 @@ func (h API) DisableIntegrationType(c echo.Context) error {
 
 	integrationTypeName := c.Param("integration_type")
 
-	setup, _ := h.database.GetIntegrationTypeSetup(integrationTypeName)
-	if setup == nil || !setup.Enabled {
+	plugin, _ := h.database.GetPluginByIntegrationType(integrationTypeName)
+	if plugin == nil || (plugin.OperationalStatus == models2.IntegrationPluginOperationalStatusDisabled) {
 		return echo.NewHTTPError(http.StatusBadRequest, "the integration type is already disabled")
 	}
 
@@ -1250,13 +1188,12 @@ func (h API) DisableIntegrationType(c echo.Context) error {
 		}
 	}
 
-	err = h.database.UpdateIntegrationTypeSetup(&models2.IntegrationTypeSetup{
-		IntegrationType: h.typesManager.ParseType(integrationTypeName),
-		Enabled:         false,
-	})
+	plugin.OperationalStatus = models2.IntegrationPluginOperationalStatusDisabled
+
+	err = h.database.UpdatePlugin(*plugin)
 	if err != nil {
-		h.logger.Error("failed to disable integration type in the database", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to disable integration type in the database")
+		h.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", plugin.PluginID))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
 	}
 
 	return c.NoContent(http.StatusOK)
@@ -1312,8 +1249,8 @@ func (h API) UpgradeIntegrationType(c echo.Context) error {
 
 	integrationTypeName := c.Param("integration_type")
 
-	setup, _ := h.database.GetIntegrationTypeSetup(integrationTypeName)
-	if setup == nil || !setup.Enabled {
+	plugin, _ := h.database.GetPluginByIntegrationType(integrationTypeName)
+	if plugin == nil || (plugin.OperationalStatus == models2.IntegrationPluginOperationalStatusDisabled) {
 		return echo.NewHTTPError(http.StatusBadRequest, "the integration type is not enabled")
 	}
 
@@ -1332,12 +1269,6 @@ func (h API) UpgradeIntegrationType(c echo.Context) error {
 	if err != nil {
 		h.logger.Error("failed to get configuration", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get configuration")
-	}
-
-	integrationTypeInfo, err := h.database.GetIntegrationType(integrationTypeName)
-	if err != nil {
-		h.logger.Error("failed to get integration type", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration type")
 	}
 
 	// Scheduled deployment
@@ -1363,7 +1294,7 @@ func (h API) UpgradeIntegrationType(c echo.Context) error {
 
 	container := describerDeployment.Spec.Template.Spec.Containers[0]
 	container.Name = cnf.DescriberDeploymentName
-	container.Image = fmt.Sprintf("%s:%s", integrationTypeInfo.PackageURL, integrationTypeInfo.PackageTag)
+	container.Image = fmt.Sprintf("%s:%s", plugin.DescriberURL, plugin.DescriberTag)
 	container.Command = []string{cnf.DescriberRunCommand}
 	describerDeployment.Spec.Template.Spec.Containers[0] = container
 
@@ -1406,7 +1337,7 @@ func (h API) UpgradeIntegrationType(c echo.Context) error {
 
 	containerManuals := describerDeploymentManuals.Spec.Template.Spec.Containers[0]
 	containerManuals.Name = cnf.DescriberDeploymentName
-	containerManuals.Image = fmt.Sprintf("%s:%s", integrationTypeInfo.PackageURL, integrationTypeInfo.PackageTag)
+	containerManuals.Image = fmt.Sprintf("%s:%s", plugin.DescriberURL, plugin.DescriberTag)
 	containerManuals.Command = []string{cnf.DescriberRunCommand}
 	describerDeploymentManuals.Spec.Template.Spec.Containers[0] = containerManuals
 
@@ -1429,21 +1360,15 @@ func (h API) UpgradeIntegrationType(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h API) EnableIntegrationTypeHelper(ctx context.Context, logger *zap.Logger, kubeClient client.Client, database db.Database, integrationTypeName string) error {
+func (h API) EnableIntegrationTypeHelper(ctx context.Context, integrationTypeName string) error {
 	currentNamespace, ok := os.LookupEnv("CURRENT_NAMESPACE")
 	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, "current namespace lookup failed")
 	}
 
-	setup, _ := database.GetIntegrationTypeSetup(integrationTypeName)
-	if setup != nil {
-		if setup.Enabled {
-			return echo.NewHTTPError(http.StatusBadRequest, "the integration type is already enabled")
-		}
-	}
-	integrationTypeInfo, err := database.GetIntegrationType(integrationTypeName)
+	plugin, err := h.database.GetPluginByIntegrationType(integrationTypeName)
 	if err != nil {
-		logger.Error("failed to get integration type", zap.Error(err))
+		h.logger.Error("failed to get integration type", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration type")
 	}
 	kedaEnabled, ok := os.LookupEnv("KEDA_ENABLED")
@@ -1455,20 +1380,20 @@ func (h API) EnableIntegrationTypeHelper(ctx context.Context, logger *zap.Logger
 	var describerDeployment appsv1.Deployment
 	templateDeploymentFile, err := os.Open(TemplateDeploymentPath)
 	if err != nil {
-		logger.Error("failed to open template deployment file", zap.Error(err))
+		h.logger.Error("failed to open template deployment file", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open template deployment file")
 	}
 	defer templateDeploymentFile.Close()
 
 	data, err := ioutil.ReadAll(templateDeploymentFile)
 	if err != nil {
-		logger.Error("failed to read template deployment file", zap.Error(err))
+		h.logger.Error("failed to read template deployment file", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to read template deployment file")
 	}
 
 	err = yaml.Unmarshal(data, &describerDeployment)
 	if err != nil {
-		logger.Error("failed to unmarshal template deployment file", zap.Error(err))
+		h.logger.Error("failed to unmarshal template deployment file", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to unmarshal template deployment file")
 	}
 
@@ -1478,7 +1403,7 @@ func (h API) EnableIntegrationTypeHelper(ctx context.Context, logger *zap.Logger
 	}
 	cnf, err := integrationType.GetConfiguration()
 	if err != nil {
-		logger.Error("failed to get integration type configuration", zap.Error(err))
+		h.logger.Error("failed to get integration type configuration", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration type configuration")
 	}
 
@@ -1495,7 +1420,7 @@ func (h API) EnableIntegrationTypeHelper(ctx context.Context, logger *zap.Logger
 
 	container := describerDeployment.Spec.Template.Spec.Containers[0]
 	container.Name = cnf.DescriberDeploymentName
-	container.Image = fmt.Sprintf("%s:%s", integrationTypeInfo.PackageURL, integrationTypeInfo.PackageTag)
+	container.Image = fmt.Sprintf("%s:%s", plugin.DescriberURL, plugin.DescriberTag)
 	container.Command = []string{cnf.DescriberRunCommand}
 	natsUrl, ok := os.LookupEnv("NATS_URL")
 	if ok {
@@ -1517,7 +1442,7 @@ func (h API) EnableIntegrationTypeHelper(ctx context.Context, logger *zap.Logger
 		Spec: describerDeployment.Spec,
 	}
 
-	err = kubeClient.Create(ctx, &newDeployment)
+	err = h.kubeClient.Create(ctx, &newDeployment)
 	if err != nil {
 		return err
 	}
@@ -1526,20 +1451,20 @@ func (h API) EnableIntegrationTypeHelper(ctx context.Context, logger *zap.Logger
 	var describerDeploymentManuals appsv1.Deployment
 	templateManualsDeploymentFile, err := os.Open(TemplateManualsDeploymentPath)
 	if err != nil {
-		logger.Error("failed to open template manuals deployment file", zap.Error(err))
+		h.logger.Error("failed to open template manuals deployment file", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open template manuals deployment file")
 	}
 	defer templateManualsDeploymentFile.Close()
 
 	data, err = ioutil.ReadAll(templateManualsDeploymentFile)
 	if err != nil {
-		logger.Error("failed to read template manuals deployment file", zap.Error(err))
+		h.logger.Error("failed to read template manuals deployment file", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to read template manuals deployment file")
 	}
 
 	err = yaml.Unmarshal(data, &describerDeploymentManuals)
 	if err != nil {
-		logger.Error("failed to unmarshal template manuals deployment file", zap.Error(err))
+		h.logger.Error("failed to unmarshal template manuals deployment file", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to unmarshal template manuals deployment file")
 	}
 
@@ -1556,7 +1481,7 @@ func (h API) EnableIntegrationTypeHelper(ctx context.Context, logger *zap.Logger
 
 	containerManuals := describerDeploymentManuals.Spec.Template.Spec.Containers[0]
 	containerManuals.Name = cnf.DescriberDeploymentName
-	containerManuals.Image = fmt.Sprintf("%s:%s", integrationTypeInfo.PackageURL, integrationTypeInfo.PackageTag)
+	containerManuals.Image = fmt.Sprintf("%s:%s", plugin.DescriberURL, plugin.DescriberTag)
 	containerManuals.Command = []string{cnf.DescriberRunCommand}
 	natsUrl, ok = os.LookupEnv("NATS_URL")
 	if ok {
@@ -1578,7 +1503,7 @@ func (h API) EnableIntegrationTypeHelper(ctx context.Context, logger *zap.Logger
 		Spec: describerDeploymentManuals.Spec,
 	}
 
-	err = kubeClient.Create(ctx, &newDeploymentManuals)
+	err = h.kubeClient.Create(ctx, &newDeploymentManuals)
 	if err != nil {
 		return err
 	}
@@ -1588,20 +1513,20 @@ func (h API) EnableIntegrationTypeHelper(ctx context.Context, logger *zap.Logger
 		var describerScaledObject kedav1alpha1.ScaledObject
 		templateScaledObjectFile, err := os.Open(TemplateScaledObjectPath)
 		if err != nil {
-			logger.Error("failed to open template scaledobject file", zap.Error(err))
+			h.logger.Error("failed to open template scaledobject file", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to open template scaledobject file")
 		}
 		defer templateScaledObjectFile.Close()
 
 		data, err = ioutil.ReadAll(templateScaledObjectFile)
 		if err != nil {
-			logger.Error("failed to read template manuals deployment file", zap.Error(err))
+			h.logger.Error("failed to read template manuals deployment file", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to read template scaledobject file")
 		}
 
 		err = yaml.Unmarshal(data, &describerScaledObject)
 		if err != nil {
-			logger.Error("failed to unmarshal template deployment file", zap.Error(err))
+			h.logger.Error("failed to unmarshal template deployment file", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to unmarshal template deployment file")
 		}
 
@@ -1622,7 +1547,7 @@ func (h API) EnableIntegrationTypeHelper(ctx context.Context, logger *zap.Logger
 			Spec: describerScaledObject.Spec,
 		}
 
-		err = kubeClient.Create(ctx, &newScaledObject)
+		err = h.kubeClient.Create(ctx, &newScaledObject)
 		if err != nil {
 			return err
 		}
@@ -1631,20 +1556,20 @@ func (h API) EnableIntegrationTypeHelper(ctx context.Context, logger *zap.Logger
 		var describerScaledObjectManuals kedav1alpha1.ScaledObject
 		templateManualsScaledObjectFile, err := os.Open(TemplateManualsScaledObjectPath)
 		if err != nil {
-			logger.Error("failed to open template manuals scaledobject file", zap.Error(err))
+			h.logger.Error("failed to open template manuals scaledobject file", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to open template manuals scaledobject file")
 		}
 		defer templateManualsScaledObjectFile.Close()
 
 		data, err = ioutil.ReadAll(templateManualsScaledObjectFile)
 		if err != nil {
-			logger.Error("failed to read template manuals deployment file", zap.Error(err))
+			h.logger.Error("failed to read template manuals deployment file", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to read template manuals scaledobject file")
 		}
 
 		err = yaml.Unmarshal(data, &describerScaledObjectManuals)
 		if err != nil {
-			logger.Error("failed to unmarshal template deployment file", zap.Error(err))
+			h.logger.Error("failed to unmarshal template deployment file", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to unmarshal template deployment file")
 		}
 
@@ -1664,19 +1589,25 @@ func (h API) EnableIntegrationTypeHelper(ctx context.Context, logger *zap.Logger
 			Spec: describerScaledObjectManuals.Spec,
 		}
 
-		err = kubeClient.Create(ctx, &newScaledObjectManuals)
+		err = h.kubeClient.Create(ctx, &newScaledObjectManuals)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = database.UpdateIntegrationTypeSetup(&models2.IntegrationTypeSetup{
-		IntegrationType: h.typesManager.ParseType(integrationTypeName),
-		Enabled:         true,
+	err = h.database.UpdatePlugin(models2.IntegrationPlugin{
+		PluginID:          plugin.PluginID,
+		IntegrationType:   plugin.IntegrationType,
+		InstallState:      models2.IntegrationTypeInstallStateInstalled,
+		OperationalStatus: models2.IntegrationPluginOperationalStatusEnabled,
+		URL:               plugin.URL,
+
+		IntegrationPlugin: plugin.IntegrationPlugin,
+		CloudQlPlugin:     plugin.CloudQlPlugin,
 	})
 	if err != nil {
-		logger.Error("failed to enable integration type in the database", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to enable integration type in the database")
+		h.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", plugin.IntegrationType.String()))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
 	}
 
 	return nil
