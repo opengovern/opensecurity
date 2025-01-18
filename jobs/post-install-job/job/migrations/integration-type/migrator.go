@@ -49,12 +49,6 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 
 	err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(&models.IntegrationPlugin{}).Where("1 = 1").Unscoped().Delete(&models.IntegrationPlugin{}).Error
-		if err != nil {
-			logger.Error("failed to delete integration binaries", zap.Error(err))
-			return err
-		}
-
 		for _, iPlugin := range parser.Integrations.Plugins {
 			integrationBinary, err := parser.ExtractIntegrationBinaries(logger, iPlugin)
 			if err != nil {
@@ -64,7 +58,9 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 				continue
 			}
 			err = tx.Clauses(clause.OnConflict{
-				DoNothing: true,
+				Columns: []clause.Column{{Name: "plugin_id"}},
+				DoUpdates: clause.AssignmentColumns([]string{"id", "integration_type", "name", "tier", "description", "icon",
+					"availability", "source_code", "package_type", "url", "integration_plugin", "cloud_ql_plugin", "tags"}),
 			}).Create(integrationBinary).Error
 			if err != nil {
 				logger.Error("failed to create integration binary", zap.Error(err))

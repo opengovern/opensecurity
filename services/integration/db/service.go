@@ -21,9 +21,7 @@ func (db Database) Initialize() error {
 	err := db.Orm.AutoMigrate(
 		&models.Integration{},
 		&models.Credential{},
-		&models.IntegrationType{},
 		&models.IntegrationGroup{},
-		&models.IntegrationTypeSetup{},
 	)
 	if err != nil {
 		return err
