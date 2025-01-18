@@ -355,19 +355,41 @@ func (a *API) LoadPluginWithURL(c echo.Context) error {
 
 	a.logger.Info("done reading files", zap.String("url", url), zap.String("url", url), zap.String("integrationType", m.IntegrationType.String()), zap.Int("integrationPluginSize", len(integrationPlugin)), zap.Int("cloudqlPluginSize", len(cloudqlPlugin)))
 
-	err = a.database.UpdatePlugin(models2.IntegrationPlugin{
-		PluginID:          m.PluginID,
-		IntegrationType:   m.IntegrationType,
-		InstallState:      models2.IntegrationTypeInstallStateInstalled,
-		OperationalStatus: models2.IntegrationPluginOperationalStatusEnabled,
-		URL:               url,
-
-		IntegrationPlugin: integrationPlugin,
-		CloudQlPlugin:     cloudqlPlugin,
-	})
+	plugin, err := a.database.GetPluginByURL(url)
 	if err != nil {
-		a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", m.PluginID))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
+		a.logger.Error("failed to get plugin", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get plugin")
+	}
+	if plugin == nil {
+		err = a.database.CreatePlugin(models2.IntegrationPlugin{
+			PluginID:          m.PluginID,
+			IntegrationType:   m.IntegrationType,
+			InstallState:      models2.IntegrationTypeInstallStateInstalled,
+			OperationalStatus: models2.IntegrationPluginOperationalStatusEnabled,
+			URL:               url,
+
+			IntegrationPlugin: integrationPlugin,
+			CloudQlPlugin:     cloudqlPlugin,
+		})
+		if err != nil {
+			a.logger.Error("failed to create plugin", zap.Error(err), zap.String("id", m.PluginID))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create plugin")
+		}
+	} else {
+		err = a.database.UpdatePlugin(models2.IntegrationPlugin{
+			PluginID:          m.PluginID,
+			IntegrationType:   m.IntegrationType,
+			InstallState:      models2.IntegrationTypeInstallStateInstalled,
+			OperationalStatus: models2.IntegrationPluginOperationalStatusEnabled,
+			URL:               url,
+
+			IntegrationPlugin: integrationPlugin,
+			CloudQlPlugin:     cloudqlPlugin,
+		})
+		if err != nil {
+			a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", m.PluginID))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
+		}
 	}
 	return c.NoContent(http.StatusOK)
 }
