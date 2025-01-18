@@ -113,11 +113,14 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 	cloudqlPlugin, err := os.ReadFile(baseDir + "/integarion_type/cloudql-plugin")
 	if err != nil {
 		logger.Error("failed to open cloudql-plugin file", zap.Error(err), zap.String("url", url))
-		return nil, fmt.Errorf("open cloudql-plugin file for url %s: %w", iPlugin, err)
+		return nil, fmt.Errorf("open cloudql-plugin file for url %s: %w", iPlugin.IntegrationType.String(), err)
 	}
 
 	logger.Info("done reading files", zap.String("url", url), zap.String("integrationType", iPlugin.IntegrationType.String()), zap.Int("integrationPluginSize", len(integrationPlugin)), zap.Int("cloudqlPluginSize", len(cloudqlPlugin)))
 	return &models.IntegrationPlugin{
+		PluginID:          iPlugin.IntegrationType.String(),
+		InstallState:      models.IntegrationTypeInstallStateInstalled,
+		OperationalStatus: models.IntegrationPluginOperationalStatusEnabled,
 		IntegrationType:   iPlugin.IntegrationType,
 		URL:               url,
 		IntegrationPlugin: integrationPlugin,
