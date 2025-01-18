@@ -1,6 +1,9 @@
 package models
 
-import "github.com/opengovern/og-util/pkg/integration"
+import (
+	"github.com/lib/pq"
+	"github.com/opengovern/og-util/pkg/integration"
+)
 
 type Manifest struct {
 	PluginID        string           `json:"plugin_id" yaml:"plugin_id"`
@@ -18,6 +21,7 @@ const (
 const (
 	IntegrationPluginOperationalStatusEnabled  IntegrationPluginOperationalStatus = "enabled"
 	IntegrationPluginOperationalStatusDisabled IntegrationPluginOperationalStatus = "disabled"
+	IntegrationPluginOperationalStatusFailed   IntegrationPluginOperationalStatus = "failed"
 )
 
 type IntegrationPlugin struct {
@@ -26,6 +30,8 @@ type IntegrationPlugin struct {
 	InstallState      IntegrationPluginInstallState
 	OperationalStatus IntegrationPluginOperationalStatus
 	URL               string
+
+	OperationalStatusUpdates pq.StringArray `gorm:"type:text[]"`
 
 	IntegrationPlugin []byte `gorm:"type:bytea;not null"`
 	CloudQlPlugin     []byte `gorm:"type:bytea;not null"`

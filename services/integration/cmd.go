@@ -18,6 +18,7 @@ import (
 	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"time"
 
 	api3 "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
@@ -106,7 +107,7 @@ func Command() *cobra.Command {
 				}
 			}
 
-			typeManager := integration_type.NewIntegrationTypeManager(logger, integrationTypesDb)
+			typeManager := integration_type.NewIntegrationTypeManager(logger, integrationTypesDb, cnf.IntegrationPlugins.MaxAutoRebootRetries, time.Duration(cnf.IntegrationPlugins.PingIntervalSeconds)*time.Second)
 
 			err = IntegrationTypesMigration(logger, db, typeManager, IntegrationsJsonFilePath)
 			if err != nil {
