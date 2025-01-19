@@ -867,13 +867,19 @@ func (a *API) LoadPlugin(ctx context.Context, plugin models2.IntegrationPlugin) 
 	}
 	hcLogger := hczap.Wrap(a.logger)
 
-	client := plugin2.NewClient(&plugin2.ClientConfig{
-		HandshakeConfig: interfaces.HandshakeConfig,
-		Plugins:         map[string]plugin2.Plugin{pluginName: &interfaces.IntegrationTypePlugin{}},
-		Cmd:             exec.Command(pluginPath),
-		Logger:          hcLogger,
-		Managed:         true,
-	})
+	var client *plugin2.Client
+	if v, ok := a.typeManager.Clients[plugin.IntegrationType]; ok {
+		client = v
+	} else {
+		client = plugin2.NewClient(&plugin2.ClientConfig{
+			HandshakeConfig: interfaces.HandshakeConfig,
+			Plugins:         map[string]plugin2.Plugin{pluginName: &interfaces.IntegrationTypePlugin{}},
+			Cmd:             exec.Command(pluginPath),
+			Logger:          hcLogger,
+			Managed:         true,
+		})
+		a.typeManager.Clients[plugin.IntegrationType] = client
+	}
 
 	rpcClient, err := client.Client()
 	if err != nil {
@@ -890,24 +896,21 @@ func (a *API) LoadPlugin(ctx context.Context, plugin models2.IntegrationPlugin) 
 		return err
 	}
 
-	// Cast the raw interface to the appropriate interface
-	itInterface, ok := raw.(interfaces.IntegrationType)
-	if !ok {
-		a.logger.Error("failed to cast plugin to integration type", zap.String("plugin", pluginName), zap.String("path", pluginPath))
-		client.Kill()
-		return err
+	var itInterface interfaces.IntegrationType
+	var ok2 bool
+	if v, ok := a.typeManager.IntegrationTypes[plugin.IntegrationType]; ok {
+		itInterface = v
+	} else {
+		itInterface, ok2 = raw.(interfaces.IntegrationType)
+		if !ok2 {
+			a.logger.Error("failed to cast plugin to integration type", zap.String("plugin", pluginName), zap.String("path", pluginPath))
+			client.Kill()
+			return err
+		}
+		a.typeManager.IntegrationTypes[plugin.IntegrationType] = itInterface
 	}
 
-	iType, err := itInterface.GetIntegrationType()
-	if err != nil {
-		a.logger.Error("failed to get integration type from plugin", zap.Error(err))
-		client.Kill()
-		return err
-	}
-
-	a.typeManager.IntegrationTypes[iType] = itInterface
-	a.typeManager.Clients[iType] = client
-	a.typeManager.PingLocks[iType] = &sync.Mutex{}
+	a.typeManager.PingLocks[plugin.IntegrationType] = &sync.Mutex{}
 
 	err = a.EnableIntegrationTypeHelper(ctx, plugin.IntegrationType.String())
 	if err != nil {
@@ -919,10 +922,16 @@ func (a *API) LoadPlugin(ctx context.Context, plugin models2.IntegrationPlugin) 
 }
 
 func (a *API) UnLoadPlugin(ctx context.Context, plugin models2.IntegrationPlugin) error {
-	a.typeManager.Clients[plugin.IntegrationType].Kill()
-	delete(a.typeManager.IntegrationTypes, plugin.IntegrationType)
-	delete(a.typeManager.Clients, plugin.IntegrationType)
-	delete(a.typeManager.PingLocks, plugin.IntegrationType)
+	if _, ok := a.typeManager.Clients[plugin.IntegrationType]; ok {
+		a.typeManager.Clients[plugin.IntegrationType].Kill()
+		delete(a.typeManager.Clients, plugin.IntegrationType)
+	}
+	if _, ok := a.typeManager.IntegrationTypes[plugin.IntegrationType]; ok {
+		delete(a.typeManager.IntegrationTypes, plugin.IntegrationType)
+	}
+	if _, ok := a.typeManager.PingLocks[plugin.IntegrationType]; ok {
+		delete(a.typeManager.PingLocks, plugin.IntegrationType)
+	}
 
 	err := a.DisableIntegrationTypeHelper(ctx, plugin.IntegrationType.String())
 	if err != nil {
@@ -1121,7 +1130,9 @@ func (a *API) EnableIntegrationTypeHelper(ctx context.Context, integrationTypeNa
 
 	err = a.kubeClient.Create(ctx, &newDeployment)
 	if err != nil {
-		return err
+		if !strings.Contains(err.Error(), "already exists") {
+			return err
+		}
 	}
 
 	// Manual deployment
@@ -1182,7 +1193,9 @@ func (a *API) EnableIntegrationTypeHelper(ctx context.Context, integrationTypeNa
 
 	err = a.kubeClient.Create(ctx, &newDeploymentManuals)
 	if err != nil {
-		return err
+		if !strings.Contains(err.Error(), "already exists") {
+			return err
+		}
 	}
 
 	if strings.ToLower(kedaEnabled) == "true" {
@@ -1226,7 +1239,9 @@ func (a *API) EnableIntegrationTypeHelper(ctx context.Context, integrationTypeNa
 
 		err = a.kubeClient.Create(ctx, &newScaledObject)
 		if err != nil {
-			return err
+			if !strings.Contains(err.Error(), "already exists") {
+				return err
+			}
 		}
 
 		// Manual ScaledObject
@@ -1268,7 +1283,9 @@ func (a *API) EnableIntegrationTypeHelper(ctx context.Context, integrationTypeNa
 
 		err = a.kubeClient.Create(ctx, &newScaledObjectManuals)
 		if err != nil {
-			return err
+			if !strings.Contains(err.Error(), "already exists") {
+				return err
+			}
 		}
 	}
 
