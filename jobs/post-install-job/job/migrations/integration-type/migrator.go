@@ -8,7 +8,6 @@ import (
 	"github.com/opengovern/opencomply/jobs/post-install-job/db"
 	"github.com/opengovern/opencomply/services/integration/models"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -48,29 +47,25 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		return err
 	}
 
-	err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
-		logger.Info("number of integration types", zap.Int("num", len(parser.Integrations.Plugins)))
-		for _, iPlugin := range parser.Integrations.Plugins {
-			plugin, err := parser.ExtractIntegrationBinaries(logger, iPlugin)
-			if err != nil {
-				return err
-			}
-			if plugin == nil {
-				continue
-			}
-			err = tx.Clauses(clause.OnConflict{
-				Columns: []clause.Column{{Name: "plugin_id"}},
-				DoUpdates: clause.AssignmentColumns([]string{"id", "integration_type", "name", "tier", "description", "icon",
-					"availability", "source_code", "package_type", "url", "integration_plugin", "cloud_ql_plugin", "tags"}),
-			}).Create(plugin).Error
-			if err != nil {
-				logger.Error("failed to create integration binary", zap.Error(err))
-				return err
-			}
+	for _, iPlugin := range parser.Integrations.Plugins {
+		plugin, err := parser.ExtractIntegrationBinaries(logger, iPlugin)
+		if err != nil {
+			return err
 		}
-
-		return nil
-	})
+		if plugin == nil {
+			continue
+		}
+		logger.Info("plugin", zap.String("plugin_name", iPlugin.IntegrationType.String()), zap.Any("plugin", *plugin))
+		err = dbm.ORM.Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "plugin_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"id", "integration_type", "name", "tier", "description", "icon",
+				"availability", "source_code", "package_type", "url", "integration_plugin", "cloud_ql_plugin", "tags"}),
+		}).Create(plugin).Error
+		if err != nil {
+			logger.Error("failed to create integration binary", zap.Error(err))
+			return err
+		}
+	}
 
 	return nil
 }
