@@ -117,16 +117,16 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 		}
 
 		//// read manifest file
-		manifestFile, err := os.Open(baseDir + "/integarion_type/manifest.yaml")
+		manifestFile, err := os.ReadFile(baseDir + "/integarion_type/manifest.yaml")
 		if err != nil {
 			logger.Error("failed to open manifest file", zap.Error(err))
 			return nil, fmt.Errorf("open manifest file: %w", err)
 		}
-		defer manifestFile.Close()
+		logger.Info("manifestFile", zap.String("file", string(manifestFile)))
 
 		var m models.Manifest
 		// decode yaml
-		if err := yaml.NewDecoder(manifestFile).Decode(&m); err != nil {
+		if err := yaml.Unmarshal(manifestFile, &m); err != nil {
 			logger.Error("failed to decode manifest", zap.Error(err), zap.String("url", url))
 			return nil, fmt.Errorf("decode manifest for url %s: %w", iPlugin, err)
 		}
