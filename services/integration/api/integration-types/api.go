@@ -943,9 +943,13 @@ func (a *API) UnLoadPlugin(ctx context.Context, plugin models2.IntegrationPlugin
 }
 
 func (a *API) DisableIntegrationTypeHelper(ctx context.Context, integrationTypeName string) error {
-	plugin, _ := a.database.GetPluginByIntegrationType(integrationTypeName)
-	if plugin == nil || (plugin.OperationalStatus == models2.IntegrationPluginOperationalStatusDisabled) {
-		return echo.NewHTTPError(http.StatusBadRequest, "the integration type is already disabled")
+	plugin, err := a.database.GetPluginByIntegrationType(integrationTypeName)
+	if err != nil {
+		a.logger.Error("failed to get plugin", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get plugin")
+	}
+	if plugin == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
 	}
 
 	var integrationTypes []integration.Type
