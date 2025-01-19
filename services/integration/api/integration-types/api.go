@@ -34,7 +34,6 @@ import (
 	models2 "github.com/opengovern/opencomply/services/integration/models"
 	"go.uber.org/zap"
 	"sort"
-
 )
 
 const (
@@ -71,8 +70,8 @@ func (a *API) Register(e *echo.Group) {
 	plugin.POST("/load/id/:id", httpserver.AuthorizeHandler(a.LoadPluginWithID, api.EditorRole))
 	plugin.POST("/load/url/:http_url", httpserver.AuthorizeHandler(a.LoadPluginWithURL, api.EditorRole))
 	plugin.DELETE("/uninstall/id/:id", httpserver.AuthorizeHandler(a.UninstallPlugin, api.EditorRole))
-	plugin.DELETE("/plugin/:id/enable", httpserver.AuthorizeHandler(a.EnablePlugin, api.EditorRole))
-	plugin.DELETE("/plugin/:id/disable", httpserver.AuthorizeHandler(a.DisablePlugin, api.EditorRole))
+	plugin.POST("/:id/enable", httpserver.AuthorizeHandler(a.EnablePlugin, api.EditorRole))
+	plugin.POST("/:id/disable", httpserver.AuthorizeHandler(a.DisablePlugin, api.EditorRole))
 	plugin.GET("", httpserver.AuthorizeHandler(a.ListPlugins, api.ViewerRole))
 	plugin.GET("/:id", httpserver.AuthorizeHandler(a.GetPlugin, api.ViewerRole))
 	plugin.GET("/:id/integrations", httpserver.AuthorizeHandler(a.ListPluginIntegrations, api.ViewerRole))
@@ -639,16 +638,16 @@ func (a *API) ListPlugins(c echo.Context) error {
 			InstallState:             string(plugin.InstallState),
 			OperationalStatus:        string(plugin.OperationalStatus),
 			OperationalStatusUpdates: plugin.OperationalStatusUpdates,
-			URL:                     plugin.URL,
-			Tier: 				  plugin.Tier,
-			Description: 		  plugin.Description,
-			Icon: 				  plugin.Icon,
-			Availability: 		  plugin.Availability,
-			SourceCode: 		  plugin.SourceCode,
-			PackageType: 		  plugin.PackageType,
-			DescriberURL: 		  plugin.DescriberURL,
-			Name: plugin.Name,
-			Count:                   count,
+			URL:                      plugin.URL,
+			Tier:                     plugin.Tier,
+			Description:              plugin.Description,
+			Icon:                     plugin.Icon,
+			Availability:             plugin.Availability,
+			SourceCode:               plugin.SourceCode,
+			PackageType:              plugin.PackageType,
+			DescriberURL:             plugin.DescriberURL,
+			Name:                     plugin.Name,
+			Count:                    count,
 		})
 	}
 
@@ -688,8 +687,8 @@ func (a *API) ListPlugins(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, models.IntegrationPluginListResponse{
-		Items: items,
-		TotalCount:       totalCount,
+		Items:      items,
+		TotalCount: totalCount,
 	})
 }
 
