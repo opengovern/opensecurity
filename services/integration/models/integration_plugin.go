@@ -53,8 +53,8 @@ type IntegrationPlugin struct {
 
 	OperationalStatusUpdates pq.StringArray `gorm:"type:text[]"`
 
-	IntegrationPlugin []byte `gorm:"type:bytea;not null"`
-	CloudQlPlugin     []byte `gorm:"type:bytea;not null"`
+	IntegrationPlugin []byte `gorm:"type:bytea"`
+	CloudQlPlugin     []byte `gorm:"type:bytea"`
 
 	Tags pgtype.JSONB
 }
