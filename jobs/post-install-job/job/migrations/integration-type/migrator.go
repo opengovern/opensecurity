@@ -55,7 +55,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		if plugin == nil {
 			continue
 		}
-		logger.Info("plugin", zap.String("plugin_name", iPlugin.IntegrationType.String()), zap.Any("plugin", *plugin))
+
 		err = dbm.ORM.Clauses(clause.OnConflict{
 			Columns: []clause.Column{{Name: "plugin_id"}},
 			DoUpdates: clause.AssignmentColumns([]string{"id", "integration_type", "name", "tier", "description", "icon",
