@@ -1017,10 +1017,10 @@ export default function Query() {
                 <div className="p-4">
                     <Text>
                         This plugin is not available. Plugins need to be
-                        {/* @ts-ignore */} 
-                        {selectedIntegration?.installed == 'not_installed'
+                        {/* @ts-ignore */}
+                        {selectedIntegration?.install_state == 'not_installed'
                             ? ' installed'
-                            : 'enabled'}{' '}
+                            : ' enabled'}{' '}
                         to fetch the schema.
                     </Text>
 
