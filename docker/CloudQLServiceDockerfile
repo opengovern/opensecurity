@@ -1,32 +1,5 @@
 ARG PLUGIN_REGISTRY
-
-FROM ${PLUGIN_REGISTRY}/cloudql-init-job:0.0.1 as job
-
+FROM ${PLUGIN_REGISTRY}/steampipe-plugin-base:0.0.1 as base
 
 
-FROM ${PLUGIN_REGISTRY}/cloudql:0.0.1 as opengovernance
-
-FROM ubuntu:20.04 AS base
-RUN apt-get update && apt-get install -y \
-    curl \
-    sudo \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN sudo /bin/sh -c "$(curl -fsSL https://steampipe.io/install/steampipe.sh)"
-
-COPY --from=job /cloudql-init-job /cloudql-init-job
-
-
-COPY --from=opengovernance /cloudql.plugin /home/steampipe/.steampipe/plugins/local/opengovernance/opengovernance.plugin
-
-USER root
-RUN useradd -ms /bin/bash steampipe
-RUN mkdir -p /home/steampipe/.steampipe/config
-RUN mkdir -p /home/steampipe/.steampipe/db
-RUN mkdir -p /home/steampipe/.steampipe/db/14.2.0
-RUN chown -R steampipe:steampipe /home/steampipe
-RUN chmod -R 777 /home/steampipe
-RUN apt update
-RUN apt install -y procps htop
-USER steampipe
 RUN steampipe plugin list

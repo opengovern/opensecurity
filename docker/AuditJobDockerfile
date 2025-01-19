@@ -1,8 +1,7 @@
 
 ARG PLUGIN_REGISTRY
-FROM ${PLUGIN_REGISTRY}/cloudql-init-job:0.0.1 as job
+FROM ${PLUGIN_REGISTRY}/cloudql-plugin-base:0.0.1 as base
 
-COPY --from=job /cloudql-init-job /cloudql-init-job
 
 COPY ./build/audit-job /
 

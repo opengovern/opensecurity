@@ -1,8 +1,5 @@
 ARG PLUGIN_REGISTRY
-FROM ${PLUGIN_REGISTRY}/cloudql-init-job:0.0.1 as job
-
-COPY --from=job /cloudql-init-job /cloudql-init-job
-
+FROM ${PLUGIN_REGISTRY}/cloudql-plugin-base:0.0.1 as base
 
 
 COPY ./build/compliance-report-job /
