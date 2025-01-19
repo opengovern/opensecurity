@@ -156,7 +156,7 @@ jobs:
     needs:
       - build
       - tag
-     - deploy-cloudql-base
+      - deploy-cloudql-base
     permissions:
       id-token: write
       contents: read
