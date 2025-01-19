@@ -263,21 +263,35 @@ export default function Query() {
 
     const getIntegrations = () => {
         setSchemaLoading(true)
+         let url = ''
+         if (window.location.origin === 'http://localhost:3000') {
+             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+         } else {
+             url = window.location.origin
+         }
+         // @ts-ignore
+         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+         const config = {
+             headers: {
+                 Authorization: `Bearer ${token}`,
+             },
+         }
+
         axios
             .get(
-                'https://raw.githubusercontent.com/opengovern/opengovernance/refs/heads/main/assets/integrations/integrations.json'
+                `${url}/main/integration/api/v1/integration-types/plugin`,
+                config
             )
             .then((res) => {
                 if (res.data) {
-                    const arr = res.data
+                    const arr = res.data?.items
                     const temp: any = []
                     // arr.sort(() => Math.random() - 0.5);
                     arr?.map((integration: any) => {
                         if (
-                            integration.schema_ids &&
-                            integration.schema_ids.length > 0 &&
-                            integration.tier === 'Community' &&
-                            integration.SourceCode != ''
+                            integration.operational_status == 'enabled' &&
+                            integration.install_state == 'installed'
                         ) {
                             temp.push(integration)
                         }
@@ -403,7 +417,7 @@ export default function Query() {
                                                                                 integration
                                                                             )
                                                                             getMasterSchema(
-                                                                                integration.integration_type
+                                                                                integration.plugin_id
                                                                             )
                                                                         } else {
                                                                             setExpanded(

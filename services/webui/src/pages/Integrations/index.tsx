@@ -26,6 +26,7 @@ import {
     Box,
     Button,
     Cards,
+    Input,
     Link,
     Modal,
     Pagination,
@@ -49,7 +50,8 @@ export default function Integrations() {
     const navigate = useNavigate()
     const [selected, setSelected] = useState()
     const [loading, setLoading] = useState(false)
-    const connectorList = responseConnectors?.integration_types || []
+    const [url, setUrl] = useState('')
+    const connectorList = responseConnectors?.items || []
     const setNotification = useSetAtom(notificationAtom)
 
     // @ts-ignore
@@ -77,8 +79,8 @@ export default function Integrations() {
         }
 
         axios
-            .put(
-                `${url}/main/integration/api/v1/integrations/types/${selected?.platform_name}/enable`,
+            .post(
+                `${url}/main/integration/api/v1/integration-types/plugin/${selected?.platform_name}/enable`,
                 {},
                 config
             )
@@ -100,15 +102,80 @@ export default function Integrations() {
                 setLoading(false)
             })
     }
+    const InstallPlugin = () => {
+        setLoading(true)
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        let path = ''
+        if (selected?.html_url) {
+            path = `/main/integration/api/v1/integration-types/plugin/load/id/${selected?.platform_name}`
+        }
+        else{
+            path = `/main/integration/api/v1/integration-types/plugin/load/url/${url}`
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+
+        axios
+            .post(
+                `${url}${path}`,
+                {},
+                config
+            )
+            .then((res) => {
+                getList(9, pageNo, 'count', 'desc', undefined)
+                setLoading(false)
+                setOpen(false)
+                setNotification({
+                    text: `Plugin Installed`,
+                    type: 'success',
+                })
+            })
+            .catch((err) => {
+                setNotification({
+                    text: `Failed to install plugin`,
+                    type: 'error',
+                })
+                getList(9, pageNo, 'count', 'desc', undefined)
+                setLoading(false)
+            })
+    }
     return (
         <>
             <Modal
                 visible={open}
                 onDismiss={() => setOpen(false)}
-                header="Integration Disabled"
+                header="Plugin Installation"
             >
-                <div className="p-8">
-                    <Text>This integration is disabled.</Text>
+                <div className="p-4">
+                    <Text>
+                        This Plugin is{' '}
+                        {selected?.installed == 'not_installed'
+                            ? 'not installed'
+                            : 'disabled'}{' '}
+                        .
+                    </Text>
+                    {selected?.installed == 'not_installed' &&
+                        selected?.html_url == "" &&(<>
+                        <Input 
+                        className='mt-2'
+                            placeholder='Enter Plugin URL'
+                            
+                            value={url}
+                            onChange={({ detail }) => setUrl(detail.value)}
+                            
+                        />
+                        </>)}
                     <Flex
                         justifyContent="end"
                         alignItems="center"
@@ -127,39 +194,27 @@ export default function Integrations() {
                             loading={loading}
                             disabled={loading}
                             variant="primary"
-                            onClick={() => EnableIntegration()}
+                            onClick={() => {
+                                selected?.installed == 'not_installed'
+                                    ? InstallPlugin()
+                                    : EnableIntegration()
+                            }}
                             className="mt-6"
                         >
-                            Enable
+                            {selected?.installed == 'not_installed'
+                                ? ' Install'
+                                : 'Enable'}
                         </Button>
                     </Flex>
                 </div>
             </Modal>
-            {/* <TopHeader /> */}
-            {/* <Grid numItems={3} className="gap-4 mb-10">
-                <OnboardCard
-                    title="Active Accounts"
-                    active={topMetrics?.connectionsEnabled}
-                    inProgress={topMetrics?.inProgressConnections}
-                    healthy={topMetrics?.healthyConnections}
-                    unhealthy={topMetrics?.unhealthyConnections}
-                    loading={metricsLoading}
-                />
-            </Grid> */}
+
             {connectorsLoading ? (
                 <Flex className="mt-36">
                     <Spinner />
                 </Flex>
             ) : (
                 <>
-                    {/* <TabGroup className='mt-4'>
-                        <TabList>
-                            <Tab>test</Tab>
-                            <Tab>test</Tab>
-                            <Tab>test</Tab>
-                            <Tab>test</Tab>
-                        </TabList>
-                    </TabGroup> */}
                     <Flex
                         className="bg-white w-[90%] rounded-xl border-solid  border-2 border-gray-200  pb-2  "
                         flexDirection="col"
@@ -212,31 +267,7 @@ export default function Integrations() {
                                             Available Dashboards
                                         </h2> */}
                                         <div className="flex items-center space-x-2">
-                                            {/* <Select
-                                        placeholder="Sorty by"
-                                        enableClear={false}
-                                        className="[&>button]:rounded-tremor-small"
-                                    >
-                                        <SelectItem value="1">Name</SelectItem>
-                                        <SelectItem value="2">
-                                            Last edited
-                                        </SelectItem>
-                                        <SelectItem value="3">Size</SelectItem>
-                                    </Select> */}
-                                            {/* <button
-                                                type="button"
-                                                onClick={() => {
-                                                    f()
-                                                    setOpen(true)
-                                                }}
-                                                className="hidden h-9 items-center gap-1.5 whitespace-nowrap rounded-tremor-small bg-tremor-brand px-3 py-2.5 text-tremor-default font-medium text-tremor-brand-inverted shadow-tremor-input hover:bg-tremor-brand-emphasis dark:bg-dark-tremor-brand dark:text-dark-tremor-brand-inverted dark:shadow-dark-tremor-input dark:hover:bg-dark-tremor-brand-emphasis sm:inline-flex"
-                                            >
-                                                <PlusIcon
-                                                    className="-ml-1 size-5 shrink-0"
-                                                    aria-hidden={true}
-                                                />
-                                                Create new Dashboard
-                                            </button> */}
+                                        
                                         </div>
                                     </div>
                                     <div className="flex items-center w-full">
@@ -252,9 +283,9 @@ export default function Integrations() {
                                                     detail?.selectedItems[0]
                                                 if (
                                                     connector.enabled ===
-                                                        false &&
-                                                    connector?.tier ===
-                                                        PlatformEngineServicesIntegrationApiEntityTier.TierCommunity
+                                                        'disabled' ||
+                                                    connector?.installed ===
+                                                        'not_installed'
                                                 ) {
                                                     setOpen(true)
                                                     setSelected(connector)
@@ -262,8 +293,10 @@ export default function Integrations() {
                                                 }
 
                                                 if (
-                                                    connector?.tier ===
-                                                    PlatformEngineServicesIntegrationApiEntityTier.TierCommunity
+                                                    connector.enabled ==
+                                                        'enabled' &&
+                                                    connector.installed ==
+                                                        'installed'
                                                 ) {
                                                     const name = connector?.name
                                                     const id = connector?.id
@@ -303,21 +336,12 @@ export default function Integrations() {
                                                             <span>
                                                                 {item.title}
                                                             </span>
-                                                            {/* <div className="flex flex-row gap-1 items-center">
-                                    {GetTierIcon(item.tier)}
-                                    <span className="text-white">{item.tier}</span>
-                                </div> */}
                                                         </div>
                                                     </Link>
                                                 ),
                                                 sections: [
                                                     {
                                                         id: 'logo',
-                                                        // header :(<>
-                                                        //     <div className="flex justify-end">
-                                                        //         <span>{'Status'}</span>
-                                                        //     </div>
-                                                        // </>),
 
                                                         content: (item) => (
                                                             <div className="w-100 flex flex-row items-center  justify-between  ">
@@ -340,36 +364,7 @@ export default function Integrations() {
                                                             </div>
                                                         ),
                                                     },
-                                                    // {
-                                                    //     id: 'description',
-                                                    //     header: (
-                                                    //         <>
-                                                    //             <div className="flex justify-between">
-                                                    //                 <span>{'Description'}</span>
-                                                    //                 <span>{'Table'}</span>
-                                                    //             </div>
-                                                    //         </>
-                                                    //     ),
-                                                    //     content: (item) => (
-                                                    //         <>
-                                                    //             <div className="flex justify-between">
-                                                    //                 <span className="max-w-60">
-                                                    //                     {item.description}
-                                                    //                 </span>
-                                                    //                 <span>
-                                                    //                     {item.count ? item.count : '--'}
-                                                    //                 </span>
-                                                    //             </div>
-                                                    //         </>
-                                                    //     ),
-                                                    // },
-                                                    // {
-                                                    //     id: 'status',
-                                                    //     header: 'Status',
-                                                    //     content: (item) =>
-                                                    //         item.status ? 'Enabled' : 'Disabled',
-                                                    //     width: 70,
-                                                    // },
+
                                                     {
                                                         id: 'integrattoin',
                                                         header: 'Integrations',
@@ -379,18 +374,6 @@ export default function Integrations() {
                                                                 : '--',
                                                         width: 100,
                                                     },
-                                                    // {
-                                                    //   id: "tier",
-                                                    //   header: "Tier",
-                                                    //   content: (item) => item.tier,
-                                                    //   width: 85,
-                                                    // },
-                                                    // {
-                                                    //   id: "tables",
-                                                    //   header: "Table",
-                                                    //   content: (item) => (item.count ? item.count : "--"),
-                                                    //   width: 15,
-                                                    // },
                                                 ],
                                             }}
                                             cardsPerRow={[
@@ -404,17 +387,20 @@ export default function Integrations() {
                                                     return {
                                                         id: type.id,
                                                         tier: type.tier,
-                                                        enabled: type.enabled,
+                                                        enabled:
+                                                            type.operational_status,
+                                                        installed:
+                                                            type.install_state,
                                                         platform_name:
-                                                            type.platform_name,
-                                                        // description: type.Description,
-                                                        title: type.title,
+                                                            type.plugin_id,
+
+                                                        title: type.name,
                                                         name: type.name,
+                                                        html_url: type.url,
                                                         count: type?.count
                                                             ?.total,
-                                                        // schema_id: type?.schema_ids[0],
-                                                        // SourceCode: type.SourceCode,
-                                                        logo: `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${type.logo}`,
+
+                                                        logo: `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${type.icon}`,
                                                     }
                                                 }
                                             )}
@@ -436,7 +422,6 @@ export default function Integrations() {
                                                 </Box>
                                             }
                                         />
-                                     
                                     </div>
                                 </main>
                             </div>
@@ -449,7 +434,6 @@ export default function Integrations() {
                             }}
                         />
                     </Flex>
-               
                 </>
             )}
         </>

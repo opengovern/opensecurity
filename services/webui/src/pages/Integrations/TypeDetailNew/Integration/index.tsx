@@ -144,8 +144,8 @@ export default function IntegrationList({
          }
 
          axios
-             .put(
-                 `${url}/main/integration/api/v1/integrations/types/${integration_type}/disable`,
+             .post(
+                 `${url}/main/integration/api/v1/integration-types/plugin/${integration_type}/disable`,
                  {},
                  config
              )
@@ -155,10 +155,10 @@ export default function IntegrationList({
              })
              .catch((err) => {
                  setLoading(false)
-                  setNotification({
-                      text: `Error: ${err.response.data.message}`,
-                      type: 'error',
-                  })
+                 setNotification({
+                     text: `Error: ${err.response.data.message}`,
+                     type: 'error',
+                 })
              })
      }
     const CheckActionsClick = (action: any) => {
@@ -599,7 +599,7 @@ export default function IntegrationList({
                                                         DisableIntegration()
                                                     }}
                                                 >
-                                                    Disable Integration Type
+                                                    Disable Plugin
                                                 </Button>
                                                 <Button
                                                     loading={
@@ -748,7 +748,10 @@ export default function IntegrationList({
                             </Flex>
                         }
                     >
-                        <Flex className="gap-5 w-full justify-start items-start" flexDirection="col">
+                        <Flex
+                            className="gap-5 w-full justify-start items-start"
+                            flexDirection="col"
+                        >
                             <Multiselect
                                 className="w-full"
                                 options={row?.map((item: any) => {
@@ -793,7 +796,7 @@ export default function IntegrationList({
                                 }
                                 checked={enableSchedule}
                             >
-                               Discovery a Recurring  job
+                                Make this a recurring Discovery Job
                             </Checkbox>
                             {selectedResourceType?.length == 1 && (
                                 <>

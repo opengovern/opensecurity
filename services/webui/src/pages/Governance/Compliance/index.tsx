@@ -93,7 +93,7 @@ export default function Compliance() {
                 value: 'No',
             },
         ]
-        Types?.integration_types?.map((item) => {
+        Types?.items?.map((item) => {
             temp.push({
                 propertyKey: 'integrationType',
                 value: item.platform_name,

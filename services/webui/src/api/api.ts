@@ -2334,12 +2334,15 @@ export interface PlatformEngineServicesIntegrationApiEntityConnectorCount {
     logo: string
     enabled: boolean
     count: ConnectorCountField
+    url: string
+    source_code : string
+    
 }
 
 
 export interface PlatformEngineServicesIntegrationApiEntityConnectorResponse {
     total_count: number
-    integration_types: PlatformEngineServicesIntegrationApiEntityConnectorCount[]
+    items: PlatformEngineServicesIntegrationApiEntityConnectorCount[]
 }
 export interface PlatformEngineServicesIntegrationApiEntityCountConnectionsResponse {
     count?: number
@@ -4150,10 +4153,7 @@ export class Api<
          * @secure
          */
         apiV1KeysList: (params: RequestParams = {}) =>
-            this.request<
-                PlatformEnginePkgAuthApiWorkspaceApiKey[],
-                any
-            >({
+            this.request<PlatformEnginePkgAuthApiWorkspaceApiKey[], any>({
                 path: `/auth/api/v1/keys`,
                 method: 'GET',
                 secure: true,
@@ -4171,10 +4171,7 @@ export class Api<
          * @secure
          */
         apiV1MeList: (params: RequestParams = {}) =>
-            this.request<
-                PlatformEnginePkgAuthApiGetMeResponse,
-                any
-            >({
+            this.request<PlatformEnginePkgAuthApiGetMeResponse, any>({
                 path: `/auth/api/v1/me`,
                 method: 'GET',
                 secure: true,
@@ -4283,10 +4280,7 @@ export class Api<
          * @secure
          */
         apiV1UserRoleBindingsList: (params: RequestParams = {}) =>
-            this.request<
-                PlatformEnginePkgAuthApiGetRoleBindingsResponse,
-                any
-            >({
+            this.request<PlatformEnginePkgAuthApiGetRoleBindingsResponse, any>({
                 path: `/auth/api/v1/user/role/bindings`,
                 method: 'GET',
                 secure: true,
@@ -4304,10 +4298,7 @@ export class Api<
          * @secure
          */
         apiV1UserDetail: (userId: string, params: RequestParams = {}) =>
-            this.request<
-                PlatformEnginePkgAuthApiGetUserResponse,
-                any
-            >({
+            this.request<PlatformEnginePkgAuthApiGetUserResponse, any>({
                 path: `/auth/api/v1/user/${userId}`,
                 method: 'GET',
                 secure: true,
@@ -4328,10 +4319,7 @@ export class Api<
             request: PlatformEnginePkgAuthApiGetUsersRequest,
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgAuthApiGetUsersResponse[],
-                any
-            >({
+            this.request<PlatformEnginePkgAuthApiGetUsersResponse[], any>({
                 path: `/auth/api/v1/users`,
                 method: 'GET',
                 body: request,
@@ -4351,10 +4339,7 @@ export class Api<
          * @secure
          */
         apiV1WorkspaceRoleBindingsList: (params: RequestParams = {}) =>
-            this.request<
-                PlatformEnginePkgAuthApiWorkspaceRoleBinding[],
-                any
-            >({
+            this.request<PlatformEnginePkgAuthApiWorkspaceRoleBinding[], any>({
                 path: `/auth/api/v1/users`,
                 method: 'GET',
                 secure: true,
@@ -4363,7 +4348,6 @@ export class Api<
             }),
     }
     compliance = {
-        
         /**
          * @description API for get new control list
          *
@@ -4377,10 +4361,7 @@ export class Api<
             request: PlatformEnginePkgControlApiListV2,
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgControlApiListV2Response,
-                any
-            >({
+            this.request<PlatformEnginePkgControlApiListV2Response, any>({
                 path: `/compliance/api/v3/controls`,
                 method: 'POST',
                 secure: true,
@@ -4402,10 +4383,7 @@ export class Api<
             request: PlatformEnginePkgBenchmarkApiListV3,
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgBenchmarkApiListV3Response,
-                any
-            >({
+            this.request<PlatformEnginePkgBenchmarkApiListV3Response, any>({
                 path: `/compliance/api/v3/benchmarks`,
                 method: 'POST',
                 secure: true,
@@ -4500,10 +4478,6 @@ export class Api<
                 ...params,
             }),
 
-       
-   
-        
-
         /**
          * No description
          *
@@ -4540,7 +4514,6 @@ export class Api<
                 ...params,
             }),
 
-        
         /**
          * @description Changes benchmark settings.
          *
@@ -4610,8 +4583,6 @@ export class Api<
                 ...params,
             }),
 
-        
-       
         /**
          * No description
          *
@@ -4631,10 +4602,7 @@ export class Api<
             },
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgComplianceApiControlSummary,
-                any
-            >({
+            this.request<PlatformEnginePkgComplianceApiControlSummary, any>({
                 path: `/compliance/api/v1/controls/${controlId}/summary`,
                 method: 'GET',
                 query: query,
@@ -4747,10 +4715,7 @@ export class Api<
             id: string,
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgComplianceApiFindingEvent,
-                any
-            >({
+            this.request<PlatformEnginePkgComplianceApiFindingEvent, any>({
                 path: `/compliance/api/v1/finding_events/single/${id}`,
                 method: 'GET',
                 secure: true,
@@ -4784,8 +4749,6 @@ export class Api<
                 format: 'json',
                 ...params,
             }),
-
-      
 
         /**
          * @description Retrieving all compliance run finding events with respect to filters.
@@ -4835,7 +4798,6 @@ export class Api<
                 ...params,
             }),
 
- 
         /**
          * @description Retrieving a single finding
          *
@@ -4872,10 +4834,7 @@ export class Api<
          * @secure
          */
         apiV1FindingsSingleDetail: (id: string, params: RequestParams = {}) =>
-            this.request<
-                PlatformEnginePkgComplianceApiFinding,
-                any
-            >({
+            this.request<PlatformEnginePkgComplianceApiFinding, any>({
                 path: `/compliance/api/v1/compliance_result/single/${id}`,
                 method: 'GET',
                 secure: true,
@@ -5000,8 +4959,6 @@ export class Api<
                 ...params,
             }),
 
-      
-
         /**
          * @description Syncs queries with the git backend.
          *
@@ -5052,7 +5009,6 @@ export class Api<
                 format: 'json',
                 ...params,
             }),
-       
     }
     integration = {
         /**
@@ -5280,7 +5236,7 @@ export class Api<
                 PlatformEngineServicesIntegrationApiEntityConnectorResponse,
                 any
             >({
-                path: `/integration/api/v1/integrations/types?per_page=${per_page}&cursor=${cursor}&sort_by=${sort_by}&sort_order=${sort_order}&has_integration=${has_integration}`,
+                path: `/integration/api/v1/integration-types/plugin?per_page=${per_page}&cursor=${cursor}&sort_by=${sort_by}&sort_order=${sort_order}&has_integration=${has_integration}`,
                 method: 'GET',
                 secure: true,
                 format: 'json',
@@ -5598,10 +5554,7 @@ export class Api<
             request: PlatformEnginePkgInventoryApiListQueryRequest,
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgInventoryApiSmartQueryItem[],
-                any
-            >({
+            this.request<PlatformEnginePkgInventoryApiSmartQueryItem[], any>({
                 path: `/core/api/v1/query`,
                 method: 'GET',
                 body: request,
@@ -5645,10 +5598,7 @@ export class Api<
          * @secure
          */
         apiV3QueryListFilter: (params: RequestParams = {}) =>
-            this.request<
-                PlatformEnginePkgInventoryApiSmartQueryFilters,
-                any
-            >({
+            this.request<PlatformEnginePkgInventoryApiSmartQueryFilters, any>({
                 path: `/core/api/v3/queries/filters`,
                 method: 'GET',
                 secure: true,
@@ -5670,10 +5620,7 @@ export class Api<
             request: PlatformEnginePkgInventoryApiRunQueryRequest,
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgInventoryApiRunQueryResponse,
-                any
-            >({
+            this.request<PlatformEnginePkgInventoryApiRunQueryResponse, any>({
                 path: `/core/api/v1/query/run`,
                 method: 'POST',
                 body: request,
@@ -5693,16 +5640,15 @@ export class Api<
          * @secure
          */
         apiV1QueryRunHistoryList: (params: RequestParams = {}) =>
-            this.request<
-                PlatformEnginePkgInventoryApiSmartQueryHistory[],
-                any
-            >({
-                path: `/core/api/v1/query/run/history`,
-                method: 'GET',
-                secure: true,
-                format: 'json',
-                ...params,
-            }),
+            this.request<PlatformEnginePkgInventoryApiSmartQueryHistory[], any>(
+                {
+                    path: `/core/api/v1/query/run/history`,
+                    method: 'GET',
+                    secure: true,
+                    format: 'json',
+                    ...params,
+                }
+            ),
 
         /**
          * @description Retrieving list of categories for analytics
@@ -5862,18 +5808,17 @@ export class Api<
             },
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgInventoryApiListMetricsResponse,
-                any
-            >({
-                path: `/core/api/v2/analytics/metric`,
-                method: 'GET',
-                query: query,
-                secure: true,
-                type: ContentType.Json,
-                format: 'json',
-                ...params,
-            }),
+            this.request<PlatformEnginePkgInventoryApiListMetricsResponse, any>(
+                {
+                    path: `/core/api/v2/analytics/metric`,
+                    method: 'GET',
+                    query: query,
+                    secure: true,
+                    type: ContentType.Json,
+                    format: 'json',
+                    ...params,
+                }
+            ),
 
         /**
          * @description Returns list of metrics
@@ -5893,10 +5838,7 @@ export class Api<
             },
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgInventoryApiAnalyticsMetric[],
-                any
-            >({
+            this.request<PlatformEnginePkgInventoryApiAnalyticsMetric[], any>({
                 path: `/core/api/v2/analytics/metrics/list`,
                 method: 'GET',
                 query: query,
@@ -5919,10 +5861,7 @@ export class Api<
             metricId: string,
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgInventoryApiAnalyticsMetric,
-                any
-            >({
+            this.request<PlatformEnginePkgInventoryApiAnalyticsMetric, any>({
                 path: `/core/api/v2/analytics/metrics/${metricId}`,
                 method: 'GET',
                 secure: true,
@@ -6069,10 +6008,7 @@ export class Api<
             },
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgInventoryApiSpendTableRow[],
-                any
-            >({
+            this.request<PlatformEnginePkgInventoryApiSpendTableRow[], any>({
                 path: `/core/api/v2/analytics/spend/table`,
                 method: 'GET',
                 query: query,
@@ -6145,10 +6081,7 @@ export class Api<
             },
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgInventoryApiAssetTableRow[],
-                any
-            >({
+            this.request<PlatformEnginePkgInventoryApiAssetTableRow[], any>({
                 path: `/core/api/v2/analytics/table`,
                 method: 'GET',
                 query: query,
@@ -6288,10 +6221,7 @@ export class Api<
             resourceCollectionId: string,
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgInventoryApiResourceCollection,
-                any
-            >({
+            this.request<PlatformEnginePkgInventoryApiResourceCollection, any>({
                 path: `/core/api/v2/metadata/resource-collection/${resourceCollectionId}`,
                 method: 'GET',
                 secure: true,
@@ -6342,10 +6272,7 @@ export class Api<
             resourceCollectionId: string,
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgInventoryApiResourceCollection,
-                any
-            >({
+            this.request<PlatformEnginePkgInventoryApiResourceCollection, any>({
                 path: `/core/api/v2/resource-collection/${resourceCollectionId}`,
                 method: 'GET',
                 secure: true,
@@ -6388,10 +6315,7 @@ export class Api<
          * @secure
          */
         apiV1FilterList: (params: RequestParams = {}) =>
-            this.request<
-                PlatformEnginePkgMetadataModelsFilter[],
-                any
-            >({
+            this.request<PlatformEnginePkgMetadataModelsFilter[], any>({
                 path: `/core/api/v1/filter`,
                 method: 'GET',
                 secure: true,
@@ -6453,10 +6377,7 @@ export class Api<
          * @secure
          */
         apiV1MetadataDetail: (key: string, params: RequestParams = {}) =>
-            this.request<
-                PlatformEnginePkgMetadataModelsConfigMetadata,
-                any
-            >({
+            this.request<PlatformEnginePkgMetadataModelsConfigMetadata, any>({
                 path: `/core/api/v1/metadata/${key}`,
                 method: 'GET',
                 secure: true,
@@ -6524,10 +6445,7 @@ export class Api<
             },
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgOnboardApiCatalogMetrics,
-                any
-            >({
+            this.request<PlatformEnginePkgOnboardApiCatalogMetrics, any>({
                 path: `/onboard/api/v1/catalog/metrics`,
                 method: 'GET',
                 query: query,
@@ -6555,10 +6473,7 @@ export class Api<
             },
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgOnboardApiConnectionGroup[],
-                any
-            >({
+            this.request<PlatformEnginePkgOnboardApiConnectionGroup[], any>({
                 path: `/onboard/api/v1/connection-groups`,
                 method: 'GET',
                 query: query,
@@ -6588,10 +6503,7 @@ export class Api<
             },
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgOnboardApiConnectionGroup,
-                any
-            >({
+            this.request<PlatformEnginePkgOnboardApiConnectionGroup, any>({
                 path: `/onboard/api/v1/connection-groups/${connectionGroupName}`,
                 method: 'GET',
                 query: query,
@@ -6727,10 +6639,7 @@ export class Api<
          * @secure
          */
         apiV1ConnectorList: (params: RequestParams = {}) =>
-            this.request<
-                PlatformEnginePkgOnboardApiConnectorCount[],
-                any
-            >({
+            this.request<PlatformEnginePkgOnboardApiConnectorCount[], any>({
                 path: `/onboard/api/v1/connector`,
                 method: 'GET',
                 secure: true,
@@ -6824,10 +6733,7 @@ export class Api<
             credentialId: string,
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgOnboardApiCredential,
-                any
-            >({
+            this.request<PlatformEnginePkgOnboardApiCredential, any>({
                 path: `/onboard/api/v1/credential/${credentialId}`,
                 method: 'GET',
                 secure: true,
@@ -6891,10 +6797,7 @@ export class Api<
             credentialId: string,
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgOnboardApiConnection[],
-                any
-            >({
+            this.request<PlatformEnginePkgOnboardApiConnection[], any>({
                 path: `/onboard/api/v1/credential/${credentialId}/autoonboard`,
                 method: 'POST',
                 secure: true,
@@ -6915,10 +6818,7 @@ export class Api<
             request: PlatformEnginePkgOnboardApiSourceAwsRequest,
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgOnboardApiCreateSourceResponse,
-                any
-            >({
+            this.request<PlatformEnginePkgOnboardApiCreateSourceResponse, any>({
                 path: `/onboard/api/v1/source/aws`,
                 method: 'POST',
                 body: request,
@@ -6941,10 +6841,7 @@ export class Api<
             request: PlatformEnginePkgOnboardApiSourceAzureRequest,
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgOnboardApiCreateSourceResponse,
-                any
-            >({
+            this.request<PlatformEnginePkgOnboardApiCreateSourceResponse, any>({
                 path: `/onboard/api/v1/source/azure`,
                 method: 'POST',
                 body: request,
@@ -6991,10 +6888,7 @@ export class Api<
             },
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgOnboardApiConnection,
-                any
-            >({
+            this.request<PlatformEnginePkgOnboardApiConnection, any>({
                 path: `/onboard/api/v1/source/${sourceId}/healthcheck`,
                 method: 'GET',
                 query: query,
@@ -7066,10 +6960,7 @@ export class Api<
             },
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgDescribeApiJobSeqCheckResponse,
-                any
-            >({
+            this.request<PlatformEnginePkgDescribeApiJobSeqCheckResponse, any>({
                 path: `/schedule/api/v1/compliance/re-evaluate/${benchmarkId}`,
                 method: 'GET',
                 query: query,
@@ -7265,10 +7156,7 @@ export class Api<
             request: PlatformEnginePkgDescribeApiListJobsRequest,
             params: RequestParams = {}
         ) =>
-            this.request<
-                PlatformEnginePkgDescribeApiListJobsResponse,
-                any
-            >({
+            this.request<PlatformEnginePkgDescribeApiListJobsResponse, any>({
                 path: `/schedule/api/v1/jobs`,
                 method: 'POST',
                 body: request,
@@ -7465,10 +7353,7 @@ export class Api<
          * @secure
          */
         apiV1WorkspaceCurrentList: (params: RequestParams = {}) =>
-            this.request<
-                PlatformEnginePkgWorkspaceApiWorkspaceResponse,
-                any
-            >({
+            this.request<PlatformEnginePkgWorkspaceApiWorkspaceResponse, any>({
                 path: `/core/api/v3/about`,
                 method: 'GET',
                 secure: true,
@@ -7508,17 +7393,16 @@ export class Api<
          * @secure
          */
         apiV1WorkspacesList: (params: RequestParams = {}) =>
-            this.request<
-                PlatformEnginePkgWorkspaceApiWorkspaceResponse[],
-                any
-            >({
-                path: `/workspace/api/v1/workspaces`,
-                method: 'GET',
-                secure: true,
-                type: ContentType.Json,
-                format: 'json',
-                ...params,
-            }),
+            this.request<PlatformEnginePkgWorkspaceApiWorkspaceResponse[], any>(
+                {
+                    path: `/workspace/api/v1/workspaces`,
+                    method: 'GET',
+                    secure: true,
+                    type: ContentType.Json,
+                    format: 'json',
+                    ...params,
+                }
+            ),
 
         /**
          * No description
