@@ -874,7 +874,7 @@ func (db Database) CreateManualDiscoverySchedule(s *model.ManualDiscoverySchedul
 func (db Database) ListManualDiscoverySchedule(integrationId string) ([]model.ManualDiscoveryScheduleUnique, error) {
 	var jobs []model.ManualDiscoveryScheduleUnique
 	query := `
-SELECT resource_type, parameters FROM manual_discovery_schedule_unique 
+SELECT resource_type, parameters FROM manual_discovery_schedules 
                                  WHERE integration_id = ? AND parameters <> '\x7b7d'
                                  GROUP BY resource_type, parameters 
 `
