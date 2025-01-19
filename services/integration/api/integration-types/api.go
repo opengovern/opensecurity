@@ -289,10 +289,27 @@ func (a *API) LoadPluginWithID(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open cloudql-plugin file")
 	}
 
+	//// read manifest file
+	manifestFile, err := os.ReadFile(baseDir + "/integarion_type/manifest.yaml")
+	if err != nil {
+		a.logger.Error("failed to open manifest file", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open manifest file")
+	}
+	a.logger.Info("manifestFile", zap.String("file", string(manifestFile)))
+
+	var m models2.Manifest
+	// decode yaml
+	if err := yaml.Unmarshal(manifestFile, &m); err != nil {
+		a.logger.Error("failed to decode manifest", zap.Error(err), zap.String("url", url))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to decode manifest")
+	}
+
 	a.logger.Info("done reading files", zap.String("id", pluginID), zap.String("url", url), zap.String("integrationType", plugin.IntegrationType.String()), zap.Int("integrationPluginSize", len(integrationPlugin)), zap.Int("cloudqlPluginSize", len(cloudqlPlugin)))
 
 	plugin.IntegrationPlugin = integrationPlugin
 	plugin.CloudQlPlugin = cloudqlPlugin
+	plugin.DescriberURL = m.DescriberURL
+	plugin.DescriberTag = m.DescriberTag
 	plugin.InstallState = models2.IntegrationTypeInstallStateInstalled
 
 	err = a.database.UpdatePlugin(*plugin)
@@ -369,16 +386,17 @@ func (a *API) LoadPluginWithURL(c echo.Context) error {
 		a.logger.Error("failed to open cloudql-plugin file", zap.Error(err), zap.String("url", url))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open cloudql-plugin file")
 	}
-	// read manifest file
-	manifestFile, err := os.Open(baseDir + "/integarion_type/manifest.yaml")
+	//// read manifest file
+	manifestFile, err := os.ReadFile(baseDir + "/integarion_type/manifest.yaml")
 	if err != nil {
 		a.logger.Error("failed to open manifest file", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open manifest file")
 	}
-	defer manifestFile.Close()
+	a.logger.Info("manifestFile", zap.String("file", string(manifestFile)))
+
 	var m models2.Manifest
 	// decode yaml
-	if err = yaml.NewDecoder(manifestFile).Decode(&m); err != nil {
+	if err := yaml.Unmarshal(manifestFile, &m); err != nil {
 		a.logger.Error("failed to decode manifest", zap.Error(err), zap.String("url", url))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to decode manifest file")
 	}
@@ -395,6 +413,8 @@ func (a *API) LoadPluginWithURL(c echo.Context) error {
 		plugin = &models2.IntegrationPlugin{
 			PluginID:          m.IntegrationType.String(),
 			IntegrationType:   m.IntegrationType,
+			DescriberURL:      m.DescriberURL,
+			DescriberTag:      m.DescriberTag,
 			InstallState:      models2.IntegrationTypeInstallStateInstalled,
 			OperationalStatus: models2.IntegrationPluginOperationalStatusEnabled,
 			URL:               url,
@@ -410,6 +430,8 @@ func (a *API) LoadPluginWithURL(c echo.Context) error {
 	} else {
 		plugin.PluginID = m.IntegrationType.String()
 		plugin.IntegrationType = m.IntegrationType
+		plugin.DescriberURL = m.DescriberURL
+		plugin.DescriberTag = m.DescriberTag
 		plugin.InstallState = models2.IntegrationTypeInstallStateInstalled
 		plugin.OperationalStatus = models2.IntegrationPluginOperationalStatusEnabled
 		plugin.URL = url
