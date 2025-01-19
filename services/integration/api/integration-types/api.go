@@ -295,15 +295,7 @@ func (a *API) LoadPluginWithID(c echo.Context) error {
 	plugin.CloudQlPlugin = cloudqlPlugin
 	plugin.InstallState = models2.IntegrationTypeInstallStateInstalled
 
-	err = a.database.UpdatePlugin(models2.IntegrationPlugin{
-		PluginID:        pluginID,
-		IntegrationType: plugin.IntegrationType,
-		InstallState:    models2.IntegrationTypeInstallStateInstalled,
-		URL:             plugin.URL,
-
-		IntegrationPlugin: integrationPlugin,
-		CloudQlPlugin:     cloudqlPlugin,
-	})
+	err = a.database.UpdatePlugin(*plugin)
 	if err != nil {
 		a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", pluginID))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
@@ -487,7 +479,7 @@ func (a *API) UninstallPlugin(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
 	}
 
-	err = a.UnLoadPlugin(*plugin)
+	err = a.UnLoadPlugin(c.Request().Context(), *plugin)
 	if err != nil {
 		a.logger.Error("failed to unload plugin", zap.Error(err), zap.String("id", plugin.PluginID))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to unload plugin")
@@ -896,16 +888,130 @@ func (a *API) LoadPlugin(ctx context.Context, plugin models2.IntegrationPlugin) 
 	a.typeManager.PingLocks[iType] = &sync.Mutex{}
 
 	err = a.EnableIntegrationTypeHelper(ctx, plugin.IntegrationType.String())
+	if err != nil {
+		a.logger.Error("failed to enable integration type describer", zap.Error(err))
+		return err
+	}
 
 	return nil
 }
 
-func (a *API) UnLoadPlugin(plugin models2.IntegrationPlugin) error {
+func (a *API) UnLoadPlugin(ctx context.Context, plugin models2.IntegrationPlugin) error {
 	a.typeManager.Clients[plugin.IntegrationType].Kill()
 	delete(a.typeManager.IntegrationTypes, plugin.IntegrationType)
 	delete(a.typeManager.Clients, plugin.IntegrationType)
 	delete(a.typeManager.PingLocks, plugin.IntegrationType)
 
+	err := a.DisableIntegrationTypeHelper(ctx, plugin.IntegrationType.String())
+	if err != nil {
+		a.logger.Error("failed to disable integration type describer", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+func (a *API) DisableIntegrationTypeHelper(ctx context.Context, integrationTypeName string) error {
+	plugin, _ := a.database.GetPluginByIntegrationType(integrationTypeName)
+	if plugin == nil || (plugin.OperationalStatus == models2.IntegrationPluginOperationalStatusDisabled) {
+		return echo.NewHTTPError(http.StatusBadRequest, "the integration type is already disabled")
+	}
+
+	var integrationTypes []integration.Type
+	integrationTypes = append(integrationTypes, integration.Type(integrationTypeName))
+
+	integrations, err := a.database.ListIntegration(integrationTypes)
+	if err != nil {
+		a.logger.Error("failed to list credentials", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list credential")
+	}
+	if len(integrations) > 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "integration type contains integrations, you can not disable it")
+	}
+
+	currentNamespace, ok := os.LookupEnv("CURRENT_NAMESPACE")
+	if !ok {
+		return echo.NewHTTPError(http.StatusInternalServerError, "current namespace lookup failed")
+	}
+	integrationType, ok := a.typeManager.GetIntegrationTypeMap()[integration.Type(integrationTypeName)]
+	if !ok {
+		return echo.NewHTTPError(http.StatusNotFound, "invalid integration type")
+	}
+	cnf, err := integrationType.GetConfiguration()
+	if err != nil {
+		a.logger.Error("failed to get configuration", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get configuration"+err.Error())
+	}
+
+	// Scheduled deployment
+	var describerDeployment appsv1.Deployment
+	err = a.kubeClient.Get(ctx, client.ObjectKey{
+		Namespace: currentNamespace,
+		Name:      cnf.DescriberDeploymentName,
+	}, &describerDeployment)
+	if err != nil {
+		a.logger.Error("failed to get manual deployment", zap.Error(err))
+	} else {
+		err = a.kubeClient.Delete(ctx, &describerDeployment)
+		if err != nil {
+			a.logger.Error("failed to delete deployment", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete deployment")
+		}
+	}
+
+	// Manual deployment
+	var describerDeploymentManuals appsv1.Deployment
+	err = a.kubeClient.Get(ctx, client.ObjectKey{
+		Namespace: currentNamespace,
+		Name:      cnf.DescriberDeploymentName + "-manuals",
+	}, &describerDeploymentManuals)
+	if err != nil {
+		a.logger.Error("failed to get manual deployment", zap.Error(err))
+	} else {
+		err = a.kubeClient.Delete(ctx, &describerDeploymentManuals)
+		if err != nil {
+			a.logger.Error("failed to delete manual deployment", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete manual deployment")
+		}
+	}
+
+	kedaEnabled, ok := os.LookupEnv("KEDA_ENABLED")
+	if !ok {
+		kedaEnabled = "false"
+	}
+	if strings.ToLower(kedaEnabled) == "true" {
+		// Scheduled ScaledObject
+		var describerScaledObject kedav1alpha1.ScaledObject
+		err = a.kubeClient.Get(ctx, client.ObjectKey{
+			Namespace: currentNamespace,
+			Name:      cnf.DescriberDeploymentName + "-scaled-object",
+		}, &describerScaledObject)
+		if err != nil {
+			a.logger.Error("failed to get scaled object", zap.Error(err))
+		} else {
+			err = a.kubeClient.Delete(ctx, &describerScaledObject)
+			if err != nil {
+				a.logger.Error("failed to delete scaled object", zap.Error(err))
+				return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete scaled object")
+			}
+		}
+
+		// Manual ScaledObject
+		var describerScaledObjectManuals kedav1alpha1.ScaledObject
+		err = a.kubeClient.Get(ctx, client.ObjectKey{
+			Namespace: currentNamespace,
+			Name:      cnf.DescriberDeploymentName + "-manuals-scaled-object",
+		}, &describerScaledObjectManuals)
+		if err != nil {
+			a.logger.Error("failed to get manual scaled object", zap.Error(err))
+		} else {
+			err = a.kubeClient.Delete(ctx, &describerScaledObjectManuals)
+			if err != nil {
+				a.logger.Error("failed to delete manual scaled object", zap.Error(err))
+				return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete manual scaled object")
+			}
+		}
+	}
 	return nil
 }
 
@@ -1142,21 +1248,6 @@ func (a *API) EnableIntegrationTypeHelper(ctx context.Context, integrationTypeNa
 		if err != nil {
 			return err
 		}
-	}
-
-	err = a.database.UpdatePlugin(models2.IntegrationPlugin{
-		PluginID:          plugin.PluginID,
-		IntegrationType:   plugin.IntegrationType,
-		InstallState:      models2.IntegrationTypeInstallStateInstalled,
-		OperationalStatus: models2.IntegrationPluginOperationalStatusEnabled,
-		URL:               plugin.URL,
-
-		IntegrationPlugin: plugin.IntegrationPlugin,
-		CloudQlPlugin:     plugin.CloudQlPlugin,
-	})
-	if err != nil {
-		a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", plugin.IntegrationType.String()))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
 	}
 
 	return nil
