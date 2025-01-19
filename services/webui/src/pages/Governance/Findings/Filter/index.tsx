@@ -408,7 +408,7 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
             setCondition: (c: string) => undefined,
             value: [connector],
             defaultValue: [defConnector],
-            data: Types?.integration_types?.map((d) => {
+            data: Types?.items?.map((d) => {
                 return {
                     label: d.label,
                     value: d.platform_name,

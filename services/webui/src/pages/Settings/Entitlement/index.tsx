@@ -20,12 +20,9 @@ import { useAtom, useSetAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 
 import {
-    useWorkspaceApiV1WorkspaceCurrentList,
-    useWorkspaceApiV1WorkspacesLimitsDetail,
-    useWorkspaceApiV3GetShouldSetup,
     useWorkspaceApiV3LoadSampleData,
     useWorkspaceApiV3PurgeSampleData,
-} from '../../../api/workspace.gen'
+} from '../../../api/metadata.gen'
 import Spinner from '../../../components/Spinner'
 import { numericDisplay } from '../../../utilities/numericDisplay'
 import { useAuthApiV1UserDetail } from '../../../api/auth.gen'
@@ -35,6 +32,7 @@ import { isDemoAtom, previewAtom, sampleAtom } from '../../../store'
 import {
     useMetadataApiV1MetadataCreate,
     useMetadataApiV1MetadataDetail,
+    useWorkspaceApiV1WorkspaceCurrentList,
 } from '../../../api/metadata.gen'
 import { useComplianceApiV1QueriesSyncList } from '../../../api/compliance.gen'
 import { getErrorMessage } from '../../../types/apierror'
@@ -125,38 +123,13 @@ function TextMetric({ title, metricId, disabled }: ITextMetric) {
     )
 }
 export default function SettingsEntitlement() {
-    const workspace = useParams<{ ws: string }>().ws
-    const { response, isLoading } = useWorkspaceApiV1WorkspacesLimitsDetail(
-        workspace || ''
-    )
+    
     const { response: currentWorkspace, isLoading: loadingCurrentWS } =
         useWorkspaceApiV1WorkspaceCurrentList()
-    // const { response: ownerResp, isLoading: ownerIsLoading } =
-    //     useAuthApiV1UserDetail(
-    //         currentWorkspace?.ownerId || '',
-    //         {},
-    //         !loadingCurrentWS
-    //     )
 
-    const noOfHosts = 0 // metricsResp?.count || 0
-
-    const currentUsers = response?.currentUsers || 0
-    const currentConnections = response?.currentConnections || 0
-    const currentResources = response?.currentResources || 0
     const [sample, setSample] = useAtom(sampleAtom)
-    const maxUsers = response?.maxUsers || 1
-    const maxConnections = response?.maxConnections || 1
-    const maxResources = response?.maxResources || 1
-    const maxHosts = 100000
-
-    const usersPercentage = Math.ceil((currentUsers / maxUsers) * 100.0)
-    const connectionsPercentage = Math.ceil(
-        (currentConnections / maxConnections) * 100.0
-    )
-    const resourcesPercentage = Math.ceil(
-        (currentResources / maxResources) * 100.0
-    )
-    const hostsPercentage = Math.ceil((noOfHosts / maxHosts) * 100.0)
+   
+   
     const [preview, setPreview] = useAtom(previewAtom)
     const [migrations_status, setMigrationsStatus] = useState()
     const {
@@ -177,22 +150,7 @@ export default function SettingsEntitlement() {
         }
     }
     const wsDetails = [
-        // {
-        //     title: 'Workspace ID',
-        //     value: currentWorkspace?.id,
-        // },
-        // {
-        //     title: 'Displayed name',
-        //     value: currentWorkspace?.name,
-        // },
-        // {
-        //     title: 'URL',
-        //     value: currentWorkspace?.,
-        // },
-        // {
-        //     title: 'Workspace owner',
-        //     value: ownerResp?.userName,
-        // },
+       
         {
             title: 'Version',
             // @ts-ignore
@@ -406,7 +364,7 @@ export default function SettingsEntitlement() {
             // window.location.reload()
         }
     }, [syncLoading, syncExecuted])
-    return isLoading || loadingCurrentWS ? (
+    return   loadingCurrentWS ? (
         <Flex justifyContent="center" className="mt-56">
             <Spinner />
         </Flex>

@@ -154,7 +154,6 @@ export const getTable = (
     }
 }
 
-
 export default function Query() {
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)
     const [loaded, setLoaded] = useState(false)
@@ -183,6 +182,7 @@ export default function Query() {
     const [schemaLoading2, setSchemaLoading2] = useState(false)
     const [expanded, setExpanded] = useState(-1)
     const [expanded1, setExpanded1] = useState(-1)
+    const [openIntegration, setOpenIntegration] = useState(false)
 
     // const { response: categories, isLoading: categoryLoading } =
     //     useInventoryApiV2AnalyticsCategoriesList()
@@ -263,22 +263,33 @@ export default function Query() {
 
     const getIntegrations = () => {
         setSchemaLoading(true)
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+
         axios
             .get(
-                'https://raw.githubusercontent.com/opengovern/opengovernance/refs/heads/main/assets/integrations/integrations.json'
+                `${url}/main/integration/api/v1/integration-types/plugin`,
+                config
             )
             .then((res) => {
                 if (res.data) {
-                    const arr = res.data
+                    const arr = res.data?.items
                     const temp: any = []
                     // arr.sort(() => Math.random() - 0.5);
                     arr?.map((integration: any) => {
-                        if (
-                            integration.schema_ids &&
-                            integration.schema_ids.length > 0 &&
-                            integration.tier === 'Community' &&
-                            integration.SourceCode != ''
-                        ) {
+                        if (integration.source_code !== '') {
                             temp.push(integration)
                         }
                     })
@@ -291,24 +302,25 @@ export default function Query() {
             })
     }
     const getMasterSchema = (id: string) => {
-         let url = ''
-         if (window.location.origin === 'http://localhost:3000') {
-             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-         } else {
-             url = window.location.origin
-         }
-         // @ts-ignore
-         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-         const config = {
-             headers: {
-                 Authorization: `Bearer ${token}`,
-             },
-         }
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
         setSchemaLoading1(true)
         axios
             .get(
-                `${url}/main/integration/api/v1/integration-types/${id}/table`,config
+                `${url}/main/integration/api/v1/integration-types/${id}/table`,
+                config
             )
             .then((res) => {
                 if (res.data) {
@@ -320,7 +332,6 @@ export default function Query() {
                 setSchemaLoading1(false)
             })
     }
-   
 
     useEffect(() => {
         getIntegrations()
@@ -385,148 +396,176 @@ export default function Query() {
                                                     ) => {
                                                         return (
                                                             <>
-                                                                <ExpandableSection
-                                                                    expanded={
-                                                                        expanded ==
-                                                                        index
-                                                                    }
-                                                                    onChange={({
-                                                                        detail,
-                                                                    }) => {
-                                                                        if (
-                                                                            detail.expanded
-                                                                        ) {
-                                                                            setExpanded(
-                                                                                index
-                                                                            )
-                                                                            setSelectedIntegration(
-                                                                                integration
-                                                                            )
-                                                                            getMasterSchema(
-                                                                                integration.integration_type
-                                                                            )
-                                                                        } else {
-                                                                            setExpanded(
-                                                                                -1
-                                                                            )
-                                                                        }
-                                                                    }}
-                                                                    headerText={
-                                                                        <span className=" text-sm">
-                                                                            {
-                                                                                integration?.name
-                                                                            }
-                                                                        </span>
-                                                                    }
-                                                                >
+                                                                {/*   prettier-ignore */}
+                                                                {
+                                                                    //  prettier-ignore
+                                                                    (integration.install_state ==
+                                                                    'installed' &&
+                                                                integration.operational_status ==
+                                                                    'enabled') ? (
                                                                     <>
-                                                                        {schemaLoading1 ? (
+                                                                        <ExpandableSection
+                                                                            expanded={
+                                                                                expanded ==
+                                                                                index
+                                                                            }
+                                                                            onChange={({
+                                                                                detail,
+                                                                            }) => {
+                                                                                if (
+                                                                                    detail.expanded
+                                                                                ) {
+                                                                                    setExpanded(
+                                                                                        index
+                                                                                    )
+                                                                                    setSelectedIntegration(
+                                                                                        integration
+                                                                                    )
+                                                                                    getMasterSchema(
+                                                                                        integration.plugin_id
+                                                                                    )
+                                                                                } else {
+                                                                                    setExpanded(
+                                                                                        -1
+                                                                                    )
+                                                                                }
+                                                                            }}
+                                                                            headerText={
+                                                                                <span className=" text-sm">
+                                                                                    {
+                                                                                        integration?.name
+                                                                                    }
+                                                                                </span>
+                                                                            }
+                                                                        >
                                                                             <>
-                                                                                <Spinner />
-                                                                            </>
-                                                                        ) : (
-                                                                            <div className="ml-4">
-                                                                                {' '}
-                                                                                <>
-                                                                                    {tables && Object.entries(tables)?.map(
-                                                                                        (
-                                                                                            item: any,
-                                                                                            index1
-                                                                                        ) => {
-                                                                                            return (
-                                                                                                <>
-                                                                                                    <ExpandableSection
-                                                                                                        expanded={
-                                                                                                            expanded1 ==
-                                                                                                            index1
-                                                                                                        }
-                                                                                                        onChange={({
-                                                                                                            detail,
-                                                                                                        }) => {
-                                                                                                            if (
-                                                                                                                detail.expanded
-                                                                                                            ) {
-                                                                                                                setExpanded1(
-                                                                                                                    index1
-                                                                                                                )
-                                                                                                                setSelectedTable(
-                                                                                                                    item[0]
-                                                                                                                )
-                                                                                                                setColumns(
-                                                                                                                    item[1]
-                                                                                                                )
-                                                                                                            } else {
-                                                                                                                setExpanded1(
-                                                                                                                    -1
-                                                                                                                )
-                                                                                                            }
-                                                                                                        }}
-                                                                                                        headerText={
-                                                                                                            <span
-                                                                                                                onClick={(
-                                                                                                                    e
-                                                                                                                ) => {
-                                                                                                                    e.preventDefault()
-                                                                                                                    e.stopPropagation()
-                                                                                                                    setCode(
-                                                                                                                        code +
-                                                                                                                            `${item[0]}`
-                                                                                                                    )
-                                                                                                                }}
-                                                                                                                className=" text-sm"
-                                                                                                            >
-                                                                                                                {
-                                                                                                                    item[0]
-                                                                                                                }
-                                                                                                            </span>
-                                                                                                        }
-                                                                                                    >
-                                                                                                        <>
-                                                                                                            {schemaLoading2 ? (
-                                                                                                                <>
-                                                                                                                    <Spinner />
-                                                                                                                </>
-                                                                                                            ) : (
-                                                                                                                <>
-                                                                                                                    {columns?.map(
-                                                                                                                        (
-                                                                                                                            column: any,
-                                                                                                                            index2
-                                                                                                                        ) => {
-                                                                                                                            return (
-                                                                                                                                <>
-                                                                                                                                    <Flex className="pl-6 w-full">
-                                                                                                                                        <span className=" font-semibold">
-                                                                                                                                            {
-                                                                                                                                                column.Name
-                                                                                                                                            }
-                                                                                                                                        </span>
-                                                                                                                                        <span>
-                                                                                                                                            (
-                                                                                                                                            {
-                                                                                                                                                column.Type
-                                                                                                                                            }
-
-                                                                                                                                            )
-                                                                                                                                        </span>
-                                                                                                                                    </Flex>
-                                                                                                                                </>
+                                                                                {schemaLoading1 ? (
+                                                                                    <>
+                                                                                        <Spinner />
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <div className="ml-4">
+                                                                                        {' '}
+                                                                                        <>
+                                                                                            {tables &&
+                                                                                                Object.entries(
+                                                                                                    tables
+                                                                                                )?.map(
+                                                                                                    (
+                                                                                                        item: any,
+                                                                                                        index1
+                                                                                                    ) => {
+                                                                                                        return (
+                                                                                                            <>
+                                                                                                                <ExpandableSection
+                                                                                                                    expanded={
+                                                                                                                        expanded1 ==
+                                                                                                                        index1
+                                                                                                                    }
+                                                                                                                    onChange={({
+                                                                                                                        detail,
+                                                                                                                    }) => {
+                                                                                                                        if (
+                                                                                                                            detail.expanded
+                                                                                                                        ) {
+                                                                                                                            setExpanded1(
+                                                                                                                                index1
+                                                                                                                            )
+                                                                                                                            setSelectedTable(
+                                                                                                                                item[0]
+                                                                                                                            )
+                                                                                                                            setColumns(
+                                                                                                                                item[1]
+                                                                                                                            )
+                                                                                                                        } else {
+                                                                                                                            setExpanded1(
+                                                                                                                                -1
                                                                                                                             )
                                                                                                                         }
-                                                                                                                    )}
-                                                                                                                </>
-                                                                                                            )}
-                                                                                                        </>
-                                                                                                    </ExpandableSection>
-                                                                                                </>
-                                                                                            )
-                                                                                        }
-                                                                                    )}
-                                                                                </>
-                                                                            </div>
-                                                                        )}
+                                                                                                                    }}
+                                                                                                                    headerText={
+                                                                                                                        <span
+                                                                                                                            onClick={(
+                                                                                                                                e
+                                                                                                                            ) => {
+                                                                                                                                e.preventDefault()
+                                                                                                                                e.stopPropagation()
+                                                                                                                                setCode(
+                                                                                                                                    code +
+                                                                                                                                        `${item[0]}`
+                                                                                                                                )
+                                                                                                                            }}
+                                                                                                                            className=" text-sm"
+                                                                                                                        >
+                                                                                                                            {
+                                                                                                                                item[0]
+                                                                                                                            }
+                                                                                                                        </span>
+                                                                                                                    }
+                                                                                                                >
+                                                                                                                    <>
+                                                                                                                        {schemaLoading2 ? (
+                                                                                                                            <>
+                                                                                                                                <Spinner />
+                                                                                                                            </>
+                                                                                                                        ) : (
+                                                                                                                            <>
+                                                                                                                                {columns?.map(
+                                                                                                                                    (
+                                                                                                                                        column: any,
+                                                                                                                                        index2
+                                                                                                                                    ) => {
+                                                                                                                                        return (
+                                                                                                                                            <>
+                                                                                                                                                <Flex className="pl-6 w-full">
+                                                                                                                                                    <span className=" font-semibold">
+                                                                                                                                                        {
+                                                                                                                                                            column.Name
+                                                                                                                                                        }
+                                                                                                                                                    </span>
+                                                                                                                                                    <span>
+                                                                                                                                                        (
+                                                                                                                                                        {
+                                                                                                                                                            column.Type
+                                                                                                                                                        }
+
+                                                                                                                                                        )
+                                                                                                                                                    </span>
+                                                                                                                                                </Flex>
+                                                                                                                                            </>
+                                                                                                                                        )
+                                                                                                                                    }
+                                                                                                                                )}
+                                                                                                                            </>
+                                                                                                                        )}
+                                                                                                                    </>
+                                                                                                                </ExpandableSection>
+                                                                                                            </>
+                                                                                                        )
+                                                                                                    }
+                                                                                                )}
+                                                                                        </>
+                                                                                    </div>
+                                                                                )}
+                                                                            </>
+                                                                        </ExpandableSection>
                                                                     </>
-                                                                </ExpandableSection>
+                                                                ) : (
+                                                                    <>
+                                                                      <span  onClick={(e)=>{
+                                                                        setSelectedIntegration(
+                                                                            integration
+                                                                        )
+                                                                        setOpenIntegration(true)
+                                                                          
+                                                                      }} className=" text-sm  ml-5 cursor-pointer">
+                                                                                    {
+                                                                                        integration?.name
+                                                                                    }
+                                                                                </span>
+                                                                    </>
+                                                                )
+                                                                }
                                                             </>
                                                         )
                                                     }
@@ -963,7 +1002,6 @@ export default function Query() {
                                                 }
                                             />
                                         </Grid>
-                                       
                                     </Flex>
                                 </>
                             ),
@@ -971,6 +1009,38 @@ export default function Query() {
                     ]}
                 />
             </Flex>
+            <Modal
+                visible={openIntegration}
+                onDismiss={() => setOpenIntegration(false)}
+                header="Plugin Installation"
+            >
+                <div className="p-4">
+                    <Text>
+                        This plugin is not available. Plugins need to be
+                        {/* @ts-ignore */}
+                        {selectedIntegration?.install_state == 'not_installed'
+                            ? ' installed'
+                            : ' enabled'}{' '}
+                        to fetch the schema.
+                    </Text>
+
+                    <Flex
+                        justifyContent="end"
+                        alignItems="center"
+                        flexDirection="row"
+                        className="gap-3"
+                    >
+                        <Button
+                            // loading={loading}
+                            disabled={false}
+                            onClick={() => setOpenIntegration(false)}
+                            className="mt-6"
+                        >
+                            Close
+                        </Button>
+                    </Flex>
+                </div>
+            </Modal>
         </>
     )
 }

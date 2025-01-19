@@ -1,6 +1,5 @@
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../utilities/auth'
-import { useWorkspaceApiV3GetShouldSetup } from '../../api/workspace.gen'
 import Spinner from '../../components/Spinner'
 
 export const CallbackPage = () => {

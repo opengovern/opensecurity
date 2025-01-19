@@ -203,6 +203,7 @@ export default function Integrations({ height }: IQuery) {
     const navigate = useNavigate()
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)
     const [loading, setLoading] = useState(false)
+    const [url, setUrl] = useState('')
 
     const [open, setOpen] = useState(false)
     const {
@@ -210,7 +211,7 @@ export default function Integrations({ height }: IQuery) {
         isLoading: connectorsLoading,
         sendNow: getList,
     } = useIntegrationApiV1ConnectorsList(
-        9,
+        4,
         1,
         undefined,
         'count',
@@ -223,49 +224,118 @@ export default function Integrations({ height }: IQuery) {
     useEffect(() => {
         getList(4, 1, 'count', 'desc', false)
     }, [])
-    const EnableIntegration = () => {
-        setLoading(true)
-        let url = ''
-        if (window.location.origin === 'http://localhost:3000') {
-            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-        } else {
-            url = window.location.origin
-        }
-        // @ts-ignore
-        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+     const EnableIntegration = () => {
+         setLoading(true)
+         let url = ''
+         if (window.location.origin === 'http://localhost:3000') {
+             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+         } else {
+             url = window.location.origin
+         }
+         // @ts-ignore
+         const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-        const config = {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
+         const config = {
+             headers: {
+                 Authorization: `Bearer ${token}`,
+             },
+         }
 
-        axios
-            .put(
-                `${url}/main/integration/api/v1/integrations/types/${selected?.platform_name}/enable`,
-                {},
-                config
-            )
-            .then((res) => {
-                getList(4, 1, 'count', 'desc', false)
+         axios
+             .post(
+                 `${url}/main/integration/api/v1/integration-types/plugin/${selected?.platform_name}/enable`,
+                 {},
+                 config
+             )
+             .then((res) => {
+                 getList(9, pageNo, 'count', 'desc', undefined)
                  setLoading(false)
-                setOpen(false)
-            })
-            .catch((err) => {
-                setLoading(false)
-               getList(4, 1, 'count', 'desc', false)
-                setOpen(false)
-            })
-    }
+                 setOpen(false)
+                 setNotification({
+                     text: `Integration enabled`,
+                     type: 'success',
+                 })
+             })
+             .catch((err) => {
+                 setNotification({
+                     text: `Failed to enable integration`,
+                     type: 'error',
+                 })
+                 getList(9, pageNo, 'count', 'desc', undefined)
+                 setLoading(false)
+             })
+     }
+     const InstallPlugin = () => {
+         setLoading(true)
+         let url = ''
+         if (window.location.origin === 'http://localhost:3000') {
+             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+         } else {
+             url = window.location.origin
+         }
+         let path = ''
+         if (selected?.html_url) {
+             path = `/main/integration/api/v1/integration-types/plugin/load/id/${selected?.platform_name}`
+         } else {
+             path = `/main/integration/api/v1/integration-types/plugin/load/url/${url}`
+         }
+         // @ts-ignore
+         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+         const config = {
+             headers: {
+                 Authorization: `Bearer ${token}`,
+             },
+         }
+
+         axios
+             .post(`${url}${path}`, {}, config)
+             .then((res) => {
+                 getList(9, pageNo, 'count', 'desc', undefined)
+                 setLoading(false)
+                 setOpen(false)
+                 setNotification({
+                     text: `Plugin Installed`,
+                     type: 'success',
+                 })
+             })
+             .catch((err) => {
+                 setNotification({
+                     text: `Failed to install plugin`,
+                     type: 'error',
+                 })
+                 getList(9, pageNo, 'count', 'desc', undefined)
+                 setLoading(false)
+             })
+     }
     return (
         <>
             <Modal
                 visible={open}
                 onDismiss={() => setOpen(false)}
-                header="Integration Disabled"
+                header="Plugin Installation"
             >
-                <div className="p-8">
-                    <Text>This integration is disabled.</Text>
+                <div className="p-4">
+                    <Text>
+                        This Plugin is{' '}
+                        {selected?.installed == 'not_installed'
+                            ? 'not installed'
+                            : 'disabled'}{' '}
+                        .
+                    </Text>
+                    {selected?.installed == 'not_installed' &&
+                        selected?.html_url == '' && (
+                            <>
+                                <Input
+                                    className="mt-2"
+                                    placeholder="Enter Plugin URL"
+                                    value={url}
+                                    onChange={({ detail }) =>
+                                        setUrl(detail.value)
+                                    }
+                                />
+                            </>
+                        )}
                     <Flex
                         justifyContent="end"
                         alignItems="center"
@@ -284,18 +354,22 @@ export default function Integrations({ height }: IQuery) {
                             loading={loading}
                             disabled={loading}
                             variant="primary"
-                            onClick={() => EnableIntegration()}
+                            onClick={() => {
+                                selected?.installed == 'not_installed'
+                                    ? InstallPlugin()
+                                    : EnableIntegration()
+                            }}
                             className="mt-6"
                         >
-                            Enable
+                            {selected?.installed == 'not_installed'
+                                ? ' Install'
+                                : 'Enable'}
                         </Button>
                     </Flex>
                 </div>
             </Modal>
-            <Card
-                className="h-full 2xl:w-3/4 sm:w-full overflow-scroll no-scrollbar"
-               
-            >
+
+            <Card className="h-full 2xl:w-3/4 sm:w-full overflow-scroll no-scrollbar">
                 <Flex justifyContent="between" alignItems="center">
                     <Flex justifyContent="start" className="gap-2 ">
                         <Icon icon={MagnifyingGlassIcon} className="p-0" />
@@ -320,113 +394,7 @@ export default function Integrations({ height }: IQuery) {
                         </Button>
                     </a>
                 </Flex>
-                {/* {isLoading
-                ? [1, 2, 3, 4, 5].map((i) => (
-                      <Accordion
-                          className={`w-full border-0 ${
-                              i < 4 ? 'border-b border-b-gray-200' : ''
-                          } !rounded-none bg-transparent ${
-                              isLoading ? 'animate-pulse' : ''
-                          }`}
-                      >
-                          <AccordionHeader className="pl-0 pr-0.5 py-4 bg-transparent flex justify-start">
-                              <div className="h-5 w-32 bg-slate-200 dark:bg-slate-700 rounded" />
-                          </AccordionHeader>
-                      </Accordion>
-                  ))
-                : getQueries(queries)
-                      ?.sort((a, b) => {
-                          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                          // @ts-ignore
-                          if (a.title < b.title) {
-                              return -1
-                          }
-                          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                          // @ts-ignore
-                          if (a.title > b.title) {
-                              return 1
-                          }
-                          return 0
-                      })
-                      .map((q, i) => (
-                          <Accordion
-                              // eslint-disable-next-line react/no-array-index-key
-                              key={`query-${i}-${open}`}
-                              className={`w-full border-0 ${
-                                  i < 4 ? 'border-b border-b-gray-200' : ''
-                              } !rounded-none bg-transparent`}
-                              defaultOpen={i === open}
-                              onClick={() => {
-                                  if (i !== open) {
-                                      setOpen(i)
-                                  }
-                              }}
-                          >
-                              <AccordionHeader className="pl-0 pr-0.5 py-4 bg-transparent flex justify-start">
-                                  <Text className="text-gray-800 !text-base line-clamp-1">
-                                      {q?.title}
-                                  </Text>
-                              </AccordionHeader>
-                              <AccordionBody className="p-0 w-full pr-0.5 cursor-default ">
-                                  <Editor
-                                      onValueChange={(text) => {
-                                          console.log('')
-                                      }}
-                                      highlight={(text) =>
-                                          highlight(text, languages.sql, 'sql')
-                                      }
-                                      value={q?.query || ''}
-                                      className="w-full bg-gray-100 rounded p-5 dark:bg-gray-800 font-mono text-sm h-full no-scrollbar"
-                                      style={{
-                                          color: 'white !important',
-                                          minHeight: '60px',
-                                          overflowY: 'scroll',
-                                          padding: '2rem!important',
-                                      }}
-                                      placeholder="-- write your SQL query here"
-                                  />
-                                  <Button
-                                      size="xs"
-                                      variant="light"
-                                      icon={ChevronRightIcon}
-                                      iconPosition="right"
-                                      className="my-3"
-                                      onClick={() => {
-                                          setRunQuery(q?.query || '')
-                                          navigate(
-                                              `/cloudql`
-                                          )
-                                      }}
-                                  >
-                                      Run Query
-                                  </Button>
-                              </AccordionBody>
-                          </Accordion>
-                      ))}
-            {error && (
-                <Flex
-                    flexDirection="col"
-                    justifyContent="between"
-                    className="absolute top-0 w-full left-0 h-full backdrop-blur"
-                >
-                    <Flex
-                        flexDirection="col"
-                        justifyContent="center"
-                        alignItems="center"
-                    >
-                        <Title className="mt-6">Failed to load component</Title>
-                        <Text className="mt-2">{getErrorMessage(error)}</Text>
-                    </Flex>
-                    <Button
-                        variant="secondary"
-                        className="mb-6"
-                        color="slate"
-                        onClick={refresh}
-                    >
-                        Try Again
-                    </Button>
-                </Flex>
-            )} */}
+
                 <Cards
                     ariaLabels={{
                         itemSelectionLabel: (e, t) => `select ${t.name}`,
@@ -435,9 +403,8 @@ export default function Integrations({ height }: IQuery) {
                     onSelectionChange={({ detail }) => {
                         const connector = detail?.selectedItems[0]
                         if (
-                            connector.enabled === false &&
-                            connector?.tier ===
-                                PlatformEngineServicesIntegrationApiEntityTier.TierCommunity
+                            connector.enabled === 'disabled' ||
+                            connector?.installed === 'not_installed'
                         ) {
                             setOpen(true)
                             setSelected(connector)
@@ -445,12 +412,12 @@ export default function Integrations({ height }: IQuery) {
                         }
 
                         if (
-                            connector?.tier ===
-                            PlatformEngineServicesIntegrationApiEntityTier.TierCommunity
+                            connector.enabled == 'enabled' &&
+                            connector.installed == 'installed'
                         ) {
                             const name = connector?.name
                             const id = connector?.id
-                            navigate(`integrations/${connector.platform_name}`, {
+                            navigate(`/integrations/${connector.platform_name}`, {
                                 state: {
                                     name,
                                     id,
@@ -459,7 +426,7 @@ export default function Integrations({ height }: IQuery) {
                             return
                         }
                         navigate(
-                            `integrations/${connector.platform_name}/../../request-access?connector=${connector.title}`
+                            `${connector.platform_name}/../../request-access?connector=${connector.title}`
                         )
                     }}
                     selectedItems={[]}
@@ -467,35 +434,18 @@ export default function Integrations({ height }: IQuery) {
                         header: (item) => (
                             <Link
                                 className="w-100"
-                                onClick={() => {
-                                    // if (item.tier === 'Community') {
-                                    //     navigate(
-                                    //         '/integrations/' +
-                                    //             item.schema_id +
-                                    //             '/schema'
-                                    //     )
-                                    // } else {
-                                    //     // setOpen(true);
-                                    // }
-                                }}
+                               
                             >
                                 <div className="w-100 flex flex-row justify-between">
                                     <span>{item.name}</span>
-                                    {/* <div className="flex flex-row gap-1 items-center">
-                                    {GetTierIcon(item.tier)}
-                                    <span className="text-white">{item.tier}</span>
-                                </div> */}
+                                    
                                 </div>
                             </Link>
                         ),
                         sections: [
                             {
                                 id: 'logo',
-                                // header :(<>
-                                //     <div className="flex justify-end">
-                                //         <span>{'Status'}</span>
-                                //     </div>
-                                // </>),
+                               
 
                                 content: (item) => (
                                     <div className="w-100 flex flex-row items-center  justify-between  ">
@@ -513,36 +463,7 @@ export default function Integrations({ height }: IQuery) {
                                     </div>
                                 ),
                             },
-                            // {
-                            //     id: 'description',
-                            //     header: (
-                            //         <>
-                            //             <div className="flex justify-between">
-                            //                 <span>{'Description'}</span>
-                            //                 <span>{'Table'}</span>
-                            //             </div>
-                            //         </>
-                            //     ),
-                            //     content: (item) => (
-                            //         <>
-                            //             <div className="flex justify-between">
-                            //                 <span className="max-w-60">
-                            //                     {item.description}
-                            //                 </span>
-                            //                 <span>
-                            //                     {item.count ? item.count : '--'}
-                            //                 </span>
-                            //             </div>
-                            //         </>
-                            //     ),
-                            // },
-                            // {
-                            //     id: 'status',
-                            //     header: 'Status',
-                            //     content: (item) =>
-                            //         item.status ? 'Enabled' : 'Disabled',
-                            //     width: 70,
-                            // },
+                           
                             {
                                 id: 'integrattoin',
                                 header: 'Integrations',
@@ -550,36 +471,25 @@ export default function Integrations({ height }: IQuery) {
                                     item?.count ? item.count : '--',
                                 width: 100,
                             },
-                            // {
-                            //   id: "tier",
-                            //   header: "Tier",
-                            //   content: (item) => item.tier,
-                            //   width: 85,
-                            // },
-                            // {
-                            //   id: "tables",
-                            //   header: "Table",
-                            //   content: (item) => (item.count ? item.count : "--"),
-                            //   width: 15,
-                            // },
+                          
                         ],
                     }}
                     cardsPerRow={[{ cards: 1 }]}
                     // @ts-ignore
-                    items={responseConnectors?.integration_types?.map(
+                    items={responseConnectors?.items?.map(
                         (type) => {
                             return {
                                 id: type.id,
                                 tier: type.tier,
-                                enabled: type.enabled,
-                                platform_name: type.platform_name,
-                                // description: type.Description,
-                                title: type.title,
+                                enabled: type.operational_status,
+                                installed: type.install_state,
+                                platform_name: type.plugin_id,
+
+                                title: type.name,
                                 name: type.name,
+                                html_url: type.url,
                                 count: type?.count?.total,
-                                // schema_id: type?.schema_ids[0],
-                                // SourceCode: type.SourceCode,
-                                logo: `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${type.logo}`,
+                                logo: `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${type.icon}`,
                             }
                         }
                     )}
