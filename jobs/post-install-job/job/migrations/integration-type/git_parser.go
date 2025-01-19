@@ -88,37 +88,32 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 
 	if iPlugin.SourceCode != "" && iPlugin.ArtifactDetails.PackageURL != "" {
 		url = iPlugin.ArtifactDetails.PackageURL
-		if iPlugin.Default {
-			if err := os.RemoveAll(baseDir + "/integarion_type"); err != nil {
-				logger.Error("failed to remove existing files", zap.Error(err), zap.String("url", url), zap.String("path", baseDir+"/integarion_type"))
-				return nil, fmt.Errorf("remove existing files for url %s: %w", iPlugin, err)
-			}
+		if err := os.RemoveAll(baseDir + "/integarion_type"); err != nil {
+			logger.Error("failed to remove existing files", zap.Error(err), zap.String("url", url), zap.String("path", baseDir+"/integarion_type"))
+			return nil, fmt.Errorf("remove existing files for url %s: %w", iPlugin, err)
+		}
 
-			downloader := getter.Client{
-				Src:  url,
-				Dst:  baseDir + "/integarion_type",
-				Mode: getter.ClientModeDir,
-			}
-			err = downloader.Get()
-			if err != nil {
-				logger.Error("failed to get integration binaries", zap.Error(err), zap.String("url", url))
-				return nil, fmt.Errorf("get integration binaries for url %s: %w", iPlugin, err)
-			}
+		downloader := getter.Client{
+			Src:  url,
+			Dst:  baseDir + "/integarion_type",
+			Mode: getter.ClientModeDir,
+		}
+		err = downloader.Get()
+		if err != nil {
+			logger.Error("failed to get integration binaries", zap.Error(err), zap.String("url", url))
+			return nil, fmt.Errorf("get integration binaries for url %s: %w", iPlugin, err)
+		}
 
-			// read integration-plugin file
-			integrationPlugin, err = os.ReadFile(baseDir + "/integarion_type/integration-plugin")
-			if err != nil {
-				logger.Error("failed to open integration-plugin file", zap.Error(err), zap.String("url", url))
-				return nil, fmt.Errorf("open integration-plugin file for url %s: %w", iPlugin, err)
-			}
-			cloudqlPlugin, err = os.ReadFile(baseDir + "/integarion_type/cloudql-plugin")
-			if err != nil {
-				logger.Error("failed to open cloudql-plugin file", zap.Error(err), zap.String("url", url))
-				return nil, fmt.Errorf("open cloudql-plugin file for url %s: %w", iPlugin.IntegrationType.String(), err)
-			}
-
-			installState = models.IntegrationTypeInstallStateInstalled
-			operationalStatus = models.IntegrationPluginOperationalStatusEnabled
+		// read integration-plugin file
+		integrationPlugin, err = os.ReadFile(baseDir + "/integarion_type/integration-plugin")
+		if err != nil {
+			logger.Error("failed to open integration-plugin file", zap.Error(err), zap.String("url", url))
+			return nil, fmt.Errorf("open integration-plugin file for url %s: %w", iPlugin, err)
+		}
+		cloudqlPlugin, err = os.ReadFile(baseDir + "/integarion_type/cloudql-plugin")
+		if err != nil {
+			logger.Error("failed to open cloudql-plugin file", zap.Error(err), zap.String("url", url))
+			return nil, fmt.Errorf("open cloudql-plugin file for url %s: %w", iPlugin.IntegrationType.String(), err)
 		}
 
 		//// read manifest file
@@ -137,6 +132,11 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 		}
 		describerURL = m.DescriberURL
 		describerTags = m.DescriberTag
+
+		if iPlugin.Default {
+			installState = models.IntegrationTypeInstallStateInstalled
+			operationalStatus = models.IntegrationPluginOperationalStatusEnabled
+		}
 	}
 
 	// remove existing files
