@@ -560,6 +560,7 @@ func (a *API) ListPlugins(c echo.Context) error {
 			SourceCode: 		  plugin.SourceCode,
 			PackageType: 		  plugin.PackageType,
 			DescriberURL: 		  plugin.DescriberURL,
+			Name: plugin.Name,
 		})
 	}
 	totalCount := len(items)
@@ -617,6 +618,8 @@ func (a *API) GetPlugin(c echo.Context) error {
 			SourceCode: 		  plugin.SourceCode,
 			PackageType: 		  plugin.PackageType,
 			DescriberURL: 		  plugin.DescriberURL,
+			Name: plugin.Name,
+
 		})
 }
 
