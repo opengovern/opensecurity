@@ -4,6 +4,7 @@ import (
 	"github.com/jackc/pgtype"
 	"github.com/lib/pq"
 	"github.com/opengovern/og-util/pkg/integration"
+	"time"
 )
 
 type Manifest struct {
@@ -25,6 +26,13 @@ const (
 	IntegrationPluginOperationalStatusDisabled IntegrationPluginOperationalStatus = "disabled"
 	IntegrationPluginOperationalStatusFailed   IntegrationPluginOperationalStatus = "failed"
 )
+
+type OperationalStatusUpdate struct {
+	Time      time.Time
+	OldStatus IntegrationPluginOperationalStatus
+	NewStatus IntegrationPluginOperationalStatus
+	Reason    string
+}
 
 type IntegrationPlugin struct {
 	ID                int

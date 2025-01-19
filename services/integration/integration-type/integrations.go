@@ -1,7 +1,7 @@
 package integration_type
 
 import (
-	"fmt"
+	"encoding/json"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"go.uber.org/zap"
@@ -247,16 +247,26 @@ func (m *IntegrationTypeManager) RetryRebootIntegrationType(t *models.Integratio
 		Managed:         true,
 	})
 
-	changeToFailed := func() {
+	changeToFailed := func(err error) {
 		if t.OperationalStatus == models.IntegrationPluginOperationalStatusFailed {
 			return
 		}
-		t.OperationalStatusUpdates = append(t.OperationalStatusUpdates,
-			fmt.Sprintf("Time: %s, Previous Status: %s, New Status: %s", time.Now().Format(time.RFC3339), t.OperationalStatus, models.IntegrationPluginOperationalStatusFailed))
+		update := models.OperationalStatusUpdate{
+			Time:      time.Now(),
+			OldStatus: t.OperationalStatus,
+			NewStatus: models.IntegrationPluginOperationalStatusFailed,
+			Reason:    err.Error(),
+		}
+		updateJson, err := json.Marshal(update)
+		if err != nil {
+			m.logger.Error("failed to marshal operational status update", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
+			return
+		}
+		t.OperationalStatusUpdates = append(t.OperationalStatusUpdates, string(updateJson))
 		if len(t.OperationalStatusUpdates) > 20 {
 			t.OperationalStatusUpdates = t.OperationalStatusUpdates[len(t.OperationalStatusUpdates)-20:]
 		}
-		err := m.IntegrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", t).Updates(&t).Error
+		err = m.IntegrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", t).Updates(&t).Error
 		if err != nil {
 			m.logger.Error("failed to update integration plugin operational status", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
 		}
@@ -266,7 +276,7 @@ func (m *IntegrationTypeManager) RetryRebootIntegrationType(t *models.Integratio
 	if err != nil {
 		m.logger.Error("failed to create plugin client", zap.Error(err), zap.String("plugin", t.IntegrationType.String()), zap.String("path", pluginPath))
 		client.Kill()
-		changeToFailed()
+		changeToFailed(err)
 		return err
 	}
 
@@ -275,7 +285,7 @@ func (m *IntegrationTypeManager) RetryRebootIntegrationType(t *models.Integratio
 	if err != nil {
 		m.logger.Error("failed to dispense plugin", zap.Error(err), zap.String("plugin", t.IntegrationType.String()), zap.String("path", pluginPath))
 		client.Kill()
-		changeToFailed()
+		changeToFailed(err)
 		return err
 	}
 
@@ -284,15 +294,25 @@ func (m *IntegrationTypeManager) RetryRebootIntegrationType(t *models.Integratio
 	if !ok {
 		m.logger.Error("failed to cast plugin to integration type", zap.String("plugin", t.IntegrationType.String()), zap.String("path", pluginPath))
 		client.Kill()
-		changeToFailed()
+		changeToFailed(err)
 		return err
 	}
 
 	m.IntegrationTypes[t.IntegrationType] = itInterface
 	m.clients[t.IntegrationType] = client
+	update := models.OperationalStatusUpdate{
+		Time:      time.Now(),
+		OldStatus: t.OperationalStatus,
+		NewStatus: models.IntegrationPluginOperationalStatusEnabled,
+		Reason:    "Successfully rebooted after detecting failed state",
+	}
+	updateJson, err := json.Marshal(update)
+	if err != nil {
+		m.logger.Error("failed to marshal operational status update", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
+		return err
+	}
 	t.OperationalStatus = models.IntegrationPluginOperationalStatusEnabled //TODO remember enabled/disabled and change back to it here
-	t.OperationalStatusUpdates = append(t.OperationalStatusUpdates,
-		fmt.Sprintf("Time: %s, Previous Status: %s, New Status: %s. Successfully rebooted after detecting failed state", time.Now().Format(time.RFC3339), models.IntegrationPluginOperationalStatusFailed, models.IntegrationPluginOperationalStatusEnabled))
+	t.OperationalStatusUpdates = append(t.OperationalStatusUpdates, string(updateJson))
 	if len(t.OperationalStatusUpdates) > 20 {
 		t.OperationalStatusUpdates = t.OperationalStatusUpdates[len(t.OperationalStatusUpdates)-20:]
 	}
