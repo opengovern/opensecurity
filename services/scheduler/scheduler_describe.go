@@ -249,6 +249,8 @@ func (s *Scheduler) scheduleDescribeJob(ctx context.Context) {
 						zap.Error(err))
 					continue
 				}
+			} else {
+				continue
 			}
 			_, err = s.describe(integration, resourceType.ResourceType, true, false, false, nil, "system", parameters)
 			if err != nil {
