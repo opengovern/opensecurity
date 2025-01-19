@@ -546,12 +546,20 @@ func (a *API) ListPlugins(c echo.Context) error {
 	var items = []models.IntegrationPlugin{}
 	for _, plugin := range plugins {
 		items = append(items, models.IntegrationPlugin{
-			PluginId:                plugin.PluginID,
+			ID: 					plugin.ID,
+			PluginID:                plugin.PluginID,
 			IntegrationType:         plugin.IntegrationType.String(),
 			InstallState:            string(plugin.InstallState),
 			OperationalStatus:       string(plugin.OperationalStatus),
 			OperationalStatusUpdates: plugin.OperationalStatusUpdates,
 			URL:                     plugin.URL,
+			Tier: 				  plugin.Tier,
+			Description: 		  plugin.Description,
+			Icon: 				  plugin.Icon,
+			Availability: 		  plugin.Availability,
+			SourceCode: 		  plugin.SourceCode,
+			PackageType: 		  plugin.PackageType,
+			DescriberURL: 		  plugin.DescriberURL,
 		})
 	}
 	totalCount := len(items)
@@ -595,12 +603,20 @@ func (a *API) GetPlugin(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, models.IntegrationPlugin{
-			PluginId:                plugin.PluginID,
+			ID: 					plugin.ID,
+			PluginID:                plugin.PluginID,
 			IntegrationType:         plugin.IntegrationType.String(),
 			InstallState:            string(plugin.InstallState),
 			OperationalStatus:       string(plugin.OperationalStatus),
 			OperationalStatusUpdates: plugin.OperationalStatusUpdates,
 			URL:                     plugin.URL,
+			Tier: 				  plugin.Tier,
+			Description: 		  plugin.Description,
+			Icon: 				  plugin.Icon,
+			Availability: 		  plugin.Availability,
+			SourceCode: 		  plugin.SourceCode,
+			PackageType: 		  plugin.PackageType,
+			DescriberURL: 		  plugin.DescriberURL,
 		})
 }
 
