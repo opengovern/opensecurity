@@ -20,7 +20,6 @@ import SettingsParameters from '../pages/Settings/Parameters'
 import SettingsMembers from '../pages/Settings/Members'
 import NewBenchmarkSummary from '../pages/Governance/Compliance/NewBenchmarkSummary'
 import Search from '../pages/Search'
-import SettingsAccess from '../pages/Settings/Access'
 import SettingsProfile from '../pages/Settings/Profile'
 import SearchLanding from '../pages/Search/landing'
 import TypeDetail from '../pages/Integrations/TypeDetailNew'
@@ -110,11 +109,7 @@ const authRoutes = [
         path: '/settings/authentication',
         element: <SettingsMembers />,
     },
-    {
-        key: 'settings Access',
-        path: '/settings/access',
-        element: <SettingsAccess />,
-    },
+
    
     {
         key: 'Compliance',
