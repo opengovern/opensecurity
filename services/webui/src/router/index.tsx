@@ -28,7 +28,6 @@ import Tasks from '../pages/Tasks'
 import TaskDetail from '../pages/Tasks/TaskDetail'
 
 const authRoutes = [
-  
     {
         key: 'callback',
         path: '/callback',
@@ -63,9 +62,7 @@ const authRoutes = [
         path: '/automation',
         element: <RequestAccess />,
     },
- 
-   
-    
+
     {
         key: 'integrations',
         path: '/integrations',
@@ -103,17 +100,21 @@ const authRoutes = [
         path: '/settings/api-keys',
         element: <SettingsWorkspaceAPIKeys />,
     },
-   
+
     {
         key: 'settings Authentications',
         path: '/settings/authentication',
         element: <SettingsMembers />,
     },
 
-   
     {
         key: 'Compliance',
         path: '/compliance',
+        element: <Compliance />,
+    },
+    {
+        key: 'Compliance',
+        path: '/compliance/:tab_id',
         element: <Compliance />,
     },
 
@@ -122,19 +123,19 @@ const authRoutes = [
         path: '/compliance/:benchmarkId',
         element: <NewBenchmarkSummary />,
     },
- 
+
     {
         key: 'allControls',
         path: '/compliance/library/parameters',
         element: <SettingsParameters />,
     },
-  
+
     {
         key: 'benchmark summary',
         path: '/compliance/:benchmarkId/:controlId',
         element: <ControlDetail />,
     },
-   
+
     {
         key: 'benchmark single connection',
         path: '/compliance/:benchmarkId/report/:id',
@@ -145,33 +146,31 @@ const authRoutes = [
         path: '/incidents',
         element: <Findings />,
     },
-   
+
     {
         key: ' summary',
         path: '/incidents/summary',
         element: <Findings />,
     },
 
-   
     {
         key: 'Account Posture',
         path: '/incidents/account-posture',
         element: <Findings />,
     },
-    
+
     {
         key: 'incidents',
         path: '/incidents/:controlId',
         element: <ControlDetail />,
     },
-    
+
     {
         key: 'home',
         path: '/',
         element: <Overview />,
     },
-    
-  
+
     {
         key: 'request a demo',
         path: '/ws/requestdemo',
@@ -193,7 +192,6 @@ const authRoutes = [
         path: '/tasks/:id',
         element: <TaskDetail />,
     },
-    
 ]
 
 export default function Router() {

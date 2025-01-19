@@ -42,6 +42,7 @@ import AllControls from './All Controls'
 import SettingsParameters from '../../Settings/Parameters'
 import { useIntegrationApiV1EnabledConnectorsList } from '../../../api/integration.gen'
 import AllPolicy from './All Policy'
+import { useParams } from 'react-router-dom'
 const CATEGORY = {
     sre_efficiency: 'Efficiency',
     sre_reliability: 'Reliability',
@@ -50,6 +51,7 @@ const CATEGORY = {
 
 export default function Compliance() {
     const defaultSelectedConnectors = ''
+
 
     const [loading, setLoading] = useState<boolean>(false)
     const [query, setQuery] = useState({
@@ -76,6 +78,8 @@ export default function Compliance() {
     const [totalCount, setTotalCount] = useState<number>(0)
     const [response, setResponse] = useState()
     const [isLoading, setIsLoading] = useState(false)
+    const [tab,setTab] = useState('0')
+    const {tab_id} = useParams()
     const {
         response: Types,
         isLoading: TypesLoading,
@@ -279,11 +283,33 @@ export default function Compliance() {
             'baseline_supportability',
         ])
     }, [])
+    useEffect(()=>{
+        console.log(tab_id)
+        switch (tab_id) {
+            case 'frameworks':
+                setTab('0')
+                break
+            case 'controls':
+                setTab('1')
+                break
+            case 'policies':
+                setTab('2')
+                break
+            case 'parameters':
+                setTab('3')
+                break
+            default:
+                setTab('0')
+                break
+        }
+    },[tab_id])
 
     return (
         <>
             {/* <TopHeader /> */}
             <Tabs
+                activeTabId={tab}
+                onChange={({ detail }) => setTab(detail.activeTabId)}
                 tabs={[
                     {
                         label: 'Frameworks',
