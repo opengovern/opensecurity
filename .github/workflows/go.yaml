@@ -69,7 +69,7 @@ jobs:
       - tag
     environment: golang
     outputs:
-      steampipe: ${{ steps.build_services.outputs.steampipe }}
+      cloudql-service: ${{ steps.build_services.outputs.cloudql-service }}
       auth-service: ${{ steps.build_services.outputs.auth-service }}
       checkup-job: ${{ steps.build_services.outputs.checkup-job }}
       compliance-report-job: ${{ steps.build_services.outputs.compliance-report-job }}
@@ -161,7 +161,7 @@ jobs:
       id-token: write
       contents: read
     environment: docker
-    if: (needs.build.outputs.steampipe-base == 'true' || needs.build.outputs.steampipe == 'true') && github.event_name != 'pull_request'
+    if:  needs.build.outputs.cloudql == 'true' && github.event_name != 'pull_request'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -184,51 +184,12 @@ jobs:
         with:
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/steampipe-service:${{ needs.tag.outputs.latest_tag }}
-          file: docker/SteampipeServiceDockerfile
+            ghcr.io/${{ github.repository_owner }}/cloudql-service:${{ needs.tag.outputs.latest_tag }}
+          file: docker/CloudQLServiceDockerfile
           build-args: |
             PLUGIN_REGISTRY=ghcr.io/opengovern
           context: .
-  deploy-cloudql-base:
-    runs-on: ubuntu-latest
-    needs:
-      - build
-      - tag
-      - deploy-cloudql-plugin
-    permissions:
-      id-token: write
-      contents: read
-    environment: docker
-    if: (needs.build.outputs.cloudql == 'true' || needs.build.outputs.steampipe == 'true') && github.event_name != 'pull_request'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build
-          path: .
-      - name: Unpack artifact
-        run: |
-          tar -xvf build.tar.gz
-      - name: Log in to the Container registry
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
-      - name: Build and push Docker images
-        uses: docker/build-push-action@v4
-        with:
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/steampipe-plugin-base:0.0.1
-            ghcr.io/${{ github.repository_owner }}/steampipe-plugin-base:${{ needs.tag.outputs.latest_tag }}
-          file: docker/SteampipeBaseImageDockerfile
-          build-args: |
-            PLUGIN_REGISTRY=ghcr.io/opengovern
-          context: .
-
+ 
   deploy-auth-service:
     runs-on: ubuntu-latest
     needs:
@@ -755,7 +716,7 @@ jobs:
       contents: read
     environment: docker
     if: (needs.build.outputs.cloudql == 'true' ||
-      needs.build.outputs.steampipe == 'true' ||
+      needs.build.outputs.cloudql-service == 'true' ||
       needs.build.outputs.compliance-report-job == 'true') && github.event_name != 'pull_request'
     steps:
       - name: Check if we need to actually push

@@ -15,47 +15,13 @@ import (
 
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/og-util/pkg/integration/interfaces"
-	"github.com/opengovern/opencomply/services/integration/integration-type/aws-account"
-	awsConfigs "github.com/opengovern/opencomply/services/integration/integration-type/aws-account/configs"
-	"github.com/opengovern/opencomply/services/integration/integration-type/azure-subscription"
-	azureConfigs "github.com/opengovern/opencomply/services/integration/integration-type/azure-subscription/configs"
-	cloudflareaccount "github.com/opengovern/opencomply/services/integration/integration-type/cloudflare-account"
-	cloudflareConfigs "github.com/opengovern/opencomply/services/integration/integration-type/cloudflare-account/configs"
-	cohereaiproject "github.com/opengovern/opencomply/services/integration/integration-type/cohereai-project"
-	cohereaiConfigs "github.com/opengovern/opencomply/services/integration/integration-type/cohereai-project/configs"
-	"github.com/opengovern/opencomply/services/integration/integration-type/digitalocean-team"
-	digitalOceanConfigs "github.com/opengovern/opencomply/services/integration/integration-type/digitalocean-team/configs"
-	doppler "github.com/opengovern/opencomply/services/integration/integration-type/doppler-account"
-	dopplerConfigs "github.com/opengovern/opencomply/services/integration/integration-type/doppler-account/configs"
-	"github.com/opengovern/opencomply/services/integration/integration-type/entra-id-directory"
-	entraidConfigs "github.com/opengovern/opencomply/services/integration/integration-type/entra-id-directory/configs"
-	google_workspace_account "github.com/opengovern/opencomply/services/integration/integration-type/google-workspace-account"
-	googleConfig "github.com/opengovern/opencomply/services/integration/integration-type/google-workspace-account/configs"
-	linodeaccount "github.com/opengovern/opencomply/services/integration/integration-type/linode-account"
-	linodeConfigs "github.com/opengovern/opencomply/services/integration/integration-type/linode-account/configs"
-	oci "github.com/opengovern/opencomply/services/integration/integration-type/oci-repository"
-	ociConfigs "github.com/opengovern/opencomply/services/integration/integration-type/oci-repository/configs"
-	openaiproject "github.com/opengovern/opencomply/services/integration/integration-type/openai-integration"
-	openaiConfigs "github.com/opengovern/opencomply/services/integration/integration-type/openai-integration/configs"
-	render "github.com/opengovern/opencomply/services/integration/integration-type/render-account"
-	renderConfigs "github.com/opengovern/opencomply/services/integration/integration-type/render-account/configs"
+	
 	"github.com/opengovern/opencomply/services/integration/models"
 	hczap "github.com/zaffka/zap-to-hclog"
 )
 
 var integrationTypes = map[integration.Type]interfaces.IntegrationType{
-	awsConfigs.IntegrationTypeAwsCloudAccount:           &aws_account.Integration{},
-	azureConfigs.IntegrationTypeAzureSubscription:       &azure_subscription.Integration{},
-	entraidConfigs.IntegrationTypeEntraidDirectory:      &entra_id_directory.Integration{},
-	digitalOceanConfigs.IntegrationTypeDigitalOceanTeam: &digitalocean_team.Integration{},
-	cloudflareConfigs.IntegrationNameCloudflareAccount:  &cloudflareaccount.Integration{},
-	openaiConfigs.IntegrationTypeOpenaiIntegration:      &openaiproject.Integration{},
-	linodeConfigs.IntegrationTypeLinodeProject:          &linodeaccount.Integration{},
-	cohereaiConfigs.IntegrationTypeCohereaiProject:      &cohereaiproject.Integration{},
-	googleConfig.IntegrationTypeGoogleWorkspaceAccount:  &google_workspace_account.Integration{},
-	ociConfigs.IntegrationTypeOciRepository:             &oci.Integration{},
-	renderConfigs.IntegrationTypeRenderAccount:          &render.Integration{},
-	dopplerConfigs.IntegrationTypeDopplerAccount:        &doppler.Integration{},
+	
 }
 
 type IntegrationTypeManager struct {
