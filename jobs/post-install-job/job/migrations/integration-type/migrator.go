@@ -51,18 +51,18 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
 		logger.Info("number of integration types", zap.Int("num", len(parser.Integrations.Plugins)))
 		for _, iPlugin := range parser.Integrations.Plugins {
-			integrationBinary, err := parser.ExtractIntegrationBinaries(logger, iPlugin)
+			plugin, err := parser.ExtractIntegrationBinaries(logger, iPlugin)
 			if err != nil {
 				return err
 			}
-			if integrationBinary == nil {
+			if plugin == nil {
 				continue
 			}
 			err = tx.Clauses(clause.OnConflict{
 				Columns: []clause.Column{{Name: "plugin_id"}},
 				DoUpdates: clause.AssignmentColumns([]string{"id", "integration_type", "name", "tier", "description", "icon",
 					"availability", "source_code", "package_type", "url", "integration_plugin", "cloud_ql_plugin", "tags"}),
-			}).Create(integrationBinary).Error
+			}).Create(plugin).Error
 			if err != nil {
 				logger.Error("failed to create integration binary", zap.Error(err))
 				return err

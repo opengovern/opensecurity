@@ -71,10 +71,33 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 		}
 	}
 
+	tagsJsonData, err := json.Marshal(iPlugin.Tags)
+	if err != nil {
+		return nil, err
+	}
+	tagsJsonb := pgtype.JSONB{}
+	err = tagsJsonb.Set(tagsJsonData)
+
 	// download files from urls
 
 	if iPlugin.ArtifactDetails.PackageURL == "" || iPlugin.ArtifactDetails.PackageTag != "" {
-		return nil, nil
+		return &models.IntegrationPlugin{
+			ID:                iPlugin.ID,
+			PluginID:          iPlugin.IntegrationType.String(),
+			IntegrationType:   iPlugin.IntegrationType,
+			Name:              iPlugin.Name,
+			Tier:              iPlugin.Tier,
+			Description:       iPlugin.Description,
+			Icon:              iPlugin.Icon,
+			Availability:      iPlugin.Availability,
+			SourceCode:        iPlugin.SourceCode,
+			PackageType:       iPlugin.PackageType,
+			InstallState:      models.IntegrationTypeInstallStateInstalled,
+			OperationalStatus: models.IntegrationPluginOperationalStatusEnabled,
+			DescriberURL:      iPlugin.ArtifactDetails.PackageURL,
+			DescriberTag:      iPlugin.ArtifactDetails.PackageTag,
+			Tags:              tagsJsonb,
+		}, nil
 	}
 	url := iPlugin.ArtifactDetails.PackageURL
 	// remove existing files
@@ -88,7 +111,7 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 		Dst:  baseDir + "/integarion_type",
 		Mode: getter.ClientModeDir,
 	}
-	err := downloader.Get()
+	err = downloader.Get()
 	if err != nil {
 		logger.Error("failed to get integration binaries", zap.Error(err), zap.String("url", url))
 		return nil, fmt.Errorf("get integration binaries for url %s: %w", iPlugin, err)
@@ -121,13 +144,6 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 	}
 
 	logger.Info("done reading files", zap.String("url", url), zap.String("integrationType", iPlugin.IntegrationType.String()), zap.Int("integrationPluginSize", len(integrationPlugin)), zap.Int("cloudqlPluginSize", len(cloudqlPlugin)))
-
-	tagsJsonData, err := json.Marshal(iPlugin.Tags)
-	if err != nil {
-		return nil, err
-	}
-	tagsJsonb := pgtype.JSONB{}
-	err = tagsJsonb.Set(tagsJsonData)
 
 	return &models.IntegrationPlugin{
 		ID:                iPlugin.ID,
