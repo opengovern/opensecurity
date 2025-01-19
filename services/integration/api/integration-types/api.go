@@ -480,6 +480,7 @@ func (a *API) UninstallPlugin(c echo.Context) error {
 	}
 
 	plugin.InstallState = models2.IntegrationTypeInstallStateNotInstalled
+	plugin.OperationalStatus = models2.IntegrationPluginOperationalStatusDisabled
 
 	err = a.database.UpdatePlugin(*plugin)
 	if err != nil {
