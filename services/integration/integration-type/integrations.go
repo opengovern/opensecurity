@@ -15,14 +15,12 @@ import (
 
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/og-util/pkg/integration/interfaces"
-	
+
 	"github.com/opengovern/opencomply/services/integration/models"
 	hczap "github.com/zaffka/zap-to-hclog"
 )
 
-var integrationTypes = map[integration.Type]interfaces.IntegrationType{
-	
-}
+var integrationTypes = map[integration.Type]interfaces.IntegrationType{}
 
 type IntegrationTypeManager struct {
 	logger            *zap.Logger
@@ -30,10 +28,10 @@ type IntegrationTypeManager struct {
 	IntegrationTypeDb *gorm.DB
 	IntegrationTypes  map[integration.Type]interfaces.IntegrationType
 
-	clients  map[integration.Type]*plugin.Client
+	Clients  map[integration.Type]*plugin.Client
 	retryMap map[integration.Type]int
 	// mutex
-	pingLocks  map[integration.Type]*sync.Mutex
+	PingLocks  map[integration.Type]*sync.Mutex
 	maxRetries int
 }
 
@@ -134,9 +132,9 @@ func NewIntegrationTypeManager(logger *zap.Logger, integrationTypeDb *gorm.DB, m
 		IntegrationTypes:  integrationTypes,
 		IntegrationTypeDb: integrationTypeDb,
 
-		clients:    clients,
+		Clients:    clients,
 		retryMap:   make(map[integration.Type]int),
-		pingLocks:  pingLocks,
+		PingLocks:  pingLocks,
 		maxRetries: maxRetries,
 	}
 
@@ -203,11 +201,11 @@ func (m *IntegrationTypeManager) PingRoutine() {
 		err := it.Ping()
 		if err != nil {
 			m.logger.Warn("failed to ping integration type attemoting restart", zap.Error(err), zap.String("integration_type", t.String()), zap.Int("retry_count", m.retryMap[t]))
-			lock, ok := m.pingLocks[t]
+			lock, ok := m.PingLocks[t]
 			// Just in case, shouldn't ever happen but if happens since we init it in the new manage func this is will safeguard 99.99% of the time, the other 0.01 is when an uninitialized in the new manager integration type (which shouldn't exist) ping get called and reaches this line at teh same time in 2 parallel go routines
 			if !ok {
 				lock = &sync.Mutex{}
-				m.pingLocks[t] = lock
+				m.PingLocks[t] = lock
 			}
 			lock.Lock()
 			if m.retryMap[t] < m.maxRetries {
@@ -233,7 +231,7 @@ func (m *IntegrationTypeManager) PingRoutine() {
 
 func (m *IntegrationTypeManager) RetryRebootIntegrationType(t *models.IntegrationPlugin) error {
 	m.logger.Info("rebooting integration type", zap.String("integration_type", t.IntegrationType.String()), zap.String("plugin_id", t.PluginID), zap.Int("retry_count", m.retryMap[t.IntegrationType]))
-	client, ok := m.clients[t.IntegrationType]
+	client, ok := m.Clients[t.IntegrationType]
 	if ok {
 		client.Kill()
 	}
@@ -299,7 +297,7 @@ func (m *IntegrationTypeManager) RetryRebootIntegrationType(t *models.Integratio
 	}
 
 	m.IntegrationTypes[t.IntegrationType] = itInterface
-	m.clients[t.IntegrationType] = client
+	m.Clients[t.IntegrationType] = client
 	update := models.OperationalStatusUpdate{
 		Time:      time.Now(),
 		OldStatus: t.OperationalStatus,
