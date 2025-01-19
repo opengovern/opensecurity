@@ -610,7 +610,7 @@ export default function Compliance() {
                     },
                     {
                         id: '2',
-                        label: 'Policy',
+                        label: 'Policies',
                         content: <AllPolicy />,
                     },
                     {
