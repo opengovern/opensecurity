@@ -18,6 +18,7 @@ type  IntegrationPlugin struct {
 	URL               string	`json:"url"`
 	DescriberURL      string	`json:"describer_url"`
 	DescriberTag      string	`json:"describer_tag"`
+	Count        IntegrationTypeIntegrationCount `json:"count"`
 
 	OperationalStatusUpdates []string
 

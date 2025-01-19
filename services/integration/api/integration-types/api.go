@@ -18,6 +18,8 @@ import (
 	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	models2 "github.com/opengovern/opencomply/services/integration/models"
 	"go.uber.org/zap"
+	"sort"
+
 )
 
 type API struct {
@@ -531,6 +533,10 @@ func (a *API) DisablePlugin(c echo.Context) error {
 func (a *API) ListPlugins(c echo.Context) error {
 	perPageStr := c.QueryParam("per_page")
 	cursorStr := c.QueryParam("cursor")
+	filteredEnabled := c.QueryParam("enabled")
+	hasIntegration := c.QueryParam("has_integration")
+	sortBy := c.QueryParam("sort_by")
+	sortOrder := c.QueryParam("sort_order")
 	var perPage, cursor int64
 	if perPageStr != "" {
 		perPage, _ = strconv.ParseInt(perPageStr, 10, 64)
@@ -538,13 +544,46 @@ func (a *API) ListPlugins(c echo.Context) error {
 	if cursorStr != "" {
 		cursor, _ = strconv.ParseInt(cursorStr, 10, 64)
 	}
+
 	plugins, err := a.database.ListPlugins()
 	if err != nil {
-		a.logger.Error("failed to list plugins", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list plugins")
+		a.logger.Error("failed to list integration types", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list integration types")
 	}
-	var items = []models.IntegrationPlugin{}
+
+	var items []models.IntegrationPlugin
 	for _, plugin := range plugins {
+		integrations, err := a.database.ListIntegrationsByFilters(nil, []string{plugin.IntegrationType.String()}, nil, nil)
+		if err != nil {
+			a.logger.Error("failed to list integrations", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to list integrations")
+		}
+		if hasIntegration == "true" {
+			if len(integrations) == 0 {
+				continue
+			}
+		}
+		count := models.IntegrationTypeIntegrationCount{}
+		for _, i := range integrations {
+			count.Total += 1
+			if i.State == integration.IntegrationStateActive {
+				count.Active += 1
+			}
+			if i.State == integration.IntegrationStateInactive {
+				count.Inactive += 1
+			}
+			if i.State == integration.IntegrationStateArchived {
+				count.Archived += 1
+			}
+			if i.State == integration.IntegrationStateSample {
+				count.Demo += 1
+			}
+		}
+		if plugin.OperationalStatus == models2.IntegrationPluginOperationalStatusDisabled {
+			if filteredEnabled == "true" {
+				continue
+			}
+		}
 		items = append(items, models.IntegrationPlugin{
 			ID: 					plugin.ID,
 			PluginID:                plugin.PluginID,
@@ -561,9 +600,37 @@ func (a *API) ListPlugins(c echo.Context) error {
 			PackageType: 		  plugin.PackageType,
 			DescriberURL: 		  plugin.DescriberURL,
 			Name: plugin.Name,
+			Count:                   count,
 		})
 	}
+
 	totalCount := len(items)
+	if sortOrder == "desc" {
+		sort.Slice(items, func(i, j int) bool {
+			return items[i].ID > items[j].ID
+		})
+		if sortBy == "count" {
+			sort.Slice(items, func(i, j int) bool {
+				if items[i].Count.Total == items[j].Count.Total {
+					return items[i].ID < items[j].ID
+				}
+				return items[i].Count.Total > items[j].Count.Total
+			})
+		}
+	} else {
+		sort.Slice(items, func(i, j int) bool {
+			return items[i].ID < items[j].ID
+		})
+		if sortBy == "count" {
+			sort.Slice(items, func(i, j int) bool {
+				if items[i].Count.Total == items[j].Count.Total {
+					return items[i].ID < items[j].ID
+				}
+				return items[i].Count.Total < items[j].Count.Total
+			})
+		}
+	}
+
 	if perPage != 0 {
 		if cursor == 0 {
 			items = utils.Paginate(1, perPage, items)
@@ -572,12 +639,9 @@ func (a *API) ListPlugins(c echo.Context) error {
 		}
 	}
 
-
-
-
 	return c.JSON(http.StatusOK, models.IntegrationPluginListResponse{
 		Items: items,
-		TotalCount: totalCount,
+		TotalCount:       totalCount,
 	})
 }
 
