@@ -243,14 +243,15 @@ ALTER USER $migratorUserName WITH SUPERUSER;
 EOSQL
 
 echo "$dt - Init script is completed";
-# export PGPASSWORD='postgres'
-# set "PGPASSWORD=postgres"
-# PGPASSWORD="postgres"
-# pg_restore -h localhost -p 5432 -U postgres -d $authDatabaseName -v "$authDatabaseName.bak";
-# pg_restore -h localhost -p 5432 -U postgres -d $integrationDatabaseName -v "$integrationDatabaseName.bak";
-# pg_restore -h localhost -p 5432 -U postgres -d $complianceDatabaseName -v "$complianceDatabaseName.bak";
-# pg_restore -h localhost -p 5432 -U postgres -d $dexDatabaseName -v "$dexDatabaseName.bak";
-# pg_restore -h localhost -p 5432 -U postgres -d $coreDatabaseName -v "$coreDatabaseName.bak";
+export PGPASSWORD='postgres'
+set "PGPASSWORD=postgres"
+PGPASSWORD="postgres"
+pg_restore -h localhost -p 5432 -U postgres -d $authDatabaseName -v "$authDatabaseName.bak";
+pg_restore -h localhost -p 5432 -U postgres -d $integrationDatabaseName -v "$integrationDatabaseName.bak";
+pg_restore -h localhost -p 5432 -U postgres -d $integrationTypesDatabaseName -v "$integrationTypesDatabaseName.bak";
+pg_restore -h localhost -p 5432 -U postgres -d $complianceDatabaseName -v "$complianceDatabaseName.bak";
+pg_restore -h localhost -p 5432 -U postgres -d $dexDatabaseName -v "$dexDatabaseName.bak";
+pg_restore -h localhost -p 5432 -U postgres -d $coreDatabaseName -v "$coreDatabaseName.bak";
 
 
-# echo "$dt - Restore is completed";  
+echo "$dt - Restore is completed";  
