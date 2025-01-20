@@ -2,7 +2,6 @@ package integration
 
 import (
 	"errors"
-	"fmt"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kedav1alpha1 "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
 	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
@@ -105,17 +104,13 @@ func Command() *cobra.Command {
 
 			cmd.SilenceUsage = true
 
-			steampipeConn, err := steampipe.NewSteampipeDatabase(steampipe.Option{
+			steampipeOption := steampipe.Option{
 				Host: cnf.Steampipe.Host,
 				Port: cnf.Steampipe.Port,
 				User: cnf.Steampipe.Username,
 				Pass: cnf.Steampipe.Password,
 				Db:   cnf.Steampipe.DB,
-			})
-			if err != nil {
-				return fmt.Errorf("new steampipe client: %w", err)
 			}
-			logger.Info("Connected to the steampipe database", zap.String("database", cnf.Steampipe.DB))
 			kubeClient, err := NewKubeClient()
 			if err != nil {
 				return err
@@ -125,7 +120,7 @@ func Command() *cobra.Command {
 				cmd.Context(),
 				logger,
 				cnf.Http.Address,
-				api.New(logger, db, vaultSc, steampipeConn, kubeClient, typeManager),
+				api.New(logger, db, vaultSc, &steampipeOption, kubeClient, typeManager),
 			)
 		},
 	}

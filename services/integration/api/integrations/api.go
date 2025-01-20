@@ -32,16 +32,20 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
 type API struct {
-	vault         vault.VaultSourceConfig
-	logger        *zap.Logger
-	database      db.Database
-	steampipeConn *steampipe.Database
-	kubeClient    client.Client
-	typesManager  *integration_type.IntegrationTypeManager
+	vault        vault.VaultSourceConfig
+	logger       *zap.Logger
+	database     db.Database
+	kubeClient   client.Client
+	typesManager *integration_type.IntegrationTypeManager
+
+	steampipeOption *steampipe.Option
+	steampipeLock   sync.Mutex
+	steampipeConn   *steampipe.Database
 }
 
 const (
@@ -55,21 +59,22 @@ func New(
 	vault vault.VaultSourceConfig,
 	database db.Database,
 	logger *zap.Logger,
-	steampipeConn *steampipe.Database,
+	steampipeOption *steampipe.Option,
 	kubeClien client.Client,
 	typesManager *integration_type.IntegrationTypeManager,
 ) API {
 	return API{
-		vault:         vault,
-		database:      database,
-		logger:        logger.Named("integrations"),
-		steampipeConn: steampipeConn,
-		kubeClient:    kubeClien,
-		typesManager:  typesManager,
+		vault:           vault,
+		database:        database,
+		logger:          logger.Named("integrations"),
+		steampipeOption: steampipeOption,
+		steampipeLock:   sync.Mutex{},
+		kubeClient:      kubeClien,
+		typesManager:    typesManager,
 	}
 }
 
-func (h API) Register(g *echo.Group) {
+func (h *API) Register(g *echo.Group) {
 	g.GET("", httpserver.AuthorizeHandler(h.List, api.ViewerRole))
 	g.POST("/list", httpserver.AuthorizeHandler(h.ListByFilters, api.ViewerRole))
 	g.POST("/discover", httpserver.AuthorizeHandler(h.DiscoverIntegrations, api.EditorRole))
@@ -95,6 +100,22 @@ func (h API) Register(g *echo.Group) {
 	resourceTypes.GET("/:resource_type", httpserver.AuthorizeHandler(h.GetIntegrationTypeResourceType, api.ViewerRole))
 }
 
+func (h *API) getSteampipeConn() (*steampipe.Database, error) {
+	if h.steampipeConn == nil {
+		h.steampipeLock.Lock()
+		defer h.steampipeLock.Unlock()
+		if h.steampipeConn == nil {
+			steampipeConn, err := steampipe.NewSteampipeDatabase(*h.steampipeOption)
+			if err != nil {
+				h.logger.Error("failed to create steampipe connection", zap.Error(err))
+				return nil, err
+			}
+			h.steampipeConn = steampipeConn
+		}
+	}
+	return h.steampipeConn, nil
+}
+
 // DiscoverIntegrations godoc
 //
 //	@Summary		Discover integrations
@@ -105,7 +126,7 @@ func (h API) Register(g *echo.Group) {
 //	@Success		200
 //	@Param			request	body	models.DiscoverIntegrationRequest	true	"Request"
 //	@Router			/integration/api/v1/integrations/discover [post]
-func (h API) DiscoverIntegrations(c echo.Context) error {
+func (h *API) DiscoverIntegrations(c echo.Context) error {
 	var req models.DiscoverIntegrationRequest
 
 	contentType := c.Request().Header.Get("Content-Type")
@@ -308,7 +329,7 @@ func (h API) DiscoverIntegrations(c echo.Context) error {
 //	@Success		200
 //	@Param			request	body	models.AddIntegrationsRequest	true	"Request"
 //	@Router			/integration/api/v1/integrations/add [post]
-func (h API) AddIntegrations(c echo.Context) error {
+func (h *API) AddIntegrations(c echo.Context) error {
 	var req models.AddIntegrationsRequest
 
 	if err := c.Bind(&req); err != nil {
@@ -441,7 +462,7 @@ func (h API) AddIntegrations(c echo.Context) error {
 //	@Produce		json
 //	@Success		200
 //	@Router			/integration/api/v1/integrations/{IntegrationID}/healthcheck [put]
-func (h API) IntegrationHealthcheck(c echo.Context) error {
+func (h *API) IntegrationHealthcheck(c echo.Context) error {
 	IntegrationID, err := uuid.Parse(c.Param("IntegrationID"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
@@ -533,7 +554,7 @@ func (h API) IntegrationHealthcheck(c echo.Context) error {
 //	@Success		200
 //	@Param			IntegrationID	path	string	true	"IntegrationID"
 //	@Router			/integration/api/v1/integrations/{IntegrationID} [delete]
-func (h API) Delete(c echo.Context) error {
+func (h *API) Delete(c echo.Context) error {
 	IntegrationID, err := uuid.Parse(c.Param("IntegrationID"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
@@ -558,7 +579,7 @@ func (h API) Delete(c echo.Context) error {
 //	@Param			integration_type	query		[]string	false	"integration type filter"
 //	@Success		200					{object}	models.ListIntegrationsResponse
 //	@Router			/integration/api/v1/integrations [get]
-func (h API) List(c echo.Context) error {
+func (h *API) List(c echo.Context) error {
 	integrationTypesStr := httpserver.QueryArrayParam(c, "integration_type")
 
 	var integrationTypes []integration.Type
@@ -597,7 +618,7 @@ func (h API) List(c echo.Context) error {
 //	@Produce		json
 //	@Success		200	{object}	models.ListIntegrationsResponse
 //	@Router			/integration/api/v1/integrations/list [post]
-func (h API) ListByFilters(c echo.Context) error {
+func (h *API) ListByFilters(c echo.Context) error {
 	var req models.ListIntegrationsRequest
 
 	if err := c.Bind(&req); err != nil {
@@ -648,7 +669,7 @@ func (h API) ListByFilters(c echo.Context) error {
 //	@Param			populateIntegrations	query		bool	false	"Populate connections"	default(false)
 //	@Success		200						{object}	[]models.IntegrationGroup
 //	@Router			/integration/api/v1/integrations/integration-groups [get]
-func (h API) ListIntegrationGroups(c echo.Context) error {
+func (h *API) ListIntegrationGroups(c echo.Context) error {
 	populateIntegrations := false
 	var err error
 	if populateIntegrationsStr := c.QueryParam("populateIntegrations"); populateIntegrationsStr != "" {
@@ -664,9 +685,15 @@ func (h API) ListIntegrationGroups(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list credential")
 	}
 
+	steampipeConn, err := h.getSteampipeConn()
+	if err != nil {
+		h.logger.Error("failed to get steampipe connection", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get steampipe connection")
+	}
+
 	var items []models.IntegrationGroup
 	for _, integrationGroup := range integrationGroups {
-		integrationGroupApi, err := entities.NewIntegrationGroup(c.Request().Context(), h.steampipeConn, integrationGroup)
+		integrationGroupApi, err := entities.NewIntegrationGroup(c.Request().Context(), steampipeConn, integrationGroup)
 		if err != nil {
 			h.logger.Error("failed to convert integration group to API model", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to convert integration group to API model")
@@ -705,7 +732,7 @@ func (h API) ListIntegrationGroups(c echo.Context) error {
 //	@Param			integrationGroupName	path		string	true	"integrationGroupName"
 //	@Success		200						{object}	models.IntegrationGroup
 //	@Router			/integration/api/v1/integrations/integration-groups/{integrationGroupName} [get]
-func (h API) GetIntegrationGroup(c echo.Context) error {
+func (h *API) GetIntegrationGroup(c echo.Context) error {
 	integrationGroupName := c.Param("integrationGroupName")
 
 	populateIntegrations := false
@@ -723,7 +750,13 @@ func (h API) GetIntegrationGroup(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list credential")
 	}
 
-	integrationGroupApi, err := entities.NewIntegrationGroup(c.Request().Context(), h.steampipeConn, *integrationGroup)
+	steampipeConn, err := h.getSteampipeConn()
+	if err != nil {
+		h.logger.Error("failed to get steampipe connection", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get steampipe connection")
+	}
+
+	integrationGroupApi, err := entities.NewIntegrationGroup(c.Request().Context(), steampipeConn, *integrationGroup)
 	if err != nil {
 		h.logger.Error("failed to convert integration group to API model", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to convert integration group to API model")
@@ -759,7 +792,7 @@ func (h API) GetIntegrationGroup(c echo.Context) error {
 //	@Success		200
 //	@Param			IntegrationID	path	string	true	"IntegrationID"
 //	@Router			/integration/api/v1/integrations/{IntegrationID} [get]
-func (h API) Get(c echo.Context) error {
+func (h *API) Get(c echo.Context) error {
 	IntegrationID, err := uuid.Parse(c.Param("IntegrationID"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
@@ -790,7 +823,7 @@ func (h API) Get(c echo.Context) error {
 //	@Param			integrationId	path	string					true	"IntegrationID"
 //	@Param			request			body	models.UpdateRequest	true	"Request"
 //	@Router			/integration/api/v1/integrations/{integrationId} [post]
-func (h API) Update(c echo.Context) error {
+func (h *API) Update(c echo.Context) error {
 	IntegrationID, err := uuid.Parse(c.Param("IntegrationID"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
@@ -871,7 +904,7 @@ func (h API) Update(c echo.Context) error {
 //
 //	@Success		200				{object}	models.ListIntegrationTypesResponse
 //	@Router			/integration/api/v1/integrations/types [get]
-func (h API) ListIntegrationTypes(c echo.Context) error {
+func (h *API) ListIntegrationTypes(c echo.Context) error {
 	perPageStr := c.QueryParam("per_page")
 	cursorStr := c.QueryParam("cursor")
 	filteredEnabled := c.QueryParam("enabled")
@@ -988,7 +1021,7 @@ func (h API) ListIntegrationTypes(c echo.Context) error {
 //	@Success		200
 //	@Param			integrationTypeId	path	string	true	"integrationTypeId"
 //	@Router			/integration/api/v1/integrations/types/{integrationTypeId} [get]
-func (h API) GetIntegrationType(c echo.Context) error {
+func (h *API) GetIntegrationType(c echo.Context) error {
 	integrationTypeId := c.Param("integrationTypeId")
 
 	plugin, err := h.database.GetPluginByIntegrationType(integrationTypeId)
@@ -1014,7 +1047,7 @@ func (h API) GetIntegrationType(c echo.Context) error {
 //	@Success		200
 //	@Param			integrationTypeId	path	string	true	"integrationTypeId"
 //	@Router			/integration/api/v1/integrations/types/{integrationTypeId}/ui/spec [get]
-func (h API) GetIntegrationTypeUiSpec(c echo.Context) error {
+func (h *API) GetIntegrationTypeUiSpec(c echo.Context) error {
 	integrationTypeId := c.Param("integrationTypeId")
 
 	entries, err := os.ReadDir("/")
@@ -1061,7 +1094,7 @@ func (h API) GetIntegrationTypeUiSpec(c echo.Context) error {
 //	@Success		200
 //	@Param			integration_type	path	string	true	"integration_type"
 //	@Router			/integration/api/v1/integrations/types/{integration_type}/enable [put]
-func (h API) EnableIntegrationType(c echo.Context) error {
+func (h *API) EnableIntegrationType(c echo.Context) error {
 	integrationTypeName := c.Param("integration_type")
 
 	err := h.EnableIntegrationTypeHelper(c.Request().Context(), integrationTypeName)
@@ -1082,7 +1115,7 @@ func (h API) EnableIntegrationType(c echo.Context) error {
 //	@Success		200
 //	@Param			integration_type	path	string	true	"integration_type"
 //	@Router			/integration/api/v1/integrations/types/{integration_type}/disable [put]
-func (h API) DisableIntegrationType(c echo.Context) error {
+func (h *API) DisableIntegrationType(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	integrationTypeName := c.Param("integration_type")
@@ -1208,7 +1241,7 @@ func (h API) DisableIntegrationType(c echo.Context) error {
 //	@Produce		json
 //	@Success		200
 //	@Router			/integration/api/v1/integrations/sample/purge [put]
-func (h API) PurgeSampleData(c echo.Context) error {
+func (h *API) PurgeSampleData(c echo.Context) error {
 	integrations, err := h.database.ListSampleIntegrations()
 	if err != nil {
 		h.logger.Error("failed to list sample integrations", zap.Error(err))
@@ -1244,7 +1277,7 @@ func (h API) PurgeSampleData(c echo.Context) error {
 //	@Success		200
 //	@Param			integration_type	path	string	true	"integration_type"
 //	@Router			/integration/api/v1/integrations/types/{integration_type}/upgrade [put]
-func (h API) UpgradeIntegrationType(c echo.Context) error {
+func (h *API) UpgradeIntegrationType(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	integrationTypeName := c.Param("integration_type")
@@ -1360,7 +1393,7 @@ func (h API) UpgradeIntegrationType(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h API) EnableIntegrationTypeHelper(ctx context.Context, integrationTypeName string) error {
+func (h *API) EnableIntegrationTypeHelper(ctx context.Context, integrationTypeName string) error {
 	currentNamespace, ok := os.LookupEnv("CURRENT_NAMESPACE")
 	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, "current namespace lookup failed")
@@ -1625,7 +1658,7 @@ func (h API) EnableIntegrationTypeHelper(ctx context.Context, integrationTypeNam
 //	@Param			integration_type	path		string	true	"integration_type"
 //	@Success		200					{object}	models.ListIntegrationTypesResponse
 //	@Router			/integration/api/v1/integrations/types/:integration_type/resource_types [get]
-func (h API) ListIntegrationTypeResourceTypes(c echo.Context) error {
+func (h *API) ListIntegrationTypeResourceTypes(c echo.Context) error {
 	integrationType := c.Param("integration_type")
 
 	perPageStr := c.QueryParam("per_page")
@@ -1689,7 +1722,7 @@ func (h API) ListIntegrationTypeResourceTypes(c echo.Context) error {
 //	@Param			resource_type		path		string	true	"resource_type"
 //	@Success		200					{object}	models.ListIntegrationTypesResponse
 //	@Router			/integration/api/v1/integrations/types/:integration_type/resource_types/:resource_type [get]
-func (h API) GetIntegrationTypeResourceType(c echo.Context) error {
+func (h *API) GetIntegrationTypeResourceType(c echo.Context) error {
 	integrationType := c.Param("integration_type")
 	resourceType := c.Param("resource_type")
 
