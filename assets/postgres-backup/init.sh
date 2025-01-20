@@ -248,7 +248,7 @@ set "PGPASSWORD=postgres"
 PGPASSWORD="postgres"
 pg_restore -h localhost -p 5432 -U postgres -d $authDatabaseName -v "$authDatabaseName.bak";
 pg_restore -h localhost -p 5432 -U postgres -d $integrationDatabaseName -v "$integrationDatabaseName.bak";
-pg_restore -h localhost -p 5432 -U postgres -d $integrationTypesDatabaseName -v "$integrationTypesDatabaseName.bak";
+# pg_restore -h localhost -p 5432 -U postgres -d $integrationTypesDatabaseName -v "$integrationTypesDatabaseName.bak";
 pg_restore -h localhost -p 5432 -U postgres -d $complianceDatabaseName -v "$complianceDatabaseName.bak";
 pg_restore -h localhost -p 5432 -U postgres -d $dexDatabaseName -v "$dexDatabaseName.bak";
 pg_restore -h localhost -p 5432 -U postgres -d $coreDatabaseName -v "$coreDatabaseName.bak";
