@@ -311,6 +311,7 @@ func (a *API) LoadPluginWithID(c echo.Context) error {
 	plugin.DescriberURL = m.DescriberURL
 	plugin.DescriberTag = m.DescriberTag
 	plugin.InstallState = models2.IntegrationTypeInstallStateInstalled
+	plugin.OperationalStatus = models2.IntegrationPluginOperationalStatusEnabled
 
 	err = a.database.UpdatePlugin(*plugin)
 	if err != nil {
