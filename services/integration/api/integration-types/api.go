@@ -495,16 +495,16 @@ func (a *API) UninstallPlugin(c echo.Context) error {
 	plugin.InstallState = models2.IntegrationTypeInstallStateNotInstalled
 	plugin.OperationalStatus = models2.IntegrationPluginOperationalStatusDisabled
 
-	err = a.database.UpdatePlugin(*plugin)
-	if err != nil {
-		a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", plugin.PluginID))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
-	}
-
 	err = a.UnLoadPlugin(c.Request().Context(), *plugin)
 	if err != nil {
 		a.logger.Error("failed to unload plugin", zap.Error(err), zap.String("id", plugin.PluginID))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to unload plugin")
+	}
+
+	err = a.database.UpdatePlugin(*plugin)
+	if err != nil {
+		a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", plugin.PluginID))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
 	}
 
 	return c.NoContent(http.StatusOK)
@@ -922,6 +922,12 @@ func (a *API) LoadPlugin(ctx context.Context, plugin models2.IntegrationPlugin) 
 }
 
 func (a *API) UnLoadPlugin(ctx context.Context, plugin models2.IntegrationPlugin) error {
+	err := a.DisableIntegrationTypeHelper(ctx, plugin.IntegrationType.String())
+	if err != nil {
+		a.logger.Error("failed to disable integration type describer", zap.Error(err))
+		return err
+	}
+
 	if _, ok := a.typeManager.Clients[plugin.IntegrationType]; ok {
 		a.typeManager.Clients[plugin.IntegrationType].Kill()
 		delete(a.typeManager.Clients, plugin.IntegrationType)
@@ -931,12 +937,6 @@ func (a *API) UnLoadPlugin(ctx context.Context, plugin models2.IntegrationPlugin
 	}
 	if _, ok := a.typeManager.PingLocks[plugin.IntegrationType]; ok {
 		delete(a.typeManager.PingLocks, plugin.IntegrationType)
-	}
-
-	err := a.DisableIntegrationTypeHelper(ctx, plugin.IntegrationType.String())
-	if err != nil {
-		a.logger.Error("failed to disable integration type describer", zap.Error(err))
-		return err
 	}
 
 	return nil
