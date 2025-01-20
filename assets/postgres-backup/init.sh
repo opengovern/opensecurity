@@ -225,8 +225,8 @@ GRANT pg_write_all_data TO $migratorUserName;
 GRANT ALL ON SCHEMA public TO $migratorUserName;
 GRANT pg_read_all_data TO $steampipeUserName;
 \connect "$integrationTypesDatabaseName";
-GRANT pg_read_all_data TO $migrationUserName;
-GRANT pg_write_all_data TO $migrationUserName;
+GRANT pg_read_all_data TO $migratorUserName;
+GRANT pg_write_all_data TO $migratorUserName;
 GRANT pg_read_all_data TO $steampipeUserName;
 GRANT pg_read_all_data TO $integrationUserName;
 
