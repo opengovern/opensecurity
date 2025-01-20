@@ -11,7 +11,6 @@ import (
 	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"go.uber.org/zap"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sync"
 )
 
 type API struct {
