@@ -1,10 +1,11 @@
-import { Card, Title } from '@tremor/react'
+import { Card, Flex, Title } from '@tremor/react'
 
 import { useEffect, useState } from 'react'
 
 import axios from 'axios'
 
 import { KeyValuePairs } from '@cloudscape-design/components'
+import Spinner from '../../../../components/Spinner'
 interface IntegrationListProps {
     name?: string
     integration_type?: string
@@ -41,6 +42,8 @@ export default function Manifest({
             )
             .then((resp) => {
                 setManifest(resp.data)
+                setLoading(false)
+
             })
             .catch((err) => {
                 console.log(err)
@@ -56,44 +59,54 @@ export default function Manifest({
 
     return (
         <>
-            <Card className="p-5">
-                <Title className='mt-2 mb-4 font-semibold'>
-                    Plugin information
-                </Title>
-                <KeyValuePairs
-                    columns={4}
-                    items={[
-                        {
-                            label: 'Id',
-                            value: manifest?.IntegrationType,
-                        },
-                        {
-                            label: 'URL',
-                            value: manifest?.DescriberURL,
-                        },
-                        {
-                            label: 'Version',
-                            value: manifest?.DescriberTag,
-                        },
-                        {
-                            label: 'Publisher',
-                            value: manifest?.Publisher,
-                        },
-                        {
-                            label: 'Author',
-                            value: manifest?.Author,
-                        },
-                        {
-                            label: 'Supported Platform Version',
-                            value: manifest?.SupportedPlatformVersion,
-                        },
-                        {
-                            label: 'Update date',
-                            value: manifest?.UpdateDate,
-                        },
-                    ]}
-                />
-            </Card>
+            {loading ? (
+                <>
+                    <Spinner />
+                </>
+            ) : (
+                <Card className="">
+                    <Flex flexDirection='col' className='gap-2 p-5 w-full justify-start items-start'>
+                        <>
+                            <Title className=" mb-4 font-semibold">
+                                Plugin information
+                            </Title>
+                            <KeyValuePairs
+                                columns={4}
+                                items={[
+                                    {
+                                        label: 'Id',
+                                        value: manifest?.IntegrationType,
+                                    },
+                                    {
+                                        label: 'URL',
+                                        value: manifest?.DescriberURL,
+                                    },
+                                    {
+                                        label: 'Version',
+                                        value: manifest?.DescriberTag,
+                                    },
+                                    {
+                                        label: 'Publisher',
+                                        value: manifest?.Publisher,
+                                    },
+                                    {
+                                        label: 'Author',
+                                        value: manifest?.Author,
+                                    },
+                                    {
+                                        label: 'Supported Platform Version',
+                                        value: manifest?.SupportedPlatformVersion,
+                                    },
+                                    {
+                                        label: 'Update date',
+                                        value: manifest?.UpdateDate,
+                                    },
+                                ]}
+                            />
+                        </>
+                    </Flex>
+                </Card>
+            )}
         </>
     )
 }

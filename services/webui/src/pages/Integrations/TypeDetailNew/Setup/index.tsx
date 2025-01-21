@@ -1,5 +1,6 @@
 import {
     Card,
+    Flex,
 
 } from '@tremor/react'
 
@@ -9,6 +10,7 @@ import axios from 'axios'
 import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 import { useMDXComponents } from '../../../../components/MDX'
+import Spinner from '../../../../components/Spinner'
 interface IntegrationListProps {
     name?: string
     integration_type?: string
@@ -50,6 +52,8 @@ export default function Setup({
             .then((resp) => {
                
                 setSetup(resp.data)
+                setLoading(false)
+
             })
             .catch((err) => {
                 console.log(err)
@@ -66,15 +70,25 @@ export default function Setup({
   
     return (
         <>
-            <Card className="p-2">
-                <ReactMarkdown
-                    children={setup}
-                    skipHtml={false}
-                    rehypePlugins={[rehypeRaw]}
-                    // @ts-ignore
-                    components={useMDXComponents({})}
-                />
-            </Card>
+            {loading ? (
+                <>
+                    <Spinner />
+                </>
+            ) : (
+
+                <Card className="p-2">
+                    <Flex flexDirection='col' className=' p-5 justify-start w-full items-start'>
+                        <></>
+                    <ReactMarkdown
+                        children={setup}
+                        skipHtml={false}
+                        rehypePlugins={[rehypeRaw]}
+                        // @ts-ignore
+                        components={useMDXComponents({})}
+                    />
+                    </Flex>
+                </Card>
+            )}
         </>
     )
 }

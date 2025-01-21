@@ -113,8 +113,7 @@ export default function Integrations() {
         let path = ''
         if (selected?.html_url) {
             path = `/main/integration/api/v1/integration-types/plugin/load/id/${selected?.platform_name}`
-        }
-        else{
+        } else {
             path = `/main/integration/api/v1/integration-types/plugin/load/url/${url}`
         }
         // @ts-ignore
@@ -127,11 +126,7 @@ export default function Integrations() {
         }
 
         axios
-            .post(
-                `${url}${path}`,
-                {},
-                config
-            )
+            .post(`${url}${path}`, {}, config)
             .then((res) => {
                 getList(9, pageNo, 'count', 'desc', undefined)
                 setLoading(false)
@@ -162,20 +157,24 @@ export default function Integrations() {
                         This Plugin is{' '}
                         {selected?.installed == 'not_installed'
                             ? 'not installed'
+                            : selected?.installed == 'installing'
+                            ? 'installing'
                             : 'disabled'}{' '}
                         .
                     </Text>
                     {selected?.installed == 'not_installed' &&
-                        selected?.html_url == "" &&(<>
-                        <Input 
-                        className='mt-2'
-                            placeholder='Enter Plugin URL'
-                            
-                            value={url}
-                            onChange={({ detail }) => setUrl(detail.value)}
-                            
-                        />
-                        </>)}
+                        selected?.html_url == '' && (
+                            <>
+                                <Input
+                                    className="mt-2"
+                                    placeholder="Enter Plugin URL"
+                                    value={url}
+                                    onChange={({ detail }) =>
+                                        setUrl(detail.value)
+                                    }
+                                />
+                            </>
+                        )}
                     <Flex
                         justifyContent="end"
                         alignItems="center"
@@ -190,21 +189,26 @@ export default function Integrations() {
                         >
                             Close
                         </Button>
-                        <Button
-                            loading={loading}
-                            disabled={loading}
-                            variant="primary"
-                            onClick={() => {
-                                selected?.installed == 'not_installed'
-                                    ? InstallPlugin()
-                                    : EnableIntegration()
-                            }}
-                            className="mt-6"
-                        >
-                            {selected?.installed == 'not_installed'
-                                ? ' Install'
-                                : 'Enable'}
-                        </Button>
+                        {(selected?.installed == 'not_installed' ||
+                            selected?.enabled == 'disabled') && (
+                            <>
+                                <Button
+                                    loading={loading}
+                                    disabled={loading}
+                                    variant="primary"
+                                    onClick={() => {
+                                        selected?.installed == 'not_installed'
+                                            ? InstallPlugin()
+                                            : EnableIntegration()
+                                    }}
+                                    className="mt-6"
+                                >
+                                    {selected?.installed == 'not_installed'
+                                        ? ' Install'
+                                        : 'Enable'}
+                                </Button>
+                            </>
+                        )}
                     </Flex>
                 </div>
             </Modal>
@@ -266,9 +270,7 @@ export default function Integrations() {
                                         {/* <h2 className="text-tremor-title font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
                                             Available Dashboards
                                         </h2> */}
-                                        <div className="flex items-center space-x-2">
-                                        
-                                        </div>
+                                        <div className="flex items-center space-x-2"></div>
                                     </div>
                                     <div className="flex items-center w-full">
                                         <Cards
@@ -285,7 +287,9 @@ export default function Integrations() {
                                                     connector.enabled ===
                                                         'disabled' ||
                                                     connector?.installed ===
-                                                        'not_installed'
+                                                        'not_installed' ||
+                                                    connector?.installed ===
+                                                        'installing'
                                                 ) {
                                                     setOpen(true)
                                                     setSelected(connector)
