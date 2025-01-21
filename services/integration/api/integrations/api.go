@@ -1223,7 +1223,7 @@ func (h *API) DisableIntegrationType(c echo.Context) error {
 
 	plugin.OperationalStatus = models2.IntegrationPluginOperationalStatusDisabled
 
-	err = h.database.UpdatePlugin(*plugin)
+	err = h.database.UpdatePlugin(plugin)
 	if err != nil {
 		h.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", plugin.PluginID))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
@@ -1628,15 +1628,12 @@ func (h *API) EnableIntegrationTypeHelper(ctx context.Context, integrationTypeNa
 		}
 	}
 
-	err = h.database.UpdatePlugin(models2.IntegrationPlugin{
+	err = h.database.UpdatePlugin(&models2.IntegrationPlugin{
 		PluginID:          plugin.PluginID,
 		IntegrationType:   plugin.IntegrationType,
 		InstallState:      models2.IntegrationTypeInstallStateInstalled,
 		OperationalStatus: models2.IntegrationPluginOperationalStatusEnabled,
 		URL:               plugin.URL,
-
-		IntegrationPlugin: plugin.IntegrationPlugin,
-		CloudQlPlugin:     plugin.CloudQlPlugin,
 	})
 	if err != nil {
 		h.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", plugin.IntegrationType.String()))
