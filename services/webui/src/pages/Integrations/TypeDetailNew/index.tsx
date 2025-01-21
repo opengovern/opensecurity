@@ -31,6 +31,8 @@ import IntegrationList from './Integration'
 import CredentialsList from './Credentials'
 import { OpenGovernance } from '../../../icons/icons'
 import DiscoveryJobs from './Discovery'
+import Setup from './Setup'
+import Manifest from './Manifest'
 
 export default function TypeDetail() {
     const navigate = useNavigate()
@@ -112,6 +114,26 @@ export default function TypeDetail() {
                                 label: 'Discovery Jobs',
                                 content: (
                                     <DiscoveryJobs
+                                        name={state?.name}
+                                        integration_type={type}
+                                    />
+                                ),
+                            },
+                            {
+                                id: '3',
+                                label: 'Setup Guide',
+                                content: (
+                                    <Setup
+                                        name={state?.name}
+                                        integration_type={type}
+                                    />
+                                ),
+                            },
+                            {
+                                id: '4',
+                                label: 'Plugin information',
+                                content: (
+                                    <Manifest
                                         name={state?.name}
                                         integration_type={type}
                                     />
