@@ -276,68 +276,12 @@ func (a *API) LoadPluginWithID(c echo.Context) error {
 func (a *API) LoadPluginWithURL(c echo.Context) error {
 	pluginURL := c.Param("http_url")
 
-	var err error
-
-	baseDir := "/integration-types"
-
-	// create tmp directory if not exists
-	if _, err = os.Stat(baseDir); os.IsNotExist(err) {
-		if err = os.Mkdir(baseDir, os.ModePerm); err != nil {
-			a.logger.Error("failed to create tmp directory", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create tmp directory")
-		}
-	}
-
-	// download files from urls
-
 	if pluginURL == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "plugin url is empty")
 	}
 	url := pluginURL
-	// remove existing files
-	if err = os.RemoveAll(baseDir + "/integarion_type"); err != nil {
-		a.logger.Error("failed to remove existing files", zap.Error(err), zap.String("url", url), zap.String("path", baseDir+"/integarion_type"))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to remove existing files")
-	}
 
-	downloader := getter.Client{
-		Src:  url,
-		Dst:  baseDir + "/integarion_type",
-		Mode: getter.ClientModeDir,
-	}
-	err = downloader.Get()
-	if err != nil {
-		a.logger.Error("failed to get integration binaries", zap.Error(err), zap.String("url", url))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration binaries")
-	}
-
-	// read integration-plugin file
-	integrationPlugin, err := os.ReadFile(baseDir + "/integarion_type/integration-plugin")
-	if err != nil {
-		a.logger.Error("failed to open integration-plugin file", zap.Error(err), zap.String("url", url))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open integration-plugin file")
-	}
-	cloudqlPlugin, err := os.ReadFile(baseDir + "/integarion_type/cloudql-plugin")
-	if err != nil {
-		a.logger.Error("failed to open cloudql-plugin file", zap.Error(err), zap.String("url", url))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open cloudql-plugin file")
-	}
-	//// read manifest file
-	manifestFile, err := os.ReadFile(baseDir + "/integarion_type/manifest.yaml")
-	if err != nil {
-		a.logger.Error("failed to open manifest file", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open manifest file")
-	}
-	a.logger.Info("manifestFile", zap.String("file", string(manifestFile)))
-
-	var m models2.Manifest
-	// decode yaml
-	if err := yaml.Unmarshal(manifestFile, &m); err != nil {
-		a.logger.Error("failed to decode manifest", zap.Error(err), zap.String("url", url))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to decode manifest file")
-	}
-
-	a.logger.Info("done reading files", zap.String("url", url), zap.String("url", url), zap.String("integrationType", m.IntegrationType.String()), zap.Int("integrationPluginSize", len(integrationPlugin)), zap.Int("cloudqlPluginSize", len(cloudqlPlugin)))
+	var err error
 
 	plugin, err := a.database.GetPluginByURL(url)
 	if err != nil {
@@ -346,6 +290,61 @@ func (a *API) LoadPluginWithURL(c echo.Context) error {
 	}
 
 	if plugin == nil {
+		baseDir := "/integration-types"
+
+		// create tmp directory if not exists
+		if _, err = os.Stat(baseDir); os.IsNotExist(err) {
+			if err = os.Mkdir(baseDir, os.ModePerm); err != nil {
+				a.logger.Error("failed to create tmp directory", zap.Error(err))
+				return echo.NewHTTPError(http.StatusInternalServerError, "failed to create tmp directory")
+			}
+		}
+
+		// remove existing files
+		if err = os.RemoveAll(baseDir + "/integarion_type"); err != nil {
+			a.logger.Error("failed to remove existing files", zap.Error(err), zap.String("url", url), zap.String("path", baseDir+"/integarion_type"))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to remove existing files")
+		}
+
+		downloader := getter.Client{
+			Src:  url,
+			Dst:  baseDir + "/integarion_type",
+			Mode: getter.ClientModeDir,
+		}
+		err = downloader.Get()
+		if err != nil {
+			a.logger.Error("failed to get integration binaries", zap.Error(err), zap.String("url", url))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration binaries")
+		}
+
+		// read integration-plugin file
+		integrationPlugin, err := os.ReadFile(baseDir + "/integarion_type/integration-plugin")
+		if err != nil {
+			a.logger.Error("failed to open integration-plugin file", zap.Error(err), zap.String("url", url))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to open integration-plugin file")
+		}
+		cloudqlPlugin, err := os.ReadFile(baseDir + "/integarion_type/cloudql-plugin")
+		if err != nil {
+			a.logger.Error("failed to open cloudql-plugin file", zap.Error(err), zap.String("url", url))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to open cloudql-plugin file")
+		}
+		//// read manifest file
+		manifestFile, err := os.ReadFile(baseDir + "/integarion_type/manifest.yaml")
+		if err != nil {
+			a.logger.Error("failed to open manifest file", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to open manifest file")
+		}
+		a.logger.Info("manifestFile", zap.String("file", string(manifestFile)))
+
+		var m models2.Manifest
+		// decode yaml
+		if err := yaml.Unmarshal(manifestFile, &m); err != nil {
+			a.logger.Error("failed to decode manifest", zap.Error(err), zap.String("url", url))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to decode manifest file")
+		}
+
+		a.logger.Info("done reading files", zap.String("url", url), zap.String("url", url), zap.String("integrationType", m.IntegrationType.String()), zap.Int("integrationPluginSize", len(integrationPlugin)), zap.Int("cloudqlPluginSize", len(cloudqlPlugin)))
+
 		plugin = &models2.IntegrationPlugin{
 			PluginID:        m.IntegrationType.String(),
 			IntegrationType: m.IntegrationType,
@@ -362,47 +361,48 @@ func (a *API) LoadPluginWithURL(c echo.Context) error {
 			a.logger.Error("failed to create plugin", zap.Error(err), zap.String("id", m.IntegrationType.String()))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create plugin")
 		}
-	} else {
-		plugin.PluginID = m.IntegrationType.String()
-		plugin.IntegrationType = m.IntegrationType
-		plugin.DescriberURL = m.DescriberURL
-		plugin.DescriberTag = m.DescriberTag
-		plugin.InstallState = models2.IntegrationTypeInstallStateInstalling
-		plugin.URL = url
-		plugin.IntegrationPlugin = integrationPlugin
-		plugin.CloudQlPlugin = cloudqlPlugin
-		err = a.database.UpdatePlugin(*plugin)
-		if err != nil {
-			a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", m.IntegrationType.String()))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
-		}
-	}
 
-	go func() {
-		err = a.LoadPlugin(c.Request().Context(), *plugin)
-		if err != nil {
-			a.logger.Error("failed to load plugin", zap.Error(err), zap.String("id", plugin.PluginID))
+		go func() {
+			err = a.LoadPlugin(c.Request().Context(), *plugin)
+			if err != nil {
+				a.logger.Error("failed to load plugin", zap.Error(err), zap.String("id", plugin.PluginID))
 
-			plugin.InstallState = models2.IntegrationTypeInstallStateNotInstalled
-			plugin.OperationalStatus = models2.IntegrationPluginOperationalStatusFailed
+				plugin.InstallState = models2.IntegrationTypeInstallStateNotInstalled
+				plugin.OperationalStatus = models2.IntegrationPluginOperationalStatusFailed
+
+				err = a.database.UpdatePlugin(*plugin)
+				if err != nil {
+					a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", m.IntegrationType.String()))
+					return
+				}
+				return
+			}
+
+			plugin.InstallState = models2.IntegrationTypeInstallStateInstalled
+			plugin.OperationalStatus = models2.IntegrationPluginOperationalStatusEnabled
 
 			err = a.database.UpdatePlugin(*plugin)
 			if err != nil {
 				a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", m.IntegrationType.String()))
 				return
 			}
-			return
-		}
-
-		plugin.InstallState = models2.IntegrationTypeInstallStateInstalled
-		plugin.OperationalStatus = models2.IntegrationPluginOperationalStatusEnabled
+		}()
+	} else {
+		plugin.InstallState = models2.IntegrationTypeInstallStateInstalling
 
 		err = a.database.UpdatePlugin(*plugin)
 		if err != nil {
-			a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", m.IntegrationType.String()))
-			return
+			a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", plugin.PluginID))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to update plugin")
 		}
-	}()
+
+		go func() {
+			err = a.InstallOrUpdatePlugin(c, *plugin)
+			if err != nil {
+				a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", plugin.PluginID))
+			}
+		}()
+	}
 
 	return c.NoContent(http.StatusOK)
 }
@@ -914,19 +914,19 @@ func (a *API) LoadPlugin(ctx context.Context, plugin models2.IntegrationPlugin) 
 	}
 	hcLogger := hczap.Wrap(a.logger)
 
-	var client *plugin2.Client
 	if v, ok := a.typeManager.Clients[plugin.IntegrationType]; ok {
-		client = v
-	} else {
-		client = plugin2.NewClient(&plugin2.ClientConfig{
-			HandshakeConfig: interfaces.HandshakeConfig,
-			Plugins:         map[string]plugin2.Plugin{pluginName: &interfaces.IntegrationTypePlugin{}},
-			Cmd:             exec.Command(pluginPath),
-			Logger:          hcLogger,
-			Managed:         true,
-		})
-		a.typeManager.Clients[plugin.IntegrationType] = client
+		v.Kill()
+		delete(a.typeManager.Clients, plugin.IntegrationType)
 	}
+
+	client := plugin2.NewClient(&plugin2.ClientConfig{
+		HandshakeConfig: interfaces.HandshakeConfig,
+		Plugins:         map[string]plugin2.Plugin{pluginName: &interfaces.IntegrationTypePlugin{}},
+		Cmd:             exec.Command(pluginPath),
+		Logger:          hcLogger,
+		Managed:         true,
+	})
+	a.typeManager.Clients[plugin.IntegrationType] = client
 
 	rpcClient, err := client.Client()
 	if err != nil {
@@ -943,19 +943,13 @@ func (a *API) LoadPlugin(ctx context.Context, plugin models2.IntegrationPlugin) 
 		return err
 	}
 
-	var itInterface interfaces.IntegrationType
-	var ok2 bool
-	if v, ok := a.typeManager.IntegrationTypes[plugin.IntegrationType]; ok {
-		itInterface = v
-	} else {
-		itInterface, ok2 = raw.(interfaces.IntegrationType)
-		if !ok2 {
-			a.logger.Error("failed to cast plugin to integration type", zap.String("plugin", pluginName), zap.String("path", pluginPath))
-			client.Kill()
-			return err
-		}
-		a.typeManager.IntegrationTypes[plugin.IntegrationType] = itInterface
+	itInterface, ok := raw.(interfaces.IntegrationType)
+	if !ok {
+		a.logger.Error("failed to cast plugin to integration type", zap.String("plugin", pluginName), zap.String("path", pluginPath))
+		client.Kill()
+		return err
 	}
+	a.typeManager.IntegrationTypes[plugin.IntegrationType] = itInterface
 
 	a.typeManager.PingLocks[plugin.IntegrationType] = &sync.Mutex{}
 
