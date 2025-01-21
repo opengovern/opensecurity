@@ -1259,6 +1259,24 @@ func (a *API) EnableIntegrationTypeHelper(ctx context.Context, integrationTypeNa
 	if err != nil {
 		if !strings.Contains(err.Error(), "already exists") {
 			return err
+		} else {
+			existingDeployment := &appsv1.Deployment{}
+			err = a.kubeClient.Get(ctx, client.ObjectKey{
+				Name:      cnf.DescriberDeploymentName,
+				Namespace: currentNamespace,
+			}, existingDeployment)
+			if err != nil {
+				return err // Return if fetching fails
+			}
+
+			// Update the existing deployment's spec
+			existingDeployment.Spec = describerDeployment.Spec
+
+			// Apply the update
+			err = a.kubeClient.Update(ctx, existingDeployment)
+			if err != nil {
+				return err // Return if updating fails
+			}
 		}
 	}
 
@@ -1322,6 +1340,24 @@ func (a *API) EnableIntegrationTypeHelper(ctx context.Context, integrationTypeNa
 	if err != nil {
 		if !strings.Contains(err.Error(), "already exists") {
 			return err
+		} else {
+			existingDeployment := &appsv1.Deployment{}
+			err = a.kubeClient.Get(ctx, client.ObjectKey{
+				Name:      cnf.DescriberDeploymentName + "-manuals",
+				Namespace: currentNamespace,
+			}, existingDeployment)
+			if err != nil {
+				return err // Return if fetching fails
+			}
+
+			// Update the existing deployment's spec
+			existingDeployment.Spec = describerDeploymentManuals.Spec
+
+			// Apply the update
+			err = a.kubeClient.Update(ctx, existingDeployment)
+			if err != nil {
+				return err // Return if updating fails
+			}
 		}
 	}
 
