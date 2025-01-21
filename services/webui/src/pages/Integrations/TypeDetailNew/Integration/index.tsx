@@ -17,6 +17,7 @@ import {
     Badge,
     Box,
     Button,
+    Checkbox,
     FormField,
     Header,
     Input,
@@ -79,6 +80,8 @@ export default function IntegrationList({
     const [runOpen, setRunOpen] = useState(false)
     const [selectedIntegrations, setSelectedIntegrations] = useState<any>([])
     const [params, setParams] = useState<any>()
+    const [enableSchedule, setEnableSchedule] = useState(false)
+
     const GetIntegrations = () => {
         setLoading(true)
         let url = ''
@@ -141,8 +144,8 @@ export default function IntegrationList({
          }
 
          axios
-             .put(
-                 `${url}/main/integration/api/v1/integrations/types/${integration_type}/disable`,
+             .post(
+                 `${url}/main/integration/api/v1/integration-types/plugin/${integration_type}/disable`,
                  {},
                  config
              )
@@ -152,10 +155,10 @@ export default function IntegrationList({
              })
              .catch((err) => {
                  setLoading(false)
-                  setNotification({
-                      text: `Error: ${err.response.data.message}`,
-                      type: 'error',
-                  })
+                 setNotification({
+                     text: `Error: ${err.response.data.message}`,
+                     type: 'error',
+                 })
              })
      }
     const CheckActionsClick = (action: any) => {
@@ -299,12 +302,14 @@ export default function IntegrationList({
                              return {
                                  resource_type: item.value,
                                  parameters: params,
+                                 enable_schedule: enableSchedule,
                              }
                          }
                      }
                  }
                 return {
                     resource_type: item.value,
+                    enable_schedule: enableSchedule,
                 }
             })
         }
@@ -594,7 +599,7 @@ export default function IntegrationList({
                                                         DisableIntegration()
                                                     }}
                                                 >
-                                                    Disable Integration Type
+                                                    Disable Plugin
                                                 </Button>
                                                 <Button
                                                     loading={
@@ -686,7 +691,7 @@ export default function IntegrationList({
                     </Modal>
                     <Modal
                         visible={runOpen}
-                        onDismiss={() =>{
+                        onDismiss={() => {
                             setRunOpen(false)
                             setSelectedIntegrations([])
                             setSelectedResourceType([])
@@ -698,10 +703,10 @@ export default function IntegrationList({
                             <Flex className="gap-3" justifyContent="end">
                                 <Button
                                     onClick={() => {
-                                         setRunOpen(false)
-                                         setSelectedIntegrations([])
-                                         setSelectedResourceType([])
-                                         setParams({})
+                                        setRunOpen(false)
+                                        setSelectedIntegrations([])
+                                        setSelectedResourceType([])
+                                        setParams({})
                                     }}
                                 >
                                     Cancel
@@ -733,6 +738,7 @@ export default function IntegrationList({
                                 </Button>
                                 <Button
                                     variant="primary"
+                                    loading={actionLoading['discovery']}
                                     onClick={() => {
                                         RunDiscovery()
                                     }}
@@ -742,7 +748,10 @@ export default function IntegrationList({
                             </Flex>
                         }
                     >
-                        <Flex className="gap-5 w-full" flexDirection="col">
+                        <Flex
+                            className="gap-5 w-full justify-start items-start"
+                            flexDirection="col"
+                        >
                             <Multiselect
                                 className="w-full"
                                 options={row?.map((item: any) => {
@@ -781,32 +790,49 @@ export default function IntegrationList({
                                 tokenLimit={0}
                                 placeholder="Select resource type"
                             />
-                            {selectedResourceType?.length == 1 && (<>
-                                {/* show params to input */}
-                                {selectedResourceType[0]?.params?.map((item: any) => {
-                                    return (
-                                        <FormField
-                                            className="w-full"
-                                            label={`${item.name} (Optional)`}
-                                            description={item.description}
-                                            
-                                        >
-                                            <Input
-                                                className="w-full"
-                                                value={params?.[item.name]}
-                                                type={"text"}
-                                                onChange={({ detail }) =>
-                                                    setParams({
-                                                        ...params,
-                                                        [item.name]: detail.value,
-                                                    })
-                                                }
-                                            />
-                                        </FormField>
-                                    )
-                                })}
-                            </>)}
-
+                            <Checkbox
+                                onChange={({ detail }) =>
+                                    setEnableSchedule(detail.checked)
+                                }
+                                checked={enableSchedule}
+                            >
+                                Make this a recurring Discovery Job
+                            </Checkbox>
+                            {selectedResourceType?.length == 1 && (
+                                <>
+                                    {/* show params to input */}
+                                    {selectedResourceType[0]?.params?.map(
+                                        (item: any) => {
+                                            return (
+                                                <FormField
+                                                    className="w-full"
+                                                    label={`${item.name} (Optional)`}
+                                                    description={
+                                                        item.description
+                                                    }
+                                                >
+                                                    <Input
+                                                        className="w-full"
+                                                        value={
+                                                            params?.[item.name]
+                                                        }
+                                                        type={'text'}
+                                                        onChange={({
+                                                            detail,
+                                                        }) =>
+                                                            setParams({
+                                                                ...params,
+                                                                [item.name]:
+                                                                    detail.value,
+                                                            })
+                                                        }
+                                                    />
+                                                </FormField>
+                                            )
+                                        }
+                                    )}
+                                </>
+                            )}
                         </Flex>
                     </Modal>
                 </>

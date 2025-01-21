@@ -20,12 +20,9 @@ import { useAtom, useSetAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 
 import {
-    useWorkspaceApiV1WorkspaceCurrentList,
-    useWorkspaceApiV1WorkspacesLimitsDetail,
-    useWorkspaceApiV3GetShouldSetup,
     useWorkspaceApiV3LoadSampleData,
     useWorkspaceApiV3PurgeSampleData,
-} from '../../../api/workspace.gen'
+} from '../../../api/metadata.gen'
 import Spinner from '../../../components/Spinner'
 import { numericDisplay } from '../../../utilities/numericDisplay'
 import { useAuthApiV1UserDetail } from '../../../api/auth.gen'
@@ -35,6 +32,7 @@ import { isDemoAtom, previewAtom, sampleAtom } from '../../../store'
 import {
     useMetadataApiV1MetadataCreate,
     useMetadataApiV1MetadataDetail,
+    useWorkspaceApiV1WorkspaceCurrentList,
 } from '../../../api/metadata.gen'
 import { useComplianceApiV1QueriesSyncList } from '../../../api/compliance.gen'
 import { getErrorMessage } from '../../../types/apierror'
@@ -125,38 +123,13 @@ function TextMetric({ title, metricId, disabled }: ITextMetric) {
     )
 }
 export default function SettingsEntitlement() {
-    const workspace = useParams<{ ws: string }>().ws
-    const { response, isLoading } = useWorkspaceApiV1WorkspacesLimitsDetail(
-        workspace || ''
-    )
+    
     const { response: currentWorkspace, isLoading: loadingCurrentWS } =
         useWorkspaceApiV1WorkspaceCurrentList()
-    // const { response: ownerResp, isLoading: ownerIsLoading } =
-    //     useAuthApiV1UserDetail(
-    //         currentWorkspace?.ownerId || '',
-    //         {},
-    //         !loadingCurrentWS
-    //     )
 
-    const noOfHosts = 0 // metricsResp?.count || 0
-
-    const currentUsers = response?.currentUsers || 0
-    const currentConnections = response?.currentConnections || 0
-    const currentResources = response?.currentResources || 0
     const [sample, setSample] = useAtom(sampleAtom)
-    const maxUsers = response?.maxUsers || 1
-    const maxConnections = response?.maxConnections || 1
-    const maxResources = response?.maxResources || 1
-    const maxHosts = 100000
-
-    const usersPercentage = Math.ceil((currentUsers / maxUsers) * 100.0)
-    const connectionsPercentage = Math.ceil(
-        (currentConnections / maxConnections) * 100.0
-    )
-    const resourcesPercentage = Math.ceil(
-        (currentResources / maxResources) * 100.0
-    )
-    const hostsPercentage = Math.ceil((noOfHosts / maxHosts) * 100.0)
+   
+   
     const [preview, setPreview] = useAtom(previewAtom)
     const [migrations_status, setMigrationsStatus] = useState()
     const {
@@ -177,22 +150,6 @@ export default function SettingsEntitlement() {
         }
     }
     const wsDetails = [
-        // {
-        //     title: 'Workspace ID',
-        //     value: currentWorkspace?.id,
-        // },
-        // {
-        //     title: 'Displayed name',
-        //     value: currentWorkspace?.name,
-        // },
-        // {
-        //     title: 'URL',
-        //     value: currentWorkspace?.,
-        // },
-        // {
-        //     title: 'Workspace owner',
-        //     value: ownerResp?.userName,
-        // },
         {
             title: 'Version',
             // @ts-ignore
@@ -210,8 +167,8 @@ export default function SettingsEntitlement() {
             ),
         },
         {
-            title: 'Creation date',
-            value: dateDisplay(
+            title: 'Install date',
+            value: dateTimeDisplay(
                 // @ts-ignore
                 currentWorkspace?.workspace_creation_time ||
                     Date.now().toString()
@@ -282,9 +239,12 @@ export default function SettingsEntitlement() {
                         res.data.status !== 'SUCCEEDED' &&
                         res.data.status !== 'FAILED'
                     ) {
-                        const id = setInterval(GetStatus, 30000)
-                        // @ts-ignore
-                        setIntervalId(id)
+                        if(!intervalId){
+   const id = setInterval(GetStatus, 120000)
+   // @ts-ignore
+   setIntervalId(id)
+                        } 
+                     
                     }
                 }
                 //  const temp = []
@@ -399,60 +359,20 @@ export default function SettingsEntitlement() {
     useEffect(() => {
         if (syncExecuted && !syncLoading) {
             GetStatus()
-            const id = setInterval(GetStatus, 30000)
+            const id = setInterval(GetStatus, 120000)
             // @ts-ignore
             setIntervalId(id)
             // setValue(response?.value || '')
             // window.location.reload()
         }
     }, [syncLoading, syncExecuted])
-    return isLoading || loadingCurrentWS ? (
+    return   loadingCurrentWS ? (
         <Flex justifyContent="center" className="mt-56">
             <Spinner />
         </Flex>
     ) : (
         <Flex flexDirection="col">
-            {/* <Grid numItemsSm={2} numItemsLg={3} className="gap-4 w-full"> */}
-            {/* <Card key="activeUsers">
-                    <Text>Active users</Text>
-                    <Metric>{numericDisplay(currentUsers)}</Metric>
-                    <Flex className="mt-3">
-                        <Text className="truncate">{`${usersPercentage}%`}</Text>
-                        <Text>{numericDisplay(maxUsers)} Allowed</Text>
-                    </Flex>
-                    <ProgressBar value={usersPercentage} className="mt-2" />
-                </Card>
-                <Card key="connections">
-                    <Text>Connections</Text>
-                    <Metric>{numericDisplay(currentConnections)}</Metric>
-                    <Flex className="mt-3">
-                        <Text className="truncate">{`${connectionsPercentage}%`}</Text>
-                        <Text>{numericDisplay(maxConnections)} Allowed</Text>
-                    </Flex>
-                    <ProgressBar
-                        value={connectionsPercentage}
-                        className="mt-2"
-                    />
-                </Card>
-                <Card key="resources">
-                    <Text>Resources</Text>
-                    <Metric>{numericDisplay(currentResources)}</Metric>
-                    <Flex className="mt-3">
-                        <Text className="truncate">{`${resourcesPercentage}%`}</Text>
-                        <Text>{numericDisplay(maxResources)} Allowed</Text>
-                    </Flex>
-                    <ProgressBar value={resourcesPercentage} className="mt-2" />
-                </Card> */}
-            {/* <Card key="hosts">
-                    <Text>Hosts</Text>
-                    <Metric>{numericDisplay(noOfHosts)}</Metric>
-                    <Flex className="mt-3">
-                        <Text className="truncate">{`${hostsPercentage}%`}</Text>
-                        <Text>{numericDisplay(maxHosts)} Allowed</Text>
-                    </Flex>
-                    <ProgressBar value={hostsPercentage} className="mt-2" />
-                </Card> */}
-            {/* </Grid> */}
+            
             <Card key="summary" className=" w-full">
                 <Title className="font-semibold mb-2">Settings</Title>
                 <KeyValuePairs
@@ -464,25 +384,7 @@ export default function SettingsEntitlement() {
                         }
                     })}
                 />
-                {/* <List className="mt-3">
-                    {wsDetails.map((item) => (
-                        <ListItem key={item.title} className="my-1">
-                            <Text className="truncate">{item.title}</Text>
-                            <Text className="text-gray-800">{item.value}</Text>
-                        </ListItem>
-                    ))}
-                    <ListItem>
-                        <Text>Show preview features</Text>
-                        <Switch
-                            onClick={() =>
-                                preview === 'true'
-                                    ? setPreview('false')
-                                    : setPreview('true')
-                            }
-                            checked={preview === 'true'}
-                        />
-                    </ListItem>
-                </List> */}
+              
                 <Divider />
                 <Title className="font-semibold mt-8">
                     Platform Configuration
@@ -549,23 +451,7 @@ export default function SettingsEntitlement() {
 
                 <Title className="font-semibold mt-8">App configurations</Title>
 
-                {/* <Flex
-                flexDirection="row"
-                justifyContent="between"
-                className="w-full mt-2"
-            >
-                <Text className="font-normal">Demo Mode</Text>
-                <TabGroup
-                    index={selectedMode}
-                    onIndexChange={setSelectedMode}
-                    className="w-fit"
-                >
-                    <TabList className="border border-gray-200" variant="solid">
-                        <Tab>App mode</Tab>
-                        <Tab>Demo mode</Tab>
-                    </TabList>
-                </TabGroup>
-            </Flex> */}
+              
                 <Flex
                     flexDirection="row"
                     justifyContent="between"

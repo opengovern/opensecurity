@@ -42,6 +42,7 @@ import AllControls from './All Controls'
 import SettingsParameters from '../../Settings/Parameters'
 import { useIntegrationApiV1EnabledConnectorsList } from '../../../api/integration.gen'
 import AllPolicy from './All Policy'
+import { useParams, useSearchParams } from 'react-router-dom'
 const CATEGORY = {
     sre_efficiency: 'Efficiency',
     sre_reliability: 'Reliability',
@@ -50,6 +51,7 @@ const CATEGORY = {
 
 export default function Compliance() {
     const defaultSelectedConnectors = ''
+
 
     const [loading, setLoading] = useState<boolean>(false)
     const [query, setQuery] = useState({
@@ -76,6 +78,8 @@ export default function Compliance() {
     const [totalCount, setTotalCount] = useState<number>(0)
     const [response, setResponse] = useState()
     const [isLoading, setIsLoading] = useState(false)
+    const [tab,setTab] = useState('0')
+    const [tab_id,setTabID] = useSearchParams()
     const {
         response: Types,
         isLoading: TypesLoading,
@@ -93,7 +97,7 @@ export default function Compliance() {
                 value: 'No',
             },
         ]
-        Types?.integration_types?.map((item) => {
+        Types?.items?.map((item) => {
             temp.push({
                 propertyKey: 'integrationType',
                 value: item.platform_name,
@@ -279,15 +283,41 @@ export default function Compliance() {
             'baseline_supportability',
         ])
     }, [])
+    useEffect(()=>{
+        switch (tab_id?.get('tab')) {
+            case 'frameworks':
+                setTab('frameworks')
+                break
+            case 'controls':
+                setTab('controls')
+                break
+            case 'policies':
+                setTab('policies')
+                break
+            case 'parameters':
+                setTab('parameters')
+                break
+            default:
+                setTab('frameworks')
+                break
+        }
+    },[tab_id])
 
     return (
         <>
             {/* <TopHeader /> */}
             <Tabs
+                activeTabId={tab}
+                onChange={({ detail }) => {
+                console.log(detail.activeTabId)
+                    tab_id.set('tab', detail.activeTabId)
+                    setTabID(tab_id)
+                    setTab(detail.activeTabId)
+                }}
                 tabs={[
                     {
                         label: 'Frameworks',
-                        id: '0',
+                        id: 'frameworks',
                         content: (
                             <>
                                 <Flex
@@ -578,17 +608,17 @@ export default function Compliance() {
                         ),
                     },
                     {
-                        id: '1',
+                        id: 'controls',
                         label: 'Controls',
                         content: <AllControls />,
                     },
                     {
-                        id: '2',
-                        label: 'Policy',
+                        id: 'policies',
+                        label: 'Policies',
                         content: <AllPolicy />,
                     },
                     {
-                        id: '3',
+                        id: 'parameters',
                         label: 'Parameters',
                         content: <SettingsParameters />,
                     },

@@ -174,19 +174,19 @@ export default function Sidebar({  currentPage }: ISidebar) {
             false
         ) {
             if (
-                !currentPage.includes('integrations') &&
+                !currentPage.includes('plugins') &&
                 currentPage !== 'administration'
             ) {
-                navigate(`/integrations`)
+                navigate(`/pl`)
             }
             return [
                 {
-                    name: 'Integrations',
-                    page: 'integrations',
+                    name: 'Plugins',
+                    page: 'plugins',
                     icon: PuzzlePieceIcon,
                     // isLoading: connectionsIsLoading,
                     isLoading: false,
-                    count:  0,
+                    count: 0,
 
                     // count: numericDisplay(connectionCount?.count) || 0,
                     error: undefined,
@@ -208,102 +208,12 @@ export default function Sidebar({  currentPage }: ISidebar) {
                 isPreview: false,
             },
 
-            // {
-            //     name: 'Cloud Dashboards',
-            //     page: [
-            //         'infrastructure',
-            //         'infrastructure-cloud-accounts',
-            //         'infrastructure-metrics',
-            //         'spend',
-            //         'spend-accounts',
-            //         'spend-metrics',
-            //     ],
-            //     icon: CubeIcon,
-            //     children: [
-            //         {
-            //             name: 'Infrastructure Summary',
-            //             page: 'infrastructure',
-            //             isPreview: false,
-            //             isLoading: false,
-            //             count: undefined,
-            //             error: false,
-            //         },
-            //         {
-            //             name: 'Spend Summary',
-            //             page: 'spend',
-            //             isPreview: false,
-            //             isLoading: false,
-            //             count: undefined,
-            //             error: false,
-            //         },
-            //         {
-            //             name: 'Infrastructure - Cloud Accounts',
-            //             page: 'infrastructure-cloud-accounts',
-            //             isPreview: false,
-            //             isLoading: assetsIsLoading,
-            //             count: numericDisplay(assetCount?.connectionCount) || 0,
-            //             error: assetCountErr,
-            //         },
-            //         {
-            //             name: 'Infrastructure - Cloud Services',
-            //             page: 'infrastructure-metrics',
-            //             isPreview: false,
-            //             isLoading: assetsIsLoading,
-            //             count: numericDisplay(assetCount?.metricCount) || 0,
-            //             error: assetCountErr,
-            //         },
-
-            //         {
-            //             name: 'Spend - Cloud Accounts',
-            //             page: 'spend-accounts',
-            //             isPreview: false,
-            //             isLoading: spendCountIsLoading,
-            //             count: numericDisplay(spendCount?.connectionCount) || 0,
-            //             error: spendCountErr,
-            //         },
-            //         {
-            //             name: 'Spend - Cloud Services',
-            //             page: 'spend-metrics',
-            //             isPreview: false,
-            //             isLoading: spendCountIsLoading,
-            //             count: numericDisplay(spendCount?.metricCount) || 0,
-            //             error: spendCountErr,
-            //         },
-            //     ],
-            //     isPreview: false,
-            // },
-            // {
-            //     name: 'Spend',
-            //     page: ['spend', 'spend-accounts', 'spend-metrics'],
-            //     icon: BanknotesIcon,
-            //     children: [
-            //         {
-            //             name: 'Summary',
-            //             page: 'spend',
-            //             isPreview: false,
-            //             isLoading: false,
-            //             count: undefined,
-            //             error: false,
-            //         },
-            //         {
-            //             name: 'Cloud Accounts',
-            //             page: 'spend-accounts',
-            //             isPreview: false,
-            //             isLoading: spendCountIsLoading,
-            //             count: numericDisplay(spendCount?.connectionCount) || 0,
-            //             error: spendCountErr,
-            //         },
-            //         {
-            //             name: 'Services',
-            //             page: 'spend-metrics',
-            //             isPreview: false,
-            //             isLoading: spendCountIsLoading,
-            //             count: numericDisplay(spendCount?.metricCount) || 0,
-            //             error: spendCountErr,
-            //         },
-            //     ],
-            //     isPreview: false,
-            // },
+            {
+                name: 'CloudQL',
+                page: ['cloudql', 'cloudql'],
+                icon: MagnifyingGlassIcon,
+                isPreview: false,
+            },
             {
                 name: 'Compliance',
                 icon: ShieldCheckIcon,
@@ -317,55 +227,7 @@ export default function Sidebar({  currentPage }: ISidebar) {
                 isLoading: false,
                 count: undefined,
                 error: false,
-                // children: [
-                // {
-                //     name: 'Frameworks',
-                //     page: ['compliance','compliance/:benchmarkId'],
-                //     isPreview: false,
-                //     isLoading: false,
-                //     count: undefined,
-                //     error: false,
-                // },
-                // {
-                //     name: 'SCORE',
-                //     page: 'score',
-                //     isPreview: false,
-                //     isLoading: false,
-                //     count: undefined,
-                //     error: false,
-                // },
-                // {
-                //     name: ' Library',
-                //     page: 'compliance/library',
-                //     isPreview: false,
-                //     isLoading: false,
-                //     count: undefined,
-                //     error: false,
-                // },
-                // {
-                //     name: ' Benchmarks',
-                //     page: 'compliance/benchmarks',
-                //     isPreview: false,
-                //     isLoading: false,
-                //     count: undefined,
-                //     error: false,
-                // },
-                // {
-                //     name: ' Controls',
-                //     page: 'compliance/controls',
-                //     isPreview: false,
-                //     isLoading: false,
-                //     count: undefined,
-                //     error: false,
-                // },
-                // ],
             },
-            // {
-            //     name: 'SRE',
-            //     page: ['score', 'score/categories'],
-            //     icon: ChevronDoubleUpIcon,
-            //     isPreview: false,
-            // },
 
             {
                 name: 'All Incidents',
@@ -376,90 +238,17 @@ export default function Sidebar({  currentPage }: ISidebar) {
                     // 'incidents/drift-events',
                 ],
                 isPreview: false,
-                // children: [
-                //     {
-                //         name: 'Summary',
-                //         page: 'incidents/summary',
-                //     },
-                //     {
-                //         name: 'Incidents',
-                //         page: 'incidents',
-                //         isLoading: findingsIsLoading,
-                //         // count: numericDisplay(findingsCount?.count) || 0,
-                //         error: findingsErr,
-                //     },
-
-                //     // {
-                //     //     name: 'Resource Summary',
-                //     //     page: 'incidents/resource-summary',
-                //     // },
-                //     // {
-                //     //     name: 'Drift Events',
-                //     //     page: 'incidents/drift-events',
-                //     // },
-                //     // {
-                //     //     name: 'Account Posture',
-                //     //     page: 'incidents/account-posture',
-                //     // },
-                //     // {
-                //     //     name: 'Control Summary',
-                //     //     page: 'incidents/control-summary',
-                //     // },
-                // ],
             },
 
-            // {
-            //     name: 'Security',
-            //     icon: ShieldCheckIcon,
-            //     page: 'security-overview',
-            //     isPreview: false,
-            //     isLoading: false,
-            //     count: undefined,
-            //     error: false,
-            // },
-
             {
-                name: 'CloudQL',
-                page: ['cloudql', 'cloudql'],
-                icon: MagnifyingGlassIcon,
-                isPreview: false,
-                // children: [
-                //     {
-                //         name: ' Query',
-                //         page: 'query',
-                //         isPreview: false,
-                //         isLoading: false,
-                //         count: undefined,
-                //         error: false,
-                //     },
-                //     {
-                //         name: 'All Queries',
-                //         page: 'query/all-queries',
-                //         isPreview: false,
-                //         isLoading: false,
-                //         count: undefined,
-                //         error: false,
-                //     },
-                // ],
-            },
-            // {
-            //     name: 'Tasks',
-            //     page: ['tasks', 'tasks'],
-            //     icon: CommandLineIcon,
-            //     isPreview: false,
-               
-            // },
-
-            {
-                name: 'Integrations',
+                name: 'Plugins',
                 page: [
-                    'integrations',
-                    'integrations/AWS',
-                    'integrations/Azure',
-                    'integrations/EntraID',
+                    'plugins',
+                    'plugins/AWS',
+                    'plugins/Azure',
+                    'plugins/EntraID',
                 ],
                 icon: PuzzlePieceIcon,
-                // isLoading: connectionsIsLoading,
                 isLoading: false,
                 // count: 0,
 
@@ -467,21 +256,7 @@ export default function Sidebar({  currentPage }: ISidebar) {
                 error: undefined,
                 isPreview: false,
             },
-            // {
-            //     name: 'Workload Optimizer',
-            //     page: 'workload-optimizer',
-            //     icon: ArrowUpCircleIcon,
-            //     isPreview: true,
-            //     isLoading: false,
-            //     count: undefined,
-            //     // error: spendCountErr,
-            // },
-            // {
-            //     name: 'Stacks',
-            //     page: 'stacks',
-            //     icon: RectangleStackIcon,
-            //     isPreview: true,
-            // },
+          
 
             {
                 name: 'Jobs',

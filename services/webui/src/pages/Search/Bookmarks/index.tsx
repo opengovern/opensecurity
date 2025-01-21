@@ -188,36 +188,49 @@ export default function Bookmarks({ setTab }: Props) {
                 setLoading(false)
             })
     }
-    const getIntegrations = () => {
-setLoading(true)
-axios
-    .get(
-        'https://raw.githubusercontent.com/opengovern/opengovernance/refs/heads/main/assets/integrations/integrations.json'
-    )
-    .then((res) => {
-        if (res.data) {
-            const arr = res.data
-            // arr.sort(() => Math.random() - 0.5);
-            setIntegrations(arr)
-           
-        }
-        setLoading(false)
-    })
-    .catch((err) => {
-        setError(err)
-        setLoading(false)
-    })
+       const getIntegrations = () => {
+           setLoading(true)
+           let url = ''
+           if (window.location.origin === 'http://localhost:3000') {
+               url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+           } else {
+               url = window.location.origin
+           }
+           // @ts-ignore
+           const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-    }
+           const config = {
+               headers: {
+                   Authorization: `Bearer ${token}`,
+               },
+           }
+
+           axios
+               .get(
+                   `${url}/main/integration/api/v1/integration-types/plugin`,
+                   config
+               )
+               .then((res) => {
+                   if (res.data) {
+                       const arr = res.data?.items
+                       
+                       setIntegrations(arr)
+                   }
+                   setLoading(false)
+               })
+               .catch((err) => {
+                   setLoading(false)
+               })
+       }
     const FindLogos = (types : string []) => {
         const temp: string[] =[]
         types.map((type) => {
             const integration = integrations.find(
-                (i) => i.integration_type === type
+                (i) => i.plugin_id === type
             )
             if(integration){
                 temp.push(
-                    `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${integration?.Icon}`
+                    `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${integration?.icon}`
                 )
             }
         })
