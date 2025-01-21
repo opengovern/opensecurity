@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 	kedav1alpha1 "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
 	"github.com/labstack/echo/v4"
+	"github.com/lib/pq"
 	"github.com/opengovern/opencomply/services/integration/db"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -301,7 +302,10 @@ func (m *IntegrationTypeManager) RetryRebootIntegrationType(t *models.Integratio
 		if len(t.OperationalStatusUpdates) > 20 {
 			t.OperationalStatusUpdates = t.OperationalStatusUpdates[len(t.OperationalStatusUpdates)-20:]
 		}
-		err = m.IntegrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", t).Updates(&t).Error
+		err = m.IntegrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", t).Updates(map[string]any{
+			"operational_status":         models.IntegrationPluginOperationalStatusFailed,
+			"operational_status_updates": pq.StringArray(t.OperationalStatusUpdates),
+		}).Error
 		if err != nil {
 			m.logger.Error("failed to update integration plugin operational status", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
 		}
@@ -351,7 +355,10 @@ func (m *IntegrationTypeManager) RetryRebootIntegrationType(t *models.Integratio
 	if len(t.OperationalStatusUpdates) > 20 {
 		t.OperationalStatusUpdates = t.OperationalStatusUpdates[len(t.OperationalStatusUpdates)-20:]
 	}
-	err = m.IntegrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", t).Updates(&t).Error
+	err = m.IntegrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", t).Updates(map[string]any{
+		"operational_status":         models.IntegrationPluginOperationalStatusEnabled,
+		"operational_status_updates": pq.StringArray(t.OperationalStatusUpdates),
+	}).Error
 	if err != nil {
 		m.logger.Error("failed to update integration plugin operational status", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
 	}
