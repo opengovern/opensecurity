@@ -65,7 +65,6 @@ func (a *API) Register(e *echo.Group) {
 	e.GET("/:integration_type/table", httpserver.AuthorizeHandler(a.ListTables, api.ViewerRole))
 	e.POST("/:integration_type/resource-type/label", httpserver.AuthorizeHandler(a.GetResourceTypesByLabels, api.ViewerRole))
 	e.GET("/:integration_type/configuration", httpserver.AuthorizeHandler(a.GetConfiguration, api.ViewerRole))
-	
 
 	plugin := e.Group("/plugin")
 	plugin.GET("/:id/setup", httpserver.AuthorizeHandler(a.GetSetup, api.ViewerRole))
@@ -314,7 +313,7 @@ func (a *API) LoadPluginWithID(c echo.Context) error {
 	}
 
 	go func() {
-		err = a.InstallOrUpdatePlugin(c, *plugin)
+		err = a.InstallOrUpdatePlugin(*plugin)
 		if err != nil {
 			a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", pluginID))
 		}
@@ -457,7 +456,7 @@ func (a *API) LoadPluginWithURL(c echo.Context) error {
 		}
 
 		go func() {
-			err = a.InstallOrUpdatePlugin(c, *plugin)
+			err = a.InstallOrUpdatePlugin(*plugin)
 			if err != nil {
 				a.logger.Error("failed to update plugin", zap.Error(err), zap.String("id", plugin.PluginID))
 			}
@@ -861,7 +860,7 @@ func (a *API) HealthCheck(c echo.Context) error {
 	}
 }
 
-func (a *API) InstallOrUpdatePlugin(c echo.Context, plugin models2.IntegrationPlugin) (err error) {
+func (a *API) InstallOrUpdatePlugin(plugin models2.IntegrationPlugin) (err error) {
 	defer func() {
 		if err != nil {
 			plugin.InstallState = models2.IntegrationTypeInstallStateNotInstalled
@@ -944,7 +943,7 @@ func (a *API) InstallOrUpdatePlugin(c echo.Context, plugin models2.IntegrationPl
 	plugin.DescriberURL = m.DescriberURL
 	plugin.DescriberTag = m.DescriberTag
 
-	err = a.LoadPlugin(c.Request().Context(), plugin)
+	err = a.LoadPlugin(context.Background(), plugin)
 	if err != nil {
 		a.logger.Error("failed to load plugin", zap.Error(err), zap.String("id", plugin.PluginID))
 		return err
