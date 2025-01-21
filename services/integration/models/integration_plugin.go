@@ -18,6 +18,7 @@ type IntegrationPluginOperationalStatus string
 
 const (
 	IntegrationTypeInstallStateNotInstalled IntegrationPluginInstallState = "not_installed"
+	IntegrationTypeInstallStateInstalling   IntegrationPluginInstallState = "installing"
 	IntegrationTypeInstallStateInstalled    IntegrationPluginInstallState = "installed"
 )
 
