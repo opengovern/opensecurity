@@ -138,6 +138,47 @@ func (r *RegoEngine) getRegoFunctionForTables(ctx context.Context) ([]func(*rego
 		results = append(results, f)
 	}
 
+	// Add raw query function
+	f := rego.FunctionDyn(&rego.Function{
+		Name:             "opencomply.cloudql",
+		Description:      "",
+		Decl:             types.NewFunction([]types.Type{types.S}, types.NewArray(nil, types.A)),
+		Memoize:          true,
+		Nondeterministic: true,
+	}, func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
+		var query string
+		if len(terms) == 0 {
+			return nil, fmt.Errorf("invalid query")
+		}
+		query = terms[0].Value.String()
+
+		rows, err := r.steampipe.Conn().Query(bctx.Context, query)
+		if err != nil {
+			r.logger.Error("Unable to query database", zap.Error(err))
+			r.logger.Sync()
+			return nil, err
+		}
+		defer rows.Close()
+
+		results, err := pgx.CollectRows(rows, pgx.RowToMap)
+		if err != nil {
+			r.logger.Error("Unable to scan row", zap.Error(err))
+			r.logger.Sync()
+			return nil, err
+		}
+
+		value, err := ast.InterfaceToValue(results)
+		if err != nil {
+			r.logger.Error("Unable to convert to value", zap.Error(err))
+			r.logger.Sync()
+			return nil, err
+		}
+
+		return ast.NewTerm(value), nil
+	})
+
+	results = append(results, f)
+
 	return results, nil
 }
 
