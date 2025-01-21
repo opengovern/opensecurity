@@ -106,7 +106,12 @@ export default function ControlDetail({
             })
     } 
    
-   useEffect(()=>{GetParams()},[selectedItem])
+   useEffect(()=>{
+    if(selectedItem){
+        GetParams()
+    }
+
+   },[selectedItem])
    const getItems = () => {
         const items = [
             {

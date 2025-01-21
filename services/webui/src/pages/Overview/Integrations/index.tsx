@@ -320,6 +320,8 @@ export default function Integrations({ height }: IQuery) {
                         This Plugin is{' '}
                         {selected?.installed == 'not_installed'
                             ? 'not installed'
+                            : selected?.installed == 'installing'
+                            ? 'installing'
                             : 'disabled'}{' '}
                         .
                     </Text>
@@ -350,21 +352,47 @@ export default function Integrations({ height }: IQuery) {
                         >
                             Close
                         </Button>
-                        <Button
-                            loading={loading}
-                            disabled={loading}
-                            variant="primary"
-                            onClick={() => {
-                                selected?.installed == 'not_installed'
-                                    ? InstallPlugin()
-                                    : EnableIntegration()
-                            }}
-                            className="mt-6"
-                        >
-                            {selected?.installed == 'not_installed'
-                                ? ' Install'
-                                : 'Enable'}
-                        </Button>
+                        {selected?.installed == 'installing' ? (
+                            <>
+                                <Button
+                                    loading={loading}
+                                    disabled={loading}
+                                    variant="primary"
+                                    onClick={() => {
+                                        getList(4, 1, 'count', 'desc', false)
+                                        setOpen(false)
+                                    }}
+                                    className="mt-6"
+                                >
+                                    Refresh
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                {(selected?.installed == 'not_installed' ||
+                                    selected?.enabled == 'disabled') && (
+                                    <>
+                                        <Button
+                                            loading={loading}
+                                            disabled={loading}
+                                            variant="primary"
+                                            onClick={() => {
+                                                selected?.installed ==
+                                                'not_installed'
+                                                    ? InstallPlugin()
+                                                    : EnableIntegration()
+                                            }}
+                                            className="mt-6"
+                                        >
+                                            {selected?.installed ==
+                                            'not_installed'
+                                                ? ' Install'
+                                                : 'Enable'}
+                                        </Button>
+                                    </>
+                                )}
+                            </>
+                        )}
                     </Flex>
                 </div>
             </Modal>
@@ -377,7 +405,7 @@ export default function Integrations({ height }: IQuery) {
                     </Flex>
                     <a
                         target="__blank"
-                        href={`/integrations`}
+                        href={`/plugins`}
                         className=" cursor-pointer"
                     >
                         <Button
@@ -417,7 +445,7 @@ export default function Integrations({ height }: IQuery) {
                         ) {
                             const name = connector?.name
                             const id = connector?.id
-                            navigate(`/integrations/${connector.platform_name}`, {
+                            navigate(`/plugins/${connector.platform_name}`, {
                                 state: {
                                     name,
                                     id,
@@ -432,20 +460,15 @@ export default function Integrations({ height }: IQuery) {
                     selectedItems={[]}
                     cardDefinition={{
                         header: (item) => (
-                            <Link
-                                className="w-100"
-                               
-                            >
+                            <Link className="w-100">
                                 <div className="w-100 flex flex-row justify-between">
                                     <span>{item.name}</span>
-                                    
                                 </div>
                             </Link>
                         ),
                         sections: [
                             {
                                 id: 'logo',
-                               
 
                                 content: (item) => (
                                     <div className="w-100 flex flex-row items-center  justify-between  ">
@@ -463,7 +486,7 @@ export default function Integrations({ height }: IQuery) {
                                     </div>
                                 ),
                             },
-                           
+
                             {
                                 id: 'integrattoin',
                                 header: 'Integrations',
@@ -471,28 +494,25 @@ export default function Integrations({ height }: IQuery) {
                                     item?.count ? item.count : '--',
                                 width: 100,
                             },
-                          
                         ],
                     }}
                     cardsPerRow={[{ cards: 1 }]}
                     // @ts-ignore
-                    items={responseConnectors?.items?.map(
-                        (type) => {
-                            return {
-                                id: type.id,
-                                tier: type.tier,
-                                enabled: type.operational_status,
-                                installed: type.install_state,
-                                platform_name: type.plugin_id,
+                    items={responseConnectors?.items?.map((type) => {
+                        return {
+                            id: type.id,
+                            tier: type.tier,
+                            enabled: type.operational_status,
+                            installed: type.install_state,
+                            platform_name: type.plugin_id,
 
-                                title: type.name,
-                                name: type.name,
-                                html_url: type.url,
-                                count: type?.count?.total,
-                                logo: `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${type.icon}`,
-                            }
+                            title: type.name,
+                            name: type.name,
+                            html_url: type.url,
+                            count: type?.count?.total,
+                            logo: `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${type.icon}`,
                         }
-                    )}
+                    })}
                     loadingText="Loading resources"
                     stickyHeader
                     entireCardClickable

@@ -65,7 +65,7 @@ const authRoutes = [
 
     {
         key: 'integrations',
-        path: '/integrations',
+        path: '/plugins',
         element: <Integrations />,
     },
     {
@@ -76,7 +76,7 @@ const authRoutes = [
 
     {
         key: 'connector detail',
-        path: '/integrations/:type',
+        path: '/plugins/:type',
         element: <TypeDetail />,
     },
 
@@ -112,12 +112,7 @@ const authRoutes = [
         path: '/compliance',
         element: <Compliance />,
     },
-    {
-        key: 'Compliance',
-        path: '/compliance/:tab_id',
-        element: <Compliance />,
-    },
-
+   
     {
         key: 'benchmark summary 2',
         path: '/compliance/:benchmarkId',
