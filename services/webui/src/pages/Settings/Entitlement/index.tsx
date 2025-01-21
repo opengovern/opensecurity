@@ -150,7 +150,6 @@ export default function SettingsEntitlement() {
         }
     }
     const wsDetails = [
-       
         {
             title: 'Version',
             // @ts-ignore
@@ -168,8 +167,8 @@ export default function SettingsEntitlement() {
             ),
         },
         {
-            title: 'Creation date',
-            value: dateDisplay(
+            title: 'Install date',
+            value: dateTimeDisplay(
                 // @ts-ignore
                 currentWorkspace?.workspace_creation_time ||
                     Date.now().toString()
@@ -373,47 +372,7 @@ export default function SettingsEntitlement() {
         </Flex>
     ) : (
         <Flex flexDirection="col">
-            {/* <Grid numItemsSm={2} numItemsLg={3} className="gap-4 w-full"> */}
-            {/* <Card key="activeUsers">
-                    <Text>Active users</Text>
-                    <Metric>{numericDisplay(currentUsers)}</Metric>
-                    <Flex className="mt-3">
-                        <Text className="truncate">{`${usersPercentage}%`}</Text>
-                        <Text>{numericDisplay(maxUsers)} Allowed</Text>
-                    </Flex>
-                    <ProgressBar value={usersPercentage} className="mt-2" />
-                </Card>
-                <Card key="connections">
-                    <Text>Connections</Text>
-                    <Metric>{numericDisplay(currentConnections)}</Metric>
-                    <Flex className="mt-3">
-                        <Text className="truncate">{`${connectionsPercentage}%`}</Text>
-                        <Text>{numericDisplay(maxConnections)} Allowed</Text>
-                    </Flex>
-                    <ProgressBar
-                        value={connectionsPercentage}
-                        className="mt-2"
-                    />
-                </Card>
-                <Card key="resources">
-                    <Text>Resources</Text>
-                    <Metric>{numericDisplay(currentResources)}</Metric>
-                    <Flex className="mt-3">
-                        <Text className="truncate">{`${resourcesPercentage}%`}</Text>
-                        <Text>{numericDisplay(maxResources)} Allowed</Text>
-                    </Flex>
-                    <ProgressBar value={resourcesPercentage} className="mt-2" />
-                </Card> */}
-            {/* <Card key="hosts">
-                    <Text>Hosts</Text>
-                    <Metric>{numericDisplay(noOfHosts)}</Metric>
-                    <Flex className="mt-3">
-                        <Text className="truncate">{`${hostsPercentage}%`}</Text>
-                        <Text>{numericDisplay(maxHosts)} Allowed</Text>
-                    </Flex>
-                    <ProgressBar value={hostsPercentage} className="mt-2" />
-                </Card> */}
-            {/* </Grid> */}
+            
             <Card key="summary" className=" w-full">
                 <Title className="font-semibold mb-2">Settings</Title>
                 <KeyValuePairs
@@ -425,25 +384,7 @@ export default function SettingsEntitlement() {
                         }
                     })}
                 />
-                {/* <List className="mt-3">
-                    {wsDetails.map((item) => (
-                        <ListItem key={item.title} className="my-1">
-                            <Text className="truncate">{item.title}</Text>
-                            <Text className="text-gray-800">{item.value}</Text>
-                        </ListItem>
-                    ))}
-                    <ListItem>
-                        <Text>Show preview features</Text>
-                        <Switch
-                            onClick={() =>
-                                preview === 'true'
-                                    ? setPreview('false')
-                                    : setPreview('true')
-                            }
-                            checked={preview === 'true'}
-                        />
-                    </ListItem>
-                </List> */}
+              
                 <Divider />
                 <Title className="font-semibold mt-8">
                     Platform Configuration
@@ -510,23 +451,7 @@ export default function SettingsEntitlement() {
 
                 <Title className="font-semibold mt-8">App configurations</Title>
 
-                {/* <Flex
-                flexDirection="row"
-                justifyContent="between"
-                className="w-full mt-2"
-            >
-                <Text className="font-normal">Demo Mode</Text>
-                <TabGroup
-                    index={selectedMode}
-                    onIndexChange={setSelectedMode}
-                    className="w-fit"
-                >
-                    <TabList className="border border-gray-200" variant="solid">
-                        <Tab>App mode</Tab>
-                        <Tab>Demo mode</Tab>
-                    </TabList>
-                </TabGroup>
-            </Flex> */}
+              
                 <Flex
                     flexDirection="row"
                     justifyContent="between"

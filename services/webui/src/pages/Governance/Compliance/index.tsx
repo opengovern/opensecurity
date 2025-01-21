@@ -42,7 +42,7 @@ import AllControls from './All Controls'
 import SettingsParameters from '../../Settings/Parameters'
 import { useIntegrationApiV1EnabledConnectorsList } from '../../../api/integration.gen'
 import AllPolicy from './All Policy'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 const CATEGORY = {
     sre_efficiency: 'Efficiency',
     sre_reliability: 'Reliability',
@@ -79,7 +79,7 @@ export default function Compliance() {
     const [response, setResponse] = useState()
     const [isLoading, setIsLoading] = useState(false)
     const [tab,setTab] = useState('0')
-    const {tab_id} = useParams()
+    const [tab_id,setTabID] = useSearchParams()
     const {
         response: Types,
         isLoading: TypesLoading,
@@ -284,22 +284,21 @@ export default function Compliance() {
         ])
     }, [])
     useEffect(()=>{
-        console.log(tab_id)
-        switch (tab_id) {
+        switch (tab_id?.get('tab')) {
             case 'frameworks':
-                setTab('0')
+                setTab('frameworks')
                 break
             case 'controls':
-                setTab('1')
+                setTab('controls')
                 break
             case 'policies':
-                setTab('2')
+                setTab('policies')
                 break
             case 'parameters':
-                setTab('3')
+                setTab('parameters')
                 break
             default:
-                setTab('0')
+                setTab('frameworks')
                 break
         }
     },[tab_id])
@@ -309,11 +308,16 @@ export default function Compliance() {
             {/* <TopHeader /> */}
             <Tabs
                 activeTabId={tab}
-                onChange={({ detail }) => setTab(detail.activeTabId)}
+                onChange={({ detail }) => {
+                console.log(detail.activeTabId)
+                    tab_id.set('tab', detail.activeTabId)
+                    setTabID(tab_id)
+                    setTab(detail.activeTabId)
+                }}
                 tabs={[
                     {
                         label: 'Frameworks',
-                        id: '0',
+                        id: 'frameworks',
                         content: (
                             <>
                                 <Flex
@@ -604,17 +608,17 @@ export default function Compliance() {
                         ),
                     },
                     {
-                        id: '1',
+                        id: 'controls',
                         label: 'Controls',
                         content: <AllControls />,
                     },
                     {
-                        id: '2',
+                        id: 'policies',
                         label: 'Policies',
                         content: <AllPolicy />,
                     },
                     {
-                        id: '3',
+                        id: 'parameters',
                         label: 'Parameters',
                         content: <SettingsParameters />,
                     },

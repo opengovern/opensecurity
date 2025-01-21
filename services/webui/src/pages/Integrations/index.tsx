@@ -189,24 +189,45 @@ export default function Integrations() {
                         >
                             Close
                         </Button>
-                        {(selected?.installed == 'not_installed' ||
-                            selected?.enabled == 'disabled') && (
+                        {selected?.installed == 'installing' ? (
                             <>
                                 <Button
                                     loading={loading}
                                     disabled={loading}
                                     variant="primary"
                                     onClick={() => {
-                                        selected?.installed == 'not_installed'
-                                            ? InstallPlugin()
-                                            : EnableIntegration()
+                                        getList(9, 1, 'count', 'desc', false)
+                                        setOpen(false)
                                     }}
                                     className="mt-6"
                                 >
-                                    {selected?.installed == 'not_installed'
-                                        ? ' Install'
-                                        : 'Enable'}
+                                    Refresh
                                 </Button>
+                            </>
+                        ) : (
+                            <>
+                                {(selected?.installed == 'not_installed' ||
+                                    selected?.enabled == 'disabled') && (
+                                    <>
+                                        <Button
+                                            loading={loading}
+                                            disabled={loading}
+                                            variant="primary"
+                                            onClick={() => {
+                                                selected?.installed ==
+                                                'not_installed'
+                                                    ? InstallPlugin()
+                                                    : EnableIntegration()
+                                            }}
+                                            className="mt-6"
+                                        >
+                                            {selected?.installed ==
+                                            'not_installed'
+                                                ? ' Install'
+                                                : 'Enable'}
+                                        </Button>
+                                    </>
+                                )}
                             </>
                         )}
                     </Flex>
