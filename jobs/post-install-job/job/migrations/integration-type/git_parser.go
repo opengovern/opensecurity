@@ -148,21 +148,25 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 	logger.Info("done reading files", zap.String("url", url), zap.String("integrationType", iPlugin.IntegrationType.String()), zap.Int("integrationPluginSize", len(integrationPlugin)), zap.Int("cloudqlPluginSize", len(cloudqlPlugin)))
 
 	return &models.IntegrationPlugin{
-		ID:                iPlugin.ID,
-		PluginID:          iPlugin.IntegrationType.String(),
-		IntegrationType:   iPlugin.IntegrationType,
-		Name:              iPlugin.Name,
-		Tier:              iPlugin.Tier,
-		Description:       iPlugin.Description,
-		Icon:              iPlugin.Icon,
-		Availability:      iPlugin.Availability,
-		SourceCode:        iPlugin.SourceCode,
-		PackageType:       iPlugin.PackageType,
-		InstallState:      installState,
-		OperationalStatus: operationalStatus,
-		URL:               url,
-		DescriberURL:      describerURL,
-		DescriberTag:      describerTags,
-		Tags:              tagsJsonb,
-	}, &models.IntegrationPluginBinary{IntegrationPlugin: integrationPlugin, CloudQlPlugin: cloudqlPlugin}, nil
+			ID:                iPlugin.ID,
+			PluginID:          iPlugin.IntegrationType.String(),
+			IntegrationType:   iPlugin.IntegrationType,
+			Name:              iPlugin.Name,
+			Tier:              iPlugin.Tier,
+			Description:       iPlugin.Description,
+			Icon:              iPlugin.Icon,
+			Availability:      iPlugin.Availability,
+			SourceCode:        iPlugin.SourceCode,
+			PackageType:       iPlugin.PackageType,
+			InstallState:      installState,
+			OperationalStatus: operationalStatus,
+			URL:               url,
+			DescriberURL:      describerURL,
+			DescriberTag:      describerTags,
+			Tags:              tagsJsonb,
+		}, &models.IntegrationPluginBinary{
+			PluginID:          iPlugin.IntegrationType.String(),
+			IntegrationPlugin: integrationPlugin,
+			CloudQlPlugin:     cloudqlPlugin},
+		nil
 }
