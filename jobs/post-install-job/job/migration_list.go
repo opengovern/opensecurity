@@ -6,6 +6,7 @@ import (
 	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/core"
 	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/elasticsearch"
 	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/integration"
+	integration_type "github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/integration-type"
 	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/inventory"
 	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/resource_collection"
 	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/resource_info"
@@ -17,6 +18,7 @@ var migrations = map[string]types.Migration{
 }
 
 var manualMigrations = map[string]types.Migration{
+	"integration_type":    integration_type.Migration{},
 	"core":                core.Migration{},
 	"integration":         integration.Migration{},
 	"inventory":           inventory.Migration{},

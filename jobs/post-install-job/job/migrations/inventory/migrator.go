@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/opengovern/og-util/pkg/integration"
 	"os"
 	"path"
 	"strings"
@@ -13,7 +14,6 @@ import (
 	"github.com/opengovern/opencomply/jobs/post-install-job/config"
 	"github.com/opengovern/opencomply/jobs/post-install-job/db"
 	"github.com/opengovern/opencomply/services/core/db/models"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -77,7 +77,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 
 	err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(&models.ResourceType{}).Where("integration_type = ?", integration_type.IntegrationTypeAWSAccount).Unscoped().Delete(&models.ResourceType{}).Error
+		err := tx.Model(&models.ResourceType{}).Where("integration_type = ?", integration.Type("aws_cloud_account")).Unscoped().Delete(&models.ResourceType{}).Error
 		if err != nil {
 			logger.Error("failed to delete aws resource types", zap.Error(err))
 			return err
@@ -87,7 +87,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			err = tx.Clauses(clause.OnConflict{
 				DoNothing: true,
 			}).Create(&models.ResourceType{
-				IntegrationType: integration_type.IntegrationTypeAWSAccount,
+				IntegrationType: "aws_cloud_account",
 				ResourceType:    resourceType.ResourceName,
 				ResourceLabel:   resourceType.ResourceLabel,
 				ServiceName:     strings.ToLower(resourceType.ServiceName),
@@ -119,7 +119,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 
 	err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(&models.ResourceType{}).Where("integration_type = ?", integration_type.IntegrationTypeAzureSubscription).Unscoped().Delete(&models.ResourceType{}).Error
+		err := tx.Model(&models.ResourceType{}).Where("integration_type = ?", integration.Type("azure_subscription")).Unscoped().Delete(&models.ResourceType{}).Error
 		if err != nil {
 			logger.Error("failed to delete azure resource types", zap.Error(err))
 			return err
@@ -128,7 +128,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			err = tx.Clauses(clause.OnConflict{
 				DoNothing: true,
 			}).Create(&models.ResourceType{
-				IntegrationType: integration_type.IntegrationTypeAzureSubscription,
+				IntegrationType: "azure_subscription",
 				ResourceType:    resourceType.ResourceName,
 				ResourceLabel:   resourceType.ResourceLabel,
 				ServiceName:     strings.ToLower(resourceType.ServiceName),

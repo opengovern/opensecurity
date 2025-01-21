@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	cloudql_init_job "github.com/opengovern/opencomply/jobs/cloudql-init-job"
+	"github.com/opengovern/opencomply/services/integration/client"
 	"os"
 	"time"
 
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"github.com/opengovern/opencomply/services/scheduler/db/model"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -22,23 +23,26 @@ import (
 )
 
 type Config struct {
-	ElasticSearch config.ElasticSearch
-	NATS          config.NATS
-	Compliance    config.OpenGovernanceService
-	Core      config.OpenGovernanceService
-	EsSink        config.OpenGovernanceService
-	Steampipe     config.Postgres
+	ElasticSearch  config.ElasticSearch
+	NATS           config.NATS
+	Compliance     config.OpenGovernanceService
+	Core           config.OpenGovernanceService
+	Integration    config.OpenGovernanceService
+	EsSink         config.OpenGovernanceService
+	Steampipe      config.Postgres
+	PostgresPlugin config.Postgres
 }
 
 type Worker struct {
-	config           Config
-	logger           *zap.Logger
-	steampipeConn    *steampipe.Database
-	esClient         opengovernance.Client
-	jq               *jq.JobQueue
-	complianceClient complianceClient.ComplianceServiceClient
-	coreClient   coreClient.CoreServiceClient
-	sinkClient       esSinkClient.EsSinkServiceClient
+	config            Config
+	logger            *zap.Logger
+	steampipeConn     *steampipe.Database
+	esClient          opengovernance.Client
+	jq                *jq.JobQueue
+	complianceClient  complianceClient.ComplianceServiceClient
+	coreClient        coreClient.CoreServiceClient
+	integrationClient client.IntegrationServiceClient
+	sinkClient        esSinkClient.EsSinkServiceClient
 }
 
 var (
@@ -50,14 +54,16 @@ func NewWorker(
 	logger *zap.Logger,
 	ctx context.Context,
 ) (*Worker, error) {
-	for _, integrationType := range integration_type.IntegrationTypes {
-		describerConfig := integrationType.GetConfiguration()
-		err := steampipe.PopulateSteampipeConfig(config.ElasticSearch, describerConfig.SteampipePluginName)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if err := steampipe.PopulateOpenGovernancePluginSteampipeConfig(config.ElasticSearch, config.Steampipe); err != nil {
+	integrationClient := client.NewIntegrationServiceClient(config.Integration.BaseURL)
+
+	pluginJob := cloudql_init_job.NewJob(logger, cloudql_init_job.Config{
+		Postgres:      config.PostgresPlugin,
+		ElasticSearch: config.ElasticSearch,
+		Steampipe:     config.Steampipe,
+	}, integrationClient)
+	err := pluginJob.Run(ctx)
+	if err != nil {
+		logger.Error("failed to run plugin job", zap.Error(err))
 		return nil, err
 	}
 
@@ -92,14 +98,15 @@ func NewWorker(
 	}
 
 	return &Worker{
-		config:           config,
-		logger:           logger,
-		steampipeConn:    steampipeConn,
-		esClient:         esClient,
-		jq:               jq,
-		complianceClient: complianceClient.NewComplianceClient(config.Compliance.BaseURL),
-		coreClient:   coreClient.NewCoreServiceClient(config.Core.BaseURL),
-		sinkClient:       esSinkClient.NewEsSinkServiceClient(logger, config.EsSink.BaseURL),
+		config:            config,
+		logger:            logger,
+		steampipeConn:     steampipeConn,
+		esClient:          esClient,
+		jq:                jq,
+		complianceClient:  complianceClient.NewComplianceClient(config.Compliance.BaseURL),
+		coreClient:        coreClient.NewCoreServiceClient(config.Core.BaseURL),
+		sinkClient:        esSinkClient.NewEsSinkServiceClient(logger, config.EsSink.BaseURL),
+		integrationClient: integrationClient,
 	}, nil
 }
 

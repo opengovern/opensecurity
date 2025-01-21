@@ -4,13 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/labstack/echo/v4"
+	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/es"
+	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/integration"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"github.com/opengovern/opencomply/services/core/api"
 	"go.uber.org/zap"
-	"net/http"
 	"regexp"
 	"strings"
 )
@@ -54,7 +53,7 @@ func (w *Worker) RunJob(ctx context.Context, job Job) error {
 				tableName = job.ListOfResources[0]
 			}
 			if tableName != "" {
-				queryResourceType, _, err = GetResourceTypeFromTableName(tableName, job.IntegrationType)
+				queryResourceType, _, err = w.GetResourceTypeFromTableName(tableName, job.IntegrationType)
 				if err != nil {
 					w.logger.Error("Error getting resource type from table", zap.String("table_name", tableName), zap.Error(err))
 					return err
@@ -100,18 +99,20 @@ func (w *Worker) RunJob(ctx context.Context, job Job) error {
 	return nil
 }
 
-func GetResourceTypeFromTableName(tableName string, queryIntegrationType []integration.Type) (string, integration.Type, error) {
+func (w *Worker) GetResourceTypeFromTableName(tableName string, queryIntegrationType []integration.Type) (string, integration.Type, error) {
 	var integrationType integration.Type
 	if len(queryIntegrationType) == 1 {
 		integrationType = queryIntegrationType[0]
 	} else {
 		integrationType = ""
 	}
-	integration, ok := integration_type.IntegrationTypes[integrationType]
-	if !ok {
-		return "", "", echo.NewHTTPError(http.StatusInternalServerError, "unknown integration type")
+	httpCtx := httpclient.Context{Ctx: context.Background(), UserRole: authApi.AdminRole}
+	table, err := w.integrationClient.GetResourceTypeFromTableName(&httpCtx, integrationType.String(), tableName)
+	if err != nil {
+		w.logger.Error("GetResourceTypeFromTableName", zap.Error(err), zap.String("tableName", tableName), zap.String("integrationType", integrationType.String()))
+		return "", "", err
 	}
-	return integration.GetResourceTypeFromTableName(tableName), integrationType, nil
+	return table, integrationType, nil
 }
 
 var stopWordsRe = regexp.MustCompile(`\W+`)

@@ -20,7 +20,6 @@ import (
 	"github.com/opengovern/og-util/pkg/ticker"
 	opengovernanceTrace "github.com/opengovern/og-util/pkg/trace"
 	integrationapi "github.com/opengovern/opencomply/services/integration/api/models"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"github.com/opengovern/opencomply/services/scheduler/api"
 	apiDescribe "github.com/opengovern/opencomply/services/scheduler/api"
 	"github.com/opengovern/opencomply/services/scheduler/db/model"
@@ -211,15 +210,21 @@ func (s *Scheduler) scheduleDescribeJob(ctx context.Context) {
 			continue
 		}
 		s.logger.Info("running describe job scheduler for integration", zap.String("IntegrationID", integration.IntegrationID))
-		if _, ok := integration_type.IntegrationTypes[integration.IntegrationType]; !ok {
-			s.logger.Error("integration type not found", zap.String("integrationType", string(integration.IntegrationType)))
-			continue
+		httpCtx := &httpclient.Context{
+			UserRole: apiAuth.AdminRole,
+			Ctx:      ctx,
 		}
-		integrationType := integration_type.IntegrationTypes[integration.IntegrationType]
-		resourceTypes, err := integrationType.GetResourceTypesByLabels(integration.Labels)
+		resourceTypes, err := s.integrationClient.GetResourceTypesByLabels(httpCtx, integration.IntegrationType.String(), integration.Labels)
 		if err != nil {
 			s.logger.Error("failed to get integration resourceTypes", zap.String("integrationType", string(integration.IntegrationType)),
 				zap.String("spot", "ListDiscoveryResourceTypes"), zap.Error(err))
+			continue
+		}
+
+		resourceTypesWithParams, err := s.db.ListManualDiscoverySchedule(integration.IntegrationID)
+		if err != nil {
+			s.logger.Error("failed to list describe jobs with parameters for this integration", zap.String("integration_id", integration.IntegrationID),
+				zap.Error(err))
 			continue
 		}
 
@@ -231,6 +236,26 @@ func (s *Scheduler) scheduleDescribeJob(ctx context.Context) {
 			_, err = s.describe(integration, resourceType, true, false, false, nil, "system", nil)
 			if err != nil {
 				s.logger.Error("failed to describe connection", zap.String("integration_id", integration.IntegrationID), zap.String("resource_type", resourceType), zap.Error(err))
+			}
+		}
+		for _, resourceType := range resourceTypesWithParams {
+			var parameters map[string]string
+			if resourceType.Parameters.Status == pgtype.Present {
+				if err := json.Unmarshal(resourceType.Parameters.Bytes, &parameters); err != nil {
+					s.logger.Error("failed to unmarshal parameters into map",
+						zap.String("integration_id", integration.IntegrationID),
+						zap.String("resource_type", resourceType.ResourceType),
+						zap.Any("parameters", parameters),
+						zap.Error(err))
+					continue
+				}
+			} else {
+				continue
+			}
+			_, err = s.describe(integration, resourceType.ResourceType, true, false, false, nil, "system", parameters)
+			if err != nil {
+				s.logger.Error("failed to describe connection", zap.String("integration_id", integration.IntegrationID),
+					zap.String("resource_type", resourceType.ResourceType), zap.Any("parameters", resourceType.Parameters), zap.Error(err))
 			}
 		}
 	}
@@ -273,12 +298,11 @@ func (s *Scheduler) retryFailedJobs(ctx context.Context) error {
 func (s *Scheduler) describe(integration integrationapi.Integration, resourceType string, scheduled bool, costFullDiscovery bool,
 	removeResources bool, parentId *uint, createdBy string, parameters map[string]string) (*model.DescribeIntegrationJob, error) {
 
-	integrationType, ok := integration_type.IntegrationTypes[integration.IntegrationType]
-	if !ok {
-		return nil, fmt.Errorf("integration type not found")
+	httpCtx := &httpclient.Context{
+		UserRole: apiAuth.AdminRole,
+		Ctx:      context.Background(),
 	}
-
-	validResourceTypes, err := integrationType.GetResourceTypesByLabels(integration.Labels)
+	validResourceTypes, err := s.integrationClient.GetResourceTypesByLabels(httpCtx, integration.IntegrationType.String(), integration.Labels)
 	if err != nil {
 		return nil, err
 	}
@@ -389,11 +413,6 @@ func (s *Scheduler) enqueueCloudNativeDescribeJob(ctx context.Context, dc model.
 	ctx, span := otel.Tracer(opengovernanceTrace.JaegerTracerName).Start(ctx, opengovernanceTrace.GetCurrentFuncName())
 	defer span.End()
 
-	integrationType, ok := integration_type.IntegrationTypes[dc.IntegrationType]
-	if !ok {
-		return fmt.Errorf("integration type not found")
-	}
-
 	s.logger.Debug("enqueueCloudNativeDescribeJob",
 		zap.Uint("jobID", dc.ID),
 		zap.String("IntegrationID", dc.IntegrationID),
@@ -472,7 +491,16 @@ func (s *Scheduler) enqueueCloudNativeDescribeJob(ctx context.Context, dc model.
 		return fmt.Errorf("failed to marshal cloud native req due to %w", err)
 	}
 
-	describerConfig := integrationType.GetConfiguration()
+	httpCtx := &httpclient.Context{
+		UserRole: apiAuth.AdminRole,
+		Ctx:      ctx,
+	}
+	describerConfig, err := s.integrationClient.GetIntegrationConfiguration(httpCtx, integration.IntegrationType.String())
+	if err != nil {
+		s.logger.Error("failed to get integration configuration", zap.Uint("jobID", dc.ID), zap.String("IntegrationID", dc.IntegrationID), zap.String("resourceType", dc.ResourceType), zap.Error(err))
+		isFailed = true
+		return fmt.Errorf("failed to get integration configuration due to %v", err)
+	}
 
 	topic := describerConfig.NatsScheduledJobsTopic
 	if dc.TriggerType == enums.DescribeTriggerTypeManual {

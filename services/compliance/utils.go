@@ -3,6 +3,7 @@ package compliance
 import (
 	"context"
 	"fmt"
+	"github.com/opengovern/og-util/pkg/integration"
 	"regexp"
 	"time"
 
@@ -10,7 +11,6 @@ import (
 	opengovernanceTypes "github.com/opengovern/opencomply/pkg/types"
 	"github.com/opengovern/opencomply/services/compliance/api"
 	"github.com/opengovern/opencomply/services/compliance/es"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"go.uber.org/zap"
 )
 
@@ -45,7 +45,10 @@ func (h *HttpHandler) getBenchmarkTree(ctx context.Context, benchmarkId string) 
 		Children:          children,
 	}
 	if b.IntegrationType != nil {
-		nb.IntegrationTypes = integration_type.ParseTypes(b.IntegrationType)
+		nb.IntegrationTypes = make([]integration.Type, 0, len(b.IntegrationType))
+		for _, integrationType := range b.IntegrationType {
+			nb.IntegrationTypes = append(nb.IntegrationTypes, integration.Type(integrationType))
+		}
 	}
 	for _, control := range b.Controls {
 		nb.Controls = append(nb.Controls, control.ID)

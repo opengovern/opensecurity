@@ -2,6 +2,7 @@ package compliance_quick_run
 
 import (
 	"context"
+	integrationClient "github.com/opengovern/opencomply/services/integration/client"
 	"time"
 
 	"github.com/opengovern/og-util/pkg/jq"
@@ -27,8 +28,9 @@ type JobScheduler struct {
 	jq                  *jq.JobQueue
 	esClient            opengovernance.Client
 
-	complianceClient    complianceClient.ComplianceServiceClient
-	coreClient      coreClient.CoreServiceClient
+	complianceClient  complianceClient.ComplianceServiceClient
+	coreClient        coreClient.CoreServiceClient
+	integrationClient integrationClient.IntegrationServiceClient
 }
 
 func New(
@@ -41,6 +43,7 @@ func New(
 
 	complianceClient complianceClient.ComplianceServiceClient,
 	coreClient coreClient.CoreServiceClient,
+	integrationClient integrationClient.IntegrationServiceClient,
 ) *JobScheduler {
 	return &JobScheduler{
 		runSetupNatsStreams: runSetupNatsStreams,
@@ -49,9 +52,10 @@ func New(
 		db:                  db,
 		jq:                  jq,
 		esClient:            esClient,
-	
-		complianceClient:    complianceClient,
-		coreClient:      coreClient,
+
+		complianceClient:  complianceClient,
+		coreClient:        coreClient,
+		integrationClient: integrationClient,
 	}
 }
 

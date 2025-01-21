@@ -3,7 +3,6 @@ package compliance_quick_run_job
 import (
 	"bytes"
 	"fmt"
-	"github.com/labstack/echo/v4"
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/integration"
@@ -11,10 +10,8 @@ import (
 	"github.com/opengovern/opencomply/pkg/types"
 	"github.com/opengovern/opencomply/services/compliance/api"
 	complianceApi "github.com/opengovern/opencomply/services/compliance/api"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
-	"net/http"
 	"text/template"
 )
 
@@ -92,7 +89,7 @@ func (w *Worker) RunQuery(ctx context.Context, j QueryJob) ([]QueryResult, error
 		zap.String("query_id", j.ExecutionPlan.Policy.ID),
 	)
 
-	queryResults, err := j.ExtractQueryResult(w.logger, res, j.ExecutionPlan.Policy)
+	queryResults, err := w.ExtractQueryResult(w.logger, res, j.ExecutionPlan.Policy, j)
 	if err != nil {
 		return nil, err
 	}
@@ -131,21 +128,18 @@ func (w *Worker) runSqlWorkerJob(ctx context.Context, j QueryJob, queryParamMap 
 	return res, nil
 }
 
-func GetResourceTypeFromTableName(tableName string, queryIntegrationType []integration.Type) (string, error) {
+func (w *Worker) GetResourceTypeFromTableName(tableName string, queryIntegrationType []integration.Type) (string, error) {
 	var integrationType integration.Type
 	if len(queryIntegrationType) == 1 {
 		integrationType = queryIntegrationType[0]
 	} else {
 		integrationType = ""
 	}
-	integration, ok := integration_type.IntegrationTypes[integrationType]
-	if !ok {
-		return "", echo.NewHTTPError(http.StatusInternalServerError, "unknown integration type")
-	}
-	return integration.GetResourceTypeFromTableName(tableName), nil
+
+	return w.integrationClient.GetResourceTypeFromTableName(&httpclient.Context{UserRole: authApi.AdminRole}, integrationType.String(), tableName)
 }
 
-func (w *QueryJob) ExtractQueryResult(_ *zap.Logger, res *steampipe.Result, query api.Policy) ([]QueryResult, error) {
+func (w *Worker) ExtractQueryResult(_ *zap.Logger, res *steampipe.Result, query api.Policy, job QueryJob) ([]QueryResult, error) {
 	var complianceResults []QueryResult
 	var err error
 	queryResourceType := ""
@@ -156,8 +150,8 @@ func (w *QueryJob) ExtractQueryResult(_ *zap.Logger, res *steampipe.Result, quer
 		} else {
 			tableName = query.ListOfResources[0]
 		}
-		if tableName != "" {
-			queryResourceType, err = GetResourceTypeFromTableName(tableName, w.ExecutionPlan.Policy.IntegrationType)
+		if tableName != "" && len(job.ExecutionPlan.Policy.IntegrationType) > 0 {
+			queryResourceType, err = w.integrationClient.GetResourceTypeFromTableName(&httpclient.Context{UserRole: authApi.AdminRole}, job.ExecutionPlan.Policy.IntegrationType[0], tableName)
 			if err != nil {
 				return nil, err
 			}
@@ -180,8 +174,8 @@ func (w *QueryJob) ExtractQueryResult(_ *zap.Logger, res *steampipe.Result, quer
 		if v, ok := recordValue["platform_resource_id"].(string); ok {
 			platformResourceID = v
 		}
-		if v, ok := recordValue["platform_table_name"].(string); ok && resourceType == "" {
-			resourceType, err = GetResourceTypeFromTableName(v, w.ExecutionPlan.Policy.IntegrationType)
+		if v, ok := recordValue["platform_table_name"].(string); ok && resourceType == "" && len(job.ExecutionPlan.Policy.IntegrationType) > 0 {
+			resourceType, err = w.integrationClient.GetResourceTypeFromTableName(&httpclient.Context{UserRole: authApi.AdminRole}, job.ExecutionPlan.Policy.IntegrationType[0], v)
 			if err != nil {
 				return nil, err
 			}

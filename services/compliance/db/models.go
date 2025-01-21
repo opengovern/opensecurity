@@ -7,7 +7,6 @@ import (
 
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/opencomply/pkg/utils"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -301,7 +300,7 @@ func (q Policy) ToApi() api.Policy {
 	query := api.Policy{
 		ID:              q.ID,
 		Definition:      q.Definition,
-		IntegrationType: integration_type.ParseTypes(q.IntegrationType),
+		IntegrationType: q.IntegrationType,
 		ListOfResources: q.ListOfResources,
 		PrimaryResource: &q.PrimaryResource,
 		Language:        api.PolicyLanguage(q.Language),

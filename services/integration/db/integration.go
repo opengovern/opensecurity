@@ -40,7 +40,7 @@ func (db Database) DeleteIntegration(IntegrationID uuid.UUID) error {
 // DeleteSampleIntegrations deletes sample integrations
 func (db Database) DeleteSampleIntegrations() error {
 	tx := db.Orm.
-		Where("state = ?", models.IntegrationStateSample).
+		Where("state = ?", integration.IntegrationStateSample).
 		Unscoped().
 		Delete(&models.Integration{})
 	if tx.Error != nil {
@@ -55,7 +55,7 @@ func (db Database) ListSampleIntegrations() ([]models.Integration, error) {
 	var integrations []models.Integration
 
 	tx := db.Orm.
-		Where("state = ?", models.IntegrationStateSample).
+		Where("state = ?", integration.IntegrationStateSample).
 		Find(&integrations)
 	if tx.Error != nil {
 		return integrations, tx.Error
@@ -128,6 +128,19 @@ func (db Database) UpdateIntegration(integration *models.Integration) error {
 	tx := db.Orm.
 		Where("integration_id = ?", integration.IntegrationID.String()).
 		Updates(integration)
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	return nil
+}
+
+// InactiveIntegrationType inactive integrations for an integration type
+func (db Database) InactiveIntegrationType(it integration.Type) error {
+	tx := db.Orm.
+		Model(&models.Integration{}).
+		Where("integration_type = ?", it).
+		Update("state", integration.IntegrationStateInactive)
 	if tx.Error != nil {
 		return tx.Error
 	}

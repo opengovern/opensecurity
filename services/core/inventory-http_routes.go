@@ -22,7 +22,6 @@ import (
 	queryrunner "github.com/opengovern/opencomply/jobs/query-runner-job"
 	"github.com/opengovern/opencomply/pkg/types"
 	"github.com/opengovern/opencomply/services/core/rego_runner"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 
 	"github.com/labstack/echo/v4"
@@ -47,8 +46,6 @@ const (
 	MaxConns        = 100
 	KafkaPageSize   = 5000
 )
-
-
 
 const (
 	IntegrationIdParam    = "integrationId"
@@ -121,9 +118,13 @@ func (h *HttpHandler) ListQueries(ctx echo.Context) error {
 		if item.IsBookmarked {
 			tags["platform_queries_bookmark"] = "true"
 		}
+		integrationTypes := make([]integration.Type, 0, len(item.IntegrationTypes))
+		for _, integrationType := range item.IntegrationTypes {
+			integrationTypes = append(integrationTypes, integration.Type(integrationType))
+		}
 		result = append(result, api.NamedQueryItem{
 			ID:               item.ID,
-			IntegrationTypes: integration_type.ParseTypes(item.IntegrationTypes),
+			IntegrationTypes: integrationTypes,
 			Title:            item.Title,
 			Category:         category,
 			Query:            item.Query.QueryToExecute,
@@ -257,11 +258,15 @@ func (h *HttpHandler) ListQueriesV2(ctx echo.Context) error {
 		if item.IsBookmarked {
 			tags["platform_queries_bookmark"] = []string{"true"}
 		}
+		integrationTypes := make([]integration.Type, 0, len(item.IntegrationTypes))
+		for _, integrationType := range item.IntegrationTypes {
+			integrationTypes = append(integrationTypes, integration.Type(integrationType))
+		}
 		items = append(items, api.NamedQueryItemV2{
 			ID:               item.ID,
 			Title:            item.Title,
 			Description:      item.Description,
-			IntegrationTypes: integration_type.ParseTypes(item.IntegrationTypes),
+			IntegrationTypes: integrationTypes,
 			Query:            item.Query.ToApi(),
 			Tags:             filterTagsByRegex(req.TagsRegex, tags),
 		})
@@ -319,11 +324,15 @@ func (h *HttpHandler) GetQuery(ctx echo.Context) error {
 	if query.IsBookmarked {
 		tags["platform_queries_bookmark"] = []string{"true"}
 	}
+	integrationTypes := make([]integration.Type, 0, len(query.IntegrationTypes))
+	for _, integrationType := range query.IntegrationTypes {
+		integrationTypes = append(integrationTypes, integration.Type(integrationType))
+	}
 	result := api.NamedQueryItemV2{
 		ID:               query.ID,
 		Title:            query.Title,
 		Description:      query.Description,
-		IntegrationTypes: integration_type.ParseTypes(query.IntegrationTypes),
+		IntegrationTypes: integrationTypes,
 		Query:            query.Query.ToApi(),
 		Tags:             tags,
 	}
@@ -386,7 +395,7 @@ func (h *HttpHandler) ListQueriesTags(ctx echo.Context) error {
 //	@Accepts		json
 //	@Produce		json
 //	@Param			request	body		api.RunQueryRequest	true	"Request Body"
-//	@Param			accept	header		string							true	"Accept header"	Enums(application/json,text/csv)
+//	@Param			accept	header		string				true	"Accept header"	Enums(application/json,text/csv)
 //	@Success		200		{object}	api.RunQueryResponse
 //	@Router			/inventory/api/v1/query/run [post]
 func (h *HttpHandler) RunQuery(ctx echo.Context) error {
@@ -722,7 +731,10 @@ func (h *HttpHandler) RunRegoNamedQuery(ctx context.Context, title, query string
 
 func (h *HttpHandler) ListResourceTypeMetadata(ctx echo.Context) error {
 	tagMap := model.TagStringsToTagMap(httpserver.QueryArrayParam(ctx, "tag"))
-	integrationTypes := integration_type.ParseTypes(httpserver.QueryArrayParam(ctx, "integrationType"))
+	integrationTypes := make([]integration.Type, 0)
+	for _, integrationType := range httpserver.QueryArrayParam(ctx, "integrationType") {
+		integrationTypes = append(integrationTypes, integration.Type(integrationType))
+	}
 	serviceNames := httpserver.QueryArrayParam(ctx, "service")
 	resourceTypeNames := httpserver.QueryArrayParam(ctx, "resourceType")
 	summarized := strings.ToLower(ctx.QueryParam("summarized")) == "true"
@@ -768,7 +780,7 @@ func (h *HttpHandler) ListResourceTypeMetadata(ctx echo.Context) error {
 //	@Security		BearerToken
 //	@Tags			resource_collection
 //	@Produce		json
-//	@Param			id		query		[]string								false	"Resource collection IDs"
+//	@Param			id		query		[]string						false	"Resource collection IDs"
 //	@Param			status	query		[]api.ResourceCollectionStatus	false	"Resource collection status"
 //	@Success		200		{object}	[]api.ResourceCollection
 //	@Router			/inventory/api/v2/metadata/resource-collection [get]
@@ -1017,7 +1029,7 @@ func arrayContains(array []string, key string) bool {
 //	@Accepts		json
 //	@Produce		json
 //	@Param			request	body		api.RunQueryByIDRequest	true	"Request Body"
-//	@Param			accept	header		string								true	"Accept header"	Enums(application/json,text/csv)
+//	@Param			accept	header		string					true	"Accept header"	Enums(application/json,text/csv)
 //	@Success		200		{object}	api.RunQueryResponse
 //	@Router			/inventory/api/v3/query/run [post]
 func (h *HttpHandler) RunQueryByID(ctx echo.Context) error {
@@ -1291,8 +1303,8 @@ func (h *HttpHandler) GetResourceCategories(ctx echo.Context) error {
 //	@Description	Get list of unique resource categories for the give queries
 //	@Security		BearerToken
 //	@Tags			named_query
-//	@Param			queries	query	[]string	false	"Connection group to filter by - mutually exclusive with connectionId"
-//	 	@Param 			is_bookmarked 	query 	bool 		false	"is bookmarked filter"
+//	@Param			queries			query	[]string	false	"Connection group to filter by - mutually exclusive with connectionId"
+//	@Param			is_bookmarked	query	bool		false	"is bookmarked filter"
 //	@Accepts		json
 //	@Produce		json
 //	@Success		200	{object}	api.GetResourceCategoriesResponse
@@ -1382,16 +1394,16 @@ func (h *HttpHandler) GetTablesResourceCategories(ctx echo.Context) error {
 
 // GetCategoriesQueries godoc
 //
-//		@Summary		Get list of controls for given categories
-//		@Description	Get list of controls for given categories
-//		@Security		BearerToken
-//		@Tags			named_query
-//		@Param			categories		query	[]string	false	"Connection group to filter by - mutually exclusive with connectionId"
-//	 	@Param 			is_bookmarked 	query 	bool 		false	"is bookmarked filter"
-//		@Accepts		json
-//		@Produce		json
-//		@Success		200	{object}	[]string
-//		@Router			/inventory/api/v3/categories/queries [get]
+//	@Summary		Get list of controls for given categories
+//	@Description	Get list of controls for given categories
+//	@Security		BearerToken
+//	@Tags			named_query
+//	@Param			categories		query	[]string	false	"Connection group to filter by - mutually exclusive with connectionId"
+//	@Param			is_bookmarked	query	bool		false	"is bookmarked filter"
+//	@Accepts		json
+//	@Produce		json
+//	@Success		200	{object}	[]string
+//	@Router			/inventory/api/v3/categories/queries [get]
 func (h *HttpHandler) GetCategoriesQueries(ctx echo.Context) error {
 	categories, err := h.db.ListUniqueCategoriesAndTablesForTables(nil)
 	if err != nil {
@@ -1454,11 +1466,15 @@ func (h *HttpHandler) GetCategoriesQueries(ctx echo.Context) error {
 			if query.IsBookmarked {
 				tags["platform_queries_bookmark"] = []string{"true"}
 			}
+			integrationTypes := make([]integration.Type, 0, len(query.IntegrationTypes))
+			for _, integrationType := range query.IntegrationTypes {
+				integrationTypes = append(integrationTypes, integration.Type(integrationType))
+			}
 			result := api.NamedQueryItemV2{
 				ID:               query.ID,
 				Title:            query.Title,
 				Description:      query.Description,
-				IntegrationTypes: integration_type.ParseTypes(query.IntegrationTypes),
+				IntegrationTypes: integrationTypes,
 				Query:            query.Query.ToApi(),
 				Tags:             tags,
 			}
@@ -1495,8 +1511,8 @@ func (h *HttpHandler) GetCategoriesQueries(ctx echo.Context) error {
 //	@Description	Get list of queries for given parameters
 //	@Security		BearerToken
 //	@Tags			compliance
-//	@Param			parameters	query	[]string	false	"Parameters filter by"
-//	 	@Param 			is_bookmarked 	query 	bool 		false	"is bookmarked filter"
+//	@Param			parameters		query	[]string	false	"Parameters filter by"
+//	@Param			is_bookmarked	query	bool		false	"is bookmarked filter"
 //	@Accepts		json
 //	@Produce		json
 //	@Success		200	{object}	api.GetParametersQueriesResponse
@@ -1536,11 +1552,15 @@ func (h *HttpHandler) GetParametersQueries(ctx echo.Context) error {
 			if item.IsBookmarked {
 				tags["platform_queries_bookmark"] = []string{"true"}
 			}
+			integrationTypes := make([]integration.Type, 0, len(item.IntegrationTypes))
+			for _, integrationType := range item.IntegrationTypes {
+				integrationTypes = append(integrationTypes, integration.Type(integrationType))
+			}
 			items = append(items, api.NamedQueryItemV2{
 				ID:               item.ID,
 				Title:            item.Title,
 				Description:      item.Description,
-				IntegrationTypes: integration_type.ParseTypes(item.IntegrationTypes),
+				IntegrationTypes: integrationTypes,
 				Query:            item.Query.ToApi(),
 				Tags:             tags,
 			})
@@ -1672,11 +1692,15 @@ func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context, req api.ListQueryV
 		if item.IsBookmarked {
 			tags["platform_queries_bookmark"] = []string{"true"}
 		}
+		integrationTypes := make([]integration.Type, 0, len(item.IntegrationTypes))
+		for _, integrationType := range item.IntegrationTypes {
+			integrationTypes = append(integrationTypes, integration.Type(integrationType))
+		}
 		items = append(items, api.NamedQueryItemV2{
 			ID:               item.ID,
 			Title:            item.Title,
 			Description:      item.Description,
-			IntegrationTypes: integration_type.ParseTypes(item.IntegrationTypes),
+			IntegrationTypes: integrationTypes,
 			Query:            item.Query.ToApi(),
 			Tags:             filterTagsByRegex(req.TagsRegex, tags),
 		})

@@ -1,5 +1,7 @@
 ARG PLUGIN_REGISTRY
-FROM ${PLUGIN_REGISTRY}/steampipe-plugin-base:0.0.1 as base
+
+FROM ${PLUGIN_REGISTRY}/cloudql-plugin-base:0.0.1 as base
+
 
 COPY ./build/rego-service /
 

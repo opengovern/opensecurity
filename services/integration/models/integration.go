@@ -1,40 +1,14 @@
 package models
 
 import (
-	"database/sql"
 	"encoding/json"
-	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-util/pkg/integration"
 	api "github.com/opengovern/opencomply/services/integration/api/models"
-	"time"
-)
-
-type IntegrationState string
-
-const (
-	IntegrationStateActive   IntegrationState = "ACTIVE"
-	IntegrationStateInactive IntegrationState = "INACTIVE"
-	IntegrationStateArchived IntegrationState = "ARCHIVED"
-	IntegrationStateSample   IntegrationState = "SAMPLE_INTEGRATION"
 )
 
 type Integration struct {
-	IntegrationID   uuid.UUID `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"` // Auto-generated UUID
-	ProviderID      string
-	Name            string
-	IntegrationType integration.Type
-	Annotations     pgtype.JSONB
-	Labels          pgtype.JSONB
-
-	CredentialID uuid.UUID `gorm:"not null"` // Foreign key to Credential
-
-	State     IntegrationState
-	LastCheck *time.Time
-
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt sql.NullTime `gorm:"index"`
+	integration.Integration
 }
 
 func (i *Integration) AddLabel(key, value string) (*pgtype.JSONB, error) {

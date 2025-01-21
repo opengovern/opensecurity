@@ -27,7 +27,6 @@ import (
 	queryrunner "github.com/opengovern/opencomply/jobs/query-runner-job"
 	"github.com/opengovern/opencomply/pkg/utils"
 	integrationapi "github.com/opengovern/opencomply/services/integration/api/models"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"github.com/sony/sonyflake"
 
 	complianceapi "github.com/opengovern/opencomply/services/compliance/api"
@@ -384,8 +383,18 @@ func (h HttpServer) TriggerPerConnectionDescribeJob(ctx echo.Context) error {
 
 	dependencyIDs := make([]int64, 0)
 	var err error
+
+	integrationTypes, err := h.Scheduler.integrationClient.ListIntegrationTypes(ctx2)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	integrationTypesMap := make(map[string]bool)
+	for _, integrationType := range integrationTypes {
+		integrationTypesMap[integrationType] = true
+	}
+
 	for _, src := range srcs {
-		integrationType, ok := integration_type.IntegrationTypes[src.IntegrationType]
+		_, ok := integrationTypesMap[src.IntegrationType.String()]
 		if !ok {
 			return echo.NewHTTPError(http.StatusInternalServerError, "unknown integration type")
 		}
@@ -393,7 +402,7 @@ func (h HttpServer) TriggerPerConnectionDescribeJob(ctx echo.Context) error {
 		resourceTypes := ctx.QueryParams()["resource_type"]
 
 		if resourceTypes == nil {
-			resourceTypesMap, err := integrationType.GetResourceTypesByLabels(src.Labels)
+			resourceTypesMap, err := h.Scheduler.integrationClient.GetResourceTypesByLabels(ctx2, src.IntegrationType.String(), src.Labels)
 			if err != nil {
 				h.Scheduler.logger.Error("failed to get resource types by labels", zap.Error(err))
 				return echo.NewHTTPError(http.StatusInternalServerError, "failed to get resource types by labels")
@@ -442,18 +451,31 @@ func (h HttpServer) TriggerDescribeJob(ctx echo.Context) error {
 		DescribeJobsCount.WithLabelValues("failure").Inc()
 		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{Message: err.Error()})
 	}
+
+	ctx2 := &httpclient.Context{UserRole: apiAuth.AdminRole}
+	ctx2.Ctx = ctx.Request().Context()
+
+	integrationTypes, err := h.Scheduler.integrationClient.ListIntegrationTypes(ctx2)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	integrationTypesMap := make(map[string]bool)
+	for _, integrationType := range integrationTypes {
+		integrationTypesMap[integrationType] = true
+	}
+
 	for _, integration := range integrations.Integrations {
 		if integration.State != integrationapi.IntegrationStateActive {
 			continue
 		}
-		integrationType, ok := integration_type.IntegrationTypes[integration.IntegrationType]
+		_, ok := integrationTypesMap[integration.IntegrationType.String()]
 		if !ok {
 			return echo.NewHTTPError(http.StatusInternalServerError, "unknown integration type")
 		}
 		rtToDescribe := resourceTypes
 
 		if len(rtToDescribe) == 0 {
-			resourceTypesMap, err := integrationType.GetResourceTypesByLabels(integration.Labels)
+			resourceTypesMap, err := h.Scheduler.integrationClient.GetResourceTypesByLabels(ctx2, integration.IntegrationType.String(), integration.Labels)
 			if err != nil {
 				h.Scheduler.logger.Error("failed to get resource types by labels", zap.Error(err))
 				return echo.NewHTTPError(http.StatusInternalServerError, "failed to get resource types by labels")
@@ -634,17 +656,29 @@ func (h HttpServer) getReEvaluateParams(benchmarkID string, connectionIDs, contr
 		return nil, nil, err
 	}
 	var describeJobs []ReEvaluateDescribeJob
+
+	ctx2 := &httpclient.Context{UserRole: apiAuth.AdminRole}
+	ctx2.Ctx = context.Background()
+	integrationTypes, err := h.Scheduler.integrationClient.ListIntegrationTypes(ctx2)
+	if err != nil {
+		return nil, nil, err
+	}
+	integrationTypesMap := make(map[string]bool)
+	for _, integrationType := range integrationTypes {
+		integrationTypesMap[integrationType] = true
+	}
+
 	// TODO: filter needed resource types for tables for controls queries
 	for _, integration := range integrations.Integrations {
 		if integration.State != integrationapi.IntegrationStateActive {
 			continue
 		}
-		integrationType, ok := integration_type.IntegrationTypes[integration.IntegrationType]
+		_, ok := integrationTypesMap[integration.IntegrationType.String()]
 		if !ok {
 			return nil, nil, fmt.Errorf("unknown integration type")
 		}
 
-		possibleRt, err := integrationType.GetResourceTypesByLabels(integration.Labels)
+		possibleRt, err := h.Scheduler.integrationClient.GetResourceTypesByLabels(ctx2, integration.IntegrationType.String(), integration.Labels)
 		if err != nil {
 			h.Scheduler.logger.Error("failed to get resource types by labels", zap.Error(err))
 			return nil, nil, fmt.Errorf("failed to get resource types by labels")
@@ -1461,7 +1495,7 @@ func (h HttpServer) RunBenchmark(ctx echo.Context) error {
 //	@Param			request	body		api.RunDiscoveryRequest	true	"Request Body"
 //	@Router			/schedule/api/v3/discovery/run [post]
 func (h HttpServer) RunDiscovery(ctx echo.Context) error {
-	clientCtx := &httpclient.Context{UserRole: apiAuth.AdminRole}
+	clientCtx := &httpclient.Context{UserRole: apiAuth.AdminRole, Ctx: ctx.Request().Context()}
 	userID := httpserver.GetUserID(ctx)
 	if userID == "" {
 		userID = "system"
@@ -1480,6 +1514,15 @@ func (h HttpServer) RunDiscovery(ctx echo.Context) error {
 	}
 	if len(request.IntegrationInfo) == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "please provide at least one connection info")
+	}
+
+	integrationTypes, err := h.Scheduler.integrationClient.ListIntegrationTypes(clientCtx)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	integrationTypesMap := make(map[string]bool)
+	for _, integrationType := range integrationTypes {
+		integrationTypesMap[integrationType] = true
 	}
 
 	var integrations []integrationapi.Integration
@@ -1540,12 +1583,12 @@ func (h HttpServer) RunDiscovery(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create integration discovery")
 		}
 
-		integrationType, ok := integration_type.IntegrationTypes[integration.IntegrationType]
+		_, ok := integrationTypesMap[integration.IntegrationType.String()]
 		if !ok {
 			return echo.NewHTTPError(http.StatusInternalServerError, "unknown integration type")
 		}
 
-		possibleRtMap, err := integrationType.GetResourceTypesByLabels(integration.Labels)
+		possibleRtMap, err := h.Scheduler.integrationClient.GetResourceTypesByLabels(clientCtx, integration.IntegrationType.String(), integration.Labels)
 		if err != nil {
 			h.Scheduler.logger.Error("failed to get resource types by labels", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get resource types by labels")
@@ -1581,6 +1624,34 @@ func (h HttpServer) RunDiscovery(ctx echo.Context) error {
 					}
 				} else {
 					failureReason = err.Error()
+				}
+			}
+			if resourceType.EnableSchedule {
+				parameters := resourceType.Parameters
+				if parameters == nil {
+					parameters = make(map[string]string)
+				}
+				parametersJsonData, err := json.Marshal(parameters)
+				if err != nil {
+					h.Scheduler.logger.Error("failed to marshal parameters", zap.Error(err))
+					return echo.NewHTTPError(http.StatusInternalServerError, "failed to marshal parameters")
+				}
+				parametersJsonb := pgtype.JSONB{}
+				err = parametersJsonb.Set(parametersJsonData)
+				if err != nil {
+					h.Scheduler.logger.Error("failed to set parameters jsonb", zap.Error(err))
+					return echo.NewHTTPError(http.StatusInternalServerError, "failed to set parameters jsonb")
+				}
+				err = h.DB.CreateManualDiscoverySchedule(&model2.ManualDiscoverySchedule{
+					ResourceType:    resourceType.ResourceType,
+					IntegrationID:   integration.IntegrationID,
+					IntegrationType: integration.IntegrationType,
+					CreatedBy:       userID,
+					Parameters:      parametersJsonb,
+				})
+				if err != nil {
+					h.Scheduler.logger.Error("failed to create manual discovery schedule", zap.Error(err))
+					return echo.NewHTTPError(http.StatusInternalServerError, "failed to create manual discovery schedule")
 				}
 			}
 
@@ -1826,6 +1897,14 @@ func (h HttpServer) ListDescribeJobs(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	for _, j := range jobs {
+		var params map[string]string
+		if j.Parameters.Status == pgtype.Present {
+			if err := json.Unmarshal(j.Parameters.Bytes, &params); err != nil {
+				h.Scheduler.logger.Error("failed to unmarshal parameters", zap.Uint("job_id", j.ID))
+			}
+		} else {
+			params = make(map[string]string)
+		}
 		jobResult := api.GetDescribeJobsHistoryResponse{
 			JobId:          j.ID,
 			ResourceType:   j.ResourceType,
@@ -1834,6 +1913,7 @@ func (h HttpServer) ListDescribeJobs(ctx echo.Context) error {
 			CreatedAt:      j.CreatedAt,
 			FailureMessage: j.FailureMessage,
 			Title:          j.ResourceType,
+			Parameters:     params,
 		}
 		if info, ok := connectionInfo[j.IntegrationID]; ok {
 			jobResult.IntegrationInfo = &info
@@ -2645,12 +2725,23 @@ func (h HttpServer) CancelJobById(ctx echo.Context) error {
 			job.Status == api.DescribeResourceJobSucceeded || job.Status == api.DescribeResourceJobTimeout {
 			return echo.NewHTTPError(http.StatusOK, "job is already finished")
 		} else if job.Status == api.DescribeResourceJobQueued {
-			integrationType, ok := integration_type.IntegrationTypes[job.IntegrationType]
+			ctx2 := &httpclient.Context{UserRole: apiAuth.AdminRole, Ctx: ctx.Request().Context()}
+
+			integrationTypes, err := h.Scheduler.integrationClient.ListIntegrationTypes(ctx2)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			}
+			integrationTypesMap := make(map[string]bool)
+			for _, integrationType := range integrationTypes {
+				integrationTypesMap[integrationType] = true
+			}
+
+			_, ok := integrationTypesMap[job.IntegrationType.String()]
 			if !ok {
 				return echo.NewHTTPError(http.StatusInternalServerError, "unknown integration type")
 			}
 
-			integrationConfig := integrationType.GetConfiguration()
+			integrationConfig, err := h.Scheduler.integrationClient.GetIntegrationConfiguration(ctx2, job.IntegrationType.String())
 			err = h.Scheduler.jq.DeleteMessage(ctx.Request().Context(), integrationConfig.NatsStreamName, job.NatsSequenceNumber)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -2898,12 +2989,7 @@ func (h HttpServer) CancelJob(ctx echo.Context) error {
 				failureReason = "job is already finished"
 				break
 			} else if job.Status == api.DescribeResourceJobQueued {
-				integrationType, ok := integration_type.IntegrationTypes[job.IntegrationType]
-				if !ok {
-					return echo.NewHTTPError(http.StatusInternalServerError, "unknown integration type")
-				}
-
-				integrationConfig := integrationType.GetConfiguration()
+				integrationConfig, err := h.Scheduler.integrationClient.GetIntegrationConfiguration(clientCtx, job.IntegrationType.String())
 				err = h.Scheduler.jq.DeleteMessage(ctx.Request().Context(), integrationConfig.NatsStreamName, job.NatsSequenceNumber)
 				if err != nil {
 					failureReason = err.Error()

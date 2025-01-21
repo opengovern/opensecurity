@@ -70,7 +70,7 @@ func (s *JobScheduler) buildRunners(
 		if integrationType != nil && len(control.Policy.IntegrationType) > 0 {
 			supportsConnector := false
 			for _, c := range control.Policy.IntegrationType {
-				if *integrationType == c {
+				if integrationType.String() == c {
 					supportsConnector = true
 					break
 				}

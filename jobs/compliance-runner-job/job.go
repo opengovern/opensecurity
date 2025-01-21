@@ -125,7 +125,7 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 	)
 	totalComplianceResultCountMap := make(map[string]int)
 
-	complianceResults, err := j.ExtractComplianceResults(w.logger, w.benchmarkCache, j.ExecutionPlan.Callers[0], res, j.ExecutionPlan.Query)
+	complianceResults, err := j.ExtractComplianceResults(w.logger, w.benchmarkCache, w.integrationClient, j.ExecutionPlan.Callers[0], res, j.ExecutionPlan.Query)
 	if err != nil {
 		return 0, err
 	}

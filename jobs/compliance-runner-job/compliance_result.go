@@ -1,37 +1,40 @@
 package runner
 
 import (
+	"context"
 	"fmt"
-	"net/http"
+	authApi "github.com/opengovern/og-util/pkg/api"
+	"github.com/opengovern/og-util/pkg/httpclient"
+	"github.com/opengovern/opencomply/services/integration/client"
 	"reflect"
 	"strconv"
 	"strings"
 
-	"github.com/labstack/echo/v4"
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/og-util/pkg/steampipe"
 	"github.com/opengovern/opencomply/pkg/types"
 	"github.com/opengovern/opencomply/pkg/utils"
 	"github.com/opengovern/opencomply/services/compliance/api"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"go.uber.org/zap"
 )
 
-func GetResourceTypeFromTableName(tableName string, queryIntegrationType []integration.Type) (string, integration.Type, error) {
-	var integrationType integration.Type
+func (w *Job) GetResourceTypeFromTableName(integrationClient client.IntegrationServiceClient, tableName string, queryIntegrationType []string) (string, integration.Type, error) {
+	var integrationType string
 	if len(queryIntegrationType) == 1 {
 		integrationType = queryIntegrationType[0]
 	} else {
 		integrationType = ""
 	}
-	integration, ok := integration_type.IntegrationTypes[integrationType]
-	if !ok {
-		return "", "", echo.NewHTTPError(http.StatusInternalServerError, "unknown integration type")
+
+	tableResourceType, err := integrationClient.GetResourceTypeFromTableName(&httpclient.Context{Ctx: context.Background(), UserRole: authApi.ViewerRole}, integrationType, tableName)
+	if err != nil {
+		return "", "", err
 	}
-	return integration.GetResourceTypeFromTableName(tableName), integrationType, nil
+
+	return tableResourceType, integration.Type(integrationType), nil
 }
 
-func (w *Job) ExtractComplianceResults(_ *zap.Logger, benchmarkCache map[string]api.Benchmark, caller Caller, res *steampipe.Result, query api.Policy) ([]types.ComplianceResult, error) {
+func (w *Job) ExtractComplianceResults(logger *zap.Logger, benchmarkCache map[string]api.Benchmark, integrationClient client.IntegrationServiceClient, caller Caller, res *steampipe.Result, query api.Policy) ([]types.ComplianceResult, error) {
 	var complianceResults []types.ComplianceResult
 	var integrationType integration.Type
 	var err error
@@ -44,7 +47,7 @@ func (w *Job) ExtractComplianceResults(_ *zap.Logger, benchmarkCache map[string]
 			tableName = query.ListOfResources[0]
 		}
 		if tableName != "" {
-			queryResourceType, integrationType, err = GetResourceTypeFromTableName(tableName, w.ExecutionPlan.Query.IntegrationType)
+			queryResourceType, integrationType, err = w.GetResourceTypeFromTableName(integrationClient, tableName, w.ExecutionPlan.Query.IntegrationType)
 			if err != nil {
 				return nil, err
 			}
@@ -72,7 +75,7 @@ func (w *Job) ExtractComplianceResults(_ *zap.Logger, benchmarkCache map[string]
 			integrationID = v
 		}
 		if v, ok := recordValue["platform_table_name"].(string); ok && resourceType == "" {
-			resourceType, integrationType, err = GetResourceTypeFromTableName(v, w.ExecutionPlan.Query.IntegrationType)
+			resourceType, integrationType, err = w.GetResourceTypeFromTableName(integrationClient, v, w.ExecutionPlan.Query.IntegrationType)
 			if err != nil {
 				return nil, err
 			}

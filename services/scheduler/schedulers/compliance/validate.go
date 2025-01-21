@@ -4,10 +4,7 @@ import (
 	"fmt"
 	api2 "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/opencomply/services/compliance/api"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
-	"github.com/opengovern/opencomply/services/integration/integration-type/interfaces"
 	"github.com/opengovern/opencomply/services/scheduler/db/model"
 	"go.uber.org/zap"
 )
@@ -59,24 +56,19 @@ func (s *JobScheduler) tableValidation(framework api.Benchmark) error {
 			return err
 		}
 
-		s.logger.Info("getting integration types")
-		var integrationTypes []interfaces.IntegrationType
-		for _, itName := range framework.IntegrationTypes {
-			if it, ok := integration_type.IntegrationTypes[integration.Type(itName)]; ok {
-				integrationTypes = append(integrationTypes, it)
-			} else {
-				_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
-					FrameworkID:    framework.ID,
-					FailureMessage: fmt.Errorf("integration type not valid: %s", itName).Error(),
-				})
-				return fmt.Errorf("integration type not valid: %s", itName)
-			}
+		integrationTypes, err := s.integrationClient.ListIntegrationTypes(&httpclient.Context{UserRole: api2.AdminRole})
+		if err != nil {
+			_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
+				FrameworkID:    framework.ID,
+				FailureMessage: err.Error(),
+			})
+			return err
 		}
-
-		s.logger.Info("making tables map")
+		integrationTypesMap := make(map[string]bool)
 		tablesMap := make(map[string]struct{})
 		for _, it := range integrationTypes {
-			tables, err := it.GetTablesByLabels(nil)
+			integrationTypesMap[it] = true
+			tables, err := s.integrationClient.GetIntegrationTypeTables(&httpclient.Context{UserRole: api2.AdminRole}, it)
 			if err != nil {
 				_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
 					FrameworkID:    framework.ID,
@@ -84,8 +76,19 @@ func (s *JobScheduler) tableValidation(framework api.Benchmark) error {
 				})
 				return err
 			}
-			for _, table := range tables {
+			for table, _ := range tables {
 				tablesMap[table] = struct{}{}
+			}
+		}
+
+		s.logger.Info("getting integration types")
+		for _, itName := range framework.IntegrationTypes {
+			if _, ok := integrationTypesMap[itName]; !ok {
+				_ = s.db.CreateFrameworkValidation(&model.FrameworkValidation{
+					FrameworkID:    framework.ID,
+					FailureMessage: fmt.Errorf("integration type not valid: %s", itName).Error(),
+				})
+				return fmt.Errorf("integration type not valid: %s", itName)
 			}
 		}
 

@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
+	cloudql_init_job "github.com/opengovern/opencomply/jobs/cloudql-init-job"
+	"github.com/opengovern/opencomply/services/integration/client"
 	"strconv"
 	"time"
 
@@ -20,20 +21,22 @@ type Config struct {
 	ElasticSearch         config.ElasticSearch
 	NATS                  config.NATS
 	Compliance            config.OpenGovernanceService
-	Onboard               config.OpenGovernanceService
+	Integration           config.OpenGovernanceService
 	Inventory             config.OpenGovernanceService
-	Core              config.OpenGovernanceService
+	Core                  config.OpenGovernanceService
 	EsSink                config.OpenGovernanceService
 	Steampipe             config.Postgres
+	PostgresPlugin        config.Postgres
 	PrometheusPushAddress string
 }
 
 type Worker struct {
-	config        Config
-	logger        *zap.Logger
-	steampipeConn *steampipe.Database
-	esClient      opengovernance.Client
-	jq            *jq.JobQueue
+	config            Config
+	logger            *zap.Logger
+	steampipeConn     *steampipe.Database
+	esClient          opengovernance.Client
+	jq                *jq.JobQueue
+	integrationClient client.IntegrationServiceClient
 }
 
 func NewWorker(
@@ -41,15 +44,16 @@ func NewWorker(
 	logger *zap.Logger,
 	ctx context.Context,
 ) (*Worker, error) {
-	for _, integrationType := range integration_type.IntegrationTypes {
-		describerConfig := integrationType.GetConfiguration()
-		err := steampipe.PopulateSteampipeConfig(config.ElasticSearch, describerConfig.SteampipePluginName)
-		if err != nil {
-			return nil, err
-		}
-	}
+	integrationClient := client.NewIntegrationServiceClient(config.Integration.BaseURL)
 
-	if err := steampipe.PopulateOpenGovernancePluginSteampipeConfig(config.ElasticSearch, config.Steampipe); err != nil {
+	pluginJob := cloudql_init_job.NewJob(logger, cloudql_init_job.Config{
+		Postgres:      config.PostgresPlugin,
+		ElasticSearch: config.ElasticSearch,
+		Steampipe:     config.Steampipe,
+	}, integrationClient)
+	err := pluginJob.Run(ctx)
+	if err != nil {
+		logger.Error("failed to run plugin job", zap.Error(err))
 		return nil, err
 	}
 
@@ -83,11 +87,12 @@ func NewWorker(
 	}
 
 	w := &Worker{
-		config:        config,
-		logger:        logger,
-		steampipeConn: steampipeConn,
-		esClient:      esClient,
-		jq:            jq,
+		config:            config,
+		logger:            logger,
+		steampipeConn:     steampipeConn,
+		esClient:          esClient,
+		jq:                jq,
+		integrationClient: integrationClient,
 	}
 
 	return w, nil

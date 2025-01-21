@@ -4,7 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
+	cloudql_init_job "github.com/opengovern/opencomply/jobs/cloudql-init-job"
+	"github.com/opengovern/opencomply/services/integration/client"
 	"strconv"
 	"time"
 
@@ -27,10 +28,11 @@ type Config struct {
 	ElasticSearch         config.ElasticSearch
 	NATS                  config.NATS
 	Compliance            config.OpenGovernanceService
-	Onboard               config.OpenGovernanceService
-	Core              config.OpenGovernanceService
+	Integration           config.OpenGovernanceService
+	Core                  config.OpenGovernanceService
 	EsSink                config.OpenGovernanceService
 	Steampipe             config.Postgres
+	PostgresPlugin        config.Postgres
 	PrometheusPushAddress string
 }
 
@@ -41,9 +43,9 @@ type Worker struct {
 	esClient         opengovernance.Client
 	jq               *jq.JobQueue
 	complianceClient complianceClient.ComplianceServiceClient
-	
-	coreClient   coreClient.CoreServiceClient
-	sinkClient       esSinkClient.EsSinkServiceClient
+
+	coreClient coreClient.CoreServiceClient
+	sinkClient esSinkClient.EsSinkServiceClient
 
 	benchmarkCache map[string]complianceApi.Benchmark
 }
@@ -54,15 +56,16 @@ func NewWorker(
 	prometheusPushAddress string,
 	ctx context.Context,
 ) (*Worker, error) {
-	for _, integrationType := range integration_type.IntegrationTypes {
-		describerConfig := integrationType.GetConfiguration()
-		err := steampipe.PopulateSteampipeConfig(config.ElasticSearch, describerConfig.SteampipePluginName)
-		if err != nil {
-			return nil, err
-		}
-	}
+	integrationClient := client.NewIntegrationServiceClient(config.Integration.BaseURL)
 
-	if err := steampipe.PopulateOpenGovernancePluginSteampipeConfig(config.ElasticSearch, config.Steampipe); err != nil {
+	pluginJob := cloudql_init_job.NewJob(logger, cloudql_init_job.Config{
+		Postgres:      config.PostgresPlugin,
+		ElasticSearch: config.ElasticSearch,
+		Steampipe:     config.Steampipe,
+	}, integrationClient)
+	err := pluginJob.Run(ctx)
+	if err != nil {
+		logger.Error("failed to run plugin job", zap.Error(err))
 		return nil, err
 	}
 
@@ -102,10 +105,10 @@ func NewWorker(
 		esClient:         esClient,
 		jq:               jq,
 		complianceClient: complianceClient.NewComplianceClient(config.Compliance.BaseURL),
-	
-		coreClient:   coreClient.NewCoreServiceClient(config.Core.BaseURL),
-		sinkClient:       esSinkClient.NewEsSinkServiceClient(logger, config.EsSink.BaseURL),
-		benchmarkCache:   make(map[string]complianceApi.Benchmark),
+
+		coreClient:     coreClient.NewCoreServiceClient(config.Core.BaseURL),
+		sinkClient:     esSinkClient.NewEsSinkServiceClient(logger, config.EsSink.BaseURL),
+		benchmarkCache: make(map[string]complianceApi.Benchmark),
 	}
 	ctx2 := &httpclient.Context{Ctx: ctx, UserRole: api.AdminRole}
 	benchmarks, err := w.complianceClient.ListAllBenchmarks(ctx2, true)

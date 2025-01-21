@@ -10,7 +10,6 @@ import (
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/ticker"
 	"github.com/opengovern/opencomply/services/integration/api/models"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"github.com/opengovern/opencomply/services/scheduler/db/model"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -155,7 +154,7 @@ func (s *DescribeDependencies) Do(ctx context.Context) error {
 	}
 
 	for _, integration := range resp.Integrations {
-		validResourceTypes, err := getIntegrationTypesValidResourceTypes(integration)
+		validResourceTypes, err := s.getIntegrationTypesValidResourceTypes(integration)
 		if err != nil {
 			return err
 		}
@@ -211,7 +210,7 @@ func (s *Scheduler) getFrameworkDependencies(frameworkID string) ([]string, erro
 			integrationTypesMap[i] = true
 		}
 		for _, i := range control.Policy.IntegrationType {
-			integrationTypesMap[i.String()] = true
+			integrationTypesMap[i] = true
 		}
 		for _, table := range control.Policy.ListOfResources {
 			tables[table] = true
@@ -238,40 +237,27 @@ func (s *Scheduler) getFrameworkDependencies(frameworkID string) ([]string, erro
 
 func (s *Scheduler) findTableResourceTypeInIntegrations(integrations []string, table string) (string, error) {
 	for _, i := range integrations {
-		if value, ok := integration_type.IntegrationTypes[integration_type.ParseType(i)]; ok {
-			resourceType := value.GetResourceTypeFromTableName(table)
-			if resourceType != "" {
-				return resourceType, nil
-			}
-		} else {
-			return "", fmt.Errorf("integration type not found, integration-type: %s", value)
-		}
-	}
-	for _, integrationType := range integration_type.AllIntegrationTypes {
-		if value, ok := integration_type.IntegrationTypes[integrationType]; ok {
-			resourceType := value.GetResourceTypeFromTableName(table)
-			if resourceType != "" {
-				return resourceType, nil
-			}
-		} else {
-			return "", fmt.Errorf("integration type not found, integration-type: %s", value)
+		res, err := s.integrationClient.GetResourceTypeFromTableName(&httpclient.Context{Ctx: context.Background(), UserRole: apiAuth.ViewerRole}, i, table)
+		if err == nil {
+			return res, nil
 		}
 	}
 	return "", fmt.Errorf("resource type not found in integrations, table: %s, integration-types: %v",
 		table, integrations)
 }
 
-func getIntegrationTypesValidResourceTypes(integration models.Integration) (map[string]bool, error) {
-	if integrationType, ok := integration_type.IntegrationTypes[integration.IntegrationType]; ok {
-		resourceTypesMap := make(map[string]bool)
-		resourceTypes, err := integrationType.GetResourceTypesByLabels(integration.Labels)
-		if err != nil {
-			return nil, err
-		}
-		for resourceType, _ := range resourceTypes {
-			resourceTypesMap[resourceType] = true
-		}
-		return resourceTypesMap, nil
+func (s *DescribeDependencies) getIntegrationTypesValidResourceTypes(integration models.Integration) (map[string]bool, error) {
+	httpCtx := &httpclient.Context{
+		UserRole: apiAuth.AdminRole,
+		Ctx:      context.Background(),
 	}
-	return nil, fmt.Errorf("integration type for integration %s not found", integration.IntegrationID)
+	resourceTypesMap := make(map[string]bool)
+	resourceTypes, err := s.s.integrationClient.GetResourceTypesByLabels(httpCtx, integration.IntegrationType.String(), integration.Labels)
+	if err != nil {
+		return nil, err
+	}
+	for resourceType, _ := range resourceTypes {
+		resourceTypesMap[resourceType] = true
+	}
+	return resourceTypesMap, nil
 }

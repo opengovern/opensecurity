@@ -4,7 +4,8 @@ import (
 	config2 "github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/httpserver"
 	"github.com/opengovern/og-util/pkg/steampipe"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
+	cloudql_init_job "github.com/opengovern/opencomply/jobs/cloudql-init-job"
+	"github.com/opengovern/opencomply/services/integration/client"
 	"github.com/opengovern/opencomply/services/rego/api"
 	"github.com/opengovern/opencomply/services/rego/config"
 	"github.com/opengovern/opencomply/services/rego/service"
@@ -28,14 +29,16 @@ func Command() *cobra.Command {
 
 			logger = logger.Named("rego")
 
-			for _, integrationType := range integration_type.IntegrationTypes {
-				describerConfig := integrationType.GetConfiguration()
-				err := steampipe.PopulateSteampipeConfig(cnf.ElasticSearch, describerConfig.SteampipePluginName)
-				if err != nil {
-					return err
-				}
-			}
-			if err := steampipe.PopulateOpenGovernancePluginSteampipeConfig(cnf.ElasticSearch, cnf.Steampipe); err != nil {
+			integrationClient := client.NewIntegrationServiceClient(cnf.Integration.BaseURL)
+
+			pluginJob := cloudql_init_job.NewJob(logger, cloudql_init_job.Config{
+				Postgres:      cnf.PostgresPlugin,
+				ElasticSearch: cnf.ElasticSearch,
+				Steampipe:     cnf.Steampipe,
+			}, integrationClient)
+			err = pluginJob.Run(ctx)
+			if err != nil {
+				logger.Error("failed to run plugin job", zap.Error(err))
 				return err
 			}
 
