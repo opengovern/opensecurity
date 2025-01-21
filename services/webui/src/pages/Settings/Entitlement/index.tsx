@@ -240,9 +240,12 @@ export default function SettingsEntitlement() {
                         res.data.status !== 'SUCCEEDED' &&
                         res.data.status !== 'FAILED'
                     ) {
-                        const id = setInterval(GetStatus, 30000)
-                        // @ts-ignore
-                        setIntervalId(id)
+                        if(!intervalId){
+   const id = setInterval(GetStatus, 120000)
+   // @ts-ignore
+   setIntervalId(id)
+                        } 
+                     
                     }
                 }
                 //  const temp = []
@@ -357,7 +360,7 @@ export default function SettingsEntitlement() {
     useEffect(() => {
         if (syncExecuted && !syncLoading) {
             GetStatus()
-            const id = setInterval(GetStatus, 30000)
+            const id = setInterval(GetStatus, 120000)
             // @ts-ignore
             setIntervalId(id)
             // setValue(response?.value || '')
