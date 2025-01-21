@@ -25,12 +25,13 @@ import {
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { Schema } from './types'
-import { Spinner, Tabs } from '@cloudscape-design/components'
+import { BreadcrumbGroup, Spinner, Tabs } from '@cloudscape-design/components'
 
 import IntegrationList from './Integration'
 import CredentialsList from './Credentials'
 import { OpenGovernance } from '../../../icons/icons'
 import DiscoveryJobs from './Discovery'
+import Configuration from './Manifest'
 
 export default function TypeDetail() {
     const navigate = useNavigate()
@@ -79,46 +80,72 @@ export default function TypeDetail() {
 
     return (
         <>
-            <TopHeader breadCrumb={[type]} />
+            {/* <TopHeader breadCrumb={[state?.name]} /> */}
 
             {shcema && shcema?.integration_type_id ? (
                 <>
-                    <Tabs
-                        tabs={[
-                            {
-                                id: '0',
-                                label: 'Integrations',
-                                content: (
-                                    <IntegrationList
-                                        schema={shcema}
-                                        name={state.name}
-                                        integration_type={type}
-                                    />
-                                ),
-                            },
-                            {
-                                id: '1',
-                                label: 'Credentials',
-                                content: (
-                                    <CredentialsList
-                                        schema={shcema}
-                                        name={state.name}
-                                        integration_type={type}
-                                    />
-                                ),
-                            },
-                            {
-                                id: '2',
-                                label: 'Discovery Jobs',
-                                content: (
-                                    <DiscoveryJobs
-                                        name={state.name}
-                                        integration_type={type}
-                                    />
-                                ),
-                            },
-                        ]}
-                    />
+                    <Flex className="flex-col w-full justify-start items-start gap-4">
+                        <BreadcrumbGroup
+                            className='w-full'
+                            items={[
+                                {
+                                    text: 'Plugins',
+                                    href: '/plugins',
+                                },
+                                {
+                                    // @ts-ignore
+                                    text: state?.name,
+                                    href: `/plugins/${type}`,
+                                },
+                            ]}
+                        />
+                        <Tabs
+                            tabs={[
+                                {
+                                    id: '0',
+                                    label: 'Integrations',
+                                    content: (
+                                        <IntegrationList
+                                            schema={shcema}
+                                            name={state?.name}
+                                            integration_type={type}
+                                        />
+                                    ),
+                                },
+                                {
+                                    id: '1',
+                                    label: 'Credentials',
+                                    content: (
+                                        <CredentialsList
+                                            schema={shcema}
+                                            name={state?.name}
+                                            integration_type={type}
+                                        />
+                                    ),
+                                },
+                                {
+                                    id: '2',
+                                    label: 'Discovery Jobs',
+                                    content: (
+                                        <DiscoveryJobs
+                                            name={state?.name}
+                                            integration_type={type}
+                                        />
+                                    ),
+                                },
+                                {
+                                    id: '3',
+                                    label: 'Configuration',
+                                    content: (
+                                        <Configuration
+                                            name={state?.name}
+                                            integration_type={type}
+                                        />
+                                    ),
+                                },
+                            ]}
+                        />
+                    </Flex>
                 </>
             ) : (
                 <>
@@ -149,7 +176,7 @@ export default function TypeDetail() {
                                         <Button
                                             icon={ArrowLeftStartOnRectangleIcon}
                                             onClick={() => {
-                                                navigate('/integrations')
+                                                navigate('/plugins')
                                             }}
                                         >
                                             Back
