@@ -302,6 +302,9 @@ func (m *IntegrationTypeManager) RetryRebootIntegrationType(t *models.Integratio
 		if len(t.OperationalStatusUpdates) > 20 {
 			t.OperationalStatusUpdates = t.OperationalStatusUpdates[len(t.OperationalStatusUpdates)-20:]
 		}
+		if t.OperationalStatusUpdates == nil {
+			t.OperationalStatusUpdates = []string{}
+		}
 		err = m.IntegrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", t).Updates(map[string]any{
 			"operational_status":         models.IntegrationPluginOperationalStatusFailed,
 			"operational_status_updates": pq.StringArray(t.OperationalStatusUpdates),
@@ -354,6 +357,9 @@ func (m *IntegrationTypeManager) RetryRebootIntegrationType(t *models.Integratio
 	t.OperationalStatusUpdates = append(t.OperationalStatusUpdates, string(updateJson))
 	if len(t.OperationalStatusUpdates) > 20 {
 		t.OperationalStatusUpdates = t.OperationalStatusUpdates[len(t.OperationalStatusUpdates)-20:]
+	}
+	if t.OperationalStatusUpdates == nil {
+		t.OperationalStatusUpdates = []string{}
 	}
 	err = m.IntegrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", t).Updates(map[string]any{
 		"operational_status":         models.IntegrationPluginOperationalStatusEnabled,
