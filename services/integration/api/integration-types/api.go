@@ -2,21 +2,13 @@ package integration_types
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	kedav1alpha1 "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
 	hczap "github.com/zaffka/zap-to-hclog"
 	"golang.org/x/net/context"
-	"io/ioutil"
-	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/goccy/go-yaml"
@@ -36,26 +28,17 @@ import (
 	"sort"
 )
 
-const (
-	TemplateDeploymentPath          string = "/integrations/deployment-template.yaml"
-	TemplateManualsDeploymentPath   string = "/integrations/deployment-template-manuals.yaml"
-	TemplateScaledObjectPath        string = "/integrations/scaled-object-template.yaml"
-	TemplateManualsScaledObjectPath string = "/integrations/scaled-object-template-manuals.yaml"
-)
-
 type API struct {
 	logger      *zap.Logger
 	typeManager *integration_type.IntegrationTypeManager
 	database    db.Database
-	kubeClient  client.Client
 }
 
-func New(typeManager *integration_type.IntegrationTypeManager, database db.Database, logger *zap.Logger, kubeClient client.Client) *API {
+func New(typeManager *integration_type.IntegrationTypeManager, database db.Database, logger *zap.Logger) *API {
 	return &API{
 		logger:      logger.Named("integration_types"),
 		typeManager: typeManager,
 		database:    database,
-		kubeClient:  kubeClient,
 	}
 }
 
@@ -1035,7 +1018,7 @@ func (a *API) LoadPlugin(ctx context.Context, plugin *models2.IntegrationPlugin,
 
 	a.typeManager.PingLocks[plugin.IntegrationType] = &sync.Mutex{}
 
-	err = a.EnableIntegrationTypeHelper(ctx, plugin.IntegrationType.String())
+	err = a.typeManager.EnableIntegrationTypeHelper(ctx, plugin.IntegrationType.String())
 	if err != nil {
 		a.logger.Error("failed to enable integration type describer", zap.Error(err))
 		return err
@@ -1045,7 +1028,7 @@ func (a *API) LoadPlugin(ctx context.Context, plugin *models2.IntegrationPlugin,
 }
 
 func (a *API) UnLoadPlugin(ctx context.Context, plugin models2.IntegrationPlugin) error {
-	err := a.DisableIntegrationTypeHelper(ctx, plugin.IntegrationType.String())
+	err := a.typeManager.DisableIntegrationTypeHelper(ctx, plugin.IntegrationType.String())
 	if err != nil {
 		a.logger.Error("failed to disable integration type describer", zap.Error(err))
 		return err
@@ -1060,396 +1043,6 @@ func (a *API) UnLoadPlugin(ctx context.Context, plugin models2.IntegrationPlugin
 	}
 	if _, ok := a.typeManager.PingLocks[plugin.IntegrationType]; ok {
 		delete(a.typeManager.PingLocks, plugin.IntegrationType)
-	}
-
-	return nil
-}
-
-func (a *API) DisableIntegrationTypeHelper(ctx context.Context, integrationTypeName string) error {
-	plugin, err := a.database.GetPluginByIntegrationType(integrationTypeName)
-	if err != nil {
-		a.logger.Error("failed to get plugin", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get plugin")
-	}
-	if plugin == nil {
-		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
-	}
-
-	var integrationTypes []integration.Type
-	integrationTypes = append(integrationTypes, integration.Type(integrationTypeName))
-
-	integrations, err := a.database.ListIntegration(integrationTypes)
-	if err != nil {
-		a.logger.Error("failed to list credentials", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list credential")
-	}
-	if len(integrations) > 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "integration type contains integrations, you can not disable it")
-	}
-
-	currentNamespace, ok := os.LookupEnv("CURRENT_NAMESPACE")
-	if !ok {
-		return echo.NewHTTPError(http.StatusInternalServerError, "current namespace lookup failed")
-	}
-	integrationType, ok := a.typeManager.GetIntegrationTypeMap()[integration.Type(integrationTypeName)]
-	if !ok {
-		return echo.NewHTTPError(http.StatusNotFound, "invalid integration type")
-	}
-	cnf, err := integrationType.GetConfiguration()
-	if err != nil {
-		a.logger.Error("failed to get configuration", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get configuration"+err.Error())
-	}
-
-	// Scheduled deployment
-	var describerDeployment appsv1.Deployment
-	err = a.kubeClient.Get(ctx, client.ObjectKey{
-		Namespace: currentNamespace,
-		Name:      cnf.DescriberDeploymentName,
-	}, &describerDeployment)
-	if err != nil {
-		a.logger.Error("failed to get manual deployment", zap.Error(err))
-	} else {
-		err = a.kubeClient.Delete(ctx, &describerDeployment)
-		if err != nil {
-			a.logger.Error("failed to delete deployment", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete deployment")
-		}
-	}
-
-	// Manual deployment
-	var describerDeploymentManuals appsv1.Deployment
-	err = a.kubeClient.Get(ctx, client.ObjectKey{
-		Namespace: currentNamespace,
-		Name:      cnf.DescriberDeploymentName + "-manuals",
-	}, &describerDeploymentManuals)
-	if err != nil {
-		a.logger.Error("failed to get manual deployment", zap.Error(err))
-	} else {
-		err = a.kubeClient.Delete(ctx, &describerDeploymentManuals)
-		if err != nil {
-			a.logger.Error("failed to delete manual deployment", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete manual deployment")
-		}
-	}
-
-	kedaEnabled, ok := os.LookupEnv("KEDA_ENABLED")
-	if !ok {
-		kedaEnabled = "false"
-	}
-	if strings.ToLower(kedaEnabled) == "true" {
-		// Scheduled ScaledObject
-		var describerScaledObject kedav1alpha1.ScaledObject
-		err = a.kubeClient.Get(ctx, client.ObjectKey{
-			Namespace: currentNamespace,
-			Name:      cnf.DescriberDeploymentName + "-scaled-object",
-		}, &describerScaledObject)
-		if err != nil {
-			a.logger.Error("failed to get scaled object", zap.Error(err))
-		} else {
-			err = a.kubeClient.Delete(ctx, &describerScaledObject)
-			if err != nil {
-				a.logger.Error("failed to delete scaled object", zap.Error(err))
-				return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete scaled object")
-			}
-		}
-
-		// Manual ScaledObject
-		var describerScaledObjectManuals kedav1alpha1.ScaledObject
-		err = a.kubeClient.Get(ctx, client.ObjectKey{
-			Namespace: currentNamespace,
-			Name:      cnf.DescriberDeploymentName + "-manuals-scaled-object",
-		}, &describerScaledObjectManuals)
-		if err != nil {
-			a.logger.Error("failed to get manual scaled object", zap.Error(err))
-		} else {
-			err = a.kubeClient.Delete(ctx, &describerScaledObjectManuals)
-			if err != nil {
-				a.logger.Error("failed to delete manual scaled object", zap.Error(err))
-				return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete manual scaled object")
-			}
-		}
-	}
-	return nil
-}
-
-func (a *API) EnableIntegrationTypeHelper(ctx context.Context, integrationTypeName string) error {
-	currentNamespace, ok := os.LookupEnv("CURRENT_NAMESPACE")
-	if !ok {
-		return echo.NewHTTPError(http.StatusInternalServerError, "current namespace lookup failed")
-	}
-
-	plugin, err := a.database.GetPluginByIntegrationType(integrationTypeName)
-	if err != nil {
-		a.logger.Error("failed to get integration type", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration type")
-	}
-	kedaEnabled, ok := os.LookupEnv("KEDA_ENABLED")
-	if !ok {
-		kedaEnabled = "false"
-	}
-
-	// Scheduled deployment
-	var describerDeployment appsv1.Deployment
-	templateDeploymentFile, err := os.Open(TemplateDeploymentPath)
-	if err != nil {
-		a.logger.Error("failed to open template deployment file", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open template deployment file")
-	}
-	defer templateDeploymentFile.Close()
-
-	data, err := ioutil.ReadAll(templateDeploymentFile)
-	if err != nil {
-		a.logger.Error("failed to read template deployment file", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to read template deployment file")
-	}
-
-	err = yaml.Unmarshal(data, &describerDeployment)
-	if err != nil {
-		a.logger.Error("failed to unmarshal template deployment file", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to unmarshal template deployment file")
-	}
-
-	integrationType, ok := a.typeManager.GetIntegrationTypeMap()[integration.Type(integrationTypeName)]
-	if !ok {
-		return echo.NewHTTPError(http.StatusNotFound, "invalid integration type")
-	}
-	cnf, err := integrationType.GetConfiguration()
-	if err != nil {
-		a.logger.Error("failed to get integration type configuration", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration type configuration")
-	}
-
-	describerDeployment.ObjectMeta.Name = cnf.DescriberDeploymentName
-	describerDeployment.ObjectMeta.Namespace = currentNamespace
-	if kedaEnabled == "true" {
-		describerDeployment.Spec.Replicas = aws.Int32(0)
-	} else {
-		describerDeployment.Spec.Replicas = aws.Int32(5)
-	}
-	describerDeployment.Spec.Selector.MatchLabels["app"] = cnf.DescriberDeploymentName
-	describerDeployment.Spec.Template.ObjectMeta.Labels["app"] = cnf.DescriberDeploymentName
-	describerDeployment.Spec.Template.Spec.ServiceAccountName = "og-describer"
-
-	container := describerDeployment.Spec.Template.Spec.Containers[0]
-	container.Name = cnf.DescriberDeploymentName
-	container.Image = fmt.Sprintf("%s:%s", plugin.DescriberURL, plugin.DescriberTag)
-	container.Command = []string{cnf.DescriberRunCommand}
-	natsUrl, ok := os.LookupEnv("NATS_URL")
-	if ok {
-		container.Env = append(container.Env, v1.EnvVar{
-			Name:  "NATS_URL",
-			Value: natsUrl,
-		})
-	}
-	describerDeployment.Spec.Template.Spec.Containers[0] = container
-
-	newDeployment := appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cnf.DescriberDeploymentName,
-			Namespace: currentNamespace,
-			Labels: map[string]string{
-				"app": cnf.DescriberDeploymentName,
-			},
-		},
-		Spec: describerDeployment.Spec,
-	}
-
-	err = a.kubeClient.Create(ctx, &newDeployment)
-	if err != nil {
-		if !strings.Contains(err.Error(), "already exists") {
-			return err
-		} else {
-			existingDeployment := &appsv1.Deployment{}
-			err = a.kubeClient.Get(ctx, client.ObjectKey{
-				Name:      cnf.DescriberDeploymentName,
-				Namespace: currentNamespace,
-			}, existingDeployment)
-			if err != nil {
-				return err // Return if fetching fails
-			}
-
-			// Update the existing deployment's spec
-			existingDeployment.Spec = describerDeployment.Spec
-
-			// Apply the update
-			err = a.kubeClient.Update(ctx, existingDeployment)
-			if err != nil {
-				return err // Return if updating fails
-			}
-		}
-	}
-
-	// Manual deployment
-	var describerDeploymentManuals appsv1.Deployment
-	templateManualsDeploymentFile, err := os.Open(TemplateManualsDeploymentPath)
-	if err != nil {
-		a.logger.Error("failed to open template manuals deployment file", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open template manuals deployment file")
-	}
-	defer templateManualsDeploymentFile.Close()
-
-	data, err = ioutil.ReadAll(templateManualsDeploymentFile)
-	if err != nil {
-		a.logger.Error("failed to read template manuals deployment file", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to read template manuals deployment file")
-	}
-
-	err = yaml.Unmarshal(data, &describerDeploymentManuals)
-	if err != nil {
-		a.logger.Error("failed to unmarshal template manuals deployment file", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to unmarshal template manuals deployment file")
-	}
-
-	describerDeploymentManuals.ObjectMeta.Name = cnf.DescriberDeploymentName + "-manuals"
-	describerDeploymentManuals.ObjectMeta.Namespace = currentNamespace
-	if kedaEnabled == "true" {
-		describerDeploymentManuals.Spec.Replicas = aws.Int32(0)
-	} else {
-		describerDeploymentManuals.Spec.Replicas = aws.Int32(2)
-	}
-	describerDeploymentManuals.Spec.Selector.MatchLabels["app"] = cnf.DescriberDeploymentName + "-manuals"
-	describerDeploymentManuals.Spec.Template.ObjectMeta.Labels["app"] = cnf.DescriberDeploymentName + "-manuals"
-	describerDeploymentManuals.Spec.Template.Spec.ServiceAccountName = "og-describer"
-
-	containerManuals := describerDeploymentManuals.Spec.Template.Spec.Containers[0]
-	containerManuals.Name = cnf.DescriberDeploymentName
-	containerManuals.Image = fmt.Sprintf("%s:%s", plugin.DescriberURL, plugin.DescriberTag)
-	containerManuals.Command = []string{cnf.DescriberRunCommand}
-	natsUrl, ok = os.LookupEnv("NATS_URL")
-	if ok {
-		containerManuals.Env = append(containerManuals.Env, v1.EnvVar{
-			Name:  "NATS_URL",
-			Value: natsUrl,
-		})
-	}
-	describerDeploymentManuals.Spec.Template.Spec.Containers[0] = containerManuals
-
-	newDeploymentManuals := appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cnf.DescriberDeploymentName + "-manuals",
-			Namespace: currentNamespace,
-			Labels: map[string]string{
-				"app": cnf.DescriberDeploymentName + "-manuals",
-			},
-		},
-		Spec: describerDeploymentManuals.Spec,
-	}
-
-	err = a.kubeClient.Create(ctx, &newDeploymentManuals)
-	if err != nil {
-		if !strings.Contains(err.Error(), "already exists") {
-			return err
-		} else {
-			existingDeployment := &appsv1.Deployment{}
-			err = a.kubeClient.Get(ctx, client.ObjectKey{
-				Name:      cnf.DescriberDeploymentName + "-manuals",
-				Namespace: currentNamespace,
-			}, existingDeployment)
-			if err != nil {
-				return err // Return if fetching fails
-			}
-
-			// Update the existing deployment's spec
-			existingDeployment.Spec = describerDeploymentManuals.Spec
-
-			// Apply the update
-			err = a.kubeClient.Update(ctx, existingDeployment)
-			if err != nil {
-				return err // Return if updating fails
-			}
-		}
-	}
-
-	if strings.ToLower(kedaEnabled) == "true" {
-		// Scheduled ScaledObject
-		var describerScaledObject kedav1alpha1.ScaledObject
-		templateScaledObjectFile, err := os.Open(TemplateScaledObjectPath)
-		if err != nil {
-			a.logger.Error("failed to open template scaledobject file", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to open template scaledobject file")
-		}
-		defer templateScaledObjectFile.Close()
-
-		data, err = ioutil.ReadAll(templateScaledObjectFile)
-		if err != nil {
-			a.logger.Error("failed to read template manuals deployment file", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to read template scaledobject file")
-		}
-
-		err = yaml.Unmarshal(data, &describerScaledObject)
-		if err != nil {
-			a.logger.Error("failed to unmarshal template deployment file", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to unmarshal template deployment file")
-		}
-
-		describerScaledObject.Spec.ScaleTargetRef.Name = cnf.DescriberDeploymentName
-
-		trigger := describerScaledObject.Spec.Triggers[0]
-		trigger.Metadata["stream"] = cnf.NatsStreamName
-		soNatsUrl, _ := os.LookupEnv("SCALED_OBJECT_NATS_URL")
-		trigger.Metadata["natsServerMonitoringEndpoint"] = soNatsUrl
-		trigger.Metadata["consumer"] = cnf.NatsConsumerGroup + "-service"
-		describerScaledObject.Spec.Triggers[0] = trigger
-
-		newScaledObject := kedav1alpha1.ScaledObject{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      cnf.DescriberDeploymentName + "-scaled-object",
-				Namespace: currentNamespace,
-			},
-			Spec: describerScaledObject.Spec,
-		}
-
-		err = a.kubeClient.Create(ctx, &newScaledObject)
-		if err != nil {
-			if !strings.Contains(err.Error(), "already exists") {
-				return err
-			}
-		}
-
-		// Manual ScaledObject
-		var describerScaledObjectManuals kedav1alpha1.ScaledObject
-		templateManualsScaledObjectFile, err := os.Open(TemplateManualsScaledObjectPath)
-		if err != nil {
-			a.logger.Error("failed to open template manuals scaledobject file", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to open template manuals scaledobject file")
-		}
-		defer templateManualsScaledObjectFile.Close()
-
-		data, err = ioutil.ReadAll(templateManualsScaledObjectFile)
-		if err != nil {
-			a.logger.Error("failed to read template manuals deployment file", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to read template manuals scaledobject file")
-		}
-
-		err = yaml.Unmarshal(data, &describerScaledObjectManuals)
-		if err != nil {
-			a.logger.Error("failed to unmarshal template deployment file", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to unmarshal template deployment file")
-		}
-
-		describerScaledObjectManuals.Spec.ScaleTargetRef.Name = cnf.DescriberDeploymentName + "-manuals"
-
-		triggerManuals := describerScaledObjectManuals.Spec.Triggers[0]
-		triggerManuals.Metadata["stream"] = cnf.NatsStreamName
-		triggerManuals.Metadata["natsServerMonitoringEndpoint"] = soNatsUrl
-		triggerManuals.Metadata["consumer"] = cnf.NatsConsumerGroupManuals + "-service"
-		describerScaledObjectManuals.Spec.Triggers[0] = triggerManuals
-
-		newScaledObjectManuals := kedav1alpha1.ScaledObject{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      cnf.DescriberDeploymentName + "-manuals-scaled-object",
-				Namespace: currentNamespace,
-			},
-			Spec: describerScaledObjectManuals.Spec,
-		}
-
-		err = a.kubeClient.Create(ctx, &newScaledObjectManuals)
-		if err != nil {
-			if !strings.Contains(err.Error(), "already exists") {
-				return err
-			}
-		}
 	}
 
 	return nil

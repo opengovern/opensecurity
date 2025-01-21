@@ -47,7 +47,7 @@ func New(
 func (api *API) Register(e *echo.Echo) {
 	integrationsApi := integrations.New(api.vault, api.database, api.logger, api.steampipeOption, api.kubeClient, api.typeManager)
 	cred := credentials.New(api.vault, api.database, api.logger)
-	integrationType := integration_type2.New(api.typeManager, api.database, api.logger, api.kubeClient)
+	integrationType := integration_type2.New(api.typeManager, api.database, api.logger)
 
 	integrationsApi.Register(e.Group("/api/v1/integrations"))
 	cred.Register(e.Group("/api/v1/credentials"))
