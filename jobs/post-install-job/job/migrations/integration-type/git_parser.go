@@ -18,13 +18,13 @@ type GitParser struct {
 }
 
 type Manifest struct {
-	IntegrationType integration.Type `json:"IntegrationType" yaml:"IntegrationType"`
-	DescriberURL    string           `json:"DescriberURL" yaml:"DescriberURL"`
-	DescriberTag    string           `json:"DescriberTag" yaml:"DescriberTag"`
-	Publisher		 string           `json:"Publisher" yaml:"Publisher"`
-	Author			 string           `json:"Author" yaml:"Author"`
-	SupportedPlatformVersion string `json:"SupportedPlatformVersion" yaml:"SupportedPlatformVersion"`
-	UpdateDate		 string           `json:"UpdateDate" yaml:"UpdateDate"`
+	IntegrationType          integration.Type `json:"IntegrationType" yaml:"IntegrationType"`
+	DescriberURL             string           `json:"DescriberURL" yaml:"DescriberURL"`
+	DescriberTag             string           `json:"DescriberTag" yaml:"DescriberTag"`
+	Publisher                string           `json:"Publisher" yaml:"Publisher"`
+	Author                   string           `json:"Author" yaml:"Author"`
+	SupportedPlatformVersion string           `json:"SupportedPlatformVersion" yaml:"SupportedPlatformVersion"`
+	UpdateDate               string           `json:"UpdateDate" yaml:"UpdateDate"`
 }
 
 type IntegrationPlugin struct {
@@ -64,20 +64,20 @@ func (g *GitParser) ExtractIntegrations(logger *zap.Logger) error {
 	return nil
 }
 
-func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin IntegrationPlugin) (*models.IntegrationPlugin, error) {
+func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin IntegrationPlugin) (*models.IntegrationPlugin, *models.IntegrationPluginBinary, error) {
 	baseDir := "/integration-types"
 
 	// create tmp directory if not exists
 	if _, err := os.Stat(baseDir); os.IsNotExist(err) {
 		if err := os.Mkdir(baseDir, os.ModePerm); err != nil {
 			logger.Error("failed to create tmp directory", zap.Error(err))
-			return nil, fmt.Errorf("create tmp directory: %w", err)
+			return nil, nil, fmt.Errorf("create tmp directory: %w", err)
 		}
 	}
 
 	tagsJsonData, err := json.Marshal(iPlugin.Tags)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	tagsJsonb := pgtype.JSONB{}
 	err = tagsJsonb.Set(tagsJsonData)
@@ -95,7 +95,7 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 		if iPlugin.Default {
 			if err := os.RemoveAll(baseDir + "/integarion_type"); err != nil {
 				logger.Error("failed to remove existing files", zap.Error(err), zap.String("url", url), zap.String("path", baseDir+"/integarion_type"))
-				return nil, fmt.Errorf("remove existing files for url %s: %w", iPlugin, err)
+				return nil, nil, fmt.Errorf("remove existing files for url %s: %w", iPlugin, err)
 			}
 
 			downloader := getter.Client{
@@ -106,14 +106,14 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 			err = downloader.Get()
 			if err != nil {
 				logger.Error("failed to get integration binaries", zap.Error(err), zap.String("url", url))
-				return nil, fmt.Errorf("get integration binaries for url %s: %w", iPlugin, err)
+				return nil, nil, fmt.Errorf("get integration binaries for url %s: %w", iPlugin, err)
 			}
 
 			//// read manifest file
 			manifestFile, err := os.ReadFile(baseDir + "/integarion_type/manifest.yaml")
 			if err != nil {
 				logger.Error("failed to open manifest file", zap.Error(err))
-				return nil, fmt.Errorf("open manifest file: %w", err)
+				return nil, nil, fmt.Errorf("open manifest file: %w", err)
 			}
 			logger.Info("manifestFile", zap.String("file", string(manifestFile)))
 
@@ -121,7 +121,7 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 			// decode yaml
 			if err := yaml.Unmarshal(manifestFile, &m); err != nil {
 				logger.Error("failed to decode manifest", zap.Error(err), zap.String("url", url))
-				return nil, fmt.Errorf("decode manifest for url %s: %w", iPlugin, err)
+				return nil, nil, fmt.Errorf("decode manifest for url %s: %w", iPlugin, err)
 			}
 			describerURL = m.DescriberURL
 			describerTags = m.DescriberTag
@@ -130,12 +130,12 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 			integrationPlugin, err = os.ReadFile(baseDir + "/integarion_type/integration-plugin")
 			if err != nil {
 				logger.Error("failed to open integration-plugin file", zap.Error(err), zap.String("url", url))
-				return nil, fmt.Errorf("open integration-plugin file for url %s: %w", iPlugin, err)
+				return nil, nil, fmt.Errorf("open integration-plugin file for url %s: %w", iPlugin, err)
 			}
 			cloudqlPlugin, err = os.ReadFile(baseDir + "/integarion_type/cloudql-plugin")
 			if err != nil {
 				logger.Error("failed to open cloudql-plugin file", zap.Error(err), zap.String("url", url))
-				return nil, fmt.Errorf("open cloudql-plugin file for url %s: %w", iPlugin.IntegrationType.String(), err)
+				return nil, nil, fmt.Errorf("open cloudql-plugin file for url %s: %w", iPlugin.IntegrationType.String(), err)
 			}
 
 			installState = models.IntegrationTypeInstallStateInstalled
@@ -148,23 +148,25 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 	logger.Info("done reading files", zap.String("url", url), zap.String("integrationType", iPlugin.IntegrationType.String()), zap.Int("integrationPluginSize", len(integrationPlugin)), zap.Int("cloudqlPluginSize", len(cloudqlPlugin)))
 
 	return &models.IntegrationPlugin{
-		ID:                iPlugin.ID,
-		PluginID:          iPlugin.IntegrationType.String(),
-		IntegrationType:   iPlugin.IntegrationType,
-		Name:              iPlugin.Name,
-		Tier:              iPlugin.Tier,
-		Description:       iPlugin.Description,
-		Icon:              iPlugin.Icon,
-		Availability:      iPlugin.Availability,
-		SourceCode:        iPlugin.SourceCode,
-		PackageType:       iPlugin.PackageType,
-		InstallState:      installState,
-		OperationalStatus: operationalStatus,
-		URL:               url,
-		DescriberURL:      describerURL,
-		DescriberTag:      describerTags,
-		IntegrationPlugin: integrationPlugin,
-		CloudQlPlugin:     cloudqlPlugin,
-		Tags:              tagsJsonb,
-	}, nil
+			ID:                iPlugin.ID,
+			PluginID:          iPlugin.IntegrationType.String(),
+			IntegrationType:   iPlugin.IntegrationType,
+			Name:              iPlugin.Name,
+			Tier:              iPlugin.Tier,
+			Description:       iPlugin.Description,
+			Icon:              iPlugin.Icon,
+			Availability:      iPlugin.Availability,
+			SourceCode:        iPlugin.SourceCode,
+			PackageType:       iPlugin.PackageType,
+			InstallState:      installState,
+			OperationalStatus: operationalStatus,
+			URL:               url,
+			DescriberURL:      describerURL,
+			DescriberTag:      describerTags,
+			Tags:              tagsJsonb,
+		}, &models.IntegrationPluginBinary{
+			PluginID:          iPlugin.IntegrationType.String(),
+			IntegrationPlugin: integrationPlugin,
+			CloudQlPlugin:     cloudqlPlugin},
+		nil
 }
