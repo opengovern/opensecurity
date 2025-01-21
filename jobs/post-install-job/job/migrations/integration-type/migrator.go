@@ -8,6 +8,7 @@ import (
 	"github.com/opengovern/opencomply/jobs/post-install-job/db"
 	"github.com/opengovern/opencomply/services/integration/models"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -67,8 +68,11 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		}
 
 		err = dbm.ORM.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "plugin_id"}},
-			DoUpdates: clause.AssignmentColumns([]string{"integration_plugin", "cloud_ql_plugin"}),
+			Columns: []clause.Column{{Name: "plugin_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{
+				"integration_plugin": gorm.Expr("CASE WHEN ? <> '' THEN ? ELSE integration_plugin_binaries.integration_plugin END", pluginBinary.IntegrationPlugin, pluginBinary.IntegrationPlugin),
+				"cloud_ql_plugin":    gorm.Expr("CASE WHEN ? <> '' THEN ? ELSE integration_plugin_binaries.cloud_ql_plugin END", pluginBinary.CloudQlPlugin, pluginBinary.CloudQlPlugin),
+			}),
 		}).Create(pluginBinary).Error
 		if err != nil {
 			logger.Error("failed to create integration binary", zap.Error(err))
