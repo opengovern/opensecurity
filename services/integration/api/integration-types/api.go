@@ -65,8 +65,11 @@ func (a *API) Register(e *echo.Group) {
 	e.GET("/:integration_type/table", httpserver.AuthorizeHandler(a.ListTables, api.ViewerRole))
 	e.POST("/:integration_type/resource-type/label", httpserver.AuthorizeHandler(a.GetResourceTypesByLabels, api.ViewerRole))
 	e.GET("/:integration_type/configuration", httpserver.AuthorizeHandler(a.GetConfiguration, api.ViewerRole))
+	
 
 	plugin := e.Group("/plugin")
+	plugin.GET("/:id/setup", httpserver.AuthorizeHandler(a.GetSetup, api.ViewerRole))
+	plugin.GET("/:id/manifest", httpserver.AuthorizeHandler(a.GetManifest, api.ViewerRole))
 	plugin.POST("/load/id/:id", httpserver.AuthorizeHandler(a.LoadPluginWithID, api.EditorRole))
 	plugin.POST("/load/url/:http_url", httpserver.AuthorizeHandler(a.LoadPluginWithURL, api.EditorRole))
 	plugin.DELETE("/uninstall/id/:id", httpserver.AuthorizeHandler(a.UninstallPlugin, api.EditorRole))
@@ -154,6 +157,63 @@ func (a *API) GetConfiguration(c echo.Context) error {
 		}
 
 		return c.JSON(200, conf)
+	} else {
+		return echo.NewHTTPError(404, "integration type not found")
+	}
+}
+
+// GetSetup godoc
+// @Summary			Get integration setup
+// @Description		Get integration setup
+// @Security		BearerToken
+// @Tags			integration_types
+// @Produce			json
+// @Param			integration_type	path	string	true	"Integration type"
+// @Success			200	{object} interfaces.IntegrationConfiguration
+// @Router			/integration/api/v1/integration-types/{id}/setup [get]
+func (a *API) GetSetup(c echo.Context) error {
+	integrationType := c.Param("id")
+
+	rtMap := a.typeManager.GetIntegrationTypeMap()
+	if value, ok := rtMap[a.typeManager.ParseType(integrationType)]; ok {
+		conf, err := value.GetConfiguration()
+		if err != nil {
+			return echo.NewHTTPError(500, err.Error())
+		}
+		var setup string
+		// convert byte to string
+		setup = string(conf.SetupMD)
+		return c.String(200, setup)
+
+	} else {
+		return echo.NewHTTPError(404, "integration type not found")
+	}
+}
+
+// GetSetup godoc
+// @Summary			Get integration manifest
+// @Description		Get integration manifest
+// @Security		BearerToken
+// @Tags			integration_types
+// @Produce			json
+// @Param			integration_type	path	string	true	"Integration type"
+// @Success			200	{object} interfaces.IntegrationConfiguration
+// @Router			/integration/api/v1/integration-types/{id}/manifest [get]
+func (a *API) GetManifest(c echo.Context) error {
+	integrationType := c.Param("id")
+
+	rtMap := a.typeManager.GetIntegrationTypeMap()
+	if value, ok := rtMap[a.typeManager.ParseType(integrationType)]; ok {
+		conf, err := value.GetConfiguration()
+		if err != nil {
+			return echo.NewHTTPError(500, err.Error())
+		}
+		var manifest models2.Manifest
+		if err := yaml.Unmarshal(conf.Manifest, &manifest); err != nil {
+			return echo.NewHTTPError(500, err.Error())
+		}
+		return c.JSON(200, manifest)
+
 	} else {
 		return echo.NewHTTPError(404, "integration type not found")
 	}

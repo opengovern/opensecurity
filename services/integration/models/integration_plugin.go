@@ -11,6 +11,10 @@ type Manifest struct {
 	IntegrationType integration.Type `json:"IntegrationType" yaml:"IntegrationType"`
 	DescriberURL    string           `json:"DescriberURL" yaml:"DescriberURL"`
 	DescriberTag    string           `json:"DescriberTag" yaml:"DescriberTag"`
+	Publisher		 string           `json:"Publisher" yaml:"Publisher"`
+	Author			 string           `json:"Author" yaml:"Author"`
+	SupportedPlatformVersion string `json:"SupportedPlatformVersion" yaml:"SupportedPlatformVersion"`
+	UpdateDate		 string           `json:"UpdateDate" yaml:"UpdateDate"`
 }
 
 type IntegrationPluginInstallState string
@@ -51,7 +55,6 @@ type IntegrationPlugin struct {
 	URL               string
 	DescriberURL      string
 	DescriberTag      string
-
 	OperationalStatusUpdates pq.StringArray `gorm:"type:text[]"`
 
 	IntegrationPlugin []byte `gorm:"type:bytea"`
