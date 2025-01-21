@@ -48,7 +48,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 
 	for _, iPlugin := range parser.Integrations.Plugins {
-		plugin, err := parser.ExtractIntegrationBinaries(logger, iPlugin)
+		plugin, pluginBinary, err := parser.ExtractIntegrationBinaries(logger, iPlugin)
 		if err != nil {
 			return err
 		}
@@ -59,8 +59,17 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		err = dbm.ORM.Clauses(clause.OnConflict{
 			Columns: []clause.Column{{Name: "plugin_id"}},
 			DoUpdates: clause.AssignmentColumns([]string{"id", "integration_type", "name", "tier", "description", "icon",
-				"availability", "source_code", "package_type", "url", "integration_plugin", "cloud_ql_plugin", "tags"}),
+				"availability", "source_code", "package_type", "url", "tags"}),
 		}).Create(plugin).Error
+		if err != nil {
+			logger.Error("failed to create integration binary", zap.Error(err))
+			return err
+		}
+
+		err = dbm.ORM.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "plugin_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"integration_plugin", "cloud_ql_plugin"}),
+		}).Create(pluginBinary).Error
 		if err != nil {
 			logger.Error("failed to create integration binary", zap.Error(err))
 			return err

@@ -8,13 +8,13 @@ import (
 )
 
 type Manifest struct {
-	IntegrationType integration.Type `json:"IntegrationType" yaml:"IntegrationType"`
-	DescriberURL    string           `json:"DescriberURL" yaml:"DescriberURL"`
-	DescriberTag    string           `json:"DescriberTag" yaml:"DescriberTag"`
-	Publisher		 string           `json:"Publisher" yaml:"Publisher"`
-	Author			 string           `json:"Author" yaml:"Author"`
-	SupportedPlatformVersion string `json:"SupportedPlatformVersion" yaml:"SupportedPlatformVersion"`
-	UpdateDate		 string           `json:"UpdateDate" yaml:"UpdateDate"`
+	IntegrationType          integration.Type `json:"IntegrationType" yaml:"IntegrationType"`
+	DescriberURL             string           `json:"DescriberURL" yaml:"DescriberURL"`
+	DescriberTag             string           `json:"DescriberTag" yaml:"DescriberTag"`
+	Publisher                string           `json:"Publisher" yaml:"Publisher"`
+	Author                   string           `json:"Author" yaml:"Author"`
+	SupportedPlatformVersion string           `json:"SupportedPlatformVersion" yaml:"SupportedPlatformVersion"`
+	UpdateDate               string           `json:"UpdateDate" yaml:"UpdateDate"`
 }
 
 type IntegrationPluginInstallState string
@@ -40,25 +40,29 @@ type OperationalStatusUpdate struct {
 }
 
 type IntegrationPlugin struct {
-	ID                int
-	PluginID          string `gorm:"primaryKey"`
-	IntegrationType   integration.Type
-	Name              string
-	Tier              string
-	Description       string
-	Icon              string
-	Availability      string
-	SourceCode        string
-	PackageType       string
-	InstallState      IntegrationPluginInstallState
-	OperationalStatus IntegrationPluginOperationalStatus
-	URL               string
-	DescriberURL      string
-	DescriberTag      string
+	ID                       int
+	PluginID                 string `gorm:"primaryKey"`
+	IntegrationType          integration.Type
+	Name                     string
+	Tier                     string
+	Description              string
+	Icon                     string
+	Availability             string
+	SourceCode               string
+	PackageType              string
+	InstallState             IntegrationPluginInstallState
+	OperationalStatus        IntegrationPluginOperationalStatus
+	URL                      string
+	DescriberURL             string
+	DescriberTag             string
 	OperationalStatusUpdates pq.StringArray `gorm:"type:text[]"`
+
+	Tags pgtype.JSONB
+}
+
+type IntegrationPluginBinary struct {
+	PluginID string `gorm:"primaryKey"`
 
 	IntegrationPlugin []byte `gorm:"type:bytea"`
 	CloudQlPlugin     []byte `gorm:"type:bytea"`
-
-	Tags pgtype.JSONB
 }

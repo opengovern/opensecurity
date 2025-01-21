@@ -73,7 +73,7 @@ func (j *Job) Run(ctx context.Context) error {
 			return err
 		}
 
-		if integrationBin, ok := integrationMap[integrationType]; ok {
+		if plugin, ok := integrationMap[integrationType]; ok {
 			dirPath := basePath + "/" + describerConfig.SteampipePluginName + "@latest"
 			// create directory if not exists
 			if _, err := os.Stat(dirPath); os.IsNotExist(err) {
@@ -84,9 +84,16 @@ func (j *Job) Run(ctx context.Context) error {
 				}
 			}
 
+			var pluginBinary models.IntegrationPluginBinary
+			err = db.Model(models.IntegrationPluginBinary{}).Where("plugin_id = ?", plugin.PluginID).Find(&pluginBinary).Error
+			if err != nil {
+				j.logger.Error("failed to get plugin binary", zap.Error(err), zap.String("plugin_id", plugin.PluginID))
+				return err
+			}
+
 			// write the plugin to the file system
 			pluginPath := dirPath + "/steampipe-plugin-" + describerConfig.SteampipePluginName + ".plugin"
-			err := os.WriteFile(pluginPath, integrationBin.CloudQlPlugin, 0777)
+			err := os.WriteFile(pluginPath, pluginBinary.CloudQlPlugin, 0777)
 			if err != nil {
 				j.logger.Error("failed to write plugin to file system", zap.Error(err), zap.String("plugin", describerConfig.SteampipePluginName))
 				return err

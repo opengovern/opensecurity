@@ -29,6 +29,7 @@ func (db Database) Initialize() error {
 
 	err = db.IntegrationTypeOrm.AutoMigrate(
 		&models.IntegrationPlugin{},
+		&models.IntegrationPluginBinary{},
 	)
 	if err != nil {
 		return err

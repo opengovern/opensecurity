@@ -2,6 +2,7 @@ package integration_type
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"go.uber.org/zap"
@@ -70,9 +71,19 @@ func NewIntegrationTypeManager(logger *zap.Logger, integrationTypeDb *gorm.DB, m
 
 	plugins := make(map[integration.Type]string)
 	for _, t := range types {
+		var pluginBinary models.IntegrationPluginBinary
+		err = integrationTypeDb.Model(models.IntegrationPluginBinary{}).Where("plugin_id = ?", t.PluginID).Find(&pluginBinary).Error
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				logger.Error("could not find the binary", zap.String("plugin_id", t.PluginID))
+			} else {
+				logger.Error("failed to fetch plugin binary", zap.String("plugin_id", t.PluginID), zap.Error(err))
+			}
+			continue
+		}
 		// write the plugin to the file system
 		pluginPath := filepath.Join(baseDir, t.IntegrationType.String()+".so")
-		err := os.WriteFile(pluginPath, t.IntegrationPlugin, 0755)
+		err := os.WriteFile(pluginPath, pluginBinary.IntegrationPlugin, 0755)
 		if err != nil {
 			logger.Error("failed to write plugin to file system", zap.Error(err), zap.String("plugin", t.IntegrationType.String()))
 			continue
