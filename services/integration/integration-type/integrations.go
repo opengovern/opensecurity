@@ -68,7 +68,7 @@ func NewIntegrationTypeManager(logger *zap.Logger, integrationTypeDb *gorm.DB, m
 		}
 	}
 
-	plugins := make(map[string]string)
+	plugins := make(map[integration.Type]string)
 	for _, t := range types {
 		// write the plugin to the file system
 		pluginPath := filepath.Join(baseDir, t.IntegrationType.String()+".so")
@@ -77,15 +77,15 @@ func NewIntegrationTypeManager(logger *zap.Logger, integrationTypeDb *gorm.DB, m
 			logger.Error("failed to write plugin to file system", zap.Error(err), zap.String("plugin", t.IntegrationType.String()))
 			continue
 		}
-		plugins[t.IntegrationType.String()] = pluginPath
+		plugins[t.IntegrationType] = pluginPath
 	}
 
 	var clients = make(map[integration.Type]*plugin.Client)
 	var pingLocks = make(map[integration.Type]*sync.Mutex)
-	for pluginName, pluginPath := range plugins {
+	for integrationType, pluginPath := range plugins {
 		client := plugin.NewClient(&plugin.ClientConfig{
 			HandshakeConfig: interfaces.HandshakeConfig,
-			Plugins:         map[string]plugin.Plugin{pluginName: &interfaces.IntegrationTypePlugin{}},
+			Plugins:         map[string]plugin.Plugin{integrationType.String(): &interfaces.IntegrationTypePlugin{}},
 			Cmd:             exec.Command(pluginPath),
 			Logger:          hcLogger,
 			Managed:         true,
@@ -93,15 +93,15 @@ func NewIntegrationTypeManager(logger *zap.Logger, integrationTypeDb *gorm.DB, m
 
 		rpcClient, err := client.Client()
 		if err != nil {
-			logger.Error("failed to create plugin client", zap.Error(err), zap.String("plugin", pluginName), zap.String("path", pluginPath))
+			logger.Error("failed to create plugin client", zap.Error(err), zap.String("plugin", integrationType.String()), zap.String("path", pluginPath))
 			client.Kill()
 			continue
 		}
 
 		// Request the plugin
-		raw, err := rpcClient.Dispense(pluginName)
+		raw, err := rpcClient.Dispense(integrationType.String())
 		if err != nil {
-			logger.Error("failed to dispense plugin", zap.Error(err), zap.String("plugin", pluginName), zap.String("path", pluginPath))
+			logger.Error("failed to dispense plugin", zap.Error(err), zap.String("plugin", integrationType.String()), zap.String("path", pluginPath))
 			client.Kill()
 			continue
 		}
@@ -109,21 +109,14 @@ func NewIntegrationTypeManager(logger *zap.Logger, integrationTypeDb *gorm.DB, m
 		// Cast the raw interface to the appropriate interface
 		itInterface, ok := raw.(interfaces.IntegrationType)
 		if !ok {
-			logger.Error("failed to cast plugin to integration type", zap.String("plugin", pluginName), zap.String("path", pluginPath))
+			logger.Error("failed to cast plugin to integration type", zap.String("plugin", integrationType.String()), zap.String("path", pluginPath))
 			client.Kill()
 			continue
 		}
 
-		iType, err := itInterface.GetIntegrationType()
-		if err != nil {
-			logger.Error("failed to get integration type from plugin", zap.Error(err))
-			client.Kill()
-			continue
-		}
-
-		integrationTypes[iType] = itInterface
-		clients[iType] = client
-		pingLocks[iType] = &sync.Mutex{}
+		integrationTypes[integrationType] = itInterface
+		clients[integrationType] = client
+		pingLocks[integrationType] = &sync.Mutex{}
 	}
 
 	manager := IntegrationTypeManager{
