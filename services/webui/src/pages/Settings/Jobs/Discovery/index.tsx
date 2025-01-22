@@ -524,6 +524,10 @@ export default function DiscoveryJobs({
                                         },
                                         {
                                             propertyKey: 'job_status',
+                                            value: 'IN_PROGRESS',
+                                        },
+                                        {
+                                            propertyKey: 'job_status',
                                             value: 'TIMEOUT',
                                         },
                                         {
