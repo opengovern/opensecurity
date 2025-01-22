@@ -649,8 +649,47 @@ func (g *GitParser) HandleBenchmarks(benchmarks []Benchmark) error {
 }
 
 func (g *GitParser) HandleFrameworks(frameworks []Framework) error {
+	benchmarkIntegrationTypes := make(map[string]map[string]bool)
+	seenMap := make(map[string]bool)
+	var childrenDfs func(framework Framework)
+	childrenDfs = func(framework Framework) {
+		if _, ok := seenMap[framework.ID]; ok {
+			return
+		}
+		if benchmarkIntegrationTypes[framework.ID] == nil {
+			benchmarkIntegrationTypes[framework.ID] = make(map[string]bool)
+		}
+		seenMap[framework.ID] = true
+		for _, c := range g.controls {
+			for _, it := range c.IntegrationType {
+				benchmarkIntegrationTypes[framework.ID][it] = true
+			}
+			if c.Policy != nil {
+				for _, it := range c.Policy.IntegrationType {
+					benchmarkIntegrationTypes[framework.ID][it] = true
+				}
+			}
+			if c.PolicyID != nil {
+				if policy, ok := g.controlsPolicies[*c.PolicyID]; ok {
+					for _, it := range policy.IntegrationType {
+						benchmarkIntegrationTypes[framework.ID][it] = true
+					}
+				}
+			}
+		}
+		for _, child := range framework.ControlGroup {
+			if _, ok := seenMap[child.ID]; ok {
+				continue
+			}
+			childrenDfs(child)
+			for it, _ := range benchmarkIntegrationTypes[child.ID] {
+				benchmarkIntegrationTypes[framework.ID][it] = true
+			}
+		}
+	}
+
 	for _, f := range frameworks {
-		err := g.HandleSingleFramework(f)
+		err := g.HandleSingleFramework(benchmarkIntegrationTypes, f)
 		if err != nil {
 			return err
 		}
@@ -673,7 +712,7 @@ func (g *GitParser) HandleFrameworks(frameworks []Framework) error {
 	return nil
 }
 
-func (g *GitParser) HandleSingleFramework(framework Framework) error {
+func (g *GitParser) HandleSingleFramework(benchmarkIntegrationTypes map[string]map[string]bool, framework Framework) error {
 	var tags []db.BenchmarkTag
 
 	tags = make([]db.BenchmarkTag, 0, len(framework.Tags))
@@ -719,50 +758,26 @@ func (g *GitParser) HandleSingleFramework(framework Framework) error {
 	}
 	b.Metadata = metadataJsonb
 
-	for _, controls := range g.controls {
-		if contains(framework.Controls, controls.ID) {
-			b.Controls = append(b.Controls, controls)
+	for _, control := range g.controls {
+		if contains(framework.Controls, control.ID) {
+			b.Controls = append(b.Controls, control)
 		}
 	}
-
-	integrationTypes := make(map[string]bool)
-	for _, c := range b.Children {
-		for _, it := range c.IntegrationType {
-			integrationTypes[it] = true
-		}
-	}
-	for _, c := range b.Controls {
-		for _, it := range c.IntegrationType {
-			integrationTypes[it] = true
-		}
-		if c.Policy != nil {
-			for _, it := range c.Policy.IntegrationType {
-				integrationTypes[it] = true
-			}
-		}
-		if c.PolicyID != nil {
-			if policy, ok := g.controlsPolicies[*c.PolicyID]; ok {
-				for _, it := range policy.IntegrationType {
-					integrationTypes[it] = true
-				}
-			}
-		}
-	}
-	var integrationTypesList []string
-	for k, _ := range integrationTypes {
-		integrationTypesList = append(integrationTypesList, k)
-	}
-	b.IntegrationType = integrationTypesList
 
 	for _, group := range framework.ControlGroup {
 		if len(group.Controls) > 0 || len(group.ControlGroup) > 0 {
-			err = g.HandleSingleFramework(group)
+			err = g.HandleSingleFramework(benchmarkIntegrationTypes, group)
 			if err != nil {
 				return err
 			}
 		}
 		g.frameworksChildren[framework.ID] = append(g.frameworksChildren[framework.ID], group.ID)
 	}
+	var integrationTypesList []string
+	for k, _ := range benchmarkIntegrationTypes[framework.ID] {
+		integrationTypesList = append(integrationTypesList, k)
+	}
+	b.IntegrationType = integrationTypesList
 	g.benchmarks = append(g.benchmarks, b)
 	return nil
 }
