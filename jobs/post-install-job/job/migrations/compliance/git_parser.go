@@ -563,9 +563,11 @@ func (g *GitParser) HandleBenchmarks(benchmarks []Benchmark) error {
 			}
 		}
 		for _, childID := range benchmark.Children {
-			for _, child := range benchmarks {
-				if child.ID == childID {
-					childrenDfs(child)
+			if !seenMap[childID] {
+				for _, child := range benchmarks {
+					if child.ID == childID {
+						childrenDfs(child)
+					}
 				}
 			}
 			for it, _ := range benchmarkIntegrationTypes[childID] {
@@ -576,6 +578,7 @@ func (g *GitParser) HandleBenchmarks(benchmarks []Benchmark) error {
 
 	children := map[string][]string{}
 	for _, o := range benchmarks {
+		childrenDfs(o)
 		tags := make([]db.BenchmarkTag, 0, len(o.Tags))
 		for tagKey, tagValue := range o.Tags {
 			tags = append(tags, db.BenchmarkTag{
@@ -683,6 +686,7 @@ func (g *GitParser) HandleFrameworks(frameworks []Framework) error {
 	}
 
 	for _, f := range frameworks {
+		childrenDfs(f)
 		err := g.HandleSingleFramework(benchmarkIntegrationTypes, f)
 		if err != nil {
 			return err
