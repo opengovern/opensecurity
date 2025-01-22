@@ -55,6 +55,9 @@ func (s *Scheduler) RunDescribeJobResultsConsumer(ctx context.Context) error {
 			if err != nil {
 				s.logger.Error("failed to get describe integration job by id", zap.Uint("job_id", result.JobID))
 			}
+			if job == nil {
+				return
+			}
 			var params map[string]string
 			if job.Parameters.Status == pgtype.Present {
 				if err := json.Unmarshal(job.Parameters.Bytes, &params); err != nil {
