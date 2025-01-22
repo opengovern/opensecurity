@@ -726,6 +726,11 @@ func (g *GitParser) HandleSingleFramework(framework Framework) error {
 	}
 
 	integrationTypes := make(map[string]bool)
+	for _, c := range b.Children {
+		for _, it := range c.IntegrationType {
+			integrationTypes[it] = true
+		}
+	}
 	for _, c := range b.Controls {
 		for _, it := range c.IntegrationType {
 			integrationTypes[it] = true
