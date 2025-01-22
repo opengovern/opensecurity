@@ -730,6 +730,18 @@ func (g *GitParser) HandleSingleFramework(framework Framework) error {
 		for _, it := range c.IntegrationType {
 			integrationTypes[it] = true
 		}
+		if c.Policy != nil {
+			for _, it := range c.Policy.IntegrationType {
+				integrationTypes[it] = true
+			}
+		}
+		if c.PolicyID != nil {
+			if policy, ok := g.controlsPolicies[*c.PolicyID]; ok {
+				for _, it := range policy.IntegrationType {
+					integrationTypes[it] = true
+				}
+			}
+		}
 	}
 	var integrationTypesList []string
 	for k, _ := range integrationTypes {
