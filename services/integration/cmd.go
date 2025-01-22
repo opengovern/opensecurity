@@ -100,7 +100,12 @@ func Command() *cobra.Command {
 				}
 			}
 
-			typeManager := integration_type.NewIntegrationTypeManager(logger, integrationTypesDb, cnf.IntegrationPlugins.MaxAutoRebootRetries, time.Duration(cnf.IntegrationPlugins.PingIntervalSeconds)*time.Second)
+			kubeClient, err := NewKubeClient()
+			if err != nil {
+				return err
+			}
+
+			typeManager := integration_type.NewIntegrationTypeManager(logger, db, integrationTypesDb, kubeClient, cnf.IntegrationPlugins.MaxAutoRebootRetries, time.Duration(cnf.IntegrationPlugins.PingIntervalSeconds)*time.Second)
 
 			cmd.SilenceUsage = true
 
@@ -110,10 +115,6 @@ func Command() *cobra.Command {
 				User: cnf.Steampipe.Username,
 				Pass: cnf.Steampipe.Password,
 				Db:   cnf.Steampipe.DB,
-			}
-			kubeClient, err := NewKubeClient()
-			if err != nil {
-				return err
 			}
 
 			return httpserver.RegisterAndStart(
