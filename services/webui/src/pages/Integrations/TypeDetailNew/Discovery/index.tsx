@@ -283,32 +283,32 @@ export default function DiscoveryJobs({
                                     }
                                 })}
                             />
-                            {clickedJob?.parameters && Object.entries(
-                                clickedJob?.parameters
-                            ).length > 0 && (
-                                <>
-                                    <Flex
-                                        flexDirection="col"
-                                        className="w-full gap-2 justify-start items-start mt-2"
-                                    >
-                                        <Title className=" font-semibold font-sans text-lg">
-                                            Parameters:
-                                        </Title>
-                                        <KeyValuePairs
-                                            columns={4}
-                                            className="w-full"
-                                            items={Object.entries(
-                                                clickedJob?.parameters
-                                            )?.map((item) => {
-                                                return {
-                                                    label: item[0],
-                                                    value: item[1],
-                                                }
-                                            })}
-                                        />
-                                    </Flex>
-                                </>
-                            )}
+                            {clickedJob?.parameters &&
+                                Object.entries(clickedJob?.parameters).length >
+                                    0 && (
+                                    <>
+                                        <Flex
+                                            flexDirection="col"
+                                            className="w-full gap-2 justify-start items-start mt-2"
+                                        >
+                                            <Title className=" font-semibold font-sans text-lg">
+                                                Parameters:
+                                            </Title>
+                                            <KeyValuePairs
+                                                columns={4}
+                                                className="w-full"
+                                                items={Object.entries(
+                                                    clickedJob?.parameters
+                                                )?.map((item) => {
+                                                    return {
+                                                        label: item[0],
+                                                        value: item[1],
+                                                    }
+                                                })}
+                                            />
+                                        </Flex>
+                                    </>
+                                )}
                         </Flex>
                     </SplitPanel>
                 }
@@ -533,6 +533,10 @@ export default function DiscoveryJobs({
                                         {
                                             propertyKey: 'job_status',
                                             value: 'FAILED',
+                                        },
+                                        {
+                                            propertyKey: 'job_status',
+                                            value: 'IN_PROGRESS',
                                         },
                                         {
                                             propertyKey: 'job_status',
