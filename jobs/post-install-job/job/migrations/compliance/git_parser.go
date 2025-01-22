@@ -534,6 +534,49 @@ func (g *GitParser) ExtractBenchmarks(complianceBenchmarksPath string) error {
 }
 
 func (g *GitParser) HandleBenchmarks(benchmarks []Benchmark) error {
+	benchmarkIntegrationTypes := make(map[string]map[string]bool)
+	seenMap := make(map[string]bool)
+	var childrenDfs func(benchmark Benchmark)
+	childrenDfs = func(benchmark Benchmark) {
+		if _, ok := seenMap[benchmark.ID]; ok {
+			return
+		}
+		if benchmarkIntegrationTypes[benchmark.ID] == nil {
+			benchmarkIntegrationTypes[benchmark.ID] = make(map[string]bool)
+		}
+		seenMap[benchmark.ID] = true
+		for _, c := range g.controls {
+			for _, it := range c.IntegrationType {
+				benchmarkIntegrationTypes[benchmark.ID][it] = true
+			}
+			if c.Policy != nil {
+				for _, it := range c.Policy.IntegrationType {
+					benchmarkIntegrationTypes[benchmark.ID][it] = true
+				}
+			}
+			if c.PolicyID != nil {
+				if policy, ok := g.controlsPolicies[*c.PolicyID]; ok {
+					for _, it := range policy.IntegrationType {
+						benchmarkIntegrationTypes[benchmark.ID][it] = true
+					}
+				}
+			}
+		}
+		for _, childID := range benchmark.Children {
+			if _, ok := seenMap[childID]; ok {
+				continue
+			}
+			for _, child := range benchmarks {
+				if child.ID == childID {
+					childrenDfs(child)
+				}
+			}
+			for it, _ := range benchmarkIntegrationTypes[childID] {
+				benchmarkIntegrationTypes[benchmark.ID][it] = true
+			}
+		}
+	}
+
 	children := map[string][]string{}
 	for _, o := range benchmarks {
 		tags := make([]db.BenchmarkTag, 0, len(o.Tags))
@@ -576,26 +619,8 @@ func (g *GitParser) HandleBenchmarks(benchmarks []Benchmark) error {
 			}
 		}
 
-		integrationTypes := make(map[string]bool)
-		for _, c := range b.Controls {
-			for _, it := range c.IntegrationType {
-				integrationTypes[it] = true
-			}
-			if c.Policy != nil {
-				for _, it := range c.Policy.IntegrationType {
-					integrationTypes[it] = true
-				}
-			}
-			if c.PolicyID != nil {
-				if policy, ok := g.controlsPolicies[*c.PolicyID]; ok {
-					for _, it := range policy.IntegrationType {
-						integrationTypes[it] = true
-					}
-				}
-			}
-		}
 		var integrationTypesList []string
-		for k, _ := range integrationTypes {
+		for k, _ := range benchmarkIntegrationTypes[o.ID] {
 			integrationTypesList = append(integrationTypesList, k)
 		}
 		b.IntegrationType = integrationTypesList
