@@ -1298,7 +1298,14 @@ func (h HttpServer) RunBenchmarkById(ctx echo.Context) error {
 	var connectionIDs []string
 	for _, c := range integrations {
 		if _, ok := validIntegrationTypes[c.IntegrationType.String()]; !ok {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid integration type for this framework")
+			return echo.NewHTTPError(
+				http.StatusBadRequest,
+				fmt.Sprintf(
+					"invalid integration type for this framework. "+
+						"IntegrationID: %s, IntegrationType: %s, ProviderID: %s, Allowed types: %v",
+					c.IntegrationID, c.IntegrationType.String(), c.ProviderID, benchmark.IntegrationTypes,
+				),
+			)
 		}
 		connectionInfo[c.IntegrationID] = api.IntegrationInfo{
 			IntegrationID:   c.IntegrationID,
