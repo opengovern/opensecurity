@@ -563,9 +563,6 @@ func (g *GitParser) HandleBenchmarks(benchmarks []Benchmark) error {
 			}
 		}
 		for _, childID := range benchmark.Children {
-			if _, ok := seenMap[childID]; ok {
-				continue
-			}
 			for _, child := range benchmarks {
 				if child.ID == childID {
 					childrenDfs(child)
@@ -678,9 +675,6 @@ func (g *GitParser) HandleFrameworks(frameworks []Framework) error {
 			}
 		}
 		for _, child := range framework.ControlGroup {
-			if _, ok := seenMap[child.ID]; ok {
-				continue
-			}
 			childrenDfs(child)
 			for it, _ := range benchmarkIntegrationTypes[child.ID] {
 				benchmarkIntegrationTypes[framework.ID][it] = true
