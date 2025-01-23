@@ -25,22 +25,24 @@ import {
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { Schema } from './types'
-import { BreadcrumbGroup, Spinner, Tabs } from '@cloudscape-design/components'
+import { BreadcrumbGroup, KeyValuePairs, Spinner, Tabs } from '@cloudscape-design/components'
 
 import IntegrationList from './Integration'
 import CredentialsList from './Credentials'
 import { OpenGovernance } from '../../../icons/icons'
 import DiscoveryJobs from './Discovery'
-import Configuration from './Manifest'
+import Configuration from './Configuration'
+import Setup from './Setup'
 
 export default function TypeDetail() {
     const navigate = useNavigate()
     const searchParams = useAtomValue(searchAtom)
     const { type } = useParams()
+     const [manifest, setManifest] = useState<any>()
     const { state } = useLocation()
     const [shcema, setSchema] = useState<Schema>()
     const [loading, setLoading] = useState<boolean>(false)
-
+const [status, setStatus] = useState<string>()
     const GetSchema = () => {
         setLoading(true)
         let url = ''
@@ -73,9 +75,78 @@ export default function TypeDetail() {
                 setLoading(false)
             })
     }
+      const GetManifest = () => {
+          setLoading(true)
+          let url = ''
+          if (window.location.origin === 'http://localhost:3000') {
+              url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+          } else {
+              url = window.location.origin
+          }
+          // @ts-ignore
+          const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+          const config = {
+              headers: {
+                  Authorization: `Bearer ${token}`,
+              },
+          }
+
+          axios
+              .get(
+                  `${url}/main/integration/api/v1/integration-types/plugin/${type}/manifest`,
+                  config
+              )
+              .then((resp) => {
+                  setManifest(resp.data)
+                  setLoading(false)
+              })
+              .catch((err) => {
+                  console.log(err)
+                  setLoading(false)
+
+                  // params.fail()
+              })
+      }
+      const GetStatus = () => {
+          setLoading(true)
+          let url = ''
+          if (window.location.origin === 'http://localhost:3000') {
+              url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+          } else {
+              url = window.location.origin
+          }
+          // @ts-ignore
+          const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+          const config = {
+              headers: {
+                  Authorization: `Bearer ${token}`,
+              },
+          }
+
+          axios
+              .post(
+                  `${url}/main/integration/api/v1/integration-types/plugin/${type}/healthcheck`,
+                  {},
+                  config
+              )
+              .then((resp) => {
+                  setStatus(resp.data)
+                  setLoading(false)
+              })
+              .catch((err) => {
+                  console.log(err)
+                  setLoading(false)
+
+                  // params.fail()
+              })
+      }
 
     useEffect(() => {
         GetSchema()
+         GetStatus()
+         GetManifest()
     }, [])
 
     return (
@@ -86,7 +157,7 @@ export default function TypeDetail() {
                 <>
                     <Flex className="flex-col w-full justify-start items-start gap-4">
                         <BreadcrumbGroup
-                            className='w-full'
+                            className="w-full"
                             items={[
                                 {
                                     text: 'Plugins',
@@ -99,8 +170,76 @@ export default function TypeDetail() {
                                 },
                             ]}
                         />
+                        <Flex className="flex-col gap-3 w-full">
+                            <h1 className=" font-bold text-2xl mb-2 w-full text-left ml-1">
+                                {state?.name} plugin
+                            </h1>
+                            <Card className="">
+                                <Flex
+                                    flexDirection="col"
+                                    className="gap-2 p-2 w-full justify-start items-start"
+                                >
+                                    <>
+                                        <KeyValuePairs
+                                            columns={4}
+                                            items={[
+                                                {
+                                                    label: 'Id',
+                                                    value: manifest?.IntegrationType,
+                                                },
+                                                {
+                                                    label: 'Artifact URL',
+                                                    value: manifest?.DescriberURL,
+                                                },
+                                                {
+                                                    label: 'Version',
+                                                    value: manifest?.DescriberTag,
+                                                },
+                                                {
+                                                    label: 'Publisher',
+                                                    value: manifest?.Publisher,
+                                                },
+                                                {
+                                                    label: 'Author',
+                                                    value: manifest?.Author,
+                                                },
+                                                {
+                                                    label: 'Supported Platform Version',
+                                                    value: manifest?.SupportedPlatformVersion,
+                                                },
+                                                {
+                                                    label: 'Update date',
+                                                    value: manifest?.UpdateDate,
+                                                },
+                                                {
+                                                    label: 'Operational Status',
+                                                    // @ts-ignore
+                                                    value: status
+                                                        ? status
+                                                              ?.charAt(0)
+                                                              .toUpperCase() +
+                                                          status?.slice(1)
+                                                        : '',
+                                                },
+                                            ]}
+                                        />
+                                    </>
+                                </Flex>
+                            </Card>
+                            <></>
+                        </Flex>
                         <Tabs
                             tabs={[
+                                {
+                                    id: '3',
+                                    label: 'Resource Types',
+                                    content: (
+                                        <Configuration
+                                            name={state?.name}
+                                            integration_type={type}
+                                        />
+                                    ),
+                                },
                                 {
                                     id: '0',
                                     label: 'Integrations',
@@ -133,11 +272,12 @@ export default function TypeDetail() {
                                         />
                                     ),
                                 },
+
                                 {
-                                    id: '3',
-                                    label: 'Configuration',
+                                    id: '4',
+                                    label: 'Setup',
                                     content: (
-                                        <Configuration
+                                        <Setup
                                             name={state?.name}
                                             integration_type={type}
                                         />
