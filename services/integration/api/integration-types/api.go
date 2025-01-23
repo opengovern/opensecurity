@@ -1023,6 +1023,12 @@ func (a *API) LoadPlugin(ctx context.Context, plugin *models2.IntegrationPlugin,
 		a.logger.Error("failed to enable integration type describer", zap.Error(err))
 		return err
 	}
+	// Restart cloudql enabled services so that they can use the new plugin
+	err = a.typeManager.RestartCloudQLEnabledServices(ctx)
+	if err != nil {
+		a.logger.Error("failed to restart cloudql enabled services", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to restart cloudql enabled services", err)
+	}
 
 	return nil
 }

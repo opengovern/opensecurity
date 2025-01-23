@@ -19,6 +19,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"net/http"
 	"os"
 	"os/exec"
@@ -50,8 +51,9 @@ type IntegrationTypeManager struct {
 	IntegrationTypeDb *gorm.DB
 	IntegrationTypes  map[integration.Type]interfaces.IntegrationType
 
-	kubeClient client.Client
-	database   db.Database
+	kubeClient    client.Client
+	kubeClientset *kubernetes.Clientset
+	database      db.Database
 
 	Clients  map[integration.Type]*plugin.Client
 	retryMap map[integration.Type]int
@@ -60,7 +62,7 @@ type IntegrationTypeManager struct {
 	maxRetries int
 }
 
-func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integrationTypeDb *gorm.DB, kubeClient client.Client, maxRetries int, pingInterval time.Duration) *IntegrationTypeManager {
+func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integrationTypeDb *gorm.DB, kubeClient client.Client, kubeClientset *kubernetes.Clientset, maxRetries int, pingInterval time.Duration) *IntegrationTypeManager {
 	if maxRetries == 0 {
 		maxRetries = 1
 	}
@@ -129,8 +131,9 @@ func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integra
 		PingLocks:  pingLocks,
 		maxRetries: maxRetries,
 
-		database:   database,
-		kubeClient: kubeClient,
+		database:      database,
+		kubeClient:    kubeClient,
+		kubeClientset: kubeClientset,
 	}
 
 	for integrationType, pluginPath := range plugins {
@@ -757,6 +760,22 @@ func (a *IntegrationTypeManager) EnableIntegrationTypeHelper(ctx context.Context
 				return err
 			}
 		}
+	}
+
+	return nil
+}
+
+func (a *IntegrationTypeManager) RestartCloudQLEnabledServices(ctx context.Context) error {
+	currentNamespace, ok := os.LookupEnv("CURRENT_NAMESPACE")
+	if !ok {
+		a.logger.Error("current namespace lookup failed")
+		return errors.New("current namespace lookup failed")
+	}
+
+	err := a.kubeClientset.CoreV1().Pods(currentNamespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "cloudql-enabled=true"})
+	if err != nil {
+		a.logger.Error("failed to delete pods", zap.Error(err))
+		return err
 	}
 
 	return nil

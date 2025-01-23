@@ -9,6 +9,8 @@ import (
 	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
@@ -105,7 +107,16 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			typeManager := integration_type.NewIntegrationTypeManager(logger, db, integrationTypesDb, kubeClient, cnf.IntegrationPlugins.MaxAutoRebootRetries, time.Duration(cnf.IntegrationPlugins.PingIntervalSeconds)*time.Second)
+			inClusterConfig, err := rest.InClusterConfig()
+			if err != nil {
+				logger.Error("failed to get in cluster config", zap.Error(err))
+			}
+			// creates the clientset
+			clientset, err := kubernetes.NewForConfig(inClusterConfig)
+			if err != nil {
+				logger.Error("failed to create clientset", zap.Error(err))
+			}
+			typeManager := integration_type.NewIntegrationTypeManager(logger, db, integrationTypesDb, kubeClient, clientset, cnf.IntegrationPlugins.MaxAutoRebootRetries, time.Duration(cnf.IntegrationPlugins.PingIntervalSeconds)*time.Second)
 
 			cmd.SilenceUsage = true
 
