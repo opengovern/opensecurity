@@ -33,6 +33,8 @@ import { OpenGovernance } from '../../../icons/icons'
 import DiscoveryJobs from './Discovery'
 import Configuration from './Configuration'
 import Setup from './Setup'
+import ButtonDropdown from '@cloudscape-design/components/button-dropdown'
+
 
 export default function TypeDetail() {
     const navigate = useNavigate()
@@ -170,10 +172,45 @@ const [status, setStatus] = useState<string>()
                                 },
                             ]}
                         />
-                        <Flex className="flex-col gap-3 w-full">
-                            <h1 className=" font-bold text-2xl mb-2 w-full text-left ml-1">
-                                {state?.name} plugin
-                            </h1>
+                        <Flex className="flex-col gap-3 justify-start items-start w-full">
+                            <Flex className="flex-row justify-between w-full gap-8">
+                                <h1 className=" font-bold text-2xl mb-2  text-left ml-1">
+                                    {state?.name} plugin
+                                </h1>
+                                <ButtonDropdown
+                                variant='primary'
+                                    items={[
+                                        {
+                                            text: 'Settings',
+                                            items: [
+                                                {
+                                                    text: 'Update',
+                                                    id: 'update',
+                                                },
+                                                {
+                                                    text: 'Disable',
+                                                    id: 'disable',
+                                                },
+                                                {
+                                                    text: 'Uninstall',
+                                                    id: 'uninstall',
+                                                },
+                                            ],
+                                        },
+                                        // {
+                                        //     text: 'Action',
+                                        //     items: [
+                                        //         {
+                                        //             text: 'Run Discovery',
+                                        //             id: 'run-discovery',
+                                        //         },
+                                        //     ],
+                                        // },
+                                    ]}
+                                >
+                                    Actions
+                                </ButtonDropdown>
+                            </Flex>
                             <Card className="">
                                 <Flex
                                     flexDirection="col"
@@ -275,7 +312,7 @@ const [status, setStatus] = useState<string>()
 
                                 {
                                     id: '4',
-                                    label: 'Setup',
+                                    label: 'Setup Guide',
                                     content: (
                                         <Setup
                                             name={state?.name}

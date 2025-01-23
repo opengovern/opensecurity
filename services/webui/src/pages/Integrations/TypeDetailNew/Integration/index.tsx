@@ -571,12 +571,20 @@ export default function IntegrationList({
                                         actions={
                                             <Flex className="gap-1">
                                                 <Button
+                                                    // icon={PencilIcon}
+                                                    onClick={() => {
+                                                        GetIntegrations()
+                                                    }}
+                                                    iconName="refresh"
+                                                ></Button>
+                                                <Button
                                                     // icon={PlusIcon}
+                                                    // variant='primary'
                                                     onClick={() =>
                                                         setOpen(true)
                                                     }
                                                 >
-                                                    Add New Integration
+                                                    Add 
                                                     {/* {`${name}`} */}
                                                 </Button>
                                                 {/* <Button
@@ -585,28 +593,22 @@ export default function IntegrationList({
                                         >
                                             Edit Integration
                                         </Button> */}
-                                                <Button
-                                                    // icon={PencilIcon}
-                                                    onClick={() => {
-                                                        GetIntegrations()
-                                                    }}
-                                                >
-                                                    Reload
-                                                </Button>
-                                                <Button
+                                              
+                                                {/* <Button
                                                     // icon={PencilIcon}
                                                     onClick={() => {
                                                         DisableIntegration()
                                                     }}
                                                 >
                                                     Disable Plugin
-                                                </Button>
+                                                </Button> */}
                                                 <Button
                                                     loading={
                                                         actionLoading[
                                                             'discovery'
                                                         ]
                                                     }
+                                                    // variant='primary'
                                                     onClick={() => {
                                                         // RunDiscovery(true)
                                                         GetResourceTypes()

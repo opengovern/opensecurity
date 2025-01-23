@@ -96,19 +96,21 @@ const [total_count, setTotalCount] = useState<number>(0)
                             // @ts-ignore
                             header={selected?.name ? selected?.name : ''}
                         >
-                            <Flex className='flex-col gap-3 justify-start items-start'>
+                            <Flex className="flex-col gap-3 justify-start items-start">
                                 <Title> Parameters: </Title>
                                 <KeyValuePairs
                                     columns={2}
                                     // @ts-ignore
                                     items={
                                         selected
-                                            ? selected?.params?.map((param :any) => {
-                                                  return {
-                                                      label: param?.name,
-                                                      value: param?.description,
+                                            ? selected?.params?.map(
+                                                  (param: any) => {
+                                                      return {
+                                                          label: param?.name,
+                                                          value: param?.description,
+                                                      }
                                                   }
-                                              })
+                                              )
                                             : []
                                     }
                                 />
@@ -130,12 +132,10 @@ const [total_count, setTotalCount] = useState<number>(0)
                             onRowClick={(event) => {
                                 const row = event.detail.item
                                 // @ts-ignore
-                                if(row.params.length > 0){
- setSelected(row)
- setOpen(true)
+                                if (row.params.length > 0) {
+                                    setSelected(row)
+                                    setOpen(true)
                                 }
-                                
-                               
                             }}
                             columnDefinitions={[
                                 {
@@ -183,22 +183,38 @@ const [total_count, setTotalCount] = useState<number>(0)
                                 </Box>
                             }
                             header={
-                                <Header className="w-full">
-                                    {name} Resources{' '}
-                                    <span className=" font-medium">
-                                        ({total_count})
-                                    </span>
+                                <Header
+                                    className="w-full"
+                                    actions={
+                                        <Pagination
+                                            // @ts-ignore
+                                            className="min-w-fit"
+                                            currentPageIndex={page + 1}
+                                            pagesCount={Math.ceil(
+                                                total_count / 15
+                                            )}
+                                            onChange={({ detail }) =>
+                                                setPage(
+                                                    detail.currentPageIndex - 1
+                                                )
+                                            }
+                                        />
+                                    }
+                                >
+                                    <Flex className="flex-row justify-between items-center w-full resource-types ">
+                                        <div className="w-full">
+                                            {' '}
+                                            {name} Resources{' '}
+                                            <span className=" font-medium">
+                                                ({total_count})
+                                            </span>
+                                        </div>
+                                    </Flex>
                                 </Header>
                             }
-                            pagination={
-                                <Pagination
-                                    currentPageIndex={page + 1}
-                                    pagesCount={Math.ceil(total_count / 15)}
-                                    onChange={({ detail }) =>
-                                        setPage(detail.currentPageIndex - 1)
-                                    }
-                                />
-                            }
+                            // pagination={
+
+                            // }
                         />
                     }
                 />

@@ -226,7 +226,7 @@ export default function CredentialsList({
                                     )}
                                 />
                                 <KeyValuePairs
-                                    className='mt-5'
+                                    className="mt-5"
                                     columns={
                                         GetMarkedSecrets().length > 4
                                             ? 4
@@ -388,8 +388,9 @@ export default function CredentialsList({
                                                     onClick={() => {
                                                         GetCredentials()
                                                     }}
+                                                    iconName="refresh"
                                                 >
-                                                    Reload
+                                                    
                                                 </Button>
                                             </Flex>
                                         }

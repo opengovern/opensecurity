@@ -657,13 +657,25 @@ export default function DiscoveryJobs({
                             <Header
                                 counter={totalCount ? `(${totalCount})` : ''}
                                 actions={
-                                    <KButton
-                                        onClick={() => {
-                                            GetRows()
-                                        }}
-                                    >
-                                        Reload
-                                    </KButton>
+                                    <Flex className="flex-row gap-2">
+                                        <KButton
+                                            onClick={() => {
+                                                GetRows()
+                                            }}
+                                            iconName="refresh"
+                                        ></KButton>
+                                        <KButton
+                                            // loading={actionLoading['discovery']}
+                                            // variant='primary'
+                                            onClick={() => {
+                                                // RunDiscovery(true)
+                                                // GetResourceTypes()
+                                                // setRunOpen(true)
+                                            }}
+                                        >
+                                            Run discovery
+                                        </KButton>
+                                    </Flex>
                                 }
                                 className="w-full"
                             >
