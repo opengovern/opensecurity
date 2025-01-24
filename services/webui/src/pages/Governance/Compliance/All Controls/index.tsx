@@ -84,6 +84,7 @@ import {
 } from '@cloudscape-design/components'
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import { useIntegrationApiV1EnabledConnectorsList } from '../../../../api/integration.gen'
+import { severityBadge } from '../../Controls'
 
 
 
@@ -416,11 +417,12 @@ export default function AllControls() {
                                     header={
                                         selectedRow ? (
                                             <>
-                                                <Flex justifyContent="start">
+                                                <Flex justifyContent="start" className='gap-2 items-center justify-center'>
                                                   
                                                     <Title className="text-lg font-semibold ml-2 my-1">
-                                                        {selectedRow?.title}
+                                                        {selectedRow?.title} 
                                                     </Title>
+                                                    {severityBadge(selectedRow?.severity)}
                                                 </Flex>
                                             </>
                                         ) : (

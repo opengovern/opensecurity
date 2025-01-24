@@ -30,13 +30,14 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
         if (current) {
             if (
                 (current.includes('incidents') ||
-                   
+                   current.includes('plugins') ||
                     current.includes('dashboard') ||
                     current.includes('compliance') ||
                     current.includes('score') ||
                     current.includes('administration')) &&
-                !sub_page
+                sub_page
             ) {
+                console.log("here")
                 return false
             }
             return true

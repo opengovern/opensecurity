@@ -126,41 +126,7 @@ export default function IntegrationList({
                 setLoading(false)
             })
     }
-     const DisableIntegration = () => {
-         setLoading(true)
-         let url = ''
-         if (window.location.origin === 'http://localhost:3000') {
-             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-         } else {
-             url = window.location.origin
-         }
-         // @ts-ignore
-         const token = JSON.parse(localStorage.getItem('openg_auth')).token
-
-         const config = {
-             headers: {
-                 Authorization: `Bearer ${token}`,
-             },
-         }
-
-         axios
-             .post(
-                 `${url}/main/integration/api/v1/integration-types/plugin/${integration_type}/disable`,
-                 {},
-                 config
-             )
-             .then((res) => {
-                 setLoading(false)
-                 navigate('/plugins')
-             })
-             .catch((err) => {
-                 setLoading(false)
-                 setNotification({
-                     text: `Error: ${err.response.data.message}`,
-                     type: 'error',
-                 })
-             })
-     }
+   
     const CheckActionsClick = (action: any) => {
         setAction(action)
         if (action.type === "update") {
@@ -539,74 +505,36 @@ export default function IntegrationList({
                                         </SpaceBetween>
                                     </Box>
                                 }
-                                filter={
-                                    ''
-                                    // <PropertyFilter
-                                    //     // @ts-ignore
-                                    //     query={undefined}
-                                    //     // @ts-ignore
-                                    //     onChange={({ detail }) => {
-                                    //         // @ts-ignore
-                                    //         setQueries(detail)
-                                    //     }}
-                                    //     // countText="5 matches"
-                                    //     enableTokenGroups
-                                    //     expandToViewport
-                                    //     filteringAriaLabel="Control Categories"
-                                    //     // @ts-ignore
-                                    //     // filteringOptions={filters}
-                                    //     filteringPlaceholder="Control Categories"
-                                    //     // @ts-ignore
-                                    //     filteringOptions={undefined}
-                                    //     // @ts-ignore
-
-                                    //     filteringProperties={undefined}
-                                    //     // filteringProperties={
-                                    //     //     filterOption
-                                    //     // }
-                                    // />
-                                }
+                                
                                 header={
                                     <Header
                                         actions={
                                             <Flex className="gap-1">
                                                 <Button
-                                                    // icon={PlusIcon}
-                                                    onClick={() =>
-                                                        setOpen(true)
-                                                    }
-                                                >
-                                                    Add New Integration
-                                                    {/* {`${name}`} */}
-                                                </Button>
-                                                {/* <Button
-                                            // icon={PencilIcon}
-                                            onClick={() => setEdit(true)}
-                                        >
-                                            Edit Integration
-                                        </Button> */}
-                                                <Button
                                                     // icon={PencilIcon}
                                                     onClick={() => {
                                                         GetIntegrations()
                                                     }}
-                                                >
-                                                    Reload
-                                                </Button>
+                                                    iconName="refresh"
+                                                ></Button>
                                                 <Button
-                                                    // icon={PencilIcon}
-                                                    onClick={() => {
-                                                        DisableIntegration()
-                                                    }}
+                                                    // icon={PlusIcon}
+                                                    // variant='primary'
+                                                    onClick={() =>
+                                                        setOpen(true)
+                                                    }
                                                 >
-                                                    Disable Plugin
+                                                    Add 
+                                                    {/* {`${name}`} */}
                                                 </Button>
+                                               
                                                 <Button
                                                     loading={
                                                         actionLoading[
                                                             'discovery'
                                                         ]
                                                     }
+                                                    // variant='primary'
                                                     onClick={() => {
                                                         // RunDiscovery(true)
                                                         GetResourceTypes()

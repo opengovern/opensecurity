@@ -1,5 +1,4 @@
-import ReactJson from '@microlink/react-json-view'
-import { Card } from '@tremor/react'
+
 import 'ace-builds/css/ace.css'
 import 'ace-builds/css/theme/cloud_editor.css'
 import 'ace-builds/css/theme/cloud_editor_dark.css'
@@ -14,13 +13,15 @@ import { CodeEditor } from '@cloudscape-design/components'
 
 interface IRenderObjectProps {
     obj: any
+    language?: string
+    className? :string
 }
 
-export function RenderObject({ obj }: IRenderObjectProps) {
+export function RenderObject({ obj, language, className }: IRenderObjectProps) {
     const [ace, setAce] = useState()
     const [preferences, setPreferences] = useState(undefined)
 
- useEffect(() => {
+    useEffect(() => {
         async function loadAce() {
             const ace = await import('ace-builds')
             await import('ace-builds/webpack-resolver')
@@ -88,11 +89,11 @@ export function RenderObject({ obj }: IRenderObjectProps) {
         //     />
         // </Card>
         <CodeEditor
-        // className='h-full'
+            className={className}
             ace={ace}
-            language="json"
-            value={JSON.stringify(obj,null,'\t')}
-            languageLabel="JSON"
+            language={language ? language : 'json'}
+            value={language? obj:JSON.stringify(obj, null, '\t')}
+            languageLabel={language ? language.toUpperCase() : 'JSON'}
             onChange={({ detail }) => {
                 // setSavedQuery('')
                 // setCode(detail.value)
@@ -105,7 +106,7 @@ export function RenderObject({ obj }: IRenderObjectProps) {
             }
             loading={false}
             themes={{
-                light: ['xcode','cloud_editor', 'sqlserver'],
+                light: ['xcode', 'cloud_editor', 'sqlserver'],
                 dark: ['cloud_editor_dark', 'twilight'],
                 // @ts-ignore
             }}
