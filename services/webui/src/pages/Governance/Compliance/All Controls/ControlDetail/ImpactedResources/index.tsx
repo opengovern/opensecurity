@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useAtomValue, useSetAtom } from 'jotai/index'
 
 import { Card, Flex, Text, Title } from '@tremor/react'
-import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
+import { CheckCircleIcon, ExclamationCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import { isDemoAtom, notificationAtom } from '../../../../../../store'
 import {
     Api,
@@ -10,7 +10,6 @@ import {
     PlatformEnginePkgComplianceApiResourceFinding,
 } from '../../../../../../api/api'
 import AxiosAPI from '../../../../../../api/ApiConfig'
-import { statusBadge } from '../../../index'
 import { dateTimeDisplay } from '../../../../../../utilities/dateDisplay'
 import ResourceFindingDetail from '../../../../Findings/ResourceFindingDetail'
 import KTable from '@cloudscape-design/components/table'
@@ -36,6 +35,27 @@ interface IImpactedResources {
 }
 
 
+export const statusBadge = (
+    status: PlatformEnginePkgComplianceApiConformanceStatus | undefined
+) => {
+    if (
+        status ===
+        PlatformEnginePkgComplianceApiConformanceStatus.ConformanceStatusPassed
+    ) {
+        return (
+            <Flex className="w-fit gap-1.5">
+                <CheckCircleIcon className="h-4 text-emerald-500" />
+                <Text>Passed</Text>
+            </Flex>
+        )
+    }
+    return (
+        <Flex className="w-fit gap-1.5">
+            <XCircleIcon className="h-4 text-rose-600" />
+            <Text>Failed</Text>
+        </Flex>
+    )
+}
 
 export default function ImpactedResources({
     controlId,

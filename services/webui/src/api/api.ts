@@ -2869,8 +2869,8 @@ export interface PlatformEnginePkgControlDetailV3QueryParams {
 
 export interface PlatformEnginePkgControlDetailV3Query {
     language: string
-    listOfResources: string[]
-    primaryResource: string
+    list_of_resources: string[]
+    primary_resource: string
     definition: string
     parameters: PlatformEnginePkgControlDetailV3QueryParams[]
     reference: string
@@ -4404,7 +4404,7 @@ export class Api<
          */
         apiV3ControlDetail: (id: string, params: RequestParams = {}) =>
             this.request<PlatformEnginePkgControlDetailV3, any>({
-                path: `compliance/api/v3/control/${id}?showReferences=true`,
+                path: `compliance/api/v3/controls/${id}?showReferences=true`,
                 method: 'GET',
                 secure: true,
                 type: ContentType.Json,
