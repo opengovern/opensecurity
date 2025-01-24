@@ -46,6 +46,8 @@ import { severityBadge } from '../../../Controls'
 import { Badge, KeyValuePairs, Popover, Tabs } from '@cloudscape-design/components'
 import axios from 'axios'
 import { RenderObject } from '../../../../../components/RenderObject'
+import ImpactedResources from './ImpactedResources'
+import Benchmarks from './Benchmarks'
 
 interface IResourceFindingDetail {
     selectedItem: PlatformEnginePkgControlDetailV3 | undefined
@@ -133,13 +135,13 @@ export default function ControlDetail({
                     <Flex className="gap-2 flex-wrap" flexDirection="row">
                         <>
                             {/* @ts-ignore */}
-                            {selectedItem?.policy?.listOfResources?.map(
+                            {selectedItem?.policy?.list_of_resources?.map(
                                 (key, index) => {
                                     return (
                                         <>
                                             {key ===
                                             selectedItem?.policy
-                                                ?.primaryResource ? (
+                                                ?.primary_resource ? (
                                                 <>
                                                     <Popover
                                                         content={
@@ -351,6 +353,44 @@ export default function ControlDetail({
                                     </>
                                 ),
                             },
+                            {
+                                                                    label: 'Impacted resources',
+                                                                    id: '2',
+                                                                    content: (
+                                                                        <ImpactedResources
+                                                                            controlId={
+                                                                              selectedItem?.id || ''
+                                                                            }
+                                                                            linkPrefix={`/score/categories/`}
+                                                                            // conformanceFilter={
+                                                                            //     conformanceFilter
+                                                                            // }
+                                                                        />
+                                                                    ),
+                                                                },
+                                                                // {
+                                                                //     id: '3',
+                                                                //     label: 'Impacted Integrations',
+                                                                //     content: (
+                                                                //         <ImpactedAccounts
+                                                                //             controlId={
+                                                                //                 controlDetail?.control?.id
+                                                                //             }
+                                                                //         />
+                                                                //     ),
+                                                                // },
+                                                              
+                                                                {
+                                                                    id: '4',
+                                                                    label: 'Frameworks',
+                                                                    content: (
+                                                                        <Benchmarks
+                                                                            benchmarks={
+                                                                                selectedItem?.frameworks
+                                                                            }
+                                                                        />
+                                                                    ),
+                                                                },
                         ]}
                     />
                 </>
