@@ -19,7 +19,7 @@ type Framework struct {
 	Description string `json:"description" yaml:"description"`
 	SectionCode string `json:"section-code" yaml:"section-code"`
 	Defaults    *struct {
-		AutoAssign        *bool `json:"auto-assign" yaml:"auto-assign"`
+		IsBaseline        *bool `json:"is-baseline" yaml:"is-baseline"`
 		Enabled           bool  `json:"enabled" yaml:"enabled"`
 		TracksDriftEvents bool  `json:"tracks-drift-events" yaml:"tracks-drift-events"`
 	} `json:"defaults"`

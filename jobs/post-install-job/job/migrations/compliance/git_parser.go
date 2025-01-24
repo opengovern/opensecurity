@@ -724,13 +724,13 @@ func (g *GitParser) HandleSingleFramework(benchmarkIntegrationTypes map[string]m
 		})
 	}
 
-	autoAssign := true
+	isBaseline := true
 	tracksDriftEvents := false
 	enabled := false
 
 	if framework.Defaults != nil {
-		if framework.Defaults.AutoAssign != nil {
-			autoAssign = *framework.Defaults.AutoAssign
+		if framework.Defaults.IsBaseline != nil {
+			isBaseline = *framework.Defaults.IsBaseline
 		}
 
 		tracksDriftEvents = framework.Defaults.TracksDriftEvents
@@ -742,7 +742,7 @@ func (g *GitParser) HandleSingleFramework(benchmarkIntegrationTypes map[string]m
 		Title:             framework.Title,
 		DisplayCode:       framework.SectionCode,
 		Description:       framework.Description,
-		IsBaseline:        autoAssign,
+		IsBaseline:        isBaseline,
 		Enabled:           enabled,
 		TracksDriftEvents: tracksDriftEvents,
 		Tags:              tags,
