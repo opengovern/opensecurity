@@ -179,6 +179,7 @@ export default function TypeDetail() {
                     text: `Plugin Updated`,
                     type: 'success',
                 })
+                window.location.reload()
             })
             .catch((err) => {
                  setNotification({
@@ -209,7 +210,7 @@ export default function TypeDetail() {
         }
 
         axios
-            .post(`${url}${path}`, {}, config)
+            .delete(`${url}${path}`, config)
             .then((res) => {
                 setLoading(false)
                 setNotification({
@@ -252,6 +253,10 @@ export default function TypeDetail() {
             )
             .then((res) => {
                 setLoading(false)
+                 setNotification({
+                     text: `Plugin Disabled`,
+                     type: 'success',
+                 })
                 navigate('/plugins')
             })
             .catch((err) => {
