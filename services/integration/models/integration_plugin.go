@@ -55,8 +55,7 @@ type IntegrationPlugin struct {
 	DescriberURL             string
 	DescriberTag             string
 	OperationalStatusUpdates pgtype.TextArray
-
-	Tags pgtype.JSONB
+	Tags                     pgtype.JSONB
 }
 
 func (ip IntegrationPlugin) GetStringOperationalStatusUpdates() ([]string, error) {
