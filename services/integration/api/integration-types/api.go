@@ -229,9 +229,9 @@ func (a *API) GetResourceTypesByLabels(c echo.Context) error {
 			return echo.NewHTTPError(500, err.Error())
 		}
 		res := models.GetResourceTypesByLabelsResponse{
-			ResourceTypes:rts,
+			ResourceTypes: rts,
 		}
-		
+
 		return c.JSON(200, res)
 	} else {
 		return echo.NewHTTPError(404, "integration type not found")
@@ -652,13 +652,19 @@ func (a *API) ListPlugins(c echo.Context) error {
 				continue
 			}
 		}
+
+		operationalStatusUpdates, err := plugin.GetStringOperationalStatusUpdates()
+		if err != nil {
+			a.logger.Error("failed to get operational status updates", zap.Error(err))
+		}
+
 		items = append(items, models.IntegrationPlugin{
 			ID:                       plugin.ID,
 			PluginID:                 plugin.PluginID,
 			IntegrationType:          plugin.IntegrationType.String(),
 			InstallState:             string(plugin.InstallState),
 			OperationalStatus:        string(plugin.OperationalStatus),
-			OperationalStatusUpdates: plugin.OperationalStatusUpdates,
+			OperationalStatusUpdates: operationalStatusUpdates,
 			URL:                      plugin.URL,
 			Tier:                     plugin.Tier,
 			Description:              plugin.Description,
@@ -735,13 +741,18 @@ func (a *API) GetPlugin(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
 	}
 
+	operationalStatusUpdates, err := plugin.GetStringOperationalStatusUpdates()
+	if err != nil {
+		a.logger.Error("failed to get operational status updates", zap.Error(err))
+	}
+
 	return c.JSON(http.StatusOK, models.IntegrationPlugin{
 		ID:                       plugin.ID,
 		PluginID:                 plugin.PluginID,
 		IntegrationType:          plugin.IntegrationType.String(),
 		InstallState:             string(plugin.InstallState),
 		OperationalStatus:        string(plugin.OperationalStatus),
-		OperationalStatusUpdates: plugin.OperationalStatusUpdates,
+		OperationalStatusUpdates: operationalStatusUpdates,
 		URL:                      plugin.URL,
 		Tier:                     plugin.Tier,
 		Description:              plugin.Description,

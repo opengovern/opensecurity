@@ -147,6 +147,9 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 
 	logger.Info("done reading files", zap.String("url", url), zap.String("integrationType", iPlugin.IntegrationType.String()), zap.Int("integrationPluginSize", len(integrationPlugin)), zap.Int("cloudqlPluginSize", len(cloudqlPlugin)))
 
+	operationalStatusUpdates := pgtype.TextArray{}
+	operationalStatusUpdates.Set([]string{})
+
 	return &models.IntegrationPlugin{
 			ID:                       iPlugin.ID,
 			PluginID:                 iPlugin.IntegrationType.String(),
@@ -160,7 +163,7 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 			PackageType:              iPlugin.PackageType,
 			InstallState:             installState,
 			OperationalStatus:        operationalStatus,
-			OperationalStatusUpdates: make([]string, 0),
+			OperationalStatusUpdates: operationalStatusUpdates,
 			URL:                      url,
 			DescriberURL:             describerURL,
 			DescriberTag:             describerTags,

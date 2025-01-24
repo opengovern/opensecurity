@@ -2,7 +2,6 @@ package models
 
 import (
 	"github.com/jackc/pgtype"
-	"github.com/lib/pq"
 	"github.com/opengovern/og-util/pkg/integration"
 	"time"
 )
@@ -55,9 +54,17 @@ type IntegrationPlugin struct {
 	URL                      string
 	DescriberURL             string
 	DescriberTag             string
-	OperationalStatusUpdates pq.StringArray `gorm:"type:text[]"`
+	OperationalStatusUpdates pgtype.TextArray `gorm:"type:text[]"`
 
 	Tags pgtype.JSONB
+}
+
+func (ip IntegrationPlugin) GetStringOperationalStatusUpdates() ([]string, error) {
+	stringUpdates := make([]string, 0)
+	if err := ip.OperationalStatusUpdates.AssignTo(&stringUpdates); err != nil {
+		return nil, err
+	}
+	return stringUpdates, nil
 }
 
 type IntegrationPluginBinary struct {

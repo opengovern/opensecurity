@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/go-plugin"
 	kedav1alpha1 "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
 	"github.com/labstack/echo/v4"
-	"github.com/lib/pq"
 	"github.com/opengovern/opencomply/services/integration/db"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -186,7 +185,12 @@ func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integra
 			logger.Error("could not find the plugin from the type map", zap.String("plugin", integrationType.String()))
 			continue
 		}
-		if len(pType.OperationalStatusUpdates) == 0 {
+		currentOperationalStatusUpdates, err := pType.GetStringOperationalStatusUpdates()
+		if err != nil {
+			logger.Error("failed to get operational status updates", zap.Error(err), zap.String("integration_type", integrationType.String()))
+			continue
+		}
+		if len(currentOperationalStatusUpdates) == 0 {
 			update := models.OperationalStatusUpdate{
 				Time:      time.Now(),
 				OldStatus: "",
@@ -198,9 +202,15 @@ func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integra
 				logger.Error("failed to marshal operational status update", zap.Error(err), zap.String("integration_type", integrationType.String()))
 				continue
 			}
-			pType.OperationalStatusUpdates = append(pType.OperationalStatusUpdates, string(updateJson))
+			currentOperationalStatusUpdates = append(currentOperationalStatusUpdates, string(updateJson))
+
+			err = pType.OperationalStatusUpdates.Set(currentOperationalStatusUpdates)
+			if err != nil {
+				logger.Error("failed to set operational status updates", zap.Error(err), zap.String("integration_type", integrationType.String()))
+				continue
+			}
 			err = integrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", pType).Updates(map[string]any{
-				"operational_status_updates": pq.StringArray(pType.OperationalStatusUpdates),
+				"operational_status_updates": pType.OperationalStatusUpdates,
 			}).Error
 			if err != nil {
 				logger.Error("failed to update integration plugin initial operational status", zap.Error(err), zap.String("integration_type", integrationType.String()))
@@ -332,16 +342,29 @@ func (m *IntegrationTypeManager) RetryRebootIntegrationType(t *models.Integratio
 			m.logger.Error("failed to marshal operational status update", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
 			return
 		}
-		t.OperationalStatusUpdates = append(t.OperationalStatusUpdates, string(updateJson))
-		if len(t.OperationalStatusUpdates) > 20 {
-			t.OperationalStatusUpdates = t.OperationalStatusUpdates[len(t.OperationalStatusUpdates)-20:]
+
+		currentOperationalStatusUpdates, err := t.GetStringOperationalStatusUpdates()
+		if err != nil {
+			m.logger.Error("failed to get operational status updates", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
+			return
 		}
-		if t.OperationalStatusUpdates == nil {
-			t.OperationalStatusUpdates = []string{}
+
+		currentOperationalStatusUpdates = append(currentOperationalStatusUpdates, string(updateJson))
+		if len(currentOperationalStatusUpdates) > 20 {
+			currentOperationalStatusUpdates = currentOperationalStatusUpdates[len(currentOperationalStatusUpdates)-20:]
+		}
+		if currentOperationalStatusUpdates == nil {
+			currentOperationalStatusUpdates = []string{}
+		}
+
+		err = t.OperationalStatusUpdates.Set(currentOperationalStatusUpdates)
+		if err != nil {
+			m.logger.Error("failed to set operational status updates", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
+			return
 		}
 		err = m.IntegrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", t).Updates(map[string]any{
 			"operational_status":         models.IntegrationPluginOperationalStatusFailed,
-			"operational_status_updates": pq.StringArray(t.OperationalStatusUpdates),
+			"operational_status_updates": t.OperationalStatusUpdates,
 		}).Error
 		if err != nil {
 			m.logger.Error("failed to update integration plugin operational status", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
@@ -387,17 +410,31 @@ func (m *IntegrationTypeManager) RetryRebootIntegrationType(t *models.Integratio
 		m.logger.Error("failed to marshal operational status update", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
 		return err
 	}
+
+	currentOperationalStatusUpdates, err := t.GetStringOperationalStatusUpdates()
+	if err != nil {
+		m.logger.Error("failed to get operational status updates", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
+		return err
+	}
+
 	t.OperationalStatus = models.IntegrationPluginOperationalStatusEnabled //TODO remember enabled/disabled and change back to it here
-	t.OperationalStatusUpdates = append(t.OperationalStatusUpdates, string(updateJson))
-	if len(t.OperationalStatusUpdates) > 20 {
-		t.OperationalStatusUpdates = t.OperationalStatusUpdates[len(t.OperationalStatusUpdates)-20:]
+	currentOperationalStatusUpdates = append(currentOperationalStatusUpdates, string(updateJson))
+	if len(currentOperationalStatusUpdates) > 20 {
+		currentOperationalStatusUpdates = currentOperationalStatusUpdates[len(currentOperationalStatusUpdates)-20:]
 	}
-	if t.OperationalStatusUpdates == nil {
-		t.OperationalStatusUpdates = []string{}
+	if currentOperationalStatusUpdates == nil {
+		currentOperationalStatusUpdates = []string{}
 	}
+
+	err = t.OperationalStatusUpdates.Set(currentOperationalStatusUpdates)
+	if err != nil {
+		m.logger.Error("failed to set operational status updates", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
+		return err
+	}
+
 	err = m.IntegrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", t).Updates(map[string]any{
 		"operational_status":         models.IntegrationPluginOperationalStatusEnabled,
-		"operational_status_updates": pq.StringArray(t.OperationalStatusUpdates),
+		"operational_status_updates": t.OperationalStatusUpdates,
 	}).Error
 	if err != nil {
 		m.logger.Error("failed to update integration plugin operational status", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
