@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-util/pkg/integration"
 	"time"
@@ -54,15 +55,21 @@ type IntegrationPlugin struct {
 	URL                      string
 	DescriberURL             string
 	DescriberTag             string
-	OperationalStatusUpdates pgtype.TextArray `gorm:"type:text[]"`
+	OperationalStatusUpdates pgtype.JSONB
 	Tags                     pgtype.JSONB
 }
 
 func (ip IntegrationPlugin) GetStringOperationalStatusUpdates() ([]string, error) {
 	stringUpdates := make([]string, 0)
-	if err := ip.OperationalStatusUpdates.AssignTo(&stringUpdates); err != nil {
+	var jsonVal []byte
+	if err := ip.OperationalStatusUpdates.AssignTo(&jsonVal); err != nil {
 		return nil, err
 	}
+
+	if err := json.Unmarshal(jsonVal, &stringUpdates); err != nil {
+		return nil, err
+	}
+
 	return stringUpdates, nil
 }
 

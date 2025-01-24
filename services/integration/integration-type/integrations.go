@@ -204,7 +204,13 @@ func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integra
 			}
 			currentOperationalStatusUpdates = append(currentOperationalStatusUpdates, string(updateJson))
 
-			err = pType.OperationalStatusUpdates.Set(currentOperationalStatusUpdates)
+			currentOperationalStatusUpdatesStr, err := json.Marshal(currentOperationalStatusUpdates)
+			if err != nil {
+				logger.Error("failed to marshal operational status updates", zap.Error(err), zap.String("integration_type", integrationType.String()))
+				continue
+			}
+
+			err = pType.OperationalStatusUpdates.Set(currentOperationalStatusUpdatesStr)
 			if err != nil {
 				logger.Error("failed to set operational status updates", zap.Error(err), zap.String("integration_type", integrationType.String()))
 				continue
@@ -357,7 +363,13 @@ func (m *IntegrationTypeManager) RetryRebootIntegrationType(t *models.Integratio
 			currentOperationalStatusUpdates = []string{}
 		}
 
-		err = t.OperationalStatusUpdates.Set(currentOperationalStatusUpdates)
+		currentOperationalStatusUpdatesStr, err := json.Marshal(currentOperationalStatusUpdates)
+		if err != nil {
+			m.logger.Error("failed to marshal operational status updates", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
+			return
+		}
+
+		err = t.OperationalStatusUpdates.Set(currentOperationalStatusUpdatesStr)
 		if err != nil {
 			m.logger.Error("failed to set operational status updates", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
 			return
@@ -426,7 +438,13 @@ func (m *IntegrationTypeManager) RetryRebootIntegrationType(t *models.Integratio
 		currentOperationalStatusUpdates = []string{}
 	}
 
-	err = t.OperationalStatusUpdates.Set(currentOperationalStatusUpdates)
+	currentOperationalStatusUpdatesStr, err := json.Marshal(currentOperationalStatusUpdates)
+	if err != nil {
+		m.logger.Error("failed to marshal operational status updates", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
+		return err
+	}
+
+	err = t.OperationalStatusUpdates.Set(currentOperationalStatusUpdatesStr)
 	if err != nil {
 		m.logger.Error("failed to set operational status updates", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
 		return err
