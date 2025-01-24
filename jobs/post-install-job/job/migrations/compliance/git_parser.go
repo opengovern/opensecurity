@@ -456,7 +456,6 @@ func (g *GitParser) parseControlFile(content []byte, path string) error {
 }
 
 func (g *GitParser) ExtractBenchmarks(complianceBenchmarksPath string) error {
-	var benchmarks []Benchmark
 	var frameworks []Framework
 	err := filepath.WalkDir(complianceBenchmarksPath, func(path string, d fs.DirEntry, err error) error {
 		if !strings.HasSuffix(filepath.Base(path), ".yaml") {
@@ -492,23 +491,12 @@ func (g *GitParser) ExtractBenchmarks(complianceBenchmarksPath string) error {
 			}
 			frameworks = append(frameworks, obj.ControlGroup)
 		} else {
-			var obj Benchmark
-			err = yaml.Unmarshal(content, &obj)
-			if err != nil {
-				g.logger.Error("failed to unmarshal benchmark", zap.String("path", path), zap.Error(err))
-				return err
-			}
-			benchmarks = append(benchmarks, obj)
+			g.logger.Error("this file should be deprecated", zap.String("path", path))
 		}
 
 		return nil
 	})
 
-	if err != nil {
-		return err
-	}
-
-	err = g.HandleBenchmarks(benchmarks)
 	if err != nil {
 		return err
 	}
@@ -530,121 +518,6 @@ func (g *GitParser) ExtractBenchmarks(complianceBenchmarksPath string) error {
 
 	g.benchmarks, _ = fillBenchmarksIntegrationTypes(g.benchmarks)
 
-	return nil
-}
-
-func (g *GitParser) HandleBenchmarks(benchmarks []Benchmark) error {
-	benchmarkIntegrationTypes := make(map[string]map[string]bool)
-	seenMap := make(map[string]bool)
-	var childrenDfs func(benchmark Benchmark)
-	childrenDfs = func(benchmark Benchmark) {
-		if _, ok := seenMap[benchmark.ID]; ok {
-			return
-		}
-		if benchmarkIntegrationTypes[benchmark.ID] == nil {
-			benchmarkIntegrationTypes[benchmark.ID] = make(map[string]bool)
-		}
-		seenMap[benchmark.ID] = true
-		for _, c := range g.controls {
-			for _, it := range c.IntegrationType {
-				benchmarkIntegrationTypes[benchmark.ID][it] = true
-			}
-			if c.Policy != nil {
-				for _, it := range c.Policy.IntegrationType {
-					benchmarkIntegrationTypes[benchmark.ID][it] = true
-				}
-			}
-			if c.PolicyID != nil {
-				if policy, ok := g.controlsPolicies[*c.PolicyID]; ok {
-					for _, it := range policy.IntegrationType {
-						benchmarkIntegrationTypes[benchmark.ID][it] = true
-					}
-				}
-			}
-		}
-		for _, childID := range benchmark.Children {
-			if !seenMap[childID] {
-				for _, child := range benchmarks {
-					if child.ID == childID {
-						childrenDfs(child)
-					}
-				}
-			}
-			for it, _ := range benchmarkIntegrationTypes[childID] {
-				benchmarkIntegrationTypes[benchmark.ID][it] = true
-			}
-		}
-	}
-
-	children := map[string][]string{}
-	for _, o := range benchmarks {
-		childrenDfs(o)
-		tags := make([]db.BenchmarkTag, 0, len(o.Tags))
-		for tagKey, tagValue := range o.Tags {
-			tags = append(tags, db.BenchmarkTag{
-				Tag: model.Tag{
-					Key:   tagKey,
-					Value: tagValue,
-				},
-				BenchmarkID: o.ID,
-			})
-		}
-
-		autoAssign := true
-		if o.AutoAssign != nil {
-			autoAssign = *o.AutoAssign
-		}
-
-		b := db.Benchmark{
-			ID:                o.ID,
-			Title:             o.Title,
-			DisplayCode:       o.SectionCode,
-			Description:       o.Description,
-			IsBaseline:        autoAssign,
-			TracksDriftEvents: o.TracksDriftEvents,
-			Tags:              tags,
-			Children:          nil,
-			Controls:          nil,
-		}
-		metadataJsonb := pgtype.JSONB{}
-		err := metadataJsonb.Set([]byte(""))
-		if err != nil {
-			return err
-		}
-		b.Metadata = metadataJsonb
-
-		for _, controls := range g.controls {
-			if contains(o.Controls, controls.ID) {
-				b.Controls = append(b.Controls, controls)
-			}
-		}
-
-		var integrationTypesList []string
-		for k, _ := range benchmarkIntegrationTypes[o.ID] {
-			integrationTypesList = append(integrationTypesList, k)
-		}
-		b.IntegrationType = integrationTypesList
-
-		g.benchmarks = append(g.benchmarks, b)
-		children[o.ID] = o.Children
-	}
-	// g.logger.Info("Extracted benchmarks 2", zap.Int("count", len(g.benchmarks)))
-
-	for idx, benchmark := range g.benchmarks {
-		for _, childID := range children[benchmark.ID] {
-			for _, child := range g.benchmarks {
-				if child.ID == childID {
-					benchmark.Children = append(benchmark.Children, child)
-				}
-			}
-		}
-
-		if len(children[benchmark.ID]) != len(benchmark.Children) {
-			//fmt.Printf("could not find some benchmark children, %d != %d", len(children[benchmark.ID]), len(benchmark.Children))
-		}
-		g.benchmarks[idx] = benchmark
-	}
-	// g.logger.Info("Extracted benchmarks 3", zap.Int("count", len(g.benchmarks)))
 	return nil
 }
 

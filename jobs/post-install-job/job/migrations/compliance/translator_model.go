@@ -28,19 +28,6 @@ type Framework struct {
 	Controls     []string            `json:"controls" yaml:"controls"`
 }
 
-type Benchmark struct {
-	ID                string              `json:"ID" yaml:"ID"`
-	Title             string              `json:"Title" yaml:"Title"`
-	SectionCode       string              `json:"SectionCode" yaml:"SectionCode"`
-	Description       string              `json:"Description" yaml:"Description"`
-	Children          []string            `json:"Children" yaml:"Children"`
-	Tags              map[string][]string `json:"Tags" yaml:"Tags"`
-	AutoAssign        *bool               `json:"IsBaseline" yaml:"IsBaseline"`
-	Enabled           bool                `json:"Enabled" yaml:"Enabled"`
-	TracksDriftEvents bool                `json:"TracksDriftEvents" yaml:"TracksDriftEvents"`
-	Controls          []string            `json:"Controls" yaml:"Controls"`
-}
-
 type Control struct {
 	ID              string                    `json:"id" yaml:"id"`
 	Title           string                    `json:"title" yaml:"title"`
