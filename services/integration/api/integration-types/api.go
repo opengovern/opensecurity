@@ -1,6 +1,7 @@
 package integration_types
 
 import (
+	"encoding/json"
 	"fmt"
 	hczap "github.com/zaffka/zap-to-hclog"
 	"golang.org/x/net/context"
@@ -653,9 +654,24 @@ func (a *API) ListPlugins(c echo.Context) error {
 			}
 		}
 
-		operationalStatusUpdates, err := plugin.GetStringOperationalStatusUpdates()
+		operationalStatusUpdatesStr, err := plugin.GetStringOperationalStatusUpdates()
 		if err != nil {
 			a.logger.Error("failed to get operational status updates", zap.Error(err))
+		}
+
+		var operationalStatusUpdates []models.OperationalStatusUpdate
+		for _, operationalStatusUpdateStr := range operationalStatusUpdatesStr {
+			var operationalStatusUpdate models2.OperationalStatusUpdate
+			err = json.Unmarshal([]byte(operationalStatusUpdateStr), &operationalStatusUpdate)
+			if err != nil {
+				a.logger.Error("failed to unmarshal operational status updates", zap.Error(err))
+			}
+			operationalStatusUpdates = append(operationalStatusUpdates, models.OperationalStatusUpdate{
+				Time:      operationalStatusUpdate.Time,
+				OldStatus: string(operationalStatusUpdate.OldStatus),
+				NewStatus: string(operationalStatusUpdate.NewStatus),
+				Reason:    operationalStatusUpdate.Reason,
+			})
 		}
 
 		items = append(items, models.IntegrationPlugin{
@@ -741,9 +757,24 @@ func (a *API) GetPlugin(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
 	}
 
-	operationalStatusUpdates, err := plugin.GetStringOperationalStatusUpdates()
+	operationalStatusUpdatesStr, err := plugin.GetStringOperationalStatusUpdates()
 	if err != nil {
 		a.logger.Error("failed to get operational status updates", zap.Error(err))
+	}
+
+	var operationalStatusUpdates []models.OperationalStatusUpdate
+	for _, operationalStatusUpdateStr := range operationalStatusUpdatesStr {
+		var operationalStatusUpdate models2.OperationalStatusUpdate
+		err = json.Unmarshal([]byte(operationalStatusUpdateStr), &operationalStatusUpdate)
+		if err != nil {
+			a.logger.Error("failed to unmarshal operational status updates", zap.Error(err))
+		}
+		operationalStatusUpdates = append(operationalStatusUpdates, models.OperationalStatusUpdate{
+			Time:      operationalStatusUpdate.Time,
+			OldStatus: string(operationalStatusUpdate.OldStatus),
+			NewStatus: string(operationalStatusUpdate.NewStatus),
+			Reason:    operationalStatusUpdate.Reason,
+		})
 	}
 
 	return c.JSON(http.StatusOK, models.IntegrationPlugin{
