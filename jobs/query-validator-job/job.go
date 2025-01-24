@@ -29,7 +29,6 @@ type Job struct {
 	QueryId         string               `json:"query_id"`
 	Parameters      []api.QueryParameter `json:"parameters"`
 	Query           string               `json:"query"`
-	IntegrationType []integration.Type   `json:"integration_type"`
 	PrimaryResource *string              `json:"primary_resource"`
 	ListOfResources []string             `json:"list_of_resources"`
 }
@@ -53,11 +52,12 @@ func (w *Worker) RunJob(ctx context.Context, job Job) error {
 				tableName = job.ListOfResources[0]
 			}
 			if tableName != "" {
-				queryResourceType, _, err = w.GetResourceTypeFromTableName(tableName, job.IntegrationType)
-				if err != nil {
-					w.logger.Error("Error getting resource type from table", zap.String("table_name", tableName), zap.Error(err))
-					return err
-				}
+				// Deprecated (maybe use it again later)
+				//queryResourceType, _, err = w.GetResourceTypeFromTableName(tableName, job.IntegrationType)
+				//if err != nil {
+				//	w.logger.Error("Error getting resource type from table", zap.String("table_name", tableName), zap.Error(err))
+				//	return err
+				//}
 			}
 		}
 		if queryResourceType == "" {
