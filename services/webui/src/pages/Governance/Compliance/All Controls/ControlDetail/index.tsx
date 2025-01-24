@@ -380,17 +380,17 @@ export default function ControlDetail({
                                                                 //     ),
                                                                 // },
                                                               
-                                                                // {
-                                                                //     id: '4',
-                                                                //     label: 'Frameworks',
-                                                                //     content: (
-                                                                //         <Benchmarks
-                                                                //             benchmarks={
-                                                                //                 selectedItem?.benchmarks
-                                                                //             }
-                                                                //         />
-                                                                //     ),
-                                                                // },
+                                                                {
+                                                                    id: '4',
+                                                                    label: 'Frameworks',
+                                                                    content: (
+                                                                        <Benchmarks
+                                                                            benchmarks={
+                                                                                selectedItem?.frameworks
+                                                                            }
+                                                                        />
+                                                                    ),
+                                                                },
                         ]}
                     />
                 </>

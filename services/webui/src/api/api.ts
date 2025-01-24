@@ -2844,8 +2844,8 @@ export interface PlatformEnginePkgBenchmarkApiListV3ResponseTags {
 }
 
 export interface PlatformEnginePkgControlDetailV3 {
-    benchmarks: PlatformEnginePkgControlDetailV3Benchmarks
-    
+    frameworks: PlatformEnginePkgComplianceApiBenchmark[]
+
     integrationType: string[]
     description: string
     id: string
