@@ -52,10 +52,9 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 			parameters = namedQuery.Query.Parameters
 		} else if controlQuery != nil {
 			query = controlQuery.Policy.Definition
-			for _, qp := range controlQuery.Policy.Parameters {
+			for _, qp := range controlQuery.ParameterValues {
 				parameters = append(parameters, coreApi.QueryParameter{
-					Key:      qp.Key,
-					Required: qp.Required,
+					Key: qp.Key,
 				})
 			}
 		} else {
