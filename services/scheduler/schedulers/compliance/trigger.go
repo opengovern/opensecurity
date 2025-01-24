@@ -257,7 +257,7 @@ func (s *JobScheduler) enqueueRunnersCycle() error {
 	s.logger.Info("jobs with unqueued runners", zap.Int("count", len(jobsWithUnqueuedRunners)))
 	for _, job := range jobsWithUnqueuedRunners {
 		//if job.Status == model.ComplianceJobCreated {
-		//	framework, err := s.complianceClient.GetBenchmark(&httpclient.Context{UserRole: api.AdminRole}, job.FrameworkID)
+		//	framework, err := s.complianceClient.GetFramework(&httpclient.Context{UserRole: api.AdminRole}, job.FrameworkID)
 		//	if err != nil {
 		//		s.logger.Error("error while getting framework", zap.String("frameworkID", job.FrameworkID), zap.Error(err))
 		//		continue

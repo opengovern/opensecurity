@@ -52,7 +52,7 @@ type Benchmark struct {
 	Category          string
 	DocumentURI       string
 	Enabled           bool
-	AutoAssign        bool
+	IsBaseline        bool
 	TracksDriftEvents bool
 	Metadata          pgtype.JSONB
 
@@ -74,7 +74,8 @@ func (b Benchmark) ToApi() api.Benchmark {
 		LogoURI:           b.LogoURI,
 		Category:          b.Category,
 		DocumentURI:       b.DocumentURI,
-		AutoAssign:        b.AutoAssign,
+		IsBaseline:        b.IsBaseline,
+		Enabled:           b.Enabled,
 		TracksDriftEvents: b.TracksDriftEvents,
 		CreatedAt:         b.CreatedAt,
 		UpdatedAt:         b.UpdatedAt,

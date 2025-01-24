@@ -86,11 +86,7 @@ func (db Database) ListBenchmarksFiltered(ctx context.Context, titleRegex *strin
 	tx := db.Orm.WithContext(ctx).Model(&Benchmark{}).Preload(clause.Associations)
 
 	if isBaseline != nil {
-		if *isBaseline {
-			tx = tx.Where("id ~* '^baseline_.*'")
-		} else {
-			tx = tx.Where("id !~* '^baseline_.*'")
-		}
+		tx = tx.Where("benchmarks.is_baseline = ?", *isBaseline)
 	}
 	if titleRegex != nil {
 		tx = tx.Where("title ~* ?", *titleRegex)
@@ -103,13 +99,13 @@ func (db Database) ListBenchmarksFiltered(ctx context.Context, titleRegex *strin
 	}
 	if assigned != nil {
 		if *assigned {
-			tx = tx.Where("(EXISTS (SELECT 1 FROM benchmark_assignments WHERE benchmark_assignments.benchmark_id = benchmarks.id) OR benchmarks.auto_assign = true)")
+			tx = tx.Where("(EXISTS (SELECT 1 FROM benchmark_assignments WHERE benchmark_assignments.benchmark_id = benchmarks.id) OR benchmarks.is_baseline = true)")
 		} else {
-			tx = tx.Where("(NOT EXISTS (SELECT 1 FROM benchmark_assignments WHERE benchmark_assignments.benchmark_id = benchmarks.id) OR benchmarks.auto_assign = true)")
+			tx = tx.Where("(NOT EXISTS (SELECT 1 FROM benchmark_assignments WHERE benchmark_assignments.benchmark_id = benchmarks.id) OR benchmarks.is_baseline = true)")
 		}
 	}
 	if len(integrationIds) > 0 {
-		tx = tx.Where("(EXISTS (SELECT 1 FROM benchmark_assignments WHERE benchmark_assignments.integration_id IN ? AND benchmark_assignments.benchmark_id = benchmarks.id) OR benchmarks.auto_assign = true)",
+		tx = tx.Where("(EXISTS (SELECT 1 FROM benchmark_assignments WHERE benchmark_assignments.integration_id IN ? AND benchmark_assignments.benchmark_id = benchmarks.id) OR benchmarks.is_baseline = true)",
 			integrationIds)
 	}
 
@@ -191,10 +187,10 @@ func (db Database) ListRootBenchmarksWithSubtreeControls(ctx context.Context, ta
 	return benchmarks, nil
 }
 
-func (db Database) GetBenchmark(ctx context.Context, benchmarkId string) (*Benchmark, error) {
+func (db Database) GetFramework(ctx context.Context, frameworkId string) (*Benchmark, error) {
 	var s Benchmark
 	tx := db.Orm.WithContext(ctx).Model(&Benchmark{}).Preload(clause.Associations).
-		Where("id = ?", benchmarkId).
+		Where("id = ?", frameworkId).
 		First(&s)
 
 	if tx.Error != nil {
@@ -207,10 +203,10 @@ func (db Database) GetBenchmark(ctx context.Context, benchmarkId string) (*Bench
 	return &s, nil
 }
 
-func (db Database) GetBenchmarks(ctx context.Context, benchmarkIds []string) ([]Benchmark, error) {
+func (db Database) GetFrameworks(ctx context.Context, frameworkIds []string) ([]Benchmark, error) {
 	var s []Benchmark
 	tx := db.Orm.WithContext(ctx).Model(&Benchmark{}).Preload(clause.Associations).
-		Where("id IN ?", benchmarkIds).
+		Where("id IN ?", frameworkIds).
 		First(&s)
 
 	if tx.Error != nil {
@@ -223,10 +219,10 @@ func (db Database) GetBenchmarks(ctx context.Context, benchmarkIds []string) ([]
 	return s, nil
 }
 
-func (db Database) GetBenchmarkWithControlQueries(ctx context.Context, benchmarkId string) (*Benchmark, error) {
+func (db Database) GetFrameworkWithControlQueries(ctx context.Context, frameworkId string) (*Benchmark, error) {
 	var s Benchmark
 	tx := db.Orm.WithContext(ctx).Model(&Benchmark{}).Preload(clause.Associations).Preload("Controls").Preload("Controls.Policy").
-		Where("id = ?", benchmarkId).
+		Where("id = ?", frameworkId).
 		First(&s)
 
 	if tx.Error != nil {
@@ -239,7 +235,7 @@ func (db Database) GetBenchmarkWithControlQueries(ctx context.Context, benchmark
 	return &s, nil
 }
 
-func (db Database) GetBenchmarkBare(ctx context.Context, benchmarkId string) (*Benchmark, error) {
+func (db Database) GetFrameworkBare(ctx context.Context, benchmarkId string) (*Benchmark, error) {
 	var s Benchmark
 	tx := db.Orm.WithContext(ctx).Model(&Benchmark{}).Preload("Tags").
 		Where("id = ?", benchmarkId).
@@ -255,7 +251,7 @@ func (db Database) GetBenchmarkBare(ctx context.Context, benchmarkId string) (*B
 	return &s, nil
 }
 
-func (db Database) GetBenchmarksBare(ctx context.Context, benchmarkIds []string) ([]Benchmark, error) {
+func (db Database) GetFrameworksBare(ctx context.Context, benchmarkIds []string) ([]Benchmark, error) {
 	var s []Benchmark
 	tx := db.Orm.WithContext(ctx).Model(&Benchmark{}).Preload("Tags").
 		Where("id in ?", benchmarkIds).
@@ -271,15 +267,23 @@ func (db Database) GetBenchmarksBare(ctx context.Context, benchmarkIds []string)
 	return s, nil
 }
 
-func (db Database) SetBenchmarkAutoAssign(ctx context.Context, benchmarkId string, autoAssign bool) error {
-	tx := db.Orm.WithContext(ctx).Model(&Benchmark{}).Where("id = ?", benchmarkId).Update("auto_assign", autoAssign)
+func (db Database) SetFrameworkAutoAssign(ctx context.Context, benchmarkId string, isBaseline bool) error {
+	tx := db.Orm.WithContext(ctx).Model(&Benchmark{}).Where("id = ?", benchmarkId).Update("is_baseline", isBaseline)
 	if tx.Error != nil {
 		return tx.Error
 	}
 	return nil
 }
 
-func (db Database) ListDistinctRootBenchmarksFromControlIds(ctx context.Context, controlIds []string) ([]Benchmark, error) {
+func (db Database) SetFrameworkEnabled(ctx context.Context, benchmarkId string, enabled bool) error {
+	tx := db.Orm.WithContext(ctx).Model(&Benchmark{}).Where("id = ?", benchmarkId).Update("enabled", enabled)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	return nil
+}
+
+func (db Database) ListDistinctRootFrameworksFromControlIds(ctx context.Context, controlIds []string) ([]Benchmark, error) {
 	s := make(map[string]Benchmark)
 
 	findControls := make(map[string]struct{})
@@ -325,7 +329,7 @@ func (db Database) GetPolicy(ctx context.Context, policyID string) (*Policy, err
 	return &s, nil
 }
 
-func (db Database) GetBenchmarksTitle(ctx context.Context, ds []string) (map[string]string, error) {
+func (db Database) GetFrameworksTitle(ctx context.Context, ds []string) (map[string]string, error) {
 	var bs []Benchmark
 	tx := db.Orm.WithContext(ctx).Model(&Benchmark{}).
 		Where("id in ?", ds).
@@ -389,7 +393,7 @@ func (db Database) GetControl(ctx context.Context, id string) (*Control, error) 
 	return &s, nil
 }
 
-func (db Database) GetBenchmarkParent(ctx context.Context, benchmarkID string) (string, error) {
+func (db Database) GetFrameworkParent(ctx context.Context, benchmarkID string) (string, error) {
 	var benchmarkIDs string
 
 	tx := db.Orm.WithContext(ctx).
@@ -405,7 +409,7 @@ func (db Database) GetBenchmarkParent(ctx context.Context, benchmarkID string) (
 	return benchmarkIDs, nil
 }
 
-func (db Database) GetBenchmarkIdsByControlID(ctx context.Context, controlID string) ([]string, error) {
+func (db Database) GetFrameworkIdsByControlID(ctx context.Context, controlID string) ([]string, error) {
 	var benchmarkIDs []string
 
 	tx := db.Orm.WithContext(ctx).
@@ -421,7 +425,7 @@ func (db Database) GetBenchmarkIdsByControlID(ctx context.Context, controlID str
 	return benchmarkIDs, nil
 }
 
-func (db Database) ListControlsByBenchmarkID(ctx context.Context, benchmarkID string) ([]Control, error) {
+func (db Database) ListControlsByFrameworkID(ctx context.Context, benchmarkID string) ([]Control, error) {
 	var s []Control
 	tx := db.Orm.WithContext(ctx).Model(&Control{}).
 		Preload("Tags").
@@ -605,7 +609,7 @@ GROUP BY key;
 	return results, nil
 }
 
-func (db Database) GetBenchmarksTags() ([]BenchmarkTagsResult, error) {
+func (db Database) GetFrameworksTags() ([]BenchmarkTagsResult, error) {
 	var results []BenchmarkTagsResult
 
 	// Execute the raw SQL query
@@ -781,9 +785,12 @@ func (db Database) GetBenchmarkAssignmentByIds(ctx context.Context, benchmarkId 
 		BenchmarkId:        benchmarkId,
 		IntegrationID:      integrationId,
 		ResourceCollection: resourceCollectionId,
-	}).Scan(&s)
+	}).Find(&s)
 
 	if tx.Error != nil {
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, tx.Error
 	}
 
