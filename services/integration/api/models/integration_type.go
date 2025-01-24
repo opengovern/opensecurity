@@ -45,7 +45,7 @@ type GetResourceTypesByLabelsRequest struct {
 }
 
 type GetResourceTypesByLabelsResponse struct {
-	ResourceTypes map[string]*ResourceTypeConfiguration
+	ResourceTypes []interfaces.ResourceTypeConfiguration
 }
 
 type ListTablesResponse struct {

@@ -10,6 +10,7 @@ type ResourceTypeConfiguration struct {
 	IntegrationType integration.Type `json:"integration_type"`
 	Description     string           `json:"description"`
 	Params          []Param          `json:"params"`
+	Table 			string			 `json:"table"`
 }
 
 func ApiResourceTypeConfiguration(configuration interfaces.ResourceTypeConfiguration) ResourceTypeConfiguration {
@@ -23,6 +24,7 @@ func ApiResourceTypeConfiguration(configuration interfaces.ResourceTypeConfigura
 		IntegrationType: configuration.IntegrationType,
 		Description:     configuration.Description,
 		Params:          params,
+		Table:			 configuration.Table,
 	}
 }
 

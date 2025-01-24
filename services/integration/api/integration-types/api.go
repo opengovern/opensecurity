@@ -229,11 +229,9 @@ func (a *API) GetResourceTypesByLabels(c echo.Context) error {
 			return echo.NewHTTPError(500, err.Error())
 		}
 		res := models.GetResourceTypesByLabelsResponse{
-			ResourceTypes: make(map[string]*models.ResourceTypeConfiguration),
+			ResourceTypes:rts,
 		}
-		for k, v := range rts {
-			res.ResourceTypes[k] = utils.GetPointer(models.ApiResourceTypeConfiguration(v))
-		}
+		
 		return c.JSON(200, res)
 	} else {
 		return echo.NewHTTPError(404, "integration type not found")

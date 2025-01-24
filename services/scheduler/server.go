@@ -407,8 +407,8 @@ func (h HttpServer) TriggerPerConnectionDescribeJob(ctx echo.Context) error {
 				h.Scheduler.logger.Error("failed to get resource types by labels", zap.Error(err))
 				return echo.NewHTTPError(http.StatusInternalServerError, "failed to get resource types by labels")
 			}
-			for rt, _ := range resourceTypesMap {
-				resourceTypes = append(resourceTypes, rt)
+			for _, rt := range resourceTypesMap {
+				resourceTypes = append(resourceTypes, rt.Name)
 			}
 		}
 
@@ -480,8 +480,8 @@ func (h HttpServer) TriggerDescribeJob(ctx echo.Context) error {
 				h.Scheduler.logger.Error("failed to get resource types by labels", zap.Error(err))
 				return echo.NewHTTPError(http.StatusInternalServerError, "failed to get resource types by labels")
 			}
-			for rt, _ := range resourceTypesMap {
-				rtToDescribe = append(rtToDescribe, rt)
+			for _, rt := range resourceTypesMap {
+				rtToDescribe = append(rtToDescribe, rt.Name)
 			}
 		}
 
@@ -684,10 +684,10 @@ func (h HttpServer) getReEvaluateParams(benchmarkID string, connectionIDs, contr
 			return nil, nil, fmt.Errorf("failed to get resource types by labels")
 		}
 
-		for resourceType, _ := range possibleRt {
+		for _, resourceType := range possibleRt {
 			describeJobs = append(describeJobs, ReEvaluateDescribeJob{
 				Integration:  integration,
-				ResourceType: resourceType,
+				ResourceType: resourceType.Name,
 			})
 		}
 	}
@@ -1601,9 +1601,9 @@ func (h HttpServer) RunDiscovery(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get resource types by labels")
 		}
 		var possibleRt []api.ResourceTypeRunDiscoveryRequest
-		for rt, _ := range possibleRtMap {
+		for _,rt := range possibleRtMap {
 			possibleRt = append(possibleRt, api.ResourceTypeRunDiscoveryRequest{
-				ResourceType: rt,
+				ResourceType: rt.Name,
 			})
 		}
 		if len(rtToDescribe) == 0 {

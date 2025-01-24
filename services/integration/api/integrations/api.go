@@ -3,6 +3,15 @@ package integrations
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/goccy/go-yaml"
 	"github.com/google/uuid"
@@ -22,18 +31,10 @@ import (
 	models2 "github.com/opengovern/opencomply/services/integration/models"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
-	"io/ioutil"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"net/http"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sort"
-	"strconv"
-	"strings"
-	"sync"
-	"time"
 )
 
 type API struct {
@@ -1675,12 +1676,12 @@ func (h *API) ListIntegrationTypeResourceTypes(c echo.Context) error {
 			h.logger.Error("failed to list integration type resource types", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to list integration type resource types")
 		}
-		for rt, rtConfig := range resourceTypes {
+		for _, rtConfig := range resourceTypes {
 			if !rtConfig.IsEmpty() {
 				items = append(items, models.ApiResourceTypeConfiguration(rtConfig))
 			} else {
 				items = append(items, models.ResourceTypeConfiguration{
-					Name:            rt,
+					Name:            rtConfig.Name,
 					IntegrationType: h.typesManager.ParseType(integrationType),
 				})
 			}
@@ -1729,18 +1730,17 @@ func (h *API) GetIntegrationTypeResourceType(c echo.Context) error {
 			h.logger.Error("failed to list integration type resource types", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to list integration type resource types")
 		}
-		if rt, ok := resourceTypes[resourceType]; ok {
-			if !rt.IsEmpty() {
-				return c.JSON(http.StatusOK, models.ApiResourceTypeConfiguration(rt))
-			} else {
-				return c.JSON(http.StatusOK, models.ResourceTypeConfiguration{
-					Name:            resourceType,
-					IntegrationType: h.typesManager.ParseType(integrationType),
-				})
+		for _, rtConfig := range resourceTypes {
+			if rtConfig.Name == resourceType {
+				return c.JSON(http.StatusOK, models.ApiResourceTypeConfiguration(rtConfig))
 			}
-		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, "resource type not found")
 		}
+		return echo.NewHTTPError(http.StatusInternalServerError, "resource type not found")
+
+
+
+
+		
 	} else {
 		return echo.NewHTTPError(http.StatusInternalServerError, "integration type resource types not found")
 	}

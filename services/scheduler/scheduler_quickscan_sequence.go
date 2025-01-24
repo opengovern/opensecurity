@@ -256,8 +256,8 @@ func (s *DescribeDependencies) getIntegrationTypesValidResourceTypes(integration
 	if err != nil {
 		return nil, err
 	}
-	for resourceType, _ := range resourceTypes {
-		resourceTypesMap[resourceType] = true
+	for _, resourceType := range resourceTypes {
+		resourceTypesMap[resourceType.Name] = true
 	}
 	return resourceTypesMap, nil
 }
