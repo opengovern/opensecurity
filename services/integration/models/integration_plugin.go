@@ -54,7 +54,7 @@ type IntegrationPlugin struct {
 	URL                      string
 	DescriberURL             string
 	DescriberTag             string
-	OperationalStatusUpdates pgtype.TextArray
+	OperationalStatusUpdates pgtype.TextArray `gorm:"type:text[]"`
 	Tags                     pgtype.JSONB
 }
 
