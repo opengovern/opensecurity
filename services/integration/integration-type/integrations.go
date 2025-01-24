@@ -55,9 +55,8 @@ type IntegrationTypeManager struct {
 	kubeClientset *kubernetes.Clientset
 	database      db.Database
 
-	Clients  map[integration.Type]*plugin.Client
-	retryMap map[integration.Type]int
-	// mutex
+	Clients    map[integration.Type]*plugin.Client
+	retryMap   map[integration.Type]int
 	PingLocks  map[integration.Type]*sync.Mutex
 	maxRetries int
 }
@@ -83,6 +82,10 @@ func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integra
 	if err != nil {
 		logger.Error("failed to fetch integration types", zap.Error(err))
 		return nil
+	}
+	var typesMap = make(map[integration.Type]models.IntegrationPlugin)
+	for _, t := range types {
+		typesMap[t.IntegrationType] = t
 	}
 
 	// create directory for plugins if not exists
@@ -177,6 +180,34 @@ func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integra
 			logger.Error("failed to enable integration type", zap.Error(err))
 			continue
 		}
+
+		pType, ok := typesMap[integrationType]
+		if !ok {
+			logger.Error("could not find the plugin from the type map", zap.String("plugin", integrationType.String()))
+			continue
+		}
+		if len(pType.OperationalStatusUpdates) == 0 {
+			update := models.OperationalStatusUpdate{
+				Time:      time.Now(),
+				OldStatus: "",
+				NewStatus: models.IntegrationPluginOperationalStatusEnabled,
+				Reason:    "Successfully enabled",
+			}
+			updateJson, err := json.Marshal(update)
+			if err != nil {
+				logger.Error("failed to marshal operational status update", zap.Error(err), zap.String("integration_type", integrationType.String()))
+				continue
+			}
+			pType.OperationalStatusUpdates = append(pType.OperationalStatusUpdates, string(updateJson))
+			err = integrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", pType).Updates(map[string]any{
+				"operational_status_updates": pq.StringArray(pType.OperationalStatusUpdates),
+			}).Error
+			if err != nil {
+				logger.Error("failed to update integration plugin initial operational status", zap.Error(err), zap.String("integration_type", integrationType.String()))
+				continue
+			}
+		}
+
 	}
 
 	go func() {
