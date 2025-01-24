@@ -147,7 +147,7 @@ type GetControlDetailsResponse struct {
 	Description     string                  `json:"description"`
 	Severity        string                  `json:"severity"`
 	ParameterValues []ControlParameterValue `json:"parameter_values"`
-	Frameworks      []string                `json:"frameworks"`
+	Frameworks      []Benchmark             `json:"frameworks"`
 	HasInlinePolicy bool                    `json:"has_inline_policy"`
 	Policy          struct {
 		ID              string   `json:"id"`
