@@ -114,7 +114,7 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 	v3.POST("/controls", httpserver2.AuthorizeHandler(h.ListControlsFiltered, authApi.ViewerRole))
 	v3.GET("/parameters/controls", httpserver2.AuthorizeHandler(h.GetParametersControls, authApi.ViewerRole))
 	v3.GET("/controls/filters", httpserver2.AuthorizeHandler(h.ListControlsFilters, authApi.ViewerRole))
-	v3.GET("/control/:control_id", httpserver2.AuthorizeHandler(h.GetControlDetails, authApi.ViewerRole))
+	v3.GET("/controls/:control_id", httpserver2.AuthorizeHandler(h.GetControlDetails, authApi.ViewerRole))
 
 	v3.GET("/benchmarks/:benchmark_id/nested", httpserver2.AuthorizeHandler(h.ListBenchmarksNestedForBenchmark, authApi.ViewerRole))
 
@@ -2570,18 +2570,11 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 //	@Produce	json
 //	@Param		control_id	path		string	true	"Control ID"
 //	@Success	200			{object}	api.GetControlDetailsResponse
-//	@Router		/compliance/api/v3/control/{control_id} [get]
+//	@Router		/compliance/api/v3/controls/{control_id} [get]
 func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 	ctx := echoCtx.Request().Context()
 
 	controlId := echoCtx.Param("control_id")
-
-	var showReferences bool
-	showReferencesString := echoCtx.QueryParam("showReferences")
-	showReferences, err := strconv.ParseBool(showReferencesString)
-	if err != nil {
-		showReferences = false
-	}
 
 	control, err := h.db.GetControl(ctx, controlId)
 	if err != nil {
@@ -2600,68 +2593,63 @@ func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 		integrationTypes = append(integrationTypes, integration.Type(t))
 	}
 
+	frameworks, err := h.db.GetFrameworkIdsByControlID(ctx, control.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	queryParamValues, err := h.coreClient.ListQueryParameters(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole})
+	if err != nil {
+		h.logger.Error("failed to get query parameters", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get query parameters values")
+	}
+
+	queryParamMap := make(map[string]string)
+	for _, qp := range queryParamValues.Items {
+		if _, ok := queryParamMap[qp.Key]; !ok {
+			queryParamMap[qp.Key] = qp.Value
+		} else if qp.ControlID == control.ID {
+			queryParamMap[qp.Key] = qp.Value
+		}
+	}
+
+	var parameterValues []api.ControlParameterValue
+	for _, p := range control.Policy.Parameters {
+		if v, ok := queryParamMap[p.Key]; ok {
+			parameterValues = append(parameterValues, api.ControlParameterValue{
+				Key:            p.Key,
+				EffectiveValue: v,
+			})
+		} else {
+			parameterValues = append(parameterValues, api.ControlParameterValue{
+				Key:            p.Key,
+				EffectiveValue: "",
+			})
+		}
+	}
+
 	response := api.GetControlDetailsResponse{
 		ID:              control.ID,
 		Title:           control.Title,
 		Description:     control.Description,
-		IntegrationType: integrationTypes,
 		Severity:        control.Severity.String(),
+		Frameworks:      frameworks,
+		HasInlinePolicy: !control.ExternalPolicy,
+		ParameterValues: parameterValues,
 		Policy: struct {
-			Type            string               `json:"type"`
-			Reference       *string              `json:"reference"`
-			Language        string               `json:"language"`
-			Definition      string               `json:"definition"`
-			PrimaryResource string               `json:"primaryResource"`
-			ListOfResources []string             `json:"listOfResources"`
-			Parameters      []api.QueryParameter `json:"parameters"`
+			ID              string   `json:"id"`
+			Language        string   `json:"language"`
+			Definition      string   `json:"definition"`
+			PrimaryResource string   `json:"primary_resource"`
+			ListOfResources []string `json:"list_of_resources"`
 		}{
+			ID:              string(control.Policy.ID),
 			Language:        string(control.Policy.Language),
 			Definition:      control.Policy.Definition,
 			PrimaryResource: control.Policy.PrimaryResource,
 			ListOfResources: control.Policy.ListOfResources,
-			Parameters:      parameters,
 		},
 		Tags: model.TrimPrivateTags(control.GetTagsMap()),
-	}
-
-	if control.ExternalPolicy {
-		response.Policy.Type = "external"
-		response.Policy.Reference = &control.Policy.ID
-	} else {
-		response.Policy.Type = "inline"
-	}
-
-	if showReferences {
-		benchmarks, err := h.db.GetFrameworkIdsByControlID(ctx, control.ID)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-		}
-
-		benchmarkPathsMap := make(map[string]bool)
-		rootBenchmarksMap := make(map[string]bool)
-		var benchmarkPaths, rootBenchmarks []string
-		for _, b := range benchmarks {
-			path, err := h.getBenchmarkPath(ctx, b)
-			if err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-			}
-			benchmarkPathsMap[path] = true
-			root := strings.Split(path, "/")[0]
-			rootBenchmarksMap[root] = true
-		}
-		for k, _ := range benchmarkPathsMap {
-			benchmarkPaths = append(benchmarkPaths, k)
-		}
-		for k, _ := range rootBenchmarksMap {
-			rootBenchmarks = append(rootBenchmarks, k)
-		}
-		response.Benchmarks = &struct {
-			Roots    []string `json:"roots"`
-			FullPath []string `json:"fullPath"`
-		}{
-			Roots:    rootBenchmarks,
-			FullPath: benchmarkPaths,
-		}
 	}
 
 	return echoCtx.JSON(http.StatusOK, response)

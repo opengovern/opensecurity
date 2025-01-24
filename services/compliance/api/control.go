@@ -136,26 +136,27 @@ type BenchmarkTagsResult struct {
 	UniqueValues []string
 }
 
+type ControlParameterValue struct {
+	Key            string `json:"key"`
+	EffectiveValue string `json:"effective_value"`
+}
+
 type GetControlDetailsResponse struct {
-	ID              string             `json:"id"`
-	Title           string             `json:"title"`
-	Description     string             `json:"description"`
-	IntegrationType []integration.Type `json:"integrationType"`
-	Severity        string             `json:"severity"`
+	ID              string                  `json:"id"`
+	Title           string                  `json:"title"`
+	Description     string                  `json:"description"`
+	Severity        string                  `json:"severity"`
+	ParameterValues []ControlParameterValue `json:"parameter_values"`
+	Frameworks      []string                `json:"frameworks"`
+	HasInlinePolicy bool                    `json:"has_inline_policy"`
 	Policy          struct {
-		Type            string           `json:"type"`      // external/inline
-		Reference       *string          `json:"reference"` // null if inline
-		Language        string           `json:"language"`
-		Definition      string           `json:"definition"`
-		PrimaryResource string           `json:"primaryResource"`
-		ListOfResources []string         `json:"listOfResources"`
-		Parameters      []QueryParameter `json:"parameters"`
+		ID              string   `json:"id"`
+		Language        string   `json:"language"`
+		Definition      string   `json:"definition"`
+		PrimaryResource string   `json:"primary_resource"`
+		ListOfResources []string `json:"list_of_resources"`
 	} `json:"policy"`
-	Tags       map[string][]string `json:"tags"`
-	Benchmarks *struct {
-		Roots    []string `json:"roots"`
-		FullPath []string `json:"fullPath"`
-	} `json:"benchmarks"`
+	Tags map[string][]string `json:"tags"`
 }
 
 type ListControlsFiltersResponse struct {
