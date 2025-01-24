@@ -15,7 +15,7 @@ import (
 )
 
 func (h *HttpHandler) getBenchmarkTree(ctx context.Context, benchmarkId string) (*api.NestedBenchmark, error) {
-	b, err := h.db.GetBenchmark(ctx, benchmarkId)
+	b, err := h.db.GetFramework(ctx, benchmarkId)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (h *HttpHandler) getBenchmarkTree(ctx context.Context, benchmarkId string) 
 		LogoURI:           b.LogoURI,
 		Category:          b.Category,
 		DocumentURI:       b.DocumentURI,
-		AutoAssign:        b.AutoAssign,
+		AutoAssign:        b.IsBaseline,
 		TracksDriftEvents: b.TracksDriftEvents,
 		CreatedAt:         b.CreatedAt,
 		UpdatedAt:         b.UpdatedAt,
@@ -57,7 +57,7 @@ func (h *HttpHandler) getBenchmarkTree(ctx context.Context, benchmarkId string) 
 }
 
 func (h *HttpHandler) getBenchmarkPath(ctx context.Context, benchmarkId string) (string, error) {
-	parent, err := h.db.GetBenchmarkParent(ctx, benchmarkId)
+	parent, err := h.db.GetFrameworkParent(ctx, benchmarkId)
 	if err != nil {
 		return "", err
 	}
@@ -117,7 +117,7 @@ type BenchmarkControlsCache struct {
 func (h *HttpHandler) getControlsUnderBenchmark(ctx context.Context, benchmarkId string, benchmarksCache map[string]BenchmarkControlsCache) (map[string]bool, error) {
 	controls := make(map[string]bool)
 
-	benchmark, err := h.db.GetBenchmarkWithControlQueries(ctx, benchmarkId)
+	benchmark, err := h.db.GetFrameworkWithControlQueries(ctx, benchmarkId)
 	if err != nil {
 		h.logger.Error("failed to fetch benchmarks", zap.Error(err))
 		return nil, err
@@ -151,7 +151,7 @@ type BenchmarkTablesCache struct {
 
 func (h *HttpHandler) getChildBenchmarksWithDetails(ctx context.Context, benchmarkId string, req api.GetBenchmarkDetailsRequest) ([]api.GetBenchmarkDetailsChildren, error) {
 	var benchmarks []api.GetBenchmarkDetailsChildren
-	benchmark, err := h.db.GetBenchmark(ctx, benchmarkId)
+	benchmark, err := h.db.GetFramework(ctx, benchmarkId)
 	if err != nil {
 		h.logger.Error("failed to fetch benchmarks", zap.Error(err))
 		return nil, err
@@ -216,7 +216,7 @@ func (h *HttpHandler) getChildBenchmarksWithDetails(ctx context.Context, benchma
 
 func (h *HttpHandler) getChildBenchmarks(ctx context.Context, benchmarkId string) ([]string, error) {
 	var benchmarks []string
-	benchmark, err := h.db.GetBenchmark(ctx, benchmarkId)
+	benchmark, err := h.db.GetFramework(ctx, benchmarkId)
 	if err != nil {
 		h.logger.Error("failed to fetch benchmarks", zap.Error(err))
 		return nil, err

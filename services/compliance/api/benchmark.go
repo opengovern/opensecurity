@@ -22,14 +22,15 @@ type Benchmark struct {
 	LogoURI           string              `json:"logoURI"`                                                                                                                                                                           // Benchmark logo URI
 	Category          string              `json:"category"`                                                                                                                                                                          // Benchmark category
 	DocumentURI       string              `json:"documentURI" example:"benchmarks/azure_cis_v140.md"`                                                                                                                                // Benchmark document URI
-	AutoAssign        bool                `json:"autoAssign" example:"true"`                                                                                                                                                         // Whether the benchmark is auto assigned or not
-	TracksDriftEvents bool                `json:"tracksDriftEvents" example:"true"`                                                                                                                                                  // Whether the benchmark tracks drift events or not
-	Tags              map[string][]string `json:"tags" `                                                                                                                                                                             // Benchmark tags
-	IntegrationTypes  []string            `json:"integrationTypes"`                                                                                                                                                                  // Benchmark connectors
-	Children          []string            `json:"children"`                                                                                                                                                                          // Benchmark children
-	Controls          []string            `json:"controls"`                                                                                                                                                                          // Benchmark controls
-	CreatedAt         time.Time           `json:"createdAt"`                                                                                                                                                                         // Benchmark creation date
-	UpdatedAt         time.Time           `json:"updatedAt"`                                                                                                                                                                         // Benchmark last update date
+	IsBaseline        bool                `json:"isBaseline" example:"true"`                                                                                                                                                         // Whether the benchmark is auto assigned or not
+	Enabled           bool                `json:"enabled" example:"true"`
+	TracksDriftEvents bool                `json:"tracksDriftEvents" example:"true"` // Whether the benchmark tracks drift events or not
+	Tags              map[string][]string `json:"tags" `                            // Benchmark tags
+	IntegrationTypes  []string            `json:"integrationTypes"`                 // Benchmark connectors
+	Children          []string            `json:"children"`                         // Benchmark children
+	Controls          []string            `json:"controls"`                         // Benchmark controls
+	CreatedAt         time.Time           `json:"createdAt"`                        // Benchmark creation date
+	UpdatedAt         time.Time           `json:"updatedAt"`                        // Benchmark last update date
 }
 
 type NestedBenchmark struct {
@@ -225,20 +226,16 @@ type GetFrameworkListRequest struct {
 	PerPage                 *int64                          `json:"per_page"`
 }
 
-
 type GetFrameworkSummaryListRequest struct {
-	TitleRegex              *string                         `json:"title_regex"`
-	IntegrationTypes        []string                        `json:"integration_types"`
-	IsBaseline              *bool                           `json:"is_baseline"`
-	SortBy                  string                          `json:"sort_by"`
-	Cursor                  *int64                          `json:"cursor"`
-	PerPage                 *int64                          `json:"per_page"`
-	Root                    *bool                           `json:"root"`
-	Assigned                *bool                           `json:"assigned"`
+	TitleRegex       *string  `json:"title_regex"`
+	IntegrationTypes []string `json:"integration_types"`
+	IsBaseline       *bool    `json:"is_baseline"`
+	SortBy           string   `json:"sort_by"`
+	Cursor           *int64   `json:"cursor"`
+	PerPage          *int64   `json:"per_page"`
+	Root             *bool    `json:"root"`
+	Assigned         *bool    `json:"assigned"`
 }
-
-
-
 
 type GetBenchmarkListMetadata struct {
 	ID                  string              `json:"id"`
@@ -256,8 +253,6 @@ type GetBenchmarkListMetadata struct {
 	UpdatedAt           time.Time           `json:"updated_at"`
 }
 
-
-
 type GetBenchmarkListItem struct {
 	Benchmark     GetBenchmarkListMetadata `json:"benchmark"`
 	IncidentCount int                      `json:"incident_count"`
@@ -269,13 +264,13 @@ type GetBenchmarkListResponse struct {
 }
 
 type GetBenchmarkListSummaryMetadata struct {
-	ID                  string              `json:"id"`
-	Title               string              `json:"title"`
-	Description         string              `json:"description"`
-	IntegrationType     []string            `json:"connectors"`
-	Enabled             bool                `json:"enabled"`
-	CreatedAt           time.Time           `json:"created_at"`
-	UpdatedAt           time.Time           `json:"updated_at"`
+	ID                         string                             `json:"id"`
+	Title                      string                             `json:"title"`
+	Description                string                             `json:"description"`
+	IntegrationType            []string                           `json:"connectors"`
+	Enabled                    bool                               `json:"enabled"`
+	CreatedAt                  time.Time                          `json:"created_at"`
+	UpdatedAt                  time.Time                          `json:"updated_at"`
 	ComplianceScore            float64                            `json:"compliance_score"`
 	SeveritySummaryByControl   BenchmarkControlsSeverityStatusV2  `json:"severity_summary_by_control"`
 	SeveritySummaryByResource  BenchmarkResourcesSeverityStatusV2 `json:"severity_summary_by_resource"`
@@ -287,11 +282,9 @@ type GetBenchmarkListSummaryMetadata struct {
 	LastJobStatus              string                             `json:"last_job_status"`
 }
 
-
-
 type GetBenchmarkSummaryListResponse struct {
 	Items      []GetBenchmarkListSummaryMetadata `json:"items"`
-	TotalCount int                    `json:"total_count"`
+	TotalCount int                               `json:"total_count"`
 }
 
 type GetBenchmarkAssignmentsResponse struct {

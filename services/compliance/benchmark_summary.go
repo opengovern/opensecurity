@@ -13,7 +13,7 @@ func (h *HttpHandler) GetBenchmarkTreeIDs(ctx context.Context, rootID string) ([
 	_, span2 := tracer.Start(ctx, "new_GetBenchmark", trace.WithSpanKind(trace.SpanKindServer))
 	span2.SetName("new_GetBenchmark")
 	h.logger.Info(fmt.Sprintf("RootId: %s", rootID))
-	root, err := h.db.GetBenchmark(ctx, rootID)
+	root, err := h.db.GetFramework(ctx, rootID)
 	if err != nil {
 		return nil, err
 	}

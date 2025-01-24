@@ -31,7 +31,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 	s.logger.Info("Fetch Created Policy Runner Jobs", zap.Any("Jobs Count", len(jobs)))
 	for _, job := range jobs {
 		//if job.Status == model.ComplianceJobCreated {
-		//	framework, err := s.complianceClient.GetBenchmark(&httpclient.Context{UserRole: api.AdminRole}, job.FrameworkID)
+		//	framework, err := s.complianceClient.GetFramework(&httpclient.Context{UserRole: api.AdminRole}, job.FrameworkID)
 		//	if err != nil {
 		//		s.logger.Error("error while getting framework", zap.String("frameworkID", job.FrameworkID), zap.Error(err))
 		//		continue

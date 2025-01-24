@@ -19,26 +19,13 @@ type Framework struct {
 	Description string `json:"description" yaml:"description"`
 	SectionCode string `json:"section-code" yaml:"section-code"`
 	Defaults    *struct {
-		AutoAssign        *bool `json:"auto-assign" yaml:"auto-assign"`
+		IsBaseline        *bool `json:"is-baseline" yaml:"is-baseline"`
 		Enabled           bool  `json:"enabled" yaml:"enabled"`
 		TracksDriftEvents bool  `json:"tracks-drift-events" yaml:"tracks-drift-events"`
 	} `json:"defaults"`
 	Tags         map[string][]string `json:"tags" yaml:"tags"`
 	ControlGroup []Framework         `json:"control-group" yaml:"control-group"`
 	Controls     []string            `json:"controls" yaml:"controls"`
-}
-
-type Benchmark struct {
-	ID                string              `json:"ID" yaml:"ID"`
-	Title             string              `json:"Title" yaml:"Title"`
-	SectionCode       string              `json:"SectionCode" yaml:"SectionCode"`
-	Description       string              `json:"Description" yaml:"Description"`
-	Children          []string            `json:"Children" yaml:"Children"`
-	Tags              map[string][]string `json:"Tags" yaml:"Tags"`
-	AutoAssign        *bool               `json:"AutoAssign" yaml:"AutoAssign"`
-	Enabled           bool                `json:"Enabled" yaml:"Enabled"`
-	TracksDriftEvents bool                `json:"TracksDriftEvents" yaml:"TracksDriftEvents"`
-	Controls          []string            `json:"Controls" yaml:"Controls"`
 }
 
 type Control struct {

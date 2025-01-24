@@ -91,6 +91,12 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 	resourceFindings := v1.Group("/resource_findings")
 	resourceFindings.POST("", httpserver2.AuthorizeHandler(h.ListResourceFindings, authApi.ViewerRole))
 
+	complianceFrameworks := v1.Group("/compliance-frameworks")
+	complianceFrameworks.GET("/:framework-id/assignments", httpserver2.AuthorizeHandler(h.ListFrameworkAssignments, authApi.ViewerRole))
+	complianceFrameworks.PUT("/:framework-id/assignments/:integration-id", httpserver2.AuthorizeHandler(h.AddAssignment, authApi.EditorRole))
+	complianceFrameworks.DELETE("/:framework-id/assignments/:integration-id", httpserver2.AuthorizeHandler(h.DeleteAssignment, authApi.EditorRole))
+	complianceFrameworks.PUT("/:framework-id", httpserver2.AuthorizeHandler(h.UpdateFrameworkSetting, authApi.EditorRole))
+
 	v3 := e.Group("/api/v3")
 
 	v3.GET("/policies", httpserver2.AuthorizeHandler(h.ListPolicies, authApi.ViewerRole))
@@ -599,7 +605,7 @@ func (h *HttpHandler) GetSingleComplianceResultByComplianceResultID(echoCtx echo
 	}
 	apiFinding.ControlTitle = control.Title
 
-	parentBenchmarks, err := h.db.GetBenchmarksBare(ctx, finding.ParentBenchmarks)
+	parentBenchmarks, err := h.db.GetFrameworksBare(ctx, finding.ParentBenchmarks)
 	if err != nil {
 		h.logger.Error("failed to get parent benchmarks", zap.Error(err), zap.Strings("parent_benchmarks", finding.ParentBenchmarks))
 		return err
@@ -1831,7 +1837,7 @@ func (h *HttpHandler) GetBenchmarkSummary(echoCtx echo.Context) error {
 	span1.SetName("new_GetBenchmark")
 	defer span1.End()
 
-	benchmark, err := h.db.GetBenchmark(ctx, benchmarkID)
+	benchmark, err := h.db.GetFramework(ctx, benchmarkID)
 	if err != nil {
 		span1.RecordError(err)
 		span1.SetStatus(codes.Error, err.Error())
@@ -1851,7 +1857,7 @@ func (h *HttpHandler) GetBenchmarkSummary(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid integration type")
 	}
 
-	controls, err := h.db.ListControlsByBenchmarkID(ctx, benchmarkID)
+	controls, err := h.db.ListControlsByFrameworkID(ctx, benchmarkID)
 	if err != nil {
 		h.logger.Error("failed to get controls", zap.Error(err))
 		return err
@@ -2179,7 +2185,7 @@ func (h *HttpHandler) populateControlsMap(ctx context.Context, benchmarkID strin
 		return err
 	}
 
-	benchmark, err := h.db.GetBenchmark(ctx, benchmarkID)
+	benchmark, err := h.db.GetFramework(ctx, benchmarkID)
 	if err != nil {
 		return err
 	}
@@ -2626,7 +2632,7 @@ func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 	}
 
 	if showReferences {
-		benchmarks, err := h.db.GetBenchmarkIdsByControlID(ctx, control.ID)
+		benchmarks, err := h.db.GetFrameworkIdsByControlID(ctx, control.ID)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
@@ -2711,7 +2717,7 @@ func (h *HttpHandler) getControlSummary(ctx context.Context, controlID string, b
 	}
 	apiControl := control.ToApi()
 	if benchmarkID != nil {
-		benchmark, err := h.db.GetBenchmarkBare(ctx, *benchmarkID)
+		benchmark, err := h.db.GetFrameworkBare(ctx, *benchmarkID)
 		if err != nil {
 			h.logger.Error("failed to fetch benchmark", zap.Error(err), zap.Stringp("benchmarkID", benchmarkID))
 			return nil, err
@@ -2744,7 +2750,7 @@ func (h *HttpHandler) getControlSummary(ctx context.Context, controlID string, b
 		}
 	}
 
-	benchmarks, err := h.db.ListDistinctRootBenchmarksFromControlIds(ctx, []string{controlID})
+	benchmarks, err := h.db.ListDistinctRootFrameworksFromControlIds(ctx, []string{controlID})
 	if err != nil {
 		h.logger.Error("failed to fetch benchmarks", zap.Error(err), zap.String("controlID", controlID))
 		return nil, err
@@ -2825,7 +2831,7 @@ func (h *HttpHandler) ListAssignmentsByBenchmark(echoCtx echo.Context) error {
 	span1.SetName("new_GetBenchmark")
 	defer span1.End()
 
-	benchmark, err := h.db.GetBenchmarkBare(ctx, benchmarkId)
+	benchmark, err := h.db.GetFrameworkBare(ctx, benchmarkId)
 	if err != nil {
 		span1.RecordError(err)
 		span1.SetStatus(codes.Error, err.Error())
@@ -2880,7 +2886,7 @@ func (h *HttpHandler) ListAssignmentsByBenchmark(echoCtx echo.Context) error {
 	))
 	span3.End()
 
-	if benchmark.AutoAssign {
+	if benchmark.IsBaseline {
 		for idx, r := range assignedIntegrations {
 			r.Status = true
 			assignedIntegrations[idx] = r
@@ -2888,7 +2894,7 @@ func (h *HttpHandler) ListAssignmentsByBenchmark(echoCtx echo.Context) error {
 	}
 
 	for _, assignment := range dbAssignments {
-		if assignment.IntegrationID != nil && !benchmark.AutoAssign {
+		if assignment.IntegrationID != nil && !benchmark.IsBaseline {
 			for idx, r := range assignedIntegrations {
 				if r.IntegrationID == *assignment.IntegrationID {
 					r.Status = true
@@ -3055,7 +3061,7 @@ func (h *HttpHandler) ListBenchmarksFiltered(echoCtx echo.Context) error {
 			Enabled:          b.Enabled,
 			TrackDriftEvents: b.TracksDriftEvents,
 			NumberOfControls: len(metadata.Controls),
-			AutoAssigned:     b.AutoAssign,
+			AutoAssigned:     b.IsBaseline,
 			PrimaryTables:    primaryTables,
 			Tags:             filterTagsByRegex(req.TagsRegex, model.TrimPrivateTags(b.GetTagsMap())),
 			CreatedAt:        b.CreatedAt,
@@ -3069,7 +3075,7 @@ func (h *HttpHandler) ListBenchmarksFiltered(echoCtx echo.Context) error {
 			}
 			benchmarkDetails.IntegrationType = b.IntegrationType
 		}
-		if b.AutoAssign {
+		if b.IsBaseline {
 			for _, c := range b.IntegrationType {
 				benchmarkDetails.NumberOfAssignments = benchmarkDetails.NumberOfAssignments + integrationsCountByType[c]
 			}
@@ -3190,14 +3196,14 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 		benchmarkids = append(benchmarkids, item.ID)
 	}
 	h.logger.Info("benchmarkids", zap.Any("benchmarkids", benchmarkids))
-	all_benchmarks, err := h.db.GetBenchmarksBare(ctx, benchmarkids)
+	all_benchmarks, err := h.db.GetFrameworksBare(ctx, benchmarkids)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	for _, benchmark := range all_benchmarks {
 
-		controls, err := h.db.ListControlsByBenchmarkID(ctx, benchmark.ID)
+		controls, err := h.db.ListControlsByFrameworkID(ctx, benchmark.ID)
 		if err != nil {
 			h.logger.Error("failed to get controls", zap.Error(err))
 			return err
@@ -3341,7 +3347,7 @@ func (h *HttpHandler) GetBenchmarkDetails(echoCtx echo.Context) error {
 	span1.SetName("new_GetBenchmark")
 	defer span1.End()
 
-	benchmark, err := h.db.GetBenchmark(ctx, benchmarkId)
+	benchmark, err := h.db.GetFramework(ctx, benchmarkId)
 	if err != nil {
 		span1.RecordError(err)
 		span1.SetStatus(codes.Error, err.Error())
@@ -3412,7 +3418,7 @@ func (h *HttpHandler) ListBenchmarks(echoCtx echo.Context) error {
 	var err error
 	var benchmarks []db.Benchmark
 	if len(frameworkIDs) > 0 {
-		benchmarks, err = h.db.GetBenchmarks(ctx, frameworkIDs)
+		benchmarks, err = h.db.GetFrameworks(ctx, frameworkIDs)
 		if err != nil {
 			return err
 		}
@@ -3477,7 +3483,7 @@ func (h *HttpHandler) GetBenchmark(echoCtx echo.Context) error {
 	span1.SetName("new_GetBenchmark")
 	defer span1.End()
 
-	benchmark, err := h.db.GetBenchmark(ctx, benchmarkId)
+	benchmark, err := h.db.GetFramework(ctx, benchmarkId)
 	if err != nil {
 		span1.RecordError(err)
 		span1.SetStatus(codes.Error, err.Error())
@@ -3501,7 +3507,7 @@ func (h *HttpHandler) getBenchmarkControls(ctx context.Context, benchmarkID stri
 	span1.SetName("new_GetBenchmark")
 	defer span1.End()
 
-	b, err := h.db.GetBenchmark(ctx, benchmarkID)
+	b, err := h.db.GetFramework(ctx, benchmarkID)
 	if err != nil {
 		span1.RecordError(err)
 		span1.SetStatus(codes.Error, err.Error())
@@ -3808,7 +3814,7 @@ func (h *HttpHandler) GetBenchmarkAssignments(echoCtx echo.Context) error {
 	defer span1.End()
 
 	integrationInfos := make(map[string]api.GetBenchmarkAssignmentsItem)
-	benchmark, err := h.db.GetBenchmark(ctx, benchmarkId)
+	benchmark, err := h.db.GetFramework(ctx, benchmarkId)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -3866,7 +3872,7 @@ func (h *HttpHandler) GetBenchmarkAssignments(echoCtx echo.Context) error {
 	if assignmentType == "implicit" || assignmentType == "any" {
 		assignmentType2 := "implicit"
 
-		if benchmark.AutoAssign {
+		if benchmark.IsBaseline {
 			integrations, err := h.integrationClient.ListIntegrations(clientCtx, benchmark.IntegrationType)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -3900,7 +3906,7 @@ func (h *HttpHandler) GetBenchmarkAssignments(echoCtx echo.Context) error {
 	}
 
 	var status api.BenchmarkAssignmentStatus
-	if benchmark.AutoAssign {
+	if benchmark.IsBaseline {
 		status = api.BenchmarkAssignmentStatusAutoEnable
 	} else if assignedCount > 0 {
 		status = api.BenchmarkAssignmentStatusEnabled
@@ -3977,7 +3983,7 @@ func (h *HttpHandler) AssignBenchmarkToIntegration(echoCtx echo.Context) error {
 	span1.SetName("new_GetBenchmark")
 	defer span1.End()
 
-	benchmark, err := h.db.GetBenchmark(ctx, benchmarkId)
+	benchmark, err := h.db.GetFramework(ctx, benchmarkId)
 
 	if err != nil {
 		span1.RecordError(err)
@@ -4023,7 +4029,7 @@ func (h *HttpHandler) AssignBenchmarkToIntegration(echoCtx echo.Context) error {
 	h.logger.Info("integrations assignments checked")
 
 	if req.AutoEnable {
-		err = h.db.SetBenchmarkAutoAssign(ctx, benchmarkId, true)
+		err = h.db.SetFrameworkAutoAssign(ctx, benchmarkId, true)
 		if err != nil {
 			h.logger.Error("failed to set auto assign", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to set auto assign")
@@ -4031,7 +4037,7 @@ func (h *HttpHandler) AssignBenchmarkToIntegration(echoCtx echo.Context) error {
 	}
 	h.logger.Info("auto enable checked")
 	if req.Disable {
-		err = h.db.SetBenchmarkAutoAssign(ctx, benchmarkId, false)
+		err = h.db.SetFrameworkAutoAssign(ctx, benchmarkId, false)
 		if err != nil {
 			h.logger.Error("failed to set auto assign", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to set auto assign")
@@ -4088,7 +4094,7 @@ func (h *HttpHandler) ComplianceSummaryOfBenchmark(echoCtx echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 	} else {
-		benchmarks, err = h.db.GetBenchmarksBare(ctx, req.Benchmarks)
+		benchmarks, err = h.db.GetFrameworksBare(ctx, req.Benchmarks)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
@@ -4102,7 +4108,7 @@ func (h *HttpHandler) ComplianceSummaryOfBenchmark(echoCtx echo.Context) error {
 		))
 		span1.End()
 
-		controls, err := h.db.ListControlsByBenchmarkID(ctx, benchmark.ID)
+		controls, err := h.db.ListControlsByFrameworkID(ctx, benchmark.ID)
 		if err != nil {
 			h.logger.Error("failed to get controls", zap.Error(err))
 			return err
@@ -4456,7 +4462,7 @@ func (h *HttpHandler) ListBenchmarksFilters(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get listOfResources")
 	}
 
-	benchmarksTags, err := h.db.GetBenchmarksTags()
+	benchmarksTags, err := h.db.GetFrameworksTags()
 	if err != nil {
 		h.logger.Error("failed to get benchmarksTags", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get benchmarksTags")
@@ -4589,7 +4595,7 @@ func (h *HttpHandler) GetBenchmarkTrendV3(echoCtx echo.Context) error {
 	span1.SetName("new_GetBenchmark")
 	defer span1.End()
 
-	benchmark, err := h.db.GetBenchmark(ctx, benchmarkID)
+	benchmark, err := h.db.GetFramework(ctx, benchmarkID)
 	if err != nil {
 		span1.RecordError(err)
 		span1.SetStatus(codes.Error, err.Error())
@@ -5067,7 +5073,7 @@ func (h HttpHandler) GetJobReportSummary(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "job is in progress")
 	}
 
-	framework, err := h.db.GetBenchmark(ctx.Request().Context(), complianceJob.FrameworkId)
+	framework, err := h.db.GetFramework(ctx.Request().Context(), complianceJob.FrameworkId)
 	if err != nil {
 		h.logger.Error("failed to get framework by frameworkID", zap.String("framework", complianceJob.FrameworkId), zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get framework by frameworkID")
@@ -5258,4 +5264,328 @@ func (h HttpHandler) GetPolicy(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, policyItem)
+}
+
+// ListFrameworkAssignments godoc
+//
+//	@Summary	Get Benchmark Assignments by BenchmarkID
+//	@Security	BearerToken
+//	@Tags		compliance
+//	@Accept		json
+//	@Produce	json
+//	@Param		page				query		int			false	"Page Number"
+//	@Param		page_size			query		int			false	"Page Size"
+//	@Param		assignment_type		query		[]string	true	"assignment type. options: implicit, explicit, none"
+//	@Param		framework-id		path		string		true	"Framework ID"
+//	@Success	200					{object}	api.ListFrameworkAssignmentsResponse
+//	@Router		/compliance/api/v1/compliance-frameworks/{framework-id}/assignments [get]
+func (h *HttpHandler) ListFrameworkAssignments(echoCtx echo.Context) error {
+	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
+
+	var page, pageSize int64
+	var err error
+
+	pageStr := echoCtx.QueryParam("page")
+	if pageStr != "" {
+		page, err = strconv.ParseInt(pageStr, 10, 64)
+		if err != nil {
+			return err
+		}
+	}
+	pageSizeStr := echoCtx.QueryParam("page_size")
+	if pageSizeStr != "" {
+		pageSize, err = strconv.ParseInt(pageSizeStr, 10, 64)
+		if err != nil {
+			return err
+		}
+	}
+
+	ctx := echoCtx.Request().Context()
+
+	frameworkId := echoCtx.Param("framework-id")
+	assignmentType := httpserver2.QueryArrayParam(echoCtx, "assignment_type")
+	if len(assignmentType) == 0 {
+		assignmentType = []string{"explicit", "implicit", "none"}
+	}
+	assignmentTypesMap := make(map[string]bool)
+	for _, a := range assignmentType {
+		assignmentTypesMap[strings.ToLower(a)] = true
+	}
+
+	integrationInfos := make(map[string]api.ListFrameworkAssignmentsResponseData)
+	benchmark, err := h.db.GetFramework(ctx, frameworkId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if _, ok := assignmentTypesMap["none"]; ok {
+		integrations, err := h.integrationClient.ListIntegrations(clientCtx, benchmark.IntegrationType)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+		for _, i := range integrations.Integrations {
+			if i.State != integrationapi.IntegrationStateActive {
+				continue
+			}
+			integrationInfos[i.IntegrationID] = api.ListFrameworkAssignmentsResponseData{
+				PluginID:              i.IntegrationType.String(),
+				IntegrationID:         i.IntegrationID,
+				IntegrationName:       i.Name,
+				IntegrationProviderID: i.ProviderID,
+				AssignmentType:        api.FrameworkAssignmentAssignmentTypeNone,
+			}
+		}
+	}
+
+	if _, ok := assignmentTypesMap["implicit"]; ok {
+		if benchmark.IsBaseline {
+			integrations, err := h.integrationClient.ListIntegrations(clientCtx, benchmark.IntegrationType)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			}
+			for _, i := range integrations.Integrations {
+				if i.State != integrationapi.IntegrationStateActive {
+					continue
+				}
+				integrationInfos[i.IntegrationID] = api.ListFrameworkAssignmentsResponseData{
+					PluginID:              i.IntegrationType.String(),
+					IntegrationID:         i.IntegrationID,
+					IntegrationName:       i.Name,
+					IntegrationProviderID: i.ProviderID,
+					AssignmentType:        api.FrameworkAssignmentAssignmentTypeImplicit,
+				}
+			}
+		}
+	}
+
+	if _, ok := assignmentTypesMap["explicit"]; ok {
+		assignments, err := h.db.GetBenchmarkAssignmentsByBenchmarkId(ctx, frameworkId)
+		if err != nil {
+			h.logger.Error("cannot get explicit assignments", zap.Error(err))
+			return echo.NewHTTPError(http.StatusBadRequest, "cannot get explicit assignments")
+		}
+		var assignedIntegrations []string
+
+		for _, assignment := range assignments {
+			if assignment.IntegrationID != nil {
+				assignedIntegrations = append(assignedIntegrations, *assignment.IntegrationID)
+			}
+		}
+		integrations, err := h.integrationClient.ListIntegrationsByFilters(clientCtx, integrationapi.ListIntegrationsRequest{
+			IntegrationID: assignedIntegrations,
+		})
+		if err != nil {
+			h.logger.Error("failed to get integrations", zap.Error(err))
+			return echo.NewHTTPError(http.StatusBadRequest, "failed to get integrations")
+		}
+		for _, i := range integrations.Integrations {
+			integrationInfos[i.IntegrationID] = api.ListFrameworkAssignmentsResponseData{
+				PluginID:              i.IntegrationType.String(),
+				IntegrationID:         i.IntegrationID,
+				IntegrationName:       i.Name,
+				IntegrationProviderID: i.ProviderID,
+				AssignmentType:        api.FrameworkAssignmentAssignmentTypeExplicit,
+			}
+		}
+	}
+
+	var results []api.ListFrameworkAssignmentsResponseData
+	for _, info := range integrationInfos {
+		results = append(results, info)
+
+	}
+
+	pageInfo := api.PageInfo{
+		CurrentPage: page,
+		PageSize:    pageSize,
+		TotalItems:  int64(len(results)),
+		TotalPages:  int64(len(results)) / pageSize,
+	}
+
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].IntegrationID < results[j].IntegrationID
+	})
+	if pageSize != 0 {
+		if page == 0 {
+			results = utils.Paginate(1, pageSize, results)
+		} else {
+			results = utils.Paginate(page, pageSize, results)
+		}
+	}
+
+	return echoCtx.JSON(http.StatusOK, api.ListFrameworkAssignmentsResponse{
+		PageInfo: pageInfo,
+		Data:     results,
+	})
+}
+
+// AddAssignment godoc
+//
+//	@Summary		Create framework assignment
+//	@Description	Creating a framework assignment for an integration.
+//	@Security		BearerToken
+//	@Tags			benchmarks_assignment
+//	@Accept			json
+//	@Produce		json
+//	@Param			framework-id	path	string							true	"Framework ID to add assignment"
+//	@Param			integration-id	path	string							true	"Integration ID to add assignment"
+//	@Success		200
+//	@Router			/compliance/api/v1/compliance-frameworks/{framework-id}/assignments/{integration-id} [put]
+func (h *HttpHandler) AddAssignment(echoCtx echo.Context) error {
+	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
+	ctx := echoCtx.Request().Context()
+
+	integrationId := echoCtx.Param("integration-id")
+	if integrationId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "integration id is empty")
+	}
+
+	integration, err := h.integrationClient.GetIntegration(clientCtx, integrationId)
+	if err != nil {
+		h.logger.Error("failed to get integration", zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to get integration")
+	}
+
+	frameworkId := echoCtx.Param("framework-id")
+	if frameworkId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "framework id is empty")
+	}
+
+	framework, err := h.db.GetFramework(ctx, frameworkId)
+
+	if err != nil {
+		h.logger.Error("failed to get framework", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get framework")
+	}
+	if framework == nil {
+		return echo.NewHTTPError(http.StatusNotFound, fmt.Sprintf("framework %s not found", frameworkId))
+	}
+
+	supportedPlugins := make(map[string]bool)
+	for _, it := range framework.IntegrationType {
+		supportedPlugins[it] = true
+	}
+
+	if _, ok := supportedPlugins[integration.IntegrationType.String()]; !ok {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("plugin %s is not supported in the framework", integration.IntegrationType))
+	}
+
+	if !framework.Enabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "framework is disabled")
+	}
+
+	if strings.HasPrefix(framework.ID, "baseline_") {
+		return echo.NewHTTPError(http.StatusBadRequest, "framework is baseline")
+	}
+
+	assignment := &db.BenchmarkAssignment{
+		BenchmarkId:   frameworkId,
+		IntegrationID: utils.GetPointer(integration.IntegrationID),
+		AssignedAt:    time.Now(),
+	}
+
+	if err := h.db.AddBenchmarkAssignment(ctx, assignment); err != nil {
+		h.logger.Error("failed to add assignment", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to add assignment")
+	}
+
+	return echoCtx.NoContent(http.StatusOK)
+}
+
+// DeleteAssignment godoc
+//
+//	@Summary		Create framework assignment
+//	@Description	Creating a framework assignment for an integration.
+//	@Security		BearerToken
+//	@Tags			benchmarks_assignment
+//	@Accept			json
+//	@Produce		json
+//	@Param			framework-id	path	string							true	"Framework ID to remove assignment"
+//	@Param			integration-id	path	string							true	"Integration ID to remove assignment"
+//	@Success		200
+//	@Router			/compliance/api/v1/compliance-frameworks/{framework-id}/assignments/{integration-id} [delete]
+func (h *HttpHandler) DeleteAssignment(echoCtx echo.Context) error {
+	ctx := echoCtx.Request().Context()
+
+	frameworkId := echoCtx.Param("framework-id")
+	if frameworkId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "framework id is empty")
+	}
+
+	integrationId := echoCtx.Param("integration-id")
+	if integrationId == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "integration id is empty")
+	}
+
+	assignment, err := h.db.GetBenchmarkAssignmentByIds(ctx, frameworkId, &integrationId, nil)
+	if err != nil {
+		h.logger.Error("failed to get framework assignment", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get framework assignment")
+	}
+	if assignment == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "assignment not found")
+	}
+
+	if err := h.db.DeleteBenchmarkAssignmentByIds(ctx, frameworkId, &integrationId, nil); err != nil {
+		h.logger.Error("failed to delete assignment", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete assignment")
+	}
+
+	return echoCtx.NoContent(http.StatusOK)
+}
+
+// UpdateFrameworkSetting godoc
+//
+//	@Summary		Create framework assignment
+//	@Description	Creating a framework assignment for an integration.
+//	@Security		BearerToken
+//	@Tags			benchmarks_assignment
+//	@Accept			json
+//	@Produce		json
+//	@Param			framework-id	path	string								true	"Framework ID to assign"
+//	@Param			request			body	api.UpdateFrameworkSettingRequest	true	"Framework setting"
+//	@Success		200
+//	@Router			/compliance/api/v1/compliance-frameworks/{framework-id} [put]
+func (h *HttpHandler) UpdateFrameworkSetting(echoCtx echo.Context) error {
+	ctx := echoCtx.Request().Context()
+
+	frameworkId := echoCtx.Param("framework-id")
+	if frameworkId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "framework id is empty")
+	}
+
+	var req api.UpdateFrameworkSettingRequest
+	if err := bindValidate(echoCtx, &req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	framework, err := h.db.GetFramework(ctx, frameworkId)
+	if err != nil {
+		h.logger.Error("failed to get framework", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get framework")
+	}
+	if framework == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "framework not found")
+	}
+
+	if (framework.IsBaseline || (req.IsBaseline != nil && *req.IsBaseline == true)) && req.Enabled != nil && *req.Enabled == false {
+		return echo.NewHTTPError(http.StatusBadRequest, "cannot disable a baseline framework")
+	}
+
+	if req.IsBaseline != nil {
+		err = h.db.SetFrameworkAutoAssign(ctx, frameworkId, *req.IsBaseline)
+		if err != nil {
+			h.logger.Error("failed to set framework auto assign", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to set framework auto assign")
+		}
+	}
+	if req.Enabled != nil {
+		err = h.db.SetFrameworkEnabled(ctx, frameworkId, *req.Enabled)
+		if err != nil {
+			h.logger.Error("failed to set framework enabled", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to set framework enabled")
+		}
+	}
+
+	return echoCtx.NoContent(http.StatusOK)
 }

@@ -17,10 +17,10 @@ func (s *JobScheduler) runScheduler() error {
 	}
 	clientCtx := &httpclient.Context{UserRole: api.AdminRole}
 
-	benchmarks, err := s.complianceClient.ListBenchmarks(clientCtx, nil,nil)
+	frameworks, err := s.complianceClient.ListBenchmarks(clientCtx, nil, nil)
 	if err != nil {
-		s.logger.Error("error while listing benchmarks", zap.Error(err))
-		return fmt.Errorf("error while listing benchmarks: %v", err)
+		s.logger.Error("error while listing frameworks", zap.Error(err))
+		return fmt.Errorf("error while listing frameworks: %v", err)
 	}
 
 	allIntegrations, err := s.integrationClient.ListIntegrations(clientCtx, nil)
@@ -34,9 +34,12 @@ func (s *JobScheduler) runScheduler() error {
 		integrationsMap[connection.IntegrationID] = &connection
 	}
 
-	for _, benchmark := range benchmarks {
+	for _, framework := range frameworks {
+		if !framework.Enabled {
+			continue
+		}
 		var integrationIDs []string
-		assignments, err := s.complianceClient.ListAssignmentsByBenchmark(clientCtx, benchmark.ID)
+		assignments, err := s.complianceClient.ListAssignmentsByBenchmark(clientCtx, framework.ID)
 		if err != nil {
 			s.logger.Error("error while listing assignments", zap.Error(err))
 			return fmt.Errorf("error while listing assignments: %v", err)
@@ -63,7 +66,7 @@ func (s *JobScheduler) runScheduler() error {
 			continue
 		}
 
-		complianceJob, err := s.db.GetLastComplianceJob(true, benchmark.ID)
+		complianceJob, err := s.db.GetLastComplianceJob(true, framework.ID)
 		if err != nil {
 			s.logger.Error("error while getting last compliance job", zap.Error(err))
 			return err
@@ -73,7 +76,7 @@ func (s *JobScheduler) runScheduler() error {
 		if complianceJob == nil ||
 			complianceJob.CreatedAt.Before(timeAt) {
 
-			_, err := s.CreateComplianceReportJobs(true, benchmark.ID, complianceJob, integrationIDs, false, "system", nil)
+			_, err := s.CreateComplianceReportJobs(true, framework.ID, complianceJob, integrationIDs, false, "system", nil)
 			if err != nil {
 				s.logger.Error("error while creating compliance job", zap.Error(err))
 				return err
