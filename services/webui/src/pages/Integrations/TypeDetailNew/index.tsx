@@ -9,8 +9,7 @@ import {
     ArrowLeftStartOnRectangleIcon,
     Cog8ToothIcon,
 } from '@heroicons/react/24/outline'
-import { useAtomValue } from 'jotai'
-
+import { useAtomValue, useSetAtom } from 'jotai'
 
 import {
     useIntegrationApiV1ConnectorsMetricsList,
@@ -25,7 +24,12 @@ import {
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { Schema } from './types'
-import { BreadcrumbGroup, KeyValuePairs, Spinner, Tabs } from '@cloudscape-design/components'
+import {
+    BreadcrumbGroup,
+    KeyValuePairs,
+    Spinner,
+    Tabs,
+} from '@cloudscape-design/components'
 
 import IntegrationList from './Integration'
 import CredentialsList from './Credentials'
@@ -34,17 +38,19 @@ import DiscoveryJobs from './Discovery'
 import Configuration from './Configuration'
 import Setup from './Setup'
 import ButtonDropdown from '@cloudscape-design/components/button-dropdown'
-
+import { notificationAtom } from '../../../store'
 
 export default function TypeDetail() {
     const navigate = useNavigate()
     const searchParams = useAtomValue(searchAtom)
     const { type } = useParams()
-     const [manifest, setManifest] = useState<any>()
+    const [manifest, setManifest] = useState<any>()
     const { state } = useLocation()
     const [shcema, setSchema] = useState<Schema>()
     const [loading, setLoading] = useState<boolean>(false)
-const [status, setStatus] = useState<string>()
+    const [status, setStatus] = useState<string>()
+    const setNotification = useSetAtom(notificationAtom)
+
     const GetSchema = () => {
         setLoading(true)
         let url = ''
@@ -61,7 +67,7 @@ const [status, setStatus] = useState<string>()
                 Authorization: `Bearer ${token}`,
             },
         }
-        
+
         axios
             .get(
                 `${url}/main/integration/api/v1/integrations/types/${type}/ui/spec `,
@@ -77,78 +83,189 @@ const [status, setStatus] = useState<string>()
                 setLoading(false)
             })
     }
-      const GetManifest = () => {
-          setLoading(true)
-          let url = ''
-          if (window.location.origin === 'http://localhost:3000') {
-              url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-          } else {
-              url = window.location.origin
-          }
-          // @ts-ignore
-          const token = JSON.parse(localStorage.getItem('openg_auth')).token
+    const GetManifest = () => {
+        setLoading(true)
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-          const config = {
-              headers: {
-                  Authorization: `Bearer ${token}`,
-              },
-          }
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
 
-          axios
-              .get(
-                  `${url}/main/integration/api/v1/integration-types/plugin/${type}/manifest`,
-                  config
-              )
-              .then((resp) => {
-                  setManifest(resp.data)
-                  setLoading(false)
-              })
-              .catch((err) => {
-                  console.log(err)
-                  setLoading(false)
+        axios
+            .get(
+                `${url}/main/integration/api/v1/integration-types/plugin/${type}/manifest`,
+                config
+            )
+            .then((resp) => {
+                setManifest(resp.data)
+                setLoading(false)
+            })
+            .catch((err) => {
+                console.log(err)
+                setLoading(false)
 
-                  // params.fail()
-              })
-      }
-      const GetStatus = () => {
-          setLoading(true)
-          let url = ''
-          if (window.location.origin === 'http://localhost:3000') {
-              url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-          } else {
-              url = window.location.origin
-          }
-          // @ts-ignore
-          const token = JSON.parse(localStorage.getItem('openg_auth')).token
+                // params.fail()
+            })
+    }
+    const GetStatus = () => {
+        setLoading(true)
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-          const config = {
-              headers: {
-                  Authorization: `Bearer ${token}`,
-              },
-          }
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
 
-          axios
-              .post(
-                  `${url}/main/integration/api/v1/integration-types/plugin/${type}/healthcheck`,
-                  {},
-                  config
-              )
-              .then((resp) => {
-                  setStatus(resp.data)
-                  setLoading(false)
-              })
-              .catch((err) => {
-                  console.log(err)
-                  setLoading(false)
+        axios
+            .post(
+                `${url}/main/integration/api/v1/integration-types/plugin/${type}/healthcheck`,
+                {},
+                config
+            )
+            .then((resp) => {
+                setStatus(resp.data)
+                setLoading(false)
+            })
+            .catch((err) => {
+                console.log(err)
+                setLoading(false)
 
-                  // params.fail()
-              })
-      }
+                // params.fail()
+            })
+    }
+    const UpdatePlugin = () => {
+        setLoading(true)
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        let path = ''
+        path = `/main/integration/api/v1/integration-types/plugin/load/id/${type}`
 
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+
+        axios
+            .post(`${url}${path}`, {}, config)
+            .then((res) => {
+                setLoading(false)
+
+                setNotification({
+                    text: `Plugin Updated`,
+                    type: 'success',
+                })
+            })
+            .catch((err) => {
+                 setNotification({
+                     text: `Error: ${err.response.data.message}`,
+                     type: 'error',
+                 })
+
+                setLoading(false)
+            })
+    }
+    const UnInstallPlugin = () => {
+        setLoading(true)
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        let path = ''
+        path = `/main/integration/api/v1/integration-types/plugin/uninstall/id/${type}`
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+
+        axios
+            .post(`${url}${path}`, {}, config)
+            .then((res) => {
+                setLoading(false)
+                setNotification({
+                    text: `Plugin Uninstalled`,
+                    type: 'success',
+                })
+                 navigate('/plugins')
+            })
+            .catch((err) => {
+                 setNotification({
+                     text: `Error: ${err.response.data.message}`,
+                     type: 'error',
+                 })
+                setLoading(false)
+            })
+    }
+
+    const DisablePlugin = () => {
+        setLoading(true)
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+
+        axios
+            .post(
+                `${url}/main/integration/api/v1/integration-types/plugin/${type}/disable`,
+                {},
+                config
+            )
+            .then((res) => {
+                setLoading(false)
+                navigate('/plugins')
+            })
+            .catch((err) => {
+                setLoading(false)
+                setNotification({
+                    text: `Error: ${err.response.data.message}`,
+                    type: 'error',
+                })
+            })
+    }
     useEffect(() => {
         GetSchema()
-         GetStatus()
-         GetManifest()
+        GetStatus()
+        GetManifest()
     }, [])
 
     return (
@@ -178,7 +295,23 @@ const [status, setStatus] = useState<string>()
                                     {state?.name} plugin
                                 </h1>
                                 <ButtonDropdown
-                                variant='primary'
+                                onItemClick={({detail})=>{
+                                    const id = detail.id
+                                    switch (id){
+                                        case 'update':
+                                            UpdatePlugin()
+                                            break;
+                                        case 'disable':
+                                            DisablePlugin()
+                                            break;
+                                        case 'uninstall':
+                                            UnInstallPlugin()
+                                            break;
+                                        default:
+                                            break
+                                    }
+                                }}
+                                    variant="primary"
                                     items={[
                                         {
                                             text: 'Settings',
@@ -197,15 +330,7 @@ const [status, setStatus] = useState<string>()
                                                 },
                                             ],
                                         },
-                                        // {
-                                        //     text: 'Action',
-                                        //     items: [
-                                        //         {
-                                        //             text: 'Run Discovery',
-                                        //             id: 'run-discovery',
-                                        //         },
-                                        //     ],
-                                        // },
+                                      
                                     ]}
                                 >
                                     Actions
