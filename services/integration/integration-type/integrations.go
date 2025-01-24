@@ -215,7 +215,7 @@ func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integra
 				logger.Error("failed to set operational status updates", zap.Error(err), zap.String("integration_type", integrationType.String()))
 				continue
 			}
-			err = integrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", pType).Updates(models.IntegrationPlugin{
+			err = integrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", pType.IntegrationType).Updates(models.IntegrationPlugin{
 				OperationalStatusUpdates: pType.OperationalStatusUpdates,
 			}).Error
 			if err != nil {
@@ -298,7 +298,7 @@ func (m *IntegrationTypeManager) PingRoutine() {
 			lock.Lock()
 			if m.retryMap[t] < m.maxRetries {
 				var current models.IntegrationPlugin
-				err := m.IntegrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", current).First(&current).Error
+				err := m.IntegrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", current.IntegrationType).First(&current).Error
 				if err != nil {
 					m.logger.Error("failed to fetch integration plugin", zap.Error(err), zap.String("integration_type", current.IntegrationType.String()))
 					lock.Unlock()
@@ -374,7 +374,7 @@ func (m *IntegrationTypeManager) RetryRebootIntegrationType(t *models.Integratio
 			m.logger.Error("failed to set operational status updates", zap.Error(err), zap.String("integration_type", t.IntegrationType.String()))
 			return
 		}
-		err = m.IntegrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", t).Updates(models.IntegrationPlugin{
+		err = m.IntegrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", t.IntegrationType).Updates(models.IntegrationPlugin{
 			OperationalStatus:        models.IntegrationPluginOperationalStatusFailed,
 			OperationalStatusUpdates: t.OperationalStatusUpdates,
 		}).Error
@@ -450,7 +450,7 @@ func (m *IntegrationTypeManager) RetryRebootIntegrationType(t *models.Integratio
 		return err
 	}
 
-	err = m.IntegrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", t).Updates(models.IntegrationPlugin{
+	err = m.IntegrationTypeDb.Model(&models.IntegrationPlugin{}).Where("integration_type = ?", t.IntegrationType).Updates(models.IntegrationPlugin{
 		OperationalStatus:        models.IntegrationPluginOperationalStatusEnabled,
 		OperationalStatusUpdates: t.OperationalStatusUpdates,
 	}).Error
