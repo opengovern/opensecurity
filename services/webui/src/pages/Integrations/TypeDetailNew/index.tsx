@@ -35,7 +35,7 @@ import IntegrationList from './Integration'
 import CredentialsList from './Credentials'
 import { OpenGovernance } from '../../../icons/icons'
 import DiscoveryJobs from './Discovery'
-import Configuration from './Configuration'
+import Resources from './Resources'
 import Setup from './Setup'
 import ButtonDropdown from '@cloudscape-design/components/button-dropdown'
 import { notificationAtom } from '../../../store'
@@ -401,7 +401,8 @@ export default function TypeDetail() {
                                     id: '3',
                                     label: 'Resource Types',
                                     content: (
-                                        <Configuration
+                                        <Resources
+                                        
                                             name={state?.name}
                                             integration_type={type}
                                         />

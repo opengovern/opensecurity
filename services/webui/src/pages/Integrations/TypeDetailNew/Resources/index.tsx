@@ -14,7 +14,7 @@ interface IntegrationListProps {
     integration_type?: string
 }
 
-export default function Configuration({
+export default function Resources({
     name,
     integration_type,
 }: IntegrationListProps) {
@@ -144,6 +144,11 @@ const [total_count, setTotalCount] = useState<number>(0)
                                     cell: (item: any) => item.name,
                                 },
                                 {
+                                    id: 'table',
+                                    header: 'Table',
+                                    cell: (item: any) => item.table,
+                                },
+                                {
                                     id: 'has_parameter',
                                     header: 'Parameterized',
                                     cell: (item: any) =>
@@ -153,6 +158,10 @@ const [total_count, setTotalCount] = useState<number>(0)
                             columnDisplay={[
                                 {
                                     id: 'name',
+                                    visible: true,
+                                },
+                                {
+                                    id: 'table',
                                     visible: true,
                                 },
                                 {
