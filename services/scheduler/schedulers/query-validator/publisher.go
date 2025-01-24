@@ -55,7 +55,6 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 			jobMsg.Parameters = namedQuery.Query.Parameters
 			jobMsg.ListOfResources = namedQuery.Query.ListOfTables
 			jobMsg.PrimaryResource = namedQuery.Query.PrimaryTable
-			jobMsg.IntegrationType = namedQuery.IntegrationTypes
 		} else if job.QueryType == queryvalidator.QueryTypeComplianceControl {
 			jobMsg.QueryType = queryvalidator.QueryTypeComplianceControl
 			jobMsg.QueryId = job.QueryId
@@ -65,16 +64,14 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 			}
 			jobMsg.Query = controlQuery.Policy.Definition
 			var parameters []coreApi.QueryParameter
-			for _, qp := range controlQuery.Policy.Parameters {
+			for _, qp := range controlQuery.ParameterValues {
 				parameters = append(parameters, coreApi.QueryParameter{
-					Key:      qp.Key,
-					Required: qp.Required,
+					Key: qp.Key,
 				})
 			}
 			jobMsg.Parameters = parameters
 			jobMsg.ListOfResources = controlQuery.Policy.ListOfResources
 			jobMsg.PrimaryResource = &controlQuery.Policy.PrimaryResource
-			jobMsg.IntegrationType = controlQuery.IntegrationType
 		} else {
 			_ = s.db.UpdateQueryValidatorJobStatus(job.ID, queryvalidator.QueryValidatorFailed, "query ID not found")
 			continue
