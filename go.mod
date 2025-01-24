@@ -56,7 +56,7 @@ require (
 	google.golang.org/grpc v1.67.1
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/datatypes v1.1.0
-	gorm.io/gorm v1.25.6
+	gorm.io/gorm v1.25.12
 	k8s.io/api v0.31.2
 	k8s.io/apimachinery v0.31.2
 	k8s.io/client-go v0.31.2
