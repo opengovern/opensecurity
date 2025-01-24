@@ -2593,11 +2593,6 @@ func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 		integrationTypes = append(integrationTypes, integration.Type(t))
 	}
 
-	frameworks, err := h.db.GetFrameworkIdsByControlID(ctx, control.ID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
 	queryParamValues, err := h.coreClient.ListQueryParameters(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole})
 	if err != nil {
 		h.logger.Error("failed to get query parameters", zap.Error(err))
@@ -2628,12 +2623,22 @@ func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 		}
 	}
 
+	frameworks, err := h.db.ListDistinctRootFrameworksFromControlIds(ctx, []string{control.ID})
+	if err != nil {
+		h.logger.Error("failed to fetch frameworks", zap.Error(err), zap.String("controlID", control.ID))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to fetch frameworks")
+	}
+	apiFrameworks := make([]api.Benchmark, 0, len(frameworks))
+	for _, framework := range frameworks {
+		apiFrameworks = append(apiFrameworks, framework.ToApi())
+	}
+
 	response := api.GetControlDetailsResponse{
 		ID:              control.ID,
 		Title:           control.Title,
 		Description:     control.Description,
 		Severity:        control.Severity.String(),
-		Frameworks:      frameworks,
+		Frameworks:      apiFrameworks,
 		HasInlinePolicy: !control.ExternalPolicy,
 		ParameterValues: parameterValues,
 		Policy: struct {
@@ -2643,7 +2648,7 @@ func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 			PrimaryResource string   `json:"primary_resource"`
 			ListOfResources []string `json:"list_of_resources"`
 		}{
-			ID:              string(control.Policy.ID),
+			ID:              control.Policy.ID,
 			Language:        string(control.Policy.Language),
 			Definition:      control.Policy.Definition,
 			PrimaryResource: control.Policy.PrimaryResource,
