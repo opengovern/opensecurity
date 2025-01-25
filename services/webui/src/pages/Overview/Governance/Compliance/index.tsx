@@ -72,7 +72,7 @@ export default function Compliance() {
          cursor: 1,
          per_page: 4,
          sort_by: 'incidents',
-         assigned: true,
+         assigned: false,
          is_baseline: false,
      }
      axios
