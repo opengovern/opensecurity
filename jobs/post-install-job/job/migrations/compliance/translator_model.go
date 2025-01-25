@@ -5,17 +5,10 @@ import (
 	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/shared"
 )
 
-type FrameworkFile struct {
-	Framework Framework `json:"framework" yaml:"framework"`
-}
-
-type ControlGroupFile struct {
-	ControlGroup Framework `json:"control-group" yaml:"control-group"`
-}
-
 type Framework struct {
 	ID          string `json:"id" yaml:"id"`
 	Title       string `json:"title" yaml:"title"`
+	Type        string `json:"type" yaml:"type"`
 	Description string `json:"description" yaml:"description"`
 	SectionCode string `json:"section-code" yaml:"section-code"`
 	Defaults    *struct {
@@ -31,6 +24,7 @@ type Framework struct {
 type Control struct {
 	ID              string                    `json:"id" yaml:"id"`
 	Title           string                    `json:"title" yaml:"title"`
+	Type            string                    `json:"type" yaml:"type"`
 	Description     string                    `json:"description" yaml:"description"`
 	IntegrationType []string                  `json:"integration_type" yaml:"integration_type"`
 	Parameters      []shared.ControlParameter `json:"parameters" yaml:"parameters"`

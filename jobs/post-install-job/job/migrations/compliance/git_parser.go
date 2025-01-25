@@ -231,17 +231,37 @@ func (g *GitParser) ExtractPolicies(compliancePoliciesPath string) error {
 				return fmt.Errorf("cannot parse YAML as map: %w", err)
 			}
 
-			if data["policy"] != nil && data["severity"] != nil {
-				if err = g.parseControlFile(content, path); err != nil {
-					g.logger.Error("failed to parse control", zap.String("path", path), zap.Error(err))
-					return err
+			if data["type"] != nil {
+				ty, ok := data["type"].(string)
+				if ok {
+					if ty == "control" {
+						if data["policy"] != nil && data["severity"] != nil {
+							if err = g.parseControlFile(content, path); err != nil {
+								g.logger.Error("failed to parse control", zap.String("path", path), zap.Error(err))
+								return err
+							}
+						} else {
+							g.logger.Error("fields policy and severity should be defined for control", zap.String("path", path))
+						}
+					} else if ty == "policy" {
+						if data["definition"] != nil && data["language"] != nil {
+							if err = g.parsePolicyFile(content, path); err != nil {
+								g.logger.Error("failed to parse control", zap.String("path", path), zap.Error(err))
+								return err
+							}
+						} else {
+							g.logger.Error("fields definition and language should be defined for policy", zap.String("path", path))
+						}
+					} else {
+						g.logger.Error("unclassified type", zap.String("type", ty))
+					}
+				} else {
+					g.logger.Error("no type defined", zap.String("path", path))
 				}
-			} else if data["definition"] != nil && data["language"] != nil {
-				if err = g.parsePolicyFile(content, path); err != nil {
-					g.logger.Error("failed to parse control", zap.String("path", path), zap.Error(err))
-					return err
-				}
+			} else {
+				g.logger.Error("no type defined", zap.String("path", path))
 			}
+
 		}
 		return nil
 	})
@@ -468,28 +488,45 @@ func (g *GitParser) ExtractBenchmarks(complianceBenchmarksPath string) error {
 			return err
 		}
 
-		if len(content) >= 9 && string(content[:10]) == "framework:" {
-			var obj FrameworkFile
+		var temp map[string]interface{}
+		err = yaml.Unmarshal(content, &temp)
+		if err != nil {
+			g.logger.Error("failed to unmarshal benchmark for validation", zap.String("path", path), zap.Error(err))
+			return err
+		}
+
+		// Check for required fields
+		id, hasID := temp["id"].(string)
+		typeField, hasType := temp["type"].(string)
+
+		if !hasID || id == "" {
+			g.logger.Error("missing or empty 'id' field", zap.String("path", path))
+			return fmt.Errorf("missing or empty 'id' field in file: %s", path)
+		}
+
+		if !hasType || typeField == "" {
+			g.logger.Error("missing or empty 'type' field", zap.String("path", path))
+			return fmt.Errorf("missing or empty 'type' field in file: %s", path)
+		}
+
+		if typeField == "framework" {
+			var obj Framework
+			err = yaml.Unmarshal(content, &obj)
+			if err != nil {
+				g.logger.Error("failed to unmarshal framework", zap.String("path", path), zap.Error(err))
+				return err
+			}
+
+			frameworks = append(frameworks, obj)
+		} else if typeField == "control-group" {
+			var obj Framework
 			err = yaml.Unmarshal(content, &obj)
 			if err != nil {
 				g.logger.Error("failed to unmarshal benchmark", zap.String("path", path), zap.Error(err))
 				return err
 			}
-			if obj.Framework.ID == "" {
-				g.logger.Error("failed to extract benchmark from framework", zap.String("path", path))
-			}
-			frameworks = append(frameworks, obj.Framework)
-		} else if len(content) >= 13 && string(content[:14]) == "control-group:" {
-			var obj ControlGroupFile
-			err = yaml.Unmarshal(content, &obj)
-			if err != nil {
-				g.logger.Error("failed to unmarshal benchmark", zap.String("path", path), zap.Error(err))
-				return err
-			}
-			if obj.ControlGroup.ID == "" {
-				g.logger.Error("failed to extract benchmark from framework", zap.String("path", path))
-			}
-			frameworks = append(frameworks, obj.ControlGroup)
+
+			frameworks = append(frameworks, obj)
 		} else {
 			g.logger.Error("this file should be deprecated", zap.String("path", path))
 		}
