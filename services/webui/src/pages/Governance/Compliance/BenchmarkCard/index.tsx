@@ -110,7 +110,7 @@ export default function BenchmarkCards({ benchmark, all,loading }: IComplianceCa
                         >
                             <Flex className="w-full flex-row    gap-2" justifyContent="between" alignItems='center'>
                                 <Flex className='w-full  text-ellipsis overflow-hidden whitespace-nowrap  ' justifyContent='start'>{item.name}</Flex>
-                                <Flex  className="gap-2 max-w-fit overflow-hidden justify-end ">
+                                <Flex  className="gap-2 max-w-fit overflow-hidden justify-end flex-wrap ">
                                     {item?.connectors?.map((sub) => {
                                         return (
                                             <>
