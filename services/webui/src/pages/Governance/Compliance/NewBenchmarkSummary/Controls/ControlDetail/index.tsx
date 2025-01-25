@@ -33,23 +33,20 @@ import {
     PlatformEnginePkgControlDetailV3,
     PlatformEnginePkgInventoryApiSmartQueryItem,
     PlatformEnginePkgInventoryApiSmartQueryItemV2,
-} from '../../../../../api/api'
-import { useComplianceApiV1FindingsResourceCreate } from '../../../../../api/compliance.gen'
-import Spinner from '../../../../../components/Spinner'
+} from '../../../../../../api/api'
+import Spinner from '../../../../../../components/Spinner'
 // import { severityBadge } from '../Controls'
-import { isDemoAtom, notificationAtom, queryAtom } from '../../../../../store'
+import { isDemoAtom, notificationAtom, queryAtom } from '../../../../../../store'
 // import Timeline from '../FindingsWithFailure/Detail/Timeline'
-import { searchAtom } from '../../../../../utilities/urlstate'
-import { dateTimeDisplay } from '../../../../../utilities/dateDisplay'
 import Editor from 'react-simple-code-editor'
-import { severityBadge } from '../../../Controls'
 import { Badge, KeyValuePairs, Popover, Tabs } from '@cloudscape-design/components'
 import axios from 'axios'
-import { RenderObject } from '../../../../../components/RenderObject'
+import { RenderObject } from '../../../../../../components/RenderObject'
 import ImpactedResources from './ImpactedResources'
 import Benchmarks from './Benchmarks'
 
 interface IResourceFindingDetail {
+    benchmarkId: string
     selectedItem: PlatformEnginePkgControlDetailV3 | undefined
     open: boolean
     onClose: () => void
@@ -58,6 +55,7 @@ interface IResourceFindingDetail {
 }
 
 export default function ControlDetail({
+    benchmarkId,
     selectedItem,
     open,
     onClose,
@@ -116,52 +114,55 @@ export default function ControlDetail({
                 value: selectedItem?.id,
             },
             {
-            label: 'Resource Tables',
-            //    @ts-ignore
-            value: (
-                <>
-                    <Flex className="gap-2 flex-wrap w-full" flexDirection="row">
-                        <>
-                            {/* @ts-ignore */}
-                            {selectedItem?.policy?.list_of_resources?.map(
-                                (key, index) => {
-                                    return (
-                                        <>
-                                            {key ===
-                                            selectedItem?.policy
-                                                ?.primary_resource ? (
-                                                <>
-                                                    <Popover
-                                                        content={
-                                                            'This is the table used to record and track incidents related to this control. '
-                                                        }
-                                                        position="bottom"
-                                                    >
-                                                        {key}
-                                                    </Popover>
-                                                </>
-                                            ) : (
-                                                <>{key}</>
-                                            )}
-                                        </>
-                                    )
-                                }
-                            )}
-                        </>
-                    </Flex>
-                </>
-            ),
-        },
+                label: 'Resource Tables',
+                //    @ts-ignore
+                value: (
+                    <>
+                        <Flex
+                            className="gap-2 flex-wrap w-full"
+                            flexDirection="row"
+                        >
+                            <>
+                                {/* @ts-ignore */}
+                                {selectedItem?.policy?.list_of_resources?.map(
+                                    (key, index) => {
+                                        return (
+                                            <>
+                                                {key ===
+                                                selectedItem?.policy
+                                                    ?.primary_resource ? (
+                                                    <>
+                                                        <Popover
+                                                            content={
+                                                                'This is the table used to record and track incidents related to this control. '
+                                                            }
+                                                            position="bottom"
+                                                        >
+                                                            {key}
+                                                        </Popover>
+                                                    </>
+                                                ) : (
+                                                    <>{key}</>
+                                                )}
+                                            </>
+                                        )
+                                    }
+                                )}
+                            </>
+                        </Flex>
+                    </>
+                ),
+            },
             {
                 label: 'Policy Language',
                 value: selectedItem?.policy?.language,
-            },{
+            },
+            {
                 label: 'Frameworks',
-                value: selectedItem?.frameworks.length
-            }
+                value: selectedItem?.frameworks.length,
+            },
         ]
-       
-    
+
         return items
     }
 
@@ -246,7 +247,8 @@ export default function ControlDetail({
                                                     label: 'Policy source',
                                                     value: selectedItem?.has_inline_policy
                                                         ? 'Inline'
-                                                        : selectedItem?.policy?.id,
+                                                        : selectedItem?.policy
+                                                              ?.id,
                                                 },
                                                 {
                                                     label: 'Last Updated At',
@@ -361,6 +363,7 @@ export default function ControlDetail({
                                 content: (
                                     <ImpactedResources
                                         controlId={selectedItem?.id || ''}
+                                        benchmarkID={benchmarkId}
                                         linkPrefix={`/score/categories/`}
                                         // conformanceFilter={
                                         //     conformanceFilter

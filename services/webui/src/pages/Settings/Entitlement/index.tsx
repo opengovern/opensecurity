@@ -43,6 +43,7 @@ import {
     KeyValuePairs,
     ProgressBar,
 } from '@cloudscape-design/components'
+import SettingsCustomization from '../Jobs/Customization'
 
 interface ITextMetric {
     title: string
@@ -366,13 +367,12 @@ export default function SettingsEntitlement() {
             // window.location.reload()
         }
     }, [syncLoading, syncExecuted])
-    return   loadingCurrentWS ? (
+    return loadingCurrentWS ? (
         <Flex justifyContent="center" className="mt-56">
             <Spinner />
         </Flex>
     ) : (
         <Flex flexDirection="col">
-            
             <Card key="summary" className=" w-full">
                 <Title className="font-semibold mb-2">Settings</Title>
                 <KeyValuePairs
@@ -384,7 +384,7 @@ export default function SettingsEntitlement() {
                         }
                     })}
                 />
-              
+
                 <Divider />
                 <Title className="font-semibold mt-8">
                     Platform Configuration
@@ -451,7 +451,6 @@ export default function SettingsEntitlement() {
 
                 <Title className="font-semibold mt-8">App configurations</Title>
 
-              
                 <Flex
                     flexDirection="row"
                     justifyContent="between"
@@ -474,6 +473,7 @@ export default function SettingsEntitlement() {
                         </TabList>
                     </TabGroup>
                 </Flex>
+                <SettingsCustomization/>
                 <Divider />
 
                 <Title className="font-semibold mt-8">Sample Data</Title>

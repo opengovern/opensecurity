@@ -95,17 +95,9 @@ export default function AllControls() {
     const [code, setCode] = useState(savedQuery || '')
     const [selectedRow, setSelectedRow] =
         useState<PlatformEnginePkgControlDetailV3>()
-    const [openDrawer, setOpenDrawer] = useState(false)
     const [openSlider, setOpenSlider] = useState(false)
     const [open, setOpen] = useState(false)
 
-    const [openSearch, setOpenSearch] = useState(true)
-    const [showEditor, setShowEditor] = useState(true)
-    const isDemo = useAtomValue(isDemoAtom)
-    const [pageSize, setPageSize] = useState(1000)
-    const [autoRun, setAutoRun] = useState(false)
-    const [selectedFilter, setSelectedFilters] = useState<string[]>([])
-    const [engine, setEngine] = useState('odysseus-sql')
     const [query, setQuery] =
         useState<PlatformEnginePkgControlApiListV2>()
     const [rows, setRows] = useState<any[]>()
@@ -143,7 +135,7 @@ export default function AllControls() {
             .apiV3ControlDetail(id)
             .then((resp) => {
                 setSelectedRow(resp.data)
-                setOpenDrawer(true)
+                setOpen(true)
                 // setLoading(false)
             })
             .catch((err) => {
@@ -389,12 +381,8 @@ export default function AllControls() {
      
     return (
         <>
-
             <Flex alignItems="start">
-              
                 <Flex flexDirection="col" className="w-full ">
-                 
-
                     <Flex className=" mt-2">
                         <AppLayout
                             toolsOpen={false}
@@ -403,6 +391,7 @@ export default function AllControls() {
                             className="w-full"
                             toolsHide={true}
                             navigationHide={true}
+                            splitPanelSize={500}
                             splitPanelOpen={open}
                             onSplitPanelToggle={() => {
                                 setOpen(!open)
@@ -417,12 +406,16 @@ export default function AllControls() {
                                     header={
                                         selectedRow ? (
                                             <>
-                                                <Flex justifyContent="start" className='gap-2 items-center justify-center'>
-                                                  
+                                                <Flex
+                                                    justifyContent="start"
+                                                    className="gap-2 items-center justify-center"
+                                                >
                                                     <Title className="text-lg font-semibold ml-2 my-1">
-                                                        {selectedRow?.title} 
+                                                        {selectedRow?.title}
                                                     </Title>
-                                                    {severityBadge(selectedRow?.severity)}
+                                                    {severityBadge(
+                                                        selectedRow?.severity
+                                                    )}
                                                 </Flex>
                                             </>
                                         ) : (
@@ -461,11 +454,19 @@ export default function AllControls() {
                                     // @ts-ignore
                                     onRowClick={(event) => {
                                         const row = event.detail.item
-
+                                        setSelectedRow(undefined)
                                         getControlDetail(row.id)
                                         setOpen(true)
                                     }}
                                     columnDefinitions={[
+                                        {
+                                            id: 'id',
+                                            header: 'ID',
+                                            cell: (item) => item.id,
+                                            // sortingField: 'id',
+                                            isRowHeader: true,
+                                            maxWidth: 150,
+                                        },
                                         {
                                             id: 'title',
                                             header: 'Title',
@@ -485,7 +486,7 @@ export default function AllControls() {
                                         },
                                         {
                                             id: 'polity_type',
-                                            header: 'Policy Type',
+                                            header: 'Policy Language',
                                             cell: (item) =>
                                                 String(item?.policy?.type)
                                                     .charAt(0)
@@ -503,7 +504,10 @@ export default function AllControls() {
                                             maxWidth: 120,
                                             cell: (item) => (
                                                 <>
-                                                    {item?.query?.primary_table}
+                                                    {
+                                                        item?.policy
+                                                            ?.primary_resource
+                                                    }
                                                 </>
                                             ),
                                         },
@@ -524,40 +528,45 @@ export default function AllControls() {
                                             ),
                                             maxWidth: 50,
                                         },
-                                        {
-                                            id: 'parameters',
-                                            header: 'Parametrized',
-                                            maxWidth: 50,
+                                        // {
+                                        //     id: 'parameters',
+                                        //     header: 'Parametrized',
+                                        //     maxWidth: 50,
 
-                                            cell: (item) => (
-                                                <>
-                                                    {item?.query?.parameters
-                                                        .length > 0
-                                                        ? 'True'
-                                                        : 'False'}
-                                                </>
-                                            ),
-                                        },
+                                        //     cell: (item) => (
+                                        //         <>
+                                        //             {item?.query?.parameters
+                                        //                 .length > 0
+                                        //                 ? 'True'
+                                        //                 : 'False'}
+                                        //         </>
+                                        //     ),
+                                        // },
                                     ]}
                                     columnDisplay={[
+                                        {
+                                            id: 'id',
+                                            visible: true,
+                                        },
                                         {
                                             id: 'title',
                                             visible: true,
                                         },
                                         {
-                                            id: 'integration_type',
-                                            visible: true,
-                                        },
-                                        {
-                                            id: 'polity_type',
-                                            visible: true,
-                                        },
-                                        // { id: 'query', visible: true },
-                                        {
                                             id: 'severity',
                                             visible: true,
                                         },
-                                        { id: 'parameters', visible: true },
+                                        {
+                                            id: 'integration_type',
+                                            visible: false,
+                                        },
+                                        // {
+                                        //     id: 'polity_type',
+                                        //     visible: true,
+                                        // },
+                                        // { id: 'query', visible: true },
+
+                                        { id: 'query', visible: true },
                                         // {
                                         //     id: 'evaluatedAt',
                                         //     visible: true,

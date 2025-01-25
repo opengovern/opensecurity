@@ -2845,7 +2845,7 @@ export interface PlatformEnginePkgBenchmarkApiListV3ResponseTags {
 
 export interface PlatformEnginePkgControlDetailV3 {
     frameworks: PlatformEnginePkgComplianceApiBenchmark[]
-
+    has_inline_policy: boolean
     integrationType: string[]
     description: string
     id: string
@@ -2853,6 +2853,7 @@ export interface PlatformEnginePkgControlDetailV3 {
     severity: string
     tags: PlatformEnginePkgControlDetailV3Tags
     title: string
+    updated_at: string
 }
 
 export interface PlatformEnginePkgControlDetailV3Benchmarks {
@@ -2870,6 +2871,7 @@ export interface PlatformEnginePkgControlDetailV3QueryParams {
 export interface PlatformEnginePkgControlDetailV3Query {
     language: string
     list_of_resources: string[]
+    id: string
     primary_resource: string
     definition: string
     parameters: PlatformEnginePkgControlDetailV3QueryParams[]
