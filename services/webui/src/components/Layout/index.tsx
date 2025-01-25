@@ -26,25 +26,7 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
         sub_page= true
     }
     const showSidebar = url[1] == "callback" ? false : true
-    const hasTop = () => {
-        if (current) {
-            if (
-                (current.includes('incidents') ||
-                   current.includes('plugins') ||
-                    current.includes('dashboard') ||
-                    current.includes('compliance') ||
-                    current.includes('score') ||
-                    current.includes('administration')) &&
-                sub_page
-            ) {
-                console.log("here")
-                return false
-            }
-            return true
-        } else {
-            return true
-        }
-    }
+   
     return (
         <Flex
             flexDirection="row"
@@ -77,7 +59,7 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                                 ? 'h-fit'
                                 : 'px-12 mt-16 h-fit '
                         } ${showSidebar && '2xl:px-48 '} ${
-                            hasTop() ? 'mt-16' : 'mt-6'
+                            'mt-6'
                         } `}
                         // pl-44
                     >

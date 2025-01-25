@@ -241,9 +241,9 @@ export default function Sidebar({  currentPage }: ISidebar) {
             },
 
             {
-                name: 'Plugins',
+                name: 'Integration Plugins',
                 page: [
-                    'plugins',
+                    'integration/plugins',
                     'plugins/AWS',
                     'plugins/Azure',
                     'plugins/EntraID',
@@ -256,7 +256,6 @@ export default function Sidebar({  currentPage }: ISidebar) {
                 error: undefined,
                 isPreview: false,
             },
-          
 
             {
                 name: 'Jobs',
@@ -279,13 +278,13 @@ export default function Sidebar({  currentPage }: ISidebar) {
             {
                 name: 'Dashboards',
                 page: [
-                    'dashboard',
-                    'dashboard/infrastructure',
-                    'dashboard/spend',
-                    'dashboard/infrastructure-cloud-accounts',
-                    'dashboard/infrastructure-metrics',
-                    'dashboard/spend-accounts',
-                    'dashboard/spend-metrics',
+                    'dashboards',
+                    'dashboards/infrastructure',
+                    'dashboards/spend',
+                    'dashboards/infrastructure-cloud-accounts',
+                    'dashboards/infrastructure-metrics',
+                    'dashboards/spend-accounts',
+                    'dashboards/spend-metrics',
                 ],
                 icon: PresentationChartBarIcon,
                 isPreview: true,

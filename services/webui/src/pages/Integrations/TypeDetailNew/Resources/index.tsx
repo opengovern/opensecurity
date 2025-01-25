@@ -213,7 +213,7 @@ const [total_count, setTotalCount] = useState<number>(0)
                                     <Flex className="flex-row justify-between items-center w-full resource-types ">
                                         <div className="w-full">
                                             {' '}
-                                            {name} Resources{' '}
+                                             Resources{' '}
                                             <span className=" font-medium">
                                                 ({total_count})
                                             </span>

@@ -70,7 +70,7 @@ export default function Compliance() {
      }
      const body = {
          cursor: 1,
-         per_page: 4,
+         per_page: window.innerWidth > 1920 ? 6 : 4,
          sort_by: 'incidents',
          assigned: false,
          is_baseline: false,
@@ -156,10 +156,10 @@ export default function Compliance() {
                 </Button>
             </Flex> */}
             {loading ? (
-                <Flex flexDirection="row" className="gap-1 flex-wrap">
+                <Flex flexDirection="row" className="gap-4 flex-wrap">
                     {[1, 2,3,4].map((i) => {
                         return (
-                            <Card className="p-3 dark:ring-gray-500 w-[calc(50%-0.25rem)]">
+                            <Card className="p-3 dark:ring-gray-500 w-[calc(50%-0.5rem)] h-64">
                                 <Flex
                                     flexDirection="col"
                                     alignItems="start"

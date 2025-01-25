@@ -397,15 +397,17 @@ export default function Integrations({ height }: IQuery) {
                 </div>
             </Modal>
 
-            <Card className="h-full 2xl:w-3/4 sm:w-full overflow-scroll no-scrollbar">
+            <Card className="h-full  sm:w-full overflow-scroll no-scrollbar">
                 <Flex justifyContent="between" alignItems="center">
                     <Flex justifyContent="start" className="gap-2 ">
                         <Icon icon={MagnifyingGlassIcon} className="p-0" />
-                        <Title className="font-semibold">Integrations</Title>
+                        <Title className="font-semibold">
+                            Integration Plugins
+                        </Title>
                     </Flex>
                     <a
                         target="__blank"
-                        href={`/plugins`}
+                        href={`/integration/plugins`}
                         className=" cursor-pointer"
                     >
                         <Button
@@ -445,12 +447,15 @@ export default function Integrations({ height }: IQuery) {
                         ) {
                             const name = connector?.name
                             const id = connector?.id
-                            navigate(`/plugins/${connector.platform_name}`, {
-                                state: {
-                                    name,
-                                    id,
-                                },
-                            })
+                            navigate(
+                                `integration/plugins/${connector.platform_name}`,
+                                {
+                                    state: {
+                                        name,
+                                        id,
+                                    },
+                                }
+                            )
                             return
                         }
                         navigate(
@@ -486,13 +491,47 @@ export default function Integrations({ height }: IQuery) {
                                     </div>
                                 ),
                             },
+                            // {
+                            //     id: 'integrattoin',
+                            //     header: 'Description',
+                            //     content: (item) => item?.description,
+                            //     width: 70,
+                            // },
 
+                            // {
+                            //     id: 'integrattoin',
+                            //     header: 'Integrations',
+                            //     content: (item) => (
+                            //         <>
+                            //             <span className='w-full text-end'>
+                            //                 {item?.count ? item.count : '--'}
+                            //             </span>
+                            //         </>
+                            //     ),
+                            //     width: 30,
+                            // },
                             {
-                                id: 'integrattoin',
-                                header: 'Integrations',
-                                content: (item) =>
-                                    item?.count ? item.count : '--',
-                                width: 100,
+                                id: 'description',
+                                header: (
+                                    <>
+                                        <div className="flex justify-between">
+                                            <span>{'Description'}</span>
+                                            <span>{'Integrations'}</span>
+                                        </div>
+                                    </>
+                                ),
+                                content: (item) => (
+                                    <>
+                                        <div className="flex justify-between gap-4">
+                                            <span className="max-w-60">
+                                                {item.description}
+                                            </span>
+                                            <span>
+                                                {item.count ? item.count : '--'}
+                                            </span>
+                                        </div>
+                                    </>
+                                ),
                             },
                         ],
                     }}
@@ -505,7 +544,7 @@ export default function Integrations({ height }: IQuery) {
                             enabled: type.operational_status,
                             installed: type.install_state,
                             platform_name: type.plugin_id,
-
+                            description: type.description,
                             title: type.name,
                             name: type.name,
                             html_url: type.url,

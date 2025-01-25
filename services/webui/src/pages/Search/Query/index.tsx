@@ -339,7 +339,7 @@ export default function Query() {
 
     return (
         <>
-            <TopHeader />
+            {/* <TopHeader /> */}
             <Flex className="w-full" alignItems="start" flexDirection="col">
                 <Flex
                     flexDirection="row"

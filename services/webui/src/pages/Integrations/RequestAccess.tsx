@@ -13,9 +13,9 @@ export default function RequestAccess() {
         if (window.location.href.indexOf('stacks') > 0) {
             return `Dynamically group infrastructure, code repos, and entities as Apps & Environments for targeted governance.`
         }
-        // if (window.location.href.indexOf('dashboard') > 0) {
-        //     return `Create custom dashboards for teams, functions, and roles—In-App or through BI tools like PowerBI, Tableau, Looker, or Grafana.`
-        // }
+        if (window.location.href.indexOf('dashboard') > 0) {
+            return `Create custom dashboards for teams, functions, and roles—In-App or through BI tools like PowerBI, Tableau, Looker, or Grafana.`
+        }
          if (window.location.href.indexOf('automation') > 0) {
              return `Automatically triggers runbooks or external APIs in response to compliance events, streamlining operations and enforcing policies efficiently.`
          }

@@ -45,7 +45,7 @@ export default function Integrations() {
         response: responseConnectors,
         isLoading: connectorsLoading,
         sendNow: getList,
-    } = useIntegrationApiV1ConnectorsList(9, pageNo, undefined, 'count', 'desc')
+    } = useIntegrationApiV1ConnectorsList(12, pageNo, undefined, 'count', 'desc')
     const [open, setOpen] = useState(false)
     const navigate = useNavigate()
     const [selected, setSelected] = useState()
@@ -59,7 +59,7 @@ export default function Integrations() {
     //@ts-ignore
     const totalPages = Math.ceil(responseConnectors?.total_count / 9)
     useEffect(() => {
-        getList(9, pageNo, 'count', 'desc', undefined)
+        getList(12, pageNo, 'count', 'desc', undefined)
     }, [pageNo])
     const EnableIntegration = () => {
         setLoading(true)
@@ -85,7 +85,7 @@ export default function Integrations() {
                 config
             )
             .then((res) => {
-                getList(9, pageNo, 'count', 'desc', undefined)
+                getList(12, pageNo, 'count', 'desc', undefined)
                 setLoading(false)
                 setOpen(false)
                 setNotification({
@@ -98,7 +98,7 @@ export default function Integrations() {
                     text: `Failed to enable integration`,
                     type: 'error',
                 })
-                getList(9, pageNo, 'count', 'desc', undefined)
+                getList(12, pageNo, 'count', 'desc', undefined)
                 setLoading(false)
             })
     }
@@ -128,7 +128,7 @@ export default function Integrations() {
         axios
             .post(`${url}${path}`, {}, config)
             .then((res) => {
-                getList(9, pageNo, 'count', 'desc', undefined)
+                getList(12, pageNo, 'count', 'desc', undefined)
                 setLoading(false)
                 setOpen(false)
                 setNotification({
@@ -141,7 +141,7 @@ export default function Integrations() {
                     text: `Failed to install plugin`,
                     type: 'error',
                 })
-                getList(9, pageNo, 'count', 'desc', undefined)
+                getList(12, pageNo, 'count', 'desc', undefined)
                 setLoading(false)
             })
     }
@@ -196,7 +196,7 @@ export default function Integrations() {
                                     disabled={loading}
                                     variant="primary"
                                     onClick={() => {
-                                        getList(9, 1, 'count', 'desc', false)
+                                        getList(12, 1, 'count', 'desc', false)
                                         setOpen(false)
                                     }}
                                     className="mt-6"
@@ -241,51 +241,28 @@ export default function Integrations() {
             ) : (
                 <>
                     <Flex
-                        className="bg-white w-[90%] rounded-xl border-solid  border-2 border-gray-200  pb-2  "
+                        className="bg-white w-full rounded-xl border-solid  border-2 border-gray-200    "
                         flexDirection="col"
                         justifyContent="center"
                         alignItems="center"
                     >
-                        <div className="border-b w-full rounded-xl border-tremor-border bg-tremor-background-muted p-4 dark:border-dark-tremor-border dark:bg-gray-950 sm:p-6 lg:p-8">
-                            <header>
-                                <h1 className="text-tremor-title font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                                    Integrations
-                                </h1>
-                                <p className="text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-                                    Create and Manage your Integrations
-                                </p>
-                                <div className="mt-8 w-full md:flex md:max-w-3xl md:items-stretch md:space-x-4">
-                                    <Card className="w-full md:w-7/12">
-                                        <div className="inline-flex items-center justify-center rounded-tremor-small border border-tremor-border p-2 dark:border-dark-tremor-border">
-                                            <DocumentTextIcon
-                                                className="size-5 text-tremor-content-emphasis dark:text-dark-tremor-content-emphasis"
-                                                aria-hidden={true}
-                                            />
-                                        </div>
-                                        <h3 className="mt-4 text-tremor-default font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                                            <a
-                                                href="https://docs.opengovernance.io/"
-                                                target="_blank"
-                                                className="focus:outline-none"
-                                            >
-                                                {/* Extend link to entire card */}
-                                                <span
-                                                    className="absolute inset-0"
-                                                    aria-hidden={true}
-                                                />
-                                                Documentation
-                                            </a>
-                                        </h3>
-                                        <p className="dark:text-dark-tremor-cont text-tremor-default text-tremor-content">
-                                            Learn how to add, update, remove
-                                            Integrations
-                                        </p>
-                                    </Card>
-                                </div>
-                            </header>
+                        <div className="flex flex-row justify-between w-full p-4 sm:p-6 lg:p-8 lg:pb-0 sm:pb-0 pb-0 mb-4">
+                            <span className="text-2xl font-bold">
+                                Integration Plugins
+                                {responseConnectors?.total_count
+                                    ? ` (${responseConnectors?.total_count})`
+                                    : ' ?'}
+                            </span>
+                            <Pagination
+                                currentPageIndex={pageNo}
+                                pagesCount={totalPages}
+                                onChange={({ detail }) => {
+                                    setPageNo(detail.currentPageIndex)
+                                }}
+                            />
                         </div>
                         <div className="w-full">
-                            <div className="p-4 sm:p-6 lg:p-8">
+                            <div className="p-4 sm:p-6 lg:p-8 pt-0">
                                 <main>
                                     <div className="flex items-center justify-between">
                                         {/* <h2 className="text-tremor-title font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
@@ -391,13 +368,39 @@ export default function Integrations() {
                                                     },
 
                                                     {
-                                                        id: 'integrattoin',
-                                                        header: 'Integrations',
-                                                        content: (item) =>
-                                                            item?.count
-                                                                ? item.count
-                                                                : '--',
-                                                        width: 100,
+                                                        id: 'description',
+                                                        header: (
+                                                            <>
+                                                                <div className="flex justify-between">
+                                                                    <span>
+                                                                        {
+                                                                            'Description'
+                                                                        }
+                                                                    </span>
+                                                                    <span>
+                                                                        {
+                                                                            'Integrations'
+                                                                        }
+                                                                    </span>
+                                                                </div>
+                                                            </>
+                                                        ),
+                                                        content: (item) => (
+                                                            <>
+                                                                <div className="flex justify-between gap-4">
+                                                                    <span className="max-w-60">
+                                                                        {
+                                                                            item.description
+                                                                        }
+                                                                    </span>
+                                                                    <span>
+                                                                        {item.count
+                                                                            ? item.count
+                                                                            : '--'}
+                                                                    </span>
+                                                                </div>
+                                                            </>
+                                                        ),
                                                     },
                                                 ],
                                             }}
@@ -418,6 +421,8 @@ export default function Integrations() {
                                                             type.install_state,
                                                         platform_name:
                                                             type.plugin_id,
+                                                        description:
+                                                            type?.description,
 
                                                         title: type.name,
                                                         name: type.name,
@@ -451,13 +456,6 @@ export default function Integrations() {
                                 </main>
                             </div>
                         </div>
-                        <Pagination
-                            currentPageIndex={pageNo}
-                            pagesCount={totalPages}
-                            onChange={({ detail }) => {
-                                setPageNo(detail.currentPageIndex)
-                            }}
-                        />
                     </Flex>
                 </>
             )}
