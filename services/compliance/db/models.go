@@ -74,7 +74,6 @@ func (b Benchmark) ToApi() api.Benchmark {
 		LogoURI:           b.LogoURI,
 		Category:          b.Category,
 		DocumentURI:       b.DocumentURI,
-		IsBaseline:        b.IsBaseline,
 		Enabled:           b.Enabled,
 		TracksDriftEvents: b.TracksDriftEvents,
 		CreatedAt:         b.CreatedAt,
