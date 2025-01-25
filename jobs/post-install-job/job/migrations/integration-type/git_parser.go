@@ -45,6 +45,7 @@ type IntegrationPlugin struct {
 }
 
 type IntegrationYaml struct {
+	Type    string              `json:"type" yaml:"type"`
 	Plugins []IntegrationPlugin `json:"plugins" yaml:"plugins"`
 }
 

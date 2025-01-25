@@ -48,6 +48,10 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		return err
 	}
 
+	if parser.Integrations.Type != "integrations" {
+		return fmt.Errorf("manifest type %s is not supported, should be integrations", parser.Integrations.Type)
+	}
+
 	for _, iPlugin := range parser.Integrations.Plugins {
 		plugin, pluginBinary, err := parser.ExtractIntegrationBinaries(logger, iPlugin)
 		if err != nil {
