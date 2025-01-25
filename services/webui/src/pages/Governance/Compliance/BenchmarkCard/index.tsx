@@ -91,7 +91,7 @@ export default function BenchmarkCards({ benchmark, all,loading }: IComplianceCa
     return (
         <>
             <Cards
-                className='w-full'
+                className="w-full"
                 ariaLabels={{
                     itemSelectionLabel: (e, t) => `select ${t.name}`,
                     selectionGroupLabel: 'Item selection',
@@ -108,9 +108,18 @@ export default function BenchmarkCards({ benchmark, all,loading }: IComplianceCa
                             href={`./compliance/${item.id}`}
                             fontSize="heading-m"
                         >
-                            <Flex className="w-full flex-row    gap-2" justifyContent="between" alignItems='center'>
-                                <Flex className='w-full  text-ellipsis overflow-hidden whitespace-nowrap  ' justifyContent='start'>{item.name}</Flex>
-                                <Flex  className="gap-2 max-w-fit overflow-hidden justify-end ">
+                            <Flex
+                                className="w-full flex-row    gap-2"
+                                justifyContent="between"
+                                alignItems="center"
+                            >
+                                <Flex
+                                    className="w-full  text-ellipsis overflow-hidden whitespace-nowrap  "
+                                    justifyContent="start"
+                                >
+                                    {item.name}
+                                </Flex>
+                                {/* <Flex  className="gap-2 max-w-fit overflow-hidden justify-end flex-wrap ">
                                     {item?.connectors?.map((sub) => {
                                         return (
                                             <>
@@ -118,7 +127,7 @@ export default function BenchmarkCards({ benchmark, all,loading }: IComplianceCa
                                             </>
                                         )
                                     })}
-                                </Flex>
+                                </Flex> */}
                             </Flex>
                         </Link>
                     ),
@@ -145,7 +154,7 @@ export default function BenchmarkCards({ benchmark, all,loading }: IComplianceCa
                         },
                     ],
                 }}
-                cardsPerRow={[{ cards: 2 }]}
+                cardsPerRow={[{minWidth:340, cards: 2 },{ minWidth:1200,cards: 3 }]}
                 // totalItemsCount={7}
                 items={benchmark?.map((item) => {
                     return {

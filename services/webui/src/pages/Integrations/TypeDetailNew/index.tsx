@@ -179,7 +179,9 @@ export default function TypeDetail() {
                     text: `Plugin Updated`,
                     type: 'success',
                 })
-                window.location.reload()
+                 navigate('/integration/plugins')
+
+               
             })
             .catch((err) => {
                  setNotification({
@@ -217,7 +219,7 @@ export default function TypeDetail() {
                     text: `Plugin Uninstalled`,
                     type: 'success',
                 })
-                 navigate('/plugins')
+                 navigate('/integration/plugins')
             })
             .catch((err) => {
                  setNotification({
@@ -257,7 +259,7 @@ export default function TypeDetail() {
                      text: `Plugin Disabled`,
                      type: 'success',
                  })
-                navigate('/plugins')
+                navigate('/integration/plugins')
             })
             .catch((err) => {
                 setLoading(false)
@@ -277,7 +279,7 @@ export default function TypeDetail() {
         <>
             {/* <TopHeader breadCrumb={[state?.name]} /> */}
 
-            {shcema && shcema?.integration_type_id ? (
+            {shcema&& !loading && shcema?.integration_type_id ? (
                 <>
                     <Flex className="flex-col w-full justify-start items-start gap-4">
                         <BreadcrumbGroup
@@ -285,12 +287,12 @@ export default function TypeDetail() {
                             items={[
                                 {
                                     text: 'Plugins',
-                                    href: '/plugins',
+                                    href: '/integration/plugins',
                                 },
                                 {
                                     // @ts-ignore
                                     text: state?.name,
-                                    href: `/plugins/${type}`,
+                                    href: `/integration/plugins/${type}`,
                                 },
                             ]}
                         />
@@ -300,22 +302,25 @@ export default function TypeDetail() {
                                     {state?.name} plugin
                                 </h1>
                                 <ButtonDropdown
-                                onItemClick={({detail})=>{
-                                    const id = detail.id
-                                    switch (id){
-                                        case 'update':
-                                            UpdatePlugin()
-                                            break;
-                                        case 'disable':
-                                            DisablePlugin()
-                                            break;
-                                        case 'uninstall':
-                                            UnInstallPlugin()
-                                            break;
-                                        default:
-                                            break
-                                    }
-                                }}
+                                    onItemClick={({ detail }) => {
+                                        const id = detail.id
+                                        switch (id) {
+                                            case 'update':
+                                                UpdatePlugin()
+                                                break
+                                            case 'disable':
+                                                DisablePlugin()
+                                                break
+                                            case 'uninstall':
+                                                UnInstallPlugin()
+                                                break
+                                            case 'healthckeck':
+                                                GetStatus()
+                                                break
+                                            default:
+                                                break
+                                        }
+                                    }}
                                     variant="primary"
                                     items={[
                                         {
@@ -335,7 +340,10 @@ export default function TypeDetail() {
                                                 },
                                             ],
                                         },
-                                      
+                                        {
+                                            text: 'Run Health Check',
+                                            id: 'healthckeck'
+                                        },
                                     ]}
                                 >
                                     Actions
@@ -399,10 +407,9 @@ export default function TypeDetail() {
                             tabs={[
                                 {
                                     id: '3',
-                                    label: 'Resource Types',
+                                    label: ' Discovered Resources',
                                     content: (
                                         <Resources
-                                        
                                             name={state?.name}
                                             integration_type={type}
                                         />
@@ -484,7 +491,7 @@ export default function TypeDetail() {
                                         <Button
                                             icon={ArrowLeftStartOnRectangleIcon}
                                             onClick={() => {
-                                                navigate('/plugins')
+                                                navigate('/integration/plugins')
                                             }}
                                         >
                                             Back

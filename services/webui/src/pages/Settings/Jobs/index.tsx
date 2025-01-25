@@ -233,7 +233,7 @@ export default function SettingsJobs() {
 
     return (
         <>
-            <TopHeader />
+            {/* <TopHeader /> */}
             <Tabs
                 tabs={[
                     // {
@@ -252,11 +252,11 @@ export default function SettingsJobs() {
                         id: '1',
                     },
 
-                    {
-                        label: 'Scheduling',
-                        content: <SettingsCustomization />,
-                        id: '2',
-                    },
+                    // {
+                    //     label: 'Scheduling',
+                    //     content: <SettingsCustomization />,
+                    //     id: '2',
+                    // },
                 ]}
             />
             {/* <TabGroup>

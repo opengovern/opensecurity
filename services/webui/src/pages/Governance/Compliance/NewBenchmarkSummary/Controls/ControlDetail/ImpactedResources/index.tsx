@@ -3,15 +3,14 @@ import { useAtomValue, useSetAtom } from 'jotai/index'
 
 import { Card, Flex, Text, Title } from '@tremor/react'
 import { CheckCircleIcon, ExclamationCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
-import { isDemoAtom, notificationAtom } from '../../../../../../store'
+import { isDemoAtom, notificationAtom } from '../../../../../../../store'
 import {
     Api,
     PlatformEnginePkgComplianceApiConformanceStatus,
     PlatformEnginePkgComplianceApiResourceFinding,
-} from '../../../../../../api/api'
-import AxiosAPI from '../../../../../../api/ApiConfig'
-import { dateTimeDisplay } from '../../../../../../utilities/dateDisplay'
-import ResourceFindingDetail from '../../../../Findings/ResourceFindingDetail'
+} from '../../../../../../../api/api'
+import AxiosAPI from '../../../../../../../api/ApiConfig'
+import ResourceFindingDetail from '../../../../../Findings/ResourceFindingDetail'
 import KTable from '@cloudscape-design/components/table'
 import Box from '@cloudscape-design/components/box'
 import SpaceBetween from '@cloudscape-design/components/space-between'
@@ -28,6 +27,7 @@ import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 let sortKey: any[] = []
 
 interface IImpactedResources {
+    benchmarkID: string
     controlId: string
     // conformanceFilter?: PlatformEnginePkgComplianceApiConformanceStatus[]
     linkPrefix?: string
@@ -58,6 +58,7 @@ export const statusBadge = (
 }
 
 export default function ImpactedResources({
+    benchmarkID,
     controlId,
     // conformanceFilter,
     linkPrefix,
@@ -107,6 +108,7 @@ export default function ImpactedResources({
           .apiV1ResourceFindingsCreate({
               filters: {
                   controlID: [controlId || ''],
+                  benchmarkID: [benchmarkID || ''],
                   complianceStatus:
                       conformanceFilter === undefined
                           ? [

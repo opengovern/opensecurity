@@ -178,7 +178,7 @@ function NumberMetric({ title, metricId, min, max }: INumberMetric) {
     }, [value])
 
     return (
-        <Flex flexDirection="row" className="mb-4">
+        <Flex flexDirection="row" className="mb-4 w-full justify-between">
             <Flex justifyContent="start" className="truncate space-x-4 ">
                 <div className="truncate">
                     <Text className="truncate text-sm">{title}:</Text>
@@ -186,6 +186,7 @@ function NumberMetric({ title, metricId, min, max }: INumberMetric) {
             </Flex>
 
             <NumberInput
+                className='w-1/2'
                 value={value}
                 min={min}
                 max={max}
@@ -272,13 +273,13 @@ export default function SettingsCustomization() {
     }, [syncLoading])
 
     return (
-        <Card key="summary" className="">
-            <Title className="font-semibold">Customization</Title>
+        <Flex key="summary" className="">
+            {/* <Title className="font-semibold">Customization</Title>
             <Divider />
 
             <Title className="font-semibold">
                 Jobs interval configurations
-            </Title>
+            </Title> */}
 
             <Flex flexDirection="col" className="mt-4">
                 <Flex
@@ -287,94 +288,25 @@ export default function SettingsCustomization() {
                     justifyContent="start"
                 >
                     <NumberMetric
-                        metricId="describe_job_interval"
-                        title="Fast Discovery Interval (Hours)"
-                        min={1}
-                        max={120}
-                    />
-                    <Button
-                        variant="secondary"
-                        className="ml-2"
-                        icon={ArrowPathIcon}
-                        disabled={describeExecuted && describeLoading}
-                        loading={describeExecuted && describeLoading}
-                        onClick={() =>
-                            describeTrigger('all', { force_full: false }, {})
-                        }
-                    >
-                        Run now
-                    </Button>
-                </Flex>
-                <Flex
-                    flexDirection="row"
-                    alignItems="start"
-                    justifyContent="start"
-                >
-                    <NumberMetric
                         metricId="full_discovery_job_interval"
-                        title="Full Discovery Interval (Hours)"
+                        title="Resource Discovery Frequency (Hrs)"
                         min={1}
                         max={120}
                     />
                     <Button
                         variant="secondary"
                         className="ml-2"
-                        icon={ArrowPathIcon}
+                        // icon={ArrowPathIcon}
                         disabled={describeExecuted && describeLoading}
                         loading={describeExecuted && describeLoading}
                         onClick={() =>
                             describeTrigger('all', { force_full: true }, {})
                         }
                     >
-                        Run now
+                        Save
                     </Button>
                 </Flex>
-                <Flex
-                    flexDirection="row"
-                    alignItems="start"
-                    justifyContent="start"
-                >
-                    <NumberMetric
-                        metricId="cost_discovery_job_interval"
-                        title="Spend Discovery Interval (Hours)"
-                        min={24}
-                        max={120}
-                    />
-                    <Button
-                        variant="secondary"
-                        className="ml-2"
-                        icon={ArrowPathIcon}
-                        disabled={describeExecuted && describeLoading}
-                        loading={describeExecuted && describeLoading}
-                        onClick={() =>
-                            describeTrigger('all', { cost_discovery: true }, {})
-                        }
-                    >
-                        Run now
-                    </Button>
-                </Flex>
-                <Flex
-                    flexDirection="row"
-                    alignItems="start"
-                    justifyContent="start"
-                >
-                    <NumberMetric
-                        metricId="metrics_job_interval"
-                        title="Metrics Job Interval (Hours)"
-                        min={4}
-                        max={120}
-                    />
-                    <Button
-                        className="ml-2"
-                        icon={ArrowPathIcon}
-                        disabled={triggerLoading && triggerExecuted}
-                        loading={triggerLoading && triggerExecuted}
-                        variant="secondary"
-                        onClick={trigger}
-                    >
-                        Run now
-                    </Button>
-                </Flex>
+
                 <Flex
                     flexDirection="row"
                     alignItems="start"
@@ -382,19 +314,19 @@ export default function SettingsCustomization() {
                 >
                     <NumberMetric
                         metricId="compliance_job_interval"
-                        title="Compliance Job Interval (Hours)"
+                        title="Compliance Assessment Frequency  (Hrs)"
                         min={24}
                         max={120}
                     />
                     <Button
                         variant="secondary"
                         className="ml-2"
-                        icon={ArrowPathIcon}
+                        // icon={ArrowPathIcon}
                         disabled={complianceExecuted && complianceLoading}
                         loading={complianceExecuted && complianceLoading}
                         onClick={() => complianceTrigger()}
                     >
-                        Run now
+                        Save
                     </Button>
                 </Flex>
             </Flex>
@@ -470,6 +402,6 @@ export default function SettingsCustomization() {
                     </TabList>
                 </TabGroup>
             </Flex> */}
-        </Card>
+        </Flex>
     )
 }

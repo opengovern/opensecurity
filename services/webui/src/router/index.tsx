@@ -62,10 +62,15 @@ const authRoutes = [
         path: '/automation',
         element: <RequestAccess />,
     },
+    {
+        key: 'Automation',
+        path: '/dashboards',
+        element: <RequestAccess />,
+    },
 
     {
         key: 'integrations',
-        path: '/plugins',
+        path: 'integration/plugins',
         element: <Integrations />,
     },
     {
@@ -76,7 +81,7 @@ const authRoutes = [
 
     {
         key: 'connector detail',
-        path: '/plugins/:type',
+        path: 'integration/plugins/:type',
         element: <TypeDetail />,
     },
 
@@ -112,7 +117,7 @@ const authRoutes = [
         path: '/compliance',
         element: <Compliance />,
     },
-   
+
     {
         key: 'benchmark summary 2',
         path: '/compliance/:benchmarkId',

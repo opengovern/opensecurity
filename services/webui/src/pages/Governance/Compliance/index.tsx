@@ -159,7 +159,7 @@ export default function Compliance() {
 
         const body = {
             cursor: page,
-            per_page: 6,
+            per_page: 9,
             sort_by: 'incidents',
             assigned: false,
             is_baseline: sre_filter,
@@ -176,7 +176,7 @@ export default function Compliance() {
                     setLoading(false)
                 }
                 setBenchmarks(res.data.items)
-                setTotalPage(Math.ceil(res.data.total_count / 6))
+                setTotalPage(Math.ceil(res.data.total_count / 9))
                 setTotalCount(res.data.total_count)
             })
             .catch((err) => {

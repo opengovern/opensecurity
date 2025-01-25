@@ -26,7 +26,7 @@ const navList = [
         title: 'CloudQL',
         description: 'See all workloads - from code to cloud',
         icon: Cube,
-        link: 'cloudql?tab_id=0',
+        link: 'cloudql',
         new: true,
     },
     {
@@ -47,7 +47,7 @@ const navList = [
         title: 'Connect',
         description: 'Setup Integrations and enable visibility',
         icon: Cable,
-        link: 'integrations',
+        link: 'integration/plugins',
         new: true,
     },
 

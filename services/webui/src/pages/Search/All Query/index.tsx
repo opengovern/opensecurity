@@ -318,7 +318,7 @@ export default function AllQueries({ setTab }: Props) {
 
     return (
         <>
-            <TopHeader />
+            {/* <TopHeader /> */}
             <AppLayout
                 toolsOpen={false}
                 navigationOpen={false}

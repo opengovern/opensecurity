@@ -299,7 +299,7 @@ export default function View({ setTab }: Props) {
 
     return (
         <>
-            <TopHeader />
+            {/* <TopHeader /> */}
             <AppLayout
                 toolsOpen={false}
                 navigationOpen={false}

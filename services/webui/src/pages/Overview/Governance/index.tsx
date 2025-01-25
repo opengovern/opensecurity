@@ -7,7 +7,7 @@ export default function Governance() {
      const workspace = useParams<{ ws: string }>().ws
      const navigate = useNavigate()
     return (
-        <Card className="border-0 ring-0 !shadow-sm">
+        <Card className="border-0 ring-0 !shadow-sm h-full">
             <Flex justifyContent="between">
                 <Flex justifyContent="start" className="gap-2 ">
                     <Icon icon={ShieldCheckIcon} className="p-0" />

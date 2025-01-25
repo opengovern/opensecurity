@@ -424,11 +424,7 @@ const {
                 )}
             </Modal>
 
-            <TopHeader
-                // supportedFilters={['Date']}
-                // initialFilters={['Date']}
-                datePickerDefault={defaultHomepageTime()}
-            />
+         
             {/* <Grid numItems={4} className="w-full gap-4 h-fit mb-4">
                 <Col numColSpan={1}>
                     <SummaryCard
@@ -472,16 +468,16 @@ const {
                     <Flex
                         flexDirection="col"
                         alignItems="start"
-                        className="gap-4"
+                        className="gap-4 h-full"
                         id="myDIV"
                     >
                         {/* <ScoreKPIs /> */}
 
-                        <Grid numItems={6} className="w-full gap-4 h-fit ">
+                        <Grid numItems={6} className="w-full gap-4 h-full ">
                             <Col numColSpan={6}>
                                 <Shortcuts />
                             </Col>
-                            <Col numColSpan={6}>
+                            <Col numColSpan={6} className='h-full'>
                                 {/* <QuickNav /> */}
                                 <Governance />
                             </Col>
@@ -491,7 +487,7 @@ const {
                 </Col>
                 <Col numColSpan={2}>
                     {/* <Query height={880} /> */}
-                    <Integrations height={875} />
+                    <Integrations height={860} />
                 </Col>
             </Grid>
 
