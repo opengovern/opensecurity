@@ -1010,19 +1010,25 @@ func (a *API) LoadPlugin(ctx context.Context, plugin *models2.IntegrationPlugin,
 	}
 	pluginName := plugin.IntegrationType.String()
 
-	// write the plugin to the file system
+	if v, ok := a.typeManager.Clients[plugin.IntegrationType]; ok {
+		v.Kill()
+		delete(a.typeManager.Clients, plugin.IntegrationType)
+	}
+
 	pluginPath := filepath.Join(baseDir, plugin.IntegrationType.String()+".so")
+
+	if _, err := os.Stat(pluginPath); err == nil {
+		if err := os.Remove(pluginPath); err != nil {
+			a.logger.Error("failed to delete existing plugin file", zap.Error(err), zap.String("pluginPath", pluginPath))
+		}
+	}
+
 	err := os.WriteFile(pluginPath, pluginBinary.IntegrationPlugin, 0755)
 	if err != nil {
 		a.logger.Error("failed to write plugin to file system", zap.Error(err), zap.String("plugin", pluginName))
 		return err
 	}
 	hcLogger := hczap.Wrap(a.logger)
-
-	if v, ok := a.typeManager.Clients[plugin.IntegrationType]; ok {
-		v.Kill()
-		delete(a.typeManager.Clients, plugin.IntegrationType)
-	}
 
 	client := plugin2.NewClient(&plugin2.ClientConfig{
 		HandshakeConfig: interfaces.HandshakeConfig,
