@@ -553,23 +553,18 @@ func (g *GitParser) ExtractFrameworks(complianceBenchmarksPath string) error {
 	}
 	g.benchmarks = newBenchmarks
 
-	g.benchmarks, _ = fillBenchmarksIntegrationTypes(g.benchmarks)
+	//g.benchmarks, _ = fillBenchmarksIntegrationTypes(g.benchmarks)
 
 	return nil
 }
 
 func (g *GitParser) HandleFrameworks(frameworks []Framework) error {
 	benchmarkIntegrationTypes := make(map[string]map[string]bool)
-	seenMap := make(map[string]bool)
 	var childrenDfs func(framework db.Benchmark)
 	childrenDfs = func(framework db.Benchmark) {
-		if _, ok := seenMap[framework.ID]; ok {
-			return
-		}
 		if benchmarkIntegrationTypes[framework.ID] == nil {
 			benchmarkIntegrationTypes[framework.ID] = make(map[string]bool)
 		}
-		seenMap[framework.ID] = true
 		for _, c := range framework.Controls {
 			for _, it := range c.IntegrationType {
 				benchmarkIntegrationTypes[framework.ID][it] = true
