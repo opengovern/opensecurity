@@ -85,7 +85,7 @@ func (j *Job) Run(ctx context.Context) error {
 			}
 
 			var cloudqlBinary []byte
-			err = db.Raw("SELECT cloud_ql_plugin FROM integration_plugin_binary WHERE plugin_id = ?", plugin.PluginID).Scan(&cloudqlBinary).Error
+			err = db.Raw("SELECT cloud_ql_plugin FROM integration_plugin_binaries WHERE plugin_id = ?", plugin.PluginID).Scan(&cloudqlBinary).Error
 			if err != nil {
 				j.logger.Error("failed to get plugin binary", zap.Error(err), zap.String("plugin_id", plugin.PluginID))
 				return err
