@@ -1,4 +1,4 @@
-import { Button, Card, Flex, Title, Text } from '@tremor/react'
+import {  Card, Flex, Title, Text } from '@tremor/react'
 import {
     useLocation,
     useNavigate,
@@ -23,10 +23,16 @@ import {
 } from '../../../utilities/urlstate'
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { Schema } from './types'
+import { Integration, Schema } from './types'
 import {
     BreadcrumbGroup,
+    Button,
+    Checkbox,
+    FormField,
+    Input,
     KeyValuePairs,
+    Modal,
+    Multiselect,
     Spinner,
     Tabs,
 } from '@cloudscape-design/components'
@@ -49,8 +55,20 @@ export default function TypeDetail() {
     const [shcema, setSchema] = useState<Schema>()
     const [loading, setLoading] = useState<boolean>(false)
     const [status, setStatus] = useState<string>()
+     const [row, setRow] = useState<Integration[]>([])
     const setNotification = useSetAtom(notificationAtom)
-
+     const [actionLoading, setActionLoading] = useState<any>({
+        
+         discovery: false,
+     })
+         const [resourceTypes, setResourceTypes] = useState<any>([])
+         const [selectedResourceType, setSelectedResourceType] = useState<any>()
+         const [runOpen, setRunOpen] = useState(false)
+         const [selectedIntegrations, setSelectedIntegrations] = useState<any>(
+             []
+         )
+ const [params, setParams] = useState<any>()
+ const [enableSchedule, setEnableSchedule] = useState(false)
     const GetSchema = () => {
         setLoading(true)
         let url = ''
@@ -269,6 +287,173 @@ export default function TypeDetail() {
                 })
             })
     }
+     const RunDiscovery = () => {
+         setActionLoading({ ...actionLoading, discovery: true })
+         let url = ''
+         if (window.location.origin === 'http://localhost:3000') {
+             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+         } else {
+             url = window.location.origin
+         }
+         // @ts-ignore
+         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+         const config = {
+             headers: {
+                 Authorization: `Bearer ${token}`,
+             },
+         }
+         let body = {}
+         body = {
+             integration_info: selectedIntegrations?.map((item: any) => {
+                 return {
+                     integration_type: type,
+                     provider_id: item.provider_id,
+                     integration_id: item.integration_id,
+                     name: item.name,
+                 }
+             }),
+         }
+         if (
+             selectedResourceType?.length > 0 &&
+             selectedResourceType?.length < resourceTypes?.length
+         ) {
+             // @ts-ignore
+             body['resource_types'] = selectedResourceType?.map((item: any) => {
+                 if (selectedResourceType?.length == 1) {
+                     if (selectedResourceType[0]?.params?.length > 0) {
+                         if (params) {
+                             // @ts-ignore
+                             return {
+                                 resource_type: item.value,
+                                 parameters: params,
+                                 enable_schedule: enableSchedule,
+                             }
+                         }
+                     }
+                 }
+                 return {
+                     resource_type: item.value,
+                     enable_schedule: enableSchedule,
+                 }
+             })
+         }
+
+         axios
+             .post(`${url}/main/schedule/api/v3/discovery/run`, body, config)
+             .then((res) => {
+                 GetIntegrations()
+                 setActionLoading({
+                     ...actionLoading,
+                     discovery: false,
+                 })
+                 setRunOpen(false)
+                 setNotification({
+                     text: `Discovery started`,
+                     type: 'success',
+                 })
+                 setParams({})
+             })
+             .catch((err) => {
+                 console.log(err)
+                 setActionLoading({
+                     ...actionLoading,
+                     discovery: false,
+                 })
+                 setNotification({
+                     text: `Error: ${err.response.data.message}`,
+                     type: 'error',
+                 })
+             })
+     }
+     const GetResourceTypes = () => {
+          setActionLoading({ ...actionLoading, discovery: true })
+         let url = ''
+         if (window.location.origin === 'http://localhost:3000') {
+             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+         } else {
+             url = window.location.origin
+         }
+         // @ts-ignore
+         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+         const config = {
+             headers: {
+                 Authorization: `Bearer ${token}`,
+             },
+         }
+
+         // const body = {
+         //     integration_type: [integration_type],
+         // }
+         axios
+             .get(
+                 `${url}/main/integration/api/v1/integrations/types/${type}/resource_types`,
+
+                 config
+             )
+             .then((res) => {
+                 const data = res.data
+                 setResourceTypes(data?.integration_types)
+                 const temp: any = []
+                 data?.integration_types?.map((item: any) => {
+                     temp.push({
+                         label: item?.name,
+                         value: item?.name,
+                         params: item?.params,
+                     })
+                 })
+                 setSelectedResourceType(temp)
+                   setActionLoading({ ...actionLoading, discovery: false })
+             })
+             .catch((err) => {
+                 console.log(err)
+                   setActionLoading({ ...actionLoading, discovery: false })
+             })
+     }
+     const GetIntegrations = () => {
+          setActionLoading({ ...actionLoading, discovery: true })
+         let url = ''
+         if (window.location.origin === 'http://localhost:3000') {
+             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+         } else {
+             url = window.location.origin
+         }
+         // @ts-ignore
+         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+         const config = {
+             headers: {
+                 Authorization: `Bearer ${token}`,
+             },
+         }
+
+         const body = {
+             integration_type: [type],
+         }
+         axios
+             .post(
+                 `${url}/main/integration/api/v1/integrations/list`,
+                 body,
+                 config
+             )
+             .then((res) => {
+                 const data = res.data
+
+                
+                 if (data.integrations) {
+                     setRow(data.integrations)
+                 } else {
+                     setRow([])
+                 }
+  setActionLoading({ ...actionLoading, discovery: false })                 
+             })
+             .catch((err) => {
+                 console.log(err)
+                 setLoading(false)
+                   setActionLoading({ ...actionLoading, discovery: false })
+             })
+     }
     useEffect(() => {
         GetSchema()
         GetStatus()
@@ -279,7 +464,7 @@ export default function TypeDetail() {
         <>
             {/* <TopHeader breadCrumb={[state?.name]} /> */}
 
-            {shcema&& !loading && shcema?.integration_type_id ? (
+            {shcema && !loading && shcema?.integration_type_id ? (
                 <>
                     <Flex className="flex-col w-full justify-start items-start gap-4">
                         <BreadcrumbGroup
@@ -342,12 +527,19 @@ export default function TypeDetail() {
                                         },
                                         {
                                             text: 'Run Health Check',
-                                            id: 'healthckeck'
+                                            id: 'healthckeck',
                                         },
                                     ]}
-                                >
-                                    Actions
-                                </ButtonDropdown>
+                                    mainAction={{
+                                        text: 'Run discovery',
+                                        onClick: () => {
+                                            GetIntegrations()
+                                            GetResourceTypes()
+                                            setRunOpen(true)
+                                        },
+                                        loading: actionLoading['discovery'],
+                                    }}
+                                ></ButtonDropdown>
                             </Flex>
                             <Card className="">
                                 <Flex
@@ -461,6 +653,152 @@ export default function TypeDetail() {
                             ]}
                         />
                     </Flex>
+                    <Modal
+                        visible={runOpen}
+                        onDismiss={() => {
+                            setRunOpen(false)
+                            setSelectedIntegrations([])
+                            setSelectedResourceType([])
+                            setParams({})
+                        }}
+                        // @ts-ignore
+                        header={'Run Discovery'}
+                        footer={
+                            <Flex className="gap-3" justifyContent="end">
+                                <Button
+                                    onClick={() => {
+                                        setRunOpen(false)
+                                        setSelectedIntegrations([])
+                                        setSelectedResourceType([])
+                                        setParams({})
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={() => {
+                                        if (
+                                            selectedResourceType?.length ==
+                                            resourceTypes?.length
+                                        ) {
+                                            setSelectedResourceType([])
+                                            return
+                                        }
+                                        const temp: any = []
+                                        resourceTypes?.map((item: any) => {
+                                            temp.push({
+                                                label: item?.name,
+                                                value: item?.name,
+                                                params: item?.params,
+                                            })
+                                        })
+                                        setSelectedResourceType(temp)
+                                    }}
+                                >
+                                    {selectedResourceType?.length ==
+                                    resourceTypes?.length
+                                        ? 'Unselect all types'
+                                        : 'Select all types'}
+                                </Button>
+                                <Button
+                                    variant="primary"
+                                    loading={actionLoading['discovery']}
+                                    onClick={() => {
+                                        RunDiscovery()
+                                    }}
+                                >
+                                    Confirm
+                                </Button>
+                            </Flex>
+                        }
+                    >
+                        <Flex
+                            className="gap-5 w-full justify-start items-start"
+                            flexDirection="col"
+                        >
+                            <Multiselect
+                                className="w-full"
+                                options={row?.map((item: any) => {
+                                    return {
+                                        label: item?.name,
+                                        value: item?.name,
+                                        provider_id: item.provider_id,
+                                        integration_id: item.integration_id,
+                                        name: item.name,
+                                    }
+                                })}
+                                selectedOptions={selectedIntegrations}
+                                onChange={({ detail }) => {
+                                    setSelectedIntegrations(
+                                        detail.selectedOptions
+                                    )
+                                }}
+                                tokenLimit={5}
+                                placeholder="Select Integration"
+                            />
+                            <Multiselect
+                                className="w-full"
+                                options={resourceTypes?.map((item: any) => {
+                                    return {
+                                        label: item?.name,
+                                        value: item?.name,
+                                        params: item?.params,
+                                    }
+                                })}
+                                selectedOptions={selectedResourceType}
+                                onChange={({ detail }) => {
+                                    setSelectedResourceType(
+                                        detail.selectedOptions
+                                    )
+                                }}
+                                tokenLimit={0}
+                                placeholder="Select resource type"
+                            />
+                            <Checkbox
+                                onChange={({ detail }) =>
+                                    setEnableSchedule(detail.checked)
+                                }
+                                checked={enableSchedule}
+                            >
+                                Make this a recurring Discovery Job
+                            </Checkbox>
+                            {selectedResourceType?.length == 1 && (
+                                <>
+                                    {/* show params to input */}
+                                    {selectedResourceType[0]?.params?.map(
+                                        (item: any) => {
+                                            return (
+                                                <FormField
+                                                    className="w-full"
+                                                    label={`${item.name} (Optional)`}
+                                                    description={
+                                                        item.description
+                                                    }
+                                                >
+                                                    <Input
+                                                        className="w-full"
+                                                        value={
+                                                            params?.[item.name]
+                                                        }
+                                                        type={'text'}
+                                                        onChange={({
+                                                            detail,
+                                                        }) =>
+                                                            setParams({
+                                                                ...params,
+                                                                [item.name]:
+                                                                    detail.value,
+                                                            })
+                                                        }
+                                                    />
+                                                </FormField>
+                                            )
+                                        }
+                                    )}
+                                </>
+                            )}
+                        </Flex>
+                    </Modal>
                 </>
             ) : (
                 <>
@@ -489,7 +827,7 @@ export default function TypeDetail() {
                                             integration
                                         </Text>
                                         <Button
-                                            icon={ArrowLeftStartOnRectangleIcon}
+                                            // icon={ArrowLeftStartOnRectangleIcon}
                                             onClick={() => {
                                                 navigate('/integration/plugins')
                                             }}

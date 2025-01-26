@@ -69,19 +69,8 @@ export default function FindingsWithFailure({ query }: ICount) {
     const [totalPage, setTotalPage] = useState(0)
     const isDemo = useAtomValue(isDemoAtom)
     const [queries, setQuery] = useState(query)
-    const today = new Date()
-    const lastWeek = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate() - 7
-    )
-
-    const [date, setDate] = useState({
-        key: 'previous-3-days',
-        amount: 3,
-        unit: 'day',
-        type: 'relative',
-    })
+  
+    const [date, setDate] = useState()
     const truncate = (text: string | undefined) => {
         if (text) {
             return text.length > 40 ? text.substring(0, 40) + '...' : text

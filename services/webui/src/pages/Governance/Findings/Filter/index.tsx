@@ -148,7 +148,7 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
                 // @ts-ignore
                 const temp = []
                 // @ts-ignore
-                res.data.map((d) => {
+                res?.data?.map((d) => {
                     temp.push({
                         label: d.job_id.toString(),
                         value: d.job_id.toString(),
@@ -699,10 +699,10 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
     }, [query])
     const GetDefaultFilter =()=>{
          if (type == 'findings') {
-            return  { label: 'Recent Incidents', value: '1' }
+            return  { label: 'All Incidents', value: '3' }
            
          } else if (type == 'controls') {
-            return { label: 'Priority Controls', value: '1' }
+            return { label: 'All Controls', value: '3' }
          }
          return undefined
     }
@@ -719,22 +719,21 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
                     unit: 'day',
                     type: 'relative',
                 })
-                    setQuery({
-                        tokens: [
-                          
-                            {
-                                propertyKey: 'conformance_status',
-                                value: 'failed',
-                                operator: '=',
-                            },
-                            // {
-                            //     propertyKey: 'connectionGroup',
-                            //     value: 'healthy',
-                            //     operator: '=',
-                            // },
-                        ],
-                        operation: 'and',
-                    })
+                setQuery({
+                    tokens: [
+                        {
+                            propertyKey: 'conformance_status',
+                            value: 'failed',
+                            operator: '=',
+                        },
+                        // {
+                        //     propertyKey: 'connectionGroup',
+                        //     value: 'healthy',
+                        //     operator: '=',
+                        // },
+                    ],
+                    operation: 'and',
+                })
             }
             // @ts-ignore
             else if (filter.value == '2') {
@@ -761,6 +760,16 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
                         //     value: 'healthy',
                         //     operator: '=',
                         // },
+                    ],
+                    operation: 'and',
+                })
+            }
+            // @ts-ignore
+            else if (filter.value == '3') {
+                setDate()
+                setQuery({
+                    tokens: [
+                        
                     ],
                     operation: 'and',
                 })
@@ -828,14 +837,8 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
             }
             // @ts-ignore
             else if (filter.value == '3') {
-                setDate({
-                    key: 'previous-7-days',
-                    amount: 7,
-                    unit: 'day',
-                    type: 'relative',
-                })
-              
-            }
+                setDate()
+            } 
         }
     }, [filter])
     const PLACEHOLDERS ={
@@ -847,6 +850,7 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
         const temp =[]
         if(type =='findings'){
              temp.push(
+                 { label: 'All Incidents', value: '3' },
                  { label: 'Recent Incidents', value: '1' },
                  {
                      label: 'Recent Critical Incidents',

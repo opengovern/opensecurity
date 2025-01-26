@@ -664,17 +664,7 @@ export default function DiscoveryJobs({
                                             }}
                                             iconName="refresh"
                                         ></KButton>
-                                        <KButton
-                                            // loading={actionLoading['discovery']}
-                                            // variant='primary'
-                                            onClick={() => {
-                                                // RunDiscovery(true)
-                                                // GetResourceTypes()
-                                                // setRunOpen(true)
-                                            }}
-                                        >
-                                            Run discovery
-                                        </KButton>
+                                       
                                     </Flex>
                                 }
                                 className="w-full"
