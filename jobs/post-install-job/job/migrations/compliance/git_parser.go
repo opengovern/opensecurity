@@ -475,7 +475,7 @@ func (g *GitParser) parseControlFile(content []byte, path string) error {
 	return nil
 }
 
-func (g *GitParser) ExtractBenchmarks(complianceBenchmarksPath string) error {
+func (g *GitParser) ExtractFrameworks(complianceBenchmarksPath string) error {
 	var frameworks []Framework
 	err := filepath.WalkDir(complianceBenchmarksPath, func(path string, d fs.DirEntry, err error) error {
 		if !strings.HasSuffix(filepath.Base(path), ".yaml") {
@@ -553,7 +553,7 @@ func (g *GitParser) ExtractBenchmarks(complianceBenchmarksPath string) error {
 	}
 	g.benchmarks = newBenchmarks
 
-	g.benchmarks, _ = fillBenchmarksIntegrationTypes(g.benchmarks)
+	//g.benchmarks, _ = fillBenchmarksIntegrationTypes(g.benchmarks)
 
 	return nil
 }
@@ -571,6 +571,9 @@ func (g *GitParser) HandleFrameworks(frameworks []Framework) error {
 		}
 		seenMap[framework.ID] = true
 		for _, c := range g.controls {
+			if !contains(framework.Controls, c.ID) {
+				continue
+			}
 			for _, it := range c.IntegrationType {
 				benchmarkIntegrationTypes[framework.ID][it] = true
 			}
@@ -772,7 +775,7 @@ func (g *GitParser) ExtractCompliance(compliancePath string, controlEnrichmentBa
 	if err := g.ExtractControls(path.Join(compliancePath, "controls"), controlEnrichmentBasePath); err != nil {
 		return err
 	}
-	if err := g.ExtractBenchmarks(path.Join(compliancePath, "frameworks")); err != nil {
+	if err := g.ExtractFrameworks(path.Join(compliancePath, "frameworks")); err != nil {
 		return err
 	}
 	//if err := g.CheckForDuplicate(); err != nil {
