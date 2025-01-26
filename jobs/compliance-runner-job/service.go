@@ -70,6 +70,7 @@ func NewWorker(
 		ElasticSearch: config.ElasticSearch,
 		Steampipe:     config.Steampipe,
 	}, integrationClient)
+	logger.Info("running plugin job to initialize integrations in cloudql")
 	err := pluginJob.Run(ctx)
 	if err != nil {
 		logger.Error("failed to run plugin job", zap.Error(err))
