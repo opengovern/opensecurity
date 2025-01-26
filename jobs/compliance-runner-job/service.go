@@ -83,6 +83,7 @@ func NewWorker(
 		logger.Error("failed to start steampipe service", zap.Error(err))
 		return nil, err
 	}
+	panic("we are here")
 	logger.Info("steampipe service started")
 	logger.Sync()
 	fmt.Println("steampipe service started")
