@@ -5,6 +5,7 @@ import (
 	"github.com/opengovern/opencomply/services/integration/client"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
+	"os/exec"
 )
 
 func JobCommand() *cobra.Command {
@@ -24,6 +25,19 @@ func JobCommand() *cobra.Command {
 			j := NewJob(logger, cnf, integrationClient)
 
 			_, err = j.Run(cmd.Context())
+			killCmd := exec.Command("steampipe", "service", "stop", "--force")
+			err = killCmd.Run()
+			if err != nil {
+				j.logger.Error("first stop failed", zap.Error(err))
+				return err
+			}
+			//NOTE: stop must be called twice. it's not a mistake
+			killCmd = exec.Command("steampipe", "service", "stop", "--force")
+			err = killCmd.Run()
+			if err != nil {
+				j.logger.Error("second stop failed", zap.Error(err))
+				return err
+			}
 			return err
 		},
 	}
