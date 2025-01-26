@@ -298,6 +298,18 @@ func (s *Scheduler) SetupNats(ctx context.Context) error {
 		return err
 	}
 
+	if err := s.jq.CreateOrUpdateConsumer(ctx, queryrunner.ConsumerGroup, queryrunner.StreamName, []string{queryrunner.JobQueueTopic}, jetstream.ConsumerConfig{
+		Replicas:          1,
+		AckPolicy:         jetstream.AckExplicitPolicy,
+		DeliverPolicy:     jetstream.DeliverAllPolicy,
+		MaxAckPending:     -1,
+		AckWait:           time.Minute * 30,
+		InactiveThreshold: time.Hour,
+	}); err != nil {
+		s.logger.Error("Failed to stream to Policy runner consumer", zap.Error(err))
+		return err
+	}
+
 	if err := s.jq.Stream(ctx, queryvalidator.StreamName, "Policy Validator job queues", []string{queryvalidator.JobQueueTopic, queryvalidator.JobResultQueueTopic}, 1000); err != nil {
 		s.logger.Error("Failed to stream to Policy Validator queue", zap.Error(err))
 		return err
@@ -313,6 +325,29 @@ func (s *Scheduler) SetupNats(ctx context.Context) error {
 		return err
 	}
 
+	if err := s.jq.CreateOrUpdateConsumer(ctx, runner.ConsumerGroup, runner.StreamName, []string{runner.JobQueueTopic}, jetstream.ConsumerConfig{
+		Replicas:          1,
+		AckPolicy:         jetstream.AckExplicitPolicy,
+		DeliverPolicy:     jetstream.DeliverAllPolicy,
+		MaxAckPending:     -1,
+		AckWait:           time.Minute * 30,
+		InactiveThreshold: time.Hour,
+	}); err != nil {
+		s.logger.Error("Failed to stream to compliance runner consumer", zap.Error(err))
+		return err
+	}
+	if err := s.jq.CreateOrUpdateConsumer(ctx, runner.ConsumerGroupManuals, runner.StreamName, []string{runner.JobQueueTopicManuals}, jetstream.ConsumerConfig{
+		Replicas:          1,
+		AckPolicy:         jetstream.AckExplicitPolicy,
+		DeliverPolicy:     jetstream.DeliverAllPolicy,
+		MaxAckPending:     -1,
+		AckWait:           time.Minute * 30,
+		InactiveThreshold: time.Hour,
+	}); err != nil {
+		s.logger.Error("Failed to stream to compliance runner manuals consumer", zap.Error(err))
+		return err
+	}
+
 	if err := s.jq.Stream(ctx, checkup.StreamName, "checkup job queue", []string{checkup.JobsQueueName, checkup.ResultsQueueName}, 1000); err != nil {
 		s.logger.Error("Failed to stream to checkup queue", zap.Error(err))
 		return err
@@ -324,7 +359,18 @@ func (s *Scheduler) SetupNats(ctx context.Context) error {
 	}
 
 	if err := s.jq.Stream(ctx, auditjob.StreamName, "audit job queue", []string{auditjob.JobQueueTopic, auditjob.ResultQueueTopic}, 1000); err != nil {
-		s.logger.Error("Failed to stream to describe queue", zap.Error(err))
+		s.logger.Error("Failed to stream to audit job queue", zap.Error(err))
+		return err
+	}
+	if err := s.jq.CreateOrUpdateConsumer(ctx, auditjob.ConsumerGroup, auditjob.StreamName, []string{auditjob.JobQueueTopic}, jetstream.ConsumerConfig{
+		Replicas:          1,
+		AckPolicy:         jetstream.AckExplicitPolicy,
+		DeliverPolicy:     jetstream.DeliverAllPolicy,
+		MaxAckPending:     -1,
+		AckWait:           time.Minute * 30,
+		InactiveThreshold: time.Hour,
+	}); err != nil {
+		s.logger.Error("Failed to stream to audit job consumer", zap.Error(err))
 		return err
 	}
 
