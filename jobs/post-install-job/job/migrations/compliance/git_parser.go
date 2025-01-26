@@ -698,8 +698,20 @@ func fillBenchmarksIntegrationTypes(benchmarks []db.Benchmark) ([]db.Benchmark, 
 
 	for idx, benchmark := range benchmarks {
 		if len(benchmark.Children) > 0 {
-			benchmark.Children, benchmark.IntegrationType = fillBenchmarksIntegrationTypes(benchmark.Children)
-			benchmarks[idx] = benchmark
+			newChildren, its := fillBenchmarksIntegrationTypes(benchmark.Children)
+			itsMap := make(map[string]bool)
+			for _, it := range its {
+				itsMap[it] = true
+			}
+			for _, it := range benchmark.IntegrationType {
+				itsMap[it] = true
+			}
+			var newIntegrationTypes []string
+			for it, _ := range itsMap {
+				newIntegrationTypes = append(newIntegrationTypes, it)
+			}
+			benchmarks[idx].Children = newChildren
+			benchmarks[idx].IntegrationType = newIntegrationTypes
 		}
 		for _, c := range benchmark.IntegrationType {
 			if _, ok := integrationTypesMap[c]; !ok {
