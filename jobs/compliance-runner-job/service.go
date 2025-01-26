@@ -97,18 +97,21 @@ func NewWorker(
 		logger.Error("failed to create elasticsearch client", zap.Error(err))
 		return nil, err
 	}
+	logger.Info("elasticsearch client created")
 
 	jq, err := jq.New(config.NATS.URL, logger)
 	if err != nil {
 		logger.Error("failed to create job queue", zap.Error(err))
 		return nil, err
 	}
+	logger.Info("job queue connectection created")
 
 	queueTopic := JobQueueTopic
 	if ManualTrigger == "true" {
 		queueTopic = JobQueueTopicManuals
 	}
 
+	logger.Info("creating stream", zap.String("stream", StreamName), zap.String("topic", queueTopic), zap.String("resultTopic", ResultQueueTopic))
 	if err := jq.Stream(ctx, StreamName, "compliance runner job queue", []string{queueTopic, ResultQueueTopic}, 1000000); err != nil {
 		logger.Error("failed to create stream", zap.Error(err), zap.String("stream", StreamName), zap.String("topic", queueTopic), zap.String("resultTopic", ResultQueueTopic))
 		return nil, err
