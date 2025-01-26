@@ -84,7 +84,7 @@ func (j *Job) Run(ctx context.Context) error {
 				}
 			}
 
-			var cloudqlBinary []byte
+			var cloudqlBinary string
 			err = db.Raw("SELECT cloud_ql_plugin FROM integration_plugin_binaries WHERE plugin_id = ?", plugin.PluginID).Scan(&cloudqlBinary).Error
 			if err != nil {
 				j.logger.Error("failed to get plugin binary", zap.Error(err), zap.String("plugin_id", plugin.PluginID))
@@ -93,13 +93,13 @@ func (j *Job) Run(ctx context.Context) error {
 
 			// write the plugin to the file system
 			pluginPath := dirPath + "/steampipe-plugin-" + describerConfig.SteampipePluginName + ".plugin"
-			err := os.WriteFile(pluginPath, cloudqlBinary, 0777)
+			err := os.WriteFile(pluginPath, []byte(cloudqlBinary), 0777)
 			if err != nil {
 				j.logger.Error("failed to write plugin to file system", zap.Error(err), zap.String("plugin", describerConfig.SteampipePluginName))
 				return err
 			}
 
-			cloudqlBinary = nil
+			cloudqlBinary = ""
 		}
 	}
 	if err := steampipe.PopulateOpenGovernancePluginSteampipeConfig(j.cfg.ElasticSearch, j.cfg.Steampipe); err != nil {
