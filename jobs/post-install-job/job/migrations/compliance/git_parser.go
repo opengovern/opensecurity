@@ -596,7 +596,7 @@ func (g *GitParser) HandleFrameworks(frameworks []Framework) error {
 	}
 
 	for _, f := range frameworks {
-		err := g.HandleSingleFramework(benchmarkIntegrationTypes, f)
+		err := g.HandleSingleFramework(f)
 		if err != nil {
 			return err
 		}
@@ -620,11 +620,18 @@ func (g *GitParser) HandleFrameworks(frameworks []Framework) error {
 	for _, f := range g.benchmarks {
 		childrenDfs(f)
 	}
+	for i, framework := range g.benchmarks {
+		if it, ok := benchmarkIntegrationTypes[framework.ID]; ok {
+			for k, _ := range it {
+				g.benchmarks[i].IntegrationType = append(g.benchmarks[i].IntegrationType, k)
+			}
+		}
+	}
 
 	return nil
 }
 
-func (g *GitParser) HandleSingleFramework(benchmarkIntegrationTypes map[string]map[string]bool, framework Framework) error {
+func (g *GitParser) HandleSingleFramework(framework Framework) error {
 	var tags []db.BenchmarkTag
 
 	tags = make([]db.BenchmarkTag, 0, len(framework.Tags))
@@ -678,18 +685,14 @@ func (g *GitParser) HandleSingleFramework(benchmarkIntegrationTypes map[string]m
 
 	for _, group := range framework.ControlGroup {
 		if len(group.Controls) > 0 || len(group.ControlGroup) > 0 {
-			err = g.HandleSingleFramework(benchmarkIntegrationTypes, group)
+			err = g.HandleSingleFramework(group)
 			if err != nil {
 				return err
 			}
 		}
 		g.frameworksChildren[framework.ID] = append(g.frameworksChildren[framework.ID], group.ID)
 	}
-	var integrationTypesList []string
-	for k, _ := range benchmarkIntegrationTypes[framework.ID] {
-		integrationTypesList = append(integrationTypesList, k)
-	}
-	b.IntegrationType = integrationTypesList
+
 	g.benchmarks = append(g.benchmarks, b)
 	return nil
 }
