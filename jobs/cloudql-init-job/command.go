@@ -23,7 +23,8 @@ func JobCommand() *cobra.Command {
 			integrationClient := client.NewIntegrationServiceClient(cnf.Integration.BaseURL)
 			j := NewJob(logger, cnf, integrationClient)
 
-			return j.Run(cmd.Context())
+			_, err = j.Run(cmd.Context())
+			return err
 		},
 	}
 

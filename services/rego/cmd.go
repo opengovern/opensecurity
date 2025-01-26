@@ -3,7 +3,6 @@ package rego
 import (
 	config2 "github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/httpserver"
-	"github.com/opengovern/og-util/pkg/steampipe"
 	cloudql_init_job "github.com/opengovern/opencomply/jobs/cloudql-init-job"
 	"github.com/opengovern/opencomply/services/integration/client"
 	"github.com/opengovern/opencomply/services/rego/api"
@@ -11,7 +10,6 @@ import (
 	"github.com/opengovern/opencomply/services/rego/service"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
-	"time"
 )
 
 func Command() *cobra.Command {
@@ -36,16 +34,9 @@ func Command() *cobra.Command {
 				ElasticSearch: cnf.ElasticSearch,
 				Steampipe:     cnf.Steampipe,
 			}, integrationClient)
-			err = pluginJob.Run(ctx)
+			steampipeConn, err := pluginJob.Run(ctx)
 			if err != nil {
 				logger.Error("failed to run plugin job", zap.Error(err))
-				return err
-			}
-
-			time.Sleep(2 * time.Minute)
-
-			steampipeConn, err := steampipe.StartSteampipeServiceAndGetConnection(logger)
-			if err != nil {
 				return err
 			}
 
