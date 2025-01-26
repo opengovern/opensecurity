@@ -83,9 +83,10 @@ func NewWorker(
 		logger.Error("failed to start steampipe service", zap.Error(err))
 		return nil, err
 	}
-
 	logger.Info("steampipe service started")
 	logger.Sync()
+	fmt.Println("steampipe service started")
+
 	esClient, err := opengovernance.NewClient(opengovernance.ClientConfig{
 		Addresses:     []string{config.ElasticSearch.Address},
 		Username:      &config.ElasticSearch.Username,
@@ -102,6 +103,7 @@ func NewWorker(
 	}
 	logger.Info("elasticsearch client created")
 	logger.Sync()
+	fmt.Println("elasticsearch client created")
 
 	jq, err := jq.New(config.NATS.URL, logger)
 	if err != nil {
@@ -111,6 +113,7 @@ func NewWorker(
 	}
 	logger.Info("job queue connection created")
 	logger.Sync()
+	fmt.Println("job queue connection created")
 
 	queueTopic := JobQueueTopic
 	if ManualTrigger == "true" {
@@ -119,15 +122,18 @@ func NewWorker(
 
 	logger.Info("creating stream", zap.String("stream", StreamName), zap.String("topic", queueTopic), zap.String("resultTopic", ResultQueueTopic))
 	logger.Sync()
+	fmt.Println("creating stream", "stream", StreamName, "topic", queueTopic, "resultTopic", ResultQueueTopic)
 	if err := jq.Stream(ctx, StreamName, "compliance runner job queue", []string{queueTopic, ResultQueueTopic}, 1000000); err != nil {
 		logger.Error("failed to create stream", zap.Error(err), zap.String("stream", StreamName), zap.String("topic", queueTopic), zap.String("resultTopic", ResultQueueTopic))
 		return nil, err
 	}
 	logger.Info("stream created", zap.String("stream", StreamName), zap.String("topic", queueTopic), zap.String("resultTopic", ResultQueueTopic))
 	logger.Sync()
+	fmt.Println("stream created", "stream", StreamName, "topic", queueTopic, "resultTopic", ResultQueueTopic)
 
 	logger.Info("initializing rego engine")
 	logger.Sync()
+	fmt.Println("initializing rego engine")
 	regoEngine, err := regoService.NewRegoEngine(ctx, logger, steampipeConn)
 	if err != nil {
 		logger.Error("failed to create rego engine", zap.Error(err))
