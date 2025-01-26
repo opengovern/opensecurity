@@ -80,6 +80,7 @@ func NewWorker(
 
 	steampipeConn, err := steampipe.StartSteampipeServiceAndGetConnection(logger)
 	if err != nil {
+		logger.Error("failed to start steampipe service", zap.Error(err))
 		return nil, err
 	}
 
@@ -93,11 +94,13 @@ func NewWorker(
 		AssumeRoleArn: &config.ElasticSearch.AssumeRoleArn,
 	})
 	if err != nil {
+		logger.Error("failed to create elasticsearch client", zap.Error(err))
 		return nil, err
 	}
 
 	jq, err := jq.New(config.NATS.URL, logger)
 	if err != nil {
+		logger.Error("failed to create job queue", zap.Error(err))
 		return nil, err
 	}
 
@@ -107,11 +110,13 @@ func NewWorker(
 	}
 
 	if err := jq.Stream(ctx, StreamName, "compliance runner job queue", []string{queueTopic, ResultQueueTopic}, 1000000); err != nil {
+		logger.Error("failed to create stream", zap.Error(err), zap.String("stream", StreamName), zap.String("topic", queueTopic), zap.String("resultTopic", ResultQueueTopic))
 		return nil, err
 	}
 
 	regoEngine, err := regoService.NewRegoEngine(ctx, logger, steampipeConn)
 	if err != nil {
+		logger.Error("failed to create rego engine", zap.Error(err))
 		return nil, err
 	}
 
