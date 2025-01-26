@@ -24,7 +24,7 @@ import (
 
 type GitParser struct {
 	logger             *zap.Logger
-	benchmarks         []db.Benchmark
+	benchmarks         map[string]*db.Benchmark
 	frameworksChildren map[string][]string
 	controls           []db.Control
 	policies           []db.Policy
@@ -543,17 +543,22 @@ func (g *GitParser) ExtractFrameworks(complianceBenchmarksPath string) error {
 		return err
 	}
 
-	var newBenchmarks []db.Benchmark
+	newBenchmarks := make(map[string]*db.Benchmark)
 	for _, b := range g.benchmarks {
 		if b.ID == "" {
 			g.logger.Error("benchmark id should not be empty", zap.String("id", b.ID), zap.String("title", b.Title))
 			continue
 		}
-		newBenchmarks = append(newBenchmarks, b)
+		newBenchmarks[b.ID] = b
 	}
 	g.benchmarks = newBenchmarks
 
-	g.benchmarks, _ = fillBenchmarksIntegrationTypes(g.benchmarks)
+	var benchmarksStr []string
+	for b := range g.benchmarks {
+		benchmarksStr = append(benchmarksStr, b)
+	}
+
+	_ = g.fillBenchmarksIntegrationTypes(benchmarksStr)
 
 	return nil
 }
@@ -601,7 +606,7 @@ func (g *GitParser) HandleFrameworks(frameworks []Framework) error {
 		for _, childID := range g.frameworksChildren[benchmark.ID] {
 			for _, child := range g.benchmarks {
 				if child.ID == childID {
-					benchmark.Children = append(benchmark.Children, child)
+					benchmark.Children = append(benchmark.Children, *child)
 				}
 			}
 		}
@@ -613,7 +618,7 @@ func (g *GitParser) HandleFrameworks(frameworks []Framework) error {
 	}
 
 	for _, f := range g.benchmarks {
-		childrenDfs(f)
+		childrenDfs(*f)
 	}
 	for i, framework := range g.benchmarks {
 		if it, ok := benchmarkIntegrationTypes[framework.ID]; ok {
@@ -688,36 +693,35 @@ func (g *GitParser) HandleSingleFramework(framework Framework) error {
 		g.frameworksChildren[framework.ID] = append(g.frameworksChildren[framework.ID], group.ID)
 	}
 
-	g.benchmarks = append(g.benchmarks, b)
+	g.benchmarks[b.ID] = &b
 	return nil
 }
 
-func fillBenchmarksIntegrationTypes(benchmarks []db.Benchmark) ([]db.Benchmark, []string) {
+func (g GitParser) fillBenchmarksIntegrationTypes(benchmarks []string) []string {
 	integrationTypesMap := make(map[string]bool)
 
-	for idx, _ := range benchmarks {
+	for _, idx := range benchmarks {
 		itsMap := make(map[string]bool)
-		if len(benchmarks[idx].Children) > 0 {
-			newChildren, its := fillBenchmarksIntegrationTypes(benchmarks[idx].Children)
+		if len(g.frameworksChildren[idx]) > 0 {
+			its := g.fillBenchmarksIntegrationTypes(g.frameworksChildren[idx])
 			for _, it := range its {
 				itsMap[it] = true
 			}
-			benchmarks[idx].Children = newChildren
 		}
-		for _, c := range benchmarks[idx].Controls {
+		for _, c := range g.benchmarks[idx].Controls {
 			for _, it := range c.IntegrationType {
 				itsMap[it] = true
 			}
 		}
-		for _, it := range benchmarks[idx].IntegrationType {
+		for _, it := range g.benchmarks[idx].IntegrationType {
 			itsMap[it] = true
 		}
 		var newIntegrationTypes []string
 		for it, _ := range itsMap {
 			newIntegrationTypes = append(newIntegrationTypes, it)
 		}
-		benchmarks[idx].IntegrationType = newIntegrationTypes
-		for _, c := range benchmarks[idx].IntegrationType {
+		g.benchmarks[idx].IntegrationType = newIntegrationTypes
+		for _, c := range g.benchmarks[idx].IntegrationType {
 			integrationTypesMap[c] = true
 		}
 	}
@@ -727,7 +731,7 @@ func fillBenchmarksIntegrationTypes(benchmarks []db.Benchmark) ([]db.Benchmark, 
 		integrationTypes = append(integrationTypes, it)
 	}
 
-	return benchmarks, integrationTypes
+	return integrationTypes
 }
 
 func (g *GitParser) CheckForDuplicate() error {
@@ -745,12 +749,12 @@ func (g *GitParser) CheckForDuplicate() error {
 func (g GitParser) ExtractBenchmarksMetadata() error {
 	for i, b := range g.benchmarks {
 		benchmarkControlsCache := make(map[string]BenchmarkControlsCache)
-		controlsMap, err := getControlsUnderBenchmark(b, benchmarkControlsCache)
+		controlsMap, err := getControlsUnderBenchmark(*b, benchmarkControlsCache)
 		if err != nil {
 			return err
 		}
 		benchmarkTablesCache := make(map[string]BenchmarkTablesCache)
-		primaryTablesMap, listOfTablesMap, err := g.getTablesUnderBenchmark(b, benchmarkTablesCache)
+		primaryTablesMap, listOfTablesMap, err := g.getTablesUnderBenchmark(*b, benchmarkTablesCache)
 		if err != nil {
 			return err
 		}
