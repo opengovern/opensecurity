@@ -693,21 +693,35 @@ func (g *GitParser) HandleSingleFramework(framework Framework) error {
 }
 
 func fillBenchmarksIntegrationTypes(benchmarks []db.Benchmark) ([]db.Benchmark, []string) {
-	var integrationTypes []string
 	integrationTypesMap := make(map[string]bool)
 
-	for idx, benchmark := range benchmarks {
-		if len(benchmark.Children) > 0 {
-			benchmark.Children, benchmark.IntegrationType = fillBenchmarksIntegrationTypes(benchmark.Children)
-			benchmarks[idx] = benchmark
-		}
-		for _, c := range benchmark.IntegrationType {
-			if _, ok := integrationTypesMap[c]; !ok {
-				integrationTypes = append(integrationTypes, c)
-				integrationTypesMap[c] = true
+	for idx, _ := range benchmarks {
+		if len(benchmarks[idx].Children) > 0 {
+			newChildren, its := fillBenchmarksIntegrationTypes(benchmarks[idx].Children)
+			itsMap := make(map[string]bool)
+			for _, it := range its {
+				itsMap[it] = true
 			}
+			for _, it := range benchmarks[idx].IntegrationType {
+				itsMap[it] = true
+			}
+			var newIntegrationTypes []string
+			for it, _ := range itsMap {
+				newIntegrationTypes = append(newIntegrationTypes, it)
+			}
+			benchmarks[idx].Children = newChildren
+			benchmarks[idx].IntegrationType = newIntegrationTypes
+		}
+		for _, c := range benchmarks[idx].IntegrationType {
+			integrationTypesMap[c] = true
 		}
 	}
+
+	var integrationTypes []string
+	for it, _ := range integrationTypesMap {
+		integrationTypes = append(integrationTypes, it)
+	}
+
 	return benchmarks, integrationTypes
 }
 
