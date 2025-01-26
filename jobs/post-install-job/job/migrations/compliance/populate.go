@@ -188,12 +188,12 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		}
 
 		for _, obj := range p.benchmarks {
-			for _, child := range obj.Children {
+			for _, child := range p.frameworksChildren[obj.ID] {
 				err := tx.Clauses(clause.OnConflict{
 					DoNothing: true,
 				}).Create(&db.BenchmarkChild{
 					BenchmarkID: obj.ID,
-					ChildID:     child.ID,
+					ChildID:     child,
 				}).Error
 				if err != nil {
 					logger.Error("inserted controls and benchmarks", zap.Error(err))
@@ -201,15 +201,12 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 				}
 			}
 
-			for _, control := range obj.Controls {
-				if control.PolicyID != nil && !loadedQueries[*control.PolicyID] {
-					continue
-				}
+			for _, control := range p.frameworksControls[obj.ID] {
 				err := tx.Clauses(clause.OnConflict{
 					DoNothing: true,
 				}).Create(&db.BenchmarkControls{
 					BenchmarkID: obj.ID,
-					ControlID:   control.ID,
+					ControlID:   control,
 				}).Error
 				if err != nil {
 					logger.Info("inserted controls and benchmarks", zap.Error(err))
