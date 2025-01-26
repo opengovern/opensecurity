@@ -68,6 +68,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	p := GitParser{
 		logger:             logger,
 		frameworksChildren: make(map[string][]string),
+		frameworksControls: make(map[string][]string),
 		controlsPolicies:   make(map[string]db.Policy),
 		namedPolicies:      make(map[string]NamedQuery),
 		benchmarks:         make(map[string]*db.Benchmark),
