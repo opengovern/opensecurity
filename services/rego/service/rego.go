@@ -30,6 +30,7 @@ func NewRegoEngine(ctx context.Context, logger *zap.Logger, steampipeDb *steampi
 
 	tries := 5
 	for i := 0; i < tries; i++ {
+		logger.Info("Getting rego functions", zap.Int("try", i+1))
 		functions, err := engine.getRegoFunctionForTables(ctx)
 		if err != nil {
 			logger.Error("Error getting rego functions", zap.Error(err))
@@ -49,7 +50,7 @@ func NewRegoEngine(ctx context.Context, logger *zap.Logger, steampipeDb *steampi
 }
 
 func (r *RegoEngine) getRegoFunctionForTables(ctx context.Context) ([]func(*rego.Rego), error) {
-
+	r.logger.Info("getting rego functions for tables")
 	rows, err := r.steampipe.Conn().Query(ctx, "SELECT table_name FROM information_schema.tables WHERE table_schema != any ($1)", excludedTableSchema)
 	if err != nil {
 		r.logger.Error("Unable to query database", zap.Error(err))
@@ -57,6 +58,7 @@ func (r *RegoEngine) getRegoFunctionForTables(ctx context.Context) ([]func(*rego
 		return nil, err
 	}
 	defer rows.Close()
+	r.logger.Info("queried database for tables", zap.Int("rows", len(rows.RawValues())))
 
 	results := make([]func(*rego.Rego), 0)
 	for rows.Next() {
@@ -67,6 +69,7 @@ func (r *RegoEngine) getRegoFunctionForTables(ctx context.Context) ([]func(*rego
 			r.logger.Sync()
 			return nil, err
 		}
+		r.logger.Info("scanned table name", zap.String("table", tableName))
 
 		f := rego.FunctionDyn(&rego.Function{
 			Name:             fmt.Sprintf("opencomply.%s", tableName),
@@ -134,8 +137,8 @@ func (r *RegoEngine) getRegoFunctionForTables(ctx context.Context) ([]func(*rego
 
 			return ast.NewTerm(value), nil
 		})
-
 		results = append(results, f)
+		r.logger.Info("created rego function", zap.String("table", tableName))
 	}
 
 	// Add raw query function
@@ -177,6 +180,7 @@ func (r *RegoEngine) getRegoFunctionForTables(ctx context.Context) ([]func(*rego
 		return ast.NewTerm(value), nil
 	})
 
+	r.logger.Info("created rego function", zap.String("function", "opencomply.cloudql"))
 	results = append(results, f)
 
 	return results, nil

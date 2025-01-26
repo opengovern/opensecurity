@@ -113,7 +113,9 @@ func NewWorker(
 		logger.Error("failed to create stream", zap.Error(err), zap.String("stream", StreamName), zap.String("topic", queueTopic), zap.String("resultTopic", ResultQueueTopic))
 		return nil, err
 	}
+	logger.Info("stream created", zap.String("stream", StreamName), zap.String("topic", queueTopic), zap.String("resultTopic", ResultQueueTopic))
 
+	logger.Info("initializing rego engine")
 	regoEngine, err := regoService.NewRegoEngine(ctx, logger, steampipeConn)
 	if err != nil {
 		logger.Error("failed to create rego engine", zap.Error(err))
