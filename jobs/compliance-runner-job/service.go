@@ -84,6 +84,8 @@ func NewWorker(
 		return nil, err
 	}
 
+	logger.Info("steampipe service started")
+	logger.Sync()
 	esClient, err := opengovernance.NewClient(opengovernance.ClientConfig{
 		Addresses:     []string{config.ElasticSearch.Address},
 		Username:      &config.ElasticSearch.Username,
@@ -95,16 +97,20 @@ func NewWorker(
 	})
 	if err != nil {
 		logger.Error("failed to create elasticsearch client", zap.Error(err))
+		logger.Sync()
 		return nil, err
 	}
 	logger.Info("elasticsearch client created")
+	logger.Sync()
 
 	jq, err := jq.New(config.NATS.URL, logger)
 	if err != nil {
 		logger.Error("failed to create job queue", zap.Error(err))
+		logger.Sync()
 		return nil, err
 	}
-	logger.Info("job queue connectection created")
+	logger.Info("job queue connection created")
+	logger.Sync()
 
 	queueTopic := JobQueueTopic
 	if ManualTrigger == "true" {
@@ -112,16 +118,20 @@ func NewWorker(
 	}
 
 	logger.Info("creating stream", zap.String("stream", StreamName), zap.String("topic", queueTopic), zap.String("resultTopic", ResultQueueTopic))
+	logger.Sync()
 	if err := jq.Stream(ctx, StreamName, "compliance runner job queue", []string{queueTopic, ResultQueueTopic}, 1000000); err != nil {
 		logger.Error("failed to create stream", zap.Error(err), zap.String("stream", StreamName), zap.String("topic", queueTopic), zap.String("resultTopic", ResultQueueTopic))
 		return nil, err
 	}
 	logger.Info("stream created", zap.String("stream", StreamName), zap.String("topic", queueTopic), zap.String("resultTopic", ResultQueueTopic))
+	logger.Sync()
 
 	logger.Info("initializing rego engine")
+	logger.Sync()
 	regoEngine, err := regoService.NewRegoEngine(ctx, logger, steampipeConn)
 	if err != nil {
 		logger.Error("failed to create rego engine", zap.Error(err))
+		logger.Sync()
 		return nil, err
 	}
 
@@ -143,6 +153,7 @@ func NewWorker(
 	benchmarks, err := w.complianceClient.ListAllBenchmarks(ctx2, true)
 	if err != nil {
 		logger.Error("failed to get benchmarks", zap.Error(err))
+		logger.Sync()
 		return nil, err
 	}
 	for _, benchmark := range benchmarks {
