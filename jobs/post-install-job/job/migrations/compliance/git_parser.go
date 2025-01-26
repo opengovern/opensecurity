@@ -26,6 +26,7 @@ type GitParser struct {
 	logger             *zap.Logger
 	benchmarks         map[string]*db.Benchmark
 	frameworksChildren map[string][]string
+	frameworksControls map[string][]string
 	controls           []db.Control
 	policies           []db.Policy
 	policyParamValues  []models.PolicyParameterValues
@@ -658,7 +659,7 @@ func (g *GitParser) HandleSingleFramework(framework Framework) error {
 		enabled = framework.Defaults.Enabled
 	}
 
-	b := db.Benchmark{
+	b := &db.Benchmark{
 		ID:                framework.ID,
 		Title:             framework.Title,
 		DisplayCode:       framework.SectionCode,
@@ -680,6 +681,7 @@ func (g *GitParser) HandleSingleFramework(framework Framework) error {
 	for _, control := range g.controls {
 		if contains(framework.Controls, control.ID) {
 			b.Controls = append(b.Controls, control)
+			g.frameworksControls[b.ID] = append(g.frameworksControls[b.ID], control.ID)
 		}
 	}
 
@@ -693,7 +695,7 @@ func (g *GitParser) HandleSingleFramework(framework Framework) error {
 		g.frameworksChildren[framework.ID] = append(g.frameworksChildren[framework.ID], group.ID)
 	}
 
-	g.benchmarks[b.ID] = &b
+	g.benchmarks[b.ID] = b
 	return nil
 }
 
