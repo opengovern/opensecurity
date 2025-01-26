@@ -70,6 +70,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		frameworksChildren: make(map[string][]string),
 		controlsPolicies:   make(map[string]db.Policy),
 		namedPolicies:      make(map[string]NamedQuery),
+		benchmarks:         make(map[string]*db.Benchmark),
 	}
 	if err := p.ExtractCompliance(config.ComplianceGitPath, config.ControlEnrichmentGitPath); err != nil {
 		logger.Error("failed to extract controls and benchmarks", zap.Error(err))
