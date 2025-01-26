@@ -553,7 +553,7 @@ func (g *GitParser) ExtractFrameworks(complianceBenchmarksPath string) error {
 	}
 	g.benchmarks = newBenchmarks
 
-	//g.benchmarks, _ = fillBenchmarksIntegrationTypes(g.benchmarks)
+	g.benchmarks, _ = fillBenchmarksIntegrationTypes(g.benchmarks)
 
 	return nil
 }
@@ -697,7 +697,7 @@ func fillBenchmarksIntegrationTypes(benchmarks []db.Benchmark) ([]db.Benchmark, 
 	integrationTypesMap := make(map[string]bool)
 
 	for idx, benchmark := range benchmarks {
-		if benchmark.IntegrationType == nil {
+		if len(benchmark.Children) > 0 {
 			benchmark.Children, benchmark.IntegrationType = fillBenchmarksIntegrationTypes(benchmark.Children)
 			benchmarks[idx] = benchmark
 		}
