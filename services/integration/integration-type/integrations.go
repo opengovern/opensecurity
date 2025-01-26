@@ -97,7 +97,7 @@ func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integra
 		}
 	}
 
-	plugins := make(map[integration.Type]string)
+	plugins := make(map[integration.Type]models.IntegrationPlugin)
 	for _, t := range types {
 		var pluginBinary models.IntegrationPluginBinary
 		err = integrationTypeDb.Model(models.IntegrationPluginBinary{}).Where("plugin_id = ?", t.PluginID).Find(&pluginBinary).Error
@@ -116,7 +116,7 @@ func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integra
 			logger.Error("failed to write plugin to file system", zap.Error(err), zap.String("plugin", t.IntegrationType.String()))
 			continue
 		}
-		plugins[t.IntegrationType] = pluginPath
+		plugins[t.IntegrationType] = t
 	}
 
 	var clients = make(map[integration.Type]*plugin.Client)
@@ -138,7 +138,9 @@ func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integra
 		kubeClientset: kubeClientset,
 	}
 
-	for integrationType, pluginPath := range plugins {
+	for integrationType, p := range plugins {
+		pluginPath := filepath.Join(baseDir, p.IntegrationType.String()+".so")
+
 		client := plugin.NewClient(&plugin.ClientConfig{
 			HandshakeConfig: interfaces.HandshakeConfig,
 			Plugins:         map[string]plugin.Plugin{integrationType.String(): &interfaces.IntegrationTypePlugin{}},
@@ -174,7 +176,7 @@ func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integra
 		manager.Clients[integrationType] = client
 		manager.PingLocks[integrationType] = &sync.Mutex{}
 
-		err = manager.EnableIntegrationTypeHelper(context.Background(), integrationType.String())
+		err = manager.EnableIntegrationTypeHelper(context.Background(), &p)
 		if err != nil {
 			logger.Error("failed to enable integration type", zap.Error(err))
 			continue
@@ -471,10 +473,7 @@ func (a *IntegrationTypeManager) DisableIntegrationTypeHelper(ctx context.Contex
 		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
 	}
 
-	var integrationTypes []integration.Type
-	integrationTypes = append(integrationTypes, integration.Type(integrationTypeName))
-
-	integrations, err := a.database.ListIntegration(integrationTypes)
+	integrations, err := a.database.ListIntegration([]integration.Type{integration.Type(integrationTypeName)})
 	if err != nil {
 		a.logger.Error("failed to list credentials", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list credential")
@@ -569,17 +568,12 @@ func (a *IntegrationTypeManager) DisableIntegrationTypeHelper(ctx context.Contex
 	return nil
 }
 
-func (a *IntegrationTypeManager) EnableIntegrationTypeHelper(ctx context.Context, integrationTypeName string) error {
+func (a *IntegrationTypeManager) EnableIntegrationTypeHelper(ctx context.Context, plugin *models.IntegrationPlugin) error {
 	currentNamespace, ok := os.LookupEnv("CURRENT_NAMESPACE")
 	if !ok {
 		return echo.NewHTTPError(http.StatusInternalServerError, "current namespace lookup failed")
 	}
 
-	plugin, err := a.database.GetPluginByIntegrationType(integrationTypeName)
-	if err != nil {
-		a.logger.Error("failed to get integration type", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration type")
-	}
 	kedaEnabled, ok := os.LookupEnv("KEDA_ENABLED")
 	if !ok {
 		kedaEnabled = "false"
@@ -606,7 +600,7 @@ func (a *IntegrationTypeManager) EnableIntegrationTypeHelper(ctx context.Context
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to unmarshal template deployment file")
 	}
 
-	integrationType, ok := a.GetIntegrationTypeMap()[integration.Type(integrationTypeName)]
+	integrationType, ok := a.GetIntegrationTypeMap()[plugin.IntegrationType]
 	if !ok {
 		return echo.NewHTTPError(http.StatusNotFound, "invalid integration type")
 	}

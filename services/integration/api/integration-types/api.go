@@ -1064,7 +1064,7 @@ func (a *API) LoadPlugin(ctx context.Context, plugin *models2.IntegrationPlugin,
 
 	a.typeManager.PingLocks[plugin.IntegrationType] = &sync.Mutex{}
 
-	err = a.typeManager.EnableIntegrationTypeHelper(ctx, plugin.IntegrationType.String())
+	err = a.typeManager.EnableIntegrationTypeHelper(ctx, plugin)
 	if err != nil {
 		a.logger.Error("failed to enable integration type describer", zap.Error(err))
 		return err
