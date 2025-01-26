@@ -79,11 +79,12 @@ func NewWorker(
 	time.Sleep(2 * time.Minute)
 
 	steampipeConn, err := steampipe.StartSteampipeServiceAndGetConnection(logger)
+	panic("we are here")
 	if err != nil {
 		logger.Error("failed to start steampipe service", zap.Error(err))
+		logger.Sync()
 		return nil, err
 	}
-	panic("we are here")
 	logger.Info("steampipe service started")
 	logger.Sync()
 	fmt.Println("steampipe service started")
