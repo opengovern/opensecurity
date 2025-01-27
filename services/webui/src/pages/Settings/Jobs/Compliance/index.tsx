@@ -16,10 +16,7 @@ import {
 import { Radio } from 'pretty-checkbox-react'
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import {
-    Api,
-    PlatformEnginePkgDescribeApiJob,
-} from '../../../../api/api'
+import { Api, PlatformEnginePkgDescribeApiJob } from '../../../../api/api'
 import AxiosAPI from '../../../../api/ApiConfig'
 import { useScheduleApiV1JobsCreate } from '../../../../api/schedule.gen'
 import DrawerPanel from '../../../../components/DrawerPanel'
@@ -48,7 +45,7 @@ import {
 import KButton from '@cloudscape-design/components/button'
 import KeyValuePairs from '@cloudscape-design/components/key-value-pairs'
 import axios from 'axios'
-
+import { dateTimeDisplay } from '../../../../utilities/dateDisplay'
 
 const ShowHours = [
     {
@@ -88,15 +85,15 @@ export default function ComplianceJobs() {
         return temp
     }
     const [open, setOpen] = useState(false)
-     const [queries, setQueries] = useState({
-         tokens: [],
-         operation: 'and',
-     })
+    const [queries, setQueries] = useState({
+        tokens: [],
+        operation: 'and',
+    })
 
     const [clickedJob, setClickedJob] =
         useState<PlatformEnginePkgDescribeApiJob>()
     const [searchParams, setSearchParams] = useSearchParams()
-    
+
     const [statusFilter, setStatusFilter] = useState<string[] | undefined>(
         findParmas('status')
     )
@@ -121,9 +118,8 @@ export default function ComplianceJobs() {
         if (filter) {
             // @ts-ignore
 
-           
             // @ts-ignore
-             if (filter.value == '2') {
+            if (filter.value == '2') {
                 setDate({
                     key: 'previous-6-hours',
                     amount: 6,
@@ -132,7 +128,6 @@ export default function ComplianceJobs() {
                 })
                 setQueries({
                     tokens: [
-                       
                         {
                             propertyKey: 'job_status',
                             value: 'FAILED',
@@ -141,10 +136,10 @@ export default function ComplianceJobs() {
                     ],
                     operation: 'and',
                 })
-            } 
+            }
         }
     }, [filter])
-   
+
     const arrayToString = (arr: string[], title: string) => {
         let temp = ``
         arr.map((item, index) => {
@@ -159,11 +154,7 @@ export default function ComplianceJobs() {
     }
 
     useEffect(() => {
-        if (
-           
-            searchParams.get('status') !== statusFilter
-        ) {
-            
+        if (searchParams.get('status') !== statusFilter) {
             if (statusFilter?.length != 0) {
                 searchParams.set('status', statusFilter)
             } else {
@@ -171,30 +162,30 @@ export default function ComplianceJobs() {
             }
             window.history.pushState({}, '', `?${searchParams.toString()}`)
         }
-    }, [ statusFilter])
-    
+    }, [statusFilter])
+
     const GetRows = () => {
         setLoading(true)
-        
-         let url = ''
-         if (window.location.origin === 'http://localhost:3000') {
-             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-         } else {
-             url = window.location.origin
-         }
-         // @ts-ignore
-         const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-         const config = {
-             headers: {
-                 Authorization: `Bearer ${token}`,
-             },
-         }
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
         const status_filter = []
         queries.tokens.map((item) => {
             if (item.propertyKey == 'job_status') {
                 status_filter.push(item.value)
-            } 
+            }
         })
         let body = {
             cursor: page,
@@ -213,53 +204,79 @@ export default function ComplianceJobs() {
             }
         }
 
-       axios
-           .post(`${url}/main/schedule/api/v3/jobs/compliance`, body, config)
-           .then((resp) => {
-               const response = resp.data
-              
+        axios
+            .post(`${url}/main/schedule/api/v3/jobs/compliance`, body, config)
+            .then((resp) => {
+                const response = resp.data
 
-              
-               if (resp.data.items) {
-                   setJobs(resp.data.items)
-               } else {
-                   setJobs([])
-               }
+                if (resp.data.items) {
+                    setJobs(resp.data.items)
+                } else {
+                    setJobs([])
+                }
 
-               setTotalCount(
-                   resp?.data?.total_count
-               )
-               setTotalPage(Math.ceil(resp?.data?.total_count / 15))
-               setLoading(false)
+                setTotalCount(resp?.data?.total_count)
+                setTotalPage(Math.ceil(resp?.data?.total_count / 15))
+                setLoading(false)
 
-               // params.success({
-               //     rowData: resp.data.jobs || [],
-               //     rowCount: resp.data.summaries
-               //         ?.map((v) => v.count)
-               //         .reduce((prev, curr) => (prev || 0) + (curr || 0), 0),
-               // })
-           })
-           .catch((err) => {
-               console.log(err)
-               setLoading(false)
+                // params.success({
+                //     rowData: resp.data.jobs || [],
+                //     rowCount: resp.data.summaries
+                //         ?.map((v) => v.count)
+                //         .reduce((prev, curr) => (prev || 0) + (curr || 0), 0),
+                // })
+            })
+            .catch((err) => {
+                console.log(err)
+                setLoading(false)
 
-               // params.fail()
-           })
+                // params.fail()
+            })
     }
 
     useEffect(() => {
-
         GetRows()
     }, [queries, date, page, sort, sortOrder])
-    // function for truncate 
+    // function for truncate
     const truncate = (str: string, n: number) => {
         return str?.length > n ? str.substr(0, n - 1) + '...' : str
+    }
+    const checkStatus = (status) => {
+        switch (status) {
+            case 'CREATED':
+                return false
+            case 'QUEUED':
+                return false
+            case 'IN_PROGRESS':
+                return false
+            case 'RUNNERS_IN_PROGRESS':
+                return false
+            case 'SUMMARIZER_IN_PROGRESS':
+                return false
+            case 'SINK_IN_PROGRESS':
+                return false
+            case 'OLD_RESOURCE_DELETION':
+                return false
+            case 'SUCCEEDED':
+                return true
+            case 'COMPLETED':
+                return true
+            case 'FAILED':
+                return true
+            case 'COMPLETED_WITH_FAILURE':
+                return true
+            case 'TIMEOUT':
+                return false
+
+            default:
+                return false
+        }
     }
     const clickedJobDetails = [
         { title: 'ID', value: clickedJob?.job_id },
         { title: 'Title', value: clickedJob?.title },
-        { title: 'Created At', value: clickedJob?.created_at },
-        { title: 'Updated At', value: clickedJob?.updated_at },
+        { title: 'Created At', value: dateTimeDisplay(clickedJob?.created_at) },
+        { title: 'Updated At', value: dateTimeDisplay(clickedJob?.updated_at) },
         // {
         //     title: 'OpenGovernance Connection ID',
         //     value: clickedJob?.connectionID,
@@ -276,7 +293,8 @@ export default function ComplianceJobs() {
             value: (
                 <>
                     <Link
-                        href={`/compliance/${clickedJob?.benchmark_id}/report/${clickedJob?.job_id}`}
+                        
+                        href={`${checkStatus(clickedJob?.job_status)? `/compliance/${clickedJob?.benchmark_id}/report/${clickedJob?.job_id}` : '#'}`}
                     >
                         {clickedJob?.title}
                     </Link>
@@ -671,10 +689,10 @@ export default function ComplianceJobs() {
                         }
                         pagination={
                             <Pagination
-                                currentPageIndex={page }
+                                currentPageIndex={page}
                                 pagesCount={totalPage}
                                 onChange={({ detail }) =>
-                                    setPage(detail.currentPageIndex )
+                                    setPage(detail.currentPageIndex)
                                 }
                             />
                         }
@@ -684,5 +702,3 @@ export default function ComplianceJobs() {
         </>
     )
 }
-
-
