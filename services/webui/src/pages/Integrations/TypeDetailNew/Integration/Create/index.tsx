@@ -154,7 +154,7 @@ export default function CreateIntegration({
     }
     const AddIntegration = () => {
         if(selectedProviders.length === 0){
-            setError('Please select provider')
+            setError('Please select integration')
             return;
         }
         setLoading(true)
@@ -421,7 +421,7 @@ export default function CreateIntegration({
                                         loading={loading}
                                         variant="primary"
                                     >
-                                        See Providers
+                                        Discover Integrations
                                     </Button>
                                 </Flex>
                             </>
