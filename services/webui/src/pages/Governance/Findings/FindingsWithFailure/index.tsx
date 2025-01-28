@@ -424,7 +424,7 @@ export default function FindingsWithFailure({ query }: ICount) {
                                 flexDirection="row"
                                 justifyContent="start"
                                 alignItems="start"
-                                className="gap-1 mt-1"
+                                className="gap-1 mt-1 sm:flex-row flex-col"
                             >
                                 <Filter
                                     // @ts-ignore

@@ -303,7 +303,7 @@ export default function ImpactedResources({
                             },
                             {
                                 id: 'providerConnectionName',
-                                header: 'Integration Type',
+                                header: 'Integration ID',
                                 maxWidth: 100,
                                 cell: (item) => (
                                     <>
@@ -313,23 +313,7 @@ export default function ImpactedResources({
                                                 isDemo ? 'blur-sm' : ''
                                             }`}
                                         >
-                                            {finding?.integrationType}
-                                            {/* <Flex
-                                                flexDirection="col"
-                                                alignItems="start"
-                                            >
-                                                <Text className="text-gray-800">
-                                                    {
-                                                        item.providerConnectionName
-                                                    }
-                                                </Text>
-                                                <Text>
-                                                    {item.providerConnectionID}
-                                                </Text>
-                                            </Flex>
-                                            <Card className="cursor-pointer absolute w-fit h-fit z-40 right-1 scale-0 transition-all py-1 px-4 group-hover:scale-100">
-                                                <Text color="blue">Open</Text>
-                                            </Card> */}
+                                            {item?.integrationID}
                                         </Flex>
                                     </>
                                 ),
@@ -431,22 +415,22 @@ export default function ImpactedResources({
                             //     ),
                             //     maxWidth: 100,
                             // },
-                            // {
-                            //     id: 'evaluatedAt',
-                            //     header: 'Last Evaluation',
-                            //     cell: (item) => (
-                            //         // @ts-ignore
-                            //         <>{dateTimeDisplay(item.value)}</>
-                            //     ),
-                            // },
+                            {
+                                id: 'evaluatedAt',
+                                header: 'Last Evaluation',
+                                cell: (item) => (
+                                    // @ts-ignore
+                                    <>{dateTimeDisplay(item.evaluatedAt)}</>
+                                ),
+                            },
                         ]}
                         columnDisplay={[
                             { id: 'resourceName', visible: true },
                             { id: 'resourceType', visible: true },
-                            // { id: 'providerConnectionName', visible: true },
+                            { id: 'severity', visible: true },
+                            { id: 'evaluatedAt', visible: true },
+                            { id: 'providerConnectionName', visible: true },
                             // { id: 'totalCount', visible: true },
-                            // { id: 'severity', visible: true },
-                            // { id: 'evaluatedAt', visible: true },
 
                             // { id: 'action', visible: true },
                         ]}

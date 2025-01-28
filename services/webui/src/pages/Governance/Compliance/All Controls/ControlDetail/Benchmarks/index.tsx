@@ -30,7 +30,7 @@ export default function Benchmarks({ benchmarks }: IBenchmarks) {
                         <Flex
                             flexDirection="col"
                             alignItems="start"
-                            className="w-3/4"
+                            className="sm:w-3/4 w-full"
                         >
                             <Flex justifyContent="start" className="gap-3">
                                 {getConnectorIcon(bm.integrationTypes)}

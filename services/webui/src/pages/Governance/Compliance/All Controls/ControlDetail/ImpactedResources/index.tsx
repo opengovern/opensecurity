@@ -301,7 +301,7 @@ export default function ImpactedResources({
                             },
                             {
                                 id: 'providerConnectionName',
-                                header: 'Integration Type',
+                                header: 'Integration ID',
                                 maxWidth: 100,
                                 cell: (item) => (
                                     <>
@@ -311,7 +311,7 @@ export default function ImpactedResources({
                                                 isDemo ? 'blur-sm' : ''
                                             }`}
                                         >
-                                            {finding?.integrationType}
+                                            {item?.integrationID}
                                             {/* <Flex
                                                 flexDirection="col"
                                                 alignItems="start"
@@ -444,7 +444,7 @@ export default function ImpactedResources({
                             // { id: 'severity', visible: true },
                             { id: 'evaluatedAt', visible: true },
 
-                            // { id: 'providerConnectionName', visible: true },
+                            { id: 'providerConnectionName', visible: true },
                             // { id: 'totalCount', visible: true },
 
                             // { id: 'action', visible: true },

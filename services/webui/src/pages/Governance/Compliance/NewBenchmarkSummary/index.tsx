@@ -536,17 +536,7 @@ export default function NewBenchmarkSummary() {
 
     return (
         <>
-            {/* <TopHeader
-                breadCrumb={[
-                    benchmarkDetail?.title
-                        ? benchmarkDetail?.title
-                        : 'Benchmark summary',
-                ]}
-                supportedFilters={
-                    enable ? ['Date', 'Cloud Account', 'Connector'] : []
-                }
-                initialFilters={enable ? ['Date'] : []}
-            /> */}
+            
             {isLoading ? (
                 <Spinner className="mt-56" />
             ) : (
@@ -766,67 +756,12 @@ export default function NewBenchmarkSummary() {
                         }
                     ></Container>
 
-                    {/* <Flex alignItems="start" className="mb-3 w-11/12">
-                        <Flex
-                            flexDirection="col"
-                            alignItems="start"
-                            justifyContent="start"
-                            className="gap-2 w-full"
-                        >
-                            <Title className="font-semibold">
-                                {benchmarkDetail?.title}
-                            </Title>
-                            <div className="group  relative flex text-wrap justify-start">
-                                <Text className="test-start w-full ">
-                                    {/* @ts-ignore 
-                                    {truncate(benchmarkDetail?.description)}
-                                </Text>
-                                <Card className="absolute w-full text-wrap z-40 top-0 scale-0 transition-all p-2 group-hover:scale-100">
-                                    <Text>{benchmarkDetail?.description}</Text>
-                                </Card>
-                            </div>
-                        </Flex>
-                        <Flex className="w-fit gap-4">
-                             <Settings
-                                id={benchmarkDetail?.id}
-                                response={(e) => setAssignments(e)}
-                                autoAssign={benchmarkDetail?.autoAssign}
-                                tracksDriftEvents={
-                                    benchmarkDetail?.tracksDriftEvents
-                                }
-                                isAutoResponse={(x) => setRecall(true)}
-                                reload={() => updateDetail()}
-                            /> 
-                            <Evaluate
-                                id={benchmarkDetail?.id}
-                                benchmarkDetail={benchmarkDetail}
-                                assignmentsCount={assignments}
-                                onEvaluate={(c) => {
-                                    RunBenchmark(c)
-                                }}
-                            />
-                        </Flex>
-                    </Flex> */}
-                    <Flex flexDirection="col" className="w-full mt-4">
+                    <Flex flexDirection="col" className="w-full sm:mt-4">
                         {/* {chart && enable && ( */}
                         {false && (
                             <>
                                 <Flex className="bg-white  w-full border-solid border-2    rounded-xl p-4">
-                                    {/* <LineChart
-                                        className="h-80"
-                                        data={chart?.length < 0 ? [] : chart}
-                                        index="date"
-                                        categories={[
-                                            // 'Total',
-                                            'Incidents',
-                                            'Non Compliant',
-                                        ]}
-                                        colors={['indigo', 'rose', 'cyan']}
-                                        noDataText="No Data to Display"
-                                        // valueFormatter={dataFormatter}
-                                        yAxisWidth={60}
-                                        onValueChange={(v) => console.log(v)}
-                                    /> */}
+                                    
                                     <ReactEcharts
                                         // echarts={echarts}
                                         option={options()}

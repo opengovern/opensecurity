@@ -231,270 +231,180 @@ export default function Settings({
   
     return (
         <>
-            <Flex
-                flexDirection="col"
-                justifyContent="start"
-                alignItems="center"
+            <div
+                className="w-full"
+                style={
+                    window.innerWidth < 768
+                        ? { width: `${window.innerWidth - 80}px` }
+                        : {}
+                }
             >
-                {/* <Flex className="w-full mb-3">
-                    <Tiles
-                        value={enableStatus}
-                        className="gap-8"
-                        onChange={({ detail }) => {
-                            ChangeStatus(detail?.value)
-                        }}
-                        items={[
-                            {
-                                value: 'disabled',
-                                label: 'Disabled',
-                                description:
-                                    'Makes the framework inactive, with no assignments or audits.',
-                                // disabled: true,
-                            },
-                            {
-                                value: 'enabled',
-                                label: `Enabled`,
-                                disabled: true,
-                                description:
-                                    'Thi',
-                            },
-                            {
-                                value: 'auto-enable',
-                                label: `Auto Enabled`,
-                                description:
-                                    'Activates the framework on all integrations including any future integrations supported by the framework',
-                            },
-                        ]}
-                    />
-                </Flex> */}
-                <Flex className="relative">
-                    {/* {allEnable && (
-                        <Flex
-                            justifyContent="center"
-                            className="w-full h-full absolute backdrop-blur-sm z-10 top-[50px] rounded-lg"
-                            style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
+                <KTable
+                    className="   min-h-[450px]"
+                    // resizableColumns
+                    // variant="full-page"
+                    renderAriaLive={({
+                        firstIndex,
+                        lastIndex,
+                        totalItemsCount,
+                    }) =>
+                        `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
+                    }
+                    onSortingChange={(event) => {
+                        // setSort(event.detail.sortingColumn.sortingField)
+                        // setSortOrder(!sortOrder)
+                    }}
+                    // sortingColumn={sort}
+                    // sortingDescending={sortOrder}
+                    // sortingDescending={sortOrder == 'desc' ? true : false}
+                    // @ts-ignore
+                    onRowClick={(event) => {
+                        // console.log(event)
+                        // const row = event.detail.item
+                    }}
+                    columnDefinitions={[
+                        {
+                            id: 'id',
+                            header: 'Id',
+                            cell: (item) => item?.integration?.integration_id,
+                            sortingField: 'id',
+                            isRowHeader: true,
+                        },
+                        {
+                            id: 'id_name',
+                            header: 'Name',
+                            cell: (item) => item?.integration?.name,
+                            sortingField: 'id',
+                            isRowHeader: true,
+                        },
+                        {
+                            id: 'provider_id',
+                            header: 'Provider ID',
+                            cell: (item) => item?.integration?.provider_id,
+                            sortingField: 'id',
+                            isRowHeader: true,
+                        },
+                        {
+                            id: 'integration_type',
+                            header: 'Integration Type',
+                            cell: (item) => item?.integration?.integration_type,
+                            sortingField: 'id',
+                            isRowHeader: true,
+                        },
+                        {
+                            id: 'enable',
+                            header: 'Enable',
+                            cell: (item) => (
+                                <>
+                                    <Switch
+                                        disabled={banner}
+                                        onChange={(e) => {
+                                            ChangeStatusItem(
+                                                e ? 'auto-enable' : 'disabled',
+                                                item?.integration
+                                                    ?.integration_id
+                                            )
+                                        }}
+                                        checked={item?.assigned}
+                                    />
+                                </>
+                            ),
+                            sortingField: 'id',
+                            isRowHeader: true,
+                        },
+                    ]}
+                    columnDisplay={[
+                        { id: 'id', visible: true },
+                        { id: 'name', visible: true },
+                        { id: 'provider_id', visible: true },
+                        { id: 'integration_type', visible: true },
+                        { id: 'enable', visible: true },
+                    ]}
+                    enableKeyboardNavigation
+                    // @ts-ignore
+                    items={rows ? rows.slice(page * 10, (page + 1) * 10) : []}
+                    loading={loading}
+                    loadingText="Loading resources"
+                    // stickyColumns={{ first: 0, last: 1 }}
+                    // stripedRows
+                    trackBy="id"
+                    empty={
+                        <Box
+                            margin={{ vertical: 'xs' }}
+                            textAlign="center"
+                            color="inherit"
                         >
-                            <Text className="py-2 px-4 rounded bg-white border">
-                                Auto onboard enabled
-                            </Text>
-                        </Flex>
-                    )} */}
-                    <KTable
-                        className="   min-h-[450px]"
-                        // resizableColumns
-                        // variant="full-page"
-                        renderAriaLive={({
-                            firstIndex,
-                            lastIndex,
-                            totalItemsCount,
-                        }) =>
-                            `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
-                        }
-                        onSortingChange={(event) => {
-                            // setSort(event.detail.sortingColumn.sortingField)
-                            // setSortOrder(!sortOrder)
-                        }}
-                        // sortingColumn={sort}
-                        // sortingDescending={sortOrder}
-                        // sortingDescending={sortOrder == 'desc' ? true : false}
-                        // @ts-ignore
-                        onRowClick={(event) => {
-                            // console.log(event)
-                            // const row = event.detail.item
-                        }}
-                        columnDefinitions={[
-                            {
-                                id: 'id',
-                                header: 'Id',
-                                cell: (item) =>
-                                    item?.integration?.integration_id,
-                                sortingField: 'id',
-                                isRowHeader: true,
-                            },
-                            {
-                                id: 'id_name',
-                                header: 'Name',
-                                cell: (item) => item?.integration?.name,
-                                sortingField: 'id',
-                                isRowHeader: true,
-                            },
-                            {
-                                id: 'provider_id',
-                                header: 'Provider ID',
-                                cell: (item) => item?.integration?.provider_id,
-                                sortingField: 'id',
-                                isRowHeader: true,
-                            },
-                            {
-                                id: 'integration_type',
-                                header: 'Integration Type',
-                                cell: (item) =>
-                                    item?.integration?.integration_type,
-                                sortingField: 'id',
-                                isRowHeader: true,
-                            },
-                            {
-                                id: 'enable',
-                                header: 'Enable',
-                                cell: (item) => (
-                                    <>
-                                        <Switch
-                                            disabled={banner}
-                                            onChange={(e) => {
-                                                ChangeStatusItem(
-                                                    e
-                                                        ? 'auto-enable'
-                                                        : 'disabled',
-                                                    item?.integration
-                                                        ?.integration_id
-                                                )
-                                            }}
-                                            checked={item?.assigned}
-                                        />
-                                    </>
-                                ),
-                                sortingField: 'id',
-                                isRowHeader: true,
-                            },
-                        ]}
-                        columnDisplay={[
-                            { id: 'id', visible: true },
-                            { id: 'name', visible: true },
-                            { id: 'provider_id', visible: true },
-                            { id: 'integration_type', visible: true },
-                            { id: 'enable', visible: true },
-                        ]}
-                        enableKeyboardNavigation
-                        // @ts-ignore
-                        items={
-                            rows ? rows.slice(page * 10, (page + 1) * 10) : []
-                        }
-                        loading={loading}
-                        loadingText="Loading resources"
-                        // stickyColumns={{ first: 0, last: 1 }}
-                        // stripedRows
-                        trackBy="id"
-                        empty={
-                            <Box
-                                margin={{ vertical: 'xs' }}
-                                textAlign="center"
-                                color="inherit"
-                            >
-                                <SpaceBetween size="m">
-                                    <b>No resources</b>
-                                </SpaceBetween>
-                            </Box>
-                        }
-                        filter={
-                            ''
-                            // <PropertyFilter
-                            //     // @ts-ignore
-                            //     query={undefined}
-                            //     // @ts-ignore
-                            //     onChange={({ detail }) => {
-                            //         // @ts-ignore
-                            //         setQueries(detail)
-                            //     }}
-                            //     // countText="5 matches"
-                            //     enableTokenGroups
-                            //     expandToViewport
-                            //     filteringAriaLabel="Control Categories"
-                            //     // @ts-ignore
-                            //     // filteringOptions={filters}
-                            //     filteringPlaceholder="Control Categories"
-                            //     // @ts-ignore
-                            //     filteringOptions={undefined}
-                            //     // @ts-ignore
+                            <SpaceBetween size="m">
+                                <b>No resources</b>
+                            </SpaceBetween>
+                        </Box>
+                    }
+                    filter={
+                        ''
+                        // <PropertyFilter
+                        //     // @ts-ignore
+                        //     query={undefined}
+                        //     // @ts-ignore
+                        //     onChange={({ detail }) => {
+                        //         // @ts-ignore
+                        //         setQueries(detail)
+                        //     }}
+                        //     // countText="5 matches"
+                        //     enableTokenGroups
+                        //     expandToViewport
+                        //     filteringAriaLabel="Control Categories"
+                        //     // @ts-ignore
+                        //     // filteringOptions={filters}
+                        //     filteringPlaceholder="Control Categories"
+                        //     // @ts-ignore
+                        //     filteringOptions={undefined}
+                        //     // @ts-ignore
 
-                            //     filteringProperties={undefined}
-                            //     // filteringProperties={
-                            //     //     filterOption
-                            //     // }
-                            // />
-                        }
-                        header={
-                            <Header
-                                className="w-full"
-                                actions={
-                                    <Flex className='gap-2'>
-                                        <KButton onClick={()=>{
+                        //     filteringProperties={undefined}
+                        //     // filteringProperties={
+                        //     //     filterOption
+                        //     // }
+                        // />
+                    }
+                    header={
+                        <Header
+                            className="w-full"
+                            actions={
+                                <Flex className="gap-2">
+                                    <KButton
+                                        onClick={() => {
                                             ChangeStatus('auto-enable')
-                                        }} >Enable All</KButton>
-                                        <KButton onClick={()=>{
+                                        }}
+                                    >
+                                        Enable All
+                                    </KButton>
+                                    <KButton
+                                        onClick={() => {
                                             ChangeStatus('disabled')
-                                        }} >Disable All</KButton>
-                                    </Flex>
-                                }
-                            >
-                                Assigments{' '}
-                                <span className=" font-medium">
-                                    ({rows?.length})
-                                </span>
-                            </Header>
-                        }
-                        pagination={
-                            <Pagination
-                                currentPageIndex={page + 1}
-                                pagesCount={Math.ceil(rows?.length / 10)}
-                                onChange={({ detail }) =>
-                                    setPage(detail.currentPageIndex - 1)
-                                }
-                            />
-                        }
-                    />
-                </Flex>
-                {/* {banner ? (
-                    <Callout
-                        title="Provider requirements"
-                        className="w-full"
-                        color="amber"
-                    >
-                        <Flex
-                            flexDirection="col"
-                            alignItems="start"
-                            className="gap-3"
+                                        }}
+                                    >
+                                        Disable All
+                                    </KButton>
+                                </Flex>
+                            }
                         >
-                            <Text color="amber">
-                                You have auto-enabled all accounts
-                            </Text>
-                            <Button
-                                variant="secondary"
-                                color="amber"
-                                onClick={() => setBanner(false)}
-                            >
-                                Edit
-                            </Button>
-                        </Flex>
-                    </Callout>
-                ) : (
-                  
-                )} */}
-                {/* <Divider /> */}
-                {/* <Flex
-                    className="w-full gap-2  bg-white p-7 rounded-xl mt-2"
-                    justifyContent="between"
-                >
-                    <Text className="text-gray-800 whitespace-nowrap">
-                        Maintain Detailed audit trails of Drifts Events
-                    </Text>
-                    {changeSettingsLoading && changeSettingsExecuted ? (
-                        <Spinner />
-                    ) : (
-                        <>
-                            <Toggle
-                                onChange={({ detail }) =>
-                                    changeSettings(
-                                        id,
-                                        { tracksDriftEvents: detail.checked },
-                                        {}
-                                    )
-                                }
-                                checked={false}
-                            ></Toggle>
-                        </>
-                    )}
-                </Flex> */}
-            </Flex>
+                            Assigments{' '}
+                            <span className=" font-medium">
+                                ({rows?.length})
+                            </span>
+                        </Header>
+                    }
+                    pagination={
+                        <Pagination
+                            currentPageIndex={page + 1}
+                            pagesCount={Math.ceil(rows?.length / 10)}
+                            onChange={({ detail }) =>
+                                setPage(detail.currentPageIndex - 1)
+                            }
+                        />
+                    }
+                />
+            </div>
         </>
     )
 }

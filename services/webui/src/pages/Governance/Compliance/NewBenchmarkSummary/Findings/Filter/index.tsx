@@ -785,12 +785,12 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
                     flexDirection="row"
                     justifyContent="start"
                     alignItems="start"
-                    className="w-full gap-2"
+                    className="w-full gap-2 sm:flex-row flex-col"
                 >
                     <Select
                         // @ts-ignore
                         selectedOption={filter}
-                        className="w-1/5 mt-[-9px]"
+                        className="sm:w-1/5 w-full mt-[-9px]"
                         inlineLabelText={'Saved Filters'}
                         placeholder="Select Filter Set"
                         // @ts-ignore

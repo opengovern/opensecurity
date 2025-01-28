@@ -280,421 +280,340 @@ export default function EvaluateTable({
     }
     return (
         <>
-            {/* <AppLayout
-                toolsOpen={false}
-                navigationOpen={false}
-                contentType="table"
-                toolsHide={true}
-                navigationHide={true}
-                splitPanelOpen={open}
-                onSplitPanelToggle={() => {
-                    setOpen(!open)
-                    if (open) {
-                        setSelected(undefined)
+            <div className='w-full' style={window.innerWidth < 768 ? { width: `${window.innerWidth-80}px` } : {}}>
+                {' '}
+                <KTable
+                    className="   min-h-[450px] w-full"
+                    // resizableColumns
+                    // variant="full-page"
+                    renderAriaLive={({
+                        firstIndex,
+                        lastIndex,
+                        totalItemsCount,
+                    }) =>
+                        `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
                     }
-                }}
-                splitPanel={
+                    onSortingChange={(event) => {
+                        // setSort(event.detail.sortingColumn.sortingField)
+                        // setSortOrder(!sortOrder)
+                    }}
+                    // sortingColumn={sort}
+                    // sortingDescending={sortOrder}
+                    // sortingDescending={sortOrder == 'desc' ? true : false}
                     // @ts-ignore
-                    <SplitPanel
+                    onRowClick={(event) => {
+                        const row = event.detail.item
                         // @ts-ignore
-                        header={
-                            selected ? (
-                                <>{`Job No ${selected?.job_id} Selected`}</>
-                            ) : (
-                                'Job not selected'
-                            )
-                        }
-                    >
-                        {detailLoading ? (
-                            <>
-                                <Spinner />
-                            </>
-                        ) : (
-                            <>
-                                <Flex
-                                    flexDirection="col"
-                                    className="w-full"
-                                    alignItems="center"
-                                    justifyContent="center"
+                        setSelected(row)
+                    }}
+                    columnDefinitions={[
+                        {
+                            id: 'job_id',
+                            header: 'Id',
+                            cell: (item) => item.job_id,
+                            sortingField: 'id',
+                            isRowHeader: true,
+                        },
+                        {
+                            id: 'updated_at',
+                            header: 'Last Updated at',
+                            cell: (item) => (
+                                // @ts-ignore
+                                <>{dateTimeDisplay(item.updated_at)}</>
+                            ),
+                        },
+
+                        {
+                            id: 'integration_id',
+                            header: 'Integration Id',
+                            cell: (item) => (
+                                // @ts-ignore
+                                <>{item.integration_info[0]?.integration_id}</>
+                            ),
+                        },
+
+                        {
+                            id: 'integration_name',
+                            header: 'Integration(s)',
+                            cell: (item) => {
+                                const names = []
+                                item.integration_info.map((i) => {
+                                    names.push(i.name)
+                                })
+                                var unique = names.filter(
+                                    (value, index, array) =>
+                                        array.indexOf(value) === index
+                                )
+                                const length = unique.length
+
+                                return (
+                                    // @ts-ignore
+                                    <>
+                                        {length > 2 ? (
+                                            <>
+                                                <>
+                                                    {unique[0]}
+                                                    {length > 2 &&
+                                                        ` + ${length - 1} more`}
+                                                </>
+                                            </>
+                                        ) : (
+                                            <>{unique.join(', ')}</>
+                                        )}
+                                    </>
+                                )
+                            },
+                        },
+                        {
+                            id: 'integration_type',
+                            header: 'Integration Type',
+                            cell: (item) => {
+                                const types = []
+                                item.integration_info.map((i) => {
+                                    types.push(i.integration_type)
+                                })
+                                var unique = types.filter(
+                                    (value, index, array) =>
+                                        array.indexOf(value) === index
+                                )
+                                return (
+                                    // @ts-ignore
+                                    <>{unique.join(', ')}</>
+                                )
+                            },
+                        },
+
+                        {
+                            id: 'job_status',
+                            header: 'Job Status',
+                            cell: (item) => (
+                                // @ts-ignore
+                                <>{item.job_status}</>
+                            ),
+                        },
+                        {
+                            id: 'action',
+                            header: '',
+                            cell: (item) => (
+                                // @ts-ignore
+                                <KButton
+                                    onClick={() => {
+                                        setSelected(item)
+                                    }}
+                                    variant="inline-link"
+                                    ariaLabel={`Open Detail`}
                                 >
-                                    <KeyValuePairs
-                                        className="w-full"
-                                        columns={6}
-                                        items={[
-                                            {
-                                                label: 'Job ID',
-                                                value: selected?.job_id,
-                                            },
-                                            {
-                                                label: 'Benchmark ID',
-                                                value: detail?.benchmark_id,
-                                            },
-                                            {
-                                                label: 'Benchmark Title',
-                                                value: detail?.benchmark_title,
-                                            },
-                                            {
-                                                label: 'Last Evaulated at',
-                                                value: (
-                                                    <>
-                                                        {dateTimeDisplay(
-                                                            selected?.updated_at
-                                                        )}
-                                                    </>
-                                                ),
-                                            },
-                                            {
-                                                label: 'Job Status',
-                                                value: (
-                                                    <StatusIndicator
-                                                        type={
-                                                            JOB_STATUS[
-                                                                selected
-                                                                    ?.job_status
-                                                            ]
-                                                        }
-                                                    >
-                                                        {selected?.job_status}
-                                                    </StatusIndicator>
-                                                ),
-                                            },
-                                        ]}
-                                    />
-                                    <Flex className="w-1/2 mt-2">
-                                        <SeverityBar benchmark={detail} />
-                                    </Flex>
-                                </Flex>
-                            </>
-                        )}
-                    </SplitPanel>
-                }
-                content={
-                   <></>
-                }
-            /> */}
-            <KTable
-                className="   min-h-[450px]"
-                // resizableColumns
-                // variant="full-page"
-                renderAriaLive={({ firstIndex, lastIndex, totalItemsCount }) =>
-                    `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
-                }
-                onSortingChange={(event) => {
-                    // setSort(event.detail.sortingColumn.sortingField)
-                    // setSortOrder(!sortOrder)
-                }}
-                // sortingColumn={sort}
-                // sortingDescending={sortOrder}
-                // sortingDescending={sortOrder == 'desc' ? true : false}
-                // @ts-ignore
-                onRowClick={(event) => {
-                    const row = event.detail.item
+                                    See Details
+                                </KButton>
+                            ),
+                        },
+                    ]}
+                    columnDisplay={[
+                        { id: 'job_id', visible: true },
+                        { id: 'updated_at', visible: true },
+                        { id: 'job_status', visible: true },
+                        { id: 'integration_id', visible: false },
+                        { id: 'integration_name', visible: true },
+                        { id: 'integration_type', visible: true },
+
+                        // { id: 'conformanceStatus', visible: true },
+                        // { id: 'severity', visible: true },
+                        // { id: 'evaluatedAt', visible: true },
+
+                        { id: 'action', visible: true },
+                    ]}
+                    enableKeyboardNavigation
                     // @ts-ignore
-                    setSelected(row)
-                }}
-                columnDefinitions={[
-                    {
-                        id: 'job_id',
-                        header: 'Id',
-                        cell: (item) => item.job_id,
-                        sortingField: 'id',
-                        isRowHeader: true,
-                    },
-                    {
-                        id: 'updated_at',
-                        header: 'Last Updated at',
-                        cell: (item) => (
-                            // @ts-ignore
-                            <>{dateTimeDisplay(item.updated_at)}</>
-                        ),
-                    },
-
-                    {
-                        id: 'integration_id',
-                        header: 'Integration Id',
-                        cell: (item) => (
-                            // @ts-ignore
-                            <>{item.integration_info[0]?.integration_id}</>
-                        ),
-                    },
-
-                    {
-                        id: 'integration_name',
-                        header: 'Integration(s)',
-                        cell: (item) => {
-                            const names =[]
-                            item.integration_info.map((i)=>{
-                                names.push(i.name)
-                            })
-                            var unique = names.filter(
-                                (value, index, array) =>
-                                    array.indexOf(value) === index
-                            )
-                            const length = unique.length
-
-                            return (
-                                // @ts-ignore
-                                <>
-                                {length>2 ? (<>
-                                <>{unique[0]}{length > 2 && ` + ${length-1} more`}</>
-                                
-                                </>) : (<>
-                                    {unique.join(', ')}
-                                </>)}
-                                </>
-                            )
-
-                            
-
-                        }
-                    },
-                    {
-                        id: 'integration_type',
-                        header: 'Integration Type',
-                        cell: (item) =>{
-                            const types =[]
-                            item.integration_info.map((i)=>{
-                                types.push(i.integration_type)
-                            })
-                            var unique = types.filter(
-                                (value, index, array) =>
-                                    array.indexOf(value) === index
-                            )
-                            return (
-                                // @ts-ignore
-                                <>{unique.join(', ')}</>
-                            )
-                        }
-                    },
-
-                    {
-                        id: 'job_status',
-                        header: 'Job Status',
-                        cell: (item) => (
-                            // @ts-ignore
-                            <>{item.job_status}</>
-                        ),
-                    },
-                    {
-                        id: 'action',
-                        header: '',
-                        cell: (item) => (
-                            // @ts-ignore
-                            <KButton
-                                onClick={() => {
-                                    setSelected(item)
+                    items={accounts}
+                    loading={loading}
+                    loadingText="Loading resources"
+                    // stickyColumns={{ first: 0, last: 1 }}
+                    // stripedRows
+                    trackBy="id"
+                    empty={
+                        <Box
+                            margin={{ vertical: 'xs' }}
+                            textAlign="center"
+                            color="inherit"
+                        >
+                            <SpaceBetween size="m">
+                                <b>No resources</b>
+                            </SpaceBetween>
+                        </Box>
+                    }
+                    filter={
+                        <Flex
+                            flexDirection="row"
+                            justifyContent="start"
+                            alignItems="start"
+                            className="gap-2 sm:flex-row flex-col"
+                        >
+                            <KMulstiSelect
+                                className="sm:w-1/4 w-full"
+                                placeholder="Filter by Job status"
+                                selectedOptions={jobStatus}
+                                options={[
+                                    {
+                                        label: 'SUCCEEDED',
+                                        value: 'SUCCEEDED',
+                                    },
+                                    {
+                                        label: 'FAILED',
+                                        value: 'FAILED',
+                                    },
+                                    {
+                                        label: 'CREATED',
+                                        value: 'CREATED',
+                                    },
+                                    {
+                                        label: 'RUNNERS_IN_PROGRESS',
+                                        value: 'RUNNERS_IN_PROGRESS',
+                                    },
+                                    {
+                                        label: 'SINK_IN_PROGRESS',
+                                        value: 'SINK_IN_PROGRESS',
+                                    },
+                                    {
+                                        label: 'CANCELED',
+                                        value: 'CANCELED',
+                                    },
+                                    {
+                                        label: 'TIMEOUT',
+                                        value: 'TIMEOUT',
+                                    },
+                                    {
+                                        label: 'SUMMARIZER_IN_PROGRESS',
+                                        value: 'SUMMARIZER_IN_PROGRESS',
+                                    },
+                                ]}
+                                onChange={({ detail }) => {
+                                    setJobStatus(detail.selectedOptions)
                                 }}
-                                variant="inline-link"
-                                ariaLabel={`Open Detail`}
-                            >
-                                See Details
-                            </KButton>
-                        ),
-                    },
-                ]}
-                columnDisplay={[
-                    { id: 'job_id', visible: true },
-                    { id: 'updated_at', visible: true },
-                    { id: 'job_status', visible: true },
-                    { id: 'integration_id', visible: false },
-                    { id: 'integration_name', visible: true },
-                    { id: 'integration_type', visible: true },
-
-                    // { id: 'conformanceStatus', visible: true },
-                    // { id: 'severity', visible: true },
-                    // { id: 'evaluatedAt', visible: true },
-
-                    { id: 'action', visible: true },
-                ]}
-                enableKeyboardNavigation
-                // @ts-ignore
-                items={accounts}
-                loading={loading}
-                loadingText="Loading resources"
-                // stickyColumns={{ first: 0, last: 1 }}
-                // stripedRows
-                trackBy="id"
-                empty={
-                    <Box
-                        margin={{ vertical: 'xs' }}
-                        textAlign="center"
-                        color="inherit"
-                    >
-                        <SpaceBetween size="m">
-                            <b>No resources</b>
-                        </SpaceBetween>
-                    </Box>
-                }
-                filter={
-                    <Flex
-                        flexDirection="row"
-                        justifyContent="start"
-                        alignItems="start"
-                        className="gap-2"
-                    >
-                        <KMulstiSelect
-                            className="w-1/4"
-                            placeholder="Filter by Job status"
-                            selectedOptions={jobStatus}
-                            options={[
-                                {
-                                    label: 'SUCCEEDED',
-                                    value: 'SUCCEEDED',
-                                },
-                                {
-                                    label: 'FAILED',
-                                    value: 'FAILED',
-                                },
-                                {
-                                    label: 'CREATED',
-                                    value: 'CREATED',
-                                },
-                                {
-                                    label: 'RUNNERS_IN_PROGRESS',
-                                    value: 'RUNNERS_IN_PROGRESS',
-                                },
-                                {
-                                    label: 'SINK_IN_PROGRESS',
-                                    value: 'SINK_IN_PROGRESS',
-                                },
-                                {
-                                    label: 'CANCELED',
-                                    value: 'CANCELED',
-                                },
-                                {
-                                    label: 'TIMEOUT',
-                                    value: 'TIMEOUT',
-                                },
-                                {
-                                    label: 'SUMMARIZER_IN_PROGRESS',
-                                    value: 'SUMMARIZER_IN_PROGRESS',
-                                },
-                            ]}
-                            onChange={({ detail }) => {
-                                setJobStatus(detail.selectedOptions)
-                            }}
-                        />
-                        <KMulstiSelect
-                            className="w-1/4"
-                            placeholder="Filter by Integration"
-                            selectedOptions={selectedIntegrations}
-                            filteringType="auto"
-                            options={integrationData?.map((i) => {
-                                return {
-                                    label: i.id_name,
-                                    value: i.integration_id,
-                                    description: truncate(i.id),
-                                }
-                            })}
-                            loadingText="Loading Integrations"
-                            loading={loadingI}
-                            onChange={({ detail }) => {
-                                setSelectedIntegrations(detail.selectedOptions)
-                            }}
-                        />
-                        {/* default last 24 */}
-                        <DateRangePicker
-                            onChange={({ detail }) => {
-                                setDate(detail.value)
-                            }}
-                            value={date}
-                            relativeOptions={[
-                                {
-                                    key: 'previous-5-minutes',
-                                    amount: 5,
-                                    unit: 'minute',
-                                    type: 'relative',
-                                },
-                                {
-                                    key: 'previous-30-minutes',
-                                    amount: 30,
-                                    unit: 'minute',
-                                    type: 'relative',
-                                },
-                                {
-                                    key: 'previous-1-hour',
-                                    amount: 1,
-                                    unit: 'hour',
-                                    type: 'relative',
-                                },
-                                {
-                                    key: 'previous-6-hours',
-                                    amount: 6,
-                                    unit: 'hour',
-                                    type: 'relative',
-                                },
-                                {
-                                    key: 'previous-7-days',
-                                    amount: 7,
-                                    unit: 'day',
-                                    type: 'relative',
-                                },
-                            ]}
-                            absoluteFormat="long-localized"
-                            hideTimeOffset
-                            // rangeSelectorMode={'absolute-only'}
-                            isValidRange={(range) => {
-                                if (range.type === 'absolute') {
-                                    const [startDateWithoutTime] =
-                                        range.startDate.split('T')
-                                    const [endDateWithoutTime] =
-                                        range.endDate.split('T')
-                                    if (
-                                        !startDateWithoutTime ||
-                                        !endDateWithoutTime
-                                    ) {
-                                        return {
-                                            valid: false,
-                                            errorMessage:
-                                                'The selected date range is incomplete. Select a start and end date for the date range.',
+                            />
+                            <KMulstiSelect
+                                className="sm:w-1/4 w-full"
+                                placeholder="Filter by Integration"
+                                selectedOptions={selectedIntegrations}
+                                filteringType="auto"
+                                options={integrationData?.map((i) => {
+                                    return {
+                                        label: i.id_name,
+                                        value: i.integration_id,
+                                        description: truncate(i.id),
+                                    }
+                                })}
+                                loadingText="Loading Integrations"
+                                loading={loadingI}
+                                onChange={({ detail }) => {
+                                    setSelectedIntegrations(
+                                        detail.selectedOptions
+                                    )
+                                }}
+                            />
+                            {/* default last 24 */}
+                            <DateRangePicker
+                                onChange={({ detail }) => {
+                                    setDate(detail.value)
+                                }}
+                                value={date}
+                                relativeOptions={[
+                                    {
+                                        key: 'previous-5-minutes',
+                                        amount: 5,
+                                        unit: 'minute',
+                                        type: 'relative',
+                                    },
+                                    {
+                                        key: 'previous-30-minutes',
+                                        amount: 30,
+                                        unit: 'minute',
+                                        type: 'relative',
+                                    },
+                                    {
+                                        key: 'previous-1-hour',
+                                        amount: 1,
+                                        unit: 'hour',
+                                        type: 'relative',
+                                    },
+                                    {
+                                        key: 'previous-6-hours',
+                                        amount: 6,
+                                        unit: 'hour',
+                                        type: 'relative',
+                                    },
+                                    {
+                                        key: 'previous-7-days',
+                                        amount: 7,
+                                        unit: 'day',
+                                        type: 'relative',
+                                    },
+                                ]}
+                                absoluteFormat="long-localized"
+                                hideTimeOffset
+                                // rangeSelectorMode={'absolute-only'}
+                                isValidRange={(range) => {
+                                    if (range.type === 'absolute') {
+                                        const [startDateWithoutTime] =
+                                            range.startDate.split('T')
+                                        const [endDateWithoutTime] =
+                                            range.endDate.split('T')
+                                        if (
+                                            !startDateWithoutTime ||
+                                            !endDateWithoutTime
+                                        ) {
+                                            return {
+                                                valid: false,
+                                                errorMessage:
+                                                    'The selected date range is incomplete. Select a start and end date for the date range.',
+                                            }
+                                        }
+                                        if (
+                                            new Date(range.startDate) -
+                                                new Date(range.endDate) >
+                                            0
+                                        ) {
+                                            return {
+                                                valid: false,
+                                                errorMessage:
+                                                    'The selected date range is invalid. The start date must be before the end date.',
+                                            }
                                         }
                                     }
-                                    if (
-                                        new Date(range.startDate) -
-                                            new Date(range.endDate) >
-                                        0
-                                    ) {
-                                        return {
-                                            valid: false,
-                                            errorMessage:
-                                                'The selected date range is invalid. The start date must be before the end date.',
-                                        }
-                                    }
-                                }
-                                return { valid: true }
-                            }}
-                            i18nStrings={{}}
-                            placeholder="Filter by Job Range"
-                        />
-                    </Flex>
-                }
-                header={
-                    <Header
-                        counter={totalCount ? `(${totalCount})` : ''}
-                        actions={
-                            <KButton
-                                onClick={() => {
-                                    GetHistory()
+                                    return { valid: true }
                                 }}
-                            >
-                                Reload
-                            </KButton>
-                        }
-                        className="w-full"
-                    >
-                        Jobs{' '}
-                    </Header>
-                }
-                pagination={
-                    <Pagination
-                        currentPageIndex={page}
-                        pagesCount={totalPage}
-                        onChange={({ detail }) =>
-                            setPage(detail.currentPageIndex)
-                        }
-                    />
-                }
-            />
+                                i18nStrings={{}}
+                                placeholder="Filter by Job Range"
+                            />
+                        </Flex>
+                    }
+                    header={
+                        <Header
+                            counter={totalCount ? `(${totalCount})` : ''}
+                            actions={
+                                <KButton
+                                    onClick={() => {
+                                        GetHistory()
+                                    }}
+                                >
+                                    Reload
+                                </KButton>
+                            }
+                            className="w-full"
+                        >
+                            Jobs{' '}
+                        </Header>
+                    }
+                    pagination={
+                        <Pagination
+                            currentPageIndex={page}
+                            pagesCount={totalPage}
+                            onChange={({ detail }) =>
+                                setPage(detail.currentPageIndex)
+                            }
+                        />
+                    }
+                />
+            </div>
         </>
     )
 }
