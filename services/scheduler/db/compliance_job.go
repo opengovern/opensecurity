@@ -238,7 +238,7 @@ func (db Database) ListComplianceJobsWithSummaryJob(withIncidents *bool, interva
 		tx = tx.Where("compliance_jobs.created_by = ?", createdBy)
 	}
 	if len(frameworkIDs) > 0 {
-		tx = tx.Where("compliance_jobs.framework_ids && ?", frameworkIDs)
+		tx = tx.Where("compliance_jobs.framework_ids && ?", pq.Array(frameworkIDs))
 	}
 
 	// Execute the query
@@ -292,7 +292,7 @@ func (db Database) ListPendingComplianceJobsByIntegrationID(withIncidents *bool,
 
 func (db Database) ListComplianceJobsByFrameworkID(withIncidents *bool, frameworkIDs []string) ([]model.ComplianceJob, error) {
 	var job []model.ComplianceJob
-	tx := db.ORM.Model(&model.ComplianceJob{}).Where("framework_ids && ?", frameworkIDs)
+	tx := db.ORM.Model(&model.ComplianceJob{}).Where("framework_ids && ?", pq.Array(frameworkIDs))
 	if withIncidents != nil {
 		tx = tx.Where("with_incidents = ?", *withIncidents)
 	}
@@ -457,7 +457,7 @@ func (db Database) ListComplianceJobsByFilters(withIncidents *bool, integrationI
 	}
 
 	if len(frameworkId) > 0 {
-		tx = tx.Where("framework_ids && ?", frameworkId)
+		tx = tx.Where("framework_ids && ?", pq.Array(frameworkId))
 	}
 	if len(status) > 0 {
 		tx = tx.Where("status IN ?", status)

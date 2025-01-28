@@ -208,7 +208,7 @@ func (s *JobScheduler) CreateComplianceReportJobs(withIncident bool, frameworkID
 		integrationsEpoch = append(integrationsEpoch, integrationID)
 		if len(integrationsEpoch) >= 10 {
 			rs := pgtype.JSONB{}
-			err := rs.Set([]byte(""))
+			err := rs.Set([]byte("{}"))
 			if err != nil {
 				return nil, err
 			}
@@ -234,7 +234,7 @@ func (s *JobScheduler) CreateComplianceReportJobs(withIncident bool, frameworkID
 	}
 	if len(integrationsEpoch) > 0 {
 		rs := pgtype.JSONB{}
-		err := rs.Set([]byte(""))
+		err := rs.Set([]byte("{}"))
 		if err != nil {
 			return nil, err
 		}
