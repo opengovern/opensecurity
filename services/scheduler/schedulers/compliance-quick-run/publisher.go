@@ -85,7 +85,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 				continue
 			}
 		}
-		_ = s.db.UpdateComplianceJob(job.ID, model.ComplianceJobRunnersInProgress, "")
+		_ = s.db.UpdateComplianceJob(job.ID, model.ComplianceJobQueued, "")
 	}
 	return nil
 }

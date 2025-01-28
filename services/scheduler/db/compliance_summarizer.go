@@ -9,6 +9,10 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	summarizerRetryCount = 0
+)
+
 func (db Database) CreateSummarizerJob(summarizer *model.ComplianceSummarizer) error {
 	tx := db.ORM.
 		Model(&model.ComplianceSummarizer{}).
@@ -42,7 +46,7 @@ func (db Database) FetchCreatedSummarizers(manuals bool) ([]model.ComplianceSumm
 }
 
 func (db Database) RetryFailedSummarizers() error {
-	tx := db.ORM.Exec("UPDATE compliance_summarizers SET retry_count = retry_count + 1, status = 'CREATED' WHERE status = 'FAILED' AND retry_count < 3 AND updated_at < NOW() - interval '7 minutes'")
+	tx := db.ORM.Exec("UPDATE compliance_summarizers SET retry_count = retry_count + 1, status = 'CREATED' WHERE status = 'FAILED' AND retry_count < ? AND updated_at < NOW() - interval '7 minutes'", summarizerRetryCount)
 	if tx.Error != nil {
 		return tx.Error
 	}

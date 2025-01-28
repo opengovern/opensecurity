@@ -17,6 +17,8 @@ type ComplianceTriggerType string
 
 const (
 	ComplianceJobCreated              ComplianceJobStatus = "CREATED"
+	ComplianceJobQueued               ComplianceJobStatus = "QUEUED"      // for quick audit
+	ComplianceJobInProgress           ComplianceJobStatus = "IN_PROGRESS" // for quick audit
 	ComplianceJobRunnersInProgress    ComplianceJobStatus = "RUNNERS_IN_PROGRESS"
 	ComplianceJobSinkInProgress       ComplianceJobStatus = "SINK_IN_PROGRESS"
 	ComplianceJobSummarizerInProgress ComplianceJobStatus = "SUMMARIZER_IN_PROGRESS"

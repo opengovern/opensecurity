@@ -5125,12 +5125,15 @@ func (h HttpHandler) GetJobReportSummary(ctx echo.Context) error {
 			BySeverity: make(map[string]*api.JobScoreControlViewBySeverityScore),
 		},
 	}
+	var totalControls int64
 	for _, c := range controls {
 		if _, ok := jobScore.ControlView.BySeverity[c.Severity.String()]; !ok {
 			jobScore.ControlView.BySeverity[c.Severity.String()] = &api.JobScoreControlViewBySeverityScore{}
 		}
 		jobScore.ControlView.BySeverity[c.Severity.String()].TotalControls += 1
+		totalControls += 1
 	}
+	jobScore.TotalControls = totalControls
 
 	for _, cs := range summary.Controls {
 		if _, ok := jobScore.ControlView.BySeverity[cs.Severity.String()]; !ok {
