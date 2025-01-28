@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gorm.io/gorm/logger"
 	"strings"
 
 	"github.com/lib/pq"
@@ -444,7 +445,9 @@ func (db Database) ListControlsByFrameworkID(ctx context.Context, benchmarkID st
 	var queriesMap map[string]Policy
 	if len(policyIDs) > 0 {
 		var policies []Policy
-		qtx := db.Orm.WithContext(ctx).Model(&Policy{}).Preload(clause.Associations).Where("id IN ?", policyIDs).Find(&policies)
+		qtx := db.Orm.Session(&gorm.Session{
+			Logger: db.Orm.Logger.LogMode(logger.Silent), // Temporarily disable logging
+		}).WithContext(ctx).Model(&Policy{}).Preload(clause.Associations).Where("id IN ?", policyIDs).Find(&policies)
 		if qtx.Error != nil {
 			return nil, qtx.Error
 		}
