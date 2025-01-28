@@ -424,45 +424,10 @@ const {
                 )}
             </Modal>
 
-         
-            {/* <Grid numItems={4} className="w-full gap-4 h-fit mb-4">
-                <Col numColSpan={1}>
-                    <SummaryCard
-                        title="Accounts"
-                        metric={100}
-                        metricPrev={0}
-                        loading={false}
-                    />
-                </Col>
-                <Col numColSpan={1}>
-                    <SummaryCard
-                        title="Accounts"
-                        metric={100}
-                        metricPrev={0}
-                        loading={false}
-                    />
-                </Col>
-                <Col numColSpan={1}>
-                    <SummaryCard
-                        title="Accounts"
-                        metric={100}
-                        metricPrev={0}
-                        loading={false}
-                    />
-                </Col>
-                <Col numColSpan={1}>
-                    <SummaryCard
-                        title="Accounts"
-                        metric={100}
-                        metricPrev={0}
-                        loading={false}
-                    />
-                </Col>
-            </Grid> */}
             <Grid numItems={6} className="w-full gap-4 h-fit mb-7" 
-                style={{"gridAutoRows" : "1fr"}}
+                style={window.innerWidth >768 ?{"gridAutoRows" : "1fr"}: {}}
             >
-                <Col numColSpan={4}>
+                <Col numColSpan={6} numColSpanSm={4}>
                     {/* <ScoreKPIs /> */}
                     {/* <QuickNav /> */}
                     <Flex
@@ -485,9 +450,9 @@ const {
                         {/* <Spend/> */}
                     </Flex>
                 </Col>
-                <Col numColSpan={2}>
+                <Col numColSpan={6} numColSpanSm={2} className='sm:h-full h-fit'>
                     {/* <Query height={880} /> */}
-                    <Integrations height={860} />
+                    <Integrations />
                 </Col>
             </Grid>
 

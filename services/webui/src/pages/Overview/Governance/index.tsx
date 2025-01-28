@@ -8,10 +8,12 @@ export default function Governance() {
      const navigate = useNavigate()
     return (
         <Card className="border-0 ring-0 !shadow-sm h-full">
-            <Flex justifyContent="between">
-                <Flex justifyContent="start" className="gap-2 ">
+            <Flex justifyContent="between" className="sm:flex-row flex-col">
+                <Flex justifyContent="start" className="gap-2 sm:w-fit w-full ">
                     <Icon icon={ShieldCheckIcon} className="p-0" />
-                    <Title className="font-semibold">Compliance Frameworks</Title>
+                    <Title className="font-semibold sm:w-fit w-full">
+                        Compliance Frameworks
+                    </Title>
                 </Flex>
                 <a
                     target="__blank"

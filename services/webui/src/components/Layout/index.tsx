@@ -64,7 +64,7 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                         // pl-44
                     >
                         <div
-                            className={`w-full ${
+                            className={`w-full  ${
                                 current === 'dashboard' ? '' : ''
                             } ${
                                 current === 'assistant'

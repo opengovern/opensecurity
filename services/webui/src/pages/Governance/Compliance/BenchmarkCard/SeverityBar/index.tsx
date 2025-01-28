@@ -213,7 +213,7 @@ export default function SeverityBar({ benchmark }: ISeverityBar) {
             {/* @ts-ignore */}
             {benchmarkChecks(benchmark).total > 0 ? (
                 <>
-                    <Text className="mb-2">{`${numberDisplay(
+                    <Text className="mb-2 sm:inline-block hidden">{`${numberDisplay(
                         (benchmark?.severity_summary_by_control?.total?.total ||
                             0) -
                             (benchmark?.severity_summary_by_control?.total

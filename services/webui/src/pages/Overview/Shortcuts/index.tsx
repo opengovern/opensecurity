@@ -76,7 +76,7 @@ export default function Shortcuts() {
     const navigate = useNavigate()
     const [open,setOpen] = useState(false)
     const [userOpen, setUserOpen] = useState(false)
-
+    const number = window.innerWidth > 768 ? 4 : 2
 
     return (
         <Card>
@@ -84,8 +84,8 @@ export default function Shortcuts() {
                 <Icon icon={CursorArrowRaysIcon} className="p-0" />
                 <Title className="font-semibold">Shortcuts</Title>
             </Flex>
-            <Grid numItems={4} className="w-full mb-4 gap-4">
-                {navList.map((nav, i) => (
+            <Grid numItems={1} numItemsSm={4} className="w-full mb-4 gap-4">
+                {navList?.slice(0,number).map((nav, i) => (
                     <>
                         {nav?.title !== 'Audit' && nav?.title !== 'Invite' ? (
                             <>

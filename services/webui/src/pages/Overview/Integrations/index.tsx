@@ -29,9 +29,7 @@ import { useIntegrationApiV1ConnectorsList } from '../../../api/integration.gen'
 import { Box, Cards, Link, Modal, SpaceBetween } from '@cloudscape-design/components'
 import axios from 'axios'
 
-interface IQuery {
-    height: any
-}
+
 
 const GetTierIcon = (tier: string) => {
     if (tier === 'Community') {
@@ -198,12 +196,13 @@ const GetTierIcon = (tier: string) => {
         )
     }
 }
-export default function Integrations({ height }: IQuery) {
+export default function Integrations() {
     const workspace = useParams<{ ws: string }>().ws
     const navigate = useNavigate()
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)
     const [loading, setLoading] = useState(false)
     const [url, setUrl] = useState('')
+    const number = window.innerWidth >768 ? 4 : 2
 
     const [open, setOpen] = useState(false)
     const {
@@ -211,7 +210,7 @@ export default function Integrations({ height }: IQuery) {
         isLoading: connectorsLoading,
         sendNow: getList,
     } = useIntegrationApiV1ConnectorsList(
-        4,
+        number,
         1,
         undefined,
         'count',
@@ -222,7 +221,7 @@ export default function Integrations({ height }: IQuery) {
     const [selected, setSelected] = useState()
 
     useEffect(() => {
-        getList(4, 1, 'count', 'desc', false)
+        getList(number, 1, 'count', 'desc', false)
     }, [])
      const EnableIntegration = () => {
          setLoading(true)
@@ -248,7 +247,7 @@ export default function Integrations({ height }: IQuery) {
                  config
              )
              .then((res) => {
-                 getList(9, pageNo, 'count', 'desc', undefined)
+                 getList(number, pageNo, 'count', 'desc', undefined)
                  setLoading(false)
                  setOpen(false)
                  setNotification({
@@ -261,7 +260,7 @@ export default function Integrations({ height }: IQuery) {
                      text: `Failed to enable integration`,
                      type: 'error',
                  })
-                 getList(9, pageNo, 'count', 'desc', undefined)
+                 getList(number, pageNo, 'count', 'desc', undefined)
                  setLoading(false)
              })
      }
@@ -291,7 +290,7 @@ export default function Integrations({ height }: IQuery) {
          axios
              .post(`${url}${path}`, {}, config)
              .then((res) => {
-                 getList(9, pageNo, 'count', 'desc', undefined)
+                 getList(number, pageNo, 'count', 'desc', undefined)
                  setLoading(false)
                  setOpen(false)
                  setNotification({
@@ -304,7 +303,7 @@ export default function Integrations({ height }: IQuery) {
                      text: `Failed to install plugin`,
                      type: 'error',
                  })
-                 getList(9, pageNo, 'count', 'desc', undefined)
+                 getList(number, pageNo, 'count', 'desc', undefined)
                  setLoading(false)
              })
      }
@@ -359,7 +358,13 @@ export default function Integrations({ height }: IQuery) {
                                     disabled={loading}
                                     variant="primary"
                                     onClick={() => {
-                                        getList(4, 1, 'count', 'desc', false)
+                                        getList(
+                                            number,
+                                            1,
+                                            'count',
+                                            'desc',
+                                            false
+                                        )
                                         setOpen(false)
                                     }}
                                     className="mt-6"
@@ -397,8 +402,8 @@ export default function Integrations({ height }: IQuery) {
                 </div>
             </Modal>
 
-            <Card className="h-full  sm:w-full overflow-scroll no-scrollbar">
-                <Flex justifyContent="between" alignItems="center">
+            <Card className="sm:h-full h-fit  sm:w-full overflow-scroll no-scrollbar">
+                <Flex justifyContent="between"  className='sm:flex-row flex-col sm:mb-0 nb-2 sm:items-center items-start'>
                     <Flex justifyContent="start" className="gap-2 ">
                         <Icon icon={MagnifyingGlassIcon} className="p-0" />
                         <Title className="font-semibold">
@@ -478,7 +483,7 @@ export default function Integrations({ height }: IQuery) {
                                 content: (item) => (
                                     <div className="w-100 flex flex-row items-center  justify-between  ">
                                         <img
-                                            className="w-[50px] h-[50px]"
+                                            className="sm:w-[50px] sm:h-[50px] w-[30px] h-[30px]"
                                             src={item.logo}
                                             onError={(e) => {
                                                 e.currentTarget.onerror = null
@@ -515,7 +520,7 @@ export default function Integrations({ height }: IQuery) {
                                 header: (
                                     <>
                                         <div className="flex justify-between">
-                                            <span>{'Description'}</span>
+                                            <span className='sm:inline hidden'>{'Description'}</span>
                                             <span>{'Integrations'}</span>
                                         </div>
                                     </>
@@ -523,7 +528,7 @@ export default function Integrations({ height }: IQuery) {
                                 content: (item) => (
                                     <>
                                         <div className="flex justify-between gap-4">
-                                            <span className="max-w-60">
+                                            <span className="max-w-60 sm:inline hidden">
                                                 {item.description}
                                             </span>
                                             <span>
