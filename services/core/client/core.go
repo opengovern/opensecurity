@@ -2,13 +2,12 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
-	"errors"
-
 
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/integration"
@@ -33,7 +32,7 @@ type CoreServiceClient interface {
 	RunQueryByID(ctx *httpclient.Context, req api.RunQueryByIDRequest) (*api.RunQueryResponse, error)
 	GetConfigMetadata(ctx *httpclient.Context, key models.MetadataKey) (models.IConfigMetadata, error)
 	SetConfigMetadata(ctx *httpclient.Context, key models.MetadataKey, value any) error
-	ListQueryParameters(ctx *httpclient.Context) (api.ListQueryParametersResponse, error)
+	ListQueryParameters(ctx *httpclient.Context, request api.ListQueryParametersRequest) (*api.ListQueryParametersResponse, error)
 	SetQueryParameter(ctx *httpclient.Context, request api.SetQueryParameterRequest) error
 	VaultConfigured(ctx *httpclient.Context) (*string, error)
 	GetViewsCheckpoint(ctx *httpclient.Context) (*api.GetViewsCheckpointResponse, error)
@@ -44,11 +43,13 @@ type CoreServiceClient interface {
 type coreClient struct {
 	baseURL string
 }
+
 var ErrConfigNotFound = errors.New("config not found")
 
 func NewCoreServiceClient(baseURL string) CoreServiceClient {
 	return &coreClient{baseURL: baseURL}
 }
+
 // inventory
 
 func (s *coreClient) RunQuery(ctx *httpclient.Context, req api.RunQueryRequest) (*api.RunQueryResponse, error) {
@@ -380,7 +381,6 @@ func (s *coreClient) RunQueryByID(ctx *httpclient.Context, req api.RunQueryByIDR
 
 // metadata
 
-
 func (s *coreClient) GetConfigMetadata(ctx *httpclient.Context, key models.MetadataKey) (models.IConfigMetadata, error) {
 	url := fmt.Sprintf("%s/api/v1/metadata/%s", s.baseURL, string(key))
 	var cnf models.ConfigMetadata
@@ -450,20 +450,25 @@ func (s *coreClient) SetConfigMetadata(ctx *httpclient.Context, key models.Metad
 	return nil
 }
 
-func (s *coreClient) ListQueryParameters(ctx *httpclient.Context) (api.ListQueryParametersResponse, error) {
+func (s *coreClient) ListQueryParameters(ctx *httpclient.Context, request api.ListQueryParametersRequest) (*api.ListQueryParametersResponse, error) {
 	url := fmt.Sprintf("%s/api/v1/query_parameter", s.baseURL)
-	var resp api.ListQueryParametersResponse
-	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodPost, url, ctx.ToHeaders(), nil, &resp); err != nil {
-		if 400 <= statusCode && statusCode < 500 {
-			return resp, echo.NewHTTPError(statusCode, err.Error())
-		}
-		return resp, err
+	jsonReq, err := json.Marshal(request)
+	if err != nil {
+		return nil, err
 	}
-	return resp, nil
+
+	var resp api.ListQueryParametersResponse
+	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodPost, url, ctx.ToHeaders(), jsonReq, &resp); err != nil {
+		if 400 <= statusCode && statusCode < 500 {
+			return &resp, echo.NewHTTPError(statusCode, err.Error())
+		}
+		return &resp, err
+	}
+	return &resp, nil
 }
 
 func (s *coreClient) SetQueryParameter(ctx *httpclient.Context, request api.SetQueryParameterRequest) error {
-	url := fmt.Sprintf("%s/api/v1/query_parameter", s.baseURL)
+	url := fmt.Sprintf("%s/api/v1/query_parameter/set", s.baseURL)
 	jsonReq, err := json.Marshal(request)
 	if err != nil {
 		return err
@@ -532,4 +537,3 @@ func (s *coreClient) GetAbout(ctx *httpclient.Context) (*api.About, error) {
 
 	return &about, nil
 }
-

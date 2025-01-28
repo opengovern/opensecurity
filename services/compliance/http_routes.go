@@ -2593,7 +2593,7 @@ func (h *HttpHandler) GetControlDetails(echoCtx echo.Context) error {
 		integrationTypes = append(integrationTypes, integration.Type(t))
 	}
 
-	queryParamValues, err := h.coreClient.ListQueryParameters(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole})
+	queryParamValues, err := h.coreClient.ListQueryParameters(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}, coreApi.ListQueryParametersRequest{})
 	if err != nil {
 		h.logger.Error("failed to get query parameters", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get query parameters values")

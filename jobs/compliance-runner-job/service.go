@@ -60,7 +60,6 @@ var (
 func NewWorker(
 	config Config,
 	logger *zap.Logger,
-	prometheusPushAddress string,
 	ctx context.Context,
 ) (*Worker, error) {
 	integrationClient := client.NewIntegrationServiceClient(config.Integration.BaseURL)

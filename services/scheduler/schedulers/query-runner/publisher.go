@@ -63,7 +63,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 		}
 		s.logger.Info("Policy Runner publisher", zap.String("query", query))
 
-		queryParams, err := s.coreClient.ListQueryParameters(&httpclient.Context{UserRole: api.AdminRole})
+		queryParams, err := s.coreClient.ListQueryParameters(&httpclient.Context{UserRole: api.AdminRole}, coreApi.ListQueryParametersRequest{})
 		if err != nil {
 			_ = s.db.UpdateQueryRunnerJobStatus(job.ID, queryrunner.QueryRunnerFailed, fmt.Sprintf("failed to list parameters: %s", err.Error()))
 			return err

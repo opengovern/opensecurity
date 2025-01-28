@@ -9,7 +9,7 @@ import (
 	"github.com/opengovern/og-util/pkg/steampipe"
 	"github.com/opengovern/opencomply/pkg/types"
 	"github.com/opengovern/opencomply/services/compliance/api"
-	complianceApi "github.com/opengovern/opencomply/services/compliance/api"
+	coreApi "github.com/opengovern/opencomply/services/core/api"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"text/template"
@@ -25,7 +25,7 @@ type QueryResult struct {
 }
 
 type ExecutionPlan struct {
-	Policy    complianceApi.Policy
+	Policy    api.Policy
 	ControlID string
 
 	IntegrationIDs []string
@@ -42,7 +42,7 @@ func (w *Worker) RunQuery(ctx context.Context, j QueryJob) ([]QueryResult, error
 		zap.Strings("integration_ids", j.ExecutionPlan.IntegrationIDs),
 	)
 
-	queryParams, err := w.coreClient.ListQueryParameters(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole})
+	queryParams, err := w.coreClient.ListQueryParameters(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}, coreApi.ListQueryParametersRequest{})
 	if err != nil {
 		w.logger.Error("failed to get query parameters", zap.Error(err))
 		return nil, err

@@ -5,6 +5,7 @@ import (
 	api2 "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/opencomply/services/compliance/api"
+	coreApi "github.com/opengovern/opencomply/services/core/api"
 	"github.com/opengovern/opencomply/services/scheduler/db/model"
 	"go.uber.org/zap"
 )
@@ -21,7 +22,7 @@ func (s *JobScheduler) validateComplianceJob(framework api.Benchmark) error {
 		return err
 	}
 
-	queryParams, err := s.coreClient.ListQueryParameters(&httpclient.Context{UserRole: api2.AdminRole})
+	queryParams, err := s.coreClient.ListQueryParameters(&httpclient.Context{UserRole: api2.AdminRole}, coreApi.ListQueryParametersRequest{})
 	if err != nil {
 		s.logger.Error("failed to get query parameters", zap.Error(err))
 		return err

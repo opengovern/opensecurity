@@ -77,7 +77,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context) error {
 			continue
 		}
 
-		queryParams, err := s.coreClient.ListQueryParameters(&httpclient.Context{UserRole: api.AdminRole})
+		queryParams, err := s.coreClient.ListQueryParameters(&httpclient.Context{UserRole: api.AdminRole}, coreApi.ListQueryParametersRequest{})
 		if err != nil {
 			_ = s.db.UpdateQueryValidatorJobStatus(job.ID, queryvalidator.QueryValidatorFailed, fmt.Sprintf("failed to list parameters: %s", err.Error()))
 			return err

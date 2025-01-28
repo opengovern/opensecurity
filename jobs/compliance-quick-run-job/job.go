@@ -146,7 +146,7 @@ func (w *Worker) RunJobForIntegration(ctx context.Context, job *AuditJob, integr
 	defer w.steampipeConn.UnsetConfigTableValue(ctx, steampipe.OpenGovernanceConfigKeyIntegrationID)
 	defer w.steampipeConn.UnsetConfigTableValue(ctx, steampipe.OpenGovernanceConfigKeyClientType)
 
-	return nil
+	return w.runJobForFramework(ctx, job, integrationId, job.FrameworkID, totalControls, failedControls, include)
 }
 
 func (w *Worker) runJobForFramework(ctx context.Context, job *AuditJob, integrationId string, frameworkId string,
