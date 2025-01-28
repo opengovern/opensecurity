@@ -93,47 +93,7 @@ export default function Search() {
             {show ? (
                 <>
                     {' '}
-                    {/* <TabGroup
-                        index={tab}
-                        onIndexChange={(index) => {
-                            setTab(index)
-                        }}
-                    >
-                        <TabList>
-                            <Tab
-                                value={0}
-                                onClick={() => {
-                                    setTab(0)
-                                }}
-                            >
-                                Query Library
-                            </Tab>
-                            <Tab
-                                value={1}
-                                onClick={() => {
-                                    setTab(1)
-                                }}
-                            >
-                                CloudQL
-                            </Tab>
-                        </TabList>
-                        <TabPanels>
-                            <TabPanel>
-                                {tab == 0 && (
-                                    <>
-                                        <AllQueries setTab={setTab} />
-                                    </>
-                                )}
-                            </TabPanel>
-                            <TabPanel>
-                                {tab == 1 && (
-                                    <>
-                                        <Query />
-                                    </>
-                                )}
-                            </TabPanel>
-                        </TabPanels>
-                    </TabGroup> */}
+                   
                     <Query />
                 </>
             ) : (

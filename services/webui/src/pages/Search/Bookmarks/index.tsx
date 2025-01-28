@@ -257,9 +257,9 @@ export default function Bookmarks({ setTab }: Props) {
             {isLoading ? (
                 <Spinner />
             ) : (
-                <div className='flex flex-col h-full w-full'>
+                <div className='flex flex-col h-full' style={window.innerWidth >768 ? {} : {width:`${window.innerWidth-120}px`}}>
                     <Flex
-                        className="w-full mb-3 mt-2 gap-2 flex-wrap"
+                        className="w-full mb-3 mt-2 gap-2 flex-wrap sm:flex hidden"
                         flexDirection="row"
                         justifyContent="start"
                         alignItems="center"
@@ -314,23 +314,9 @@ export default function Bookmarks({ setTab }: Props) {
                                 )
                             })}
                         </>
-                        {/* <Multiselect
-                            // @ts-ignore
-                            selectedOptions={selectedOptions}
-                            className="w-1/3"
-                            placeholder="Select a category"
-                            // @ts-ignore
-
-                            onChange={({ detail }) =>
-                                // @ts-ignore
-                                setSelectedOptions(detail.selectedOptions)
-                            }
-                            // Certificates | MLOps | DevOps | Keys | Certificates | Public Endpoints | Unprotected Data | Cloud Access | WAF
-                            options={options}
-                            loading={isLoading}
-                        /> */}
+                        
                     </Flex>
-                    <Flex className="gap-4 flex-wrap justify-start items-start"
+                    <Flex className="gap-4 flex-wrap justify-start items-start w-full"
                         // style={{flex: "1 1 0"}}
                     >
                         {rows?.length === 0 && (
@@ -354,14 +340,14 @@ export default function Bookmarks({ setTab }: Props) {
                             })
                             .map((q, i) => (
                                 <div
-                                className='h-full'
-                                    style={{
+                                className='h-full w-full'
+                                    style={window.innerWidth > 768 ? {
                                         "width": `calc(calc(100% - ${
                                             rows.length >= 4 ? '3' : (rows.length-1)
                                         }rem) / ${
                                             rows.length >= 4 ? '4' : rows.length
                                         })`,
-                                    }}
+                                    } : {}}
                                 >
                                     <UseCaseCard
                                         // @ts-ignore
