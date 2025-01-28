@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/opengovern/opencomply/services/compliance/api"
+	coreApi "github.com/opengovern/opencomply/services/core/api"
 	"strconv"
 	"time"
 
@@ -78,8 +80,14 @@ func (w *Worker) RunJob(ctx context.Context, job *AuditJob) error {
 	totalControls := make(map[string]bool)
 	failedControls := make(map[string]bool)
 
+	queryParams, err := w.coreClient.ListQueryParameters(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}, coreApi.ListQueryParametersRequest{})
+	if err != nil {
+		w.logger.Error("failed to get query parameters", zap.Error(err))
+		return err
+	}
+
 	for _, integrationID := range job.IntegrationIDs {
-		err := w.RunJobForIntegration(ctx, job, integrationID, &totalControls, &failedControls)
+		err := w.RunJobForIntegration(ctx, job, integrationID, &totalControls, &failedControls, queryParams)
 		if err != nil {
 			w.logger.Error("failed to run audit job for integration", zap.String("integration_id", integrationID), zap.Error(err))
 			return err
@@ -91,7 +99,7 @@ func (w *Worker) RunJob(ctx context.Context, job *AuditJob) error {
 	job.JobReportControlView.EsID = es.HashOf(keys...)
 	job.JobReportControlView.EsIndex = idx
 
-	err := sendDataToOpensearch(w.esClient.ES(), *job.JobReportControlView)
+	err = sendDataToOpensearch(w.esClient.ES(), *job.JobReportControlView)
 	if err != nil {
 		return err
 	}
@@ -119,7 +127,8 @@ func (w *Worker) RunJob(ctx context.Context, job *AuditJob) error {
 	return nil
 }
 
-func (w *Worker) RunJobForIntegration(ctx context.Context, job *AuditJob, integrationId string, totalControls, failedControls *map[string]bool) error {
+func (w *Worker) RunJobForIntegration(ctx context.Context, job *AuditJob, integrationId string, totalControls, failedControls *map[string]bool,
+	queryParams *coreApi.ListQueryParametersResponse) error {
 	include := make(map[string]bool)
 	if len(job.IncludeResult) > 0 {
 		for _, result := range job.IncludeResult {
@@ -146,18 +155,29 @@ func (w *Worker) RunJobForIntegration(ctx context.Context, job *AuditJob, integr
 	defer w.steampipeConn.UnsetConfigTableValue(ctx, steampipe.OpenGovernanceConfigKeyIntegrationID)
 	defer w.steampipeConn.UnsetConfigTableValue(ctx, steampipe.OpenGovernanceConfigKeyClientType)
 
-	return w.runJobForFramework(ctx, job, integrationId, job.FrameworkID, totalControls, failedControls, include)
+	return w.runJobForFramework(ctx, job, integrationId, job.FrameworkID, totalControls, failedControls, include, queryParams)
 }
 
 func (w *Worker) runJobForFramework(ctx context.Context, job *AuditJob, integrationId string, frameworkId string,
-	totalControls, failedControls *map[string]bool, include map[string]bool) error {
-	ctx2 := &httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}
+	totalControls, failedControls *map[string]bool, include map[string]bool, queryParams *coreApi.ListQueryParametersResponse) error {
 
-	framework, err := w.complianceClient.GetBenchmark(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}, frameworkId)
+	framework, err := w.complianceClient.ListBenchmarksNestedForBenchmark(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}, frameworkId)
 	if err != nil {
 		return err
 	}
-	controls, err := w.complianceClient.ListControl(ctx2, framework.Controls, nil)
+
+	controlsMap := make(map[string]bool)
+	controlsMap, err = getFrameworkNestedControls(*framework, controlsMap)
+	if err != nil {
+		return err
+	}
+
+	var controlsList []string
+	for k := range controlsMap {
+		controlsList = append(controlsList, k)
+	}
+
+	controls, err := w.complianceClient.ListControl(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}, controlsList, nil)
 	if err != nil {
 		return err
 	}
@@ -174,7 +194,7 @@ func (w *Worker) runJobForFramework(ctx context.Context, job *AuditJob, integrat
 				IntegrationIDs: job.IntegrationIDs,
 			},
 		}
-		queryResults, err := w.RunQuery(ctx, queryJob)
+		queryResults, err := w.RunQuery(ctx, queryJob, queryParams)
 		if err != nil {
 			w.logger.Error("failed to run query", zap.String("jobID", strconv.Itoa(int(job.JobID))),
 				zap.String("frameworkID", job.FrameworkID), zap.String("integrationID", integrationId),
@@ -266,13 +286,6 @@ func (w *Worker) runJobForFramework(ctx context.Context, job *AuditJob, integrat
 		}
 	}
 
-	for _, child := range framework.Children {
-		err = w.runJobForFramework(ctx, job, integrationId, child, totalControls, failedControls, include)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -317,4 +330,20 @@ func sendDataToOpensearch(client *opensearch.Client, doc es.Doc) error {
 		return fmt.Errorf("error indexing document: %s", res.String())
 	}
 	return nil
+}
+
+func getFrameworkNestedControls(framework api.NestedBenchmark, controls map[string]bool) (map[string]bool, error) {
+	for _, c := range framework.Controls {
+		controls[c] = true
+	}
+	for _, c := range framework.Children {
+		childControls, err := getFrameworkNestedControls(c, controls)
+		if err != nil {
+			return nil, err
+		}
+		for cc := range childControls {
+			controls[cc] = true
+		}
+	}
+	return controls, nil
 }

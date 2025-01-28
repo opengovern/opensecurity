@@ -36,17 +36,12 @@ type QueryJob struct {
 	ExecutionPlan ExecutionPlan
 }
 
-func (w *Worker) RunQuery(ctx context.Context, j QueryJob) ([]QueryResult, error) {
+func (w *Worker) RunQuery(ctx context.Context, j QueryJob, queryParams *coreApi.ListQueryParametersResponse) ([]QueryResult, error) {
 	w.logger.Info("Running query",
 		zap.String("query_id", j.ExecutionPlan.Policy.ID),
 		zap.Strings("integration_ids", j.ExecutionPlan.IntegrationIDs),
 	)
 
-	queryParams, err := w.coreClient.ListQueryParameters(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}, coreApi.ListQueryParametersRequest{})
-	if err != nil {
-		w.logger.Error("failed to get query parameters", zap.Error(err))
-		return nil, err
-	}
 	queryParamMap := make(map[string]string)
 	for _, qp := range queryParams.Items {
 		if _, ok := queryParamMap[qp.Key]; !ok {
