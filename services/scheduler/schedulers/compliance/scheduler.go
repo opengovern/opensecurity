@@ -118,6 +118,7 @@ func (s *JobScheduler) updateRunnersState() error {
 			case runner.ComplianceRunnerTimeOut:
 				status.RunnersTimedOut += 1
 			}
+			status.TotalCount += 1
 		}
 		statusJson, err := json.Marshal(status)
 		if err != nil {

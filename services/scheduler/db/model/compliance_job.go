@@ -44,6 +44,7 @@ type ComplianceRunnersStatus struct {
 	RunnersFailed    int64 `json:"runners_failed"`
 	RunnersSucceeded int64 `json:"runners_succeeded"`
 	RunnersTimedOut  int64 `json:"runners_timed_out"`
+	TotalCount       int64 `json:"total_count"`
 }
 
 type ComplianceJob struct {
