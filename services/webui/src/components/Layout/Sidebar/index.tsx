@@ -167,39 +167,7 @@ export default function Sidebar({  currentPage }: ISidebar) {
     }, [isAuthenticated])
 
     const navigation: () => ISidebarItem[] = () => {
-        if (
-            // connectionsIsExecuted &&
-            // !connectionsIsLoading &&
-            // (connectionCount?.count || 0) === 0
-            false
-        ) {
-            if (
-                !currentPage.includes('plugins') &&
-                currentPage !== 'administration'
-            ) {
-                navigate(`/pl`)
-            }
-            return [
-                {
-                    name: 'Plugins',
-                    page: 'plugins',
-                    icon: PuzzlePieceIcon,
-                    // isLoading: connectionsIsLoading,
-                    isLoading: false,
-                    count: 0,
-
-                    // count: numericDisplay(connectionCount?.count) || 0,
-                    error: undefined,
-                    isPreview: false,
-                },
-                {
-                    name: 'Administration',
-                    page: ['administration'],
-                    icon: Cog6ToothIcon,
-                    isPreview: false,
-                },
-            ]
-        }
+        
         return [
             {
                 name: 'Overview',
@@ -330,12 +298,6 @@ export default function Sidebar({  currentPage }: ISidebar) {
                     </Flex>
                 </a>
 
-                {/* <Flex
-                    justifyContent="center"
-                    className={collapsed ? 'p-0' : 'p-2'}
-                >
-                    <Workspaces isCollapsed={collapsed} />
-                </Flex> */}
                 <Flex
                     flexDirection="col"
                     justifyContent="between"
@@ -520,17 +482,27 @@ export default function Sidebar({  currentPage }: ISidebar) {
                                                         />
                                                     </div>
                                                 </Popover.Button>
-                                                <div
-                                                    className="absolute z-50 scale-0 transition-all rounded p-2 shadow-md bg-openg-950 group-hover:scale-100"
-                                                    style={{
-                                                        left: '50px',
-                                                        top: 0,
-                                                    }}
+                                                <Transition
+                                                    as={Fragment}
+                                                    enter="transition ease-out duration-200"
+                                                    enterFrom="opacity-0 translate-y-1"
+                                                    enterTo="opacity-100 translate-y-0"
+                                                    leave="transition ease-in duration-150"
+                                                    leaveFrom="opacity-100 translate-y-0"
+                                                    leaveTo="opacity-0 translate-y-1"
                                                 >
+                                                    {/* <div
+                                                        className="absolute z-50 scale-0 transition-all rounded p-2 shadow-md bg-openg-950 group-hover:scale-100"
+                                                        style={{
+                                                            left: '50px',
+                                                            top: 0,
+                                                        }}
+                                                    > */}
                                                     <Text className="text-white">
                                                         {item.name}
                                                     </Text>
-                                                </div>
+                                                    {/* </div> */}
+                                                </Transition>
                                             </div>
                                             <Transition
                                                 as={Fragment}
@@ -676,7 +648,7 @@ export default function Sidebar({  currentPage }: ISidebar) {
                                                 )}
                                                 {collapsed && (
                                                     <div
-                                                        className="absolute z-50 scale-0 transition-all rounded p-2 shadow-md bg-openg-950 group-hover:scale-100"
+                                                        className="absolute z-50 scale-0 transition-all  duration-500 rounded p-2 shadow-md bg-openg-950 group-hover:scale-100  "
                                                         style={{
                                                             left: '43px',
                                                             top: '-8px',

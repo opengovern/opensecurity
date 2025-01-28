@@ -73,20 +73,7 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                             }`}
                         >
                             <>
-                                {/* {sampleAtom && (
-                                    <p
-                                        onClick={() => {
-                                            navigate(
-                                                `ws/${workspace}/settings/about`
-                                            )
-                                        }}
-                                        className=" cursor-pointer  left-1/4 rounded-xl w-1/2 bg-[#FFEED4] border-[#ff9900] border-solid border-[1px] text-[#ff9900]  p-4  absolute top-0 mt-1"
-                                    >
-                                        Sample data has been loaded. Please
-                                        purge it before adding your data.{' '}
-                                    </p>
-                                )} */}
-
+                             
                                 {children}
                             </>
                         </div>
