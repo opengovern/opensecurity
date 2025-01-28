@@ -785,7 +785,7 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
                     flexDirection="row"
                     justifyContent="start"
                     alignItems="start"
-                    className="w-full gap-2 sm:flex-row flex-col"
+                    className="w-fit gap-2 sm:flex-row flex-col"
                 >
                     <Select
                         // @ts-ignore
