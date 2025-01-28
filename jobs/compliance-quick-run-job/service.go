@@ -167,7 +167,7 @@ func (w *Worker) ProcessMessage(ctx context.Context, msg jetstream.Msg) (err err
 
 	result := JobResult{
 		JobID:          job.JobID,
-		Status:         model.ComplianceJobRunnersInProgress,
+		Status:         model.ComplianceJobInProgress,
 		FailureMessage: "",
 	}
 

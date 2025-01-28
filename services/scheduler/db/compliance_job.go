@@ -77,6 +77,8 @@ func (db Database) UpdateComplianceJobsTimedOut(withIncidents bool, complianceIn
 		Where(fmt.Sprintf("created_at < NOW() - INTERVAL '%d MINUTES'", complianceIntervalMinutes)).
 		Where("status IN ?", []string{string(model.ComplianceJobCreated),
 			string(model.ComplianceJobRunnersInProgress),
+			string(model.ComplianceJobQueued),
+			string(model.ComplianceJobInProgress),
 			string(model.ComplianceJobSummarizerInProgress),
 		}).
 		Updates(model.ComplianceJob{Status: model.ComplianceJobTimeOut, FailureMessage: "Job timed out"})
@@ -257,7 +259,11 @@ func (db Database) ListPendingComplianceJobsByIntegrationID(withIncidents *bool,
 	var job []model.ComplianceJob
 	tx := db.ORM.Model(&model.ComplianceJob{}).
 		Where("integration_ids && ?", integrationIds).
-		Where("status IN ?", []model.ComplianceJobStatus{model.ComplianceJobCreated, model.ComplianceJobRunnersInProgress})
+		Where("status IN ?", []model.ComplianceJobStatus{
+			model.ComplianceJobCreated,
+			model.ComplianceJobQueued,
+			model.ComplianceJobInProgress,
+			model.ComplianceJobRunnersInProgress})
 	if withIncidents != nil {
 		tx = tx.Where("with_incidents = ?", *withIncidents)
 	}
@@ -415,8 +421,8 @@ func (db Database) ListJobsToFinish() ([]model.ComplianceJob, error) {
 	var jobs []model.ComplianceJob
 	tx := db.ORM.Raw(`
 SELECT * FROM compliance_jobs j WHERE status = 'SUMMARIZER_IN_PROGRESS' AND with_incidents = true AND
-	(select count(*) from compliance_summarizers where parent_job_id = j.id AND (status = 'SUCCEEDED' OR (status = 'FAILED' and retry_count >= 3))) > 0
-`).Find(&jobs)
+	(select count(*) from compliance_summarizers where parent_job_id = j.id AND (status = 'SUCCEEDED' OR (status = 'FAILED' and retry_count >= ?))) > 0
+`, summarizerRetryCount).Find(&jobs)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}

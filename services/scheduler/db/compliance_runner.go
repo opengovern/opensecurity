@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	runnerRetryCount = 1
+	runnerRetryCount = 0
 )
 
 func (db Database) CreateRunnerJobs(tx *gorm.DB, runners []*model.ComplianceRunner) error {
