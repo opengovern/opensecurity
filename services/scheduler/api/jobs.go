@@ -141,7 +141,7 @@ type GetComplianceJobsHistoryResponse struct {
 	StartTime       time.Time               `json:"start_time"`
 	LastUpdatedAt   time.Time               `json:"last_updated_at"`
 	EndTime         *time.Time              `json:"end_time"`
-	Title           string                  `json:"title"`
+	FrameworkTitle  string                  `json:"framework_title"`
 	StepFailed      ComplianceJobStatus     `json:"step_failed"`
 	FailureMessage  string                  `json:"failure_message"`
 	IntegrationInfo []IntegrationInfo       `json:"integration_info"`

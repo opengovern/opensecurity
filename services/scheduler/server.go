@@ -2051,13 +2051,13 @@ func (h HttpServer) ListComplianceJobs(ctx echo.Context) error {
 			LastUpdatedAt:  j.UpdatedAt,
 			StartTime:      j.CreatedAt,
 			FailureMessage: j.FailureMessage,
-			Title:          Title,
+			FrameworkTitle: Title,
 			CreatedBy:      j.CreatedBy,
 			TriggerType:    string(j.TriggerType),
 			StepFailed:     j.StepFailed.ToApi(),
 			RunnersStatus:  runnersStatus,
 		}
-		if jobResult.JobStatus == api.ComplianceJobFailed {
+		if jobResult.JobStatus == api.ComplianceJobSucceeded || jobResult.JobStatus == api.ComplianceJobFailed {
 			jobResult.EndTime = &j.UpdatedAt
 		}
 		for _, i := range j.IntegrationIDs {

@@ -34,21 +34,20 @@ type Benchmark struct {
 }
 
 type NestedBenchmark struct {
-	ID                string              `json:"id" example:"azure_cis_v140"`                                                                                                                                                       // Benchmark ID
-	Title             string              `json:"title" example:"Azure CIS v1.4.0"`                                                                                                                                                  // Benchmark title
-	ReferenceCode     string              `json:"referenceCode" example:"CIS 1.4.0"`                                                                                                                                                 // Benchmark display code
-	Description       string              `json:"description" example:"The CIS Microsoft Azure Foundations Security Benchmark provides prescriptive guidance for establishing a secure baseline configuration for Microsoft Azure."` // Benchmark description
-	LogoURI           string              `json:"logoURI"`                                                                                                                                                                           // Benchmark logo URI
-	Category          string              `json:"category"`                                                                                                                                                                          // Benchmark category
-	DocumentURI       string              `json:"documentURI" example:"benchmarks/azure_cis_v140.md"`                                                                                                                                // Benchmark document URI
-	AutoAssign        bool                `json:"autoAssign" example:"true"`                                                                                                                                                         // Whether the benchmark is auto assigned or not
-	TracksDriftEvents bool                `json:"tracksDriftEvents" example:"true"`                                                                                                                                                  // Whether the benchmark tracks drift events or not
-	Tags              map[string][]string `json:"tags" `                                                                                                                                                                             // Benchmark tags
-	IntegrationTypes  []integration.Type  `json:"integrationTypes" example:"[azure]"`                                                                                                                                                // Benchmark connectors
-	Children          []NestedBenchmark   `json:"children" example:"[azure_cis_v140_1, azure_cis_v140_2]"`                                                                                                                           // Benchmark children
-	Controls          []string            `json:"controls" example:"[azure_cis_v140_1_1, azure_cis_v140_1_2]"`                                                                                                                       // Benchmark controls
-	CreatedAt         time.Time           `json:"createdAt" example:"2020-01-01T00:00:00Z"`                                                                                                                                          // Benchmark creation date
-	UpdatedAt         time.Time           `json:"updatedAt" example:"2020-01-01T00:00:00Z"`                                                                                                                                          // Benchmark last update date
+	ID               string              `json:"id" example:"azure_cis_v140"`                                                                                                                                                       // Benchmark ID
+	Title            string              `json:"title" example:"Azure CIS v1.4.0"`                                                                                                                                                  // Benchmark title
+	ReferenceCode    string              `json:"referenceCode" example:"CIS 1.4.0"`                                                                                                                                                 // Benchmark display code
+	Description      string              `json:"description" example:"The CIS Microsoft Azure Foundations Security Benchmark provides prescriptive guidance for establishing a secure baseline configuration for Microsoft Azure."` // Benchmark description
+	LogoURI          string              `json:"logoURI"`                                                                                                                                                                           // Benchmark logo URI
+	Category         string              `json:"category"`                                                                                                                                                                          // Benchmark category
+	DocumentURI      string              `json:"documentURI" example:"benchmarks/azure_cis_v140.md"`                                                                                                                                // Benchmark document URI
+	AutoAssign       bool                `json:"autoAssign" example:"true"`                                                                                                                                                         // Whether the benchmark is auto assigned or not
+	Tags             map[string][]string `json:"tags" `                                                                                                                                                                             // Benchmark tags
+	IntegrationTypes []integration.Type  `json:"integrationTypes" example:"[azure]"`                                                                                                                                                // Benchmark connectors
+	Children         []NestedBenchmark   `json:"children" example:"[azure_cis_v140_1, azure_cis_v140_2]"`                                                                                                                           // Benchmark children
+	Controls         []string            `json:"controls" example:"[azure_cis_v140_1_1, azure_cis_v140_1_2]"`                                                                                                                       // Benchmark controls
+	CreatedAt        time.Time           `json:"createdAt" example:"2020-01-01T00:00:00Z"`                                                                                                                                          // Benchmark creation date
+	UpdatedAt        time.Time           `json:"updatedAt" example:"2020-01-01T00:00:00Z"`                                                                                                                                          // Benchmark last update date
 }
 
 type BenchmarkTrendDatapoint struct {
@@ -175,7 +174,6 @@ type GetBenchmarkDetailsMetadata struct {
 	Title             string              `json:"title"`
 	Description       string              `json:"description"`
 	Enabled           bool                `json:"enabled"`
-	TrackDriftEvents  bool                `json:"track_drift_events"`
 	IntegrationTypes  []integration.Type  `json:"integration_types"`
 	NumberOfControls  int                 `json:"number_of_controls"`
 	SupportedControls []string            `json:"supported_controls"`

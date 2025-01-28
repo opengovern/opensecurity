@@ -20,6 +20,7 @@ import (
 )
 
 type BenchmarkAssignment struct {
+	ID            uint    `gorm:"primarykey"`
 	BenchmarkId   string  `gorm:"index:idx_benchmark_source; index:idx_benchmark_rc; not null"`
 	IntegrationID *string `gorm:"index:idx_benchmark_source"`
 	AssignedAt    time.Time
@@ -39,18 +40,14 @@ type BenchmarkMetadata struct {
 }
 
 type Benchmark struct {
-	ID                string `gorm:"primarykey"`
-	Title             string
-	DisplayCode       string
-	IntegrationType   pq.StringArray `gorm:"type:text[]"`
-	Description       string
-	LogoURI           string
-	Category          string
-	DocumentURI       string
-	Enabled           bool
-	IsBaseline        bool
-	TracksDriftEvents bool
-	Metadata          pgtype.JSONB
+	ID              string `gorm:"primarykey"`
+	Title           string
+	DisplayCode     string
+	IntegrationType pq.StringArray `gorm:"type:text[]"`
+	Description     string
+	Enabled         bool
+	IsBaseline      bool
+	Metadata        pgtype.JSONB
 
 	Tags    []BenchmarkTag      `gorm:"foreignKey:BenchmarkID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	tagsMap map[string][]string `gorm:"-:all"`
@@ -63,18 +60,14 @@ type Benchmark struct {
 
 func (b Benchmark) ToApi() api.Benchmark {
 	ba := api.Benchmark{
-		ID:                b.ID,
-		Title:             b.Title,
-		ReferenceCode:     b.DisplayCode,
-		Description:       b.Description,
-		LogoURI:           b.LogoURI,
-		Category:          b.Category,
-		DocumentURI:       b.DocumentURI,
-		Enabled:           b.Enabled,
-		TracksDriftEvents: b.TracksDriftEvents,
-		CreatedAt:         b.CreatedAt,
-		UpdatedAt:         b.UpdatedAt,
-		Tags:              b.GetTagsMap(),
+		ID:            b.ID,
+		Title:         b.Title,
+		ReferenceCode: b.DisplayCode,
+		Description:   b.Description,
+		Enabled:       b.Enabled,
+		CreatedAt:     b.CreatedAt,
+		UpdatedAt:     b.UpdatedAt,
+		Tags:          b.GetTagsMap(),
 	}
 	if b.IntegrationType != nil {
 		ba.IntegrationTypes = b.IntegrationType
