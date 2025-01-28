@@ -21,7 +21,7 @@ export const notificationAtom = atom<INotification>({
 })
 
 export const sideBarCollapsedAtom = atom(
-    localStorage.collapse ? localStorage.collapse === 'true' : true
+    window.innerWidth < 768 ?true : localStorage.collapse ? localStorage.collapse === 'true' : true 
 )
 export const complianceOpenAtom = atom(false)
 export const automationOpenAtom = atom(false)

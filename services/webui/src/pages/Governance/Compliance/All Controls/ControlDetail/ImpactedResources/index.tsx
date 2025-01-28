@@ -429,22 +429,23 @@ export default function ImpactedResources({
                             //     ),
                             //     maxWidth: 100,
                             // },
-                            // {
-                            //     id: 'evaluatedAt',
-                            //     header: 'Last Evaluation',
-                            //     cell: (item) => (
-                            //         // @ts-ignore
-                            //         <>{dateTimeDisplay(item.value)}</>
-                            //     ),
-                            // },
+                            {
+                                id: 'evaluatedAt',
+                                header: 'Last Evaluation',
+                                cell: (item) => (
+                                    // @ts-ignore
+                                    <>{dateTimeDisplay(item.evaluatedAt)}</>
+                                ),
+                            },
                         ]}
                         columnDisplay={[
                             { id: 'resourceName', visible: true },
                             { id: 'resourceType', visible: true },
+                            // { id: 'severity', visible: true },
+                            { id: 'evaluatedAt', visible: true },
+
                             // { id: 'providerConnectionName', visible: true },
                             // { id: 'totalCount', visible: true },
-                            // { id: 'severity', visible: true },
-                            // { id: 'evaluatedAt', visible: true },
 
                             // { id: 'action', visible: true },
                         ]}

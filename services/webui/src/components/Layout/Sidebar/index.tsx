@@ -71,7 +71,7 @@ interface ISidebarItem {
 export default function Sidebar({  currentPage }: ISidebar) {
     const navigate = useNavigate()
     const { isAuthenticated, getAccessTokenSilently } = useAuth()
-    const [collapsed, setCollapsed] = window.innerWidth >768 ?useAtom( sideBarCollapsedAtom) : useState(true)
+    const [collapsed, setCollapsed] = useAtom( sideBarCollapsedAtom) 
     const preview = useAtomValue(previewAtom)
     
 
