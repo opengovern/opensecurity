@@ -178,7 +178,10 @@ function NumberMetric({ title, metricId, min, max }: INumberMetric) {
     }, [value])
 
     return (
-        <Flex flexDirection="row" className="mb-4 w-full justify-between">
+        <Flex
+            flexDirection="row"
+            className="mb-4 w-full justify-between sm:flex-row flex-col"
+        >
             <Flex justifyContent="start" className="truncate space-x-4 ">
                 <div className="truncate">
                     <Text className="truncate text-sm">{title}:</Text>
@@ -186,7 +189,7 @@ function NumberMetric({ title, metricId, min, max }: INumberMetric) {
             </Flex>
 
             <NumberInput
-                className='w-1/2'
+                className="w-1/2"
                 value={value}
                 min={min}
                 max={max}
@@ -286,6 +289,7 @@ export default function SettingsCustomization() {
                     flexDirection="row"
                     alignItems="start"
                     justifyContent="start"
+                    className="sm:flex-row flex-col sm:mb-0 mb-4"
                 >
                     <NumberMetric
                         metricId="full_discovery_job_interval"
@@ -311,6 +315,7 @@ export default function SettingsCustomization() {
                     flexDirection="row"
                     alignItems="start"
                     justifyContent="start"
+                    className="sm:flex-row flex-col "
                 >
                     <NumberMetric
                         metricId="compliance_job_interval"

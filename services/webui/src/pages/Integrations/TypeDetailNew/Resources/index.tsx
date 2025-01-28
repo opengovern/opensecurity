@@ -81,152 +81,165 @@ const [total_count, setTotalCount] = useState<number>(0)
                     <Spinner />
                 </>
             ) : (
-                <AppLayout
-                    toolsOpen={false}
-                    navigationOpen={false}
-                    contentType="table"
-                    toolsHide={true}
-                    navigationHide={true}
-                    splitPanelOpen={open}
-                    onSplitPanelToggle={() => {
-                        setOpen(!open)
-                    }}
-                    splitPanel={
-                        <SplitPanel
-                            // @ts-ignore
-                            header={selected?.name ? selected?.name : ''}
-                        >
-                            <Flex className="flex-col gap-3 justify-start items-start">
-                                <Title> Parameters: </Title>
-                                <KeyValuePairs
-                                    columns={2}
-                                    // @ts-ignore
-                                    items={
-                                        selected
-                                            ? selected?.params?.map(
-                                                  (param: any) => {
-                                                      return {
-                                                          label: param?.name,
-                                                          value: param?.description,
-                                                      }
-                                                  }
-                                              )
-                                            : []
-                                    }
-                                />
-                            </Flex>
-                        </SplitPanel>
+                <div
+                    className="w-full flex justify-center items-center"
+                    style={
+                        window.innerWidth < 768
+                            ? { width: `${window.innerWidth - 80}px` }
+                            : {}
                     }
-                    content={
-                        <Table
-                            className="  min-h-[450px]"
-                            variant="full-page"
-                            // resizableColumns
-                            renderAriaLive={({
-                                firstIndex,
-                                lastIndex,
-                                totalItemsCount,
-                            }) =>
-                                `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
-                            }
-                            onRowClick={(event) => {
-                                const row = event.detail.item
+                >
+                    {' '}
+                    <AppLayout
+                        toolsOpen={false}
+                        navigationOpen={false}
+                        contentType="table"
+                        toolsHide={true}
+                        navigationHide={true}
+                        splitPanelOpen={open}
+                        onSplitPanelToggle={() => {
+                            setOpen(!open)
+                        }}
+                        splitPanel={
+                            <SplitPanel
                                 // @ts-ignore
-                                if (row.params.length > 0) {
-                                    setSelected(row)
-                                    setOpen(true)
+                                header={selected?.name ? selected?.name : ''}
+                            >
+                                <Flex className="flex-col gap-3 justify-start items-start">
+                                    <Title> Parameters: </Title>
+                                    <KeyValuePairs
+                                        columns={2}
+                                        // @ts-ignore
+                                        items={
+                                            selected
+                                                ? selected?.params?.map(
+                                                      (param: any) => {
+                                                          return {
+                                                              label: param?.name,
+                                                              value: param?.description,
+                                                          }
+                                                      }
+                                                  )
+                                                : []
+                                        }
+                                    />
+                                </Flex>
+                            </SplitPanel>
+                        }
+                        content={
+                            <Table
+                                className="  min-h-[450px]"
+                                variant="full-page"
+                                // resizableColumns
+                                renderAriaLive={({
+                                    firstIndex,
+                                    lastIndex,
+                                    totalItemsCount,
+                                }) =>
+                                    `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
                                 }
-                            }}
-                            columnDefinitions={[
-                                {
-                                    id: 'name',
-                                    header: 'Name',
-                                    cell: (item: any) => item.name,
-                                },
-                                {
-                                    id: 'table',
-                                    header: 'Table',
-                                    cell: (item: any) => item.table,
-                                },
-                                {
-                                    id: 'has_parameter',
-                                    header: 'Parameterized',
-                                    cell: (item: any) =>
-                                        item.params.length > 0 ? 'Yes' : 'No',
-                                },
-                            ]}
-                            columnDisplay={[
-                                {
-                                    id: 'name',
-                                    visible: true,
-                                },
-                                {
-                                    id: 'table',
-                                    visible: true,
-                                },
-                                {
-                                    id: 'has_parameter',
-                                    visible: true,
-                                },
-                            ]}
-                            enableKeyboardNavigation
-                            // @ts-ignore
-                            items={resourceTypes?.slice(
-                                page * 15,
-                                (page + 1) * 15
-                            )}
-                            loading={resourceLoading}
-                            loadingText="Loading resources"
-                            // stickyColumns={{ first: 0, last: 1 }}
-                            // stripedRows
-                            trackBy="id"
-                            empty={
-                                <Box
-                                    margin={{ vertical: 'xs' }}
-                                    textAlign="center"
-                                    color="inherit"
-                                >
-                                    <SpaceBetween size="m">
-                                        <b>No resources</b>
-                                    </SpaceBetween>
-                                </Box>
-                            }
-                            header={
-                                <Header
-                                    className="w-full"
-                                    actions={
-                                        <Pagination
-                                            // @ts-ignore
-                                            className="min-w-fit"
-                                            currentPageIndex={page + 1}
-                                            pagesCount={Math.ceil(
-                                                total_count / 15
-                                            )}
-                                            onChange={({ detail }) =>
-                                                setPage(
-                                                    detail.currentPageIndex - 1
-                                                )
-                                            }
-                                        />
+                                onRowClick={(event) => {
+                                    const row = event.detail.item
+                                    // @ts-ignore
+                                    if (row.params.length > 0) {
+                                        setSelected(row)
+                                        setOpen(true)
                                     }
-                                >
-                                    <Flex className="flex-row justify-between items-center w-full resource-types ">
-                                        <div className="w-full">
-                                            {' '}
-                                             Resources{' '}
-                                            <span className=" font-medium">
-                                                ({total_count})
-                                            </span>
-                                        </div>
-                                    </Flex>
-                                </Header>
-                            }
-                            // pagination={
+                                }}
+                                columnDefinitions={[
+                                    {
+                                        id: 'name',
+                                        header: 'Name',
+                                        cell: (item: any) => item.name,
+                                    },
+                                    {
+                                        id: 'table',
+                                        header: 'Table',
+                                        cell: (item: any) => item.table,
+                                    },
+                                    {
+                                        id: 'has_parameter',
+                                        header: 'Parameterized',
+                                        cell: (item: any) =>
+                                            item.params.length > 0
+                                                ? 'Yes'
+                                                : 'No',
+                                    },
+                                ]}
+                                columnDisplay={[
+                                    {
+                                        id: 'name',
+                                        visible: true,
+                                    },
+                                    {
+                                        id: 'table',
+                                        visible: true,
+                                    },
+                                    {
+                                        id: 'has_parameter',
+                                        visible: true,
+                                    },
+                                ]}
+                                enableKeyboardNavigation
+                                // @ts-ignore
+                                items={resourceTypes?.slice(
+                                    page * 15,
+                                    (page + 1) * 15
+                                )}
+                                loading={resourceLoading}
+                                loadingText="Loading resources"
+                                // stickyColumns={{ first: 0, last: 1 }}
+                                // stripedRows
+                                trackBy="id"
+                                empty={
+                                    <Box
+                                        margin={{ vertical: 'xs' }}
+                                        textAlign="center"
+                                        color="inherit"
+                                    >
+                                        <SpaceBetween size="m">
+                                            <b>No resources</b>
+                                        </SpaceBetween>
+                                    </Box>
+                                }
+                                header={
+                                    <Header
+                                        className="w-full"
+                                        actions={
+                                            <Pagination
+                                                // @ts-ignore
+                                                className="min-w-fit"
+                                                currentPageIndex={page + 1}
+                                                pagesCount={Math.ceil(
+                                                    total_count / 15
+                                                )}
+                                                onChange={({ detail }) =>
+                                                    setPage(
+                                                        detail.currentPageIndex -
+                                                            1
+                                                    )
+                                                }
+                                            />
+                                        }
+                                    >
+                                        <Flex className="flex-row justify-between items-center w-full resource-types ">
+                                            <div className="w-full">
+                                                {' '}
+                                                Resources{' '}
+                                                <span className=" font-medium">
+                                                    ({total_count})
+                                                </span>
+                                            </div>
+                                        </Flex>
+                                    </Header>
+                                }
+                                // pagination={
 
-                            // }
-                        />
-                    }
-                />
+                                // }
+                            />
+                        }
+                    />
+                </div>
             )}
         </>
     )
