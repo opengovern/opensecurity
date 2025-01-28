@@ -81,7 +81,7 @@ func (s *JobScheduler) runScheduler() error {
 		if complianceJob == nil ||
 			complianceJob.CreatedAt.Before(timeAt) {
 
-			_, err := s.CreateComplianceReportJobs(true, framework.ID, complianceJob, integrationIDs, false, "system", nil)
+			_, err := s.CreateComplianceReportJobs(true, framework.ID, complianceJob, integrationIDs, false, "scheduler", nil)
 			if err != nil {
 				s.logger.Error("error while creating compliance job", zap.Error(err))
 				return err
@@ -98,43 +98,51 @@ func (s *JobScheduler) updateRunnersState() error {
 		return fmt.Errorf("error while listing compliance jobs: %v", err)
 	}
 	for _, complianceJob := range complianceJobs {
-		status := model.ComplianceRunnersStatus{}
-		runners, err := s.db.ListComplianceJobRunnersWithParentID(complianceJob.ID)
-		if err != nil {
-			return fmt.Errorf("error while listing compliance runners: %v", err)
-		}
-		for _, r := range runners {
-			switch r.Status {
-			case runner.ComplianceRunnerCreated:
-				status.RunnersCreated += 1
-			case runner.ComplianceRunnerQueued:
-				status.RunnersQueued += 1
-			case runner.ComplianceRunnerInProgress:
-				status.RunnersRunning += 1
-			case runner.ComplianceRunnerFailed:
-				status.RunnersFailed += 1
-			case runner.ComplianceRunnerSucceeded:
-				status.RunnersSucceeded += 1
-			case runner.ComplianceRunnerTimeOut:
-				status.RunnersTimedOut += 1
-			}
-			status.TotalCount += 1
-		}
-		statusJson, err := json.Marshal(status)
+		err = s.updateJobRunnersState(complianceJob)
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
 
-		jp := pgtype.JSONB{}
-		err = jp.Set(statusJson)
-		if err != nil {
-			return err
+func (s *JobScheduler) updateJobRunnersState(job model.ComplianceJob) error {
+	status := model.ComplianceRunnersStatus{}
+	runners, err := s.db.ListComplianceJobRunnersWithParentID(job.ID)
+	if err != nil {
+		return fmt.Errorf("error while listing compliance runners: %v", err)
+	}
+	for _, r := range runners {
+		switch r.Status {
+		case runner.ComplianceRunnerCreated:
+			status.RunnersCreated += 1
+		case runner.ComplianceRunnerQueued:
+			status.RunnersQueued += 1
+		case runner.ComplianceRunnerInProgress:
+			status.RunnersRunning += 1
+		case runner.ComplianceRunnerFailed:
+			status.RunnersFailed += 1
+		case runner.ComplianceRunnerSucceeded:
+			status.RunnersSucceeded += 1
+		case runner.ComplianceRunnerTimeOut:
+			status.RunnersTimedOut += 1
 		}
+		status.TotalCount += 1
+	}
+	statusJson, err := json.Marshal(status)
+	if err != nil {
+		return err
+	}
 
-		err = s.db.UpdateComplianceJobRunnersStatus(complianceJob.ID, jp)
-		if err != nil {
-			return err
-		}
+	jp := pgtype.JSONB{}
+	err = jp.Set(statusJson)
+	if err != nil {
+		return err
+	}
+
+	err = s.db.UpdateComplianceJobRunnersStatus(job.ID, jp)
+	if err != nil {
+		return err
 	}
 	return nil
 }

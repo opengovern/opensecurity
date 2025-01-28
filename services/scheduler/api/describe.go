@@ -27,15 +27,20 @@ type ComplianceJobStatus string
 const (
 	ComplianceJobCreated              ComplianceJobStatus = "CREATED"
 	ComplianceJobRunnersInProgress    ComplianceJobStatus = "RUNNERS_IN_PROGRESS"
+	ComplianceJobSinkInProgress       ComplianceJobStatus = "SINK_IN_PROGRESS"
 	ComplianceJobSummarizerInProgress ComplianceJobStatus = "SUMMARIZER_IN_PROGRESS"
 	ComplianceJobFailed               ComplianceJobStatus = "FAILED"
 	ComplianceJobSucceeded            ComplianceJobStatus = "SUCCEEDED"
-	ComplianceJobTimeout            ComplianceJobStatus = "TIMEOUT"
+	ComplianceJobTimeout              ComplianceJobStatus = "TIMEOUT"
+	ComplianceJobCanceled             ComplianceJobStatus = "CANCELED"
+
+	ComplianceJobQueued     ComplianceJobStatus = "QUEUED"      // for quick audit
+	ComplianceJobInProgress ComplianceJobStatus = "IN_PROGRESS" // for quick audit
 )
 
 type ComplianceJob struct {
 	ID             uint
-	BenchmarkID    string
+	FrameworkIds   []string
 	Status         ComplianceJobStatus
 	FailureMessage string
 }

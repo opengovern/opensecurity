@@ -122,16 +122,32 @@ type GetComplianceJobsHistoryRequest struct {
 	PerPage     *int64     `json:"per_page"`
 }
 
+type ComplianceRunnersStatus struct {
+	RunnersCreated   int64 `json:"runners_created"`
+	RunnersQueued    int64 `json:"runners_queued"`
+	RunnersRunning   int64 `json:"runners_running"`
+	RunnersFailed    int64 `json:"runners_failed"`
+	RunnersSucceeded int64 `json:"runners_succeeded"`
+	RunnersTimedOut  int64 `json:"runners_timed_out"`
+	TotalCount       int64 `json:"total_count"`
+}
+
 type GetComplianceJobsHistoryResponse struct {
-	JobId           uint                `json:"job_id"`
-	WithIncidents   bool                `json:"with_incidents"`
-	BenchmarkId     string              `json:"benchmark_id"`
-	JobStatus       ComplianceJobStatus `json:"job_status"`
-	CreatedAt       time.Time           `json:"created_at"`
-	UpdatedAt       time.Time           `json:"updated_at"`
-	Title           string              `json:"title"`
-	FailureMessage  string              `json:"failure_message"`
-	IntegrationInfo []IntegrationInfo   `json:"integration_info"`
+	JobId           uint                    `json:"job_id"`
+	WithIncidents   bool                    `json:"with_incidents"`
+	FrameworkID     string                  `json:"framework_id"`
+	JobStatus       ComplianceJobStatus     `json:"job_status"`
+	JobType         string                  `json:"job_type"`
+	StartTime       time.Time               `json:"start_time"`
+	LastUpdatedAt   time.Time               `json:"last_updated_at"`
+	EndTime         *time.Time              `json:"end_time"`
+	Title           string                  `json:"title"`
+	StepFailed      ComplianceJobStatus     `json:"step_failed"`
+	FailureMessage  string                  `json:"failure_message"`
+	IntegrationInfo []IntegrationInfo       `json:"integration_info"`
+	CreatedBy       string                  `json:"created_by"`
+	TriggerType     string                  `json:"trigger_type"`
+	RunnersStatus   ComplianceRunnersStatus `json:"runners_status"`
 }
 type GetComplianceJobsHistoryFinalResponse struct {
 	Items      []GetComplianceJobsHistoryResponse `json:"items"`

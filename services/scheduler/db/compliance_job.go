@@ -42,14 +42,18 @@ func (db Database) CreateComplianceJob(tx *gorm.DB, job *model.ComplianceJob) er
 }
 
 func (db Database) UpdateComplianceJob(
-	id uint, status model.ComplianceJobStatus, failureMsg string) error {
+	id uint, status model.ComplianceJobStatus, failureMsg string, stepFailed *model.ComplianceJobStatus) error {
+	update := model.ComplianceJob{
+		Status:         status,
+		FailureMessage: failureMsg,
+	}
+	if stepFailed != nil {
+		update.StepFailed = *stepFailed
+	}
 	tx := db.ORM.
 		Model(&model.ComplianceJob{}).
 		Where("id = ?", id).
-		Updates(model.ComplianceJob{
-			Status:         status,
-			FailureMessage: failureMsg,
-		})
+		Updates(update)
 	if tx.Error != nil {
 		return tx.Error
 	}

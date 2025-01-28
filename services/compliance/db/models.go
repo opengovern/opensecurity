@@ -52,7 +52,7 @@ type Benchmark struct {
 	TracksDriftEvents bool
 	Metadata          pgtype.JSONB
 
-	Tags    []BenchmarkTag      `gorm:"foreignKey:BenchmarkID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Tags    []BenchmarkTag      `gorm:"foreignKey:FrameworkIds;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	tagsMap map[string][]string `gorm:"-:all"`
 
 	Children  []Benchmark `gorm:"many2many:benchmark_children;"`

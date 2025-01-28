@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	auditjob "github.com/opengovern/opencomply/jobs/compliance-quick-run-job"
+	"github.com/opengovern/opencomply/services/scheduler/db/model"
 
 	"github.com/nats-io/nats.go/jetstream"
 	"go.uber.org/zap"
@@ -26,7 +27,12 @@ func (s *JobScheduler) RunAuditJobResultsConsumer(ctx context.Context) error {
 				zap.Uint("jobId", result.JobID),
 				zap.String("status", string(result.Status)),
 			)
-			err := s.db.UpdateComplianceJob(result.JobID, result.Status, result.FailureMessage)
+			var status *model.ComplianceJobStatus
+			if result.Status == model.ComplianceJobFailed {
+				statusTmp := model.ComplianceJobInProgress
+				status = &statusTmp
+			}
+			err := s.db.UpdateComplianceJob(result.JobID, result.Status, result.FailureMessage, status)
 			if err != nil {
 				s.logger.Error("Failed to update the status of QueryRunnerReportJob",
 					zap.Uint("jobId", result.JobID),

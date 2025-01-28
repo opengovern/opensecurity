@@ -888,7 +888,7 @@ func (h *HttpHandler) GetComplianceResultFilterValues(echoCtx echo.Context) erro
 //	@Param			notIntegrationId	query		[]string										false	"integration IDs to filter by (exclusive)"
 //	@Param			integrationGroup	query		[]string										false	"integration groups to filter by "
 //	@Param			integrationTypes	query		[]integration.Type								false	"integration type to filter by"
-//	@Param			benchmarkId			query		[]string										false	"BenchmarkID"
+//	@Param			benchmarkId			query		[]string										false	"FrameworkIds"
 //	@Param			controlId			query		[]string										false	"ControlID"
 //	@Param			severities			query		[]opengovernanceTypes.ComplianceResultSeverity	false	"Severities to filter by defaults to all severities except passed"
 //	@Param			complianceStatus	query		[]api.ComplianceStatus							false	"ComplianceStatus to filter by defaults to all complianceStatus except passed"
@@ -1340,7 +1340,7 @@ func (h *HttpHandler) GetTopFieldByComplianceResultCount(echoCtx echo.Context) e
 //	@Tags			compliance
 //	@Accept			json
 //	@Produce		json
-//	@Param			benchmarkId			path		string		true	"BenchmarkID"
+//	@Param			benchmarkId			path		string		true	"FrameworkIds"
 //	@Param			integrationId		query		[]string	false	"integration IDs to filter by"
 //	@Param			integrationGroup	query		[]string	false	"integration groups to filter by "
 //	@Success		200					{object}	api.GetAccountsComplianceResultsSummaryResponse
@@ -1439,7 +1439,7 @@ func (h *HttpHandler) GetAccountsComplianceResultsSummary(echoCtx echo.Context) 
 //	@Tags			compliance
 //	@Accept			json
 //	@Produce		json
-//	@Param			benchmarkId			path		string		true	"BenchmarkID"
+//	@Param			benchmarkId			path		string		true	"FrameworkIds"
 //	@Param			integrationId		query		[]string	false	"Integration IDs to filter by"
 //	@Param			integrationGroup	query		[]string	false	"Integration groups to filter by "
 //	@Success		200					{object}	api.GetServicesComplianceResultsSummaryResponse
@@ -1535,7 +1535,7 @@ func (h *HttpHandler) GetServicesComplianceResultsSummary(echoCtx echo.Context) 
 //	@Tags			compliance
 //	@Accept			json
 //	@Produce		json
-//	@Param			benchmark_id		path	string	false	"BenchmarkID"
+//	@Param			benchmark_id		path	string	false	"FrameworkIds"
 //	@Param			tracksDriftEvents	query	bool	false	"tracksDriftEvents"
 //	@Success		200
 //	@Router			/compliance/api/v1/benchmarks/{benchmark_id}/settings [post]
@@ -3317,7 +3317,7 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 
 // GetBenchmarkDetails godoc
 //
-//	@Summary	Get Benchmark Details by BenchmarkID
+//	@Summary	Get Benchmark Details by FrameworkIds
 //	@Security	BearerToken
 //	@Tags		compliance
 //	@Accept		json
@@ -3775,7 +3775,7 @@ func (h *HttpHandler) SyncQueries(echoCtx echo.Context) error {
 
 // GetBenchmarkAssignments godoc
 //
-//	@Summary	Get Benchmark Assignments by BenchmarkID
+//	@Summary	Get Benchmark Assignments by FrameworkIds
 //	@Security	BearerToken
 //	@Tags		compliance
 //	@Accept		json
@@ -5264,7 +5264,7 @@ func (h HttpHandler) GetPolicy(c echo.Context) error {
 
 // ListFrameworkAssignments godoc
 //
-//	@Summary	Get Benchmark Assignments by BenchmarkID
+//	@Summary	Get Benchmark Assignments by FrameworkIds
 //	@Security	BearerToken
 //	@Tags		compliance
 //	@Accept		json
