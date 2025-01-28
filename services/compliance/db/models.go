@@ -17,16 +17,12 @@ import (
 	"github.com/opengovern/opencomply/pkg/types"
 
 	"github.com/opengovern/opencomply/services/compliance/api"
-
-	"gorm.io/gorm"
 )
 
 type BenchmarkAssignment struct {
-	gorm.Model
-	BenchmarkId        string  `gorm:"index:idx_benchmark_source; index:idx_benchmark_rc; not null"`
-	IntegrationID      *string `gorm:"index:idx_benchmark_source"`
-	ResourceCollection *string `gorm:"index:idx_benchmark_rc"`
-	AssignedAt         time.Time
+	BenchmarkId   string  `gorm:"index:idx_benchmark_source; index:idx_benchmark_rc; not null"`
+	IntegrationID *string `gorm:"index:idx_benchmark_source"`
+	AssignedAt    time.Time
 }
 
 type BenchmarkAssignmentsCount struct {

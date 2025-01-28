@@ -3,6 +3,7 @@ package db
 import (
 	"errors"
 	"fmt"
+	"github.com/jackc/pgtype"
 	"math/rand"
 	"time"
 
@@ -189,6 +190,14 @@ func (db Database) ListComplianceJobsForInterval(withIncidents *bool, interval, 
 		return nil, tx.Error
 	}
 	return job, nil
+}
+
+func (db Database) UpdateComplianceJobRunnersStatus(id uint, RunnersStatus pgtype.JSONB) error {
+	tx := db.ORM.Model(&model.ComplianceJob{}).Where("id = ?", id).Update("runners_status", RunnersStatus)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	return nil
 }
 
 func (db Database) ListComplianceJobsWithSummaryJob(withIncidents *bool, interval, triggerType, createdBy string, frameworkIDs []string) ([]model.ComplianceJobWithSummarizerJob, error) {

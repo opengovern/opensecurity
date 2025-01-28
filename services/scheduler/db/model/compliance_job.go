@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jackc/pgtype"
 	"time"
 
 	"github.com/lib/pq"
@@ -36,11 +37,21 @@ func (c ComplianceJobStatus) ToApi() api.ComplianceJobStatus {
 	return api.ComplianceJobStatus(c)
 }
 
+type ComplianceRunnersStatus struct {
+	RunnersCreated   int64 `json:"runners_created"`
+	RunnersQueued    int64 `json:"runners_queued"`
+	RunnersRunning   int64 `json:"runners_running"`
+	RunnersFailed    int64 `json:"runners_failed"`
+	RunnersSucceeded int64 `json:"runners_succeeded"`
+	RunnersTimedOut  int64 `json:"runners_timed_out"`
+}
+
 type ComplianceJob struct {
 	gorm.Model
 	FrameworkID         string
 	WithIncidents       bool
 	Status              ComplianceJobStatus
+	RunnersStatus       pgtype.JSONB
 	IncludeResults      pq.StringArray `gorm:"type:text[]"`
 	AreAllRunnersQueued bool
 	IntegrationIDs      pq.StringArray `gorm:"type:text[]"`

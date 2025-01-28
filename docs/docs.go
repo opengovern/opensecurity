@@ -14281,11 +14281,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
-                    "$ref": "#/definitions/github_com_opengovern_opengovernance_services_migrator_db_model.JobsStatus"
+                    "$ref": "#/definitions/github_com_opengovern_opengovernance_services_migrator_db_model.RunnersStatus"
                 }
             }
         },
-        "github_com_opengovern_opengovernance_services_migrator_db_model.JobsStatus": {
+        "github_com_opengovern_opengovernance_services_migrator_db_model.RunnersStatus": {
             "type": "string",
             "enum": [
                 "SUCCEEDED",
