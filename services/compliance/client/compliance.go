@@ -29,6 +29,7 @@ type ComplianceServiceClient interface {
 	ListControl(ctx *httpclient.Context, controlIDs []string, tags map[string][]string) ([]compliance.Control, error)
 	GetControlDetails(ctx *httpclient.Context, controlID string) (*compliance.GetControlDetailsResponse, error)
 	SyncQueries(ctx *httpclient.Context) error
+	ListBenchmarksNestedForBenchmark(ctx *httpclient.Context, benchmarkId string) (*compliance.NestedBenchmark, error)
 }
 
 type complianceClient struct {
@@ -382,4 +383,17 @@ func (s *complianceClient) CreateBenchmarkAssignment(ctx *httpclient.Context, be
 		return nil, err
 	}
 	return assignments, nil
+}
+
+func (s *complianceClient) ListBenchmarksNestedForBenchmark(ctx *httpclient.Context, benchmarkId string) (*compliance.NestedBenchmark, error) {
+	url := fmt.Sprintf("%s/api/v3/benchmarks/%s/nested", s.baseURL, benchmarkId)
+
+	var response compliance.NestedBenchmark
+	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &response); err != nil {
+		if 400 <= statusCode && statusCode < 500 {
+			return nil, echo.NewHTTPError(statusCode, err.Error())
+		}
+		return nil, err
+	}
+	return &response, nil
 }
