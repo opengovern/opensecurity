@@ -163,9 +163,9 @@ func (db Database) ListFailedRunnersWithParentID(id uint) ([]model.ComplianceRun
 	return jobs, nil
 }
 
-func (db Database) ListComplianceJobRunnersWithID(id uint) ([]model.ComplianceRunner, error) {
+func (db Database) ListComplianceJobRunnersWithParentID(parentId uint) ([]model.ComplianceRunner, error) {
 	var jobs []model.ComplianceRunner
-	tx := db.ORM.Where("parent_job_id = ?", id).Find(&jobs)
+	tx := db.ORM.Where("parent_job_id = ?", parentId).Find(&jobs)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}

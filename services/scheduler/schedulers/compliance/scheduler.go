@@ -99,7 +99,7 @@ func (s *JobScheduler) updateRunnersState() error {
 	}
 	for _, complianceJob := range complianceJobs {
 		status := model.ComplianceRunnersStatus{}
-		runners, err := s.db.ListFailedRunnersWithParentID(complianceJob.ID)
+		runners, err := s.db.ListComplianceJobRunnersWithParentID(complianceJob.ID)
 		if err != nil {
 			return fmt.Errorf("error while listing compliance runners: %v", err)
 		}
