@@ -257,7 +257,7 @@ export default function Bookmarks({ setTab }: Props) {
             {isLoading ? (
                 <Spinner />
             ) : (
-                <div className='flex flex-col'>
+                <div className='flex flex-col h-full w-full'>
                     <Flex
                         className="w-full mb-3 mt-2 gap-2 flex-wrap"
                         flexDirection="row"
@@ -331,7 +331,7 @@ export default function Bookmarks({ setTab }: Props) {
                         /> */}
                     </Flex>
                     <Flex className="gap-4 flex-wrap justify-start items-start"
-                        style={{flex: "1 1 0"}}
+                        // style={{flex: "1 1 0"}}
                     >
                         {rows?.length === 0 && (
                             <>
@@ -379,6 +379,7 @@ export default function Bookmarks({ setTab }: Props) {
                                     />
                                 </div>
                             ))}
+                            
                     </Flex>
                 </div>
             )}
