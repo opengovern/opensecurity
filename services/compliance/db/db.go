@@ -865,7 +865,9 @@ func (db Database) ListControls(controlIDs []string, tags map[string][]string) (
 
 func (db Database) ListPolicies(ctx context.Context) ([]Policy, error) {
 	var s []Policy
-	tx := db.Orm.WithContext(ctx).Model(&Policy{}).Preload(clause.Associations).
+	tx := db.Orm.Session(&gorm.Session{
+		Logger: db.Orm.Logger.LogMode(logger.Silent), // Temporarily disable logging
+	}).WithContext(ctx).Model(&Policy{}).Preload(clause.Associations).
 		Find(&s)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -875,7 +877,9 @@ func (db Database) ListPolicies(ctx context.Context) ([]Policy, error) {
 
 func (db Database) ListControlsBare(ctx context.Context) ([]Control, error) {
 	var s []Control
-	tx := db.Orm.WithContext(ctx).Model(&Control{}).Preload("Tags").
+	tx := db.Orm.Session(&gorm.Session{
+		Logger: db.Orm.Logger.LogMode(logger.Silent), // Temporarily disable logging
+	}).WithContext(ctx).Model(&Control{}).Preload("Tags").
 		Find(&s)
 	if tx.Error != nil {
 		return nil, tx.Error

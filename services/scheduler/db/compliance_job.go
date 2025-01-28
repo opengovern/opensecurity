@@ -127,7 +127,7 @@ func (db Database) GetLastComplianceJob(withIncidents bool, frameworkID string) 
 	var job model.ComplianceJob
 	tx := db.ORM.Model(&model.ComplianceJob{}).
 		Where("with_incidents = ?", withIncidents).
-		Where("framework_ids @> ?", frameworkID).Order("created_at DESC").First(&job)
+		Where("framework_ids @> ?", pq.StringArray{frameworkID}).Order("created_at DESC").First(&job)
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 			return nil, nil
