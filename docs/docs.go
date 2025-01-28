@@ -919,7 +919,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "BenchmarkID",
+                        "description": "FrameworkIds",
                         "name": "benchmark_id",
                         "in": "path"
                     },
@@ -1493,7 +1493,7 @@ const docTemplate = `{
                             "type": "string"
                         },
                         "collectionFormat": "csv",
-                        "description": "BenchmarkID",
+                        "description": "FrameworkIds",
                         "name": "benchmarkId",
                         "in": "query"
                     },
@@ -1608,7 +1608,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "BenchmarkID",
+                        "description": "FrameworkIds",
                         "name": "benchmarkId",
                         "in": "path",
                         "required": true
@@ -1665,7 +1665,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "BenchmarkID",
+                        "description": "FrameworkIds",
                         "name": "benchmarkId",
                         "in": "path",
                         "required": true
@@ -1722,7 +1722,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "BenchmarkID",
+                        "description": "FrameworkIds",
                         "name": "benchmarkId",
                         "in": "path",
                         "required": true
@@ -1905,7 +1905,7 @@ const docTemplate = `{
                             "type": "string"
                         },
                         "collectionFormat": "csv",
-                        "description": "BenchmarkID to filter by",
+                        "description": "FrameworkIds to filter by",
                         "name": "benchmarkID",
                         "in": "query"
                     },
@@ -2350,7 +2350,7 @@ const docTemplate = `{
                 "tags": [
                     "compliance"
                 ],
-                "summary": "Get Benchmark Assignments by BenchmarkID",
+                "summary": "Get Benchmark Assignments by FrameworkIds",
                 "parameters": [
                     {
                         "type": "string",
@@ -2403,7 +2403,7 @@ const docTemplate = `{
                 "tags": [
                     "compliance"
                 ],
-                "summary": "Get Benchmark Details by BenchmarkID",
+                "summary": "Get Benchmark Details by FrameworkIds",
                 "parameters": [
                     {
                         "description": "Request Body",

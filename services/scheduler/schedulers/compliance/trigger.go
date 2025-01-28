@@ -20,9 +20,9 @@ func (s *JobScheduler) buildRunners(
 	integrationID *string,
 	integrationType *integration.Type,
 	resourceCollectionID *string,
-	rootBenchmarkID string,
-	parentBenchmarkIDs []string,
-	benchmarkID string,
+	rootFrameworkId string,
+	parentFrameworkIDs []string,
+	frameworkId string,
 	currentRunnerExistMap map[string]bool,
 	triggerType model.ComplianceTriggerType,
 ) ([]*model.ComplianceRunner, []*model.ComplianceRunner, error) {
@@ -30,9 +30,9 @@ func (s *JobScheduler) buildRunners(
 	var runners []*model.ComplianceRunner
 	var globalRunners []*model.ComplianceRunner
 
-	benchmark, err := s.complianceClient.GetBenchmark(ctx, benchmarkID)
+	benchmark, err := s.complianceClient.GetBenchmark(ctx, frameworkId)
 	if err != nil {
-		s.logger.Error("error while getting benchmark", zap.Error(err), zap.String("benchmarkID", benchmarkID))
+		s.logger.Error("error while getting benchmark", zap.Error(err), zap.String("frameworkId", frameworkId))
 		return nil, nil, err
 	}
 	if currentRunnerExistMap == nil {
@@ -48,7 +48,8 @@ func (s *JobScheduler) buildRunners(
 	}
 
 	for _, child := range benchmark.Children {
-		childRunners, childGlobalRunners, err := s.buildRunners(parentJobID, integrationID, integrationType, resourceCollectionID, rootBenchmarkID, append(parentBenchmarkIDs, benchmarkID), child, currentRunnerExistMap, triggerType)
+		childRunners, childGlobalRunners, err := s.buildRunners(parentJobID, integrationID, integrationType, resourceCollectionID,
+			rootFrameworkId, append(parentFrameworkIDs, frameworkId), child, currentRunnerExistMap, triggerType)
 		if err != nil {
 			s.logger.Error("error while building child runners", zap.Error(err))
 			return nil, nil, err
@@ -82,15 +83,15 @@ func (s *JobScheduler) buildRunners(
 		}
 
 		callers := runner.Caller{
-			RootBenchmark:      rootBenchmarkID,
+			RootBenchmark:      rootFrameworkId,
 			TracksDriftEvents:  benchmark.TracksDriftEvents,
-			ParentBenchmarkIDs: append(parentBenchmarkIDs, benchmarkID),
+			ParentBenchmarkIDs: append(parentFrameworkIDs, frameworkId),
 			ControlID:          control.ID,
 			ControlSeverity:    control.Severity,
 		}
 
 		runnerJob := model.ComplianceRunner{
-			FrameworkID:          rootBenchmarkID,
+			FrameworkID:          rootFrameworkId,
 			PolicyID:             control.Policy.ID,
 			ControlID:            control.ID,
 			IntegrationID:        integrationID,
@@ -212,7 +213,7 @@ func (s *JobScheduler) CreateComplianceReportJobs(withIncident bool, frameworkID
 				return nil, err
 			}
 			job := model.ComplianceJob{
-				FrameworkID:         frameworkID,
+				FrameworkIds:        []string{frameworkID},
 				WithIncidents:       withIncident,
 				Status:              model.ComplianceJobCreated,
 				RunnersStatus:       rs,
@@ -238,7 +239,7 @@ func (s *JobScheduler) CreateComplianceReportJobs(withIncident bool, frameworkID
 			return nil, err
 		}
 		job := model.ComplianceJob{
-			FrameworkID:         frameworkID,
+			FrameworkIds:        []string{frameworkID},
 			WithIncidents:       withIncident,
 			Status:              model.ComplianceJobCreated,
 			RunnersStatus:       rs,
@@ -270,18 +271,18 @@ func (s *JobScheduler) enqueueRunnersCycle() error {
 	s.logger.Info("jobs with unqueued runners", zap.Int("count", len(jobsWithUnqueuedRunners)))
 	for _, job := range jobsWithUnqueuedRunners {
 		//if job.Status == model.ComplianceJobCreated {
-		//	framework, err := s.complianceClient.GetFramework(&httpclient.Context{UserRole: api.AdminRole}, job.FrameworkID)
+		//	framework, err := s.complianceClient.GetFramework(&httpclient.Context{UserRole: api.AdminRole}, job.FrameworkIds)
 		//	if err != nil {
-		//		s.logger.Error("error while getting framework", zap.String("frameworkID", job.FrameworkID), zap.Error(err))
+		//		s.logger.Error("error while getting framework", zap.String("frameworkID", job.FrameworkIds), zap.Error(err))
 		//		continue
 		//	}
 		//	if framework == nil {
-		//		s.logger.Error("framework not exist", zap.String("frameworkID", job.FrameworkID))
+		//		s.logger.Error("framework not exist", zap.String("frameworkID", job.FrameworkIds))
 		//		continue
 		//	}
 		//	err = s.validateComplianceJob(*framework)
 		//	if err != nil {
-		//		s.logger.Error("framework validation failed", zap.String("frameworkID", job.FrameworkID), zap.Error(err))
+		//		s.logger.Error("framework validation failed", zap.String("frameworkID", job.FrameworkIds), zap.Error(err))
 		//		_ = s.db.UpdateComplianceJob(job.ID, model.ComplianceJobFailed, err.Error())
 		//		continue
 		//	}
@@ -314,13 +315,16 @@ func (s *JobScheduler) enqueueRunnersCycle() error {
 			if !it.Status {
 				continue
 			}
-			connection := it
-			runners, globalRunners, err = s.buildRunners(job.ID, &connection.IntegrationID, &connection.IntegrationType, nil, job.FrameworkID, nil, job.FrameworkID, nil, job.TriggerType)
-			if err != nil {
-				s.logger.Error("error while building runners", zap.Error(err))
-				return err
+			integration := it
+			for _, framework := range job.FrameworkIds {
+				runners, globalRunners, err = s.buildRunners(job.ID, &integration.IntegrationID, &integration.IntegrationType,
+					nil, framework, nil, framework, nil, job.TriggerType)
+				if err != nil {
+					s.logger.Error("error while building runners", zap.Error(err))
+					return err
+				}
+				allRunners = append(allRunners, runners...)
 			}
-			allRunners = append(allRunners, runners...)
 		}
 		allRunners = append(allRunners, globalRunners...)
 		if len(allRunners) > 0 {

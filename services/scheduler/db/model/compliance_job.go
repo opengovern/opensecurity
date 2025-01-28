@@ -18,8 +18,6 @@ type ComplianceTriggerType string
 
 const (
 	ComplianceJobCreated              ComplianceJobStatus = "CREATED"
-	ComplianceJobQueued               ComplianceJobStatus = "QUEUED"      // for quick audit
-	ComplianceJobInProgress           ComplianceJobStatus = "IN_PROGRESS" // for quick audit
 	ComplianceJobRunnersInProgress    ComplianceJobStatus = "RUNNERS_IN_PROGRESS"
 	ComplianceJobSinkInProgress       ComplianceJobStatus = "SINK_IN_PROGRESS"
 	ComplianceJobSummarizerInProgress ComplianceJobStatus = "SUMMARIZER_IN_PROGRESS"
@@ -27,6 +25,9 @@ const (
 	ComplianceJobSucceeded            ComplianceJobStatus = "SUCCEEDED"
 	ComplianceJobTimeOut              ComplianceJobStatus = "TIMEOUT"
 	ComplianceJobCanceled             ComplianceJobStatus = "CANCELED"
+
+	ComplianceJobQueued     ComplianceJobStatus = "QUEUED"      // for quick audit
+	ComplianceJobInProgress ComplianceJobStatus = "IN_PROGRESS" // for quick audit
 
 	ComplianceTriggerTypeScheduled ComplianceTriggerType = "scheduled" // default
 	ComplianceTriggerTypeManual    ComplianceTriggerType = "manual"
@@ -49,13 +50,14 @@ type ComplianceRunnersStatus struct {
 
 type ComplianceJob struct {
 	gorm.Model
-	FrameworkID         string
+	FrameworkIds        pq.StringArray `gorm:"type:text[]"`
 	WithIncidents       bool
 	Status              ComplianceJobStatus
 	RunnersStatus       pgtype.JSONB
 	IncludeResults      pq.StringArray `gorm:"type:text[]"`
 	AreAllRunnersQueued bool
 	IntegrationIDs      pq.StringArray `gorm:"type:text[]"`
+	StepFailed          ComplianceJobStatus
 	FailureMessage      string
 	TriggerType         ComplianceTriggerType
 	ParentID            *uint
@@ -65,7 +67,7 @@ type ComplianceJob struct {
 func (c ComplianceJob) ToApi() api.ComplianceJob {
 	return api.ComplianceJob{
 		ID:             c.ID,
-		BenchmarkID:    c.FrameworkID,
+		FrameworkIds:   c.FrameworkIds,
 		Status:         c.Status.ToApi(),
 		FailureMessage: c.FailureMessage,
 	}

@@ -210,7 +210,7 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 			//			EvaluatedAt:              j.CreatedAt.UnixMilli(),
 			//			Reason:                   reason,
 			//
-			//			BenchmarkID:        f.BenchmarkID,
+			//			FrameworkIds:        f.FrameworkIds,
 			//			ControlID:          f.ControlID,
 			//			IntegrationID:      f.IntegrationID,
 			//			IntegrationType:    f.IntegrationType,
@@ -250,7 +250,7 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 			//		EvaluatedAt:              j.CreatedAt.UnixMilli(),
 			//		Reason:                   newComplianceResult.Reason,
 			//
-			//		BenchmarkID:        newComplianceResult.BenchmarkID,
+			//		FrameworkIds:        newComplianceResult.FrameworkIds,
 			//		ControlID:          newComplianceResult.ControlID,
 			//		IntegrationID:      newComplianceResult.IntegrationID,
 			//		IntegrationType:    newComplianceResult.IntegrationType,
@@ -293,7 +293,7 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 		//	EvaluatedAt:           j.CreatedAt.UnixMilli(),
 		//	Reason:                newComplianceResult.Reason,
 		//
-		//	BenchmarkID:        newComplianceResult.BenchmarkID,
+		//	FrameworkIds:        newComplianceResult.FrameworkIds,
 		//	ControlID:          newComplianceResult.ControlID,
 		//	IntegrationID:      newComplianceResult.IntegrationID,
 		//	IntegrationType:    newComplianceResult.IntegrationType,

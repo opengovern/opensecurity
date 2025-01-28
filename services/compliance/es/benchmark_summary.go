@@ -117,7 +117,7 @@ func FetchBenchmarkSummaryTrendByIntegrationID(ctx context.Context, logger *zap.
 	if len(benchmarkIDs) > 0 {
 		filters = append(filters, map[string]any{
 			"terms": map[string][]string{
-				"BenchmarkID": benchmarkIDs,
+				"FrameworkIds": benchmarkIDs,
 			},
 		})
 	}
@@ -131,7 +131,7 @@ func FetchBenchmarkSummaryTrendByIntegrationID(ctx context.Context, logger *zap.
 	query["aggs"] = map[string]any{
 		"benchmark_id_group": map[string]any{
 			"terms": map[string]any{
-				"field": "BenchmarkID",
+				"field": "FrameworkIds",
 				"size":  10000,
 			},
 			"aggs": map[string]any{
@@ -247,7 +247,7 @@ func FetchBenchmarkSummaryTrendByIntegrationIDV3(ctx context.Context, logger *za
 	if len(benchmarkIDs) > 0 {
 		filters = append(filters, map[string]any{
 			"terms": map[string][]string{
-				"BenchmarkID": benchmarkIDs,
+				"FrameworkIds": benchmarkIDs,
 			},
 		})
 	}
@@ -261,7 +261,7 @@ func FetchBenchmarkSummaryTrendByIntegrationIDV3(ctx context.Context, logger *za
 	query["aggs"] = map[string]any{
 		"benchmark_id_group": map[string]any{
 			"terms": map[string]any{
-				"field": "BenchmarkID",
+				"field": "FrameworkIds",
 				"size":  10000,
 			},
 			"aggs": map[string]any{
@@ -391,7 +391,7 @@ func FetchBenchmarkSummaryTrendByResourceCollectionAndIntegrationID(ctx context.
 	if len(benchmarkIDs) > 0 {
 		filters = append(filters, map[string]any{
 			"terms": map[string][]string{
-				"BenchmarkID": benchmarkIDs,
+				"FrameworkIds": benchmarkIDs,
 			},
 		})
 	}
@@ -405,7 +405,7 @@ func FetchBenchmarkSummaryTrendByResourceCollectionAndIntegrationID(ctx context.
 	query["aggs"] = map[string]any{
 		"benchmark_id_group": map[string]any{
 			"terms": map[string]any{
-				"field": "BenchmarkID",
+				"field": "FrameworkIds",
 				"size":  10000,
 			},
 			"aggs": map[string]any{
@@ -547,7 +547,7 @@ func FetchBenchmarkSummaryTrendByIntegrationIDPerControl(ctx context.Context, lo
 	if len(benchmarkIDs) > 0 {
 		filters = append(filters, map[string]any{
 			"terms": map[string][]string{
-				"BenchmarkID": benchmarkIDs,
+				"FrameworkIds": benchmarkIDs,
 			},
 		})
 	}
@@ -561,7 +561,7 @@ func FetchBenchmarkSummaryTrendByIntegrationIDPerControl(ctx context.Context, lo
 	query["aggs"] = map[string]any{
 		"benchmark_id_group": map[string]any{
 			"terms": map[string]any{
-				"field": "BenchmarkID",
+				"field": "FrameworkIds",
 				"size":  10000,
 			},
 			"aggs": map[string]any{
@@ -718,7 +718,7 @@ func ListBenchmarkSummariesAtTime(ctx context.Context, logger *zap.Logger, clien
 		"aggs": map[string]any{
 			"summaries": map[string]any{
 				"terms": map[string]any{
-					"field": "BenchmarkID",
+					"field": "FrameworkIds",
 					"size":  10000,
 				},
 				"aggs": map[string]any{
@@ -752,7 +752,7 @@ func ListBenchmarkSummariesAtTime(ctx context.Context, logger *zap.Logger, clien
 	if len(benchmarkIDs) > 0 {
 		filters = append(filters, map[string]any{
 			"terms": map[string][]string{
-				"BenchmarkID": benchmarkIDs,
+				"FrameworkIds": benchmarkIDs,
 			},
 		})
 	}
@@ -810,7 +810,7 @@ func GetComplianceSummaryByJobId(ctx context.Context, logger *zap.Logger, client
 		"aggs": map[string]any{
 			"summaries": map[string]any{
 				"terms": map[string]any{
-					"field": "BenchmarkID",
+					"field": "FrameworkIds",
 					"size":  10000,
 				},
 				"aggs": map[string]any{
@@ -907,7 +907,7 @@ func BenchmarkIntegrationSummary(ctx context.Context, logger *zap.Logger, client
 				"filter": []map[string]any{
 					{
 						"term": map[string]any{
-							"BenchmarkID": benchmarkID,
+							"FrameworkIds": benchmarkID,
 						},
 					},
 				},
@@ -969,7 +969,7 @@ func BenchmarkControlSummary(ctx context.Context, logger *zap.Logger, client ope
 				"filter": []map[string]any{
 					{
 						"term": map[string]any{
-							"BenchmarkID": benchmarkID,
+							"FrameworkIds": benchmarkID,
 						},
 					},
 					{
@@ -1064,7 +1064,7 @@ func BenchmarksControlSummary(ctx context.Context, logger *zap.Logger, client op
 		"aggs": map[string]any{
 			"benchmark_id_group": map[string]any{
 				"terms": map[string]any{
-					"field": "BenchmarkID",
+					"field": "FrameworkIds",
 					"size":  10000,
 				},
 				"aggs": map[string]any{
@@ -1089,7 +1089,7 @@ func BenchmarksControlSummary(ctx context.Context, logger *zap.Logger, client op
 				"filter": []map[string]any{
 					{
 						"terms": map[string][]string{
-							"BenchmarkID": benchmarkIDs,
+							"FrameworkIds": benchmarkIDs,
 						},
 					},
 				},
@@ -1200,7 +1200,7 @@ func ListJobsSummariesAtTime(ctx context.Context, logger *zap.Logger, client ope
 		"aggs": map[string]any{
 			"summaries": map[string]any{
 				"terms": map[string]any{
-					"field": "BenchmarkID",
+					"field": "FrameworkIds",
 					"size":  10000,
 				},
 				"aggs": map[string]any{
@@ -1234,14 +1234,14 @@ func ListJobsSummariesAtTime(ctx context.Context, logger *zap.Logger, client ope
 	if len(benchmarkIDs) > 0 {
 		filters = append(filters, map[string]any{
 			"terms": map[string][]string{
-				"BenchmarkID": benchmarkIDs,
+				"FrameworkIds": benchmarkIDs,
 			},
 		})
 	}
 	if len(jobIDs) > 0 {
 		filters = append(filters, map[string]any{
 			"terms": map[string][]string{
-				"BenchmarkID": jobIDs,
+				"FrameworkIds": jobIDs,
 			},
 		})
 	}
