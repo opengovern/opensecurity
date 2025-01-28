@@ -88,6 +88,31 @@ export default function BenchmarkCards({ benchmark, all,loading }: IComplianceCa
             return '...'
         }
     }
+    const GetSections= () => {
+        const temp =[]
+        if (window.innerWidth >640 ){
+            temp.push({
+                id: 'security_score',
+                header: '',
+                content: (item) => '',
+            })
+        }
+        temp.push(
+            {
+                id: 'security_score',
+                header: 'Compliance Score',
+                content: (item) => `${item.security_score}%`,
+            },
+            {
+                id: 'Severity',
+                header: 'Severity',
+                content: (item) => {
+                    return <SeverityBar benchmark={item.benchmark} />
+                },
+            }
+        )
+        return temp
+    }
     return (
         <>
             <Cards
@@ -99,7 +124,7 @@ export default function BenchmarkCards({ benchmark, all,loading }: IComplianceCa
                 cardDefinition={{
                     header: (item) => (
                         <Link
-                            className="mb-10 w-full"
+                            className="sm:mb-10 w-full"
                             onClick={(e) => {
                                 e.preventDefault()
                                 // console.log(item.id)
@@ -131,28 +156,7 @@ export default function BenchmarkCards({ benchmark, all,loading }: IComplianceCa
                             </Flex>
                         </Link>
                     ),
-                    sections: [
-                        {
-                            id: 'security_score',
-                            header: '',
-                            content: (item) => '',
-                        },
-
-                        {
-                            id: 'security_score',
-                            header: 'Compliance Score',
-                            content: (item) => `${item.security_score}%`,
-                        },
-                        {
-                            id: 'Severity',
-                            header: 'Severity',
-                            content: (item) => {
-                                return (
-                                    <SeverityBar benchmark={item.benchmark} />
-                                )
-                            },
-                        },
-                    ],
+                    sections: GetSections(),
                 }}
                 cardsPerRow={[{minWidth:340, cards: 2 },{ minWidth:1200,cards: 3 }]}
                 // totalItemsCount={7}

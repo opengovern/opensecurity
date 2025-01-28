@@ -108,56 +108,7 @@ export default function Findings({ id }: Props) {
             {/* <Filter type={selectedGroup} onApply={(e) => setQuery(e)} id={id} /> */}
             {/* <Flex className="mt-2">{findComponent()}</Flex> */}
             <Grid numItems={6} className="mt-2 gap-2">
-                {/* @ts-ignore */}
-                {/* <Col numColSpan={1}>
-                    <Flex
-                        flexDirection="col"
-                        justifyContent="center"
-                        alignItems="center"
-                        className=" gap-7 bg-gray-100 p-7 rounded"
-                    >
-                        <Button
-                            onClick={() => {
-                                setTab(0)
-                            }}
-                            className="text-center w-full cursor-pointer hover:border-blue-500 hover:border-solid hover:border-2"
-                        >
-                            All Issues
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                setTab(1)
-                            }}
-                            className="text-center w-full cursor-pointer hover:border-blue-500 hover:border-solid hover:border-2"
-                        >
-                            All Findings
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                setTab(2)
-                            }}
-                            className="text-center w-full cursor-pointer hover:border-blue-500 hover:border-solid hover:border-2"
-                        >
-                            Controls Summary
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                setTab(3)
-                            }}
-                            className="text-center w-full cursor-pointer hover:border-blue-500 hover:border-solid hover:border-2"
-                        >
-                            Resource Type
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                setTab(4)
-                            }}
-                            className="text-center w-full cursor-pointer hover:border-blue-500 hover:border-solid hover:border-2"
-                        >
-                            Posture by Integration{' '}
-                        </Button>
-                    </Flex>
-                </Col> */}
+               
                 <Col numColSpan={6}>{findComponent()}</Col>
             </Grid>
         </>

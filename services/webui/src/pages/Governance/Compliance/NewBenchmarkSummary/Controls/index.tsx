@@ -25,7 +25,7 @@ import {
     ChevronDownIcon,
     ChevronUpIcon,
 } from '@heroicons/react/24/outline'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import MarkdownPreview from '@uiw/react-markdown-preview'
 import Pagination from '@cloudscape-design/components/pagination'
 import DateRangePicker from '@cloudscape-design/components/date-range-picker'
@@ -330,11 +330,7 @@ export default function Controls({
                 const temp = []
 
                 if (res.data.children) {
-                    // temp.push({
-                    //     text: res.data.title,
-                    //     href: res.data.id,
-                    //     type: 'link',
-                    // })
+                    
                     res.data.children.map((item) => {
                         let childs = {
                             text: truncate(item.title),
@@ -381,26 +377,13 @@ export default function Controls({
         GetTree()
 
     }, [])
-    useEffect(() => {
-        if (selected) {
-            setPage(0)
-            GetControls(true, selected)
-        }
-    }, [selected])
-    useEffect(() => {
-        if (selected) {
-            GetControls(true, selected)
-        } else {
-            GetControls(false)
-        }
-    }, [page])
-    useEffect(() => {
-        if (selected) {
-            GetControls(true, selected)
-        } else {
-            GetControls(false)
-        }
-    }, [sort, sortOrder])
+useEffect(() => {
+    setPage(0)
+}, [selected])
+
+useEffect(() => {
+    GetControls(selected ? true : false, selected)
+}, [selected, sort, sortOrder, page])
     useEffect(() => {
         let temp = {}
 
@@ -444,7 +427,6 @@ export default function Controls({
             toolsOpen={false}
             navigationOpen={false}
             contentType="table"
-            // disableContentPaddings={true}
             className="w-full bg-transparent rounded-xl"
             toolsHide={true}
             navigationHide={true}
@@ -465,9 +447,9 @@ export default function Controls({
                             <>
                                 <Flex
                                     justifyContent="start"
-                                    className="gap-2 items-center justify-center"
+                                    className="gap-2 items-center justify-center sm:flex-row flex-col"
                                 >
-                                    <Title className="text-lg font-semibold ml-2 my-1">
+                                    <Title className="text-lg font-semibold ml-2 my-1 w-full">
                                         {selectedRow?.title}
                                     </Title>
                                     {severityBadge(selectedRow?.severity)}
@@ -480,7 +462,7 @@ export default function Controls({
                 >
                     <ControlDetail
                         // type="resource"
-                        benchmarkId= {id}
+                        benchmarkId={id}
                         selectedItem={selectedRow}
                         open={open}
                         onClose={() => setOpen(false)}
@@ -489,8 +471,8 @@ export default function Controls({
                 </SplitPanel>
             }
             content={
-                <Grid numItems={12} className="gap-4">
-                    <Col numColSpan={12}>
+                <Grid numItems={12} className="gap-4 ">
+                    <Col numColSpan={12} className=" sm:order-1 order-1">
                         <BreadcrumbGroup
                             onClick={(event) => {
                                 event.preventDefault()
@@ -501,14 +483,18 @@ export default function Controls({
                         />
                     </Col>
                     {tree && tree.length > 0 && (
-                        <Col numColSpan={3}>
+                        <Col
+                            numColSpan={12}
+                            numColSpanSm={3}
+                            className=" sm:order-2 order-3"
+                        >
                             <Flex
-                                className="bg-white  w-full border-solid border-2 h-[550px]    rounded-xl gap-1 "
+                                className="bg-white  w-full border-solid border-2 sm:h-[550px]    rounded-xl gap-1 "
                                 flexDirection="col"
                             >
                                 <>
                                     <SideNavigation
-                                        className="w-full scroll  h-[550px] overflow-scroll p-4 pb-0"
+                                        className="w-full scroll  sm:h-[550px] overflow-scroll p-4 pb-0"
                                         activeHref={selected}
                                         virtualScroll
                                         header={{
@@ -576,11 +562,15 @@ export default function Controls({
                             </Flex>
                         </Col>
                     )}
-                    <Col numColSpan={tree && tree.length > 0 ? 9 : 12}>
+                    <Col
+                        numColSpanSm={tree && tree.length > 0 ? 9 : 12}
+                        numColSpan={12}
+                        className=" sm:order-3 order-2"
+                    >
                         {' '}
-                        <Flex className="flex flex-col  min-h-[550px] ">
+                        <Flex className="flex flex-col  sm:min-h-[550px] min-h-[300px] ">
                             <Table
-                                className="p-3   min-h-[550px]"
+                                className="p-3   sm:min-h-[550px] min-h-[300px]"
                                 // resizableColumns
                                 renderAriaLive={({
                                     firstIndex,

@@ -30,19 +30,19 @@ export default function Benchmarks({ benchmarks }: IBenchmarks) {
                         <Flex
                             flexDirection="col"
                             alignItems="start"
-                            className="w-3/4"
+                            className="sm:w-3/4 w-full"
                         >
                             <Flex justifyContent="start" className="gap-3">
                                 {getConnectorIcon(bm.integrationTypes)}
-                                <Title className="font-semibold">
+                                <Title className="font-semibold w-full">
                                     {bm.title}
                                 </Title>
                             </Flex>
-                            <Text className="ml-12">{bm.description}</Text>
+                            <Text className="ml-12 sm:inline-block hidden">{bm.description}</Text>
                         </Flex>
                         <Flex
                             justifyContent="end"
-                            className="gap-2 flex-wrap w-1/4"
+                            className="gap-2 flex-wrap w-1/4 sm:flex hidden"
                         >
                             {bm?.tags?.category?.map((cat) => (
                                 <Badge color="slate" size="xs">

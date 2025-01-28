@@ -105,7 +105,7 @@ function TextMetric({ title, metricId, disabled }: ITextMetric) {
     }, [value])
 
     return (
-        <Flex flexDirection="row" className="mb-4">
+        <Flex flexDirection="row" className="mb-4 sm:flex-row flex-col">
             <Flex justifyContent="start" className="truncate space-x-4 ">
                 <div className="truncate">
                     <Text className="truncate text-sm">{title}:</Text>
@@ -372,173 +372,196 @@ export default function SettingsEntitlement() {
             <Spinner />
         </Flex>
     ) : (
-        <Flex flexDirection="col">
-            <Card key="summary" className=" w-full">
-                <Title className="font-semibold mb-2">Settings</Title>
-                <KeyValuePairs
-                    columns={4}
-                    items={wsDetails.map((item) => {
-                        return {
-                            label: item.title,
-                            value: item.value,
-                        }
-                    })}
-                />
-
-                <Divider />
-                <Title className="font-semibold mt-8">
-                    Platform Configuration
-                </Title>
-                <Flex justifyContent="start" className="truncate space-x-4">
-                    <div className="truncate">
-                        <Text className="truncate text-sm">
-                            Platform Controls, Frameworks, and Queries are
-                            sourced from Git repositories. Currently, only
-                            public repositories are supported.
-                        </Text>
-                    </div>
-                </Flex>
-                <Flex
-                    flexDirection="row"
-                    className="mt-4"
-                    alignItems="start"
-                    justifyContent="start"
-                >
-                    <TextMetric
-                        metricId="analytics_git_url"
-                        title="Configuration Git URL"
-                        disabled={
-                            loadingCustomizationEnabled ||
-                            isCustomizationEnabled === false
-                        }
+        <div
+            className="w-full"
+            style={
+                window.innerWidth < 768
+                    ? { width: `${window.innerWidth - 80}px` }
+                    : {}
+            }
+        >
+            <Flex flexDirection="col" className="w-full">
+                <Card key="summary" className=" w-full">
+                    <Title className="font-semibold mb-2">Settings</Title>
+                    <KeyValuePairs
+                        columns={4}
+                        items={wsDetails.map((item) => {
+                            return {
+                                label: item.title,
+                                value: item.value,
+                            }
+                        })}
                     />
-                    <Button
-                        variant="secondary"
-                        className="ml-2"
-                        loading={syncExecuted && syncLoading}
-                        disabled={status !== 'SUCCEEDED' && status !== 'FAILED'}
-                        onClick={() => runSync()}
-                    >
-                        <Flex flexDirection="row" className="gap-2">
-                            {status !== 'SUCCEEDED' && status !== 'FAILED' && (
-                                <Spinner className=" w-4 h-4" />
-                            )}
-                            {status === 'SUCCEEDED' || status === 'FAILED'
-                                ? 'Re-Sync'
-                                : status}
-                        </Flex>
-                    </Button>
-                </Flex>
-                {(status !== 'SUCCEEDED' || status !== 'FAILED') && (
-                    <>
-                        <Flex className="w-full">
-                            <ProgressBar
-                                value={percentage}
-                                className="w-full"
-                                // additionalInfo="Additional information"
-                                // @ts-ignore
-                                description={`${status}, Last Updated: ${dateTimeDisplay(
-                                    // @ts-ignore
-                                    migrations_status?.updated_at
-                                )}`}
-                                resultText="Configuration done"
-                                label="Platform Configuration"
-                            />
-                        </Flex>
-                    </>
-                )}
-                <Divider />
 
-                <Title className="font-semibold mt-8">App configurations</Title>
-
-                <Flex
-                    flexDirection="row"
-                    justifyContent="between"
-                    className="w-full mt-4"
-                >
-                    <Text className="font-normal">Show preview features</Text>
-                    <TabGroup
-                        index={preview === 'true' ? 0 : 1}
-                        onIndexChange={(idx) =>
-                            setPreview(idx === 0 ? 'true' : 'false')
-                        }
-                        className="w-fit"
-                    >
-                        <TabList
-                            className="border border-gray-200"
-                            variant="solid"
-                        >
-                            <Tab>On</Tab>
-                            <Tab>Off</Tab>
-                        </TabList>
-                    </TabGroup>
-                </Flex>
-                <SettingsCustomization/>
-                <Divider />
-
-                <Title className="font-semibold mt-8">Sample Data</Title>
-                <Flex justifyContent="between" alignItems="center">
-                    <Text className="font-normal w-full">
-                        {' '}
-                        The app can be loaded with sample data, allowing you to
-                        explore features without setting up integrations.
-                    </Text>
+                    <Divider />
+                    <Title className="font-semibold mt-8">
+                        Platform Configuration
+                    </Title>
+                    <Flex justifyContent="start" className="truncate space-x-4">
+                        <div className="truncate">
+                            <Text className="truncate text-sm">
+                                Platform Controls, Frameworks, and Queries are
+                                sourced from Git repositories. Currently, only
+                                public repositories are supported.
+                            </Text>
+                        </div>
+                    </Flex>
                     <Flex
-                        className="gap-2"
-                        justifyContent="end"
-                        alignItems="center"
+                        flexDirection="row"
+                        className="mt-4 sm:flex-row flex-col sm:mb-0 mb-4"
+                        alignItems="start"
+                        justifyContent="start"
                     >
-                        {loaded != 'True' && sample != 'true' && (
-                            <Button
-                                variant="secondary"
-                                className="ml-2"
-                                loading={isLoadingLoad && isExecuted}
-                                onClick={() => {
-                                    loadData()
-                                    setSample('true')
-                                    localStorage.setItem('sample', 'true')
+                        <TextMetric
+                            metricId="analytics_git_url"
+                            title="Configuration Git URL"
+                            disabled={
+                                loadingCustomizationEnabled ||
+                                isCustomizationEnabled === false
+                            }
+                        />
+                        <Button
+                            variant="secondary"
+                            className="ml-2"
+                            loading={syncExecuted && syncLoading}
+                            disabled={
+                                status !== 'SUCCEEDED' && status !== 'FAILED'
+                            }
+                            onClick={() => runSync()}
+                        >
+                            <Flex flexDirection="row" className="gap-2">
+                                {status !== 'SUCCEEDED' &&
+                                    status !== 'FAILED' && (
+                                        <Spinner className=" w-4 h-4" />
+                                    )}
+                                {status === 'SUCCEEDED' || status === 'FAILED'
+                                    ? 'Re-Sync'
+                                    : status}
+                            </Flex>
+                        </Button>
+                    </Flex>
+                    {(status !== 'SUCCEEDED' || status !== 'FAILED') && (
+                        <>
+                            <Flex className="w-full">
+                                <ProgressBar
+                                    value={percentage}
+                                    className="w-full"
+                                    // additionalInfo="Additional information"
                                     // @ts-ignore
-                                    setLoaded('True')
-                                    // window.location.reload()
-                                }}
-                            >
-                                Load Sample Data
-                            </Button>
-                        )}
+                                    description={`${status}, Last Updated: ${dateTimeDisplay(
+                                        // @ts-ignore
+                                        migrations_status?.updated_at
+                                    )}`}
+                                    resultText="Configuration done"
+                                    label="Platform Configuration"
+                                />
+                            </Flex>
+                        </>
+                    )}
+                    <Divider />
 
-                        {loaded == 'True' && sample == 'true' && (
-                            <>
+                    <Title className="font-semibold mt-8">
+                        App configurations
+                    </Title>
+
+                    <Flex
+                        flexDirection="row"
+                        justifyContent="between"
+                        className="w-full mt-4"
+                    >
+                        <Text className="font-normal">
+                            Show preview features
+                        </Text>
+                        <TabGroup
+                            index={preview === 'true' ? 0 : 1}
+                            onIndexChange={(idx) =>
+                                setPreview(idx === 0 ? 'true' : 'false')
+                            }
+                            className="w-fit"
+                        >
+                            <TabList
+                                className="border border-gray-200"
+                                variant="solid"
+                            >
+                                <Tab>On</Tab>
+                                <Tab>Off</Tab>
+                            </TabList>
+                        </TabGroup>
+                    </Flex>
+                    <SettingsCustomization />
+                    <Divider />
+
+                    <Title className="font-semibold mt-8">Sample Data</Title>
+                    <Flex
+                        justifyContent="between"
+                        alignItems="center"
+                        className="sm:flex-row flex-col"
+                    >
+                        <Text className="font-normal w-full">
+                            {' '}
+                            The app can be loaded with sample data, allowing you
+                            to explore features without setting up integrations.
+                        </Text>
+                        <Flex
+                            className="gap-2 sm:mt-0 mt-2"
+                            justifyContent="end"
+                            alignItems="center"
+                        >
+                            {loaded != 'True' && sample != 'true' && (
                                 <Button
                                     variant="secondary"
-                                    className=""
-                                    loading={isLoadingPurge && isExecPurge}
+                                    className="ml-2"
+                                    loading={isLoadingLoad && isExecuted}
                                     onClick={() => {
-                                        PurgeData()
-                                        setSample(false)
-                                        localStorage.setItem('sample', 'false')
+                                        loadData()
+                                        setSample('true')
+                                        localStorage.setItem('sample', 'true')
                                         // @ts-ignore
-                                        setLoaded('False')
+                                        setLoaded('True')
                                         // window.location.reload()
                                     }}
                                 >
-                                    Purge Sample Data
+                                    Load Sample Data
                                 </Button>
-                            </>
-                        )}
+                            )}
+
+                            {loaded == 'True' && sample == 'true' && (
+                                <>
+                                    <Button
+                                        variant="secondary"
+                                        className=""
+                                        loading={isLoadingPurge && isExecPurge}
+                                        onClick={() => {
+                                            PurgeData()
+                                            setSample(false)
+                                            localStorage.setItem(
+                                                'sample',
+                                                'false'
+                                            )
+                                            // @ts-ignore
+                                            setLoaded('False')
+                                            // window.location.reload()
+                                        }}
+                                    >
+                                        Purge Sample Data
+                                    </Button>
+                                </>
+                            )}
+                        </Flex>
                     </Flex>
-                </Flex>
-                {((error && error !== '') ||
-                    (errorPurge && errorPurge !== '')) && (
-                    <>
-                        <Alert className="mt-2" type="error">
-                            <>
-                                {getErrorMessage(error)}
-                                {getErrorMessage(errorPurge)}
-                            </>
-                        </Alert>
-                    </>
-                )}
-            </Card>
-        </Flex>
+                    {((error && error !== '') ||
+                        (errorPurge && errorPurge !== '')) && (
+                        <>
+                            <Alert className="mt-2" type="error">
+                                <>
+                                    {getErrorMessage(error)}
+                                    {getErrorMessage(errorPurge)}
+                                </>
+                            </Alert>
+                        </>
+                    )}
+                </Card>
+            </Flex>
+        </div>
     )
 }

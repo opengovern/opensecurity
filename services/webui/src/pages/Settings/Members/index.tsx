@@ -100,22 +100,6 @@ export default function SettingsMembers() {
                     />
                 )}
             </Modal>
-            {/* <a
-                className=" cursor-pointer"
-                target="__blank"
-                href="https://docs.opengovernance.io/oss/getting-started/configure-sso"
-            >
-                <Alert statusIconAriaLabel="Info" header=" SSO Configuration">
-                    Enable SSO in OpenGovernance using OIDC. Integrate with
-                    Auth0, AzureAD, Google, and more.
-                    <Link
-                        href="  https://docs.opengovernance.io/oss/getting-started/configure-sso"
-                        external={true}
-                    >
-                        Click here.
-                    </Link>
-                </Alert>
-            </a> */}
             <Table
                 className="mt-2 mb-5"
                 onRowClick={(event) => {
@@ -225,83 +209,6 @@ export default function SettingsMembers() {
                     </Header>
                 }
             />
-            {/* <Card key="summary" className="mt-4">
-                <Flex>
-                    <Title className="font-semibold">All members</Title>
-                </Flex>
-
-                <List className="mt-4">
-                    <ListItem>
-                        <Text className="w-1/3 text-start">Member</Text>
-                        <Text className="w-1/3 text-center">Member Since</Text>
-                        <Text className="w-1/3 text-center">Last Activity</Text>
-                        <Text className="w-1/3 text-end mr-5">Role</Text>
-                    </ListItem>
-                    {response?.map((item) => (
-                        <ListItem
-                            key={item.userName}
-                            onClick={() => {
-                                if (item.userId) {
-                                    userDetail(item.userId)
-                                }
-                            }}
-                            className="cursor-pointer"
-                        >
-                            <Flex
-                                justifyContent="between"
-                                className="truncate space-x-4 w-1/3"
-                            >
-                                <div className="truncate p-1">
-                                    <Text className="truncate font-medium text-gray-800">
-                                        {item.userName}
-                                    </Text>
-                                    <Text className="truncate text-xs text-gray-400">
-                                        {item.email}
-                                    </Text>
-                                </div>
-                            </Flex>
-                            <Text className="w-1/3 text-center">
-                                {item.createdAt
-                                    ? dateTimeDisplay(item.createdAt)
-                                    : 'Never'}
-                            </Text>
-                            <Text className="w-1/3 text-center">
-                                {item.lastActivity
-                                    ? dateTimeDisplay(item.lastActivity)
-                                    : 'Never'}
-                            </Text>
-                            <Flex
-                                flexDirection="row"
-                                className="w-1/3"
-                                alignItems="center"
-                                justifyContent="end"
-                            >
-                                <Flex
-                                    justifyContent="end"
-                                    className="truncate w-full"
-                                >
-                                    <div className="truncate p-1">
-                                        <Text className="truncate font-medium text-gray-800">
-                                            {fixRole(item.roleName || '')}
-                                        </Text>
-                                        <Text className="truncate text-xs text-gray-400">
-                                            {(item.scopedConnectionIDs
-                                                ?.length || 0) === 0
-                                                ? 'All accounts'
-                                                : `${item.scopedConnectionIDs?.length} accounts`}
-                                        </Text>
-                                    </div>
-                                </Flex>
-                                <ChevronRightIcon className="h-6 w-6 shrink-0" />
-                            </Flex>
-                        </ListItem>
-                    ))}
-                </List>
-            </Card> */}
-            {/* <Toggle checked={showSSO} onChange={() => setShowSSO(!showSSO)}>
-                Show SSO Providers
-            </Toggle>
-            {showSSO && <SettingsConnectors />} */}
         </>
     )
 }

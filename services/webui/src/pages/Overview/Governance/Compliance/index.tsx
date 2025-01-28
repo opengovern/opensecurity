@@ -70,7 +70,7 @@ export default function Compliance() {
      }
      const body = {
          cursor: 1,
-         per_page: window.innerWidth > 1920 ? 6 : 4,
+         per_page: window.innerWidth > 1920 ? 6 : window.innerWidth > 768 ? 4 :2,
          sort_by: 'incidents',
          assigned: false,
          is_baseline: false,
@@ -139,36 +139,25 @@ export default function Compliance() {
     }
     
    }, [AllBenchmarks])
+   const array = window.innerWidth > 768 ? [1,2,3,4] : [1,2]
 
     return (
         <Flex flexDirection="col" alignItems="start" justifyContent="start">
-            {/* <Flex className="mb-8">
-                <Title className="text-gray-500">Benchmarks</Title>
-                <Button
-                    variant="light"
-                    icon={ChevronRightIcon}
-                    iconPosition="right"
-                    onClick={() =>
-                        navigate(`/compliance?${searchParams}`)
-                    }
-                >
-                    Show all
-                </Button>
-            </Flex> */}
+           
             {loading ? (
-                <Flex flexDirection="row" className="gap-4 flex-wrap">
-                    {[1, 2,3,4].map((i) => {
+                <Flex  className="gap-4 flex-wrap sm:flex-row flex-col">
+                    {array.map((i) => {
                         return (
-                            <Card className="p-3 dark:ring-gray-500 w-[calc(50%-0.5rem)] h-64">
+                            <Card className="p-3 dark:ring-gray-500 sm:w-[calc(50%-0.5rem)] w-[calc(100%-0.5rem)] sm:h-64 h-64">
                                 <Flex
                                     flexDirection="col"
                                     alignItems="start"
                                     justifyContent="start"
                                     className="animate-pulse w-full"
                                 >
-                                    <div className="h-5 w-24 mb-2 bg-slate-200 dark:bg-slate-700 rounded" />
-                                    <div className="h-5 w-24 mb-1 bg-slate-200 dark:bg-slate-700 rounded" />
-                                    <div className="h-6 w-24 bg-slate-200 dark:bg-slate-700 rounded" />
+                                    <div className="h-5 w-24  mb-2 bg-slate-200 dark:bg-slate-700 rounded" />
+                                    <div className="h-5 w-24  mb-1 bg-slate-200 dark:bg-slate-700 rounded" />
+                                    <div className="h-6 w-24  bg-slate-200 dark:bg-slate-700 rounded" />
                                 </Flex>
                             </Card>
                         )

@@ -76,7 +76,7 @@ export default function Shortcuts() {
     const navigate = useNavigate()
     const [open,setOpen] = useState(false)
     const [userOpen, setUserOpen] = useState(false)
-
+    const number = window.innerWidth > 768 ? 4 : 2
 
     return (
         <Card>
@@ -84,8 +84,8 @@ export default function Shortcuts() {
                 <Icon icon={CursorArrowRaysIcon} className="p-0" />
                 <Title className="font-semibold">Shortcuts</Title>
             </Flex>
-            <Grid numItems={4} className="w-full mb-4 gap-4">
-                {navList.map((nav, i) => (
+            <Grid numItems={1} numItemsSm={4} className="w-full mb-4 gap-4">
+                {navList?.slice(0,number).map((nav, i) => (
                     <>
                         {nav?.title !== 'Audit' && nav?.title !== 'Invite' ? (
                             <>
@@ -93,7 +93,7 @@ export default function Shortcuts() {
                                     href={`/${nav.link}`}
                                     target={nav.new ? '_blank' : '_self'}
                                 >
-                                    <Card className=" flex-auto  cursor-pointer  min-h-[140px] h-full pt-3 pb-3 hover:bg-gray-50 hover:dark:bg-gray-900">
+                                    <Card className=" flex-auto  cursor-pointer  sm:min-h-[140px] h-full pt-3 sm:pb-3 pb-5 hover:bg-gray-50 hover:dark:bg-gray-900">
                                         <Flex
                                             flexDirection="col"
                                             justifyContent="start"
@@ -104,7 +104,7 @@ export default function Shortcuts() {
                                                 className="bg-[#1164D9] rounded-[50%] p-[0.3rem] w-7 h-7"
                                                 src={nav.icon}
                                             />
-                                            <Text className="text-l font-semibold text-gray-900 dark:text-gray-50 text-openg-800  flex flex-row items-center gap-2">
+                                            <Text className="text-l font-semibold  dark:text-gray-50 text-openg-800  flex flex-row items-center gap-2">
                                                 {nav.title}
                                                 <ChevronRightIcon className="p-0 w-5 h-5 " />
                                             </Text>
@@ -125,7 +125,7 @@ export default function Shortcuts() {
                                             setUserOpen(true)
                                         }
                                     }}
-                                    className="  cursor-pointer  min-h-[140px] h-full pt-3 pb-3 hover:bg-gray-50 hover:dark:bg-gray-900"
+                                    className="  cursor-pointer  sm:min-h-[140px] h-full pt-3 sm:pb-3 pb-5 hover:bg-gray-50 hover:dark:bg-gray-900"
                                 >
                                     <Flex
                                         flexDirection="col"

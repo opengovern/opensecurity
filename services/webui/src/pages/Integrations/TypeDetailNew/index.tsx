@@ -466,339 +466,359 @@ export default function TypeDetail() {
 
             {shcema && !loading && shcema?.integration_type_id ? (
                 <>
-                    <Flex className="flex-col w-full justify-start items-start gap-4">
-                        <BreadcrumbGroup
-                            className="w-full"
-                            items={[
-                                {
-                                    text: 'Plugins',
-                                    href: '/integration/plugins',
-                                },
-                                {
-                                    // @ts-ignore
-                                    text: state?.name,
-                                    href: `/integration/plugins/${type}`,
-                                },
-                            ]}
-                        />
-                        <Flex className="flex-col gap-3 justify-start items-start w-full">
-                            <Flex className="flex-row justify-between w-full gap-8">
-                                <h1 className=" font-bold text-2xl mb-2  text-left ml-1">
-                                    {state?.name} plugin
-                                </h1>
-                                <ButtonDropdown
-                                    onItemClick={({ detail }) => {
-                                        const id = detail.id
-                                        switch (id) {
-                                            case 'update':
-                                                UpdatePlugin()
-                                                break
-                                            case 'disable':
-                                                DisablePlugin()
-                                                break
-                                            case 'uninstall':
-                                                UnInstallPlugin()
-                                                break
-                                            case 'healthckeck':
-                                                GetStatus()
-                                                break
-                                            default:
-                                                break
-                                        }
-                                    }}
-                                    variant="primary"
-                                    items={[
-                                        {
-                                            text: 'Settings',
-                                            items: [
-                                                {
-                                                    text: 'Update',
-                                                    id: 'update',
-                                                },
-                                                {
-                                                    text: 'Disable',
-                                                    id: 'disable',
-                                                },
-                                                {
-                                                    text: 'Uninstall',
-                                                    id: 'uninstall',
-                                                },
-                                            ],
-                                        },
-                                        {
-                                            text: 'Run Health Check',
-                                            id: 'healthckeck',
-                                        },
-                                    ]}
-                                    mainAction={{
-                                        text: 'Run discovery',
-                                        onClick: () => {
-                                            GetIntegrations()
-                                            GetResourceTypes()
-                                            setRunOpen(true)
-                                        },
-                                        loading: actionLoading['discovery'],
-                                    }}
-                                ></ButtonDropdown>
-                            </Flex>
-                            <Card className="">
-                                <Flex
-                                    flexDirection="col"
-                                    className="gap-2 p-2 w-full justify-start items-start"
-                                >
-                                    <>
-                                        <KeyValuePairs
-                                            columns={4}
-                                            items={[
-                                                {
-                                                    label: 'Id',
-                                                    value: manifest?.IntegrationType,
-                                                },
-                                                {
-                                                    label: 'Artifact URL',
-                                                    value: manifest?.DescriberURL,
-                                                },
-                                                {
-                                                    label: 'Version',
-                                                    value: manifest?.DescriberTag,
-                                                },
-                                                {
-                                                    label: 'Publisher',
-                                                    value: manifest?.Publisher,
-                                                },
-                                                {
-                                                    label: 'Author',
-                                                    value: manifest?.Author,
-                                                },
-                                                {
-                                                    label: 'Supported Platform Version',
-                                                    value: manifest?.SupportedPlatformVersion,
-                                                },
-                                                {
-                                                    label: 'Update date',
-                                                    value: manifest?.UpdateDate,
-                                                },
-                                                {
-                                                    label: 'Operational Status',
-                                                    // @ts-ignore
-                                                    value: status
-                                                        ? status
-                                                              ?.charAt(0)
-                                                              .toUpperCase() +
-                                                          status?.slice(1)
-                                                        : '',
-                                                },
-                                            ]}
-                                        />
-                                    </>
-                                </Flex>
-                            </Card>
-                            <></>
-                        </Flex>
-                        <Tabs
-                            tabs={[
-                                {
-                                    id: '3',
-                                    label: ' Discovered Resources',
-                                    content: (
-                                        <Resources
-                                            name={state?.name}
-                                            integration_type={type}
-                                        />
-                                    ),
-                                },
-                                {
-                                    id: '0',
-                                    label: 'Integrations',
-                                    content: (
-                                        <IntegrationList
-                                            schema={shcema}
-                                            name={state?.name}
-                                            integration_type={type}
-                                        />
-                                    ),
-                                },
-                                {
-                                    id: '1',
-                                    label: 'Credentials',
-                                    content: (
-                                        <CredentialsList
-                                            schema={shcema}
-                                            name={state?.name}
-                                            integration_type={type}
-                                        />
-                                    ),
-                                },
-                                {
-                                    id: '2',
-                                    label: 'Discovery Jobs',
-                                    content: (
-                                        <DiscoveryJobs
-                                            name={state?.name}
-                                            integration_type={type}
-                                        />
-                                    ),
-                                },
-
-                                {
-                                    id: '4',
-                                    label: 'Setup Guide',
-                                    content: (
-                                        <Setup
-                                            name={state?.name}
-                                            integration_type={type}
-                                        />
-                                    ),
-                                },
-                            ]}
-                        />
-                    </Flex>
-                    <Modal
-                        visible={runOpen}
-                        onDismiss={() => {
-                            setRunOpen(false)
-                            setSelectedIntegrations([])
-                            setSelectedResourceType([])
-                            setParams({})
-                        }}
-                        // @ts-ignore
-                        header={'Run Discovery'}
-                        footer={
-                            <Flex className="gap-3" justifyContent="end">
-                                <Button
-                                    onClick={() => {
-                                        setRunOpen(false)
-                                        setSelectedIntegrations([])
-                                        setSelectedResourceType([])
-                                        setParams({})
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    onClick={() => {
-                                        if (
-                                            selectedResourceType?.length ==
-                                            resourceTypes?.length
-                                        ) {
-                                            setSelectedResourceType([])
-                                            return
-                                        }
-                                        const temp: any = []
-                                        resourceTypes?.map((item: any) => {
-                                            temp.push({
-                                                label: item?.name,
-                                                value: item?.name,
-                                                params: item?.params,
-                                            })
-                                        })
-                                        setSelectedResourceType(temp)
-                                    }}
-                                >
-                                    {selectedResourceType?.length ==
-                                    resourceTypes?.length
-                                        ? 'Unselect all types'
-                                        : 'Select all types'}
-                                </Button>
-                                <Button
-                                    variant="primary"
-                                    loading={actionLoading['discovery']}
-                                    onClick={() => {
-                                        RunDiscovery()
-                                    }}
-                                >
-                                    Confirm
-                                </Button>
-                            </Flex>
+                    <div
+                        className="w-full flex justify-center items-center"
+                        style={
+                            window.innerWidth < 768
+                                ? { width: `${window.innerWidth - 80}px` }
+                                : {}
                         }
                     >
-                        <Flex
-                            className="gap-5 w-full justify-start items-start"
-                            flexDirection="col"
-                        >
-                            <Multiselect
+                        <Flex className="flex-col w-full justify-start items-start gap-4">
+                            <BreadcrumbGroup
                                 className="w-full"
-                                options={row?.map((item: any) => {
-                                    return {
-                                        label: item?.name,
-                                        value: item?.name,
-                                        provider_id: item.provider_id,
-                                        integration_id: item.integration_id,
-                                        name: item.name,
-                                    }
-                                })}
-                                selectedOptions={selectedIntegrations}
-                                onChange={({ detail }) => {
-                                    setSelectedIntegrations(
-                                        detail.selectedOptions
-                                    )
-                                }}
-                                tokenLimit={5}
-                                placeholder="Select Integration"
+                                items={[
+                                    {
+                                        text: 'Plugins',
+                                        href: '/integration/plugins',
+                                    },
+                                    {
+                                        // @ts-ignore
+                                        text: state?.name,
+                                        href: `/integration/plugins/${type}`,
+                                    },
+                                ]}
                             />
-                            <Multiselect
-                                className="w-full"
-                                options={resourceTypes?.map((item: any) => {
-                                    return {
-                                        label: item?.name,
-                                        value: item?.name,
-                                        params: item?.params,
+                            <Flex className="flex-col gap-3 justify-start items-start w-full">
+                                <Flex className="sm:flex-row flex-col sm:justify-between justify-start sm:items-center items-start w-full sm:gap-8 gap-2">
+                                    <h1 className=" font-bold text-2xl mb-2  text-left ml-1">
+                                        {state?.name} plugin
+                                    </h1>
+                                    <ButtonDropdown
+                                        onItemClick={({ detail }) => {
+                                            const id = detail.id
+                                            switch (id) {
+                                                case 'update':
+                                                    UpdatePlugin()
+                                                    break
+                                                case 'disable':
+                                                    DisablePlugin()
+                                                    break
+                                                case 'uninstall':
+                                                    UnInstallPlugin()
+                                                    break
+                                                case 'healthckeck':
+                                                    GetStatus()
+                                                    break
+                                                default:
+                                                    break
+                                            }
+                                        }}
+                                        variant="primary"
+                                        items={[
+                                            {
+                                                text: 'Settings',
+                                                items: [
+                                                    {
+                                                        text: 'Update',
+                                                        id: 'update',
+                                                    },
+                                                    {
+                                                        text: 'Disable',
+                                                        id: 'disable',
+                                                    },
+                                                    {
+                                                        text: 'Uninstall',
+                                                        id: 'uninstall',
+                                                    },
+                                                ],
+                                            },
+                                            {
+                                                text: 'Run Health Check',
+                                                id: 'healthckeck',
+                                            },
+                                        ]}
+                                        mainAction={{
+                                            text: 'Run discovery',
+                                            onClick: () => {
+                                                GetIntegrations()
+                                                GetResourceTypes()
+                                                setRunOpen(true)
+                                            },
+                                            loading: actionLoading['discovery'],
+                                        }}
+                                    ></ButtonDropdown>
+                                </Flex>
+                                <div
+                                    className="w-full"
+                                    style={
+                                        window.innerWidth < 768
+                                            ? {
+                                                  width: `${
+                                                      window.innerWidth - 80
+                                                  }px`,
+                                              }
+                                            : {}
                                     }
-                                })}
-                                selectedOptions={selectedResourceType}
-                                onChange={({ detail }) => {
-                                    setSelectedResourceType(
-                                        detail.selectedOptions
-                                    )
-                                }}
-                                tokenLimit={0}
-                                placeholder="Select resource type"
+                                >
+                                    <Card className="w-full">
+                                        <>
+                                            <KeyValuePairs
+                                                columns={4}
+                                                items={[
+                                                    {
+                                                        label: 'Id',
+                                                        value: manifest?.IntegrationType,
+                                                    },
+                                                    {
+                                                        label: 'Artifact URL',
+                                                        value: manifest?.DescriberURL,
+                                                    },
+                                                    {
+                                                        label: 'Version',
+                                                        value: manifest?.DescriberTag,
+                                                    },
+                                                    {
+                                                        label: 'Publisher',
+                                                        value: manifest?.Publisher,
+                                                    },
+                                                    {
+                                                        label: 'Author',
+                                                        value: manifest?.Author,
+                                                    },
+                                                    {
+                                                        label: 'Supported Platform Version',
+                                                        value: manifest?.SupportedPlatformVersion,
+                                                    },
+                                                    {
+                                                        label: 'Update date',
+                                                        value: manifest?.UpdateDate,
+                                                    },
+                                                    {
+                                                        label: 'Operational Status',
+                                                        // @ts-ignore
+                                                        value: status
+                                                            ? status
+                                                                  ?.charAt(0)
+                                                                  .toUpperCase() +
+                                                              status?.slice(1)
+                                                            : '',
+                                                    },
+                                                ]}
+                                            />
+                                        </>
+                                    </Card>
+                                </div>
+
+                                <></>
+                            </Flex>
+                            <Tabs
+                                tabs={[
+                                    {
+                                        id: '3',
+                                        label: ' Discovered Resources',
+                                        content: (
+                                            <Resources
+                                                name={state?.name}
+                                                integration_type={type}
+                                            />
+                                        ),
+                                    },
+                                    {
+                                        id: '0',
+                                        label: 'Integrations',
+                                        content: (
+                                            <IntegrationList
+                                                schema={shcema}
+                                                name={state?.name}
+                                                integration_type={type}
+                                            />
+                                        ),
+                                    },
+                                    {
+                                        id: '1',
+                                        label: 'Credentials',
+                                        content: (
+                                            <CredentialsList
+                                                schema={shcema}
+                                                name={state?.name}
+                                                integration_type={type}
+                                            />
+                                        ),
+                                    },
+                                    {
+                                        id: '2',
+                                        label: 'Discovery Jobs',
+                                        content: (
+                                            <DiscoveryJobs
+                                                name={state?.name}
+                                                integration_type={type}
+                                            />
+                                        ),
+                                    },
+
+                                    {
+                                        id: '4',
+                                        label: 'Setup Guide',
+                                        content: (
+                                            <Setup
+                                                name={state?.name}
+                                                integration_type={type}
+                                            />
+                                        ),
+                                    },
+                                ]}
                             />
-                            <Checkbox
-                                onChange={({ detail }) =>
-                                    setEnableSchedule(detail.checked)
-                                }
-                                checked={enableSchedule}
-                            >
-                                Make this a recurring Discovery Job
-                            </Checkbox>
-                            {selectedResourceType?.length == 1 && (
-                                <>
-                                    {/* show params to input */}
-                                    {selectedResourceType[0]?.params?.map(
-                                        (item: any) => {
-                                            return (
-                                                <FormField
-                                                    className="w-full"
-                                                    label={`${item.name} (Optional)`}
-                                                    description={
-                                                        item.description
-                                                    }
-                                                >
-                                                    <Input
-                                                        className="w-full"
-                                                        value={
-                                                            params?.[item.name]
-                                                        }
-                                                        type={'text'}
-                                                        onChange={({
-                                                            detail,
-                                                        }) =>
-                                                            setParams({
-                                                                ...params,
-                                                                [item.name]:
-                                                                    detail.value,
-                                                            })
-                                                        }
-                                                    />
-                                                </FormField>
-                                            )
-                                        }
-                                    )}
-                                </>
-                            )}
                         </Flex>
-                    </Modal>
+                        <Modal
+                            visible={runOpen}
+                            onDismiss={() => {
+                                setRunOpen(false)
+                                setSelectedIntegrations([])
+                                setSelectedResourceType([])
+                                setParams({})
+                            }}
+                            // @ts-ignore
+                            header={'Run Discovery'}
+                            footer={
+                                <Flex className="gap-3" justifyContent="end">
+                                    <Button
+                                        onClick={() => {
+                                            setRunOpen(false)
+                                            setSelectedIntegrations([])
+                                            setSelectedResourceType([])
+                                            setParams({})
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        onClick={() => {
+                                            if (
+                                                selectedResourceType?.length ==
+                                                resourceTypes?.length
+                                            ) {
+                                                setSelectedResourceType([])
+                                                return
+                                            }
+                                            const temp: any = []
+                                            resourceTypes?.map((item: any) => {
+                                                temp.push({
+                                                    label: item?.name,
+                                                    value: item?.name,
+                                                    params: item?.params,
+                                                })
+                                            })
+                                            setSelectedResourceType(temp)
+                                        }}
+                                    >
+                                        {selectedResourceType?.length ==
+                                        resourceTypes?.length
+                                            ? 'Unselect all types'
+                                            : 'Select all types'}
+                                    </Button>
+                                    <Button
+                                        variant="primary"
+                                        loading={actionLoading['discovery']}
+                                        onClick={() => {
+                                            RunDiscovery()
+                                        }}
+                                    >
+                                        Confirm
+                                    </Button>
+                                </Flex>
+                            }
+                        >
+                            <Flex
+                                className="gap-5 w-full justify-start items-start"
+                                flexDirection="col"
+                            >
+                                <Multiselect
+                                    className="w-full"
+                                    options={row?.map((item: any) => {
+                                        return {
+                                            label: item?.name,
+                                            value: item?.name,
+                                            provider_id: item.provider_id,
+                                            integration_id: item.integration_id,
+                                            name: item.name,
+                                        }
+                                    })}
+                                    selectedOptions={selectedIntegrations}
+                                    onChange={({ detail }) => {
+                                        setSelectedIntegrations(
+                                            detail.selectedOptions
+                                        )
+                                    }}
+                                    tokenLimit={5}
+                                    placeholder="Select Integration"
+                                />
+                                <Multiselect
+                                    className="w-full"
+                                    options={resourceTypes?.map((item: any) => {
+                                        return {
+                                            label: item?.name,
+                                            value: item?.name,
+                                            params: item?.params,
+                                        }
+                                    })}
+                                    selectedOptions={selectedResourceType}
+                                    onChange={({ detail }) => {
+                                        setSelectedResourceType(
+                                            detail.selectedOptions
+                                        )
+                                    }}
+                                    tokenLimit={0}
+                                    placeholder="Select resource type"
+                                />
+                                <Checkbox
+                                    onChange={({ detail }) =>
+                                        setEnableSchedule(detail.checked)
+                                    }
+                                    checked={enableSchedule}
+                                >
+                                    Make this a recurring Discovery Job
+                                </Checkbox>
+                                {selectedResourceType?.length == 1 && (
+                                    <>
+                                        {/* show params to input */}
+                                        {selectedResourceType[0]?.params?.map(
+                                            (item: any) => {
+                                                return (
+                                                    <FormField
+                                                        className="w-full"
+                                                        label={`${item.name} (Optional)`}
+                                                        description={
+                                                            item.description
+                                                        }
+                                                    >
+                                                        <Input
+                                                            className="w-full"
+                                                            value={
+                                                                params?.[
+                                                                    item.name
+                                                                ]
+                                                            }
+                                                            type={'text'}
+                                                            onChange={({
+                                                                detail,
+                                                            }) =>
+                                                                setParams({
+                                                                    ...params,
+                                                                    [item.name]:
+                                                                        detail.value,
+                                                                })
+                                                            }
+                                                        />
+                                                    </FormField>
+                                                )
+                                            }
+                                        )}
+                                    </>
+                                )}
+                            </Flex>
+                        </Modal>
+                    </div>
                 </>
             ) : (
                 <>

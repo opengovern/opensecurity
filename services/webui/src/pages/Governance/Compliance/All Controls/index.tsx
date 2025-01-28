@@ -408,7 +408,7 @@ export default function AllControls() {
                                             <>
                                                 <Flex
                                                     justifyContent="start"
-                                                    className="gap-2 items-center justify-center"
+                                                    className="gap-2 sm:items-center sm:justify-center sm:flex-row flex-col items-start justify-start"
                                                 >
                                                     <Title className="text-lg font-semibold ml-2 my-1">
                                                         {selectedRow?.title}

@@ -359,12 +359,12 @@ export default function Query() {
                     </Modal>
                     {openSearch ? (
                         <>
-                            <Card className="p-3 rounded-xl w-1/3 h-full  ">
+                            <Card className="p-3 rounded-xl w-1/3 h-full sm:flex hidden  ">
                                 <Flex
                                     flexDirection="col"
                                     justifyContent="start"
                                     alignItems="start"
-                                    className="gap-2 overflow-y-scroll max-h-[500px]"
+                                    className="gap-2 overflow-y-scroll max-h-[500px] "
                                 >
                                     <Text className="font-bold text-xl text-black flex flex-row justify-between w-full">
                                         Tables
@@ -622,7 +622,7 @@ export default function Query() {
                     </Flex>
                 </Flex>
                 <Tabs
-                    className="mt-2"
+                    className="mt-2 w-fit"
                     activeTabId={tab}
                     onChange={(e) => setTab(e.detail.activeTabId)}
                     tabs={[

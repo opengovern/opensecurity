@@ -205,11 +205,11 @@ export default function FindingsWithFailure({ query }: ICount) {
                         header={
                             finding ? (
                                 <>
-                                    <Flex justifyContent="start">
+                                    <Flex justifyContent="start" className='sm:flex-row flex-col'>
                                         {getConnectorIcon(
                                             finding?.integrationType
                                         )}
-                                        <Title className="text-lg font-semibold ml-2 my-1">
+                                        <Title className="text-lg w-full text-wrap font-semibold ml-2 my-1">
                                             {finding?.resourceName}
                                         </Title>
                                     </Flex>
@@ -424,7 +424,7 @@ export default function FindingsWithFailure({ query }: ICount) {
                                 flexDirection="row"
                                 justifyContent="start"
                                 alignItems="start"
-                                className="gap-1 mt-1"
+                                className="gap-1 mt-1 sm:flex-row flex-col"
                             >
                                 <Filter
                                     // @ts-ignore

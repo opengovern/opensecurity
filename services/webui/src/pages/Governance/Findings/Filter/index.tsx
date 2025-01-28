@@ -934,14 +934,14 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
                     flexDirection="row"
                     justifyContent="start"
                     alignItems="start"
-                    className="w-max gap-2"
+                    className="w-max gap-2 sm:flex-row flex-col"
                 >
                     {(type == 'findings' || type == 'controls') && (
                         <>
                             <Select
                                 // @ts-ignore
                                 selectedOption={filter}
-                                className="w-1/5 min-w-[160px] mt-[-9px]"
+                                className="sm:w-1/5 w-full min-w-[160px] mt-[-9px]"
                                 inlineLabelText={'Saved Filters'}
                                 placeholder="Select Filter Set"
                                 // @ts-ignore
@@ -955,7 +955,7 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
                     )}
 
                     <PropertyFilter
-                        className="w-4/5 "
+                        className="sm:w-4/5 w-full "
                         
                         // @ts-ignore
                         query={query}

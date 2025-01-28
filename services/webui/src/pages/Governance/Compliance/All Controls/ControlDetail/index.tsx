@@ -171,7 +171,8 @@ export default function ControlDetail({
                 <>
                     <KeyValuePairs
                         className="mb-8"
-                        columns={4}
+                        columns={window.innerWidth > 768 ? 4 : 1}
+                        
                         items={getItems()}
                     />
                     <Tabs
