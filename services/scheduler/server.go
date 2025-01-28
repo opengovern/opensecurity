@@ -1601,7 +1601,7 @@ func (h HttpServer) RunDiscovery(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get resource types by labels")
 		}
 		var possibleRt []api.ResourceTypeRunDiscoveryRequest
-		for _,rt := range possibleRtMap {
+		for _, rt := range possibleRtMap {
 			possibleRt = append(possibleRt, api.ResourceTypeRunDiscoveryRequest{
 				ResourceType: rt.Name,
 			})
@@ -2673,7 +2673,7 @@ func (h HttpServer) CancelJobById(ctx echo.Context) error {
 		} else if complianceJob.Status == model2.ComplianceJobSummarizerInProgress || complianceJob.Status == model2.ComplianceJobSinkInProgress {
 			return echo.NewHTTPError(http.StatusOK, "job is already in progress, unable to cancel")
 		}
-		runners, err := h.DB.ListComplianceJobRunnersWithID(uint(jobId))
+		runners, err := h.DB.ListComplianceJobRunnersWithParentID(uint(jobId))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
@@ -2923,7 +2923,7 @@ func (h HttpServer) CancelJob(ctx echo.Context) error {
 				failureReason = "job is already in progress, unable to cancel"
 				break
 			}
-			runners, err := h.DB.ListComplianceJobRunnersWithID(uint(jobId))
+			runners, err := h.DB.ListComplianceJobRunnersWithParentID(uint(jobId))
 			if err != nil {
 				failureReason = err.Error()
 				break

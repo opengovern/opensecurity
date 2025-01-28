@@ -99,7 +99,7 @@ func (s *JobScheduler) updateRunnersState() error {
 	}
 	for _, complianceJob := range complianceJobs {
 		status := model.ComplianceRunnersStatus{}
-		runners, err := s.db.ListFailedRunnersWithParentID(complianceJob.ID)
+		runners, err := s.db.ListComplianceJobRunnersWithParentID(complianceJob.ID)
 		if err != nil {
 			return fmt.Errorf("error while listing compliance runners: %v", err)
 		}
@@ -118,6 +118,7 @@ func (s *JobScheduler) updateRunnersState() error {
 			case runner.ComplianceRunnerTimeOut:
 				status.RunnersTimedOut += 1
 			}
+			status.TotalCount += 1
 		}
 		statusJson, err := json.Marshal(status)
 		if err != nil {
