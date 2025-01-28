@@ -257,7 +257,7 @@ export default function Bookmarks({ setTab }: Props) {
             {isLoading ? (
                 <Spinner />
             ) : (
-                <div className='flex flex-col h-full' style={window.innerWidth >768 ? {} : {width:`${window.innerWidth-120}px`}}>
+                <div className='flex flex-col h-full' style={window.innerWidth >768 ? {} : {width:`${window.innerWidth-70}px`}}>
                     <Flex
                         className="w-full mb-3 mt-2 gap-2 flex-wrap sm:flex hidden"
                         flexDirection="row"
