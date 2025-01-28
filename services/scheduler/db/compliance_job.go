@@ -127,7 +127,7 @@ func (db Database) GetLastComplianceJob(withIncidents bool, frameworkID string) 
 	var job model.ComplianceJob
 	tx := db.ORM.Model(&model.ComplianceJob{}).
 		Where("with_incidents = ?", withIncidents).
-		Where("framework_id = ?", frameworkID).Order("created_at DESC").First(&job)
+		Where("framework_ids = ?", frameworkID).Order("created_at DESC").First(&job)
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -213,7 +213,7 @@ func (db Database) ListComplianceJobsWithSummaryJob(withIncidents *bool, interva
 			compliance_jobs.id, 
 			compliance_jobs.created_at, 
 			compliance_jobs.updated_at, 
-			compliance_jobs.framework_id, 
+			compliance_jobs.framework_ids, 
 			compliance_jobs.status, 
 			compliance_jobs.integration_ids, 
 			compliance_jobs.trigger_type, 
@@ -238,7 +238,7 @@ func (db Database) ListComplianceJobsWithSummaryJob(withIncidents *bool, interva
 		tx = tx.Where("compliance_jobs.created_by = ?", createdBy)
 	}
 	if len(frameworkIDs) > 0 {
-		tx = tx.Where("compliance_jobs.framework_id IN ?", frameworkIDs)
+		tx = tx.Where("compliance_jobs.framework_ids IN ?", frameworkIDs)
 	}
 
 	// Execute the query
@@ -292,7 +292,7 @@ func (db Database) ListPendingComplianceJobsByIntegrationID(withIncidents *bool,
 
 func (db Database) ListComplianceJobsByFrameworkID(withIncidents *bool, frameworkIDs []string) ([]model.ComplianceJob, error) {
 	var job []model.ComplianceJob
-	tx := db.ORM.Model(&model.ComplianceJob{}).Where("framework_id IN ?", frameworkIDs)
+	tx := db.ORM.Model(&model.ComplianceJob{}).Where("framework_ids IN ?", frameworkIDs)
 	if withIncidents != nil {
 		tx = tx.Where("with_incidents = ?", *withIncidents)
 	}
@@ -457,7 +457,7 @@ func (db Database) ListComplianceJobsByFilters(withIncidents *bool, integrationI
 	}
 
 	if len(frameworkId) > 0 {
-		tx = tx.Where("framework_id IN ?", frameworkId)
+		tx = tx.Where("framework_ids IN ?", frameworkId)
 	}
 	if len(status) > 0 {
 		tx = tx.Where("status IN ?", status)
