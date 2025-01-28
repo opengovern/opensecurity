@@ -1,6 +1,7 @@
 package compliance
 
 import (
+	"github.com/jackc/pgtype"
 	"time"
 
 	"github.com/opengovern/og-util/pkg/api"
@@ -205,17 +206,23 @@ func (s *JobScheduler) CreateComplianceReportJobs(withIncident bool, frameworkID
 	for _, integrationID := range integrationIDs {
 		integrationsEpoch = append(integrationsEpoch, integrationID)
 		if len(integrationsEpoch) >= 10 {
+			rs := pgtype.JSONB{}
+			err := rs.Set([]byte(""))
+			if err != nil {
+				return nil, err
+			}
 			job := model.ComplianceJob{
 				FrameworkID:         frameworkID,
 				WithIncidents:       withIncident,
 				Status:              model.ComplianceJobCreated,
+				RunnersStatus:       rs,
 				AreAllRunnersQueued: false,
 				IntegrationIDs:      integrationsEpoch,
 				TriggerType:         triggerType,
 				CreatedBy:           createdBy,
 				ParentID:            parentJobID,
 			}
-			err := s.db.CreateComplianceJob(nil, &job)
+			err = s.db.CreateComplianceJob(nil, &job)
 			if err != nil {
 				s.logger.Error("error while creating compliance job", zap.Error(err))
 				return nil, err
@@ -225,17 +232,23 @@ func (s *JobScheduler) CreateComplianceReportJobs(withIncident bool, frameworkID
 		}
 	}
 	if len(integrationsEpoch) > 0 {
+		rs := pgtype.JSONB{}
+		err := rs.Set([]byte(""))
+		if err != nil {
+			return nil, err
+		}
 		job := model.ComplianceJob{
 			FrameworkID:         frameworkID,
 			WithIncidents:       withIncident,
 			Status:              model.ComplianceJobCreated,
+			RunnersStatus:       rs,
 			AreAllRunnersQueued: false,
 			IntegrationIDs:      integrationsEpoch,
 			TriggerType:         triggerType,
 			CreatedBy:           createdBy,
 			ParentID:            parentJobID,
 		}
-		err := s.db.CreateComplianceJob(nil, &job)
+		err = s.db.CreateComplianceJob(nil, &job)
 		if err != nil {
 			s.logger.Error("error while creating compliance job", zap.Error(err))
 			return nil, err

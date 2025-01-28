@@ -5513,7 +5513,7 @@ func (h *HttpHandler) DeleteAssignment(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "integration id is empty")
 	}
 
-	assignment, err := h.db.GetBenchmarkAssignmentByIds(ctx, frameworkId, &integrationId, nil)
+	assignment, err := h.db.GetBenchmarkAssignmentByIds(ctx, frameworkId, &integrationId)
 	if err != nil {
 		h.logger.Error("failed to get framework assignment", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get framework assignment")
@@ -5522,7 +5522,7 @@ func (h *HttpHandler) DeleteAssignment(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "assignment not found")
 	}
 
-	if err := h.db.DeleteBenchmarkAssignmentByIds(ctx, frameworkId, &integrationId, nil); err != nil {
+	if err := h.db.DeleteBenchmarkAssignmentByIds(ctx, frameworkId, &integrationId); err != nil {
 		h.logger.Error("failed to delete assignment", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete assignment")
 	}

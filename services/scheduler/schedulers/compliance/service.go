@@ -21,6 +21,7 @@ import (
 )
 
 const JobSchedulingInterval = 1 * time.Minute
+const UpdateRunnersStateCycleInterval = 10 * time.Second
 const CleanupInterval = 10 * time.Minute
 
 type JobScheduler struct {
@@ -68,6 +69,9 @@ func (s *JobScheduler) Run(ctx context.Context) {
 	})
 	utils.EnsureRunGoroutine(func() {
 		s.RunEnqueueRunnersCycle()
+	})
+	utils.EnsureRunGoroutine(func() {
+		s.RunUpdateRunnersStateCycle()
 	})
 	utils.EnsureRunGoroutine(func() {
 		s.RunPublisher(ctx, false)
@@ -135,6 +139,20 @@ func (s JobScheduler) RunEnqueueRunnersCycle() {
 	for ; ; <-t.C {
 		if err := s.enqueueRunnersCycle(); err != nil {
 			s.logger.Error("failed to run enqueue runners cycle", zap.Error(err))
+			continue
+		}
+	}
+}
+
+func (s JobScheduler) RunUpdateRunnersStateCycle() {
+	s.logger.Info("enqueue runners cycle on a timer")
+
+	t := ticker.NewTicker(UpdateRunnersStateCycleInterval, time.Second*10)
+	defer t.Stop()
+
+	for ; ; <-t.C {
+		if err := s.updateRunnersState(); err != nil {
+			s.logger.Error("failed to update compliance job runners state cycle", zap.Error(err))
 			continue
 		}
 	}

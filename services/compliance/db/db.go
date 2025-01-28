@@ -741,19 +741,6 @@ func (db Database) GetBenchmarkAssignmentsByIntegrationId(ctx context.Context, i
 	return s, nil
 }
 
-func (db Database) GetBenchmarkAssignmentsByResourceCollectionId(ctx context.Context, resourceCollectionId string) ([]BenchmarkAssignment, error) {
-	var s []BenchmarkAssignment
-	tx := db.Orm.WithContext(ctx).Model(&BenchmarkAssignment{}).
-		Where(BenchmarkAssignment{ResourceCollection: &resourceCollectionId}).
-		Where("integration_id IS NULL").Scan(&s)
-
-	if tx.Error != nil {
-		return nil, tx.Error
-	}
-
-	return s, nil
-}
-
 func (db Database) GetBenchmarkAssignmentsByBenchmarkId(ctx context.Context, benchmarkId string) ([]BenchmarkAssignment, error) {
 	var s []BenchmarkAssignment
 	tx := db.Orm.WithContext(ctx).Model(&BenchmarkAssignment{}).Where(BenchmarkAssignment{BenchmarkId: benchmarkId}).Scan(&s)
@@ -779,12 +766,11 @@ func (db Database) ListBenchmarkAssignments(ctx context.Context) ([]BenchmarkAss
 	return s, nil
 }
 
-func (db Database) GetBenchmarkAssignmentByIds(ctx context.Context, benchmarkId string, integrationId, resourceCollectionId *string) (*BenchmarkAssignment, error) {
+func (db Database) GetBenchmarkAssignmentByIds(ctx context.Context, benchmarkId string, integrationId *string) (*BenchmarkAssignment, error) {
 	var s BenchmarkAssignment
 	tx := db.Orm.WithContext(ctx).Model(&BenchmarkAssignment{}).Where(BenchmarkAssignment{
-		BenchmarkId:        benchmarkId,
-		IntegrationID:      integrationId,
-		ResourceCollection: resourceCollectionId,
+		BenchmarkId:   benchmarkId,
+		IntegrationID: integrationId,
 	}).Find(&s)
 
 	if tx.Error != nil {
@@ -811,11 +797,10 @@ func (db Database) GetBenchmarkAssignmentsCount() ([]BenchmarkAssignmentsCount, 
 	return results, nil
 }
 
-func (db Database) DeleteBenchmarkAssignmentByIds(ctx context.Context, benchmarkId string, integrationId, resourceCollectionId *string) error {
+func (db Database) DeleteBenchmarkAssignmentByIds(ctx context.Context, benchmarkId string, integrationId *string) error {
 	tx := db.Orm.WithContext(ctx).Unscoped().Where(BenchmarkAssignment{
-		BenchmarkId:        benchmarkId,
-		IntegrationID:      integrationId,
-		ResourceCollection: resourceCollectionId,
+		BenchmarkId:   benchmarkId,
+		IntegrationID: integrationId,
 	}).Delete(&BenchmarkAssignment{})
 
 	if tx.Error != nil {
