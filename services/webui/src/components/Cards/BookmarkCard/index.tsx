@@ -72,7 +72,9 @@ const UseCaseCard: FunctionComponent<CardProps> = ({
                     <span className=" text-base  text-ellipsis overflow-hidden w-full  text-nowrap">
                         {title}
                     </span>
-                    <span className="text-sm text-gray-500">{description}</span>
+                    <span className="text-sm text-gray-500 text-ellipsis overflow-hidden w-full  text-nowrap">
+                        {description}
+                    </span>
                 </div>
 
                 {/* <div className="flex flex-row justify-center w-full bg-openg-950 dark:bg-blue-900 rounded-b-lg px-4 py-2 items-center">
