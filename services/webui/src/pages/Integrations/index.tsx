@@ -246,8 +246,8 @@ export default function Integrations() {
                         justifyContent="center"
                         alignItems="center"
                     >
-                        <div className="flex flex-row justify-between w-full p-4 sm:p-6 lg:p-8 lg:pb-0 sm:pb-0 pb-0 mb-4">
-                            <span className="text-2xl font-bold">
+                        <div className="flex sm:flex-row flex-col justify-between w-full p-4 sm:p-6 lg:p-8 lg:pb-0 sm:pb-0 pb-0 mb-4">
+                            <span className="sm:text-2xl sm:mb-0 mb-2 text-lg font-bold">
                                 Integration Plugins
                                 {responseConnectors?.total_count
                                     ? ` (${responseConnectors?.total_count})`
@@ -335,7 +335,7 @@ export default function Integrations() {
                                                         }}
                                                     >
                                                         <div className="w-100 flex flex-row justify-between">
-                                                            <span>
+                                                            <span className='sm:text-base text-sm'>
                                                                 {item.title}
                                                             </span>
                                                         </div>
@@ -348,7 +348,7 @@ export default function Integrations() {
                                                         content: (item) => (
                                                             <div className="w-100 flex flex-row items-center  justify-between  ">
                                                                 <img
-                                                                    className="w-[50px] h-[50px]"
+                                                                    className="sm:w-[50px] sm:h-[50px] w-[30px] h-[30px]"
                                                                     src={
                                                                         item.logo
                                                                     }
@@ -372,7 +372,7 @@ export default function Integrations() {
                                                         header: (
                                                             <>
                                                                 <div className="flex justify-between">
-                                                                    <span>
+                                                                    <span className="sm:inline hidden">
                                                                         {
                                                                             'Description'
                                                                         }
@@ -388,7 +388,7 @@ export default function Integrations() {
                                                         content: (item) => (
                                                             <>
                                                                 <div className="flex justify-between gap-4">
-                                                                    <span className="max-w-60">
+                                                                    <span className="max-w-60 sm:inline hidden">
                                                                         {
                                                                             item.description
                                                                         }

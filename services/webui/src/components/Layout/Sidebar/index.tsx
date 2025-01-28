@@ -26,7 +26,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { Popover, Transition } from '@headlessui/react'
-import { Fragment, useEffect } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { previewAtom, sideBarCollapsedAtom } from '../../../store'
 import { OpenGovernance, OpenGovernanceBig } from '../../../icons/icons'
 import Utilities from './Utilities'
@@ -71,7 +71,7 @@ interface ISidebarItem {
 export default function Sidebar({  currentPage }: ISidebar) {
     const navigate = useNavigate()
     const { isAuthenticated, getAccessTokenSilently } = useAuth()
-    const [collapsed, setCollapsed] = useAtom(sideBarCollapsedAtom)
+    const [collapsed, setCollapsed] = window.innerWidth >768 ?useAtom( sideBarCollapsedAtom) : useState(true)
     const preview = useAtomValue(previewAtom)
     
 
@@ -352,7 +352,7 @@ export default function Sidebar({  currentPage }: ISidebar) {
                         {!collapsed && (
                             <Text className="my-2 !text-xs">OVERVIEW</Text>
                         )}
-                        {collapsed && (
+                        {collapsed && window.innerWidth > 768 && (
                             <ChevronRightIcon
                                 className="m-2 h-6 text-gray-400 cursor-pointer"
                                 onClick={() => {
