@@ -1,8 +1,8 @@
 package runner
 
 import (
-	"github.com/opengovern/opencomply/pkg/types"
 	complianceApi "github.com/opengovern/opencomply/services/compliance/api"
+	"github.com/opengovern/opencomply/services/scheduler/db/model"
 	"time"
 )
 
@@ -16,16 +16,8 @@ const (
 	StreamName = "compliance-runner"
 )
 
-type Caller struct {
-	RootBenchmark      string
-	TracksDriftEvents  bool
-	ParentBenchmarkIDs []string
-	ControlID          string
-	ControlSeverity    types.ComplianceResultSeverity
-}
-
 type ExecutionPlan struct {
-	Callers   []Caller
+	Callers   []model.Caller
 	Query     complianceApi.Policy
 	ControlID string
 
@@ -42,22 +34,10 @@ type Job struct {
 	ExecutionPlan ExecutionPlan
 }
 
-type ComplianceRunnerStatus string
-
-const (
-	ComplianceRunnerCreated    ComplianceRunnerStatus = "CREATED"
-	ComplianceRunnerQueued     ComplianceRunnerStatus = "QUEUED"
-	ComplianceRunnerInProgress ComplianceRunnerStatus = "IN_PROGRESS"
-	ComplianceRunnerSucceeded  ComplianceRunnerStatus = "SUCCEEDED"
-	ComplianceRunnerFailed     ComplianceRunnerStatus = "FAILED"
-	ComplianceRunnerTimeOut    ComplianceRunnerStatus = "TIMEOUT"
-	ComplianceRunnerCanceled   ComplianceRunnerStatus = "CANCELED"
-)
-
 type JobResult struct {
 	Job                        Job
 	StartedAt                  time.Time
-	Status                     ComplianceRunnerStatus
+	Status                     model.ComplianceRunnerStatus
 	PodName                    string
 	Error                      string
 	TotalComplianceResultCount *int

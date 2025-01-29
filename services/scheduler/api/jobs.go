@@ -17,6 +17,18 @@ const (
 	QuickScanSequenceFinished             QuickScanSequenceStatus = "FINISHED"
 )
 
+type ComplianceRunnerStatus string
+
+const (
+	ComplianceRunnerCreated    ComplianceRunnerStatus = "CREATED"
+	ComplianceRunnerQueued     ComplianceRunnerStatus = "QUEUED"
+	ComplianceRunnerInProgress ComplianceRunnerStatus = "IN_PROGRESS"
+	ComplianceRunnerSucceeded  ComplianceRunnerStatus = "SUCCEEDED"
+	ComplianceRunnerFailed     ComplianceRunnerStatus = "FAILED"
+	ComplianceRunnerTimeOut    ComplianceRunnerStatus = "TIMEOUT"
+	ComplianceRunnerCanceled   ComplianceRunnerStatus = "CANCELED"
+)
+
 type JobType string
 
 const (
@@ -245,14 +257,14 @@ type GetDescribeJobStatusResponse struct {
 }
 
 type GetComplianceJobStatusResponse struct {
-	JobId           uint              `json:"job_id"`
-	WithIncidents   bool              `json:"with_incidents"`
-	SummaryJobId    *uint             `json:"summary_job_id"`
-	IntegrationInfo []IntegrationInfo `json:"integration_info"`
-	JobStatus       string            `json:"job_status"`
-	FrameworkId     string            `json:"framework_id"`
-	CreatedAt       time.Time         `json:"created_at"`
-	UpdatedAt       time.Time         `json:"updated_at"`
+	JobId           uint                `json:"job_id"`
+	WithIncidents   bool                `json:"with_incidents"`
+	SummaryJobId    *uint               `json:"summary_job_id"`
+	IntegrationInfo []IntegrationInfo   `json:"integration_info"`
+	JobStatus       ComplianceJobStatus `json:"job_status"`
+	FrameworkId     string              `json:"framework_id"`
+	CreatedAt       time.Time           `json:"created_at"`
+	UpdatedAt       time.Time           `json:"updated_at"`
 }
 
 type GetAsyncQueryRunJobStatusResponse struct {

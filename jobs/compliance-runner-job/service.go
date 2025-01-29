@@ -7,6 +7,8 @@ import (
 	authApi "github.com/opengovern/og-util/pkg/api"
 	cloudql_init_job "github.com/opengovern/opencomply/jobs/cloudql-init-job"
 	"github.com/opengovern/opencomply/services/integration/client"
+	schedulerApi "github.com/opengovern/opencomply/services/scheduler/api"
+	"github.com/opengovern/opencomply/services/scheduler/db/model"
 	"os"
 	"strconv"
 	"time"
@@ -239,7 +241,7 @@ func (w *Worker) ProcessMessage(ctx context.Context, msg jetstream.Msg) (commit 
 	result := JobResult{
 		Job:                        job,
 		StartedAt:                  time.Now(),
-		Status:                     ComplianceRunnerInProgress,
+		Status:                     model.ComplianceRunnerInProgress,
 		Error:                      "",
 		TotalComplianceResultCount: nil,
 	}
@@ -247,9 +249,9 @@ func (w *Worker) ProcessMessage(ctx context.Context, msg jetstream.Msg) (commit 
 	defer func() {
 		if err != nil {
 			result.Error = err.Error()
-			result.Status = ComplianceRunnerFailed
+			result.Status = model.ComplianceRunnerFailed
 		} else {
-			result.Status = ComplianceRunnerSucceeded
+			result.Status = model.ComplianceRunnerSucceeded
 		}
 
 		resultJson, err := json.Marshal(result)
@@ -326,7 +328,7 @@ func (w *Worker) checkAPIResponse(ctx context.Context, jobId string) (bool, erro
 	if err != nil {
 		return false, err
 	}
-	if status.JobStatus == "CANCELED" {
+	if status.JobStatus == schedulerApi.ComplianceJobCanceled {
 		return true, nil
 	}
 	return false, nil
