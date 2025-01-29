@@ -10,7 +10,6 @@ import (
 	complianceApi "github.com/opengovern/opencomply/services/compliance/api"
 	integrationapi "github.com/opengovern/opencomply/services/integration/api/models"
 
-	runner "github.com/opengovern/opencomply/jobs/compliance-runner-job"
 	"github.com/opengovern/opencomply/services/scheduler/db/model"
 	"go.uber.org/zap"
 )
@@ -82,7 +81,7 @@ func (s *JobScheduler) buildRunners(
 			}
 		}
 
-		callers := runner.Caller{
+		callers := model.Caller{
 			RootBenchmark:      rootFrameworkId,
 			TracksDriftEvents:  benchmark.TracksDriftEvents,
 			ParentBenchmarkIDs: append(parentFrameworkIDs, frameworkId),
@@ -99,11 +98,11 @@ func (s *JobScheduler) buildRunners(
 			ParentJobID:          parentJobID,
 			StartedAt:            time.Time{},
 			RetryCount:           0,
-			Status:               runner.ComplianceRunnerCreated,
+			Status:               model.ComplianceRunnerCreated,
 			FailureMessage:       "",
 			TriggerType:          triggerType,
 		}
-		err = runnerJob.SetCallers([]runner.Caller{callers})
+		err = runnerJob.SetCallers([]model.Caller{callers})
 		if err != nil {
 			return nil, nil, err
 		}
