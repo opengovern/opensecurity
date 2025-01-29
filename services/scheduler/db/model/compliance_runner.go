@@ -40,7 +40,9 @@ type ComplianceRunner struct {
 	ResourceCollectionID *string
 	ParentJobID          uint `gorm:"index"`
 
-	StartedAt         time.Time
+	QueuedAt          time.Time
+	ExecutedAt        time.Time
+	CompletedAt       time.Time
 	TotalFindingCount *int
 	Status            ComplianceRunnerStatus
 	FailureMessage    string

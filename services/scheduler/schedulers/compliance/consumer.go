@@ -3,6 +3,8 @@ package compliance
 import (
 	"context"
 	"encoding/json"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/opengovern/opencomply/services/scheduler/db/model"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -29,7 +31,13 @@ func (s *JobScheduler) RunComplianceReportJobResultsConsumer(ctx context.Context
 			zap.Uint("jobId", result.Job.ID),
 			zap.String("status", string(result.Status)),
 		)
-		err := s.db.UpdateRunnerJob(result.Job.ID, result.Status, result.StartedAt, result.TotalComplianceResultCount, result.Error, &result.PodName)
+		var completedAt *time.Time
+		if result.Status == model.ComplianceRunnerSucceeded || result.Status == model.ComplianceRunnerCanceled ||
+			result.Status == model.ComplianceRunnerFailed {
+			completedAt = aws.Time(time.Now())
+		}
+
+		err := s.db.UpdateRunnerJob(result.Job.ID, result.Status, nil, &result.StartedAt, completedAt, result.TotalComplianceResultCount, result.Error, &result.PodName)
 		if err != nil {
 			s.logger.Error("Failed to update the status of ComplianceReportJob",
 				zap.Uint("jobId", result.Job.ID),

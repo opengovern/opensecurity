@@ -145,7 +145,7 @@ func (s *Scheduler) runNextJob(ctx context.Context, job model.JobSequencer) erro
 					PolicyID:       control.Policy.ID,
 					ControlID:      control.ID,
 					IntegrationID:  &integrationID,
-					StartedAt:      time.Time{},
+					ExecutedAt:     time.Time{},
 					RetryCount:     0,
 					Status:         model.ComplianceRunnerCreated,
 					FailureMessage: "",
