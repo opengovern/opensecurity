@@ -275,8 +275,8 @@ export default function ComplianceJobs() {
     }
     const clickedJobDetails = [
         { title: 'ID', value: clickedJob?.job_id },
-        { title: 'Title', value: clickedJob?.trigger_type },
-        { title: 'Trigger Type', value: clickedJob?.title },
+        { title: 'Title', value: clickedJob?.framework_title },
+        { title: 'Trigger Type', value: clickedJob?.trigger_type },
 
         { title: 'Created At', value: dateTimeDisplay(clickedJob?.start_time) },
         {
@@ -394,7 +394,7 @@ export default function ComplianceJobs() {
                             {
                                 id: 'title',
                                 header: 'Title',
-                                cell: (item) => <>{item.title}</>,
+                                cell: (item) => <>{item.framework_title}</>,
                                 sortingField: 'title',
                                 isRowHeader: true,
                                 maxWidth: 150,
