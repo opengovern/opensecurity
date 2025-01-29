@@ -200,7 +200,6 @@ export default function SeverityBar({ benchmark }: ISeverityBar) {
                 <Flex alignItems="start" style={{ gap: '3px' }}>
                     <Flex flexDirection="col">
                         <Flex className="h-5" style={{ gap: '3px' }}>
-                            <>{console.log(severity)}</>
                             {severity.map(
                                 (s, i) =>
                                     s.controlPercent > 0 && (
