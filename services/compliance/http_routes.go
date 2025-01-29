@@ -1831,33 +1831,33 @@ func (h *HttpHandler) GetBenchmarkSummary(echoCtx echo.Context) error {
 		}
 		timeAt = time.Unix(timeAtInt, 0)
 	}
-	benchmarkID := echoCtx.Param("benchmark_id")
+	frameworkID := echoCtx.Param("benchmark_id")
 	// tracer :
 	ctx, span1 := tracer.Start(ctx, "new_GetBenchmark", trace.WithSpanKind(trace.SpanKindServer))
 	span1.SetName("new_GetBenchmark")
 	defer span1.End()
 
-	benchmark, err := h.db.GetFramework(ctx, benchmarkID)
+	framework, err := h.db.GetFramework(ctx, frameworkID)
 	if err != nil {
 		span1.RecordError(err)
 		span1.SetStatus(codes.Error, err.Error())
 		return err
 	}
-	if benchmark == nil {
+	if framework == nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid benchmarkID")
 	}
 	span1.AddEvent("information", trace.WithAttributes(
-		attribute.String("benchmark ID", benchmark.ID),
+		attribute.String("benchmark ID", framework.ID),
 	))
 	span1.End()
 
-	be := benchmark.ToApi()
+	be := framework.ToApi()
 
 	if len(integrationTypes) > 0 && !utils.IncludesAny(be.IntegrationTypes, integrationTypes) {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid integration type")
 	}
 
-	controls, err := h.db.ListControlsByFrameworkID(ctx, benchmarkID)
+	controls, err := h.db.ListControlsByFrameworkID(ctx, frameworkID)
 	if err != nil {
 		h.logger.Error("failed to get controls", zap.Error(err))
 		return err
@@ -1869,25 +1869,25 @@ func (h *HttpHandler) GetBenchmarkSummary(echoCtx echo.Context) error {
 	}
 
 	summariesAtTime, err := es.ListBenchmarkSummariesAtTime(ctx, h.logger, h.client,
-		[]string{benchmarkID}, integrationIDs, resourceCollections,
+		[]string{frameworkID}, integrationIDs, resourceCollections,
 		timeAt, true)
 	if err != nil {
 		return err
 	}
 
-	passedResourcesResult, err := es.GetPerBenchmarkResourceSeverityResult(ctx, h.logger, h.client, []string{benchmarkID}, integrationIDs, resourceCollections, nil, opengovernanceTypes.GetPassedComplianceStatuses())
+	passedResourcesResult, err := es.GetPerBenchmarkResourceSeverityResult(ctx, h.logger, h.client, []string{frameworkID}, integrationIDs, resourceCollections, nil, opengovernanceTypes.GetPassedComplianceStatuses())
 	if err != nil {
 		h.logger.Error("failed to fetch per benchmark resource severity result for passed", zap.Error(err))
 		return err
 	}
 
-	allResourcesResult, err := es.GetPerBenchmarkResourceSeverityResult(ctx, h.logger, h.client, []string{benchmarkID}, integrationIDs, resourceCollections, nil, nil)
+	allResourcesResult, err := es.GetPerBenchmarkResourceSeverityResult(ctx, h.logger, h.client, []string{frameworkID}, integrationIDs, resourceCollections, nil, nil)
 	if err != nil {
 		h.logger.Error("failed to fetch per benchmark resource severity result for all", zap.Error(err))
 		return err
 	}
 
-	summaryAtTime := summariesAtTime[benchmarkID]
+	summaryAtTime := summariesAtTime[frameworkID]
 
 	csResult := api.ComplianceStatusSummary{}
 	sResult := opengovernanceTypes.SeverityResult{}
@@ -1941,9 +1941,9 @@ func (h *HttpHandler) GetBenchmarkSummary(echoCtx echo.Context) error {
 		}
 	}
 
-	lastJob, err := h.schedulerClient.GetLatestComplianceJobForBenchmark(&httpclient.Context{UserRole: authApi.AdminRole}, benchmarkID)
+	lastJob, err := h.schedulerClient.GetLatestComplianceJobForBenchmark(&httpclient.Context{UserRole: authApi.AdminRole}, frameworkID)
 	if err != nil {
-		h.logger.Error("failed to get latest compliance job for benchmark", zap.Error(err), zap.String("benchmarkID", benchmarkID))
+		h.logger.Error("failed to get latest compliance job for benchmark", zap.Error(err), zap.String("benchmarkID", frameworkID))
 		return err
 	}
 
@@ -1955,7 +1955,7 @@ func (h *HttpHandler) GetBenchmarkSummary(echoCtx echo.Context) error {
 	topIntegrations := make([]api.TopFieldRecord, 0, topAccountCount)
 	if topAccountCount > 0 {
 		res, err := es.ComplianceResultsTopFieldQuery(ctx, h.logger, h.client, "integrationID", integrationTypes,
-			nil, integrationIDs, nil, nil, []string{benchmark.ID}, nil, nil,
+			nil, integrationIDs, nil, nil, []string{framework.ID}, nil, nil,
 			opengovernanceTypes.GetFailedComplianceStatuses(), []bool{true}, topAccountCount, nil, nil)
 		if err != nil {
 			h.logger.Error("failed to fetch complianceResults top field", zap.Error(err))
@@ -1963,7 +1963,7 @@ func (h *HttpHandler) GetBenchmarkSummary(echoCtx echo.Context) error {
 		}
 
 		topFieldTotalResponse, err := es.ComplianceResultsTopFieldQuery(ctx, h.logger, h.client, "integrationID", integrationTypes,
-			nil, integrationIDs, nil, nil, []string{benchmark.ID}, nil, nil,
+			nil, integrationIDs, nil, nil, []string{framework.ID}, nil, nil,
 			opengovernanceTypes.GetFailedComplianceStatuses(), []bool{true}, topAccountCount, nil, nil)
 		if err != nil {
 			h.logger.Error("failed to fetch complianceResults top field total", zap.Error(err))
@@ -2003,14 +2003,14 @@ func (h *HttpHandler) GetBenchmarkSummary(echoCtx echo.Context) error {
 	}
 
 	resourcesSeverityResult := api.BenchmarkResourcesSeverityStatus{}
-	allResources := allResourcesResult[benchmarkID]
+	allResources := allResourcesResult[frameworkID]
 	resourcesSeverityResult.Total.TotalCount = allResources.TotalCount
 	resourcesSeverityResult.Critical.TotalCount = allResources.CriticalCount
 	resourcesSeverityResult.High.TotalCount = allResources.HighCount
 	resourcesSeverityResult.Medium.TotalCount = allResources.MediumCount
 	resourcesSeverityResult.Low.TotalCount = allResources.LowCount
 	resourcesSeverityResult.None.TotalCount = allResources.NoneCount
-	passedResource := passedResourcesResult[benchmarkID]
+	passedResource := passedResourcesResult[frameworkID]
 	resourcesSeverityResult.Total.PassedCount = passedResource.TotalCount
 	resourcesSeverityResult.Critical.PassedCount = passedResource.CriticalCount
 	resourcesSeverityResult.High.PassedCount = passedResource.HighCount
@@ -3116,7 +3116,7 @@ func (h *HttpHandler) ListBenchmarksFiltered(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, response)
 }
 
-// ListBenchmarksFiltered godoc
+// GetBenchmarksSummary godoc
 //
 //	@Summary	List benchmarks filtered by integrations and other filters
 //	@Security	BearerToken
