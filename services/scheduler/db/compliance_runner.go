@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	runner "github.com/opengovern/opencomply/jobs/compliance-runner-job"
 	"github.com/opengovern/opencomply/services/scheduler/db/model"
 	"gorm.io/gorm"
 )
@@ -52,7 +51,7 @@ func (db Database) DeleteOldRunnerJob(parentJobId *uint) error {
 func (db Database) FetchCreatedRunners(manual bool) ([]model.ComplianceRunner, error) {
 	var jobs []model.ComplianceRunner
 	tx := db.ORM.Model(&model.ComplianceRunner{}).
-		Where("status = ?", runner.ComplianceRunnerCreated)
+		Where("status = ?", model.ComplianceRunnerCreated)
 
 	if manual {
 		tx = tx.Where("trigger_type = ?", model.ComplianceTriggerTypeManual)
@@ -73,9 +72,9 @@ func (db Database) FetchCreatedRunners(manual bool) ([]model.ComplianceRunner, e
 func (db Database) UpdateTimedOutInProgressRunners() error {
 	tx := db.ORM.
 		Model(&model.ComplianceRunner{}).
-		Where("status = ?", runner.ComplianceRunnerInProgress).
+		Where("status = ?", model.ComplianceRunnerInProgress).
 		Where("updated_at < NOW() - INTERVAL '10 MINUTES'").
-		Updates(model.ComplianceRunner{Status: runner.ComplianceRunnerTimeOut, FailureMessage: "Job timed out"})
+		Updates(model.ComplianceRunner{Status: model.ComplianceRunnerTimeOut, FailureMessage: "Job timed out"})
 	if tx.Error != nil {
 		return tx.Error
 	}
@@ -93,7 +92,7 @@ func (db Database) RetryFailedRunners() error {
 }
 
 func (db Database) UpdateRunnerJob(
-	id uint, status runner.ComplianceRunnerStatus, startedAt time.Time, totalFindingCount *int, failureMsg string, podName *string) error {
+	id uint, status model.ComplianceRunnerStatus, startedAt time.Time, totalFindingCount *int, failureMsg string, podName *string) error {
 	updated := model.ComplianceRunner{
 		Status:            status,
 		StartedAt:         startedAt,
@@ -134,8 +133,8 @@ func (db Database) UpdateTimeoutQueuedRunnerJobs() error {
 	tx := db.ORM.
 		Model(&model.ComplianceRunner{}).
 		Where("created_at < NOW() - INTERVAL '60 MINUTES'").
-		Where("status IN ?", []string{string(runner.ComplianceRunnerCreated), string(runner.ComplianceRunnerQueued)}).
-		Updates(model.ComplianceRunner{Status: runner.ComplianceRunnerTimeOut, FailureMessage: "Job timed out"})
+		Where("status IN ?", []string{string(model.ComplianceRunnerCreated), string(model.ComplianceRunnerQueued)}).
+		Updates(model.ComplianceRunner{Status: model.ComplianceRunnerTimeOut, FailureMessage: "Job timed out"})
 	if tx.Error != nil {
 		return tx.Error
 	}
@@ -156,7 +155,7 @@ func (db Database) ListRunnersWithID(ids []int64) ([]model.ComplianceRunner, err
 func (db Database) ListFailedRunnersWithParentID(id uint) ([]model.ComplianceRunner, error) {
 	var jobs []model.ComplianceRunner
 	tx := db.ORM.Model(&model.ComplianceRunner{}).
-		Where("status = ?", runner.ComplianceRunnerFailed).
+		Where("status = ?", model.ComplianceRunnerFailed).
 		Where("parent_job_id = ?", id).
 		Find(&jobs)
 	if tx.Error != nil {
