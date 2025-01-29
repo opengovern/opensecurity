@@ -23,7 +23,7 @@ import Search from '../pages/Search'
 import SettingsProfile from '../pages/Settings/Profile'
 import SearchLanding from '../pages/Search/landing'
 import TypeDetail from '../pages/Integrations/TypeDetailNew'
-import EvaluateDetail from '../pages/Governance/Compliance/NewBenchmarkSummary/EvaluateTable/EvaluateDetail/inde'
+import EvaluateDetail from '../pages/Governance/Compliance/NewBenchmarkSummary/EvaluateTable/EvaluateDetail'
 import Tasks from '../pages/Tasks'
 import TaskDetail from '../pages/Tasks/TaskDetail'
 

@@ -76,6 +76,7 @@ import AllQueries from '../All Query'
 import View from '../View'
 import Bookmarks from '../Bookmarks'
 import axios from 'axios'
+import CustomPagination from '../../../components/Pagination'
 export const getTable = (
     headers: string[] | undefined,
     details: any[][] | undefined
@@ -971,7 +972,7 @@ export default function Query() {
                                                     </Header>
                                                 }
                                                 pagination={
-                                                    <Pagination
+                                                    <CustomPagination
                                                         currentPageIndex={
                                                             page + 1
                                                         }
@@ -992,7 +993,7 @@ export default function Query() {
                                                         }
                                                         onChange={({
                                                             detail,
-                                                        }) =>
+                                                        }: any) =>
                                                             setPage(
                                                                 detail.currentPageIndex -
                                                                     1

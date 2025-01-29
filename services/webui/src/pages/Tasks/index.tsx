@@ -7,6 +7,7 @@ import { Card, Flex } from "@tremor/react"
 import Spinner from "../../components/Spinner"
 import { DocumentTextIcon } from "@heroicons/react/24/outline"
 import { Box, Cards, Link, Pagination, SpaceBetween } from "@cloudscape-design/components"
+import CustomPagination from "../../components/Pagination"
 
 
 export default function Tasks() {
@@ -133,7 +134,7 @@ export default function Tasks() {
                                    </div>
                                    <div className="flex items-center w-full">
                                        <Cards
-                                        className="w-full"
+                                           className="w-full"
                                            ariaLabels={{
                                                itemSelectionLabel: (e, t) =>
                                                    `select `,
@@ -150,9 +151,9 @@ export default function Tasks() {
                                                    <Link
                                                        className="w-100"
                                                        onClick={() => {
-                                                              navigate(
-                                                                `/tasks/${item.id}`
-                                                              )
+                                                           navigate(
+                                                               `/tasks/${item.id}`
+                                                           )
                                                        }}
                                                    >
                                                        <div className="w-100 flex flex-row justify-between">
@@ -233,10 +234,10 @@ export default function Tasks() {
                                </main>
                            </div>
                        </div>
-                       <Pagination
+                       <CustomPagination
                            currentPageIndex={pageNo}
                            pagesCount={total_count}
-                           onChange={({ detail }) => {
+                           onChange={({ detail }: any) => {
                                setPageNo(detail.currentPageIndex)
                            }}
                        />

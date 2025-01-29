@@ -36,6 +36,7 @@ import {
     RenderTableField,
 } from '../utils'
 import UpdateCredentials from './Update'
+import CustomPagination from '../../../../components/Pagination'
 
 interface CredentialsListProps {
     name?: string
@@ -389,9 +390,7 @@ export default function CredentialsList({
                                                         GetCredentials()
                                                     }}
                                                     iconName="refresh"
-                                                >
-                                                    
-                                                </Button>
+                                                ></Button>
                                             </Flex>
                                         }
                                         className="w-full"
@@ -403,10 +402,10 @@ export default function CredentialsList({
                                     </Header>
                                 }
                                 pagination={
-                                    <Pagination
+                                    <CustomPagination
                                         currentPageIndex={page + 1}
                                         pagesCount={Math.ceil(total_count / 10)}
-                                        onChange={({ detail }) =>
+                                        onChange={({ detail }: any) =>
                                             setPage(detail.currentPageIndex - 1)
                                         }
                                     />

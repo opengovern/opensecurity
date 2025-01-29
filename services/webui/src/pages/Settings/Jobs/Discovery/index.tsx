@@ -47,6 +47,8 @@ import KButton from '@cloudscape-design/components/button'
 import KeyValuePairs from '@cloudscape-design/components/key-value-pairs'
 import axios from 'axios'
 import { title } from 'process'
+import { dateTimeDisplay } from '../../../../utilities/dateDisplay'
+import CustomPagination from '../../../../components/Pagination'
 
 interface Option {
     label: string | undefined
@@ -336,13 +338,8 @@ export default function DiscoveryJobs({
                             {
                                 id: 'createdAt',
                                 header: 'Created At',
-                                cell: (item) => (
-                                    <>{`${item?.created_at.split('T')[0]} ${
-                                        item?.created_at
-                                            .split('T')[1]
-                                            .split('.')[0]
-                                    } `}</>
-                                ),
+                                cell: (item) =>
+                                    dateTimeDisplay(item?.created_at),
                                 sortingField: 'createdAt',
                                 isRowHeader: true,
                                 maxWidth: 100,
@@ -433,13 +430,8 @@ export default function DiscoveryJobs({
                             {
                                 id: 'updatedAt',
                                 header: 'Updated At',
-                                cell: (item) => (
-                                    <>{`${item?.updated_at.split('T')[0]} ${
-                                        item?.updated_at
-                                            .split('T')[1]
-                                            .split('.')[0]
-                                    } `}</>
-                                ),
+                                cell: (item) =>
+                                    dateTimeDisplay(item?.updated_at),
                                 sortingField: 'updatedAt',
                                 isRowHeader: true,
                                 maxWidth: 100,
@@ -659,7 +651,7 @@ export default function DiscoveryJobs({
                             </Header>
                         }
                         pagination={
-                            <Pagination
+                            <CustomPagination
                                 currentPageIndex={page}
                                 pagesCount={totalPage}
                                 onChange={({ detail }) =>

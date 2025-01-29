@@ -43,6 +43,7 @@ import {
     Toggle,
 } from '@cloudscape-design/components'
 import KButton from '@cloudscape-design/components/button'
+import CustomPagination from '../../../components/Pagination'
 
 interface IParam {
     key: string
@@ -475,8 +476,8 @@ useEffect(()=>{
                     />
                     <Select
                         selectedOption={addValue.control_id}
-                        placeholder='controls'
-                        inlineLabelText='Controls'
+                        placeholder="controls"
+                        inlineLabelText="Controls"
                         className="w-full"
                         onChange={({ detail }) =>
                             setAddValue({
@@ -495,7 +496,7 @@ useEffect(()=>{
                         <>
                             <Alert
                                 statusIconAriaLabel="Error"
-                                className='w-full'
+                                className="w-full"
                                 type="error"
                                 header="Invalid Input"
                             >
@@ -503,7 +504,7 @@ useEffect(()=>{
                             </Alert>
                         </>
                     )}
-                    <div className='flex flex-row justify-end w-full'>
+                    <div className="flex flex-row justify-end w-full">
                         <KButton onClick={AddParams}>Add</KButton>
                     </div>
                 </Flex>
@@ -534,7 +535,7 @@ useEffect(()=>{
                         header: 'Value',
                         cell: (item: any) => item.value,
                         sortingField: 'value',
-                        maxWidth:120,
+                        maxWidth: 120,
                         editConfig: {
                             ariaLabel: 'Value',
                             editIconAriaLabel: 'editable',
@@ -650,10 +651,10 @@ useEffect(()=>{
                     </Header>
                 }
                 pagination={
-                    <Pagination
+                    <CustomPagination
                         currentPageIndex={page}
                         pagesCount={Math.ceil(total / 15)}
-                        onChange={({ detail }) =>
+                        onChange={({ detail }: any) =>
                             setPage(detail.currentPageIndex)
                         }
                     />

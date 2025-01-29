@@ -536,7 +536,6 @@ export default function NewBenchmarkSummary() {
 
     return (
         <>
-            
             {isLoading ? (
                 <Spinner className="mt-56" />
             ) : (
@@ -559,133 +558,16 @@ export default function NewBenchmarkSummary() {
                         disableHeaderPaddings
                         disableContentPaddings
                         className="rounded-xl  bg-[#0f2940] p-0 text-white mt-4"
-                        footer={
-                            false ? (
-                                <>
-                                    <ExpandableSection
-                                        header="Additional settings"
-                                        variant="footer"
-                                    >
-                                        <Flex
-                                            justifyContent="end"
-                                            className="bg-white p-4 pt-0 mb-2 w-full gap-3    rounded-xl"
-                                        >
-                                            <Filter
-                                                type={selectedGroup}
-                                                onApply={(e) => {
-                                                    setAccount(e.connector)
-                                                }}
-                                                // id={id}
-                                            />
-                                            <DateRangePicker
-                                                onChange={({ detail }) => {
-                                                    setValue(detail.value)
-                                                }}
-                                                value={value}
-                                                placeholder={
-                                                    'Please select Date'
-                                                }
-                                                // disabled={true}
-                                                relativeOptions={[
-                                                    {
-                                                        key: 'previous-5-minutes',
-                                                        amount: 5,
-                                                        unit: 'minute',
-                                                        type: 'relative',
-                                                    },
-                                                    {
-                                                        key: 'previous-30-minutes',
-                                                        amount: 30,
-                                                        unit: 'minute',
-                                                        type: 'relative',
-                                                    },
-                                                    {
-                                                        key: 'previous-1-hour',
-                                                        amount: 1,
-                                                        unit: 'hour',
-                                                        type: 'relative',
-                                                    },
-                                                    {
-                                                        key: 'previous-6-hours',
-                                                        amount: 6,
-                                                        unit: 'hour',
-                                                        type: 'relative',
-                                                    },
-                                                    {
-                                                        key: 'previous-7-Days',
-                                                        amount: 7,
-                                                        unit: 'day',
-                                                        type: 'relative',
-                                                    },
-                                                ]}
-                                                isValidRange={(range) => {
-                                                    if (
-                                                        range.type ===
-                                                        'absolute'
-                                                    ) {
-                                                        const [
-                                                            startDateWithoutTime,
-                                                        ] =
-                                                            range.startDate.split(
-                                                                'T'
-                                                            )
-                                                        const [
-                                                            endDateWithoutTime,
-                                                        ] =
-                                                            range.endDate.split(
-                                                                'T'
-                                                            )
-                                                        if (
-                                                            !startDateWithoutTime ||
-                                                            !endDateWithoutTime
-                                                        ) {
-                                                            return {
-                                                                valid: false,
-                                                                errorMessage:
-                                                                    'The selected date range is incomplete. Select a start and end date for the date range.',
-                                                            }
-                                                        }
-                                                        if (
-                                                            new Date(
-                                                                range.startDate
-                                                            ) -
-                                                                new Date(
-                                                                    range.endDate
-                                                                ) >
-                                                            0
-                                                        ) {
-                                                            return {
-                                                                valid: false,
-                                                                errorMessage:
-                                                                    'The selected date range is invalid. The start date must be before the end date.',
-                                                            }
-                                                        }
-                                                    }
-                                                    return { valid: true }
-                                                }}
-                                                i18nStrings={{}}
-                                                absoluteFormat="long-localized"
-                                                hideTimeOffset
-                                                dateOnly={true}
-                                                // placeholder="Filter by a date and time range"
-                                            />
-                                        </Flex>
-                                    </ExpandableSection>
-                                </>
-                            ) : (
-                                ''
-                            )
-                        }
                         header={
                             <Header
-                                className={`bg-[#0f2940] p-4 pt-0 rounded-xl   text-white ${
+                                className={`bg-[#0f2940] sm:p-4 p-3 pt-0 rounded-xl   text-white ${
                                     false ? 'rounded-b-none' : ''
                                 }`}
                                 variant="h2"
                                 description=""
                             >
-                                <SpaceBetween size="xxxs" direction="vertical">
-                                    <Box className="rounded-xl same text-white pt-3 pl-3 pb-0">
+                                <Flex className=' justify-between sm:flex-col flex-row gap-6 items-center sm:items-start'>
+                                    <Box className="rounded-xl same text-white sm:pt-3 pl-3 pb-0">
                                         <Grid
                                             gridDefinition={[
                                                 {
@@ -717,12 +599,13 @@ export default function NewBenchmarkSummary() {
                                                 <Box
                                                     variant="p"
                                                     color="white"
+                                                    className='sm:inline-block hidden'
                                                     margin={{
                                                         top: 'xxs',
                                                         bottom: 's',
                                                     }}
                                                 >
-                                                    <div className="group text-white important  relative flex text-wrap justify-start">
+                                                    <div className="group text-white important  relative sm:flex hidden text-wrap justify-start">
                                                         <Text className="test-start w-full text-white ">
                                                             {/* @ts-ignore */}
                                                             {truncate(
@@ -741,7 +624,7 @@ export default function NewBenchmarkSummary() {
                                             </div>
                                         </Grid>
                                     </Box>
-                                    <Flex className="w-max pl-3">
+                                    <Flex className="w-max sm:pl-3">
                                         <Evaluate
                                             id={benchmarkDetail?.id}
                                             benchmarkDetail={benchmarkDetail}
@@ -751,7 +634,7 @@ export default function NewBenchmarkSummary() {
                                             }}
                                         />
                                     </Flex>
-                                </SpaceBetween>
+                                </Flex>
                             </Header>
                         }
                     ></Container>
@@ -761,7 +644,6 @@ export default function NewBenchmarkSummary() {
                         {false && (
                             <>
                                 <Flex className="bg-white  w-full border-solid border-2    rounded-xl p-4">
-                                    
                                     <ReactEcharts
                                         // echarts={echarts}
                                         option={options()}
@@ -780,8 +662,6 @@ export default function NewBenchmarkSummary() {
                             />
                         </Flex>
                     </Flex>
-
-                    
                 </>
             )}
         </>

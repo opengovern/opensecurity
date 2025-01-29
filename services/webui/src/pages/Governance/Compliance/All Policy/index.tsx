@@ -85,6 +85,7 @@ import {
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import { useIntegrationApiV1EnabledConnectorsList } from '../../../../api/integration.gen'
 import axios from 'axios'
+import CustomPagination from '../../../../components/Pagination'
 
 
 export default function AllPolicy() {
@@ -226,7 +227,6 @@ export default function AllPolicy() {
                                         selectedRow ? (
                                             <>
                                                 <Flex justifyContent="start">
-                                                    
                                                     <Title className="text-lg font-semibold ml-2 my-1">
                                                         {selectedRow?.id}
                                                     </Title>
@@ -293,10 +293,14 @@ export default function AllPolicy() {
                                             id: 'type',
                                             header: 'Type',
                                             cell: (item) =>
-                                                item?.type ?  String(item?.type)
-                                                    .charAt(0)
-                                                    .toUpperCase() +
-                                                String(item?.type).slice(1) : '',
+                                                item?.type
+                                                    ? String(item?.type)
+                                                          .charAt(0)
+                                                          .toUpperCase() +
+                                                      String(item?.type).slice(
+                                                          1
+                                                      )
+                                                    : '',
                                             // sortingField: 'title',
                                             // minWidth: 400,
                                             maxWidth: 70,
@@ -408,10 +412,10 @@ export default function AllPolicy() {
                                         </Header>
                                     }
                                     pagination={
-                                        <Pagination
+                                        <CustomPagination
                                             currentPageIndex={page}
                                             pagesCount={totalPage}
-                                            onChange={({ detail }) =>
+                                            onChange={({ detail }:any) =>
                                                 setPage(detail.currentPageIndex)
                                             }
                                         />

@@ -523,7 +523,7 @@ export default function FindingsWithFailure({ query }: ICount) {
                             </Header>
                         }
                         pagination={
-                            <Pagination
+                            <CustomPagination
                                 currentPageIndex={page}
                                 pagesCount={totalPage}
                                 onChange={({ detail }) =>

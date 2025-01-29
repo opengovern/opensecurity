@@ -52,7 +52,6 @@ const badgeStyle = {
 }
 
 interface ISidebar {
-   
     currentPage: string
 }
 
@@ -68,12 +67,11 @@ interface ISidebarItem {
     selected?: string
 }
 
-export default function Sidebar({  currentPage }: ISidebar) {
+export default function Sidebar({ currentPage }: ISidebar) {
     const navigate = useNavigate()
     const { isAuthenticated, getAccessTokenSilently } = useAuth()
-    const [collapsed, setCollapsed] = useAtom( sideBarCollapsedAtom) 
+    const [collapsed, setCollapsed] = useAtom(sideBarCollapsedAtom)
     const preview = useAtomValue(previewAtom)
-    
 
     const searchParams = useAtomValue(searchAtom)
     const setOldUrl = useSetAtom(oldUrlAtom)
@@ -110,7 +108,7 @@ export default function Sidebar({  currentPage }: ISidebar) {
         }
         // @ts-ignore
 
-        return currentPage.includes(page) && page !==''
+        return currentPage.includes(page) && page !== ''
     }
     const findPage = (page: string | string[], item: ISidebarItem): string => {
         if (Array.isArray(item.page)) {
@@ -167,7 +165,6 @@ export default function Sidebar({  currentPage }: ISidebar) {
     }, [isAuthenticated])
 
     const navigation: () => ISidebarItem[] = () => {
-        
         return [
             {
                 name: 'Overview',
@@ -259,6 +256,16 @@ export default function Sidebar({  currentPage }: ISidebar) {
             },
         ]
     }
+    const [showTooltip, setShowTooltip] = useState(false)
+    useEffect(() => {
+        let timer: any
+        if (showTooltip) {
+            timer = setTimeout(() => {
+                setShowTooltip(false)
+            }, 2000)
+        }
+        return () => clearTimeout(timer) // Cleanup timeout on re-click
+    }, [showTooltip])
 
     return (
         <Flex
@@ -616,9 +623,12 @@ export default function Sidebar({  currentPage }: ISidebar) {
                                                                 : ''
                                                         }`}
                                         >
-                                            <div className="group relative">
+                                            <div className="group relative" onClick={()=>{
+                                                setShowTooltip(true)
+                                            }}>
                                                 {item.isPreview === true ? (
                                                     <item.icon
+                                                        
                                                         className={`h-6 w-6 stroke-2 ${
                                                             isCurrentPage(
                                                                 item.page
@@ -646,7 +656,7 @@ export default function Sidebar({  currentPage }: ISidebar) {
                                                         }`}
                                                     />
                                                 )}
-                                                {collapsed && (
+                                                {collapsed&& showTooltip && (
                                                     <div
                                                         className="absolute z-50 scale-0 transition-all  duration-500 rounded p-2 shadow-md bg-openg-950 group-hover:scale-100  "
                                                         style={{

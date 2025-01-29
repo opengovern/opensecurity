@@ -21,6 +21,7 @@ import {
     Pagination,
     PropertyFilter,
 } from '@cloudscape-design/components'
+import CustomPagination from '../../../../../../components/Pagination'
 
 
 interface IImpactedAccounts {
@@ -342,13 +343,13 @@ export default function ImpactedAccounts({ controlId }: IImpactedAccounts) {
                             </Header>
                         }
                         pagination={
-                            <Pagination
+                            <CustomPagination
                                 currentPageIndex={page + 1}
                                 pagesCount={Math.ceil(
                                     // @ts-ignore
                                     accounts?.totalCount / 10
                                 )}
-                                onChange={({ detail }) =>
+                                onChange={({ detail }: any) =>
                                     setPage(detail.currentPageIndex - 1)
                                 }
                             />

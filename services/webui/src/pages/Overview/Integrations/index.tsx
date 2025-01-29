@@ -402,7 +402,7 @@ export default function Integrations() {
                 </div>
             </Modal>
 
-            <Card className="sm:h-full h-fit  sm:w-full overflow-scroll no-scrollbar">
+            <Card className="sm:h-full h-fit  sm:w-full overflow-scroll no-scrollbar sm:inline-block hidden">
                 <Flex justifyContent="between"  className='sm:flex-row flex-col sm:mb-0 nb-2 sm:items-center items-start'>
                     <Flex justifyContent="start" className="gap-2 ">
                         <Icon icon={MagnifyingGlassIcon} className="p-0" />

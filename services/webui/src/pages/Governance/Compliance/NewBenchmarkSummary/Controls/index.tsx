@@ -66,6 +66,7 @@ import {
 } from '@cloudscape-design/components'
 import ControlDetail from './ControlDetail'
 import { severityBadge } from '../../../Controls'
+import CustomPagination from '../../../../../components/Pagination'
 
 
 interface IPolicies {
@@ -374,7 +375,10 @@ export default function Controls({
             })
     }
     useEffect(() => {
+        if(window.innerWidth >640){
         GetTree()
+
+        }
 
     }, [])
 useEffect(() => {
@@ -547,7 +551,7 @@ useEffect(() => {
                                 </>
                                 {treeTotalPages > 1 && (
                                     <>
-                                        <Pagination
+                                        <CustomPagination
                                             className="pb-2"
                                             currentPageIndex={treePage + 1}
                                             pagesCount={treeTotalPages}
@@ -820,7 +824,7 @@ useEffect(() => {
                                     </Header>
                                 }
                                 pagination={
-                                    <Pagination
+                                    <CustomPagination
                                         currentPageIndex={page}
                                         pagesCount={totalPage}
                                         onChange={({ detail }) =>

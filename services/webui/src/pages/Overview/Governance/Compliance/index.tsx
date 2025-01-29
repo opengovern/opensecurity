@@ -70,7 +70,7 @@ export default function Compliance() {
      }
      const body = {
          cursor: 1,
-         per_page: window.innerWidth > 1920 ? 6 : window.innerWidth > 768 ? 4 :2,
+         per_page: window.innerWidth > 1920 ? 6 : window.innerWidth > 768 ? 4 :5,
          sort_by: 'incidents',
          assigned: false,
          is_baseline: false,
@@ -139,7 +139,7 @@ export default function Compliance() {
     }
     
    }, [AllBenchmarks])
-   const array = window.innerWidth > 768 ? [1,2,3,4] : [1,2]
+   const array = window.innerWidth > 768 ? [1,2,3,4] : [1,2,3,4,5]
 
     return (
         <Flex flexDirection="col" alignItems="start" justifyContent="start">
@@ -148,7 +148,7 @@ export default function Compliance() {
                 <Flex  className="gap-4 flex-wrap sm:flex-row flex-col">
                     {array.map((i) => {
                         return (
-                            <Card className="p-3 dark:ring-gray-500 sm:w-[calc(50%-0.5rem)] w-[calc(100%-0.5rem)] sm:h-64 h-64">
+                            <Card className="p-3 dark:ring-gray-500 sm:w-[calc(50%-0.5rem)] w-[calc(100%-0.5rem)] sm:h-64 h-32">
                                 <Flex
                                     flexDirection="col"
                                     alignItems="start"
@@ -177,50 +177,4 @@ export default function Compliance() {
     )
 }
 
-{
-    /* <Card
-                                        onClick={() =>
-                                            navigate(
-                                                `/compliance/${bs.id}?${searchParams}`
-                                            )
-                                        }
-                                        className="p-3 cursor-pointer shadow-none ring-0  border-none dark:ring-gray-500 hover:shadow-md"
-                                    >
-                                        <Subtitle className="font-semibold text-gray-800 mb-2">
-                                            {bs.title}
-                                        </Subtitle>
-                                        {(bs.controlsSeverityStatus?.total
-                                            ?.total || 0) > 0 ? (
-                                            <>
-                                                <Text>Security score</Text>
-                                                <Title>
-                                                    {(
-                                                        ((bs
-                                                            ?.controlsSeverityStatus
-                                                            ?.total?.passed ||
-                                                            0) /
-                                                            (bs
-                                                                ?.controlsSeverityStatus
-                                                                ?.total
-                                                                ?.total || 1)) *
-                                                            100 || 0
-                                                    ).toFixed(1)}
-                                                    %
-                                                </Title>
-                                            </>
-                                        ) : (
-                                            <Button
-                                                variant="light"
-                                                icon={ChevronRightIcon}
-                                                iconPosition="right"
-                                            >
-                                                Assign
-                                            </Button>
-                                        )}
-                                    </Card> */
-}
-{
-    /* {i  < sorted.length-1 && (
-                                        <Divider className="m-0 p-0" />
-                                    )} */
-}
+

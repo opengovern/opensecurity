@@ -46,6 +46,7 @@ import KButton from '@cloudscape-design/components/button'
 import KeyValuePairs from '@cloudscape-design/components/key-value-pairs'
 import axios from 'axios'
 import { dateTimeDisplay } from '../../../../utilities/dateDisplay'
+import CustomPagination from '../../../../components/Pagination'
 
 const ShowHours = [
     {
@@ -274,9 +275,14 @@ export default function ComplianceJobs() {
     }
     const clickedJobDetails = [
         { title: 'ID', value: clickedJob?.job_id },
-        { title: 'Title', value: clickedJob?.title },
-        { title: 'Created At', value: dateTimeDisplay(clickedJob?.created_at) },
-        { title: 'Updated At', value: dateTimeDisplay(clickedJob?.updated_at) },
+        { title: 'Title', value: clickedJob?.trigger_type },
+        { title: 'Trigger Type', value: clickedJob?.title },
+
+        { title: 'Created At', value: dateTimeDisplay(clickedJob?.start_time) },
+        {
+            title: 'Updated At',
+            value: dateTimeDisplay(clickedJob?.last_updated_at),
+        },
         // {
         //     title: 'OpenGovernance Connection ID',
         //     value: clickedJob?.connectionID,
@@ -286,15 +292,18 @@ export default function ComplianceJobs() {
         { title: 'Status', value: clickedJob?.job_status },
         {
             title: 'Failure Reason',
-            value: truncate(clickedJob?.failure_message, 150),
+            value: truncate(clickedJob?.failure_message, 250),
         },
         {
             title: 'Report link',
             value: (
                 <>
                     <Link
-                        
-                        href={`${checkStatus(clickedJob?.job_status)? `/compliance/${clickedJob?.benchmark_id}/report/${clickedJob?.job_id}` : '#'}`}
+                        href={`${
+                            checkStatus(clickedJob?.job_status)
+                                ? `/compliance/${clickedJob?.framework_id}/report/${clickedJob?.job_id}`
+                                : '#'
+                        }`}
                     >
                         {clickedJob?.title}
                     </Link>
@@ -376,13 +385,7 @@ export default function ComplianceJobs() {
                             {
                                 id: 'createdAt',
                                 header: 'Created At',
-                                cell: (item) => (
-                                    <>{`${item?.created_at.split('T')[0]} ${
-                                        item?.created_at
-                                            .split('T')[1]
-                                            .split('.')[0]
-                                    } `}</>
-                                ),
+                                cell: (item) => dateTimeDisplay(item?.start_time),
                                 sortingField: 'createdAt',
                                 isRowHeader: true,
                                 maxWidth: 70,
@@ -466,13 +469,7 @@ export default function ComplianceJobs() {
                             {
                                 id: 'updatedAt',
                                 header: 'Updated At',
-                                cell: (item) => (
-                                    <>{`${item?.updated_at.split('T')[0]} ${
-                                        item?.updated_at
-                                            .split('T')[1]
-                                            .split('.')[0]
-                                    } `}</>
-                                ),
+                                cell: (item) => dateTimeDisplay(item?.last_updated_at),
                                 sortingField: 'updatedAt',
                                 isRowHeader: true,
                                 maxWidth: 70,
@@ -688,7 +685,7 @@ export default function ComplianceJobs() {
                             </Header>
                         }
                         pagination={
-                            <Pagination
+                            <CustomPagination
                                 currentPageIndex={page}
                                 pagesCount={totalPage}
                                 onChange={({ detail }) =>

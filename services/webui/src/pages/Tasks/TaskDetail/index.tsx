@@ -34,6 +34,7 @@ import {
     Title,
     Switch,
 } from '@tremor/react'
+import CustomPagination from '../../../components/Pagination'
 export default function TaskDetail() {
     const { id } = useParams()
     const [loading, setLoading] = useState(false)
@@ -516,10 +517,10 @@ export default function TaskDetail() {
                             </Header>
                         }
                         pagination={
-                            <Pagination
+                            <CustomPagination
                                 currentPageIndex={page}
                                 pagesCount={Math.ceil(total / 15)}
-                                onChange={({ detail }) =>
+                                onChange={({ detail }: any) =>
                                     setPage(detail.currentPageIndex)
                                 }
                             />

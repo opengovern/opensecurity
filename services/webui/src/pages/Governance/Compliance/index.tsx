@@ -52,7 +52,6 @@ export default function Compliance() {
 
     return (
         <>
-            {/* <TopHeader /> */}
             <Tabs
                 activeTabId={tab}
                 className={`w-[270px]`}

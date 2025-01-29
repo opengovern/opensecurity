@@ -21,6 +21,7 @@ import Header from '@cloudscape-design/components/header'
 import { Link } from '@cloudscape-design/components'
 import Badge from '@cloudscape-design/components/badge'
 import { Flex } from '@tremor/react'
+import ScoreCategoryCard from '../../../../components/Cards/ScoreCategoryCard'
 
 interface IComplianceCard {
     benchmark: NewBenchmark[] | undefined
@@ -76,21 +77,24 @@ export enum Field {
     ResourceType = 'ResourceType',
 }
 //    <SeverityBar benchmark={benchmark} />
-export default function BenchmarkCards({ benchmark, all,loading }: IComplianceCard) {
+export default function BenchmarkCards({
+    benchmark,
+    all,
+    loading,
+}: IComplianceCard) {
     const navigate = useNavigate()
     const searchParams = useAtomValue(searchAtom)
     const isDemo = useAtomValue(isDemoAtom)
     const truncate = (text: string | undefined) => {
         if (text) {
             return text.length > 20 ? text.substring(0, 20) + '...' : text
-        }
-        else{
+        } else {
             return '...'
         }
     }
-    const GetSections= () => {
-        const temp =[]
-        if (window.innerWidth >640 ){
+    const GetSections = () => {
+        const temp = []
+        if (window.innerWidth > 640) {
             temp.push({
                 id: 'security_score',
                 header: '',
@@ -115,36 +119,38 @@ export default function BenchmarkCards({ benchmark, all,loading }: IComplianceCa
     }
     return (
         <>
-            <Cards
-                className="w-full"
-                ariaLabels={{
-                    itemSelectionLabel: (e, t) => `select ${t.name}`,
-                    selectionGroupLabel: 'Item selection',
-                }}
-                cardDefinition={{
-                    header: (item) => (
-                        <Link
-                            className="sm:mb-10 w-full"
-                            onClick={(e) => {
-                                e.preventDefault()
-                                // console.log(item.id)
-                                // navigate(`${item.id}`)
-                            }}
-                            href={`./compliance/${item.id}`}
-                            fontSize="heading-m"
-                        >
-                            <Flex
-                                className="w-full flex-row    gap-2"
-                                justifyContent="between"
-                                alignItems="center"
-                            >
-                                <Flex
-                                    className="w-full  text-ellipsis overflow-hidden whitespace-nowrap  "
-                                    justifyContent="start"
+            {window.innerWidth > 640 ? (
+                <>
+                    <Cards
+                        className="w-full"
+                        ariaLabels={{
+                            itemSelectionLabel: (e, t) => `select ${t.name}`,
+                            selectionGroupLabel: 'Item selection',
+                        }}
+                        cardDefinition={{
+                            header: (item) => (
+                                <Link
+                                    className="sm:mb-10 w-full"
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        // console.log(item.id)
+                                        // navigate(`${item.id}`)
+                                    }}
+                                    href={`./compliance/${item.id}`}
+                                    fontSize="heading-m"
                                 >
-                                    {item.name}
-                                </Flex>
-                                {/* <Flex  className="gap-2 max-w-fit overflow-hidden justify-end flex-wrap ">
+                                    <Flex
+                                        className="w-full flex-row    gap-2"
+                                        justifyContent="between"
+                                        alignItems="center"
+                                    >
+                                        <Flex
+                                            className="w-full  text-ellipsis overflow-hidden whitespace-nowrap  "
+                                            justifyContent="start"
+                                        >
+                                            {item.name}
+                                        </Flex>
+                                        {/* <Flex  className="gap-2 max-w-fit overflow-hidden justify-end flex-wrap ">
                                     {item?.connectors?.map((sub) => {
                                         return (
                                             <>
@@ -153,41 +159,77 @@ export default function BenchmarkCards({ benchmark, all,loading }: IComplianceCa
                                         )
                                     })}
                                 </Flex> */}
-                            </Flex>
-                        </Link>
-                    ),
-                    sections: GetSections(),
-                }}
-                cardsPerRow={[{minWidth:340, cards: 2 },{ minWidth:1200,cards: 3 }]}
-                // totalItemsCount={7}
-                items={benchmark?.map((item) => {
-                    return {
-                        name: item?.benchmark_title,
-                        benchmark: item,
-                        security_score: (item?.compliance_score * 100).toFixed(
-                            0
-                        ),
-                        id: item.benchmark_id,
-                        connectors: item.connectors,
-                    }
-                })}
-                entireCardClickable
-                loadingText="Loading resources"
-                loading={loading}
-                empty={
-                    <Box
-                        margin={{ vertical: 'xs' }}
-                        textAlign="center"
-                        color="inherit"
-                    >
-                        <SpaceBetween size="m">
-                            <b>No resources</b>
-                            {/* <Button>Create resource</Button> */}
-                        </SpaceBetween>
-                    </Box>
-                }
-                // header={<Header>Example Cards</Header>}
-            />
+                                    </Flex>
+                                </Link>
+                            ),
+                            sections: GetSections(),
+                        }}
+                        cardsPerRow={[
+                            { minWidth: 340, cards: 2 },
+                            { minWidth: 1200, cards: 3 },
+                        ]}
+                        // totalItemsCount={7}
+                        items={benchmark?.map((item) => {
+                            return {
+                                name: item?.benchmark_title,
+                                benchmark: item,
+                                security_score: (
+                                    item?.compliance_score * 100
+                                ).toFixed(0),
+                                id: item.benchmark_id,
+                                connectors: item.connectors,
+                            }
+                        })}
+                        entireCardClickable
+                        loadingText="Loading resources"
+                        loading={loading}
+                        empty={
+                            <Box
+                                margin={{ vertical: 'xs' }}
+                                textAlign="center"
+                                color="inherit"
+                            >
+                                <SpaceBetween size="m">
+                                    <b>No resources</b>
+                                    {/* <Button>Create resource</Button> */}
+                                </SpaceBetween>
+                            </Box>
+                        }
+                    />
+                </>
+            ) : (
+                <>
+                   
+                        <div className="flex flex-col gap-4 w-full">
+                            {benchmark?.map((item) => {
+                                return (
+                                    <>
+                                        <ScoreCategoryCard
+                                            title={item.benchmark_title || ''}
+                                            percentage={
+                                                (item
+                                                    .severity_summary_by_control
+                                                    .total.passed /
+                                                    item
+                                                        .severity_summary_by_control
+                                                        .total.total) *
+                                                100
+                                            }
+                                            costOptimization={
+                                                item.cost_optimization
+                                            }
+                                            value={item.issues_count}
+                                            kpiText="Incidents"
+                                            category={item.benchmark_id}
+                                            varient="minimized"
+                                        />
+                                    </>
+                                )
+                            })}
+                        </div>
+                   
+                </>
+            )}
         </>
     )
 }

@@ -166,7 +166,7 @@ export default function UpdateCredentials({
                             Please Select Credential Input method
                         </Title>
                         <Flex
-                            className="mt-4 mb-2 gap-4"
+                            className="mt-4 mb-2 gap-4 sm:flex-row flex-col"
                             justifyContent="center"
                         >
                             <>

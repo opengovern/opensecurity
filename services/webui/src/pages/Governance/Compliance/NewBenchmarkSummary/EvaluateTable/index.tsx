@@ -53,6 +53,7 @@ import { dateTimeDisplay } from '../../../../../utilities/dateDisplay'
 import StatusIndicator from '@cloudscape-design/components/status-indicator'
 import SeverityBar from '../../BenchmarkCard/SeverityBar'
 import { useNavigate } from 'react-router-dom'
+import CustomPagination from '../../../../../components/Pagination'
 
 const JOB_STATUS = {
     CANCELED: 'stopped',
@@ -280,7 +281,14 @@ export default function EvaluateTable({
     }
     return (
         <>
-            <div className='w-full' style={window.innerWidth < 768 ? { width: `${window.innerWidth-80}px` } : {}}>
+            <div
+                className="w-full"
+                style={
+                    window.innerWidth < 768
+                        ? { width: `${window.innerWidth - 80}px` }
+                        : {}
+                }
+            >
                 {' '}
                 <KTable
                     className="   min-h-[450px] w-full"
@@ -604,7 +612,7 @@ export default function EvaluateTable({
                         </Header>
                     }
                     pagination={
-                        <Pagination
+                        <CustomPagination
                             currentPageIndex={page}
                             pagesCount={totalPage}
                             onChange={({ detail }) =>

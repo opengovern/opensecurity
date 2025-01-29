@@ -1,4 +1,4 @@
-import {  Card, Flex, Title, Text } from '@tremor/react'
+import { Card, Flex, Title, Text } from '@tremor/react'
 import {
     useLocation,
     useNavigate,
@@ -55,20 +55,17 @@ export default function TypeDetail() {
     const [shcema, setSchema] = useState<Schema>()
     const [loading, setLoading] = useState<boolean>(false)
     const [status, setStatus] = useState<string>()
-     const [row, setRow] = useState<Integration[]>([])
+    const [row, setRow] = useState<Integration[]>([])
     const setNotification = useSetAtom(notificationAtom)
-     const [actionLoading, setActionLoading] = useState<any>({
-        
-         discovery: false,
-     })
-         const [resourceTypes, setResourceTypes] = useState<any>([])
-         const [selectedResourceType, setSelectedResourceType] = useState<any>()
-         const [runOpen, setRunOpen] = useState(false)
-         const [selectedIntegrations, setSelectedIntegrations] = useState<any>(
-             []
-         )
- const [params, setParams] = useState<any>()
- const [enableSchedule, setEnableSchedule] = useState(false)
+    const [actionLoading, setActionLoading] = useState<any>({
+        discovery: false,
+    })
+    const [resourceTypes, setResourceTypes] = useState<any>([])
+    const [selectedResourceType, setSelectedResourceType] = useState<any>()
+    const [runOpen, setRunOpen] = useState(false)
+    const [selectedIntegrations, setSelectedIntegrations] = useState<any>([])
+    const [params, setParams] = useState<any>()
+    const [enableSchedule, setEnableSchedule] = useState(false)
     const GetSchema = () => {
         setLoading(true)
         let url = ''
@@ -197,15 +194,13 @@ export default function TypeDetail() {
                     text: `Plugin Updated`,
                     type: 'success',
                 })
-                 navigate('/integration/plugins')
-
-               
+                navigate('/integration/plugins')
             })
             .catch((err) => {
-                 setNotification({
-                     text: `Error: ${err.response.data.message}`,
-                     type: 'error',
-                 })
+                setNotification({
+                    text: `Error: ${err.response.data.message}`,
+                    type: 'error',
+                })
 
                 setLoading(false)
             })
@@ -237,13 +232,13 @@ export default function TypeDetail() {
                     text: `Plugin Uninstalled`,
                     type: 'success',
                 })
-                 navigate('/integration/plugins')
+                navigate('/integration/plugins')
             })
             .catch((err) => {
-                 setNotification({
-                     text: `Error: ${err.response.data.message}`,
-                     type: 'error',
-                 })
+                setNotification({
+                    text: `Error: ${err.response.data.message}`,
+                    type: 'error',
+                })
                 setLoading(false)
             })
     }
@@ -273,10 +268,10 @@ export default function TypeDetail() {
             )
             .then((res) => {
                 setLoading(false)
-                 setNotification({
-                     text: `Plugin Disabled`,
-                     type: 'success',
-                 })
+                setNotification({
+                    text: `Plugin Disabled`,
+                    type: 'success',
+                })
                 navigate('/integration/plugins')
             })
             .catch((err) => {
@@ -287,178 +282,230 @@ export default function TypeDetail() {
                 })
             })
     }
-     const RunDiscovery = () => {
-         setActionLoading({ ...actionLoading, discovery: true })
-         let url = ''
-         if (window.location.origin === 'http://localhost:3000') {
-             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-         } else {
-             url = window.location.origin
-         }
-         // @ts-ignore
-         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+    const RunDiscovery = () => {
+        setActionLoading({ ...actionLoading, discovery: true })
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-         const config = {
-             headers: {
-                 Authorization: `Bearer ${token}`,
-             },
-         }
-         let body = {}
-         body = {
-             integration_info: selectedIntegrations?.map((item: any) => {
-                 return {
-                     integration_type: type,
-                     provider_id: item.provider_id,
-                     integration_id: item.integration_id,
-                     name: item.name,
-                 }
-             }),
-         }
-         if (
-             selectedResourceType?.length > 0 &&
-             selectedResourceType?.length < resourceTypes?.length
-         ) {
-             // @ts-ignore
-             body['resource_types'] = selectedResourceType?.map((item: any) => {
-                 if (selectedResourceType?.length == 1) {
-                     if (selectedResourceType[0]?.params?.length > 0) {
-                         if (params) {
-                             // @ts-ignore
-                             return {
-                                 resource_type: item.value,
-                                 parameters: params,
-                                 enable_schedule: enableSchedule,
-                             }
-                         }
-                     }
-                 }
-                 return {
-                     resource_type: item.value,
-                     enable_schedule: enableSchedule,
-                 }
-             })
-         }
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+        let body = {}
+        body = {
+            integration_info: selectedIntegrations?.map((item: any) => {
+                return {
+                    integration_type: type,
+                    provider_id: item.provider_id,
+                    integration_id: item.integration_id,
+                    name: item.name,
+                }
+            }),
+        }
+        if (
+            selectedResourceType?.length > 0 &&
+            selectedResourceType?.length < resourceTypes?.length
+        ) {
+            // @ts-ignore
+            body['resource_types'] = selectedResourceType?.map((item: any) => {
+                if (selectedResourceType?.length == 1) {
+                    if (selectedResourceType[0]?.params?.length > 0) {
+                        if (params) {
+                            // @ts-ignore
+                            return {
+                                resource_type: item.value,
+                                parameters: params,
+                                enable_schedule: enableSchedule,
+                            }
+                        }
+                    }
+                }
+                return {
+                    resource_type: item.value,
+                    enable_schedule: enableSchedule,
+                }
+            })
+        }
 
-         axios
-             .post(`${url}/main/schedule/api/v3/discovery/run`, body, config)
-             .then((res) => {
-                 GetIntegrations()
-                 setActionLoading({
-                     ...actionLoading,
-                     discovery: false,
-                 })
-                 setRunOpen(false)
-                 setNotification({
-                     text: `Discovery started`,
-                     type: 'success',
-                 })
-                 setParams({})
-             })
-             .catch((err) => {
-                 console.log(err)
-                 setActionLoading({
-                     ...actionLoading,
-                     discovery: false,
-                 })
-                 setNotification({
-                     text: `Error: ${err.response.data.message}`,
-                     type: 'error',
-                 })
-             })
-     }
-     const GetResourceTypes = () => {
-          setActionLoading({ ...actionLoading, discovery: true })
-         let url = ''
-         if (window.location.origin === 'http://localhost:3000') {
-             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-         } else {
-             url = window.location.origin
-         }
-         // @ts-ignore
-         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+        axios
+            .post(`${url}/main/schedule/api/v3/discovery/run`, body, config)
+            .then((res) => {
+                GetIntegrations()
+                setActionLoading({
+                    ...actionLoading,
+                    discovery: false,
+                })
+                setRunOpen(false)
+                setNotification({
+                    text: `Discovery started`,
+                    type: 'success',
+                })
+                setParams({})
+            })
+            .catch((err) => {
+                console.log(err)
+                setActionLoading({
+                    ...actionLoading,
+                    discovery: false,
+                })
+                setNotification({
+                    text: `Error: ${err.response.data.message}`,
+                    type: 'error',
+                })
+            })
+    }
+    const GetResourceTypes = () => {
+        setActionLoading({ ...actionLoading, discovery: true })
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-         const config = {
-             headers: {
-                 Authorization: `Bearer ${token}`,
-             },
-         }
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
 
-         // const body = {
-         //     integration_type: [integration_type],
-         // }
-         axios
-             .get(
-                 `${url}/main/integration/api/v1/integrations/types/${type}/resource_types`,
+        // const body = {
+        //     integration_type: [integration_type],
+        // }
+        axios
+            .get(
+                `${url}/main/integration/api/v1/integrations/types/${type}/resource_types`,
 
-                 config
-             )
-             .then((res) => {
-                 const data = res.data
-                 setResourceTypes(data?.integration_types)
-                 const temp: any = []
-                 data?.integration_types?.map((item: any) => {
-                     temp.push({
-                         label: item?.name,
-                         value: item?.name,
-                         params: item?.params,
-                     })
-                 })
-                 setSelectedResourceType(temp)
-                   setActionLoading({ ...actionLoading, discovery: false })
-             })
-             .catch((err) => {
-                 console.log(err)
-                   setActionLoading({ ...actionLoading, discovery: false })
-             })
-     }
-     const GetIntegrations = () => {
-          setActionLoading({ ...actionLoading, discovery: true })
-         let url = ''
-         if (window.location.origin === 'http://localhost:3000') {
-             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-         } else {
-             url = window.location.origin
-         }
-         // @ts-ignore
-         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+                config
+            )
+            .then((res) => {
+                const data = res.data
+                setResourceTypes(data?.integration_types)
+                const temp: any = []
+                data?.integration_types?.map((item: any) => {
+                    temp.push({
+                        label: item?.name,
+                        value: item?.name,
+                        params: item?.params,
+                    })
+                })
+                setSelectedResourceType(temp)
+                setActionLoading({ ...actionLoading, discovery: false })
+            })
+            .catch((err) => {
+                console.log(err)
+                setActionLoading({ ...actionLoading, discovery: false })
+            })
+    }
+    const GetIntegrations = () => {
+        setActionLoading({ ...actionLoading, discovery: true })
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-         const config = {
-             headers: {
-                 Authorization: `Bearer ${token}`,
-             },
-         }
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
 
-         const body = {
-             integration_type: [type],
-         }
-         axios
-             .post(
-                 `${url}/main/integration/api/v1/integrations/list`,
-                 body,
-                 config
-             )
-             .then((res) => {
-                 const data = res.data
+        const body = {
+            integration_type: [type],
+        }
+        axios
+            .post(
+                `${url}/main/integration/api/v1/integrations/list`,
+                body,
+                config
+            )
+            .then((res) => {
+                const data = res.data
 
-                
-                 if (data.integrations) {
-                     setRow(data.integrations)
-                 } else {
-                     setRow([])
-                 }
-  setActionLoading({ ...actionLoading, discovery: false })                 
-             })
-             .catch((err) => {
-                 console.log(err)
-                 setLoading(false)
-                   setActionLoading({ ...actionLoading, discovery: false })
-             })
-     }
+                if (data.integrations) {
+                    setRow(data.integrations)
+                } else {
+                    setRow([])
+                }
+                setActionLoading({ ...actionLoading, discovery: false })
+            })
+            .catch((err) => {
+                console.log(err)
+                setLoading(false)
+                setActionLoading({ ...actionLoading, discovery: false })
+            })
+    }
     useEffect(() => {
         GetSchema()
         GetStatus()
         GetManifest()
     }, [])
+    const GetItems = () => {
+        const temp = []
+        temp.push({
+            label: 'Id',
+            value: manifest?.IntegrationType,
+        })
+        if(window.innerWidth > 640){
+            temp.push(
+                {
+                    label: 'Artifact URL',
+                    value: manifest?.DescriberURL,
+                },
+                {
+                    label: 'Version',
+                    value: manifest?.DescriberTag,
+                },
+                
+            )
+        }
+        temp.push(
+            {
+                label: 'Publisher',
+                value: manifest?.Publisher,
+            },
+          
+        )
+        if(window.innerWidth >640){
+            temp.push(
+                {
+                    label: 'Author',
+                    value: manifest?.Author,
+                },
+                {
+                    label: 'Supported Platform Version',
+                    value: manifest?.SupportedPlatformVersion,
+                },
+                {
+                    label: 'Update date',
+                    value: manifest?.UpdateDate,
+                },
+              
+            )
+        }
+        temp.push({
+            label: 'Operational Status',
+            // @ts-ignore
+            value: status
+                ? status?.charAt(0).toUpperCase() + status?.slice(1)
+                : '',
+        })
+
+        return temp
+    }
 
     return (
         <>
@@ -565,46 +612,7 @@ export default function TypeDetail() {
                                         <>
                                             <KeyValuePairs
                                                 columns={4}
-                                                items={[
-                                                    {
-                                                        label: 'Id',
-                                                        value: manifest?.IntegrationType,
-                                                    },
-                                                    {
-                                                        label: 'Artifact URL',
-                                                        value: manifest?.DescriberURL,
-                                                    },
-                                                    {
-                                                        label: 'Version',
-                                                        value: manifest?.DescriberTag,
-                                                    },
-                                                    {
-                                                        label: 'Publisher',
-                                                        value: manifest?.Publisher,
-                                                    },
-                                                    {
-                                                        label: 'Author',
-                                                        value: manifest?.Author,
-                                                    },
-                                                    {
-                                                        label: 'Supported Platform Version',
-                                                        value: manifest?.SupportedPlatformVersion,
-                                                    },
-                                                    {
-                                                        label: 'Update date',
-                                                        value: manifest?.UpdateDate,
-                                                    },
-                                                    {
-                                                        label: 'Operational Status',
-                                                        // @ts-ignore
-                                                        value: status
-                                                            ? status
-                                                                  ?.charAt(0)
-                                                                  .toUpperCase() +
-                                                              status?.slice(1)
-                                                            : '',
-                                                    },
-                                                ]}
+                                                items={GetItems()}
                                             />
                                         </>
                                     </Card>
