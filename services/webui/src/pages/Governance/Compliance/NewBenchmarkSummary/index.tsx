@@ -566,7 +566,7 @@ export default function NewBenchmarkSummary() {
                                 variant="h2"
                                 description=""
                             >
-                                <Flex className=' justify-between sm:flex-col flex-row gap-6 items-center'>
+                                <Flex className=' justify-between sm:flex-col flex-row gap-6 items-center sm:items-start'>
                                     <Box className="rounded-xl same text-white sm:pt-3 pl-3 pb-0">
                                         <Grid
                                             gridDefinition={[
