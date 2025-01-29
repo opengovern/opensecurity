@@ -34,6 +34,18 @@ const (
 	ComplianceTriggerTypeEmpty     ComplianceTriggerType = ""
 )
 
+type ComplianceRunnerStatus string
+
+const (
+	ComplianceRunnerCreated    ComplianceRunnerStatus = "CREATED"
+	ComplianceRunnerQueued     ComplianceRunnerStatus = "QUEUED"
+	ComplianceRunnerInProgress ComplianceRunnerStatus = "IN_PROGRESS"
+	ComplianceRunnerSucceeded  ComplianceRunnerStatus = "SUCCEEDED"
+	ComplianceRunnerFailed     ComplianceRunnerStatus = "FAILED"
+	ComplianceRunnerTimeOut    ComplianceRunnerStatus = "TIMEOUT"
+	ComplianceRunnerCanceled   ComplianceRunnerStatus = "CANCELED"
+)
+
 func (c ComplianceJobStatus) ToApi() api.ComplianceJobStatus {
 	return api.ComplianceJobStatus(c)
 }
@@ -86,7 +98,7 @@ type ComplianceRunner struct {
 
 	StartedAt         time.Time
 	TotalFindingCount *int
-	Status            runner.ComplianceRunnerStatus
+	Status            ComplianceRunnerStatus
 	FailureMessage    string
 	RetryCount        int
 	TriggerType       ComplianceTriggerType
