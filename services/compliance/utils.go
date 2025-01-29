@@ -30,19 +30,15 @@ func (h *HttpHandler) getBenchmarkTree(ctx context.Context, benchmarkId string) 
 	}
 
 	nb := api.NestedBenchmark{
-		ID:                b.ID,
-		Title:             b.Title,
-		ReferenceCode:     b.DisplayCode,
-		Description:       b.Description,
-		LogoURI:           b.LogoURI,
-		Category:          b.Category,
-		DocumentURI:       b.DocumentURI,
-		AutoAssign:        b.IsBaseline,
-		TracksDriftEvents: b.TracksDriftEvents,
-		CreatedAt:         b.CreatedAt,
-		UpdatedAt:         b.UpdatedAt,
-		Tags:              b.GetTagsMap(),
-		Children:          children,
+		ID:            b.ID,
+		Title:         b.Title,
+		ReferenceCode: b.DisplayCode,
+		Description:   b.Description,
+		AutoAssign:    b.IsBaseline,
+		CreatedAt:     b.CreatedAt,
+		UpdatedAt:     b.UpdatedAt,
+		Tags:          b.GetTagsMap(),
+		Children:      children,
 	}
 	if b.IntegrationType != nil {
 		nb.IntegrationTypes = make([]integration.Type, 0, len(b.IntegrationType))

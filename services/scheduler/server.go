@@ -1996,15 +1996,8 @@ func (h HttpServer) ListComplianceJobs(ctx echo.Context) error {
 		integrations = append(integrations, connectionsTmp.Integrations...)
 	}
 
-	connectionInfo := make(map[string]api.IntegrationInfo)
 	var connectionIDs []string
 	for _, c := range integrations {
-		connectionInfo[c.IntegrationID] = api.IntegrationInfo{
-			IntegrationID:   c.IntegrationID,
-			IntegrationType: string(c.IntegrationType),
-			Name:            c.Name,
-			ProviderID:      c.ProviderID,
-		}
 		connectionIDs = append(connectionIDs, c.IntegrationID)
 	}
 	var startTime, endTime *time.Time
@@ -2046,24 +2039,20 @@ func (h HttpServer) ListComplianceJobs(ctx echo.Context) error {
 			JobId:          j.ID,
 			WithIncidents:  j.WithIncidents,
 			FrameworkID:    j.FrameworkIds[0],
+			IntegrationIds: j.IntegrationIDs,
 			JobType:        "compliance",
 			JobStatus:      j.Status.ToApi(),
 			LastUpdatedAt:  j.UpdatedAt,
 			StartTime:      j.CreatedAt,
 			FailureMessage: j.FailureMessage,
-			Title:          Title,
+			FrameworkTitle: Title,
 			CreatedBy:      j.CreatedBy,
 			TriggerType:    string(j.TriggerType),
 			StepFailed:     j.StepFailed.ToApi(),
 			RunnersStatus:  runnersStatus,
 		}
-		if jobResult.JobStatus == api.ComplianceJobFailed {
+		if jobResult.JobStatus == api.ComplianceJobSucceeded || jobResult.JobStatus == api.ComplianceJobFailed {
 			jobResult.EndTime = &j.UpdatedAt
-		}
-		for _, i := range j.IntegrationIDs {
-			if info, ok := connectionInfo[i]; ok {
-				jobResult.IntegrationInfo = []api.IntegrationInfo{info}
-			}
 		}
 
 		jobsResults = append(jobsResults, jobResult)
@@ -2546,36 +2535,14 @@ func (h HttpServer) GetComplianceJobsHistoryByIntegration(ctx echo.Context) erro
 		}
 
 		for _, j := range jobs {
-			var jobIntegrations []api.IntegrationInfo
-			for _, i := range j.IntegrationIDs {
-				if info, ok := connectionInfo[i]; ok {
-					jobIntegrations = append(jobIntegrations, info)
-				} else {
-					integration, err := h.Scheduler.integrationClient.GetIntegration(clientCtx, i)
-					if err != nil {
-						return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-					}
-					if integration != nil {
-						info = api.IntegrationInfo{
-							IntegrationID:   integration.IntegrationID,
-							IntegrationType: string(integration.IntegrationType),
-							Name:            integration.Name,
-							ProviderID:      integration.ProviderID,
-						}
-						connectionInfo[i] = info
-						jobIntegrations = append(jobIntegrations, info)
-					}
-				}
-			}
-
 			jobsResults = append(jobsResults, api.GetComplianceJobsHistoryResponse{
-				JobId:           j.ID,
-				WithIncidents:   j.WithIncidents,
-				FrameworkID:     j.FrameworkIds[0],
-				JobStatus:       j.Status.ToApi(),
-				LastUpdatedAt:   j.UpdatedAt,
-				StartTime:       j.CreatedAt,
-				IntegrationInfo: jobIntegrations,
+				JobId:          j.ID,
+				WithIncidents:  j.WithIncidents,
+				FrameworkID:    j.FrameworkIds[0],
+				JobStatus:      j.Status.ToApi(),
+				LastUpdatedAt:  j.UpdatedAt,
+				StartTime:      j.CreatedAt,
+				IntegrationIds: j.IntegrationIDs,
 			})
 		}
 	}

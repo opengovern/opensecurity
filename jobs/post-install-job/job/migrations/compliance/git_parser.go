@@ -647,7 +647,6 @@ func (g *GitParser) HandleSingleFramework(framework Framework) error {
 	}
 
 	isBaseline := true
-	tracksDriftEvents := false
 	enabled := false
 
 	if framework.Defaults != nil {
@@ -655,21 +654,19 @@ func (g *GitParser) HandleSingleFramework(framework Framework) error {
 			isBaseline = *framework.Defaults.IsBaseline
 		}
 
-		tracksDriftEvents = framework.Defaults.TracksDriftEvents
 		enabled = framework.Defaults.Enabled
 	}
 
 	b := &db.Benchmark{
-		ID:                framework.ID,
-		Title:             framework.Title,
-		DisplayCode:       framework.SectionCode,
-		Description:       framework.Description,
-		IsBaseline:        isBaseline,
-		Enabled:           enabled,
-		TracksDriftEvents: tracksDriftEvents,
-		Tags:              tags,
-		Children:          nil,
-		Controls:          nil,
+		ID:          framework.ID,
+		Title:       framework.Title,
+		DisplayCode: framework.SectionCode,
+		Description: framework.Description,
+		IsBaseline:  isBaseline,
+		Enabled:     enabled,
+		Tags:        tags,
+		Children:    nil,
+		Controls:    nil,
 	}
 	metadataJsonb := pgtype.JSONB{}
 	err := metadataJsonb.Set([]byte(""))
