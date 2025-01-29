@@ -75,7 +75,7 @@ func (db Database) UpdateTimedOutInProgressRunners() error {
 		Model(&model.ComplianceRunner{}).
 		Where("status = ?", runner.ComplianceRunnerInProgress).
 		Where("updated_at < NOW() - INTERVAL '10 MINUTES'").
-		Updates(model.ComplianceRunner{Status: model.ComplianceRunnerTimeOut, FailureMessage: "Job timed out"})
+		Updates(model.ComplianceRunner{Status: runner.ComplianceRunnerTimeOut, FailureMessage: "Job timed out"})
 	if tx.Error != nil {
 		return tx.Error
 	}
@@ -93,7 +93,7 @@ func (db Database) RetryFailedRunners() error {
 }
 
 func (db Database) UpdateRunnerJob(
-	id uint, status model.ComplianceRunnerStatus, startedAt time.Time, totalFindingCount *int, failureMsg string, podName *string) error {
+	id uint, status runner.ComplianceRunnerStatus, startedAt time.Time, totalFindingCount *int, failureMsg string, podName *string) error {
 	updated := model.ComplianceRunner{
 		Status:            status,
 		StartedAt:         startedAt,
@@ -135,7 +135,7 @@ func (db Database) UpdateTimeoutQueuedRunnerJobs() error {
 		Model(&model.ComplianceRunner{}).
 		Where("created_at < NOW() - INTERVAL '60 MINUTES'").
 		Where("status IN ?", []string{string(runner.ComplianceRunnerCreated), string(runner.ComplianceRunnerQueued)}).
-		Updates(model.ComplianceRunner{Status: model.ComplianceRunnerTimeOut, FailureMessage: "Job timed out"})
+		Updates(model.ComplianceRunner{Status: runner.ComplianceRunnerTimeOut, FailureMessage: "Job timed out"})
 	if tx.Error != nil {
 		return tx.Error
 	}

@@ -98,7 +98,7 @@ type ComplianceRunner struct {
 
 	StartedAt         time.Time
 	TotalFindingCount *int
-	Status            ComplianceRunnerStatus
+	Status            runner.ComplianceRunnerStatus
 	FailureMessage    string
 	RetryCount        int
 	TriggerType       ComplianceTriggerType
