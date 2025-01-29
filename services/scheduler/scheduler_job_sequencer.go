@@ -8,7 +8,6 @@ import (
 
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	runner "github.com/opengovern/opencomply/jobs/compliance-runner-job"
 	"github.com/opengovern/opencomply/services/compliance/api"
 
 	"github.com/opengovern/og-util/pkg/ticker"
@@ -129,9 +128,9 @@ func (s *Scheduler) runNextJob(ctx context.Context, job model.JobSequencer) erro
 			}
 
 			for _, integrationID := range parameters.ConnectionIDs {
-				callers := make([]runner.Caller, 0, len(parentPaths))
+				callers := make([]model.Caller, 0, len(parentPaths))
 				for _, path := range parentPaths {
-					caller := runner.Caller{
+					caller := model.Caller{
 						RootBenchmark:      parameters.BenchmarkID,
 						TracksDriftEvents:  rootBenchmark.TracksDriftEvents,
 						ParentBenchmarkIDs: path,
@@ -148,7 +147,7 @@ func (s *Scheduler) runNextJob(ctx context.Context, job model.JobSequencer) erro
 					IntegrationID:  &integrationID,
 					StartedAt:      time.Time{},
 					RetryCount:     0,
-					Status:         runner.ComplianceRunnerCreated,
+					Status:         model.ComplianceRunnerCreated,
 					FailureMessage: "",
 				}
 				err = runnerJob.SetCallers(callers)
