@@ -1,4 +1,5 @@
 import { Box, Button, Pagination, SpaceBetween } from '@cloudscape-design/components'
+import { Flex } from '@tremor/react'
 
 interface ISpinner {
     currentPageIndex: number
@@ -16,7 +17,7 @@ export default function CustomPagination({
             {window.innerWidth > 640 ? (
                 <>
                     {' '}
-                    <div className='w-full flex justify-end'>
+                    <div className="w-full flex justify-end">
                         <Pagination
                             currentPageIndex={currentPageIndex}
                             pagesCount={pagesCount}
@@ -27,7 +28,7 @@ export default function CustomPagination({
             ) : (
                 <>
                     {' '}
-                    <SpaceBetween size="xxs" direction="horizontal">
+                    <Flex className="w-full justify-start items-center flex-row gap-2">
                         <Button
                             iconName="angle-left"
                             variant="icon"
@@ -66,7 +67,7 @@ export default function CustomPagination({
                         >
                             Next
                         </Button>
-                    </SpaceBetween>
+                    </Flex>
                 </>
             )}
         </>
