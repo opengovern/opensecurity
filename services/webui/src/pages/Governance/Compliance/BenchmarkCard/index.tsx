@@ -186,7 +186,7 @@ export default function BenchmarkCards({ benchmark, all,loading }: IComplianceCa
                         </SpaceBetween>
                     </Box>
                 }
-                // header={<Header>Example Cards</Header>}
+              
             />
         </>
     )

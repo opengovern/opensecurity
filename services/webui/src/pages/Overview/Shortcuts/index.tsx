@@ -23,10 +23,10 @@ import MemberInvite from '../../Settings/Members/MemberInvite'
 
 const navList = [
     {
-        title: 'CloudQL',
-        description: 'See all workloads - from code to cloud',
-        icon: Cube,
-        link: 'cloudql',
+        title: 'Connect',
+        description: 'Setup Integrations and enable visibility',
+        icon: Cable,
+        link: 'integration/plugins',
         new: true,
     },
     {
@@ -37,17 +37,17 @@ const navList = [
         new: true,
     },
     {
+        title: 'CloudQL',
+        description: 'See all workloads - from code to cloud',
+        icon: Cube,
+        link: 'cloudql',
+        new: true,
+    },
+    {
         title: 'Invite',
         description: 'Add new users and govern as a team',
         icon: User,
         link: 'settings/authentication?action=invite',
-        new: true,
-    },
-    {
-        title: 'Connect',
-        description: 'Setup Integrations and enable visibility',
-        icon: Cable,
-        link: 'integration/plugins',
         new: true,
     },
 
@@ -79,106 +79,233 @@ export default function Shortcuts() {
     const number = window.innerWidth > 768 ? 4 : 2
 
     return (
-        <Card>
-            <Flex justifyContent="start" className="gap-2 mb-4">
-                <Icon icon={CursorArrowRaysIcon} className="p-0" />
-                <Title className="font-semibold">Shortcuts</Title>
-            </Flex>
-            <Grid numItems={1} numItemsSm={4} className="w-full mb-4 gap-4">
-                {navList?.slice(0, number).map((nav, i) => (
-                    <>
-                        {nav?.title !== 'Audit' && nav?.title !== 'Invite' ? (
-                            <>
-                                <a
-                                    href={`/${nav.link}`}
-                                    target={nav.new ? '_blank' : '_self'}
-                                >
-                                    <Card className=" flex-auto  cursor-pointer  sm:min-h-[140px] h-full pt-3 sm:pb-3 pb-3 hover:bg-gray-50 hover:dark:bg-gray-900">
-                                        <Flex
-                                            flexDirection="col"
-                                            justifyContent="start"
-                                            alignItems="start"
-                                            className="gap-2 sm:flex-col flex-row justify-start items-center sm:items-start"
-                                        >
-                                            <img
-                                                className="bg-[#1164D9] rounded-[50%] p-[0.3rem] w-7 h-7"
-                                                src={nav.icon}
-                                            />
-                                            <Text className="text-l font-semibold  dark:text-gray-50 text-openg-800  flex flex-row items-center gap-2">
-                                                {nav.title}
-                                                <ChevronRightIcon className="p-0 w-5 h-5 " />
-                                            </Text>
-                                            <Text className="text-sm sm:inline-block hidden">
-                                                {nav.description}
-                                            </Text>
-                                        </Flex>
-                                    </Card>
-                                </a>
-                            </>
-                        ) : (
-                            <>
-                                <Card
-                                    onClick={() => {
-                                        if (nav?.title == 'Audit') {
-                                            setOpen(true)
-                                        } else {
-                                            setUserOpen(true)
-                                        }
-                                    }}
-                                    className="  cursor-pointer  sm:min-h-[140px] h-full pt-3 sm:pb-3 pb-3 hover:bg-gray-50 hover:dark:bg-gray-900"
-                                >
-                                    <Flex
-                                        flexDirection="col"
-                                        justifyContent="start"
-                                        alignItems="start"
-                                        className="gap-2 sm:flex-col flex-row justify-start sm:items-start items-center"
-                                    >
-                                        <img
-                                            className="bg-[#1164D9] rounded-[50%] p-[0.3rem] w-7 h-7"
-                                            src={nav.icon}
-                                        />
-                                        <Text className="text-l font-semibold text-gray-900 dark:text-gray-50  flex flex-row items-center gap-2">
-                                            {nav.title}
-                                            <ChevronRightIcon className="p-0 w-5 h-5 " />
-                                        </Text>
-                                        <Text className="text-sm sm:inline-block hidden">
-                                            {nav.description}
-                                        </Text>
-                                    </Flex>
-                                </Card>
-                                <Evaluate
-                                    opened={open}
-                                    id=""
-                                    assignmentsCount={0}
-                                    benchmarkDetail={undefined}
-                                    setOpened={(value: boolean) => {
-                                        setOpen(value)
-                                    }}
-                                    onEvaluate={() => {}}
-                                    // complianceScore={0}
-                                />
-                                <Modal
-                                    visible={userOpen}
-                                    header={'Invite new member'}
-                                    onDismiss={() => {
-                                        setUserOpen(false)
-                                    }}
-                                >
-                                    {userOpen && (
+        <>
+            {window.innerWidth > 640 ? (
+                <>
+                    {' '}
+                    <Card>
+                        <Flex justifyContent="start" className="gap-2 mb-4">
+                            <Icon
+                                icon={CursorArrowRaysIcon}
+                                className="p-0 sm:inline-block hidden"
+                            />
+                            <Title className="font-semibold sm:inline-block hidden">
+                                Shortcuts
+                            </Title>
+                        </Flex>
+                        <Grid
+                            numItems={1}
+                            numItemsSm={4}
+                            className="w-full mb-4 gap-4"
+                        >
+                            {navList?.slice(0, number).map((nav, i) => (
+                                <>
+                                    {nav?.title !== 'Audit' &&
+                                    nav?.title !== 'Invite' ? (
                                         <>
-                                            <MemberInvite
-                                                close={(refresh: boolean) => {
+                                            <a
+                                                href={`/${nav.link}`}
+                                                target={
+                                                    nav.new ? '_blank' : '_self'
+                                                }
+                                            >
+                                                <Card className=" flex-auto  cursor-pointer  sm:min-h-[140px] h-full pt-3 sm:pb-3 pb-3 hover:bg-gray-50 hover:dark:bg-gray-900">
+                                                    <Flex
+                                                        flexDirection="col"
+                                                        justifyContent="start"
+                                                        alignItems="start"
+                                                        className="gap-2 sm:flex-col flex-row justify-start items-center sm:items-start"
+                                                    >
+                                                        <img
+                                                            className="bg-[#1164D9] rounded-[50%] p-[0.3rem] w-7 h-7"
+                                                            src={nav.icon}
+                                                        />
+                                                        <Text className="text-l font-semibold  dark:text-gray-50 text-openg-800  flex flex-row items-center gap-2">
+                                                            {nav.title}
+                                                            <ChevronRightIcon className="p-0 w-5 h-5 " />
+                                                        </Text>
+                                                        <Text className="text-sm sm:inline-block hidden">
+                                                            {nav.description}
+                                                        </Text>
+                                                    </Flex>
+                                                </Card>
+                                            </a>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Card
+                                                onClick={() => {
+                                                    if (nav?.title == 'Audit') {
+                                                        setOpen(true)
+                                                    } else {
+                                                        setUserOpen(true)
+                                                    }
+                                                }}
+                                                className="  cursor-pointer  sm:min-h-[140px] h-full pt-3 sm:pb-3 pb-3 hover:bg-gray-50 hover:dark:bg-gray-900"
+                                            >
+                                                <Flex
+                                                    flexDirection="col"
+                                                    justifyContent="start"
+                                                    alignItems="start"
+                                                    className="gap-2 sm:flex-col flex-row justify-start sm:items-start items-center"
+                                                >
+                                                    <img
+                                                        className="bg-[#1164D9] rounded-[50%] p-[0.3rem] w-7 h-7"
+                                                        src={nav.icon}
+                                                    />
+                                                    <Text className="text-l font-semibold text-gray-900 dark:text-gray-50  flex flex-row items-center gap-2">
+                                                        {nav.title}
+                                                        <ChevronRightIcon className="p-0 w-5 h-5 " />
+                                                    </Text>
+                                                    <Text className="text-sm sm:inline-block hidden">
+                                                        {nav.description}
+                                                    </Text>
+                                                </Flex>
+                                            </Card>
+                                            <Evaluate
+                                                opened={open}
+                                                id=""
+                                                assignmentsCount={0}
+                                                benchmarkDetail={undefined}
+                                                setOpened={(value: boolean) => {
+                                                    setOpen(value)
+                                                }}
+                                                onEvaluate={() => {}}
+                                                // complianceScore={0}
+                                            />
+                                            <Modal
+                                                visible={userOpen}
+                                                header={'Invite new member'}
+                                                onDismiss={() => {
                                                     setUserOpen(false)
                                                 }}
-                                            />
+                                            >
+                                                {userOpen && (
+                                                    <>
+                                                        <MemberInvite
+                                                            close={(
+                                                                refresh: boolean
+                                                            ) => {
+                                                                setUserOpen(
+                                                                    false
+                                                                )
+                                                            }}
+                                                        />
+                                                    </>
+                                                )}
+                                            </Modal>
                                         </>
                                     )}
-                                </Modal>
+                                </>
+                            ))}
+                        </Grid>
+                    </Card>
+                </>
+            ) : (
+                <>
+                    {' '}
+                    <div className='flex flex-row gap-2 justify-start items-center'>
+                        {navList?.slice(0, number).map((nav, i) => (
+                            <>
+                                {nav?.title !== 'Audit' &&
+                                nav?.title !== 'Invite' ? (
+                                    <>
+                                        <a
+                                            href={`/${nav.link}`}
+                                            target={
+                                                nav.new ? '_blank' : '_self'
+                                            }
+                                        >
+                                            <Card className=" flex-auto  cursor-pointer  sm:min-h-[140px] h-full pt-3 sm:pb-3 pb-3 hover:bg-gray-50 hover:dark:bg-gray-900">
+                                                <Flex
+                                                    flexDirection="col"
+                                                    justifyContent="start"
+                                                    alignItems="start"
+                                                    className="gap-2 sm:flex-col flex-row justify-start items-center sm:items-start"
+                                                >
+                                                    <img
+                                                        className="bg-[#1164D9] rounded-[50%] p-[0.3rem] w-7 h-7"
+                                                        src={nav.icon}
+                                                    />
+                                                    <Text className="text-l font-semibold  dark:text-gray-50 text-openg-800  flex flex-row items-center gap-2">
+                                                        {nav.title}
+                                                        <ChevronRightIcon className="p-0 w-5 h-5 " />
+                                                    </Text>
+                                                    <Text className="text-sm sm:inline-block hidden">
+                                                        {nav.description}
+                                                    </Text>
+                                                </Flex>
+                                            </Card>
+                                        </a>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Card
+                                            onClick={() => {
+                                                if (nav?.title == 'Audit') {
+                                                    setOpen(true)
+                                                } else {
+                                                    setUserOpen(true)
+                                                }
+                                            }}
+                                            className="  cursor-pointer  sm:min-h-[140px] h-full pt-3 sm:pb-3 pb-3 hover:bg-gray-50 hover:dark:bg-gray-900"
+                                        >
+                                            <Flex
+                                                flexDirection="col"
+                                                justifyContent="start"
+                                                alignItems="start"
+                                                className="gap-2 sm:flex-col flex-row justify-start sm:items-start items-center"
+                                            >
+                                                <img
+                                                    className="bg-[#1164D9] rounded-[50%] p-[0.3rem] w-7 h-7"
+                                                    src={nav.icon}
+                                                />
+                                                <Text className="text-l font-semibold text-gray-900 dark:text-gray-50  flex flex-row items-center gap-2">
+                                                    {nav.title}
+                                                    <ChevronRightIcon className="p-0 w-5 h-5 " />
+                                                </Text>
+                                                <Text className="text-sm sm:inline-block hidden">
+                                                    {nav.description}
+                                                </Text>
+                                            </Flex>
+                                        </Card>
+                                        <Evaluate
+                                            opened={open}
+                                            id=""
+                                            assignmentsCount={0}
+                                            benchmarkDetail={undefined}
+                                            setOpened={(value: boolean) => {
+                                                setOpen(value)
+                                            }}
+                                            onEvaluate={() => {}}
+                                            // complianceScore={0}
+                                        />
+                                        <Modal
+                                            visible={userOpen}
+                                            header={'Invite new member'}
+                                            onDismiss={() => {
+                                                setUserOpen(false)
+                                            }}
+                                        >
+                                            {userOpen && (
+                                                <>
+                                                    <MemberInvite
+                                                        close={(
+                                                            refresh: boolean
+                                                        ) => {
+                                                            setUserOpen(false)
+                                                        }}
+                                                    />
+                                                </>
+                                            )}
+                                        </Modal>
+                                    </>
+                                )}
                             </>
-                        )}
-                    </>
-                ))}
-            </Grid>
-        </Card>
+                        ))}
+                    </div>
+                </>
+            )}
+        </>
     )
 }
