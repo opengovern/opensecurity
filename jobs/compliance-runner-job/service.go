@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	authApi "github.com/opengovern/og-util/pkg/api"
 	cloudql_init_job "github.com/opengovern/opencomply/jobs/cloudql-init-job"
 	"github.com/opengovern/opencomply/services/integration/client"
+	schedulerapi "github.com/opengovern/opencomply/services/scheduler/api"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -21,6 +24,7 @@ import (
 	complianceClient "github.com/opengovern/opencomply/services/compliance/client"
 	coreClient "github.com/opengovern/opencomply/services/core/client"
 	regoService "github.com/opengovern/opencomply/services/rego/service"
+	schedulerClient "github.com/opengovern/opencomply/services/scheduler/client"
 	"go.uber.org/zap"
 )
 
@@ -28,6 +32,7 @@ type Config struct {
 	ElasticSearch         config.ElasticSearch
 	NATS                  config.NATS
 	Compliance            config.OpenGovernanceService
+	Scheduler             config.OpenGovernanceService
 	Integration           config.OpenGovernanceService
 	Inventory             config.OpenGovernanceService
 	Core                  config.OpenGovernanceService
@@ -46,6 +51,7 @@ type Worker struct {
 	regoEngine        *regoService.RegoEngine
 	complianceClient  complianceClient.ComplianceServiceClient
 	integrationClient client.IntegrationServiceClient
+	schedulerClient   schedulerClient.SchedulerServiceClient
 
 	coreClient coreClient.CoreServiceClient
 	sinkClient esSinkClient.EsSinkServiceClient
@@ -136,6 +142,7 @@ func NewWorker(
 		jq:                jq,
 		regoEngine:        regoEngine,
 		complianceClient:  complianceClient.NewComplianceClient(config.Compliance.BaseURL),
+		schedulerClient:   schedulerClient.NewSchedulerServiceClient(config.Scheduler.BaseURL),
 		integrationClient: integrationClient,
 
 		coreClient:     coreClient.NewCoreServiceClient(config.Core.BaseURL),
@@ -193,7 +200,12 @@ func (w *Worker) Run(ctx context.Context) error {
 				}
 			}()
 
-			_, _, err := w.ProcessMessage(ctx, msg)
+			jobCtx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			go w.pollAPI(jobCtx, cancel, msg)
+
+			_, _, err := w.ProcessMessage(jobCtx, msg)
 			if err != nil {
 				w.logger.Error("failed to process message", zap.Error(err))
 			}
@@ -202,19 +214,6 @@ func (w *Worker) Run(ctx context.Context) error {
 			if err := msg.Ack(); err != nil {
 				w.logger.Error("failed to send the ack message", zap.Error(err), zap.Any("msg", msg))
 			}
-
-			//if requeue {
-			//	if err := msg.Nak(); err != nil {
-			//		w.logger.Error("failed to send a not ack message", zap.Error(err))
-			//	}
-			//}
-			//
-			//if commit {
-			//	w.logger.Info("committing")
-			//	if err := msg.Ack(); err != nil {
-			//		w.logger.Error("failed to send an ack message", zap.Error(err))
-			//	}
-			//}
 
 			w.logger.Info("processing a job completed")
 		})
@@ -284,6 +283,54 @@ func (w *Worker) ProcessMessage(ctx context.Context, msg jetstream.Msg) (commit 
 
 	result.TotalComplianceResultCount = &totalComplianceResultCount
 	return true, false, nil
+}
+
+// **pollAPI runs every 15 seconds and cancels the process if needed**
+func (w *Worker) pollAPI(ctx context.Context, cancelFunc context.CancelFunc, msg jetstream.Msg) {
+	var job Job
+
+	if err := json.Unmarshal(msg.Data(), &job); err != nil {
+		w.logger.Error("failed to unmarshal job msg")
+		return
+	}
+
+	ticker := time.NewTicker(15 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			w.logger.Info("Polling API...")
+			stop, err := w.checkAPIResponse(ctx, strconv.Itoa(int(job.ParentJobID)))
+			if err != nil {
+				w.logger.Error("Failed to check compliance job status", zap.Uint("compliance-job-id", job.ParentJobID),
+					zap.Uint("runner-job-id", job.ID), zap.Error(err))
+			}
+			if stop { // If API returns a special response
+				w.logger.Warn("Received stop signal from API! Cancelling job.")
+				cancelFunc()
+				return
+			}
+
+		case <-ctx.Done(): // Stop if context is canceled
+			w.logger.Info("Stopping API polling.")
+			return
+		}
+	}
+}
+
+// **checkAPIResponse simulates an API request**
+func (w *Worker) checkAPIResponse(ctx context.Context, jobId string) (bool, error) {
+	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
+
+	status, err := w.schedulerClient.GetComplianceJobStatus(clientCtx, jobId)
+	if err != nil {
+		return false, err
+	}
+	if status.JobStatus == schedulerapi.ComplianceJobCanceled {
+		return true, nil
+	}
+	return false, nil
 }
 
 func (w *Worker) Stop() error {

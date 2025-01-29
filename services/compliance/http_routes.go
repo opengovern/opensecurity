@@ -4833,11 +4833,11 @@ func (h HttpHandler) GetQuickScanSummary(c echo.Context) error {
 		h.logger.Error("failed to get compliance job", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get compliance job")
 	}
-	if complianceJob.JobStatus == string(schedulerapi.ComplianceJobTimeout) {
+	if complianceJob.JobStatus == schedulerapi.ComplianceJobTimeout {
 		return echo.NewHTTPError(http.StatusBadRequest, "job has been timed out")
-	} else if complianceJob.JobStatus == string(schedulerapi.ComplianceJobRunnersInProgress) ||
-		complianceJob.JobStatus == string(schedulerapi.ComplianceJobCreated) ||
-		complianceJob.JobStatus == string(schedulerapi.ComplianceJobSummarizerInProgress) {
+	} else if complianceJob.JobStatus == schedulerapi.ComplianceJobRunnersInProgress ||
+		complianceJob.JobStatus == schedulerapi.ComplianceJobCreated ||
+		complianceJob.JobStatus == schedulerapi.ComplianceJobSummarizerInProgress {
 		return echo.NewHTTPError(http.StatusBadRequest, "job is in progress")
 	}
 	var result api.AuditSummary
@@ -5015,11 +5015,11 @@ func (h HttpHandler) GetComplianceJobReport(c echo.Context) error {
 		h.logger.Error("failed to get compliance job", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get compliance job")
 	}
-	if complianceJob.JobStatus == string(schedulerapi.ComplianceJobTimeout) {
+	if complianceJob.JobStatus == schedulerapi.ComplianceJobTimeout {
 		return echo.NewHTTPError(http.StatusBadRequest, "job has been timed out")
-	} else if complianceJob.JobStatus == string(schedulerapi.ComplianceJobRunnersInProgress) ||
-		complianceJob.JobStatus == string(schedulerapi.ComplianceJobCreated) ||
-		complianceJob.JobStatus == string(schedulerapi.ComplianceJobSummarizerInProgress) {
+	} else if complianceJob.JobStatus == schedulerapi.ComplianceJobRunnersInProgress ||
+		complianceJob.JobStatus == schedulerapi.ComplianceJobCreated ||
+		complianceJob.JobStatus == schedulerapi.ComplianceJobSummarizerInProgress {
 		return echo.NewHTTPError(http.StatusBadRequest, "job is in progress")
 	}
 
@@ -5056,11 +5056,11 @@ func (h HttpHandler) GetJobReportSummary(ctx echo.Context) error {
 		h.logger.Error("failed to get compliance job", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get compliance job")
 	}
-	if complianceJob.JobStatus == string(schedulerapi.ComplianceJobTimeout) {
+	if complianceJob.JobStatus == schedulerapi.ComplianceJobTimeout {
 		return echo.NewHTTPError(http.StatusBadRequest, "job has been timed out")
-	} else if complianceJob.JobStatus == string(schedulerapi.ComplianceJobRunnersInProgress) ||
-		complianceJob.JobStatus == string(schedulerapi.ComplianceJobCreated) ||
-		complianceJob.JobStatus == string(schedulerapi.ComplianceJobSummarizerInProgress) {
+	} else if complianceJob.JobStatus == schedulerapi.ComplianceJobRunnersInProgress ||
+		complianceJob.JobStatus == schedulerapi.ComplianceJobCreated ||
+		complianceJob.JobStatus == schedulerapi.ComplianceJobSummarizerInProgress {
 		return echo.NewHTTPError(http.StatusBadRequest, "job is in progress")
 	}
 
@@ -5099,7 +5099,7 @@ func (h HttpHandler) GetJobReportSummary(ctx echo.Context) error {
 		JobID:         complianceJob.JobId,
 		WithIncidents: complianceJob.WithIncidents,
 		JobDetails: api.GetJobReportSummaryJobDetails{
-			Status:    complianceJob.JobStatus,
+			Status:    string(complianceJob.JobStatus),
 			CreatedAt: complianceJob.CreatedAt,
 			UpdatedAt: complianceJob.UpdatedAt,
 			Framework: struct {
