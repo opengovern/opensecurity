@@ -29,7 +29,7 @@ func (s *JobScheduler) RunComplianceReportJobResultsConsumer(ctx context.Context
 			zap.Uint("jobId", result.Job.ID),
 			zap.String("status", string(result.Status)),
 		)
-		err := s.db.UpdateRunnerJob(result.Job.ID, result.Status, result.StartedAt, result.TotalComplianceResultCount, result.Error)
+		err := s.db.UpdateRunnerJob(result.Job.ID, result.Status, result.StartedAt, result.TotalComplianceResultCount, result.Error, &result.PodName)
 		if err != nil {
 			s.logger.Error("Failed to update the status of ComplianceReportJob",
 				zap.Uint("jobId", result.Job.ID),
