@@ -79,6 +79,8 @@ import {
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import { useIntegrationApiV1EnabledConnectorsList } from '../../../api/integration.gen'
 import CustomPagination from '../../../components/Pagination'
+import UseCaseCard from '../../../components/Cards/BookmarkCard'
+import axios from 'axios'
 
 
 export interface Props {
@@ -89,25 +91,12 @@ export default function AllQueries({ setTab }: Props) {
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)
     const [loading, setLoading] = useState(false)
     const [savedQuery, setSavedQuery] = useAtom(queryAtom)
-    const [code, setCode] = useState(savedQuery || '')
-    const [selectedIndex, setSelectedIndex] = useState(0)
-    const [searchCategory, setSearchCategory] = useState('')
-    const [selectedRow, setSelectedRow] =
-        useState<PlatformEnginePkgInventoryApiSmartQueryItemV2>()
-    const [openDrawer, setOpenDrawer] = useState(false)
-    const [openSlider, setOpenSlider] = useState(false)
-    const [openSearch, setOpenSearch] = useState(true)
     const [query, setQuery] =
         useState<PlatformEnginePkgInventoryApiListQueryRequestV2>()
-    const [selectedFilter, setSelectedFilters] = useState<string[]>([])
-
-    const [showEditor, setShowEditor] = useState(true)
-    const isDemo = useAtomValue(isDemoAtom)
-    const [pageSize, setPageSize] = useState(1000)
-    const [autoRun, setAutoRun] = useState(false)
-    const [listofTables, setListOfTables] = useState([])
-
+    
+    
     const [engine, setEngine] = useState('odysseus-sql')
+    const [integrations, setIntegrations] = useState<any[]>([])
     const [page, setPage] = useState(1)
     const [totalCount, setTotalCount] = useState(0)
     const [totalPage, setTotalPage] = useState(0)
@@ -137,12 +126,7 @@ export default function AllQueries({ setTab }: Props) {
         isExecuted: TypesExec,
     } = useIntegrationApiV1EnabledConnectorsList(0, 0)
 
-    // const { response: queries, isLoading: queryLoading } =
-    //     useInventoryApiV2QueryList({
-    //         titleFilter: '',
-    //         Cursor: 0,
-    //         PerPage:25
-    //     })
+  
     const recordToArray = (record?: Record<string, string[]> | undefined) => {
         if (record === undefined) {
             return []
@@ -155,20 +139,40 @@ export default function AllQueries({ setTab }: Props) {
             }
         })
     }
+    const getIntegrations = () => {
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-    const ConvertParams = (array: string[], key: string) => {
-        return `[${array[0]}]`
-        // let temp = ''
-        // array.map((item,index)=>{
-        //     if(index ===0){
-        //         temp = temp + item
-        //     }
-        //     else{
-        //         temp = temp +'&'+key+'='+item
-        //     }
-        // })
-        // return temp
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+
+        axios
+            .get(
+                `${url}/main/integration/api/v1/integration-types/plugin`,
+                config
+            )
+            .then((res) => {
+                if (res.data) {
+                    const arr = res.data?.items
+
+                    setIntegrations(arr)
+                }
+            })
+            .catch((err) => {
+                setLoading(false)
+            })
     }
+
+   
 
     const getRows = () => {
         setLoading(true)
@@ -181,7 +185,7 @@ export default function AllQueries({ setTab }: Props) {
             integration_types: query?.providers,
             list_of_tables: query?.list_of_tables,
             cursor: page,
-            per_page: 15,
+            per_page: 12,
         }
         // if (!body.integration_types) {
         //     delete body['integration_types']
@@ -202,7 +206,7 @@ export default function AllQueries({ setTab }: Props) {
                     setRows([])
                 }
                 setTotalCount(resp.data.total_count)
-                setTotalPage(Math.ceil(resp.data.total_count / 15))
+                setTotalPage(Math.ceil(resp.data.total_count / 12))
                 setLoading(false)
             })
             .catch((err) => {
@@ -213,6 +217,10 @@ export default function AllQueries({ setTab }: Props) {
     useEffect(() => {
         getRows()
     }, [page, query])
+    useEffect(()=>{
+        getIntegrations()
+
+    },[])
 
     useEffect(() => {
         if (
@@ -316,11 +324,130 @@ export default function AllQueries({ setTab }: Props) {
             })
         }
     }, [filterQuery])
-
+   const FindLogos = (types: string[]) => {
+       const temp: string[] = []
+       types.map((type) => {
+           const integration = integrations.find((i) => i.plugin_id === type)
+           if (integration) {
+               temp.push(
+                   `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${integration?.icon}`
+               )
+           }
+       })
+       return temp
+   }
     return (
         <>
-            {/* <TopHeader /> */}
-            <AppLayout
+            <Flex className="w-full flex-col justify-start items-start gap-4">
+                <Flex className="sm:flex-row flex-col gap-4 w-full sm:justify-between">
+                    <Header className="w-full">
+                        Queries{' '}
+                        <span className=" font-medium">({totalCount})</span>
+                    </Header>
+                    <CustomPagination
+                        currentPageIndex={page}
+                        pagesCount={totalPage}
+                        onChange={({ detail }: any) =>
+                            setPage(detail.currentPageIndex)
+                        }
+                    />
+                </Flex>
+                <PropertyFilter
+                    // @ts-ignore
+                    query={filterQuery}
+                    tokenLimit={2}
+                    onChange={({ detail }) =>
+                        // @ts-ignore
+                        setFilterQuery(detail)
+                    }
+                    customGroupsText={[
+                        {
+                            properties: 'Tags',
+                            values: 'Tag values',
+                            group: 'tags',
+                        },
+                        {
+                            properties: 'Category',
+                            values: 'Category values',
+                            group: 'category',
+                        },
+                    ]}
+                    // countText="5 matches"
+                    expandToViewport
+                    filteringAriaLabel="Find Query"
+                    filteringPlaceholder="Find Query"
+                    filteringOptions={options}
+                    filteringProperties={properties}
+                    asyncProperties
+                    virtualScroll
+                />
+                <Flex
+                    className="gap-4 flex-wrap justify-start items-start w-full"
+                    // style={{flex: "1 1 0"}}
+                >
+                    {(rows?.length === 0 || loading) && (
+                        <>
+                            <Spinner className="mt-2" />
+                        </>
+                    )}
+                    {rows
+                        ?.sort((a, b) => {
+                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                            // @ts-ignore
+                            if (a.title < b.title) {
+                                return -1
+                            }
+                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                            // @ts-ignore
+                            if (a.title > b.title) {
+                                return 1
+                            }
+                            return 0
+                        })
+                        .map((q, i) => (
+                            <div
+                                className="h-full w-full"
+                                style={
+                                    window.innerWidth > 768
+                                        ? {
+                                              width: `calc(calc(100% - ${
+                                                  rows.length >= 4
+                                                      ? '3'
+                                                      : rows.length - 1
+                                              }rem) / ${
+                                                  rows.length >= 4
+                                                      ? '4'
+                                                      : rows.length
+                                              })`,
+                                          }
+                                        : {}
+                                }
+                            >
+                                <UseCaseCard
+                                    // @ts-ignore
+                                    title={q?.title}
+                                    description={q?.description}
+                                    logos={FindLogos(q?.integration_types)}
+                                    onClick={() => {
+                                        // @ts-ignore
+                                        setSavedQuery(
+                                            q?.query?.query_to_execute
+                                        )
+                                        setTab('3')
+                                    }}
+                                    tag="tag1"
+                                />
+                            </div>
+                        ))}
+                </Flex>
+            </Flex>
+        </>
+    )
+}
+
+
+{/*
+    <AppLayout
                 toolsOpen={false}
                 navigationOpen={false}
                 contentType="table"
@@ -342,9 +469,7 @@ export default function AllQueries({ setTab }: Props) {
                             selectedRow ? (
                                 <>
                                     <Flex justifyContent="start">
-                                        {/* {getConnectorIcon(
-                                            selectedRow?.connector
-                                        )} */}
+                                       
                                         <Title className="text-lg font-semibold ml-2 my-1">
                                             {selectedRow?.title}
                                         </Title>
@@ -516,6 +641,4 @@ export default function AllQueries({ setTab }: Props) {
                     />
                 }
             />
-        </>
-    )
-}
+    */ }

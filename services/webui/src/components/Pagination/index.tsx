@@ -16,11 +16,13 @@ export default function CustomPagination({
             {window.innerWidth > 640 ? (
                 <>
                     {' '}
-                    <Pagination
-                        currentPageIndex={currentPageIndex}
-                        pagesCount={pagesCount}
-                        onChange={onChange}
-                    />
+                    <div className='w-full flex justify-end'>
+                        <Pagination
+                            currentPageIndex={currentPageIndex}
+                            pagesCount={pagesCount}
+                            onChange={onChange}
+                        />
+                    </div>
                 </>
             ) : (
                 <>
