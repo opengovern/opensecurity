@@ -92,15 +92,23 @@ func (db Database) RetryFailedRunners() error {
 }
 
 func (db Database) UpdateRunnerJob(
-	id uint, status model.ComplianceRunnerStatus, startedAt time.Time, totalFindingCount *int, failureMsg string, podName *string) error {
+	id uint, status model.ComplianceRunnerStatus, queuedAt, executedAt, completedAt *time.Time, totalFindingCount *int, failureMsg string, podName *string) error {
 	updated := model.ComplianceRunner{
 		Status:            status,
-		StartedAt:         startedAt,
 		FailureMessage:    failureMsg,
 		TotalFindingCount: totalFindingCount,
 	}
 	if podName != nil {
 		updated.WorkerPodName = *podName
+	}
+	if queuedAt != nil {
+		updated.QueuedAt = *queuedAt
+	}
+	if executedAt != nil {
+		updated.ExecutedAt = *executedAt
+	}
+	if completedAt != nil {
+		updated.CompletedAt = *completedAt
 	}
 
 	tx := db.ORM.
