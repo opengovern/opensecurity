@@ -2648,7 +2648,7 @@ func (h HttpServer) CancelJobById(ctx echo.Context) error {
 			for _, r := range runners {
 				if r.Status == runner2.ComplianceRunnerCreated {
 					allInProgress = false
-					err = h.DB.UpdateRunnerJob(r.ID, runner2.ComplianceRunnerCanceled, r.StartedAt, nil, "")
+					err = h.DB.UpdateRunnerJob(r.ID, runner2.ComplianceRunnerCanceled, r.StartedAt, nil, "", nil)
 					if err != nil {
 						return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 					}
@@ -2658,7 +2658,7 @@ func (h HttpServer) CancelJobById(ctx echo.Context) error {
 					if err != nil {
 						return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 					}
-					err = h.DB.UpdateRunnerJob(r.ID, runner2.ComplianceRunnerCanceled, r.StartedAt, nil, "")
+					err = h.DB.UpdateRunnerJob(r.ID, runner2.ComplianceRunnerCanceled, r.StartedAt, nil, "", nil)
 					if err != nil {
 						return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 					}
@@ -2901,7 +2901,7 @@ func (h HttpServer) CancelJob(ctx echo.Context) error {
 				for _, r := range runners {
 					if r.Status == runner2.ComplianceRunnerCreated {
 						allInProgress = false
-						err = h.DB.UpdateRunnerJob(r.ID, runner2.ComplianceRunnerCanceled, r.StartedAt, nil, "")
+						err = h.DB.UpdateRunnerJob(r.ID, runner2.ComplianceRunnerCanceled, r.StartedAt, nil, "", nil)
 						if err != nil {
 							failureReason = err.Error()
 							break
@@ -2913,7 +2913,7 @@ func (h HttpServer) CancelJob(ctx echo.Context) error {
 							failureReason = err.Error()
 							break
 						}
-						err = h.DB.UpdateRunnerJob(r.ID, runner2.ComplianceRunnerCanceled, r.StartedAt, nil, "")
+						err = h.DB.UpdateRunnerJob(r.ID, runner2.ComplianceRunnerCanceled, r.StartedAt, nil, "", nil)
 						if err != nil {
 							failureReason = err.Error()
 							break

@@ -58,6 +58,7 @@ type JobResult struct {
 	Job                        Job
 	StartedAt                  time.Time
 	Status                     ComplianceRunnerStatus
+	PodName                    string
 	Error                      string
 	TotalComplianceResultCount *int
 }

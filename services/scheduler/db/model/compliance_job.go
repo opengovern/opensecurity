@@ -89,9 +89,10 @@ type ComplianceRunner struct {
 	Status            runner.ComplianceRunnerStatus
 	FailureMessage    string
 	RetryCount        int
+	TriggerType       ComplianceTriggerType
 
-	TriggerType        ComplianceTriggerType
 	NatsSequenceNumber uint64
+	WorkerPodName      string
 }
 
 func (cr *ComplianceRunner) GetKeyIdentifier() string {
