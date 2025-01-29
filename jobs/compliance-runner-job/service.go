@@ -7,7 +7,6 @@ import (
 	authApi "github.com/opengovern/og-util/pkg/api"
 	cloudql_init_job "github.com/opengovern/opencomply/jobs/cloudql-init-job"
 	"github.com/opengovern/opencomply/services/integration/client"
-	schedulerapi "github.com/opengovern/opencomply/services/scheduler/api"
 	"os"
 	"strconv"
 	"time"
@@ -327,7 +326,7 @@ func (w *Worker) checkAPIResponse(ctx context.Context, jobId string) (bool, erro
 	if err != nil {
 		return false, err
 	}
-	if status.JobStatus == schedulerapi.ComplianceJobCanceled {
+	if status.JobStatus == "CANCELED" {
 		return true, nil
 	}
 	return false, nil
