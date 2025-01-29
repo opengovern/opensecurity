@@ -305,7 +305,7 @@ export default function ComplianceJobs() {
                                 : '#'
                         }`}
                     >
-                        {clickedJob?.title}
+                        {clickedJob?.framework_title}
                     </Link>
                 </>
             ),
@@ -327,7 +327,9 @@ export default function ComplianceJobs() {
                 splitPanel={
                     <SplitPanel
                         header={
-                            clickedJob ? clickedJob.title : 'Job not selected'
+                            clickedJob
+                                ? clickedJob.framework_title
+                                : 'Job not selected'
                         }
                     >
                         <Flex
@@ -385,7 +387,8 @@ export default function ComplianceJobs() {
                             {
                                 id: 'createdAt',
                                 header: 'Created At',
-                                cell: (item) => dateTimeDisplay(item?.start_time),
+                                cell: (item) =>
+                                    dateTimeDisplay(item?.start_time),
                                 sortingField: 'createdAt',
                                 isRowHeader: true,
                                 maxWidth: 70,
@@ -469,7 +472,8 @@ export default function ComplianceJobs() {
                             {
                                 id: 'updatedAt',
                                 header: 'Updated At',
-                                cell: (item) => dateTimeDisplay(item?.last_updated_at),
+                                cell: (item) =>
+                                    dateTimeDisplay(item?.last_updated_at),
                                 sortingField: 'updatedAt',
                                 isRowHeader: true,
                                 maxWidth: 70,
