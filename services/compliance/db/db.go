@@ -428,7 +428,9 @@ func (db Database) GetFrameworkIdsByControlID(ctx context.Context, controlID str
 
 func (db Database) ListControlsByFrameworkID(ctx context.Context, benchmarkID string) ([]Control, error) {
 	var s []Control
-	tx := db.Orm.WithContext(ctx).Model(&Control{}).
+	tx := db.Orm.Session(&gorm.Session{
+		Logger: db.Orm.Logger.LogMode(logger.Silent), // Temporarily disable logging
+	}).WithContext(ctx).Model(&Control{}).
 		Preload("Tags").
 		Preload("Benchmarks").
 		Where(Control{Benchmarks: []Benchmark{{ID: benchmarkID}}}).Find(&s)
