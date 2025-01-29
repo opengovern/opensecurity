@@ -867,9 +867,9 @@ func (h HttpServer) CheckReEvaluateComplianceJob(ctx echo.Context) error {
 		return err
 	}
 	for _, runner := range runnerJobs {
-		if runner.Status != runner2.ComplianceRunnerSucceeded &&
-			runner.Status != runner2.ComplianceRunnerFailed &&
-			runner.Status != runner2.ComplianceRunnerTimeOut {
+		if runner.Status != model2.ComplianceRunnerSucceeded &&
+			runner.Status != model2.ComplianceRunnerFailed &&
+			runner.Status != model2.ComplianceRunnerTimeOut {
 			fmt.Println("+++ job status", runner.Status)
 
 			return ctx.JSON(http.StatusOK, api.JobSeqCheckResponse{
@@ -1764,7 +1764,7 @@ func (h HttpServer) GetComplianceJobStatus(ctx echo.Context) error {
 		SummaryJobId:    summaryJobId,
 		IntegrationInfo: integrations,
 		FrameworkId:     j.FrameworkIds[0], // TODO: need to change if we're actually giving more frameworks
-		JobStatus:       string(j.Status),
+		JobStatus:       j.Status.ToApi(),
 		CreatedAt:       j.CreatedAt,
 		UpdatedAt:       j.UpdatedAt,
 	}
@@ -2646,19 +2646,19 @@ func (h HttpServer) CancelJobById(ctx echo.Context) error {
 		} else {
 			allInProgress := true
 			for _, r := range runners {
-				if r.Status == runner2.ComplianceRunnerCreated {
+				if r.Status == model2.ComplianceRunnerCreated {
 					allInProgress = false
-					err = h.DB.UpdateRunnerJob(r.ID, runner2.ComplianceRunnerCanceled, r.StartedAt, nil, "", nil)
+					err = h.DB.UpdateRunnerJob(r.ID, model2.ComplianceRunnerCanceled, r.StartedAt, nil, "", nil)
 					if err != nil {
 						return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 					}
-				} else if r.Status == runner2.ComplianceRunnerQueued {
+				} else if r.Status == model2.ComplianceRunnerQueued {
 					allInProgress = false
 					err = h.Scheduler.jq.DeleteMessage(ctx.Request().Context(), runner2.StreamName, r.NatsSequenceNumber)
 					if err != nil {
 						return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 					}
-					err = h.DB.UpdateRunnerJob(r.ID, runner2.ComplianceRunnerCanceled, r.StartedAt, nil, "", nil)
+					err = h.DB.UpdateRunnerJob(r.ID, model2.ComplianceRunnerCanceled, r.StartedAt, nil, "", nil)
 					if err != nil {
 						return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 					}
@@ -2899,21 +2899,21 @@ func (h HttpServer) CancelJob(ctx echo.Context) error {
 			} else {
 				allInProgress := true
 				for _, r := range runners {
-					if r.Status == runner2.ComplianceRunnerCreated {
+					if r.Status == model2.ComplianceRunnerCreated {
 						allInProgress = false
-						err = h.DB.UpdateRunnerJob(r.ID, runner2.ComplianceRunnerCanceled, r.StartedAt, nil, "", nil)
+						err = h.DB.UpdateRunnerJob(r.ID, model2.ComplianceRunnerCanceled, r.StartedAt, nil, "", nil)
 						if err != nil {
 							failureReason = err.Error()
 							break
 						}
-					} else if r.Status == runner2.ComplianceRunnerQueued {
+					} else if r.Status == model2.ComplianceRunnerQueued {
 						allInProgress = false
 						err = h.Scheduler.jq.DeleteMessage(ctx.Request().Context(), runner2.StreamName, r.NatsSequenceNumber)
 						if err != nil {
 							failureReason = err.Error()
 							break
 						}
-						err = h.DB.UpdateRunnerJob(r.ID, runner2.ComplianceRunnerCanceled, r.StartedAt, nil, "", nil)
+						err = h.DB.UpdateRunnerJob(r.ID, model2.ComplianceRunnerCanceled, r.StartedAt, nil, "", nil)
 						if err != nil {
 							failureReason = err.Error()
 							break

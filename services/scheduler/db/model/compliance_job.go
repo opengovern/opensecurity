@@ -1,13 +1,10 @@
 package model
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/jackc/pgtype"
 	"time"
 
 	"github.com/lib/pq"
-	runner "github.com/opengovern/opencomply/jobs/compliance-runner-job"
 	summarizer "github.com/opengovern/opencomply/jobs/compliance-summarizer-job"
 	"github.com/opengovern/opencomply/services/scheduler/api"
 	"gorm.io/gorm"
@@ -32,18 +29,6 @@ const (
 	ComplianceTriggerTypeScheduled ComplianceTriggerType = "scheduled" // default
 	ComplianceTriggerTypeManual    ComplianceTriggerType = "manual"
 	ComplianceTriggerTypeEmpty     ComplianceTriggerType = ""
-)
-
-type ComplianceRunnerStatus string
-
-const (
-	ComplianceRunnerCreated    ComplianceRunnerStatus = "CREATED"
-	ComplianceRunnerQueued     ComplianceRunnerStatus = "QUEUED"
-	ComplianceRunnerInProgress ComplianceRunnerStatus = "IN_PROGRESS"
-	ComplianceRunnerSucceeded  ComplianceRunnerStatus = "SUCCEEDED"
-	ComplianceRunnerFailed     ComplianceRunnerStatus = "FAILED"
-	ComplianceRunnerTimeOut    ComplianceRunnerStatus = "TIMEOUT"
-	ComplianceRunnerCanceled   ComplianceRunnerStatus = "CANCELED"
 )
 
 func (c ComplianceJobStatus) ToApi() api.ComplianceJobStatus {
@@ -83,51 +68,6 @@ func (c ComplianceJob) ToApi() api.ComplianceJob {
 		Status:         c.Status.ToApi(),
 		FailureMessage: c.FailureMessage,
 	}
-}
-
-type ComplianceRunner struct {
-	gorm.Model
-
-	Callers              string
-	FrameworkID          string
-	ControlID            string
-	PolicyID             string
-	IntegrationID        *string
-	ResourceCollectionID *string
-	ParentJobID          uint `gorm:"index"`
-
-	StartedAt         time.Time
-	TotalFindingCount *int
-	Status            runner.ComplianceRunnerStatus
-	FailureMessage    string
-	RetryCount        int
-	TriggerType       ComplianceTriggerType
-
-	NatsSequenceNumber uint64
-	WorkerPodName      string
-}
-
-func (cr *ComplianceRunner) GetKeyIdentifier() string {
-	cid := "all"
-	if cr.IntegrationID != nil {
-		cid = *cr.IntegrationID
-	}
-	return fmt.Sprintf("%s-%s-%s-%d", cr.FrameworkID, cr.PolicyID, cid, cr.ParentJobID)
-}
-
-func (cr *ComplianceRunner) GetCallers() ([]runner.Caller, error) {
-	var res []runner.Caller
-	err := json.Unmarshal([]byte(cr.Callers), &res)
-	return res, err
-}
-
-func (cr *ComplianceRunner) SetCallers(callers []runner.Caller) error {
-	b, err := json.Marshal(callers)
-	if err != nil {
-		return err
-	}
-	cr.Callers = string(b)
-	return nil
 }
 
 type ComplianceSummarizer struct {
