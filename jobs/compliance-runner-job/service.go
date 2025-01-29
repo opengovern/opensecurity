@@ -302,7 +302,7 @@ func (w *Worker) pollAPI(ctx context.Context, cancelFunc context.CancelFunc, msg
 		select {
 		case <-ticker.C:
 			w.logger.Info("Polling API...")
-			stop, err := w.checkAPIResponse(ctx, strconv.Itoa(int(job.ParentJobID)))
+			stop, err := w.checkAPIResponse(strconv.Itoa(int(job.ParentJobID)))
 			if err != nil {
 				w.logger.Error("Failed to check compliance job status", zap.Uint("compliance-job-id", job.ParentJobID),
 					zap.Uint("runner-job-id", job.ID), zap.Error(err))
@@ -321,7 +321,7 @@ func (w *Worker) pollAPI(ctx context.Context, cancelFunc context.CancelFunc, msg
 }
 
 // **checkAPIResponse simulates an API request**
-func (w *Worker) checkAPIResponse(ctx context.Context, jobId string) (bool, error) {
+func (w *Worker) checkAPIResponse(jobId string) (bool, error) {
 	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
 
 	status, err := w.schedulerClient.GetComplianceJobStatus(clientCtx, jobId)
