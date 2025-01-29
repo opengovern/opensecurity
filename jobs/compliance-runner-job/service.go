@@ -24,7 +24,6 @@ import (
 	complianceApi "github.com/opengovern/opencomply/services/compliance/api"
 	complianceClient "github.com/opengovern/opencomply/services/compliance/client"
 	coreClient "github.com/opengovern/opencomply/services/core/client"
-	regoService "github.com/opengovern/opencomply/services/rego/service"
 	schedulerClient "github.com/opengovern/opencomply/services/scheduler/client"
 	"go.uber.org/zap"
 )
@@ -44,12 +43,12 @@ type Config struct {
 }
 
 type Worker struct {
-	config            Config
-	logger            *zap.Logger
-	steampipeConn     *steampipe.Database
-	esClient          opengovernance.Client
-	jq                *jq.JobQueue
-	regoEngine        *regoService.RegoEngine
+	config        Config
+	logger        *zap.Logger
+	steampipeConn *steampipe.Database
+	esClient      opengovernance.Client
+	jq            *jq.JobQueue
+	//regoEngine        *regoService.RegoEngine
 	complianceClient  complianceClient.ComplianceServiceClient
 	integrationClient client.IntegrationServiceClient
 	schedulerClient   schedulerClient.SchedulerServiceClient
@@ -128,20 +127,20 @@ func NewWorker(
 
 	logger.Info("initializing rego engine")
 	logger.Sync()
-	regoEngine, err := regoService.NewRegoEngine(ctx, logger, steampipeConn)
-	if err != nil {
-		logger.Error("failed to create rego engine", zap.Error(err))
-		logger.Sync()
-		return nil, err
-	}
+	//regoEngine, err := regoService.NewRegoEngine(ctx, logger, steampipeConn)
+	//if err != nil {
+	//	logger.Error("failed to create rego engine", zap.Error(err))
+	//	logger.Sync()
+	//	return nil, err
+	//}
 
 	w := &Worker{
-		config:            config,
-		logger:            logger,
-		steampipeConn:     steampipeConn,
-		esClient:          esClient,
-		jq:                jq,
-		regoEngine:        regoEngine,
+		config:        config,
+		logger:        logger,
+		steampipeConn: steampipeConn,
+		esClient:      esClient,
+		jq:            jq,
+		//regoEngine:        regoEngine,
 		complianceClient:  complianceClient.NewComplianceClient(config.Compliance.BaseURL),
 		schedulerClient:   schedulerClient.NewSchedulerServiceClient(config.Scheduler.BaseURL),
 		integrationClient: integrationClient,
