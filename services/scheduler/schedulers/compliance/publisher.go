@@ -67,14 +67,14 @@ func (s *JobScheduler) runPublisher(ctx context.Context, manuals bool) error {
 			query, ok := queriesMap[it.PolicyID]
 			if !ok || query == nil {
 				s.logger.Error("query not found", zap.String("queryId", it.PolicyID), zap.Uint("runnerId", it.ID))
-				_ = s.db.UpdateRunnerJob(it.ID, runner.ComplianceRunnerFailed, it.CreatedAt, nil, "query not found", nil)
+				_ = s.db.UpdateRunnerJob(it.ID, model.ComplianceRunnerFailed, it.CreatedAt, nil, "query not found", nil)
 				continue
 			}
 
 			callers, err := it.GetCallers()
 			if err != nil {
 				s.logger.Error("failed to get callers", zap.Error(err), zap.Uint("runnerId", it.ID))
-				_ = s.db.UpdateRunnerJob(it.ID, runner.ComplianceRunnerFailed, it.CreatedAt, nil, "failed to get callers", nil)
+				_ = s.db.UpdateRunnerJob(it.ID, model.ComplianceRunnerFailed, it.CreatedAt, nil, "failed to get callers", nil)
 				continue
 			}
 			var providerID *string
@@ -82,7 +82,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context, manuals bool) error {
 				if _, ok := connectionsMap[*it.IntegrationID]; ok {
 					providerID = &connectionsMap[*it.IntegrationID].ProviderID
 				} else {
-					_ = s.db.UpdateRunnerJob(it.ID, runner.ComplianceRunnerFailed, it.CreatedAt, nil, "integration does not exist", nil)
+					_ = s.db.UpdateRunnerJob(it.ID, model.ComplianceRunnerFailed, it.CreatedAt, nil, "integration does not exist", nil)
 					continue
 				}
 			}
@@ -102,7 +102,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context, manuals bool) error {
 
 			jobJson, err := json.Marshal(job)
 			if err != nil {
-				_ = s.db.UpdateRunnerJob(job.ID, runner.ComplianceRunnerFailed, job.CreatedAt, nil, err.Error(), nil)
+				_ = s.db.UpdateRunnerJob(job.ID, model.ComplianceRunnerFailed, job.CreatedAt, nil, err.Error(), nil)
 				s.logger.Error("failed to marshal job", zap.Error(err), zap.Uint("runnerId", it.ID))
 				continue
 			}
@@ -122,12 +122,12 @@ func (s *JobScheduler) runPublisher(ctx context.Context, manuals bool) error {
 					}
 					seqNum, err = s.jq.Produce(ctx, topic, jobJson, fmt.Sprintf("job-%d-%d", job.ID, it.RetryCount))
 					if err != nil {
-						_ = s.db.UpdateRunnerJob(job.ID, runner.ComplianceRunnerFailed, job.CreatedAt, nil, err.Error(), nil)
+						_ = s.db.UpdateRunnerJob(job.ID, model.ComplianceRunnerFailed, job.CreatedAt, nil, err.Error(), nil)
 						s.logger.Error("failed to send job", zap.Error(err), zap.Uint("runnerId", it.ID))
 						continue
 					}
 				} else {
-					_ = s.db.UpdateRunnerJob(job.ID, runner.ComplianceRunnerFailed, job.CreatedAt, nil, err.Error(), nil)
+					_ = s.db.UpdateRunnerJob(job.ID, model.ComplianceRunnerFailed, job.CreatedAt, nil, err.Error(), nil)
 					s.logger.Error("failed to send job", zap.Error(err), zap.Uint("runnerId", it.ID), zap.String("error message", err.Error()))
 					continue
 				}
@@ -136,7 +136,7 @@ func (s *JobScheduler) runPublisher(ctx context.Context, manuals bool) error {
 			if seqNum != nil {
 				_ = s.db.UpdateRunnerJobNatsSeqNum(job.ID, *seqNum)
 			}
-			_ = s.db.UpdateRunnerJob(job.ID, runner.ComplianceRunnerQueued, job.CreatedAt, nil, "", nil)
+			_ = s.db.UpdateRunnerJob(job.ID, model.ComplianceRunnerQueued, job.CreatedAt, nil, "", nil)
 		}
 	}
 

@@ -7,7 +7,6 @@ import (
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	runner "github.com/opengovern/opencomply/jobs/compliance-runner-job"
 	integrationapi "github.com/opengovern/opencomply/services/integration/api/models"
 	"github.com/opengovern/opencomply/services/scheduler/db/model"
 	"go.uber.org/zap"
@@ -114,17 +113,17 @@ func (s *JobScheduler) updateJobRunnersState(job model.ComplianceJob) error {
 	}
 	for _, r := range runners {
 		switch r.Status {
-		case runner.ComplianceRunnerCreated:
+		case model.ComplianceRunnerCreated:
 			status.RunnersCreated += 1
-		case runner.ComplianceRunnerQueued:
+		case model.ComplianceRunnerQueued:
 			status.RunnersQueued += 1
-		case runner.ComplianceRunnerInProgress:
+		case model.ComplianceRunnerInProgress:
 			status.RunnersRunning += 1
-		case runner.ComplianceRunnerFailed:
+		case model.ComplianceRunnerFailed:
 			status.RunnersFailed += 1
-		case runner.ComplianceRunnerSucceeded:
+		case model.ComplianceRunnerSucceeded:
 			status.RunnersSucceeded += 1
-		case runner.ComplianceRunnerTimeOut:
+		case model.ComplianceRunnerTimeOut:
 			status.RunnersTimedOut += 1
 		}
 		status.TotalCount += 1
