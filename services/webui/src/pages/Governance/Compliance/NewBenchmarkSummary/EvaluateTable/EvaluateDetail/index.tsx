@@ -56,6 +56,7 @@ import SeverityBar from './SeverityBar'
 import { useParams } from 'react-router-dom'
 import { RunDetail } from './types'
 import TopHeader from '../../../../../../components/Layout/Header'
+import CustomPagination from '../../../../../../components/Pagination'
 
 const JOB_STATUS = {
     CANCELED: 'stopped',
@@ -703,7 +704,7 @@ export default function EvaluateDetail() {
                             </Header>
                         }
                         pagination={
-                            <Pagination
+                            <CustomPagination
                                 currentPageIndex={page + 1}
                                 pagesCount={Math.ceil(runDetail?.length / 10)}
                                 onChange={({ detail }) =>
@@ -807,7 +808,7 @@ export default function EvaluateDetail() {
                             </Header>
                         }
                         pagination={
-                            <Pagination
+                            <CustomPagination
                                 currentPageIndex={resourcePage + 1}
                                 pagesCount={Math.ceil(resources?.length / 7)}
                                 onChange={({ detail }) =>
@@ -880,7 +881,8 @@ export default function EvaluateDetail() {
                                             // @ts-ignore
                                             color={
                                                 // @ts-ignore
-                                                item?.state?.toLowerCase() === 'active'
+                                                item?.state?.toLowerCase() ===
+                                                'active'
                                                     ? 'green'
                                                     : 'red'
                                             }
@@ -927,15 +929,7 @@ export default function EvaluateDetail() {
                                 </span>
                             </Header>
                         }
-                        // pagination={
-                        //     <Pagination
-                        //         currentPageIndex={resourcePage + 1}
-                        //         pagesCount={Math.ceil(resources?.length / 7)}
-                        //         onChange={({ detail }) =>
-                        //             setResourcePage(detail.currentPageIndex - 1)
-                        //         }
-                        //     />
-                        // }
+                     
                     />
                 </Modal>
             </div>

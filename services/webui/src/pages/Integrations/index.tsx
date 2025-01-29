@@ -38,6 +38,7 @@ import { get } from 'http'
 import axios from 'axios'
 import { notificationAtom } from '../../store'
 import { useSetAtom } from 'jotai'
+import CustomPagination from '../../components/Pagination'
 
 export default function Integrations() {
     const [pageNo, setPageNo] = useState<number>(1)
@@ -253,7 +254,7 @@ export default function Integrations() {
                                     ? ` (${responseConnectors?.total_count})`
                                     : ' ?'}
                             </span>
-                            <Pagination
+                            <CustomPagination
                                 currentPageIndex={pageNo}
                                 pagesCount={totalPages}
                                 onChange={({ detail }) => {

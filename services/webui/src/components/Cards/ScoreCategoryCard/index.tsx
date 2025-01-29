@@ -51,66 +51,82 @@ export default function ScoreCategoryCard({
     } else if (percentage >= 0 && percentage < 25) {
         color = 'red'
     }
+     const truncate = (text: string | undefined, number: number) => {
+         if (text) {
+             return text.length > number
+                 ? text.substring(0, number) + '...'
+                 : text
+         }
+     }
     return (
-        <Card
-            onClick={() =>
-                navigate(`/compliance/${category}${searchParams}`)
-            }
-            className={` ${
-                varient === 'default'
-                    ? 'gap-6 2xl:px-8 sm:px-4 py-8 rounded-xl'
-                    : 'pl-5 pr-4 py-6 rounded-lg'
-            } ${
-                varient === 'default' ? 'items-center' : 'items-start'
-            } flex bg-white dark:bg-openg-950 shadow-sm  hover:shadow-lg hover:cursor-pointer`}
-        >
-            <Flex className="relative w-fit">
-                <ProgressCircle color={color} value={percentage} size="md" >
-                    <Text>{percentage? percentage.toFixed(1) : 0}%</Text>
-                </ProgressCircle>
-            </Flex>
-            <Flex justifyContent="between" className="h-full">
-                <Flex
-                    alignItems="start"
-                    flexDirection="col"
-                    className={varient === 'default' ? 'gap-2' : 'pl-5 gap-1.5'}
-                >
-                    <Title
+        <div className="w-full   sm:max-w-full">
+            <Card
+                onClick={() => navigate(`/compliance/${category}`)}
+                className={` ${
+                    varient === 'default'
+                        ? 'gap-6 2xl:px-8 sm:px-4 py-8 rounded-xl'
+                        : 'sm:pl-5 pl-2 sm:pr-4 pr-2 sm:py-6 py-6 rounded-lg w-full'
+                } ${
+                    varient === 'default' ? 'items-center' : 'items-start'
+                } flex bg-white dark:bg-openg-950 shadow-sm  hover:shadow-lg hover:cursor-pointer`}
+            >
+                <Flex className="relative w-fit">
+                    <ProgressCircle
+                        color={color}
+                        value={percentage}
+                        size={'md'}
+                    >
+                        <Text>{percentage ? percentage.toFixed(1) : 0}%</Text>
+                    </ProgressCircle>
+                </Flex>
+                <Flex justifyContent="between" className="h-full w-full sm:justify-between justify-start">
+                    <Flex
+                        alignItems="start"
+                        flexDirection="col"
                         className={
                             varient === 'default'
-                                ? 'text-xl'
-                                : '!text-base font-bold'
+                                ? 'gap-2'
+                                : 'sm:pl-5 pl-3 gap-1.5 w-full'
                         }
                     >
-                        {title}
-                    </Title>
+                        <Title
+                            className={
+                                varient === 'default'
+                                    ? 'text-xl'
+                                    : ' sm:font-bold text-base   w-full    '
+                            }
+                        >
+                            {truncate(title,20)}
+                        </Title>
 
-                    {costOptimization > 0 || title == 'Efficiency' ? (
-                        // <Text>${costOptimization} Waste</Text>
-                        <Text>
-                            <Flex className="gap-1">
-                                <span className="text-gray-900">{value}</span>
-                                <span>{kpiText}</span>
-                            </Flex>
-                        </Text>
+                        {costOptimization > 0 || title == 'Efficiency' ? (
+                            // <Text>${costOptimization} Waste</Text>
+                            <Text>
+                                <Flex className="gap-1">
+                                    <span className="text-gray-900">
+                                        {value}
+                                    </span>
+                                    <span>{kpiText}</span>
+                                </Flex>
+                            </Text>
+                        ) : (
+                            <Text>
+                                <Flex className="gap-1">
+                                    <span className="text-gray-900">
+                                        {value}
+                                    </span>
+                                    <span>{kpiText}</span>
+                                </Flex>
+                            </Text>
+                        )}
+                    </Flex>
+                    {varient === 'default' ? (
+                        <Icon size="md" icon={ChevronRightIcon} />
                     ) : (
-                        <Text>
-                            <Flex className="gap-1">
-                                <span className="text-gray-900">{value}</span>
-                                <span>{kpiText}</span>
-                            </Flex>
-                        </Text>
+                        <ChevronRightIconSolid className="w-6 text-gray-300" />
                     )}
-                    {/* <BadgeDeltaSimple change={change}>
-                    from previous time period
-                </BadgeDeltaSimple> */}
                 </Flex>
-                {varient === 'default' ? (
-                    <Icon size="md" icon={ChevronRightIcon} />
-                ) : (
-                    <ChevronRightIconSolid className="w-6 text-gray-300" />
-                )}
-            </Flex>
-        </Card>
+            </Card>
+        </div>
     )
 }

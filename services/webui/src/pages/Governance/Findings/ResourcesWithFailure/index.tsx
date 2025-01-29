@@ -30,6 +30,7 @@ import {
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import Filter from '../Filter'
 import dayjs from 'dayjs'
+import CustomPagination from '../../../../components/Pagination'
 
 
 let sortKey: any[] = []
@@ -523,7 +524,7 @@ export default function ResourcesWithFailure({ query }: ICount) {
                             </Header>
                         }
                         pagination={
-                            <Pagination
+                            <CustomPagination
                                 currentPageIndex={page}
                                 pagesCount={totalPage}
                                 onChange={({ detail }) =>

@@ -9,6 +9,7 @@ import Spinner from '../../../../components/Spinner'
 import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 import { useMDXComponents } from '../../../../components/MDX'
+import CustomPagination from '../../../../components/Pagination'
 interface IntegrationListProps {
     name?: string
     integration_type?: string
@@ -195,14 +196,14 @@ const [total_count, setTotalCount] = useState<number>(0)
                                 <Header
                                     className="w-full"
                                     actions={
-                                        <Pagination
+                                        <CustomPagination
                                             // @ts-ignore
                                             className="min-w-fit"
                                             currentPageIndex={page + 1}
                                             pagesCount={Math.ceil(
                                                 total_count / 15
                                             )}
-                                            onChange={({ detail }) =>
+                                            onChange={({ detail }: any) =>
                                                 setPage(
                                                     detail.currentPageIndex - 1
                                                 )

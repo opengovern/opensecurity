@@ -39,6 +39,7 @@ import Select from '@cloudscape-design/components/select'
 import ScoreCategoryCard from '../../../../components/Cards/ScoreCategoryCard'
 import { useIntegrationApiV1EnabledConnectorsList } from '../../../../api/integration.gen'
 import { useParams, useSearchParams } from 'react-router-dom'
+import CustomPagination from '../../../../components/Pagination'
 const CATEGORY = {
     sre_efficiency: 'Efficiency',
     sre_reliability: 'Reliability',
@@ -322,7 +323,7 @@ export default function Framework() {
                 alignItems="center"
             >
                 <div className="border-b w-full rounded-xl border-tremor-border bg-tremor-background-muted p-4 dark:border-dark-tremor-border dark:bg-gray-950 sm:p-6 lg:p-8">
-                    <header className='flex flex-col gap-4 w-full'>
+                    <header className="flex flex-col gap-4 w-full">
                         <h1 className="text-tremor-title font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
                             Frameworks
                         </h1>
@@ -462,7 +463,10 @@ export default function Framework() {
                                                     numItems={9}
                                                     className="gap-2 min-h-[80px]  w-full "
                                                 >
-                                                    <Col numColSpan={9} numColSpanSm={4}>
+                                                    <Col
+                                                        numColSpan={9}
+                                                        numColSpanSm={4}
+                                                    >
                                                         <PropertyFilter
                                                             // @ts-ignore
                                                             query={query}
@@ -524,12 +528,15 @@ export default function Framework() {
                                                             ]}
                                                         />
                                                     </Col>
-                                                    <Col numColSpan={9} numColSpanSm={5}>
+                                                    <Col
+                                                        numColSpan={9}
+                                                        numColSpanSm={5}
+                                                    >
                                                         <Flex
                                                             className="w-full"
                                                             justifyContent="end"
                                                         >
-                                                            <Pagination
+                                                            <CustomPagination
                                                                 currentPageIndex={
                                                                     page
                                                                 }
@@ -538,7 +545,7 @@ export default function Framework() {
                                                                 }
                                                                 onChange={({
                                                                     detail,
-                                                                }) =>
+                                                                }:any) =>
                                                                     setPage(
                                                                         detail.currentPageIndex
                                                                     )

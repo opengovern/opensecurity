@@ -85,6 +85,7 @@ import {
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import { useIntegrationApiV1EnabledConnectorsList } from '../../../../api/integration.gen'
 import { severityBadge } from '../../Controls'
+import CustomPagination from '../../../../components/Pagination'
 
 
 
@@ -628,10 +629,10 @@ export default function AllControls() {
                                         </Header>
                                     }
                                     pagination={
-                                        <Pagination
+                                        <CustomPagination
                                             currentPageIndex={page}
                                             pagesCount={totalPage}
-                                            onChange={({ detail }) =>
+                                            onChange={({ detail } :any) =>
                                                 setPage(detail.currentPageIndex)
                                             }
                                         />

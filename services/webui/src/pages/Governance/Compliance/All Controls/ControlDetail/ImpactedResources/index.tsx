@@ -25,6 +25,7 @@ import {
     SegmentedControl,
 } from '@cloudscape-design/components'
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
+import CustomPagination from '../../../../../../components/Pagination'
 let sortKey: any[] = []
 
 interface IImpactedResources {
@@ -508,10 +509,10 @@ export default function ImpactedResources({
                             </Header>
                         }
                         pagination={
-                            <Pagination
+                            <CustomPagination
                                 currentPageIndex={page}
                                 pagesCount={totalPage}
-                                onChange={({ detail }) =>
+                                onChange={({ detail }:any) =>
                                     setPage(detail.currentPageIndex)
                                 }
                             />

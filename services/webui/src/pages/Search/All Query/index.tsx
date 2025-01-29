@@ -78,6 +78,7 @@ import {
 } from '@cloudscape-design/components'
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import { useIntegrationApiV1EnabledConnectorsList } from '../../../api/integration.gen'
+import CustomPagination from '../../../components/Pagination'
 
 
 export interface Props {
@@ -504,10 +505,10 @@ export default function AllQueries({ setTab }: Props) {
                             </Header>
                         }
                         pagination={
-                            <Pagination
+                            <CustomPagination
                                 currentPageIndex={page}
                                 pagesCount={totalPage}
-                                onChange={({ detail }) =>
+                                onChange={({ detail }: any) =>
                                     setPage(detail.currentPageIndex)
                                 }
                             />
@@ -515,7 +516,6 @@ export default function AllQueries({ setTab }: Props) {
                     />
                 }
             />
-     
         </>
     )
 }

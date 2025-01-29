@@ -46,6 +46,7 @@ import KButton from '@cloudscape-design/components/button'
 import KeyValuePairs from '@cloudscape-design/components/key-value-pairs'
 import axios from 'axios'
 import { dateTimeDisplay } from '../../../../utilities/dateDisplay'
+import CustomPagination from '../../../../components/Pagination'
 
 const ShowHours = [
     {
@@ -684,7 +685,7 @@ export default function ComplianceJobs() {
                             </Header>
                         }
                         pagination={
-                            <Pagination
+                            <CustomPagination
                                 currentPageIndex={page}
                                 pagesCount={totalPage}
                                 onChange={({ detail }) =>

@@ -37,6 +37,7 @@ import { GetActions, GetDetailsActions, GetTableColumns, GetTableColumnsDefintio
 import { update } from '@react-spring/web'
 import UpdateIntegration from './Update'
 import { notificationAtom } from '../../../../store'
+import CustomPagination from '../../../../components/Pagination'
 
 interface IntegrationListProps {
     name?: string
@@ -385,7 +386,6 @@ export default function IntegrationList({
                                         </SpaceBetween>
                                     </Box>
                                 }
-                                
                                 header={
                                     <Header
                                         actions={
@@ -404,11 +404,9 @@ export default function IntegrationList({
                                                         setOpen(true)
                                                     }
                                                 >
-                                                    Add 
+                                                    Add
                                                     {/* {`${name}`} */}
                                                 </Button>
-                                               
-                                                
                                             </Flex>
                                         }
                                         className="w-full"
@@ -420,10 +418,10 @@ export default function IntegrationList({
                                     </Header>
                                 }
                                 pagination={
-                                    <Pagination
+                                    <CustomPagination
                                         currentPageIndex={page + 1}
                                         pagesCount={Math.ceil(total_count / 10)}
-                                        onChange={({ detail }) =>
+                                        onChange={({ detail }: any) =>
                                             setPage(detail.currentPageIndex - 1)
                                         }
                                     />
@@ -483,7 +481,6 @@ export default function IntegrationList({
                             </Flex>
                         </Box>
                     </Modal>
-                   
                 </>
             ) : (
                 <Spinner />

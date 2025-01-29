@@ -26,6 +26,7 @@ import {
 } from '@cloudscape-design/components'
 import Filter from '../Filter'
 import dayjs from 'dayjs'
+import CustomPagination from '../../../../components/Pagination'
 
 
 
@@ -440,7 +441,7 @@ export default function ControlsWithFailure({ query }: ICount) {
                     </Header>
                 }
                 pagination={
-                    <Pagination
+                    <CustomPagination
                         currentPageIndex={page + 1}
                         pagesCount={Math.ceil(controls?.totalCount / 10)}
                         onChange={({ detail }) =>

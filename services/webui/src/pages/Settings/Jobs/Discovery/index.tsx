@@ -48,6 +48,7 @@ import KeyValuePairs from '@cloudscape-design/components/key-value-pairs'
 import axios from 'axios'
 import { title } from 'process'
 import { dateTimeDisplay } from '../../../../utilities/dateDisplay'
+import CustomPagination from '../../../../components/Pagination'
 
 interface Option {
     label: string | undefined
@@ -650,7 +651,7 @@ export default function DiscoveryJobs({
                             </Header>
                         }
                         pagination={
-                            <Pagination
+                            <CustomPagination
                                 currentPageIndex={page}
                                 pagesCount={totalPage}
                                 onChange={({ detail }) =>

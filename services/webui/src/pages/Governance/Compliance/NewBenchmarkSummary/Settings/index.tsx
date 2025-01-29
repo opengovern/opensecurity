@@ -395,7 +395,7 @@ export default function Settings({
                         </Header>
                     }
                     pagination={
-                        <Pagination
+                        <CustomPagination
                             currentPageIndex={page + 1}
                             pagesCount={Math.ceil(rows?.length / 10)}
                             onChange={({ detail }) =>
