@@ -375,7 +375,10 @@ export default function Controls({
             })
     }
     useEffect(() => {
+        if(window.innerWidth >640){
         GetTree()
+
+        }
 
     }, [])
 useEffect(() => {

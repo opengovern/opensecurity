@@ -258,13 +258,13 @@ export default function Evaluate({
                             GetEnabled()
                         }}
                         loading={false}
-                        variant="primary"
-                        className="flex flex-row justify-center items-center w-full min-w-20"
+                        variant={"primary" }
+                        className="flex flex-row justify-center items-center w-full sm:min-w-20"
                         // iconAlign="left"
                     >
-                        <div className="flex flex-row justify-center items-center w-full min-w-20 gap-2">
-                            <PlayCircleIcon className="w-5" />
-                            Run
+                        <div className="flex flex-row justify-center items-center w-full sm:min-w-20 gap-2">
+                            <PlayCircleIcon className="w-5" color='white' />
+                            <span className=' sm:inline-block  hidden'>Run</span>
                         </div>
                     </KButton>
                 </>
@@ -459,34 +459,4 @@ export default function Evaluate({
         </>
     )
 }
-{
-    /**
-    
-    <Modal
-                visible={openConfirm}
-                onDismiss={() => setOpenConfirm(false)}
-            >
-                <Title>
-                    {`Do you want to run evaluation on ${checkbox.state.length} accounts?`}
-                </Title>
-                <Flex className="mt-8">
-                    <Button
-                        variant="secondary"
-                        onClick={() => setOpenConfirm(false)}
-                    >
-                        Close
-                    </Button>
-                    <Button
-                        onClick={() => {
-                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                            // @ts-ignore
-                            onEvaluate(connections)
-                            setOpenConfirm(false)
-                        }}
-                    >
-                        Evaluate
-                    </Button>
-                </Flex>
-            </Modal>
-    */
-}
+
