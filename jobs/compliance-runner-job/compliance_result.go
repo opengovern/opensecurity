@@ -6,6 +6,7 @@ import (
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/opencomply/services/integration/client"
+	"github.com/opengovern/opencomply/services/scheduler/db/model"
 	"reflect"
 	"strconv"
 	"strings"
@@ -34,7 +35,7 @@ func (w *Job) GetResourceTypeFromTableName(integrationClient client.IntegrationS
 	return tableResourceType, integration.Type(integrationType), nil
 }
 
-func (w *Job) ExtractComplianceResults(logger *zap.Logger, benchmarkCache map[string]api.Benchmark, integrationClient client.IntegrationServiceClient, caller Caller, res *steampipe.Result, query api.Policy) ([]types.ComplianceResult, error) {
+func (w *Job) ExtractComplianceResults(logger *zap.Logger, benchmarkCache map[string]api.Benchmark, integrationClient client.IntegrationServiceClient, caller model.Caller, res *steampipe.Result, query api.Policy) ([]types.ComplianceResult, error) {
 	var complianceResults []types.ComplianceResult
 	var integrationType integration.Type
 	var err error
