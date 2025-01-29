@@ -103,8 +103,8 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 	var res *steampipe.Result
 
 	switch j.ExecutionPlan.Query.Language {
-	case api.PolicyLanguageRego:
-		res, err = w.runRegoWorkerJob(ctx, j, queryParamMap)
+	//case api.PolicyLanguageRego:
+	//	res, err = w.runRegoWorkerJob(ctx, j, queryParamMap)
 	case api.PolicyLanguageSQL:
 		res, err = w.runSqlWorkerJob(ctx, j, queryParamMap)
 	default:
@@ -392,55 +392,56 @@ func (w *Worker) runSqlWorkerJob(ctx context.Context, j Job, queryParamMap map[s
 	return res, nil
 }
 
-func (w *Worker) runRegoWorkerJob(ctx context.Context, j Job, queryParamMap map[string]string) (*steampipe.Result, error) {
-	regoResults, err := w.regoEngine.Evaluate(ctx, j.ExecutionPlan.Query.RegoPolicies, j.ExecutionPlan.Query.Definition)
-	if err != nil {
-		w.logger.Error("failed to evaluate rego", zap.Error(err), zap.String("query_id", j.ExecutionPlan.Query.ID), zap.Stringp("integration_id", j.ExecutionPlan.IntegrationID))
-		return nil, err
-	}
-
-	regoResultMaps := make([]map[string]any, 0)
-	for _, regoResult := range regoResults {
-		for _, expression := range regoResult.Expressions {
-			if messages, ok := expression.Value.([]any); ok {
-				for _, msg := range messages {
-					msgMap, ok := msg.(map[string]any)
-					if !ok {
-						w.logger.Error("failed to parse rego result, output is not an object", zap.Any("regoResult", expression.Value), zap.String("query_id", j.ExecutionPlan.Query.ID), zap.Stringp("integration_id", j.ExecutionPlan.IntegrationID), zap.Uint("job_id", j.ID), zap.String("type", fmt.Sprintf("%T", msg)))
-						return nil, fmt.Errorf("failed to parse rego result output is not an object")
-					}
-					regoResultMaps = append(regoResultMaps, msgMap)
-				}
-			} else {
-
-			}
-		}
-	}
-
-	var results steampipe.Result
-	for _, regoResultMap := range regoResultMaps {
-		if len(results.Headers) == 0 {
-			for k := range regoResultMap {
-				results.Headers = append(results.Headers, k)
-			}
-		}
-		var record []any
-		for _, header := range results.Headers {
-			record = append(record, regoResultMap[header])
-		}
-		results.Data = append(results.Data, record)
-	}
-
-	w.logger.Info("runRegoWorkerJob QueryOutput",
-		zap.Uint("job_id", j.ID),
-		zap.Int("caller_count", len(j.ExecutionPlan.Callers)),
-		zap.String("query", j.ExecutionPlan.Query.Definition),
-		zap.String("query_id", j.ExecutionPlan.Query.ID),
-		zap.Int("result_count", len(results.Data)),
-	)
-
-	return &results, nil
-}
+//
+//func (w *Worker) runRegoWorkerJob(ctx context.Context, j Job, queryParamMap map[string]string) (*steampipe.Result, error) {
+//	regoResults, err := w.regoEngine.Evaluate(ctx, j.ExecutionPlan.Query.RegoPolicies, j.ExecutionPlan.Query.Definition)
+//	if err != nil {
+//		w.logger.Error("failed to evaluate rego", zap.Error(err), zap.String("query_id", j.ExecutionPlan.Query.ID), zap.Stringp("integration_id", j.ExecutionPlan.IntegrationID))
+//		return nil, err
+//	}
+//
+//	regoResultMaps := make([]map[string]any, 0)
+//	for _, regoResult := range regoResults {
+//		for _, expression := range regoResult.Expressions {
+//			if messages, ok := expression.Value.([]any); ok {
+//				for _, msg := range messages {
+//					msgMap, ok := msg.(map[string]any)
+//					if !ok {
+//						w.logger.Error("failed to parse rego result, output is not an object", zap.Any("regoResult", expression.Value), zap.String("query_id", j.ExecutionPlan.Query.ID), zap.Stringp("integration_id", j.ExecutionPlan.IntegrationID), zap.Uint("job_id", j.ID), zap.String("type", fmt.Sprintf("%T", msg)))
+//						return nil, fmt.Errorf("failed to parse rego result output is not an object")
+//					}
+//					regoResultMaps = append(regoResultMaps, msgMap)
+//				}
+//			} else {
+//
+//			}
+//		}
+//	}
+//
+//	var results steampipe.Result
+//	for _, regoResultMap := range regoResultMaps {
+//		if len(results.Headers) == 0 {
+//			for k := range regoResultMap {
+//				results.Headers = append(results.Headers, k)
+//			}
+//		}
+//		var record []any
+//		for _, header := range results.Headers {
+//			record = append(record, regoResultMap[header])
+//		}
+//		results.Data = append(results.Data, record)
+//	}
+//
+//	w.logger.Info("runRegoWorkerJob QueryOutput",
+//		zap.Uint("job_id", j.ID),
+//		zap.Int("caller_count", len(j.ExecutionPlan.Callers)),
+//		zap.String("query", j.ExecutionPlan.Query.Definition),
+//		zap.String("query_id", j.ExecutionPlan.Query.ID),
+//		zap.Int("result_count", len(results.Data)),
+//	)
+//
+//	return &results, nil
+//}
 
 type ComplianceResultsMultiGetResponse struct {
 	Docs []struct {
