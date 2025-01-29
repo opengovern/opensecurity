@@ -34,6 +34,7 @@ import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import Filter from '../Filter'
 import FindingDetail from './Detail'
 import dayjs from 'dayjs'
+import CustomPagination from '../../../../../../components/Pagination'
 
 
 let sortKey = ''

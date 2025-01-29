@@ -38,6 +38,7 @@ import {
     Pagination,
     PropertyFilter,
 } from '@cloudscape-design/components'
+import CustomPagination from '../../../../../components/Pagination'
 interface ISettings {
     id: string | undefined
     response: (x: number) => void
