@@ -119,6 +119,11 @@ func (s *JobScheduler) runSummarizer(ctx context.Context, manuals bool) error {
 					zap.Time("lastUpdatedRunner", lastUpdatedRunner.UpdatedAt),
 				)
 				if job.Status != model.ComplianceJobSinkInProgress {
+					err = s.updateJobRunnersState(job)
+					if err != nil {
+						s.logger.Error("failed to update compliance runners status", zap.Error(err), zap.String("framework", framework))
+						return err
+					}
 					err = s.db.UpdateComplianceJob(job.ID, model.ComplianceJobSinkInProgress, "", nil)
 					if err != nil {
 						s.logger.Error("failed to update compliance job status", zap.Error(err), zap.String("framework", framework))
