@@ -14,6 +14,8 @@ import User from '../../../icons/User.svg'
 import Dollar from '../../../icons/Dollar.svg'
 import Cable from '../../../icons/Cable.svg'
 import Cube from '../../../icons/Cube.svg'
+import Terminal from '../../../icons/Terminal.svg'
+
 import { link } from 'fs'
 import { useEffect, useState } from 'react'
 import Evaluate from '../../Governance/Compliance/NewBenchmarkSummary/Evaluate'
@@ -22,6 +24,13 @@ import { Modal } from '@cloudscape-design/components'
 import MemberInvite from '../../Settings/Members/MemberInvite'
 
 const navList = [
+    {
+        title: 'CloudQL',
+        description: 'See all workloads - from code to cloud',
+        icon: Terminal,
+        link: 'cloudql',
+        new: true,
+    },
     {
         title: 'Connect',
         description: 'Setup Integrations and enable visibility',
@@ -36,13 +45,7 @@ const navList = [
         link: 'compliance',
         new: true,
     },
-    {
-        title: 'CloudQL',
-        description: 'See all workloads - from code to cloud',
-        icon: Cube,
-        link: 'cloudql',
-        new: true,
-    },
+
     {
         title: 'Invite',
         description: 'Add new users and govern as a team',
@@ -76,15 +79,17 @@ export default function Shortcuts() {
     const navigate = useNavigate()
     const [open,setOpen] = useState(false)
     const [userOpen, setUserOpen] = useState(false)
-    const number = window.innerWidth > 768 ? 4 : 2
+    const number = window.innerWidth > 768 ? 4 : 3
+    const number1 = window.innerWidth > 768 ? 0 : 1
+
 
     return (
         <>
             {window.innerWidth > 640 ? (
                 <>
                     {' '}
-                    <Card>
-                        <Flex justifyContent="start" className="gap-2 mb-4">
+                    <Card className="border-solid  border-2 border-b w-full rounded-xl border-tremor-border bg-tremor-background-muted p-4 dark:border-dark-tremor-border dark:bg-gray-950 sm:py-6 sm:px-4  ">
+                        <Flex justifyContent="start" className="gap-2 mb-4 ">
                             <Icon
                                 icon={CursorArrowRaysIcon}
                                 className="p-0 sm:inline-block hidden"
@@ -96,9 +101,9 @@ export default function Shortcuts() {
                         <Grid
                             numItems={1}
                             numItemsSm={4}
-                            className="w-full mb-4 gap-4"
+                            className="w-full mb-4 2xl:gap-[20px]  sm:gap-8 gap-4"
                         >
-                            {navList?.slice(0, number).map((nav, i) => (
+                            {navList?.slice(number1, number).map((nav, i) => (
                                 <>
                                     {nav?.title !== 'Audit' &&
                                     nav?.title !== 'Invite' ? (
@@ -204,8 +209,8 @@ export default function Shortcuts() {
             ) : (
                 <>
                     {' '}
-                    <div className='flex flex-row gap-2 justify-start items-center'>
-                        {navList?.slice(0, number).map((nav, i) => (
+                    <div className="flex flex-row gap-2 justify-start items-center">
+                        {navList?.slice(number1, number).map((nav, i) => (
                             <>
                                 {nav?.title !== 'Audit' &&
                                 nav?.title !== 'Invite' ? (

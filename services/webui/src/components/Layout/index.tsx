@@ -58,7 +58,7 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                             current === 'assistant'
                                 ? 'h-fit'
                                 : 'sm:px-6 px-2  sm:mt-16 mt-4 h-fit '
-                        } ${showSidebar && '2xl:px-48 '} ${
+                        } ${showSidebar && ' 2xl:px-24'} ${
                             'sm:mt-6'
                         } `}
                         // pl-44

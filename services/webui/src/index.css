@@ -35,7 +35,7 @@
 
 body {
     margin: 0;
-    font-family: 'Lato', Helvetica, sans-serif;
+    font-family: var(--font-family-base-dnvic8, "Open Sans", "Helvetica Neue", Roboto, Arial, sans-serif);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     color: #374151;

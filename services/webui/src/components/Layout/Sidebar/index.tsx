@@ -272,7 +272,7 @@ export default function Sidebar({ currentPage }: ISidebar) {
             flexDirection="col"
             alignItems="start"
             className={`z-50 !max-h-screen h-full  ${
-                collapsed ? 'w-20' : ' 2xl:w-60 sm:w-44'
+                collapsed ? 'w-20' : ' 2xl:w-72 sm:w-48'
             }
              pt-4 bg-openg-950  dark:bg-gray-950 relative border-r border-r-gray-700`}
         >
