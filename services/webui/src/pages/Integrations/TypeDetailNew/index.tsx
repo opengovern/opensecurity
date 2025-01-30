@@ -464,7 +464,7 @@ export default function TypeDetail() {
         if (window.innerWidth > 640) {
             temp.push(
                 {
-                    label: 'Version',
+                    label: 'Plugin Version',
                     value: manifest?.DescriberTag,
                 },
                 {
