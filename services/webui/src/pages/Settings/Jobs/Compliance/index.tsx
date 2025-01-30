@@ -347,18 +347,18 @@ const setNotification = useSetAtom(notificationAtom)
             value: (
                 <>
                     <Link
-                        href={`${
-                            checkStatus(clickedJob?.job_status)
-                                ? `/compliance/${clickedJob?.framework_id}/report/${clickedJob?.job_id}`
-                                : '#'
-                        }`}
+                        // href={`${
+                        //     checkStatus(clickedJob?.job_status)
+                        //         ? `/compliance/${clickedJob?.framework_id}/report/${clickedJob?.job_id}`
+                        //         : '#'
+                        // }`}
+                        href={`/compliance/${clickedJob?.framework_id}/report/${clickedJob?.job_id}`}
                     >
                         {clickedJob?.framework_title}
                     </Link>
                 </>
             ),
         },
-       
     ]
 
     return (

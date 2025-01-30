@@ -31,6 +31,7 @@ import {
     Icon,
     SpaceBetween,
     Spinner,
+    Tabs,
 } from '@cloudscape-design/components'
 
 import KMulstiSelect from '@cloudscape-design/components/multiselect'
@@ -50,7 +51,7 @@ import {
     PropertyFilter,
 } from '@cloudscape-design/components'
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
-import { dateTimeDisplay } from '../../../../../../utilities/dateDisplay'
+import { dateTimeDisplay, shortDateTimeDisplayDelta } from '../../../../../../utilities/dateDisplay'
 import StatusIndicator from '@cloudscape-design/components/status-indicator'
 import SeverityBar from './SeverityBar'
 import { useParams } from 'react-router-dom'
@@ -77,7 +78,13 @@ export default function EvaluateDetail() {
     const [open, setOpen] = useState(false)
     const [selectedControl, setSelectedControl] = useState()
     const [resources, setResources] = useState()
+    const [jobDetail, setJobDetail] = useState()
     const [fullLoading, setFullLoading] = useState(false)
+    const [runnerLoading, setRunnerLoading] = useState(false)
+    const [runners, setRunners] = useState([])
+    const [selectedRunner, setSelectedRunner] = useState()
+    const [runnerOpen, setRunnerOpen] = useState(false)
+    const [runnerPage, setRunnerPage] = useState(0)
     const [sortOrder, setSortOrder] = useState('asc')
     const [sortField, setSortField] = useState({
         id: 'severity',
@@ -241,7 +248,7 @@ export default function EvaluateDetail() {
                                 resource_id: alarm.resource_id,
                                 resource_type: alarm.resource_type,
                                 reason: alarm.reason,
-                                type:key[0]
+                                type: key[0],
                             })
                         })
                     }
@@ -330,11 +337,82 @@ export default function EvaluateDetail() {
                 console.log(err)
             })
     }
+    const GetRunners = () => {
+        setRunnerLoading(true)
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+
+        axios
+            .get(
+                // @ts-ignore
+                `${url}/main/schedule/api/v3/jobs/compliance/${id}/runners`,
+
+                config
+            )
+            .then((res) => {
+                //   setAccounts(res.data.integrations)
+                setRunners(res?.data)
+                setRunnerLoading(false)
+            })
+            .catch((err) => {
+                console.log(err)
+                setRunnerLoading(false)
+            })
+    }
+    const GetJobDetail = () => {
+        setRunnerLoading(true)
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+
+        axios
+            .get(
+                // @ts-ignore
+                `${url}/main/schedule/api/v3/job/compliance/${id}`,
+
+                config
+            )
+            .then((res) => {
+                //   setAccounts(res.data.integrations)
+                setJobDetail(res?.data)
+                setRunnerLoading(false)
+            })
+            .catch((err) => {
+                console.log(err)
+                setRunnerLoading(false)
+            })
+    }
 
     useEffect(() => {
         GetDetail()
         GetControls()
+        GetRunners()
+        GetJobDetail()
     }, [])
+
     useEffect(() => {
         if (selectedControl) {
             GetResults()
@@ -405,7 +483,7 @@ export default function EvaluateDetail() {
                                 },
                                 {
                                     label: 'Benchmark ID',
-                                    value: detail?.job_details?.framework?.id,
+                                    value: jobDetail?.framework_id,
                                 },
                                 {
                                     label: 'Benchmark Title',
@@ -433,7 +511,10 @@ export default function EvaluateDetail() {
                                                 className="gap-2 mt-2"
                                                 justifyContent="start"
                                             >
-                                                {integrations?.length}
+                                                {
+                                                    jobDetail?.integration_info
+                                                        ?.length
+                                                }
                                                 <KButton
                                                     onClick={() => {
                                                         if (integrations) {
@@ -457,7 +538,7 @@ export default function EvaluateDetail() {
                                     value: (
                                         <>
                                             {dateTimeDisplay(
-                                                detail?.job_details?.updated_at
+                                                jobDetail?.updated_at
                                             )}
                                         </>
                                     ),
@@ -510,208 +591,545 @@ export default function EvaluateDetail() {
                     </Flex>
                 </Flex>
                 <Flex className="w-100 bg-white p-4 rounded-lg mt-4">
-                    <KTable
-                        className="p-3   min-h-[550px]"
-                        // resizableColumns
-                        renderAriaLive={({
-                            firstIndex,
-                            lastIndex,
-                            totalItemsCount,
-                        }) =>
-                            `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
-                        }
-                        sortingDescending={sortOrder == 'desc' ? true : false}
-                        sortingColumn={sortField}
-                        onSortingChange={({ detail }) => {
-                            const desc = detail.isDescending ? 'desc' : 'asc'
-                            setSortOrder(desc)
-                            setSortField(detail.sortingColumn)
-                        }}
-                        onRowClick={(event) => {
-                            const row = event.detail.item
-                            // @ts-ignore
-                            setSelectedControl(row)
-                            setResourcePage(0)
-                        }}
-                        columnDefinitions={[
+                    <Tabs
+                        tabs={[
                             {
-                                id: 'id',
-                                header: 'Control ID',
-                                cell: (item) => item.title,
-                                // sortingField: 'id',
-                                isRowHeader: true,
-                            },
-
-                            {
-                                id: 'severity',
-                                header: 'Severity',
-                                sortingField: 'severity',
-                                cell: (item) => (
-                                    <Badge
-                                        // @ts-ignore
-                                        color={`severity-${item.severity}`}
-                                    >
-                                        {item.severity.charAt(0).toUpperCase() +
-                                            item.severity.slice(1)}
-                                    </Badge>
-                                ),
-                                maxWidth: 100,
-                                sortingComparator: (a, b) => {
-                                    if (a?.severity === b?.severity) {
-                                        return 0
-                                    }
-                                    if (a?.severity === 'critical') {
-                                        return -1
-                                    }
-                                    if (b?.severity === 'critical') {
-                                        return 1
-                                    }
-                                    if (a?.severity === 'high') {
-                                        return -1
-                                    }
-                                    if (b?.severity === 'high') {
-                                        return 1
-                                    }
-                                    if (a?.severity === 'medium') {
-                                        return -1
-                                    }
-                                    if (b?.severity === 'medium') {
-                                        return 1
-                                    }
-                                    if (a?.severity === 'low') {
-                                        return -1
-                                    }
-                                    if (b?.severity === 'low') {
-                                        return 1
-                                    }
-                                },
-                            },
-
-                            {
-                                id: 'incidents',
-                                header: 'OK',
-                                sortingField: 'oks',
-
-                                cell: (item) => (
-                                    // @ts-ignore
+                                label: 'Controls',
+                                id: '0',
+                                disabled: !(runDetail && runDetail?.length > 0),
+                                disabledReason: 'Jobs is still in progress',
+                                content: (
                                     <>
-                                        {/**@ts-ignore */}
-                                        {item.oks}
+                                        {' '}
+                                        <KTable
+                                            className="p-3   min-h-[550px]"
+                                            // resizableColumns
+                                            renderAriaLive={({
+                                                firstIndex,
+                                                lastIndex,
+                                                totalItemsCount,
+                                            }) =>
+                                                `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
+                                            }
+                                            sortingDescending={
+                                                sortOrder == 'desc'
+                                                    ? true
+                                                    : false
+                                            }
+                                            sortingColumn={sortField}
+                                            onSortingChange={({ detail }) => {
+                                                const desc = detail.isDescending
+                                                    ? 'desc'
+                                                    : 'asc'
+                                                setSortOrder(desc)
+                                                setSortField(
+                                                    detail.sortingColumn
+                                                )
+                                            }}
+                                            onRowClick={(event) => {
+                                                const row = event.detail.item
+                                                // @ts-ignore
+                                                setSelectedControl(row)
+                                                setResourcePage(0)
+                                            }}
+                                            columnDefinitions={[
+                                                {
+                                                    id: 'id',
+                                                    header: 'Control ID',
+                                                    cell: (item) => item.title,
+                                                    // sortingField: 'id',
+                                                    isRowHeader: true,
+                                                },
+
+                                                {
+                                                    id: 'severity',
+                                                    header: 'Severity',
+                                                    sortingField: 'severity',
+                                                    cell: (item) => (
+                                                        <Badge
+                                                            // @ts-ignore
+                                                            color={`severity-${item.severity}`}
+                                                        >
+                                                            {item.severity
+                                                                .charAt(0)
+                                                                .toUpperCase() +
+                                                                item.severity.slice(
+                                                                    1
+                                                                )}
+                                                        </Badge>
+                                                    ),
+                                                    maxWidth: 100,
+                                                    sortingComparator: (
+                                                        a,
+                                                        b
+                                                    ) => {
+                                                        if (
+                                                            a?.severity ===
+                                                            b?.severity
+                                                        ) {
+                                                            return 0
+                                                        }
+                                                        if (
+                                                            a?.severity ===
+                                                            'critical'
+                                                        ) {
+                                                            return -1
+                                                        }
+                                                        if (
+                                                            b?.severity ===
+                                                            'critical'
+                                                        ) {
+                                                            return 1
+                                                        }
+                                                        if (
+                                                            a?.severity ===
+                                                            'high'
+                                                        ) {
+                                                            return -1
+                                                        }
+                                                        if (
+                                                            b?.severity ===
+                                                            'high'
+                                                        ) {
+                                                            return 1
+                                                        }
+                                                        if (
+                                                            a?.severity ===
+                                                            'medium'
+                                                        ) {
+                                                            return -1
+                                                        }
+                                                        if (
+                                                            b?.severity ===
+                                                            'medium'
+                                                        ) {
+                                                            return 1
+                                                        }
+                                                        if (
+                                                            a?.severity ===
+                                                            'low'
+                                                        ) {
+                                                            return -1
+                                                        }
+                                                        if (
+                                                            b?.severity ===
+                                                            'low'
+                                                        ) {
+                                                            return 1
+                                                        }
+                                                    },
+                                                },
+
+                                                {
+                                                    id: 'incidents',
+                                                    header: 'OK',
+                                                    sortingField: 'oks',
+
+                                                    cell: (item) => (
+                                                        // @ts-ignore
+                                                        <>
+                                                            {/**@ts-ignore */}
+                                                            {item.oks}
+                                                        </>
+                                                    ),
+                                                    // minWidth: 50,
+                                                    maxWidth: 100,
+                                                    sortingComparator: (
+                                                        a,
+                                                        b
+                                                    ) => {
+                                                        console.log(a)
+                                                        console.log(b)
+
+                                                        if (a?.oks === b?.oks) {
+                                                            return 0
+                                                        }
+                                                        if (a?.oks > b?.oks) {
+                                                            return -1
+                                                        }
+                                                        if (a?.oks < b?.oks) {
+                                                            return 1
+                                                        }
+                                                    },
+                                                },
+                                                {
+                                                    id: 'passing_resources',
+                                                    header: 'Alarms ',
+                                                    sortingField: 'alarms',
+
+                                                    cell: (item) => (
+                                                        // @ts-ignore
+                                                        <>{item.alarms}</>
+                                                    ),
+                                                    maxWidth: 100,
+                                                    sortingComparator: (
+                                                        a,
+                                                        b
+                                                    ) => {
+                                                        if (
+                                                            a?.alarms ===
+                                                            b?.alarms
+                                                        ) {
+                                                            return 0
+                                                        }
+                                                        if (
+                                                            a?.alarms >
+                                                            b?.alarms
+                                                        ) {
+                                                            return -1
+                                                        }
+                                                        if (
+                                                            a?.alarms <
+                                                            b?.alarms
+                                                        ) {
+                                                            return 1
+                                                        }
+                                                    },
+                                                },
+
+                                                {
+                                                    id: 'action',
+                                                    header: '',
+                                                    cell: (item) => (
+                                                        // @ts-ignore
+                                                        <KButton
+                                                            onClick={() => {
+                                                                setSelectedControl(
+                                                                    item
+                                                                )
+                                                                setResourcePage(
+                                                                    0
+                                                                )
+                                                            }}
+                                                            className="w-full"
+                                                            variant="inline-link"
+                                                            ariaLabel={`Open Detail`}
+                                                        >
+                                                            {window.innerWidth >
+                                                            768 ? (
+                                                                'See details'
+                                                            ) : (
+                                                                <InformationCircleIcon className="w-5" />
+                                                            )}
+                                                        </KButton>
+                                                    ),
+                                                },
+                                            ]}
+                                            columnDisplay={[
+                                                { id: 'id', visible: true },
+                                                { id: 'title', visible: false },
+                                                {
+                                                    id: 'connector',
+                                                    visible: false,
+                                                },
+                                                { id: 'query', visible: false },
+                                                {
+                                                    id: 'severity',
+                                                    visible: true,
+                                                },
+                                                {
+                                                    id: 'incidents',
+                                                    visible: true,
+                                                },
+                                                {
+                                                    id: 'passing_resources',
+                                                    visible: true,
+                                                },
+                                                {
+                                                    id: 'noncompliant_resources',
+                                                    visible: true,
+                                                },
+
+                                                { id: 'action', visible: true },
+                                            ]}
+                                            enableKeyboardNavigation
+                                            items={runDetail ? getRows() : []}
+                                            loading={detailLoading}
+                                            loadingText="Loading resources"
+                                            // stickyColumns={{ first: 0, last: 1 }}
+                                            // stripedRows
+                                            trackBy="id"
+                                            empty={
+                                                <Box
+                                                    margin={{ vertical: 'xs' }}
+                                                    textAlign="center"
+                                                    color="inherit"
+                                                >
+                                                    <SpaceBetween size="m">
+                                                        <b>No resources</b>
+                                                    </SpaceBetween>
+                                                </Box>
+                                            }
+                                            header={
+                                                <Header className="w-full">
+                                                    Controls{' '}
+                                                    <span className=" font-medium">
+                                                        ({runDetail?.length})
+                                                    </span>
+                                                </Header>
+                                            }
+                                            pagination={
+                                                <CustomPagination
+                                                    currentPageIndex={page + 1}
+                                                    pagesCount={Math.ceil(
+                                                        runDetail?.length / 10
+                                                    )}
+                                                    onChange={({ detail }) =>
+                                                        setPage(
+                                                            detail.currentPageIndex -
+                                                                1
+                                                        )
+                                                    }
+                                                />
+                                            }
+                                        />
                                     </>
                                 ),
-                                // minWidth: 50,
-                                maxWidth: 100,
-                                sortingComparator: (a, b) => {
-                                    console.log(a)
-                                    console.log(b)
-
-                                    if (a?.oks === b?.oks) {
-                                        return 0
-                                    }
-                                    if (a?.oks > b?.oks) {
-                                        return -1
-                                    }
-                                    if (a?.oks < b?.oks) {
-                                        return 1
-                                    }
-                                },
                             },
                             {
-                                id: 'passing_resources',
-                                header: 'Alarms ',
-                                sortingField: 'alarms',
+                                label: 'Execution info',
+                                id: '1',
+                                disabled: !(runners && runners?.length > 0),
+                                disabledReason: 'Jobs completed',
+                                content: (
+                                    <>
+                                        <KTable
+                                            className="p-3   min-h-[550px]"
+                                            // resizableColumns
+                                            renderAriaLive={({
+                                                firstIndex,
+                                                lastIndex,
+                                                totalItemsCount,
+                                            }) =>
+                                                `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
+                                            }
+                                            onRowClick={(event) => {
+                                                const row = event.detail.item
+                                                // @ts-ignore
+                                                setSelectedRunner(row)
+                                                setRunnerOpen(true)
+                                            }}
+                                            columnDefinitions={[
+                                                {
+                                                    id: 'id',
+                                                    header: 'Runner ID',
+                                                    cell: (item) =>
+                                                        item.runner_id,
+                                                    // sortingField: 'id',
+                                                    isRowHeader: true,
+                                                },
 
-                                cell: (item) => (
-                                    // @ts-ignore
-                                    <>{item.alarms}</>
-                                ),
-                                maxWidth: 100,
-                                sortingComparator: (a, b) => {
-                                    if (a?.alarms === b?.alarms) {
-                                        return 0
-                                    }
-                                    if (a?.alarms > b?.alarms) {
-                                        return -1
-                                    }
-                                    if (a?.alarms < b?.alarms) {
-                                        return 1
-                                    }
-                                },
-                            },
+                                                {
+                                                    id: 'control_id',
+                                                    header: 'Control ID',
+                                                    sortingField: 'severity',
+                                                    cell: (item) =>
+                                                        item?.control_id,
+                                                    maxWidth: 100,
+                                                },
 
-                            {
-                                id: 'action',
-                                header: '',
-                                cell: (item) => (
-                                    // @ts-ignore
-                                    <KButton
-                                        onClick={() => {
-                                            setSelectedControl(item)
-                                            setResourcePage(0)
-                                        }}
-                                        className="w-full"
-                                        variant="inline-link"
-                                        ariaLabel={`Open Detail`}
-                                    >
-                                        {window.innerWidth > 768 ? (
-                                            'See details'
-                                        ) : (
-                                            <InformationCircleIcon className="w-5" />
-                                        )}
-                                    </KButton>
+                                                {
+                                                    id: 'integration_id',
+                                                    header: 'Integration ID',
+                                                    sortingField: 'oks',
+
+                                                    cell: (item) =>
+                                                        item?.integration_id,
+                                                    // minWidth: 50,
+                                                    maxWidth: 100,
+                                                },
+                                                {
+                                                    id: 'queued_at',
+                                                    header: 'Queued At',
+                                                    sortingField: 'oks',
+
+                                                    cell: (item) =>
+                                                        dateTimeDisplay(
+                                                            item?.queued_at
+                                                        ),
+                                                    // minWidth: 50,
+                                                    maxWidth: 100,
+                                                },
+                                                {
+                                                    id: 'executed_at',
+                                                    header: 'Executed At',
+                                                    sortingField: 'oks',
+
+                                                    cell: (item) =>
+                                                        dateTimeDisplay(
+                                                            item?.executed_at
+                                                        ),
+                                                    // minWidth: 50,
+                                                    maxWidth: 100,
+                                                },
+                                                {
+                                                    id: 'completed_at',
+                                                    header: 'Completed At',
+                                                    sortingField: 'oks',
+
+                                                    cell: (item) =>
+                                                        dateTimeDisplay(
+                                                            item?.completed_at
+                                                        ),
+                                                    // minWidth: 50,
+                                                    maxWidth: 100,
+                                                },
+                                                {
+                                                    id: 'wait',
+                                                    header: 'Wait time',
+                                                    sortingField: 'oks',
+
+                                                    cell: (item) =>
+                                                        shortDateTimeDisplayDelta(
+                                                            item?.executed_at,
+                                                            item?.queued_at
+                                                        ),
+                                                    // minWidth: 50,
+                                                    maxWidth: 100,
+                                                },
+                                                {
+                                                    id: 'execution_time',
+                                                    header: 'Total time',
+                                                    sortingField: 'oks',
+
+                                                    cell: (item) =>
+                                                        shortDateTimeDisplayDelta(
+                                                            item?.completed_at,
+                                                            item?.queued_at
+                                                        ),
+                                                    // minWidth: 50,
+                                                    maxWidth: 100,
+                                                },
+
+                                                {
+                                                    id: 'status',
+                                                    header: 'status',
+                                                    sortingField: 'oks',
+
+                                                    cell: (item) =>
+                                                        item?.status,
+                                                    // minWidth: 50,
+                                                    maxWidth: 100,
+                                                },
+                                                {
+                                                    id: 'action',
+                                                    header: '',
+                                                    cell: (item) => (
+                                                        // @ts-ignore
+                                                        <KButton
+                                                            onClick={() => {
+                                                                setSelectedRunner(
+                                                                    item
+                                                                )
+                                                                setRunnerOpen(
+                                                                    true
+                                                                )
+                                                            }}
+                                                            className="w-full"
+                                                            variant="inline-link"
+                                                            ariaLabel={`Open Detail`}
+                                                        >
+                                                            {window.innerWidth >
+                                                            768 ? (
+                                                                'See details'
+                                                            ) : (
+                                                                <InformationCircleIcon className="w-5" />
+                                                            )}
+                                                        </KButton>
+                                                    ),
+                                                },
+                                            ]}
+                                            columnDisplay={[
+                                                { id: 'id', visible: true },
+                                                {
+                                                    id: 'integration_id',
+                                                    visible: true,
+                                                },
+                                                {
+                                                    id: 'control_id',
+                                                    visible: true,
+                                                },
+                                                {
+                                                    id: 'queued_at',
+                                                    visible: false,
+                                                },
+                                                {
+                                                    id: 'executed_at',
+                                                    visible: false,
+                                                },
+                                                {
+                                                    id: 'completed_at',
+                                                    visible: false,
+                                                },
+                                                {
+                                                    id: 'execution_time',
+                                                    visible: true,
+                                                },
+
+                                                {
+                                                    id: 'status',
+                                                    visible: true,
+                                                },
+                                                {
+                                                    id: 'action',
+                                                    visible: true,
+                                                },
+                                            ]}
+                                            enableKeyboardNavigation
+                                            items={
+                                                // @prettie
+                                                runners && runners.length > 0
+                                                    ? runners?.slice(
+                                                          runnerPage * 10,
+                                                          (runnerPage + 1) * 10
+                                                      )
+                                                    : []
+                                            }
+                                            loading={detailLoading}
+                                            loadingText="Loading resources"
+                                            // stickyColumns={{ first: 0, last: 1 }}
+                                            // stripedRows
+                                            trackBy="id"
+                                            empty={
+                                                <Box
+                                                    margin={{ vertical: 'xs' }}
+                                                    textAlign="center"
+                                                    color="inherit"
+                                                >
+                                                    <SpaceBetween size="m">
+                                                        <b>No resources</b>
+                                                    </SpaceBetween>
+                                                </Box>
+                                            }
+                                            header={
+                                                <Header className="w-full">
+                                                    Runners{' '}
+                                                    <span className=" font-medium">
+                                                        ({runners?.length})
+                                                    </span>
+                                                </Header>
+                                            }
+                                            pagination={
+                                                <CustomPagination
+                                                    currentPageIndex={
+                                                        runnerPage + 1
+                                                    }
+                                                    pagesCount={Math.ceil(
+                                                        runners?.length / 10
+                                                    )}
+                                                    onChange={({ detail }) =>
+                                                        setRunnerPage(
+                                                            detail.currentPageIndex -
+                                                                1
+                                                        )
+                                                    }
+                                                />
+                                            }
+                                        />
+                                    </>
                                 ),
                             },
                         ]}
-                        columnDisplay={[
-                            { id: 'id', visible: true },
-                            { id: 'title', visible: false },
-                            { id: 'connector', visible: false },
-                            { id: 'query', visible: false },
-                            { id: 'severity', visible: true },
-                            { id: 'incidents', visible: true },
-                            { id: 'passing_resources', visible: true },
-                            {
-                                id: 'noncompliant_resources',
-                                visible: true,
-                            },
-
-                            { id: 'action', visible: true },
-                        ]}
-                        enableKeyboardNavigation
-                        items={runDetail ? getRows() : []}
-                        loading={detailLoading}
-                        loadingText="Loading resources"
-                        // stickyColumns={{ first: 0, last: 1 }}
-                        // stripedRows
-                        trackBy="id"
-                        empty={
-                            <Box
-                                margin={{ vertical: 'xs' }}
-                                textAlign="center"
-                                color="inherit"
-                            >
-                                <SpaceBetween size="m">
-                                    <b>No resources</b>
-                                </SpaceBetween>
-                            </Box>
-                        }
-                        header={
-                            <Header className="w-full">
-                                Controls{' '}
-                                <span className=" font-medium">
-                                    ({runDetail?.length})
-                                </span>
-                            </Header>
-                        }
-                        pagination={
-                            <CustomPagination
-                                currentPageIndex={page + 1}
-                                pagesCount={Math.ceil(runDetail?.length / 10)}
-                                onChange={({ detail }) =>
-                                    setPage(detail.currentPageIndex - 1)
-                                }
-                            />
-                        }
                     />
                 </Flex>
                 <Modal
@@ -929,7 +1347,61 @@ export default function EvaluateDetail() {
                                 </span>
                             </Header>
                         }
-                     
+                    />
+                </Modal>
+                <Modal
+                    visible={runnerOpen}
+                    size="large"
+                    onDismiss={() => setRunnerOpen(false)}
+                    header={selectedRunner?.runner_id}
+                >
+                    <KeyValuePairs
+                        columns={3}
+                        items={[
+                            {
+                                label: 'Compliance Job ID',
+                                value: selectedRunner?.compliance_job_id,
+                            },
+                            {
+                                label: 'Control ID',
+                                value: selectedRunner?.control_id,
+                            },
+                            {
+                                label: 'Integration ID',
+                                value: selectedRunner?.integration_id,
+                            },
+                            {
+                                label: 'Worker Pod Name',
+                                value: selectedRunner?.worker_pod_name,
+                            },
+                            {
+                                label: 'Queued At',
+                                value: dateTimeDisplay(
+                                    selectedRunner?.queued_at
+                                ),
+                            },
+                            {
+                                label: 'Executed At',
+                                value: dateTimeDisplay(
+                                    selectedRunner?.executed_at
+                                ),
+                            },
+                            {
+                                label: 'Completed At',
+                                value: dateTimeDisplay(
+                                    selectedRunner?.completed_at
+                                ),
+                            },
+                            { label: 'Status', value: selectedRunner?.status },
+                            {
+                                label: 'Failure Message',
+                                value: selectedRunner?.failure_message || 'N/A',
+                            }, // Default if empty
+                            {
+                                label: 'Trigger Type',
+                                value: selectedRunner?.trigger_type,
+                            },
+                        ]}
                     />
                 </Modal>
             </div>
