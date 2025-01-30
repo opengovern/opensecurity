@@ -257,6 +257,7 @@ func (w *Worker) ProcessMessage(ctx context.Context, msg jetstream.Msg) (commit 
 		Job:                        job,
 		StartedAt:                  time.Now(),
 		Status:                     model.ComplianceRunnerInProgress,
+		PodName:                    os.Getenv("POD_NAME"),
 		Error:                      "",
 		TotalComplianceResultCount: nil,
 	}

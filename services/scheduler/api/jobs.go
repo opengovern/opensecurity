@@ -267,6 +267,20 @@ type GetComplianceJobStatusResponse struct {
 	UpdatedAt       time.Time           `json:"updated_at"`
 }
 
+type ComplianceJobRunner struct {
+	RunnerId        string                 `json:"runner_id"`
+	ComplianceJobId string                 `json:"compliance_job_id"`
+	ControlId       string                 `json:"control_id"`
+	IntegrationId   string                 `json:"integration_id"`
+	WorkerPodName   string                 `json:"worker_pod_name"`
+	QueuedAt        time.Time              `json:"queued_at"`
+	ExecutedAt      time.Time              `json:"executed_at"`
+	CompletedAt     time.Time              `json:"completed_at"`
+	Status          ComplianceRunnerStatus `json:"status"`
+	FailureMessage  string                 `json:"failure_message"`
+	TriggerType     string                 `json:"trigger_type"`
+}
+
 type GetAsyncQueryRunJobStatusResponse struct {
 	JobId          uint                          `json:"job_id"`
 	QueryId        string                        `json:"query_id"`

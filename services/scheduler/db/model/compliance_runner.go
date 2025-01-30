@@ -6,6 +6,7 @@ import (
 	"github.com/opengovern/opencomply/pkg/types"
 	"github.com/opengovern/opencomply/services/scheduler/api"
 	"gorm.io/gorm"
+	"strconv"
 	"time"
 )
 
@@ -51,6 +52,26 @@ type ComplianceRunner struct {
 
 	NatsSequenceNumber uint64
 	WorkerPodName      string
+}
+
+func (cr ComplianceRunner) ToAPI() api.ComplianceJobRunner {
+	integrationId := ""
+	if cr.IntegrationID != nil {
+		integrationId = *cr.IntegrationID
+	}
+	return api.ComplianceJobRunner{
+		RunnerId:        strconv.Itoa(int(cr.ID)),
+		ComplianceJobId: strconv.Itoa(int(cr.ParentJobID)),
+		ControlId:       cr.ControlID,
+		IntegrationId:   integrationId,
+		WorkerPodName:   cr.WorkerPodName,
+		QueuedAt:        cr.QueuedAt,
+		ExecutedAt:      cr.ExecutedAt,
+		CompletedAt:     cr.CompletedAt,
+		Status:          cr.Status.ToAPI(),
+		FailureMessage:  cr.FailureMessage,
+		TriggerType:     string(cr.TriggerType),
+	}
 }
 
 func (s ComplianceRunnerStatus) ToAPI() api.ComplianceRunnerStatus {

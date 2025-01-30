@@ -91,6 +91,7 @@ func (h HttpServer) Register(e *echo.Echo) {
 	v3.PUT("/query/:query_id/run", httpserver.AuthorizeHandler(h.RunQuery, apiAuth.AdminRole))
 	v3.GET("/job/discovery/:job_id", httpserver.AuthorizeHandler(h.GetDescribeJobStatus, apiAuth.ViewerRole))
 	v3.GET("/job/compliance/:job_id", httpserver.AuthorizeHandler(h.GetComplianceJobStatus, apiAuth.ViewerRole))
+	v3.GET("/jobs/compliance/:job_id/runners", httpserver.AuthorizeHandler(h.GetComplianceJobRunners, apiAuth.ViewerRole))
 	v3.GET("/job/query/:job_id", httpserver.AuthorizeHandler(h.GetAsyncQueryRunJobStatus, apiAuth.ViewerRole))
 	v3.POST("/jobs/discovery", httpserver.AuthorizeHandler(h.ListDescribeJobs, apiAuth.ViewerRole))
 	v3.POST("/jobs/compliance", httpserver.AuthorizeHandler(h.ListComplianceJobs, apiAuth.ViewerRole))
@@ -1772,6 +1773,36 @@ func (h HttpServer) GetComplianceJobStatus(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, jobsResult)
 }
 
+// GetComplianceJobRunners godoc
+//
+//	@Summary	Get compliance job runners by job id
+//	@Security	BearerToken
+//	@Tags		scheduler
+//	@Param		job_id	path	string	true	"Job ID"
+//	@Produce	json
+//	@Success	200	{object}	api.GetComplianceJobStatusResponse
+//	@Router		/schedule/api/v3/job/compliance/{job_id}/runners [get]
+func (h HttpServer) GetComplianceJobRunners(ctx echo.Context) error {
+	jobIdString := ctx.Param("job_id")
+	jobId, err := strconv.ParseUint(jobIdString, 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid job id")
+	}
+
+	runners, err := h.DB.ListComplianceJobRunnersWithParentID(uint(jobId))
+	if err != nil {
+		h.Scheduler.logger.Error("failed to get runners", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get runners")
+	}
+
+	var runnersApis []api.ComplianceJobRunner
+	for _, r := range runners {
+		runnersApis = append(runnersApis, r.ToAPI())
+	}
+
+	return ctx.JSON(http.StatusOK, runnersApis)
+}
+
 // GetAsyncQueryRunJobStatus godoc
 //
 //	@Summary	Get async query run job status by job id
@@ -2897,41 +2928,30 @@ func (h HttpServer) CancelJob(ctx echo.Context) error {
 				canceled = true
 				break
 			} else {
-				allFinished := true
 				for _, r := range runners {
 					if r.Status == model2.ComplianceRunnerCreated {
-						allFinished = false
 						err = h.DB.UpdateRunnerJob(r.ID, model2.ComplianceRunnerCanceled, nil, nil, nil, nil, "", nil)
 						if err != nil {
-							failureReason = err.Error()
-							break
+							failureReason = failureReason + ", " + err.Error()
 						}
-					} else if r.Status == model2.ComplianceRunnerQueued || r.Status == model2.ComplianceRunnerInProgress {
-						allFinished = false
+					} else if r.Status == model2.ComplianceRunnerQueued {
+						err = h.DB.UpdateRunnerJob(r.ID, model2.ComplianceRunnerCanceled, nil, nil, nil, nil, "", nil)
+						if err != nil {
+							failureReason = failureReason + ", " + err.Error()
+						}
 						err = h.Scheduler.jq.DeleteMessage(ctx.Request().Context(), runner2.StreamName, r.NatsSequenceNumber)
 						if err != nil {
-							failureReason = err.Error()
-							break
-						}
-						err = h.DB.UpdateRunnerJob(r.ID, model2.ComplianceRunnerCanceled, nil, nil, nil, nil, "", nil)
-						if err != nil {
-							failureReason = err.Error()
-							break
+							failureReason = failureReason + ", " + err.Error()
 						}
 					}
 				}
-				if allFinished {
-					failureReason = "runners are already finished, unable to cancel"
-					break
-				} else {
-					err = h.DB.UpdateComplianceJob(uint(jobId), model2.ComplianceJobCanceled, "", nil)
-					if err != nil {
-						failureReason = err.Error()
-						break
-					}
-					canceled = true
+				err = h.DB.UpdateComplianceJob(uint(jobId), model2.ComplianceJobCanceled, "", nil)
+				if err != nil {
+					failureReason = err.Error()
 					break
 				}
+				canceled = true
+				break
 			}
 		case "discovery":
 			job, err := h.DB.GetDescribeJobById(jobIdStr)
@@ -2999,23 +3019,22 @@ func (h HttpServer) CancelJob(ctx echo.Context) error {
 				failureReason = "job is already in progress, unable to cancel"
 				break
 			} else if job.Status == queryrunner.QueryRunnerQueued {
-				err = h.Scheduler.jq.DeleteMessage(ctx.Request().Context(), queryrunner.StreamName, job.NatsSequenceNumber)
-				if err != nil {
-					failureReason = err.Error()
-					break
-				}
 				err = h.DB.UpdateQueryRunnerJobStatus(job.ID, queryrunner.QueryRunnerCanceled, "")
 				if err != nil {
 					failureReason = err.Error()
 					break
 				}
+				err = h.Scheduler.jq.DeleteMessage(ctx.Request().Context(), queryrunner.StreamName, job.NatsSequenceNumber)
+				if err != nil {
+					failureReason = failureReason + ", " + err.Error()
+				}
 			} else {
-				failureReason = "job is already finished"
+				failureReason = failureReason + ", " + "job is already finished"
 				break
 			}
 
 		default:
-			failureReason = "invalid job type"
+			failureReason = failureReason + ", " + "invalid job type"
 			break
 		}
 		results = append(results, api.CancelJobResponse{
