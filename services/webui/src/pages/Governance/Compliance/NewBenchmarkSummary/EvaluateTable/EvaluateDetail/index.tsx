@@ -573,16 +573,10 @@ export default function EvaluateDetail() {
                                         </KButton>
                                     ),
                                 },
-                                // {
-                                //     label: 'Job Status',
-                                //     value: (
-                                //         <StatusIndicator
-                                //             type={JOB_STATUS[detail?.job_status]}
-                                //         >
-                                //             {detail?.job_status}
-                                //         </StatusIndicator>
-                                //     ),
-                                // },
+                                {
+                                    label: 'Total Time',
+                                    value: shortDateTimeDisplayDelta(jobDetail?.updated_at, jobDetail?.created_at),
+                                },
                             ]}
                         />
                         {/* <Flex className="w-1/2 mt-2">
