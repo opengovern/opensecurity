@@ -4,17 +4,6 @@ import (
 	"errors"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kedav1alpha1 "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
-	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
-	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/batch/v1"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
-
 	api3 "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/httpserver"
@@ -26,8 +15,17 @@ import (
 	"github.com/opengovern/opencomply/services/integration/api"
 	"github.com/opengovern/opencomply/services/integration/config"
 	"github.com/opengovern/opencomply/services/integration/db"
+	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
+	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -116,7 +114,7 @@ func Command() *cobra.Command {
 			if err != nil {
 				logger.Error("failed to create clientset", zap.Error(err))
 			}
-			typeManager := integration_type.NewIntegrationTypeManager(logger, db, integrationTypesDb, kubeClient, clientset, cnf.IntegrationPlugins.MaxAutoRebootRetries, time.Duration(cnf.IntegrationPlugins.PingIntervalSeconds)*time.Second)
+			typeManager := integration_type.NewIntegrationTypeManager(logger, db, integrationTypesDb, kubeClient, clientset, cnf.IntegrationPlugins)
 
 			cmd.SilenceUsage = true
 

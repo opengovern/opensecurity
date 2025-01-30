@@ -172,6 +172,7 @@ func NewWorker(
 // It runs a NATS consumer and it will close it when the given context is closed.
 func (w *Worker) Run(ctx context.Context) error {
 	w.logger.Info("starting to consume")
+	w.logger.Sync()
 
 	w.logger.Info("fetching parameters values")
 	queryParams, err := w.coreClient.ListQueryParameters(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}, coreApi.ListQueryParametersRequest{})
@@ -203,15 +204,23 @@ func (w *Worker) Run(ctx context.Context) error {
 		}, nil,
 		func(msg jetstream.Msg) {
 			w.logger.Info("received a new job")
+			w.logger.Sync()
+
 			w.logger.Info("committing")
+			w.logger.Sync()
+
 			if err := msg.InProgress(); err != nil {
 				w.logger.Error("failed to send the initial in progress message", zap.Error(err), zap.Any("msg", msg))
+			w.logger.Sync()
+
 			}
 			ticker := time.NewTicker(15 * time.Second)
 			go func() {
 				for range ticker.C {
 					if err := msg.InProgress(); err != nil {
 						w.logger.Error("failed to send an in progress message", zap.Error(err), zap.Any("msg", msg))
+					w.logger.Sync()
+
 					}
 				}
 			}()
@@ -224,20 +233,28 @@ func (w *Worker) Run(ctx context.Context) error {
 			_, _, err := w.ProcessMessage(jobCtx, msg)
 			if err != nil {
 				w.logger.Error("failed to process message", zap.Error(err))
+				w.logger.Sync()
+
 			}
 			ticker.Stop()
 
 			if err := msg.Ack(); err != nil {
 				w.logger.Error("failed to send the ack message", zap.Error(err), zap.Any("msg", msg))
+				w.logger.Sync()
+
 			}
 
 			w.logger.Info("processing a job completed")
+			w.logger.Sync()
+
 		})
 	if err != nil {
 		return err
 	}
 
 	w.logger.Info("consuming")
+	w.logger.Sync()
+
 
 	<-ctx.Done()
 	consumeCtx.Drain()
@@ -272,25 +289,35 @@ func (w *Worker) ProcessMessage(ctx context.Context, msg jetstream.Msg) (commit 
 		resultJson, err := json.Marshal(result)
 		if err != nil {
 			w.logger.Error("failed to create job result json", zap.Error(err))
+			w.logger.Sync()
+
 			return
 		}
 
 		if _, err := w.jq.Produce(ctx, ResultQueueTopic, resultJson, fmt.Sprintf("compliance-runner-result-%d-%d", job.ID, job.RetryCount)); err != nil {
 			w.logger.Error("failed to publish job result", zap.String("jobResult", string(resultJson)), zap.Error(err))
+			w.logger.Sync()
+
 		}
 	}()
 
 	resultJson, err := json.Marshal(result)
 	if err != nil {
 		w.logger.Error("failed to create job in progress json", zap.Error(err))
+		w.logger.Sync()
+
 		return true, false, err
 	}
 
 	if _, err := w.jq.Produce(ctx, ResultQueueTopic, resultJson, fmt.Sprintf("compliance-runner-inprogress-%d-%d", job.ID, job.RetryCount)); err != nil {
 		w.logger.Error("failed to publish job in progress", zap.String("jobInProgress", string(resultJson)), zap.Error(err))
+		w.logger.Sync()
+
 	}
 
 	w.logger.Info("running job", zap.ByteString("job", msg.Data()))
+	w.logger.Sync()
+
 
 	totalComplianceResultCount, err := w.RunJob(ctx, job)
 	if err != nil {
@@ -328,6 +355,8 @@ func (w *Worker) pollAPI(ctx context.Context, cancelFunc context.CancelFunc, msg
 
 	if err := json.Unmarshal(msg.Data(), &job); err != nil {
 		w.logger.Error("failed to unmarshal job msg")
+		w.logger.Sync()
+
 		return
 	}
 

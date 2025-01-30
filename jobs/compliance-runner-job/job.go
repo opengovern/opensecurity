@@ -54,6 +54,8 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 		zap.Stringp("integration_id", j.ExecutionPlan.IntegrationID),
 		zap.Stringp("provider_id", j.ExecutionPlan.ProviderID),
 	)
+	w.logger.Sync()
+
 
 	if err := w.Initialize(ctx, j); err != nil {
 		return 0, err
@@ -83,6 +85,7 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 				zap.Uint("job_id", j.ID),
 			)
 			w.logger.Info("query params", zap.Any("map", queryParamMap), zap.Any("resp", w.queryParameters))
+			w.logger.Sync()
 			return 0, fmt.Errorf("required query parameter not found: %s for query: %s", param.Key, j.ExecutionPlan.Query.ID)
 		}
 		if _, ok := queryParamMap[param.Key]; !ok && !param.Required {
@@ -93,6 +96,8 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 				zap.Stringp("integration_id", j.ExecutionPlan.IntegrationID),
 				zap.Uint("job_id", j.ID),
 			)
+			w.logger.Sync()
+
 			queryParamMap[param.Key] = ""
 		}
 	}
@@ -120,6 +125,8 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 		zap.String("query", j.ExecutionPlan.Query.Definition),
 		zap.String("query_id", j.ExecutionPlan.Query.ID),
 	)
+	w.logger.Sync()
+
 	totalComplianceResultCountMap := make(map[string]int)
 
 	complianceResults, err := j.ExtractComplianceResults(w.logger, w.benchmarkCache, w.integrationClient, j.ExecutionPlan.Callers[0], res, j.ExecutionPlan.Query)
@@ -129,6 +136,7 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 	w.logger.Info("Extracted complianceResults", zap.Int("count", len(complianceResults)),
 		zap.Uint("job_id", j.ID),
 		zap.String("benchmarkID", j.ExecutionPlan.Callers[0].RootBenchmark))
+	w.logger.Sync()
 
 	complianceResultsMap := make(map[string]types.ComplianceResult)
 	for i, f := range complianceResults {
@@ -155,6 +163,8 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 
 	filtersJSON, _ := json.Marshal(filters)
 	w.logger.Info("Old complianceResult query", zap.Int("length", len(complianceResults)), zap.String("filters", string(filtersJSON)))
+	w.logger.Sync()
+
 	paginator, err := es2.NewComplianceResultPaginator(w.esClient, types.ComplianceResultsIndex, filters, nil, nil)
 	if err != nil {
 		w.logger.Error("failed to create paginator", zap.Error(err))
@@ -175,6 +185,8 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 		}
 
 		w.logger.Info("Old complianceResult", zap.Int("length", len(oldComplianceResults)))
+		w.logger.Sync()
+
 		for _, f := range oldComplianceResults {
 			f := f
 			err = w.esClient.Delete(f.EsID, types.ComplianceResultsIndex)

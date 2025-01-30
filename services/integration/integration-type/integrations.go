@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 	kedav1alpha1 "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
 	"github.com/labstack/echo/v4"
+	"github.com/opengovern/opencomply/services/integration/config"
 	"github.com/opengovern/opencomply/services/integration/db"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -45,6 +46,8 @@ const (
 var integrationTypes = map[integration.Type]interfaces.IntegrationType{}
 
 type IntegrationTypeManager struct {
+	cnf config.IntegrationPluginsConfig
+
 	logger            *zap.Logger
 	hcLogger          hclog.Logger
 	IntegrationTypeDb *gorm.DB
@@ -60,10 +63,12 @@ type IntegrationTypeManager struct {
 	maxRetries int
 }
 
-func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integrationTypeDb *gorm.DB, kubeClient client.Client, kubeClientset *kubernetes.Clientset, maxRetries int, pingInterval time.Duration) *IntegrationTypeManager {
+func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integrationTypeDb *gorm.DB, kubeClient client.Client, kubeClientset *kubernetes.Clientset, cnf config.IntegrationPluginsConfig) *IntegrationTypeManager {
+	maxRetries := cnf.MaxAutoRebootRetries
 	if maxRetries == 0 {
 		maxRetries = 1
 	}
+	pingInterval := time.Duration(cnf.PingIntervalSeconds) * time.Second
 	if pingInterval == 0 {
 		pingInterval = 5 * time.Minute
 	}
@@ -123,6 +128,7 @@ func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integra
 	var pingLocks = make(map[integration.Type]*sync.Mutex)
 
 	manager := IntegrationTypeManager{
+		cnf:               cnf,
 		logger:            logger,
 		hcLogger:          hcLogger,
 		IntegrationTypes:  integrationTypes,
