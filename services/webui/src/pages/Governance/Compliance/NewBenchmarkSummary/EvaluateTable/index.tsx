@@ -219,48 +219,48 @@ export default function EvaluateTable({
             })
     }
 
-    const GetDetail = () => {
+    // const GetDetail = () => {
         
-        setLoading(true)
-        let url = ''
-        if (window.location.origin === 'http://localhost:3000') {
-            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-        } else {
-            url = window.location.origin
-        }
-        // @ts-ignore
-        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+    //     setLoading(true)
+    //     let url = ''
+    //     if (window.location.origin === 'http://localhost:3000') {
+    //         url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+    //     } else {
+    //         url = window.location.origin
+    //     }
+    //     // @ts-ignore
+    //     const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-        const config = {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
+    //     const config = {
+    //         headers: {
+    //             Authorization: `Bearer ${token}`,
+    //         },
+    //     }
         
-        axios
-            .get(
-                // @ts-ignore
-                `${url}/main/compliance/api/v3/job-report/${selected.job_id}/summary `,
-                config
-            )
-            .then((res) => {
-                //   setAccounts(res.data.integrations)
-                navigate(`/compliance/${id}/report/${selected.job_id}`)
-                // setDetail(res.data)
-                // setDetailLoading(false)
-            })
-            .catch((err) => {
-                const message = err.response.data.message
-                setNotification({
-                    text: `${message}`,
-                    type: 'error',
-                })
-                // setDetailLoading(false)
+    //     axios
+    //         .get(
+    //             // @ts-ignore
+    //             `${url}/main/compliance/api/v3/job-report/${selected.job_id}/summary `,
+    //             config
+    //         )
+    //         .then((res) => {
+    //             //   setAccounts(res.data.integrations)
+    //             navigate(`/compliance/${id}/report/${selected.job_id}`)
+    //             // setDetail(res.data)
+    //             // setDetailLoading(false)
+    //         })
+    //         .catch((err) => {
+    //             const message = err.response.data.message
+    //             setNotification({
+    //                 text: `${message}`,
+    //                 type: 'error',
+    //             })
+    //             // setDetailLoading(false)
 
-                console.log(err)
-                setLoading(false)
-            })
-    }
+    //             console.log(err)
+    //             setLoading(false)
+    //         })
+    // }
     useEffect(() => {
         GetHistory()
     }, [page, jobStatus, date, selectedIntegrations])
@@ -269,11 +269,11 @@ export default function EvaluateTable({
         GetIntegrations()
     }, [])
 
-    useEffect(() => {
-        if (selected) {
-            GetDetail()
-        }
-    }, [selected])
+    // useEffect(() => {
+    //     if (selected) {
+    //         GetDetail()
+    //     }
+    // }, [selected])
     const truncate = (text: string | undefined) => {
         if (text) {
             return text.length > 30 ? text.substring(0, 30) + '...' : text
@@ -312,7 +312,8 @@ export default function EvaluateTable({
                     onRowClick={(event) => {
                         const row = event.detail.item
                         // @ts-ignore
-                        setSelected(row)
+                        // setSelected(row)
+                        navigate(`/compliance/${id}/report/${selected.job_id}`)
                     }}
                     columnDefinitions={[
                         {
@@ -406,7 +407,10 @@ export default function EvaluateTable({
                                 // @ts-ignore
                                 <KButton
                                     onClick={() => {
-                                        setSelected(item)
+                                        // setSelected(item)
+                                        navigate(
+                                            `/compliance/${id}/report/${selected.job_id}`
+                                        )
                                     }}
                                     variant="inline-link"
                                     ariaLabel={`Open Detail`}
