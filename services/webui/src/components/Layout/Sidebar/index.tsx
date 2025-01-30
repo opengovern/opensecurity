@@ -206,7 +206,7 @@ export default function Sidebar({ currentPage }: ISidebar) {
             },
 
             {
-                name: 'Integrations',
+                name: 'Integration',
                 page: [
                     'integration/plugins',
                     'plugins/AWS',
