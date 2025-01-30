@@ -6,11 +6,13 @@ import (
 	"fmt"
 	authApi "github.com/opengovern/og-util/pkg/api"
 	cloudql_init_job "github.com/opengovern/opencomply/jobs/cloudql-init-job"
+	coreApi "github.com/opengovern/opencomply/services/core/api"
 	"github.com/opengovern/opencomply/services/integration/client"
 	schedulerApi "github.com/opengovern/opencomply/services/scheduler/api"
 	"github.com/opengovern/opencomply/services/scheduler/db/model"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -56,7 +58,9 @@ type Worker struct {
 	coreClient coreClient.CoreServiceClient
 	sinkClient esSinkClient.EsSinkServiceClient
 
-	benchmarkCache map[string]complianceApi.Benchmark
+	benchmarkCache  map[string]complianceApi.Benchmark
+	queryParameters []coreApi.QueryParameter
+	queryParamsMu   sync.RWMutex
 }
 
 var (
@@ -148,6 +152,7 @@ func NewWorker(
 		coreClient:     coreClient.NewCoreServiceClient(config.Core.BaseURL),
 		sinkClient:     esSinkClient.NewEsSinkServiceClient(logger, config.EsSink.BaseURL),
 		benchmarkCache: make(map[string]complianceApi.Benchmark),
+		queryParamsMu:  sync.RWMutex{},
 	}
 	ctx2 := &httpclient.Context{Ctx: ctx, UserRole: api.AdminRole}
 	benchmarks, err := w.complianceClient.ListAllBenchmarks(ctx2, true)
@@ -168,6 +173,17 @@ func NewWorker(
 func (w *Worker) Run(ctx context.Context) error {
 	w.logger.Info("starting to consume")
 	w.logger.Sync()
+
+	w.logger.Info("fetching parameters values")
+	queryParams, err := w.coreClient.ListQueryParameters(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}, coreApi.ListQueryParametersRequest{})
+	if err != nil {
+		w.logger.Error("failed to get query parameters", zap.Error(err))
+	} else {
+		w.queryParamsMu.Lock()
+		w.queryParameters = queryParams.Items
+		w.queryParamsMu.Unlock()
+	}
+	go w.fetchParameters(ctx)
 
 	queueTopic := JobQueueTopic
 	consumer := ConsumerGroup
@@ -310,6 +326,27 @@ func (w *Worker) ProcessMessage(ctx context.Context, msg jetstream.Msg) (commit 
 
 	result.TotalComplianceResultCount = &totalComplianceResultCount
 	return true, false, nil
+}
+
+// **pollAPI runs every 15 seconds and cancels the process if needed**
+func (w *Worker) fetchParameters(ctx context.Context) {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			w.logger.Info("fetching parameters values")
+			queryParams, err := w.coreClient.ListQueryParameters(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}, coreApi.ListQueryParametersRequest{})
+			if err != nil {
+				w.logger.Error("failed to get query parameters", zap.Error(err))
+			} else {
+				w.queryParamsMu.Lock()
+				w.queryParameters = queryParams.Items
+				w.queryParamsMu.Unlock()
+			}
+		}
+	}
 }
 
 // **pollAPI runs every 15 seconds and cancels the process if needed**

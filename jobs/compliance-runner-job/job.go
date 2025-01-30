@@ -8,7 +8,6 @@ import (
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/opencomply/services/compliance/api"
-	coreApi "github.com/opengovern/opencomply/services/core/api"
 	"strings"
 	"text/template"
 
@@ -65,19 +64,16 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 	defer w.steampipeConn.UnsetConfigTableValue(ctx, steampipe.OpenGovernanceConfigKeyClientType)
 	defer w.steampipeConn.UnsetConfigTableValue(ctx, steampipe.OpenGovernanceConfigKeyResourceCollectionFilters)
 
-	queryParams, err := w.coreClient.ListQueryParameters(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole}, coreApi.ListQueryParametersRequest{})
-	if err != nil {
-		w.logger.Error("failed to get query parameters", zap.Error(err))
-		return 0, err
-	}
 	queryParamMap := make(map[string]string)
-	for _, qp := range queryParams.Items {
+	w.queryParamsMu.RLock()
+	for _, qp := range w.queryParameters {
 		if _, ok := queryParamMap[qp.Key]; !ok {
 			queryParamMap[qp.Key] = qp.Value
 		} else if qp.ControlID == j.ExecutionPlan.ControlID {
 			queryParamMap[qp.Key] = qp.Value
 		}
 	}
+	w.queryParamsMu.RUnlock()
 
 	for _, param := range j.ExecutionPlan.Query.Parameters {
 		if _, ok := queryParamMap[param.Key]; !ok && param.Required {
@@ -88,11 +84,8 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 				zap.Stringp("integration_id", j.ExecutionPlan.IntegrationID),
 				zap.Uint("job_id", j.ID),
 			)
+			w.logger.Info("query params", zap.Any("map", queryParamMap), zap.Any("resp", w.queryParameters))
 			w.logger.Sync()
-
-			w.logger.Info("query params", zap.Any("map", queryParamMap), zap.Any("resp", queryParams))
-			w.logger.Sync()
-
 			return 0, fmt.Errorf("required query parameter not found: %s for query: %s", param.Key, j.ExecutionPlan.Query.ID)
 		}
 		if _, ok := queryParamMap[param.Key]; !ok && !param.Required {
@@ -109,7 +102,7 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 		}
 	}
 	var res *steampipe.Result
-
+	var err error
 	switch j.ExecutionPlan.Query.Language {
 	//case api.PolicyLanguageRego:
 	//	res, err = w.runRegoWorkerJob(ctx, j, queryParamMap)
