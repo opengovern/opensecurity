@@ -129,8 +129,8 @@ func NewWorker(
 	logger.Info("stream created", zap.String("stream", StreamName), zap.String("topic", queueTopic), zap.String("resultTopic", ResultQueueTopic))
 	logger.Sync()
 
-	logger.Info("initializing rego engine")
-	logger.Sync()
+	//logger.Info("initializing rego engine")
+	//logger.Sync()
 	//regoEngine, err := regoService.NewRegoEngine(ctx, logger, steampipeConn)
 	//if err != nil {
 	//	logger.Error("failed to create rego engine", zap.Error(err))
@@ -201,7 +201,7 @@ func (w *Worker) Run(ctx context.Context) error {
 			InactiveThreshold: time.Hour,
 			Replicas:          1,
 			MemoryStorage:     false,
-			Durable:           consumer,
+			Durable:           fmt.Sprintf("%s-service", consumer),
 		}, nil,
 		func(msg jetstream.Msg) {
 			if err := msg.Ack(); err != nil {
