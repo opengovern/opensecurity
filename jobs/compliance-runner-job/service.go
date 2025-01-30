@@ -201,7 +201,7 @@ func (w *Worker) Run(ctx context.Context) error {
 			InactiveThreshold: time.Hour,
 			Replicas:          1,
 			MemoryStorage:     false,
-			Durable:           consumer,
+			Durable:           fmt.Sprintf("%s-service", consumer),
 		}, nil,
 		func(msg jetstream.Msg) {
 			if err := msg.Ack(); err != nil {
