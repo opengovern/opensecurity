@@ -71,7 +71,7 @@ export default function Compliance() {
      }
      const body = {
          cursor: 1,
-         per_page: window.innerWidth > 1920 ? 6 : window.innerWidth > 768 ? 6 :5,
+         per_page: window.innerWidth > 1920 ? 6 : window.innerWidth > 768 ? 6 :3,
          sort_by: 'incidents',
          assigned: false,
          is_baseline: false,

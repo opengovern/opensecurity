@@ -455,6 +455,10 @@ export default function ComplianceJobs() {
                                             jobStatus = 'time out'
                                             jobColor = 'red'
                                             break
+                                        case 'CANCELED':
+                                            jobStatus = 'canceled'
+                                            jobColor = 'red'
+                                            break
                                         default:
                                             jobStatus = String(item?.status)
                                     }
@@ -579,6 +583,10 @@ export default function ComplianceJobs() {
                                         {
                                             propertyKey: 'job_status',
                                             value: 'CREATED',
+                                        },
+                                        {
+                                            propertyKey: 'job_status',
+                                            value: 'CANCELED',
                                         },
                                     ]}
                                     // @ts-ignore

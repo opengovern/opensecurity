@@ -97,18 +97,14 @@ export default function Compliance() {
      }
 
         useEffect(() => {
-            if (window.innerWidth > 768) {
-                GetBenchmarks([
-                    'baseline_efficiency',
-                    'baseline_reliability',
-                    'baseline_security',
-                    'baseline_supportability',
-                ])
-            } else {
-                GetBenchmarks(['baseline_efficiency', 'baseline_security'])
-            }
+              GetBenchmarks([
+                  'baseline_efficiency',
+                  'baseline_reliability',
+                  'baseline_security',
+                  'baseline_supportability',
+              ])
         }, [])
-   const array = window.innerWidth > 768 ? [1,2,3,4] : [1,2,3,4,5]
+   const array = window.innerWidth > 768 ? [1,2,3,4] : [1,2,3,4]
 
     return (
         <Grid
