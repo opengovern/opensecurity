@@ -201,29 +201,16 @@ func (w *Worker) Run(ctx context.Context) error {
 			InactiveThreshold: time.Hour,
 			Replicas:          1,
 			MemoryStorage:     false,
+			Durable:           consumer,
 		}, nil,
 		func(msg jetstream.Msg) {
+			if err := msg.Ack(); err != nil {
+				w.logger.Error("failed to send the ack message", zap.Error(err), zap.Any("msg", msg))
+				w.logger.Sync()
+			}
+
 			w.logger.Info("received a new job")
 			w.logger.Sync()
-
-			w.logger.Info("committing")
-			w.logger.Sync()
-
-			if err := msg.InProgress(); err != nil {
-				w.logger.Error("failed to send the initial in progress message", zap.Error(err), zap.Any("msg", msg))
-			w.logger.Sync()
-
-			}
-			ticker := time.NewTicker(15 * time.Second)
-			go func() {
-				for range ticker.C {
-					if err := msg.InProgress(); err != nil {
-						w.logger.Error("failed to send an in progress message", zap.Error(err), zap.Any("msg", msg))
-					w.logger.Sync()
-
-					}
-				}
-			}()
 
 			jobCtx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -233,13 +220,6 @@ func (w *Worker) Run(ctx context.Context) error {
 			_, _, err := w.ProcessMessage(jobCtx, msg)
 			if err != nil {
 				w.logger.Error("failed to process message", zap.Error(err))
-				w.logger.Sync()
-
-			}
-			ticker.Stop()
-
-			if err := msg.Ack(); err != nil {
-				w.logger.Error("failed to send the ack message", zap.Error(err), zap.Any("msg", msg))
 				w.logger.Sync()
 
 			}
@@ -254,7 +234,6 @@ func (w *Worker) Run(ctx context.Context) error {
 
 	w.logger.Info("consuming")
 	w.logger.Sync()
-
 
 	<-ctx.Done()
 	consumeCtx.Drain()
@@ -317,7 +296,6 @@ func (w *Worker) ProcessMessage(ctx context.Context, msg jetstream.Msg) (commit 
 
 	w.logger.Info("running job", zap.ByteString("job", msg.Data()))
 	w.logger.Sync()
-
 
 	totalComplianceResultCount, err := w.RunJob(ctx, job)
 	if err != nil {
