@@ -90,9 +90,10 @@ import CustomPagination from '../../../components/Pagination'
 
 export interface Props {
     setTab: Function
+    setOpenLayout: Function
 }
 
-export default function View({ setTab }: Props) {
+export default function View({ setTab, setOpenLayout }: Props) {
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)
     const [loading, setLoading] = useState(false)
     const [savedQuery, setSavedQuery] = useAtom(queryAtom)
@@ -150,9 +151,8 @@ export default function View({ setTab }: Props) {
     //         Cursor: 0,
     //         PerPage:25
     //     })
-   
+
     const getRows = () => {
-        
         setLoading(true)
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
@@ -169,7 +169,10 @@ export default function View({ setTab }: Props) {
             },
         }
         axios
-            .get(`${url}/main/core/api/v3/views?per_page=10&cursor=${page}`, config)
+            .get(
+                `${url}/main/core/api/v3/views?per_page=10&cursor=${page}`,
+                config
+            )
             .then((res) => {
                 if (res.data) {
                     setRows(res.data.views)
@@ -348,6 +351,7 @@ export default function View({ setTab }: Props) {
                                             window.location.reload()
                                         }
                                         setTab={setTab}
+                                        setOpenLayout={setOpenLayout}
                                     />
                                 </>
                             ) : (

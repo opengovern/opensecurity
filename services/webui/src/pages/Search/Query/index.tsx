@@ -52,12 +52,14 @@ import { numberDisplay } from '../../../utilities/numericDisplay'
 import TopHeader from '../../../components/Layout/Header'
 import KTable from '@cloudscape-design/components/table'
 import {
+    AppLayout,
     Box,
     ExpandableSection,
     Header,
     Modal,
     Pagination,
     SpaceBetween,
+    SplitPanel,
     Tabs,
 } from '@cloudscape-design/components'
 import AceEditor from 'react-ace-builds'
@@ -184,6 +186,7 @@ export default function Query() {
     const [expanded, setExpanded] = useState(-1)
     const [expanded1, setExpanded1] = useState(-1)
     const [openIntegration, setOpenIntegration] = useState(false)
+    const [openLayout, setOpenLayout] = useState(true)
 
     // const { response: categories, isLoading: categoryLoading } =
     //     useInventoryApiV2AnalyticsCategoriesList()
@@ -340,67 +343,150 @@ export default function Query() {
 
     return (
         <>
-            {/* <TopHeader /> */}
-            <Flex className="w-full" alignItems="start" flexDirection="col">
-                <Flex
-                    flexDirection="row"
-                    className="gap-5"
-                    justifyContent="start"
-                    alignItems="start"
-                    style={{ flex: '1 1 0' }}
-                >
-                    <Modal
-                        visible={openDrawer}
-                        onDismiss={() => setOpenDrawer(false)}
-                        header="Query Result"
-                        className="min-w-[500px]"
-                        size="large"
+            <AppLayout
+                toolsOpen={false}
+                navigationOpen={false}
+                contentType="table"
+                className="w-full"
+                toolsHide={true}
+                navigationHide={true}
+                splitPanelOpen={openLayout}
+                onSplitPanelToggle={() => {
+                    setOpenLayout(!openLayout)
+                }}
+                splitPanel={
+                    // @ts-ignore
+                    <SplitPanel
+                        // @ts-ignore
+                        header={<>Saved Queries</>}
                     >
-                        <RenderObject obj={selectedRow} />
-                    </Modal>
-                    {openSearch ? (
                         <>
-                            <Card className="p-3 rounded-xl w-1/3 h-full sm:flex hidden  ">
-                                <Flex
-                                    flexDirection="col"
-                                    justifyContent="start"
-                                    alignItems="start"
-                                    className="gap-2 overflow-y-scroll max-h-[500px] "
-                                >
-                                    <Text className="font-bold text-xl text-black flex flex-row justify-between w-full">
-                                        Tables
-                                        <Flex
-                                            justifyContent="end"
-                                            // className="mt-12"
-                                        >
-                                            <Button
-                                                variant="light"
-                                                onClick={() =>
-                                                    setOpenSearch(false)
-                                                }
-                                            >
-                                                <ChevronDoubleLeftIcon className="h-4" />
-                                            </Button>
-                                        </Flex>
-                                    </Text>
-                                    <>
-                                        {schemaLoading ? (
+                            {/* <Tabs
+                                className="mt-2 w-fit"
+                                activeTabId={tab}
+                                onChange={(e) => setTab(e.detail.activeTabId)}
+                                tabs={[
+                                    {
+                                        id: '0',
+                                        label: 'Getting Started',
+                                        content: (
                                             <>
-                                                <Spinner />
+                                                <Bookmarks
+                                                    setTab={setTab}
+                                                    setOpenLayout={
+                                                        setOpenLayout
+                                                    }
+                                                />
                                             </>
-                                        ) : (
+                                        ),
+                                    },
+
+                                    {
+                                        id: '1',
+                                        label: 'All Queries',
+                                        content: (
                                             <>
-                                                {integrations?.map(
-                                                    (
-                                                        integration: any,
-                                                        index
-                                                    ) => {
-                                                        return (
-                                                            <>
-                                                                {/*   prettier-ignore */}
-                                                                {
-                                                                    //  prettier-ignore
-                                                                    (integration.install_state ==
+                                                <AllQueries
+                                                    setTab={setTab}
+                                                    setOpenLayout={
+                                                        setOpenLayout
+                                                    }
+                                                />
+                                            </>
+                                        ),
+                                    },
+                                    {
+                                        id: '2',
+                                        label: 'Views',
+                                        content: (
+                                            <>
+                                                <View
+                                                    setTab={setTab}
+                                                    setOpenLayout={
+                                                        setOpenLayout
+                                                    }
+                                                />
+                                            </>
+                                        ),
+                                    },
+                                ]}
+                            /> */}
+
+                            <AllQueries
+                                setTab={setTab}
+                                setOpenLayout={setOpenLayout}
+                            />
+                        </>
+                    </SplitPanel>
+                }
+                content={
+                    <>
+                        <Flex
+                            className="w-full"
+                            alignItems="start"
+                            flexDirection="col"
+                        >
+                            <Flex
+                                flexDirection="row"
+                                className="gap-5"
+                                justifyContent="start"
+                                alignItems="start"
+                                style={{ flex: '1 1 0' }}
+                            >
+                                <Modal
+                                    visible={openDrawer}
+                                    onDismiss={() => setOpenDrawer(false)}
+                                    header="Query Result"
+                                    className="min-w-[500px]"
+                                    size="large"
+                                >
+                                    <RenderObject obj={selectedRow} />
+                                </Modal>
+                                {openSearch ? (
+                                    <>
+                                        <Card className="p-3 rounded-xl w-1/4 h-full sm:flex hidden  ">
+                                            <Flex
+                                                flexDirection="col"
+                                                justifyContent="start"
+                                                alignItems="start"
+                                                className="gap-2 overflow-y-scroll max-h-[500px] "
+                                            >
+                                                <Text className="font-bold text-xl text-black flex flex-row justify-between w-full">
+                                                    Tables
+                                                    <Flex
+                                                        justifyContent="end"
+                                                        // className="mt-12"
+                                                    >
+                                                        <Button
+                                                            variant="light"
+                                                            onClick={() =>
+                                                                setOpenSearch(
+                                                                    false
+                                                                )
+                                                            }
+                                                        >
+                                                            <ChevronDoubleLeftIcon className="h-4" />
+                                                        </Button>
+                                                    </Flex>
+                                                </Text>
+                                                <>
+                                                    {schemaLoading ? (
+                                                        <>
+                                                            <Spinner />
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            {integrations?.map(
+                                                                (
+                                                                    integration: any,
+                                                                    index
+                                                                ) => {
+                                                                    return (
+                                                                        <>
+                                                                            {/*   prettier-ignore */}
+                                                                            {
+                                                                                //  prettier-ignore
+                                                                                (integration.install_state ==
                                                                     'installed' &&
                                                                 integration.operational_status ==
                                                                     'enabled') ? (
@@ -432,7 +518,7 @@ export default function Query() {
                                                                                 }
                                                                             }}
                                                                             headerText={
-                                                                                <span className=" text-sm">
+                                                                                <span className=" text-sm font-normal ">
                                                                                     {
                                                                                         integration?.name
                                                                                     }
@@ -496,7 +582,7 @@ export default function Query() {
                                                                                                                                         `${item[0]}`
                                                                                                                                 )
                                                                                                                             }}
-                                                                                                                            className=" text-sm"
+                                                                                                                            className=" text-sm font-normal"
                                                                                                                         >
                                                                                                                             {
                                                                                                                                 item[0]
@@ -519,7 +605,7 @@ export default function Query() {
                                                                                                                                         return (
                                                                                                                                             <>
                                                                                                                                                 <Flex className="pl-6 w-full">
-                                                                                                                                                    <span className=" font-semibold">
+                                                                                                                                                    <span className=" font-normal text-sm">
                                                                                                                                                         {
                                                                                                                                                             column.Name
                                                                                                                                                         }
@@ -559,426 +645,307 @@ export default function Query() {
                                                                         )
                                                                         setOpenIntegration(true)
                                                                           
-                                                                      }} className=" text-sm  ml-5 cursor-pointer">
+                                                                      }} className=" text-sm text-gray-400  ml-5 cursor-pointer">
                                                                                     {
                                                                                         integration?.name
                                                                                     }
                                                                                 </span>
                                                                     </>
                                                                 )
+                                                                            }
+                                                                        </>
+                                                                    )
                                                                 }
-                                                            </>
-                                                        )
-                                                    }
-                                                )}
-                                            </>
-                                        )}
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </>
+                                            </Flex>
+                                        </Card>
                                     </>
-                                </Flex>
-                            </Card>
-                        </>
-                    ) : (
-                        <Flex
-                            flexDirection="col"
-                            justifyContent="center"
-                            className="min-h-full w-fit"
-                        >
-                            <Button
-                                variant="light"
-                                onClick={() => setOpenSearch(true)}
-                            >
-                                <Flex flexDirection="col" className="gap-4 w-4">
-                                    <TableCellsIcon />
-                                    <Text className="rotate-90">Tables</Text>
-                                </Flex>
-                            </Button>
-                        </Flex>
-                    )}
-
-                    <Flex className="h-full">
-                        <CodeEditor
-                            ace={ace}
-                            language="sql"
-                            value={code}
-                            languageLabel="SQL"
-                            onChange={({ detail }) => {
-                                setSavedQuery('')
-                                setCode(detail.value)
-                                if (tab !== '3') {
-                                    setTab('3')
-                                }
-                            }}
-                            preferences={preferences}
-                            onPreferencesChange={(e) =>
-                                // @ts-ignore
-                                setPreferences(e.detail)
-                            }
-                            loading={false}
-                            themes={{
-                                light: ['xcode', 'cloud_editor', 'sqlserver'],
-                                dark: ['cloud_editor_dark', 'twilight'],
-                                // @ts-ignore
-                            }}
-                        />
-                    </Flex>
-                </Flex>
-                <Tabs
-                    className="mt-2 w-fit"
-                    activeTabId={tab}
-                    onChange={(e) => setTab(e.detail.activeTabId)}
-                    tabs={[
-                        {
-                            id: '0',
-                            label: 'Getting Started',
-                            content: (
-                                <>
-                                    <Bookmarks setTab={setTab} />
-                                </>
-                            ),
-                        },
-
-                        {
-                            id: '1',
-                            label: 'All Queries',
-                            content: (
-                                <>
-                                    <AllQueries setTab={setTab} />
-                                </>
-                            ),
-                        },
-                        {
-                            id: '2',
-                            label: 'Views',
-                            content: (
-                                <>
-                                    <View setTab={setTab} />
-                                </>
-                            ),
-                        },
-                        {
-                            id: '3',
-                            label: 'Result',
-                            content: (
-                                <>
+                                ) : (
                                     <Flex
                                         flexDirection="col"
-                                        className="w-full "
+                                        justifyContent="center"
+                                        className="min-h-full w-fit"
                                     >
-                                        <Flex
-                                            flexDirection="col"
-                                            className="mb-4"
+                                        <Button
+                                            variant="light"
+                                            onClick={() => setOpenSearch(true)}
                                         >
-                                            {/* <Card className="relative overflow-hidden"> */}
-                                            {/* <AceEditor
-                                            mode="java"
-                                            theme="github"
-                                            onChange={(text) => {
-                                                setSavedQuery('')
-                                                setCode(text)
-                                            }}
-                                            name="editor"
-                                            value={code}
-                                        /> */}
+                                            <Flex
+                                                flexDirection="col"
+                                                className="gap-4 w-4"
+                                            >
+                                                <TableCellsIcon />
+                                                <Text className="rotate-90">
+                                                    Tables
+                                                </Text>
+                                            </Flex>
+                                        </Button>
+                                    </Flex>
+                                )}
 
-                                            {/* <Editor
-                                            onValueChange={(text) => {
-                                                setSavedQuery('')
-                                                setCode(text)
-                                            }}
-                                            highlight={(text) =>
-                                                highlight(
-                                                    text,
-                                                    languages.sql,
-                                                    'sql'
-                                                )
+                                <Flex className="h-full">
+                                    <CodeEditor
+                                        ace={ace}
+                                        language="sql"
+                                        value={code}
+                                        languageLabel="SQL"
+                                        onChange={({ detail }) => {
+                                            setSavedQuery('')
+                                            setCode(detail.value)
+                                            if (tab !== '3') {
+                                                setTab('3')
                                             }
-                                            value={code}
-                                            className="w-full bg-white dark:bg-gray-900 dark:text-gray-50 font-mono text-sm"
-                                            style={{
-                                                minHeight: '200px',
-                                                // maxHeight: '500px',
-                                                overflowY: 'scroll',
-                                            }}
-                                            placeholder="-- write your SQL query here"
-                                        /> */}
-                                            {/* {isLoading && isExecuted && (
-                                                <Spinner className="bg-white/30 backdrop-blur-sm top-0 left-0 absolute flex justify-center items-center w-full h-full" />
-                                            )} */}
-                                            {/* </Card> */}
-                                            <Flex className="w-full mt-4">
+                                        }}
+                                        preferences={preferences}
+                                        onPreferencesChange={(e) =>
+                                            // @ts-ignore
+                                            setPreferences(e.detail)
+                                        }
+                                        loading={false}
+                                        themes={{
+                                            light: [
+                                                'xcode',
+                                                'cloud_editor',
+                                                'sqlserver',
+                                            ],
+                                            dark: [
+                                                'cloud_editor_dark',
+                                                'twilight',
+                                            ],
+                                            // @ts-ignore
+                                        }}
+                                    />
+                                </Flex>
+                            </Flex>
+                            <Flex flexDirection="col" className="w-full ">
+                                <Flex flexDirection="col" className="mb-4">
+                                    =
+                                    <Flex className="w-full mt-4">
+                                        <Flex
+                                            justifyContent="start"
+                                            className="gap-1"
+                                        >
+                                            <Text className="mr-2 w-fit">
+                                                Maximum rows:
+                                            </Text>
+                                            <Select
+                                                enableClear={false}
+                                                className="w-44"
+                                                placeholder="1,000"
+                                            >
+                                                <SelectItem
+                                                    value="1000"
+                                                    onClick={() =>
+                                                        setPageSize(1000)
+                                                    }
+                                                >
+                                                    1,000
+                                                </SelectItem>
+                                                <SelectItem
+                                                    value="3000"
+                                                    onClick={() =>
+                                                        setPageSize(3000)
+                                                    }
+                                                >
+                                                    3,000
+                                                </SelectItem>
+                                                <SelectItem
+                                                    value="5000"
+                                                    onClick={() =>
+                                                        setPageSize(5000)
+                                                    }
+                                                >
+                                                    5,000
+                                                </SelectItem>
+                                                <SelectItem
+                                                    value="10000"
+                                                    onClick={() =>
+                                                        setPageSize(10000)
+                                                    }
+                                                >
+                                                    10,000
+                                                </SelectItem>
+                                            </Select>
+                                        </Flex>
+                                        <Flex className="w-max gap-x-3">
+                                            {!!code.length && (
+                                                <KButton
+                                                    className="  w-max min-w-max  "
+                                                    onClick={() => setCode('')}
+                                                    iconSvg={
+                                                        <CommandLineIcon className="w-5 " />
+                                                    }
+                                                >
+                                                    Clear editor
+                                                </KButton>
+                                            )}
+                                            <KButton
+                                                // icon={PlayCircleIcon}
+                                                variant="primary"
+                                                className="w-max  min-w-[300px]  "
+                                                onClick={() => {
+                                                    sendNow()
+                                                    setLoaded(true)
+                                                    setPage(0)
+                                                }}
+                                                disabled={!code.length}
+                                                loading={
+                                                    isLoading && isExecuted
+                                                }
+                                                loadingText="Running"
+                                                iconSvg={
+                                                    <PlayCircleIcon className="w-5 " />
+                                                }
+                                            >
+                                                Run
+                                            </KButton>
+                                        </Flex>
+                                    </Flex>
+                                    <Flex className="w-full">
+                                        {!isLoading && isExecuted && error && (
+                                            <Flex
+                                                justifyContent="start"
+                                                className="w-fit"
+                                            >
+                                                <Icon
+                                                    icon={ExclamationCircleIcon}
+                                                    color="rose"
+                                                />
+                                                <Text color="rose">
+                                                    {getErrorMessage(error)}
+                                                </Text>
+                                            </Flex>
+                                        )}
+                                        {!isLoading &&
+                                            isExecuted &&
+                                            queryResponse && (
                                                 <Flex
                                                     justifyContent="start"
-                                                    className="gap-1"
+                                                    className="w-fit"
                                                 >
-                                                    <Text className="mr-2 w-fit">
-                                                        Maximum rows:
-                                                    </Text>
-                                                    <Select
-                                                        enableClear={false}
-                                                        className="w-56"
-                                                        placeholder="1,000"
-                                                    >
-                                                        <SelectItem
-                                                            value="1000"
-                                                            onClick={() =>
-                                                                setPageSize(
-                                                                    1000
-                                                                )
-                                                            }
-                                                        >
-                                                            1,000
-                                                        </SelectItem>
-                                                        <SelectItem
-                                                            value="3000"
-                                                            onClick={() =>
-                                                                setPageSize(
-                                                                    3000
-                                                                )
-                                                            }
-                                                        >
-                                                            3,000
-                                                        </SelectItem>
-                                                        <SelectItem
-                                                            value="5000"
-                                                            onClick={() =>
-                                                                setPageSize(
-                                                                    5000
-                                                                )
-                                                            }
-                                                        >
-                                                            5,000
-                                                        </SelectItem>
-                                                        <SelectItem
-                                                            value="10000"
-                                                            onClick={() =>
-                                                                setPageSize(
-                                                                    10000
-                                                                )
-                                                            }
-                                                        >
-                                                            10,000
-                                                        </SelectItem>
-                                                    </Select>
-                                                    {/* <Text className="mr-2 w-fit">
-                                                        Engine:
-                                                    </Text>
-                                                    <Select
-                                                        enableClear={false}
-                                                        className="w-56"
-                                                        value={engine}
-                                                    >
-                                                        <SelectItem
-                                                            value="odysseus-sql"
-                                                            onClick={() =>
-                                                                setEngine(
-                                                                    'odysseus-sql'
-                                                                )
-                                                            }
-                                                        >
-                                                            CloudQL
-                                                        </SelectItem>
-                                                        <SelectItem
-                                                            value="odysseus-rego"
-                                                            onClick={() =>
-                                                                setEngine(
-                                                                    'odysseus-rego'
-                                                                )
-                                                            }
-                                                        >
-                                                            Odysseus Rego
-                                                        </SelectItem>
-                                                    </Select> */}
-                                                </Flex>
-                                                <Flex className="w-max gap-x-3">
-                                                    {!!code.length && (
-                                                        <KButton
-                                                            className="  w-max min-w-max  "
-                                                            onClick={() =>
-                                                                setCode('')
-                                                            }
-                                                            iconSvg={
-                                                                <CommandLineIcon className="w-5 " />
-                                                            }
-                                                        >
-                                                            Clear editor
-                                                        </KButton>
-                                                    )}
-                                                    <KButton
-                                                        // icon={PlayCircleIcon}
-                                                        variant="primary"
-                                                        className="w-max  min-w-[300px]  "
-                                                        onClick={() => {
-                                                            sendNow()
-                                                            setLoaded(true)
-                                                            setPage(0)
-                                                        }}
-                                                        disabled={!code.length}
-                                                        loading={
-                                                            isLoading &&
-                                                            isExecuted
-                                                        }
-                                                        loadingText="Running"
-                                                        iconSvg={
-                                                            <PlayCircleIcon className="w-5 " />
-                                                        }
-                                                    >
-                                                        Run
-                                                    </KButton>
-                                                </Flex>
-                                            </Flex>
-                                            <Flex className="w-full">
-                                                {!isLoading &&
-                                                    isExecuted &&
-                                                    error && (
-                                                        <Flex
-                                                            justifyContent="start"
-                                                            className="w-fit"
-                                                        >
+                                                    {memoCount === pageSize ? (
+                                                        <>
                                                             <Icon
                                                                 icon={
                                                                     ExclamationCircleIcon
                                                                 }
-                                                                color="rose"
+                                                                color="amber"
+                                                                className="ml-0 pl-0"
                                                             />
-                                                            <Text color="rose">
-                                                                {getErrorMessage(
-                                                                    error
-                                                                )}
+                                                            <Text color="amber">
+                                                                {`Row limit of ${numberDisplay(
+                                                                    pageSize,
+                                                                    0
+                                                                )} reached, results are truncated`}
                                                             </Text>
-                                                        </Flex>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Icon
+                                                                icon={
+                                                                    CheckCircleIcon
+                                                                }
+                                                                color="emerald"
+                                                            />
+                                                            <Text color="emerald">
+                                                                Success
+                                                            </Text>
+                                                        </>
                                                     )}
-                                                {!isLoading &&
-                                                    isExecuted &&
-                                                    queryResponse && (
-                                                        <Flex
-                                                            justifyContent="start"
-                                                            className="w-fit"
-                                                        >
-                                                            {memoCount ===
-                                                            pageSize ? (
-                                                                <>
-                                                                    <Icon
-                                                                        icon={
-                                                                            ExclamationCircleIcon
-                                                                        }
-                                                                        color="amber"
-                                                                        className="ml-0 pl-0"
-                                                                    />
-                                                                    <Text color="amber">
-                                                                        {`Row limit of ${numberDisplay(
-                                                                            pageSize,
-                                                                            0
-                                                                        )} reached, results are truncated`}
-                                                                    </Text>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <Icon
-                                                                        icon={
-                                                                            CheckCircleIcon
-                                                                        }
-                                                                        color="emerald"
-                                                                    />
-                                                                    <Text color="emerald">
-                                                                        Success
-                                                                    </Text>
-                                                                </>
-                                                            )}
-                                                        </Flex>
-                                                    )}
-                                            </Flex>
-                                        </Flex>
-                                        <Grid numItems={1} className="w-full">
-                                            <KTable
-                                                className="   min-h-[450px]   "
-                                                // resizableColumns
-                                                // variant="full-page"
-                                                renderAriaLive={({
-                                                    firstIndex,
-                                                    lastIndex,
-                                                    totalItemsCount,
-                                                }) =>
-                                                    `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
-                                                }
-                                                onSortingChange={(event) => {
-                                                    // setSort(event.detail.sortingColumn.sortingField)
-                                                    // setSortOrder(!sortOrder)
+                                                </Flex>
+                                            )}
+                                    </Flex>
+                                </Flex>
+                                <Grid numItems={1} className="w-full">
+                                    <KTable
+                                        className="   min-h-[450px]   "
+                                        // resizableColumns
+                                        // variant="full-page"
+                                        renderAriaLive={({
+                                            firstIndex,
+                                            lastIndex,
+                                            totalItemsCount,
+                                        }) =>
+                                            `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
+                                        }
+                                        onSortingChange={(event) => {
+                                            // setSort(event.detail.sortingColumn.sortingField)
+                                            // setSortOrder(!sortOrder)
+                                        }}
+                                        // sortingColumn={sort}
+                                        // sortingDescending={sortOrder}
+                                        // sortingDescending={sortOrder == 'desc' ? true : false}
+                                        // @ts-ignore
+                                        // stickyHeader={true}
+                                        resizableColumns={true}
+                                        // stickyColumns={
+                                        //  {   first:1,
+                                        //     last: 1}
+                                        // }
+                                        onRowClick={(event) => {
+                                            const row = event.detail.item
+                                            // @ts-ignore
+                                            setSelectedRow(row)
+                                            setOpenDrawer(true)
+                                        }}
+                                        columnDefinitions={
+                                            getTable(
+                                                queryResponse?.headers,
+                                                queryResponse?.result
+                                            ).columns
+                                        }
+                                        columnDisplay={
+                                            getTable(
+                                                queryResponse?.headers,
+                                                queryResponse?.result
+                                            ).column_def
+                                        }
+                                        enableKeyboardNavigation
+                                        // @ts-ignore
+                                        items={getTable(
+                                            queryResponse?.headers,
+                                            queryResponse?.result
+                                        ).rows?.slice(
+                                            page * 10,
+                                            (page + 1) * 10
+                                        )}
+                                        loading={isLoading}
+                                        loadingText="Loading resources"
+                                        // stickyColumns={{ first: 0, last: 1 }}
+                                        // stripedRows
+                                        trackBy="id"
+                                        empty={
+                                            <Box
+                                                margin={{
+                                                    vertical: 'xs',
                                                 }}
-                                                // sortingColumn={sort}
-                                                // sortingDescending={sortOrder}
-                                                // sortingDescending={sortOrder == 'desc' ? true : false}
-                                                // @ts-ignore
-                                                // stickyHeader={true}
-                                                resizableColumns={true}
-                                                // stickyColumns={
-                                                //  {   first:1,
-                                                //     last: 1}
-                                                // }
-                                                onRowClick={(event) => {
-                                                    const row =
-                                                        event.detail.item
-                                                    // @ts-ignore
-                                                    setSelectedRow(row)
-                                                    setOpenDrawer(true)
-                                                }}
-                                                columnDefinitions={
-                                                    getTable(
-                                                        queryResponse?.headers,
-                                                        queryResponse?.result
-                                                    ).columns
-                                                }
-                                                columnDisplay={
-                                                    getTable(
-                                                        queryResponse?.headers,
-                                                        queryResponse?.result
-                                                    ).column_def
-                                                }
-                                                enableKeyboardNavigation
-                                                // @ts-ignore
-                                                items={getTable(
-                                                    queryResponse?.headers,
-                                                    queryResponse?.result
-                                                ).rows?.slice(
-                                                    page * 10,
-                                                    (page + 1) * 10
-                                                )}
-                                                loading={isLoading}
-                                                loadingText="Loading resources"
-                                                // stickyColumns={{ first: 0, last: 1 }}
-                                                // stripedRows
-                                                trackBy="id"
-                                                empty={
-                                                    <Box
-                                                        margin={{
-                                                            vertical: 'xs',
-                                                        }}
-                                                        textAlign="center"
-                                                        color="inherit"
-                                                    >
-                                                        <SpaceBetween size="m">
-                                                            <b>No Results</b>
-                                                        </SpaceBetween>
-                                                    </Box>
-                                                }
-                                                header={
-                                                    <Header className="w-full">
-                                                        Results{' '}
-                                                        <span className=" font-medium">
-                                                            {isLoading &&
-                                                            isExecuted
-                                                                ? '(?)'
-                                                                : `(${memoCount})`}{' '}
-                                                        </span>
-                                                    </Header>
-                                                }
-                                                pagination={
-                                                    <CustomPagination
-                                                        currentPageIndex={
-                                                            page + 1
-                                                        }
-                                                        pagesCount={
-                                                            // prettier-ignore
-                                                            (isLoading &&
+                                                textAlign="center"
+                                                color="inherit"
+                                            >
+                                                <SpaceBetween size="m">
+                                                    <b>No Results</b>
+                                                </SpaceBetween>
+                                            </Box>
+                                        }
+                                        header={
+                                            <Header className="w-full">
+                                                Results{' '}
+                                                <span className=" font-medium">
+                                                    {isLoading && isExecuted
+                                                        ? '(?)'
+                                                        : `(${memoCount})`}{' '}
+                                                </span>
+                                            </Header>
+                                        }
+                                        pagination={
+                                            <CustomPagination
+                                                currentPageIndex={page + 1}
+                                                pagesCount={
+                                                    // prettier-ignore
+                                                    (isLoading &&
                                                             isExecuted)
                                                                 ? 0
                                                                 : Math.ceil(
@@ -990,26 +957,23 @@ export default function Query() {
                                                                           .length /
                                                                           10
                                                                   )
-                                                        }
-                                                        onChange={({
-                                                            detail,
-                                                        }: any) =>
-                                                            setPage(
-                                                                detail.currentPageIndex -
-                                                                    1
-                                                            )
-                                                        }
-                                                    />
+                                                }
+                                                onChange={({ detail }: any) =>
+                                                    setPage(
+                                                        detail.currentPageIndex -
+                                                            1
+                                                    )
                                                 }
                                             />
-                                        </Grid>
-                                    </Flex>
-                                </>
-                            ),
-                        },
-                    ]}
-                />
-            </Flex>
+                                        }
+                                    />
+                                </Grid>
+                            </Flex>
+                        </Flex>
+                    </>
+                }
+            />
+
             <Modal
                 visible={openIntegration}
                 onDismiss={() => setOpenIntegration(false)}

@@ -93,7 +93,7 @@ export default function ScoreCategoryCard({
                             className={
                                 varient === 'default'
                                     ? 'text-xl'
-                                    : ' sm:font-bold text-base   w-full    '
+                                    : '  text-base   w-full    '
                             }
                         >
                             {truncate(title,20)}

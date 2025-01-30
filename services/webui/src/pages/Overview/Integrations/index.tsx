@@ -202,7 +202,7 @@ export default function Integrations() {
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)
     const [loading, setLoading] = useState(false)
     const [url, setUrl] = useState('')
-    const number = window.innerWidth >768 ? 4 : 2
+    const number = window.innerWidth >768 ? 5 : 2
 
     const [open, setOpen] = useState(false)
     const {
@@ -402,12 +402,15 @@ export default function Integrations() {
                 </div>
             </Modal>
 
-            <Card className="sm:h-full h-fit  sm:w-full overflow-scroll no-scrollbar sm:inline-block hidden">
-                <Flex justifyContent="between"  className='sm:flex-row flex-col sm:mb-0 nb-2 sm:items-center items-start'>
+            <Card className="sm:h-full h-fit  sm:w-full overflow-scroll no-scrollbar sm:inline-block hidden border-solid  border-2 border-b w-full rounded-xl border-tremor-border bg-tremor-background-muted p-4 dark:border-dark-tremor-border dark:bg-gray-950 sm:py-2 px-6">
+                <Flex
+                    justifyContent="between"
+                    className="sm:flex-row flex-col sm:mb-0 mb-2 sm:items-center items-start"
+                >
                     <Flex justifyContent="start" className="gap-2 ">
                         <Icon icon={MagnifyingGlassIcon} className="p-0" />
-                        <Title className="font-semibold">
-                            Integration Plugins
+                        <Title className="sm:font-semibold">
+                            Integrations
                         </Title>
                     </Flex>
                     <a
@@ -520,7 +523,9 @@ export default function Integrations() {
                                 header: (
                                     <>
                                         <div className="flex justify-between">
-                                            <span className='sm:inline hidden'>{'Description'}</span>
+                                            <span className="sm:inline hidden">
+                                                {'Description'}
+                                            </span>
                                             <span>{'Integrations'}</span>
                                         </div>
                                     </>
@@ -528,7 +533,7 @@ export default function Integrations() {
                                 content: (item) => (
                                     <>
                                         <div className="flex justify-between gap-4">
-                                            <span className="max-w-60 sm:inline hidden">
+                                            <span className="max-w-44 sm:inline hidden">
                                                 {item.description}
                                             </span>
                                             <span>

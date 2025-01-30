@@ -85,16 +85,16 @@ import axios from 'axios'
 
 export interface Props {
     setTab: Function
+     setOpenLayout : Function
 }
 
-export default function AllQueries({ setTab }: Props) {
+export default function AllQueries({ setTab, setOpenLayout }: Props) {
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)
     const [loading, setLoading] = useState(false)
     const [savedQuery, setSavedQuery] = useAtom(queryAtom)
     const [query, setQuery] =
         useState<PlatformEnginePkgInventoryApiListQueryRequestV2>()
-    
-    
+
     const [engine, setEngine] = useState('odysseus-sql')
     const [integrations, setIntegrations] = useState<any[]>([])
     const [page, setPage] = useState(1)
@@ -126,7 +126,6 @@ export default function AllQueries({ setTab }: Props) {
         isExecuted: TypesExec,
     } = useIntegrationApiV1EnabledConnectorsList(0, 0)
 
-  
     const recordToArray = (record?: Record<string, string[]> | undefined) => {
         if (record === undefined) {
             return []
@@ -172,8 +171,6 @@ export default function AllQueries({ setTab }: Props) {
             })
     }
 
-   
-
     const getRows = () => {
         setLoading(true)
         const api = new Api()
@@ -217,10 +214,9 @@ export default function AllQueries({ setTab }: Props) {
     useEffect(() => {
         getRows()
     }, [page, query])
-    useEffect(()=>{
+    useEffect(() => {
         getIntegrations()
-
-    },[])
+    }, [])
 
     useEffect(() => {
         if (
@@ -281,7 +277,14 @@ export default function AllQueries({ setTab }: Props) {
             setOptions(temp_option)
             setProperties(property)
         }
-    }, [filterExec, categoryExec, filtersLoading, categoryLoading, TypesExec,TypesLoading])
+    }, [
+        filterExec,
+        categoryExec,
+        filtersLoading,
+        categoryLoading,
+        TypesExec,
+        TypesLoading,
+    ])
 
     useEffect(() => {
         if (filterQuery) {
@@ -324,18 +327,18 @@ export default function AllQueries({ setTab }: Props) {
             })
         }
     }, [filterQuery])
-   const FindLogos = (types: string[]) => {
-       const temp: string[] = []
-       types.map((type) => {
-           const integration = integrations.find((i) => i.plugin_id === type)
-           if (integration) {
-               temp.push(
-                   `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${integration?.icon}`
-               )
-           }
-       })
-       return temp
-   }
+    const FindLogos = (types: string[]) => {
+        const temp: string[] = []
+        types.map((type) => {
+            const integration = integrations.find((i) => i.plugin_id === type)
+            if (integration) {
+                temp.push(
+                    `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${integration?.icon}`
+                )
+            }
+        })
+        return temp
+    }
     return (
         <>
             <Flex className="w-full flex-col justify-start items-start gap-4">
@@ -382,63 +385,69 @@ export default function AllQueries({ setTab }: Props) {
                     virtualScroll
                 />
                 <Flex
-                    className="gap-4 flex-wrap justify-start items-start w-full"
+                    className="gap-8 flex-wrap justify-start items-start w-full"
                     // style={{flex: "1 1 0"}}
                 >
-                    {(rows?.length === 0 || loading) && (
+                    {rows?.length === 0 || loading ? (
                         <>
                             <Spinner className="mt-2" />
                         </>
-                    )}
-                    {rows
-                        ?.sort((a, b) => {
-                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                            // @ts-ignore
-                            if (a.title < b.title) {
-                                return -1
-                            }
-                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                            // @ts-ignore
-                            if (a.title > b.title) {
-                                return 1
-                            }
-                            return 0
-                        })
-                        .map((q, i) => (
-                            <div
-                                className="h-full w-full"
-                                style={
-                                    window.innerWidth > 768
-                                        ? {
-                                              width: `calc(calc(100% - ${
-                                                  rows.length >= 4
-                                                      ? '3'
-                                                      : rows.length - 1
-                                              }rem) / ${
-                                                  rows.length >= 4
-                                                      ? '4'
-                                                      : rows.length
-                                              })`,
-                                          }
-                                        : {}
-                                }
-                            >
-                                <UseCaseCard
+                    ) : (
+                        <>
+                            {rows
+                                ?.sort((a, b) => {
+                                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                                     // @ts-ignore
-                                    title={q?.title}
-                                    description={q?.description}
-                                    logos={FindLogos(q?.integration_types)}
-                                    onClick={() => {
-                                        // @ts-ignore
-                                        setSavedQuery(
-                                            q?.query?.query_to_execute
-                                        )
-                                        setTab('3')
-                                    }}
-                                    tag="tag1"
-                                />
-                            </div>
-                        ))}
+                                    if (a.title < b.title) {
+                                        return -1
+                                    }
+                                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                    // @ts-ignore
+                                    if (a.title > b.title) {
+                                        return 1
+                                    }
+                                    return 0
+                                })
+                                .map((q, i) => (
+                                    <div
+                                        className="h-full w-full"
+                                        style={
+                                            window.innerWidth > 768
+                                                ? {
+                                                      width: `calc(calc(100% - ${
+                                                          rows.length >= 4
+                                                              ? '6'
+                                                              : ((rows.length - 1)*2)
+                                                      }rem) / ${
+                                                          rows.length >= 4
+                                                              ? '4'
+                                                              : rows.length
+                                                      })`,
+                                                  }
+                                                : {}
+                                        }
+                                    >
+                                        <UseCaseCard
+                                            // @ts-ignore
+                                            title={q?.title}
+                                            description={q?.description}
+                                            logos={FindLogos(
+                                                q?.integration_types
+                                            )}
+                                            onClick={() => {
+                                                // @ts-ignore
+                                                setSavedQuery(
+                                                    q?.query?.query_to_execute
+                                                )
+                                                setTab('3')
+                                                setOpenLayout(false)
+                                            }}
+                                            tag="tag1"
+                                        />
+                                    </div>
+                                ))}
+                        </>
+                    )}
                 </Flex>
             </Flex>
         </>

@@ -45,6 +45,7 @@ import Resources from './Resources'
 import Setup from './Setup'
 import ButtonDropdown from '@cloudscape-design/components/button-dropdown'
 import { notificationAtom } from '../../../store'
+import CreateIntegration from './Integration/Create'
 
 export default function TypeDetail() {
     const navigate = useNavigate()
@@ -66,6 +67,7 @@ export default function TypeDetail() {
     const [selectedIntegrations, setSelectedIntegrations] = useState<any>([])
     const [params, setParams] = useState<any>()
     const [enableSchedule, setEnableSchedule] = useState(false)
+     const [open, setOpen] = useState(false)
     const GetSchema = () => {
         setLoading(true)
         let url = ''
@@ -459,43 +461,22 @@ export default function TypeDetail() {
             label: 'Id',
             value: manifest?.IntegrationType,
         })
-        if(window.innerWidth > 640){
+        if (window.innerWidth > 640) {
             temp.push(
+                {
+                    label: 'Plugin Version',
+                    value: manifest?.DescriberTag,
+                },
                 {
                     label: 'Artifact URL',
                     value: manifest?.DescriberURL,
-                },
-                {
-                    label: 'Version',
-                    value: manifest?.DescriberTag,
-                },
-                
+                }
             )
         }
-        temp.push(
-            {
-                label: 'Publisher',
-                value: manifest?.Publisher,
-            },
-          
-        )
-        if(window.innerWidth >640){
-            temp.push(
-                {
-                    label: 'Author',
-                    value: manifest?.Author,
-                },
-                {
-                    label: 'Supported Platform Version',
-                    value: manifest?.SupportedPlatformVersion,
-                },
-                {
-                    label: 'Update date',
-                    value: manifest?.UpdateDate,
-                },
-              
-            )
-        }
+        temp.push({
+            label: 'Publisher',
+            value: manifest?.Publisher,
+        })
         temp.push({
             label: 'Operational Status',
             // @ts-ignore
@@ -503,6 +484,23 @@ export default function TypeDetail() {
                 ? status?.charAt(0).toUpperCase() + status?.slice(1)
                 : '',
         })
+        if (window.innerWidth > 640) {
+            temp.push(
+                {
+                    label: 'Update date',
+                    value: manifest?.UpdateDate,
+                },
+                {
+                    label: 'Supported Platform Version',
+                    value: manifest?.SupportedPlatformVersion,
+                },
+
+                {
+                    label: 'Author',
+                    value: manifest?.Author,
+                }
+            )
+        }
 
         return temp
     }
@@ -557,12 +555,21 @@ export default function TypeDetail() {
                                                 case 'healthckeck':
                                                     GetStatus()
                                                     break
+                                                case 'discovery':
+                                                        GetIntegrations()
+                                                        GetResourceTypes()
+                                                        setRunOpen(true)
+                                                    break
                                                 default:
                                                     break
                                             }
                                         }}
                                         variant="primary"
                                         items={[
+                                            {
+                                                text: 'Run Discovery',
+                                                id: 'discovery',
+                                            },
                                             {
                                                 text: 'Settings',
                                                 items: [
@@ -586,11 +593,10 @@ export default function TypeDetail() {
                                             },
                                         ]}
                                         mainAction={{
-                                            text: 'Run discovery',
+                                            text: 'Add new integration',
+                                            
                                             onClick: () => {
-                                                GetIntegrations()
-                                                GetResourceTypes()
-                                                setRunOpen(true)
+                                                setOpen(true)
                                             },
                                             loading: actionLoading['discovery'],
                                         }}
@@ -826,6 +832,16 @@ export default function TypeDetail() {
                                 )}
                             </Flex>
                         </Modal>
+                        <CreateIntegration
+                            name={state?.name}
+                            integration_type={type}
+                            schema={shcema}
+                            open={open}
+                            onClose={() => setOpen(false)}
+                            GetList={() => {
+                                window.location.reload()
+                            }}
+                        />
                     </div>
                 </>
             ) : (
