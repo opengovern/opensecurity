@@ -444,7 +444,7 @@ export default function Query() {
                                 </Modal>
                                 {openSearch ? (
                                     <>
-                                        <Card className="p-3 rounded-xl w-1/3 h-full sm:flex hidden  ">
+                                        <Card className="p-3 rounded-xl w-1/4 h-full sm:flex hidden  ">
                                             <Flex
                                                 flexDirection="col"
                                                 justifyContent="start"
@@ -518,7 +518,7 @@ export default function Query() {
                                                                                 }
                                                                             }}
                                                                             headerText={
-                                                                                <span className=" text-sm">
+                                                                                <span className=" text-sm font-normal ">
                                                                                     {
                                                                                         integration?.name
                                                                                     }
@@ -582,7 +582,7 @@ export default function Query() {
                                                                                                                                         `${item[0]}`
                                                                                                                                 )
                                                                                                                             }}
-                                                                                                                            className=" text-sm"
+                                                                                                                            className=" text-sm font-normal"
                                                                                                                         >
                                                                                                                             {
                                                                                                                                 item[0]
@@ -605,7 +605,7 @@ export default function Query() {
                                                                                                                                         return (
                                                                                                                                             <>
                                                                                                                                                 <Flex className="pl-6 w-full">
-                                                                                                                                                    <span className=" font-semibold">
+                                                                                                                                                    <span className=" font-normal text-sm">
                                                                                                                                                         {
                                                                                                                                                             column.Name
                                                                                                                                                         }
@@ -645,7 +645,7 @@ export default function Query() {
                                                                         )
                                                                         setOpenIntegration(true)
                                                                           
-                                                                      }} className=" text-sm  ml-5 cursor-pointer">
+                                                                      }} className=" text-sm text-gray-400  ml-5 cursor-pointer">
                                                                                     {
                                                                                         integration?.name
                                                                                     }
@@ -733,7 +733,7 @@ export default function Query() {
                                             </Text>
                                             <Select
                                                 enableClear={false}
-                                                className="w-56"
+                                                className="w-44"
                                                 placeholder="1,000"
                                             >
                                                 <SelectItem

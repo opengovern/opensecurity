@@ -31,7 +31,7 @@ export default function Governance() {
                     </Button>
                 </a>
             </Flex>
-            <Grid numItems={1} className="w-full gap-6 px-2">
+            <Grid numItems={1} className="w-full gap-6 ">
                 <Compliance />
                 {/* <Col numColSpan={1}>
                     <Findings />

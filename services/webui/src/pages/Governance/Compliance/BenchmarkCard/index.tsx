@@ -166,7 +166,7 @@ export default function BenchmarkCards({
                         }}
                         cardsPerRow={[
                             { minWidth: 340, cards: 2 },
-                            { minWidth: 1200, cards: 3 },
+                            { minWidth: 700, cards: 3 },
                         ]}
                         // totalItemsCount={7}
                         items={benchmark?.map((item) => {

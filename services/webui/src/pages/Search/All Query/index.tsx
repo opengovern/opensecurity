@@ -385,64 +385,69 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
                     virtualScroll
                 />
                 <Flex
-                    className="gap-4 flex-wrap justify-start items-start w-full"
+                    className="gap-8 flex-wrap justify-start items-start w-full"
                     // style={{flex: "1 1 0"}}
                 >
-                    {(rows?.length === 0 || loading) && (
+                    {rows?.length === 0 || loading ? (
                         <>
                             <Spinner className="mt-2" />
                         </>
-                    )}
-                    {rows
-                        ?.sort((a, b) => {
-                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                            // @ts-ignore
-                            if (a.title < b.title) {
-                                return -1
-                            }
-                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                            // @ts-ignore
-                            if (a.title > b.title) {
-                                return 1
-                            }
-                            return 0
-                        })
-                        .map((q, i) => (
-                            <div
-                                className="h-full w-full"
-                                style={
-                                    window.innerWidth > 768
-                                        ? {
-                                              width: `calc(calc(100% - ${
-                                                  rows.length >= 4
-                                                      ? '3'
-                                                      : rows.length - 1
-                                              }rem) / ${
-                                                  rows.length >= 4
-                                                      ? '4'
-                                                      : rows.length
-                                              })`,
-                                          }
-                                        : {}
-                                }
-                            >
-                                <UseCaseCard
+                    ) : (
+                        <>
+                            {rows
+                                ?.sort((a, b) => {
+                                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                                     // @ts-ignore
-                                    title={q?.title}
-                                    description={q?.description}
-                                    logos={FindLogos(q?.integration_types)}
-                                    onClick={() => {
-                                        // @ts-ignore
-                                        setSavedQuery(
-                                            q?.query?.query_to_execute
-                                        )
-                                        setTab('3')
-                                        setOpenLayout(false)
-                                    }}
-                                    tag="tag1"
-                                />
-                            </div>
-                        ))}
+                                    if (a.title < b.title) {
+                                        return -1
+                                    }
+                                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                    // @ts-ignore
+                                    if (a.title > b.title) {
+                                        return 1
+                                    }
+                                    return 0
+                                })
+                                .map((q, i) => (
+                                    <div
+                                        className="h-full w-full"
+                                        style={
+                                            window.innerWidth > 768
+                                                ? {
+                                                      width: `calc(calc(100% - ${
+                                                          rows.length >= 4
+                                                              ? '6'
+                                                              : ((rows.length - 1)*2)
+                                                      }rem) / ${
+                                                          rows.length >= 4
+                                                              ? '4'
+                                                              : rows.length
+                                                      })`,
+                                                  }
+                                                : {}
+                                        }
+                                    >
+                                        <UseCaseCard
+                                            // @ts-ignore
+                                            title={q?.title}
+                                            description={q?.description}
+                                            logos={FindLogos(
+                                                q?.integration_types
+                                            )}
+                                            onClick={() => {
+                                                // @ts-ignore
+                                                setSavedQuery(
+                                                    q?.query?.query_to_execute
+                                                )
+                                                setTab('3')
+                                                setOpenLayout(false)
+                                            }}
+                                            tag="tag1"
+                                        />
+                                    </div>
+                                ))}
+                        </>
+                    )}
                 </Flex>
             </Flex>
         </>

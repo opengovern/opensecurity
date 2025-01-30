@@ -202,7 +202,7 @@ export default function Integrations() {
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)
     const [loading, setLoading] = useState(false)
     const [url, setUrl] = useState('')
-    const number = window.innerWidth >768 ? 4 : 2
+    const number = window.innerWidth >768 ? 5 : 2
 
     const [open, setOpen] = useState(false)
     const {
@@ -533,7 +533,7 @@ export default function Integrations() {
                                 content: (item) => (
                                     <>
                                         <div className="flex justify-between gap-4">
-                                            <span className="max-w-40 sm:inline hidden">
+                                            <span className="max-w-44 sm:inline hidden">
                                                 {item.description}
                                             </span>
                                             <span>
