@@ -14,7 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const SummarizerSchedulingInterval = 1 * time.Minute
+const SummarizerSchedulingInterval = 20 * time.Second
 
 type SankDocumentCountResponse struct {
 	Hits struct {
