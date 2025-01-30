@@ -364,9 +364,9 @@ func (w *Worker) pollAPI(ctx context.Context, cancelFunc context.CancelFunc, msg
 			zap.Uint("runner-job-id", job.ID), zap.Error(err))
 	}
 	if stop { // If API returns a special response
-		w.canceledComplianceJobsMu.RLock()
+		w.canceledComplianceJobsMu.Lock()
 		w.canceledComplianceJobs[job.ParentJobID] = true
-		w.canceledComplianceJobsMu.RUnlock()
+		w.canceledComplianceJobsMu.Unlock()
 		w.logger.Warn("Received stop signal from API! Cancelling job.")
 		cancelFunc()
 		return
@@ -382,9 +382,9 @@ func (w *Worker) pollAPI(ctx context.Context, cancelFunc context.CancelFunc, msg
 					zap.Uint("runner-job-id", job.ID), zap.Error(err))
 			}
 			if stop { // If API returns a special response
-				w.canceledComplianceJobsMu.RLock()
+				w.canceledComplianceJobsMu.Lock()
 				w.canceledComplianceJobs[job.ParentJobID] = true
-				w.canceledComplianceJobsMu.RUnlock()
+				w.canceledComplianceJobsMu.Unlock()
 				w.logger.Warn("Received stop signal from API! Cancelling job.")
 				cancelFunc()
 				return
