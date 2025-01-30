@@ -58,9 +58,11 @@ type Worker struct {
 	coreClient coreClient.CoreServiceClient
 	sinkClient esSinkClient.EsSinkServiceClient
 
-	benchmarkCache  map[string]complianceApi.Benchmark
-	queryParameters []coreApi.QueryParameter
-	queryParamsMu   sync.RWMutex
+	benchmarkCache           map[string]complianceApi.Benchmark
+	canceledComplianceJobs   map[uint]bool
+	canceledComplianceJobsMu sync.RWMutex
+	queryParameters          []coreApi.QueryParameter
+	queryParamsMu            sync.RWMutex
 }
 
 var (
@@ -149,10 +151,12 @@ func NewWorker(
 		schedulerClient:   schedulerClient.NewSchedulerServiceClient(config.Scheduler.BaseURL),
 		integrationClient: integrationClient,
 
-		coreClient:     coreClient.NewCoreServiceClient(config.Core.BaseURL),
-		sinkClient:     esSinkClient.NewEsSinkServiceClient(logger, config.EsSink.BaseURL),
-		benchmarkCache: make(map[string]complianceApi.Benchmark),
-		queryParamsMu:  sync.RWMutex{},
+		coreClient:               coreClient.NewCoreServiceClient(config.Core.BaseURL),
+		sinkClient:               esSinkClient.NewEsSinkServiceClient(logger, config.EsSink.BaseURL),
+		benchmarkCache:           make(map[string]complianceApi.Benchmark),
+		canceledComplianceJobs:   make(map[uint]bool),
+		canceledComplianceJobsMu: sync.RWMutex{},
+		queryParamsMu:            sync.RWMutex{},
 	}
 	ctx2 := &httpclient.Context{Ctx: ctx, UserRole: api.AdminRole}
 	benchmarks, err := w.complianceClient.ListAllBenchmarks(ctx2, true)
@@ -257,6 +261,12 @@ func (w *Worker) ProcessMessage(ctx context.Context, msg jetstream.Msg) (commit 
 		TotalComplianceResultCount: nil,
 	}
 
+	w.canceledComplianceJobsMu.RLock()
+	if _, ok := w.canceledComplianceJobs[job.ParentJobID]; ok {
+		return true, false, nil
+	}
+	w.canceledComplianceJobsMu.RUnlock()
+
 	defer func() {
 		if err != nil {
 			result.Error = err.Error()
@@ -264,6 +274,12 @@ func (w *Worker) ProcessMessage(ctx context.Context, msg jetstream.Msg) (commit 
 		} else {
 			result.Status = model.ComplianceRunnerSucceeded
 		}
+
+		w.canceledComplianceJobsMu.RLock()
+		if _, ok := w.canceledComplianceJobs[job.ParentJobID]; ok {
+			result.Status = model.ComplianceRunnerCanceled
+		}
+		w.canceledComplianceJobsMu.RUnlock()
 
 		resultJson, err := json.Marshal(result)
 		if err != nil {
@@ -341,16 +357,34 @@ func (w *Worker) pollAPI(ctx context.Context, cancelFunc context.CancelFunc, msg
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 
+	w.logger.Info("Polling API...")
+	stop, err := w.checkAPIResponse(strconv.Itoa(int(job.ParentJobID)))
+	if err != nil {
+		w.logger.Error("Failed to check compliance job status", zap.Uint("compliance-job-id", job.ParentJobID),
+			zap.Uint("runner-job-id", job.ID), zap.Error(err))
+	}
+	if stop { // If API returns a special response
+		w.canceledComplianceJobsMu.RLock()
+		w.canceledComplianceJobs[job.ParentJobID] = true
+		w.canceledComplianceJobsMu.RUnlock()
+		w.logger.Warn("Received stop signal from API! Cancelling job.")
+		cancelFunc()
+		return
+	}
+
 	for {
 		select {
 		case <-ticker.C:
 			w.logger.Info("Polling API...")
-			stop, err := w.checkAPIResponse(strconv.Itoa(int(job.ParentJobID)))
+			stop, err = w.checkAPIResponse(strconv.Itoa(int(job.ParentJobID)))
 			if err != nil {
 				w.logger.Error("Failed to check compliance job status", zap.Uint("compliance-job-id", job.ParentJobID),
 					zap.Uint("runner-job-id", job.ID), zap.Error(err))
 			}
 			if stop { // If API returns a special response
+				w.canceledComplianceJobsMu.RLock()
+				w.canceledComplianceJobs[job.ParentJobID] = true
+				w.canceledComplianceJobsMu.RUnlock()
 				w.logger.Warn("Received stop signal from API! Cancelling job.")
 				cancelFunc()
 				return

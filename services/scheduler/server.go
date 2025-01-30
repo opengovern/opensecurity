@@ -2897,17 +2897,17 @@ func (h HttpServer) CancelJob(ctx echo.Context) error {
 				canceled = true
 				break
 			} else {
-				allInProgress := true
+				allFinished := true
 				for _, r := range runners {
 					if r.Status == model2.ComplianceRunnerCreated {
-						allInProgress = false
+						allFinished = false
 						err = h.DB.UpdateRunnerJob(r.ID, model2.ComplianceRunnerCanceled, nil, nil, nil, nil, "", nil)
 						if err != nil {
 							failureReason = err.Error()
 							break
 						}
-					} else if r.Status == model2.ComplianceRunnerQueued {
-						allInProgress = false
+					} else if r.Status == model2.ComplianceRunnerQueued || r.Status == model2.ComplianceRunnerInProgress {
+						allFinished = false
 						err = h.Scheduler.jq.DeleteMessage(ctx.Request().Context(), runner2.StreamName, r.NatsSequenceNumber)
 						if err != nil {
 							failureReason = err.Error()
@@ -2920,8 +2920,8 @@ func (h HttpServer) CancelJob(ctx echo.Context) error {
 						}
 					}
 				}
-				if allInProgress {
-					failureReason = "job is already in progress, unable to cancel"
+				if allFinished {
+					failureReason = "runners are already finished, unable to cancel"
 					break
 				} else {
 					err = h.DB.UpdateComplianceJob(uint(jobId), model2.ComplianceJobCanceled, "", nil)
