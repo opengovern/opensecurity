@@ -85,16 +85,16 @@ import axios from 'axios'
 
 export interface Props {
     setTab: Function
+     setOpenLayout : Function
 }
 
-export default function AllQueries({ setTab }: Props) {
+export default function AllQueries({ setTab, setOpenLayout }: Props) {
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)
     const [loading, setLoading] = useState(false)
     const [savedQuery, setSavedQuery] = useAtom(queryAtom)
     const [query, setQuery] =
         useState<PlatformEnginePkgInventoryApiListQueryRequestV2>()
-    
-    
+
     const [engine, setEngine] = useState('odysseus-sql')
     const [integrations, setIntegrations] = useState<any[]>([])
     const [page, setPage] = useState(1)
@@ -126,7 +126,6 @@ export default function AllQueries({ setTab }: Props) {
         isExecuted: TypesExec,
     } = useIntegrationApiV1EnabledConnectorsList(0, 0)
 
-  
     const recordToArray = (record?: Record<string, string[]> | undefined) => {
         if (record === undefined) {
             return []
@@ -172,8 +171,6 @@ export default function AllQueries({ setTab }: Props) {
             })
     }
 
-   
-
     const getRows = () => {
         setLoading(true)
         const api = new Api()
@@ -217,10 +214,9 @@ export default function AllQueries({ setTab }: Props) {
     useEffect(() => {
         getRows()
     }, [page, query])
-    useEffect(()=>{
+    useEffect(() => {
         getIntegrations()
-
-    },[])
+    }, [])
 
     useEffect(() => {
         if (
@@ -281,7 +277,14 @@ export default function AllQueries({ setTab }: Props) {
             setOptions(temp_option)
             setProperties(property)
         }
-    }, [filterExec, categoryExec, filtersLoading, categoryLoading, TypesExec,TypesLoading])
+    }, [
+        filterExec,
+        categoryExec,
+        filtersLoading,
+        categoryLoading,
+        TypesExec,
+        TypesLoading,
+    ])
 
     useEffect(() => {
         if (filterQuery) {
@@ -324,18 +327,18 @@ export default function AllQueries({ setTab }: Props) {
             })
         }
     }, [filterQuery])
-   const FindLogos = (types: string[]) => {
-       const temp: string[] = []
-       types.map((type) => {
-           const integration = integrations.find((i) => i.plugin_id === type)
-           if (integration) {
-               temp.push(
-                   `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${integration?.icon}`
-               )
-           }
-       })
-       return temp
-   }
+    const FindLogos = (types: string[]) => {
+        const temp: string[] = []
+        types.map((type) => {
+            const integration = integrations.find((i) => i.plugin_id === type)
+            if (integration) {
+                temp.push(
+                    `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${integration?.icon}`
+                )
+            }
+        })
+        return temp
+    }
     return (
         <>
             <Flex className="w-full flex-col justify-start items-start gap-4">
@@ -434,6 +437,7 @@ export default function AllQueries({ setTab }: Props) {
                                             q?.query?.query_to_execute
                                         )
                                         setTab('3')
+                                        setOpenLayout(false)
                                     }}
                                     tag="tag1"
                                 />

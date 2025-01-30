@@ -43,14 +43,13 @@ import 'prismjs/themes/prism.css'
 import { Badge, KeyValuePairs } from '@cloudscape-design/components'
 
 interface IResourceFindingDetail {
-    query:
-        | any
-        | undefined
+    query: any | undefined
     open: boolean
     onClose: () => void
     onRefresh: () => void
     linkPrefix?: string
     setTab: Function
+    setOpenLayout: Function
 }
 
 export default function ViewDetail({
@@ -60,18 +59,14 @@ export default function ViewDetail({
     onRefresh,
     linkPrefix = '',
     setTab,
+    setOpenLayout,
 }: IResourceFindingDetail) {
     const { ws } = useParams()
     const setQuery = useSetAtom(queryAtom)
 
-   
     const searchParams = useAtomValue(searchAtom)
 
-  
-
     const isDemo = useAtomValue(isDemoAtom)
-
-  
 
     return (
         <>
@@ -199,6 +194,7 @@ export default function ViewDetail({
                         // @ts-ignore
                         setQuery(query?.query?.query_to_execute)
                         setTab('3')
+                        setOpenLayout(false)
                         // debugger
                     }}
                     disabled={false}

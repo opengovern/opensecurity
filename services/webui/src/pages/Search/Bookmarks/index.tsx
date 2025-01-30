@@ -76,18 +76,19 @@ import UseCaseCard from '../../../components/Cards/BookmarkCard'
 
 export interface Props {
     setTab: Function
+    setOpenLayout: Function
 }
 
-export default function Bookmarks({ setTab }: Props) {
+export default function Bookmarks({ setTab, setOpenLayout }: Props) {
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)
     // const [loading, setLoading] = useState(false)
     const [savedQuery, setSavedQuery] = useAtom(queryAtom)
     const [code, setCode] = useState(savedQuery || '')
 
-        useState<PlatformEnginePkgInventoryApiSmartQueryItemV2>()
-    
+    useState<PlatformEnginePkgInventoryApiSmartQueryItemV2>()
+
     const [pageSize, setPageSize] = useState(1000)
- 
+
     const [page, setPage] = useState(1)
     const [totalCount, setTotalCount] = useState(0)
     const [totalPage, setTotalPage] = useState(0)
@@ -188,56 +189,51 @@ export default function Bookmarks({ setTab }: Props) {
                 setLoading(false)
             })
     }
-       const getIntegrations = () => {
-           setLoading(true)
-           let url = ''
-           if (window.location.origin === 'http://localhost:3000') {
-               url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-           } else {
-               url = window.location.origin
-           }
-           // @ts-ignore
-           const token = JSON.parse(localStorage.getItem('openg_auth')).token
+    const getIntegrations = () => {
+        setLoading(true)
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-           const config = {
-               headers: {
-                   Authorization: `Bearer ${token}`,
-               },
-           }
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
 
-           axios
-               .get(
-                   `${url}/main/integration/api/v1/integration-types/plugin`,
-                   config
-               )
-               .then((res) => {
-                   if (res.data) {
-                       const arr = res.data?.items
-                       
-                       setIntegrations(arr)
-                   }
-                   setLoading(false)
-               })
-               .catch((err) => {
-                   setLoading(false)
-               })
-       }
-    const FindLogos = (types : string []) => {
-        const temp: string[] =[]
-        types.map((type) => {
-            const integration = integrations.find(
-                (i) => i.plugin_id === type
+        axios
+            .get(
+                `${url}/main/integration/api/v1/integration-types/plugin`,
+                config
             )
-            if(integration){
+            .then((res) => {
+                if (res.data) {
+                    const arr = res.data?.items
+
+                    setIntegrations(arr)
+                }
+                setLoading(false)
+            })
+            .catch((err) => {
+                setLoading(false)
+            })
+    }
+    const FindLogos = (types: string[]) => {
+        const temp: string[] = []
+        types.map((type) => {
+            const integration = integrations.find((i) => i.plugin_id === type)
+            if (integration) {
                 temp.push(
                     `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${integration?.icon}`
                 )
             }
         })
         return temp
-
-
-
     }
 
     useEffect(() => {
@@ -249,15 +245,20 @@ export default function Bookmarks({ setTab }: Props) {
         getRows()
     }, [selectedOptions])
 
-
-
     return (
         <>
             {/* <TopHeader /> */}
             {isLoading ? (
                 <Spinner />
             ) : (
-                <div className='flex flex-col h-full' style={window.innerWidth >768 ? {} : {width:`${window.innerWidth-70}px`}}>
+                <div
+                    className="flex flex-col h-full"
+                    style={
+                        window.innerWidth > 768
+                            ? {}
+                            : { width: `${window.innerWidth - 70}px` }
+                    }
+                >
                     <Flex
                         className="w-full mb-3 mt-2 gap-2 flex-wrap sm:flex hidden"
                         flexDirection="row"
@@ -314,9 +315,9 @@ export default function Bookmarks({ setTab }: Props) {
                                 )
                             })}
                         </>
-                        
                     </Flex>
-                    <Flex className="gap-4 flex-wrap justify-start items-start w-full"
+                    <Flex
+                        className="gap-4 flex-wrap justify-start items-start w-full"
                         // style={{flex: "1 1 0"}}
                     >
                         {rows?.length === 0 && (
@@ -340,14 +341,22 @@ export default function Bookmarks({ setTab }: Props) {
                             })
                             .map((q, i) => (
                                 <div
-                                className='h-full w-full'
-                                    style={window.innerWidth > 768 ? {
-                                        "width": `calc(calc(100% - ${
-                                            rows.length >= 4 ? '3' : (rows.length-1)
-                                        }rem) / ${
-                                            rows.length >= 4 ? '4' : rows.length
-                                        })`,
-                                    } : {}}
+                                    className="h-full w-full"
+                                    style={
+                                        window.innerWidth > 768
+                                            ? {
+                                                  width: `calc(calc(100% - ${
+                                                      rows.length >= 4
+                                                          ? '3'
+                                                          : rows.length - 1
+                                                  }rem) / ${
+                                                      rows.length >= 4
+                                                          ? '4'
+                                                          : rows.length
+                                                  })`,
+                                              }
+                                            : {}
+                                    }
                                 >
                                     <UseCaseCard
                                         // @ts-ignore
@@ -360,12 +369,12 @@ export default function Bookmarks({ setTab }: Props) {
                                                 q?.query?.query_to_execute
                                             )
                                             setTab('3')
+                                            setOpenLayout(false)
                                         }}
                                         tag="tag1"
                                     />
                                 </div>
                             ))}
-                            
                     </Flex>
                 </div>
             )}
