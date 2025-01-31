@@ -553,93 +553,40 @@ export default function NewBenchmarkSummary() {
                         ]}
                         ariaLabel="Breadcrumbs"
                     />
-
-                    <Container
-                        disableHeaderPaddings
-                        disableContentPaddings
-                        className="rounded-xl  bg-[#0f2940] p-0 text-white mt-4"
-                        header={
-                            <Header
-                                className={`bg-[#0f2940] sm:p-4 p-3 pt-0 rounded-xl   text-white ${
-                                    false ? 'rounded-b-none' : ''
-                                }`}
-                                variant="h2"
-                                description=""
-                            >
-                                <Flex className=' justify-between sm:flex-col flex-row gap-6 items-center sm:items-start'>
-                                    <Box className="rounded-xl same text-white sm:pt-3 pl-3 pb-0">
-                                        <Grid
-                                            gridDefinition={[
-                                                {
-                                                    colspan: {
-                                                        default: 12,
-                                                        xs: 8,
-                                                        s: 9,
-                                                    },
-                                                },
-                                                {
-                                                    colspan: {
-                                                        default: 12,
-                                                        xs: 4,
-                                                        s: 3,
-                                                    },
-                                                },
-                                            ]}
-                                        >
-                                            <div>
-                                                <Box
-                                                    variant="h1"
-                                                    className="text-white important"
-                                                    color="white"
-                                                >
-                                                    <span className="text-white">
-                                                        {benchmarkDetail?.title}
-                                                    </span>
-                                                </Box>
-                                                <Box
-                                                    variant="p"
-                                                    color="white"
-                                                    className='sm:inline-block hidden'
-                                                    margin={{
-                                                        top: 'xxs',
-                                                        bottom: 's',
-                                                    }}
-                                                >
-                                                    <div className="group text-white important  relative sm:flex hidden text-wrap justify-start">
-                                                        <Text className="test-start w-full text-white ">
-                                                            {/* @ts-ignore */}
-                                                            {truncate(
-                                                                benchmarkDetail?.description
-                                                            )}
-                                                        </Text>
-                                                        <Card className="absolute w-full text-wrap z-40 top-0 scale-0 transition-all p-2 group-hover:scale-100">
-                                                            <Text>
-                                                                {
-                                                                    benchmarkDetail?.description
-                                                                }
-                                                            </Text>
-                                                        </Card>
-                                                    </div>
-                                                </Box>
-                                            </div>
-                                        </Grid>
-                                    </Box>
-                                    <Flex className="w-max sm:pl-3">
-                                        <Evaluate
-                                            id={benchmarkDetail?.id}
-                                            benchmarkDetail={benchmarkDetail}
-                                            assignmentsCount={assignments}
-                                            onEvaluate={(c, b) => {
-                                                RunBenchmark(c, b)
-                                            }}
-                                        />
-                                    </Flex>
-                                </Flex>
-                            </Header>
+                    <Header
+                        className={`   rounded-xl mt-6   ${
+                            false ? 'rounded-b-none' : ''
+                        }`}
+                        actions={
+                            <Flex className="w-max ">
+                                <Evaluate
+                                    id={benchmarkDetail?.id}
+                                    benchmarkDetail={benchmarkDetail}
+                                    assignmentsCount={assignments}
+                                    onEvaluate={(c, b) => {
+                                        RunBenchmark(c, b)
+                                    }}
+                                />
+                            </Flex>
                         }
-                    ></Container>
+                        variant="h2"
+                        description={
+                            <div className="group  important text-black  relative sm:flex hidden text-wrap justify-start">
+                                <Text className="test-start w-full text-black  ">
+                                    {/* @ts-ignore */}
+                                    {truncate(benchmarkDetail?.description)}
+                                </Text>
+                                <Card className="absolute w-full text-wrap text-black z-40 top-0 scale-0 transition-all p-2 group-hover:scale-100">
+                                    <Text>{benchmarkDetail?.description}</Text>
+                                </Card>
+                            </div>
+                        }
+                    >
+                        <span className="">{benchmarkDetail?.title}</span>
+                    </Header>
+                 
 
-                    <Flex flexDirection="col" className="w-full sm:mt-4">
+                    <Flex flexDirection="col" className="w-full ">
                         {/* {chart && enable && ( */}
                         {false && (
                             <>
@@ -654,9 +601,9 @@ export default function NewBenchmarkSummary() {
                             </>
                         )}
 
-                        <Flex className="mt-2">
+                        <Flex className="">
                             <Tabs
-                                className="mt-6 rounded-[1px] rounded-s-none rounded-e-none"
+                                className="mt-4 rounded-[1px] rounded-s-none rounded-e-none"
                                 // variant="container"
                                 tabs={find_tabs()}
                             />
