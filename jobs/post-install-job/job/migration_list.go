@@ -16,6 +16,9 @@ import (
 var migrations = map[string]types.Migration{
 	"elasticsearch": elasticsearch.Migration{},
 }
+var Order = []string{
+	"elasticsearch",
+}
 
 var manualMigrations = map[string]types.Migration{
 	"manifest":            manifest.Migration{},
@@ -27,4 +30,17 @@ var manualMigrations = map[string]types.Migration{
 	"compliance":          compliance.Migration{},
 	"resource_info":       resource_info.Migration{},
 	"auth":                auth.Migration{},
+}
+
+// Ordered keys slice
+var ManualOrder = []string{
+	"manifest",
+	"core",
+	"integration",
+	"inventory",
+	"resource_collection",
+	"elasticsearch",
+	"compliance",
+	"resource_info",
+	"auth",
 }

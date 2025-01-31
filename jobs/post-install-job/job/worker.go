@@ -120,24 +120,29 @@ func (w *Job) Run(ctx context.Context) error {
 
 	jobsStatus := make(map[string]model.JobInfo)
 	var migrationList map[string]types.Migration
+	var order []string
 	if w.conf.IsManual {
 		migrationList = manualMigrations
+		order = ManualOrder
 	} else {
 		migrationList = migrations
+		order = Order
 	}
-	for name, _ := range migrationList {
-		jobsStatus[name] = model.JobInfo{
-			MigrationJobName: name,
+	for _, key := range order {
+		jobsStatus[key] = model.JobInfo{
+			MigrationJobName: key,
 			Status:           model.JobStatusPending,
 			FailureReason:    "",
 		}
 	}
+	
 
 	m.Status = "Started"
 	err = w.updateJob(m, m.Status, jobsStatus)
 
 	hasFailed := false
-	for name, mig := range migrationList {
+	for _, name := range order {
+		mig := migrationList[name]
 		w.logger.Info("running migration", zap.String("migrationName", name))
 
 		jobsStatus, err = getJobsStatus(m)
@@ -185,7 +190,9 @@ func (w *Job) Run(ctx context.Context) error {
 		if err != nil {
 			w.logger.Error("failed to update job status", zap.Error(err), zap.String("migrationName", name))
 		}
+	
 	}
+	
 
 	if hasFailed {
 		err = w.db.UpdateMigrationJob(m.ID, "FAILED", m.JobsStatus)
