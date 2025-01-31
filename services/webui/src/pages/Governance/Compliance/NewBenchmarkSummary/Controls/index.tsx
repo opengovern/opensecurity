@@ -56,10 +56,11 @@ import KButton from '@cloudscape-design/components/button'
 import axios from 'axios'
 import ReactEChartsCore from 'echarts-for-react/lib/core'
 import * as echarts from 'echarts/core'
-import {LineChart} from 'echarts/charts'
+import { LineChart } from 'echarts/charts'
 import {
     AppLayout,
     BreadcrumbGroup,
+    ContentLayout,
     Link,
     PropertyFilter,
     SplitPanel,
@@ -67,7 +68,6 @@ import {
 import ControlDetail from './ControlDetail'
 import { severityBadge } from '../../../Controls'
 import CustomPagination from '../../../../../components/Pagination'
-
 
 interface IPolicies {
     id: string | undefined
@@ -93,9 +93,7 @@ export const activeBadge = (status: boolean) => {
 }
 
 export const statusBadge = (
-    status:
-        | PlatformEnginePkgComplianceApiConformanceStatus
-        | undefined
+    status: PlatformEnginePkgComplianceApiConformanceStatus | undefined
 ) => {
     if (
         status ===
@@ -117,9 +115,7 @@ export const statusBadge = (
 }
 
 export const treeRows = (
-    json:
-        | PlatformEnginePkgComplianceApiBenchmarkControlSummary
-        | undefined
+    json: PlatformEnginePkgComplianceApiBenchmarkControlSummary | undefined
 ) => {
     let arr: any = []
     if (json) {
@@ -157,9 +153,7 @@ export const groupBy = (input: any[], key: string) => {
 }
 
 export const countControls = (
-    v:
-        | PlatformEnginePkgComplianceApiBenchmarkControlSummary
-        | undefined
+    v: PlatformEnginePkgComplianceApiBenchmarkControlSummary | undefined
 ) => {
     const countChildren = v?.children
         ?.map((i) => countControls(i))
@@ -194,8 +188,7 @@ export default function Controls({
     const [listofTables, setListOfTables] = useState([])
     const [totalPage, setTotalPage] = useState<number>(0)
     const [totalCount, setTotalCount] = useState<number>(0)
-    const [query, setQuery] =
-        useState<PlatformEnginePkgControlApiListV2>()
+    const [query, setQuery] = useState<PlatformEnginePkgControlApiListV2>()
     const [queries, setQueries] = useState({
         tokens: [],
         operation: 'and',
@@ -207,7 +200,6 @@ export default function Controls({
     const [treePage, setTreePage] = useState(0)
     const [treeTotal, setTreeTotal] = useState(0)
     const [treeTotalPages, setTreeTotalPages] = useState(0)
-
 
     const [filters, setFilters] = useState([
         {
@@ -252,9 +244,7 @@ export default function Controls({
     }
 
     const countBenchmarks = (
-        v:
-            | PlatformEnginePkgComplianceApiBenchmarkControlSummary
-            | undefined
+        v: PlatformEnginePkgComplianceApiBenchmarkControlSummary | undefined
     ) => {
         const countChildren = v?.children
             ?.map((i) => countBenchmarks(i))
@@ -331,7 +321,6 @@ export default function Controls({
                 const temp = []
 
                 if (res.data.children) {
-                    
                     res.data.children.map((item) => {
                         let childs = {
                             text: truncate(item.title),
@@ -355,7 +344,7 @@ export default function Controls({
                         }
                         temp.push(childs)
                     })
-                  
+
                     // setTree(temp)
                 } else {
                     // temp.push({
@@ -364,9 +353,9 @@ export default function Controls({
                     //     type: 'link',
                     // })
                 }
-                  setTreeTotalPages(Math.ceil(temp.length / 12))
-                  setTreeTotal(temp.length)
-                  setTreePage(0)
+                setTreeTotalPages(Math.ceil(temp.length / 18))
+                setTreeTotal(temp.length)
+                setTreePage(0)
 
                 setTree(temp)
             })
@@ -375,19 +364,17 @@ export default function Controls({
             })
     }
     useEffect(() => {
-        if(window.innerWidth >640){
-        GetTree()
-
+        if (window.innerWidth > 640) {
+            GetTree()
         }
-
     }, [])
-useEffect(() => {
-    setPage(0)
-}, [selected])
+    useEffect(() => {
+        setPage(0)
+    }, [selected])
 
-useEffect(() => {
-    GetControls(selected ? true : false, selected)
-}, [selected, sort, sortOrder, page])
+    useEffect(() => {
+        GetControls(selected ? true : false, selected)
+    }, [selected, sort, sortOrder, page])
     useEffect(() => {
         let temp = {}
 
@@ -411,29 +398,32 @@ useEffect(() => {
         }
     }, [query])
 
-     const getControlDetail = (id: string) => {
-         const api = new Api()
-         api.instance = AxiosAPI
-         // setLoading(true);
-         api.compliance
-             .apiV3ControlDetail(id)
-             .then((resp) => {
-                 setSelectedRow(resp.data)
-                 setOpen(true)
-                 // setLoading(false)
-             })
-             .catch((err) => {
-                 // setLoading(false)
-             })
-     }
+    const getControlDetail = (id: string) => {
+        const api = new Api()
+        api.instance = AxiosAPI
+        // setLoading(true);
+        api.compliance
+            .apiV3ControlDetail(id)
+            .then((resp) => {
+                setSelectedRow(resp.data)
+                setOpen(true)
+                // setLoading(false)
+            })
+            .catch((err) => {
+                // setLoading(false)
+            })
+    }
     return (
         <AppLayout
             toolsOpen={false}
             navigationOpen={false}
-            contentType="table"
+            contentType="dashboard"
             className="w-full bg-transparent rounded-xl"
             toolsHide={true}
-            navigationHide={true}
+            navigationHide={
+                !(tree && tree?.length > 0) || window.innerWidth < 640
+            }
+            disableContentPaddings={true}
             splitPanelSize={500}
             splitPanelOpen={open}
             onSplitPanelToggle={() => {
@@ -474,83 +464,70 @@ useEffect(() => {
                     />
                 </SplitPanel>
             }
-            content={
-                <Grid numItems={12} className="gap-4 ">
-                    <Col numColSpan={12} className=" sm:order-1 order-1">
-                        <BreadcrumbGroup
-                            onClick={(event) => {
-                                event.preventDefault()
-                                setSelected(event.detail.href)
-                            }}
-                            items={selectedBread}
-                            ariaLabel="Breadcrumbs"
-                        />
-                    </Col>
+            navigationOpen={tree && tree.length > 0}
+            navigationWidth={300}
+            navigation={
+                <>
                     {tree && tree.length > 0 && (
-                        <Col
-                            numColSpan={12}
-                            numColSpanSm={3}
-                            className=" sm:order-2 order-3"
+                        <Flex
+                            className="bg-white  w-full justify-center items-center   "
+                            flexDirection="col"
                         >
-                            <Flex
-                                className="bg-white  w-full border-solid border-2 sm:h-[550px]    rounded-xl gap-1 "
-                                flexDirection="col"
-                            >
-                                <>
-                                    <SideNavigation
-                                        className="w-full scroll  sm:h-[550px] overflow-scroll p-4 pb-0"
-                                        activeHref={selected}
-                                        virtualScroll
-                                        header={{
-                                            href: benchmarkId,
-                                            text: controls?.benchmark?.title,
-                                        }}
-                                        onFollow={(event) => {
-                                            event.preventDefault()
-                                            setSelected(event.detail.href)
-                                            const temp = []
+                            <>
+                                <SideNavigation
+                                    className="w-full scroll   overflow-scroll p-4 pb-0"
+                                    activeHref={selected}
+                                    virtualScroll
+                                    header={{
+                                        href: benchmarkId,
+                                        text: 'Control Groups',
+                                    }}
+                                    onFollow={(event) => {
+                                        event.preventDefault()
+                                        setSelected(event.detail.href)
+                                        const temp = []
 
-                                            if (event.detail.parentId) {
-                                                temp.push({
-                                                    text: controls?.benchmark
-                                                        ?.title,
-                                                    href: id,
-                                                })
-                                                temp.push({
-                                                    text: event.detail
-                                                        .parentTitle,
-                                                    href: event.detail.parentId,
-                                                })
+                                        if (event.detail.parentId) {
+                                            temp.push({
+                                                text: controls?.benchmark
+                                                    ?.title,
+                                                href: id,
+                                            })
+                                            temp.push({
+                                                text: event.detail.parentTitle,
+                                                href: event.detail.parentId,
+                                            })
+                                            temp.push({
+                                                text: event.detail.text,
+                                                href: event.detail.href,
+                                            })
+                                        } else {
+                                            temp.push({
+                                                text: controls?.benchmark
+                                                    ?.title,
+                                                href: id,
+                                            })
+                                            if (
+                                                event.detail.text !==
+                                                controls?.benchmark?.title
+                                            ) {
                                                 temp.push({
                                                     text: event.detail.text,
                                                     href: event.detail.href,
                                                 })
-                                            } else {
-                                                temp.push({
-                                                    text: controls?.benchmark
-                                                        ?.title,
-                                                    href: id,
-                                                })
-                                                if (
-                                                    event.detail.text !==
-                                                    controls?.benchmark?.title
-                                                ) {
-                                                    temp.push({
-                                                        text: event.detail.text,
-                                                        href: event.detail.href,
-                                                    })
-                                                }
                                             }
-                                            setSelectedBread(temp)
-                                        }}
-                                        items={tree?.slice(
-                                            treePage * 12,
-                                            (treePage + 1) * 12
-                                        )}
-                                    />
-                                </>
-                                {treeTotalPages > 1 && (
-                                    <>
+                                        }
+                                        setSelectedBread(temp)
+                                    }}
+                                    items={tree?.slice(
+                                        treePage * 18,
+                                        (treePage + 1) * 18
+                                    )}
+                                />
+                            </>
+                            {treeTotalPages > 1 && (
+                                <>
+                                    <div className="flex justify-center items-center ">
                                         <CustomPagination
                                             className="pb-2"
                                             currentPageIndex={treePage + 1}
@@ -561,281 +538,271 @@ useEffect(() => {
                                                 )
                                             }
                                         />
-                                    </>
-                                )}
-                            </Flex>
-                        </Col>
+                                    </div>
+                                </>
+                            )}
+                        </Flex>
                     )}
-                    <Col
-                        numColSpanSm={tree && tree.length > 0 ? 9 : 12}
-                        numColSpan={12}
-                        className=" sm:order-3 order-2"
-                    >
-                        {' '}
-                        <Flex className="flex flex-col  sm:min-h-[550px] min-h-[300px] ">
-                            <Table
-                                className="p-3   sm:min-h-[550px] min-h-[300px]"
-                                // resizableColumns
-                                renderAriaLive={({
-                                    firstIndex,
-                                    lastIndex,
-                                    totalItemsCount,
-                                }) =>
-                                    `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
-                                }
-                                onSortingChange={(event) => {
-                                    setSort(
-                                        event.detail.sortingColumn.sortingField
-                                    )
-                                    setSortOrder(!sortOrder)
-                                }}
-                                onRowClick={(event) => {
-                                    const row = event.detail.item
-                                    setSelectedRow(undefined)
-                                    getControlDetail(row.id)
-                                    setOpen(true)
-                                }}
-                                sortingColumn={sort}
-                                sortingDescending={sortOrder}
-                                // sortingDescending={sortOrder == 'desc' ? true : false}
-                                columnDefinitions={[
-                                    {
-                                        id: 'id',
-                                        header: 'ID',
-                                        cell: (item) => item.id,
-                                        sortingField: 'id',
-                                        isRowHeader: true,
-                                    },
-                                    {
-                                        id: 'title',
-                                        header: 'Title',
-                                        cell: (item) => item.title,
-                                        sortingField: 'title',
-                                        // minWidth: 400,
-                                        maxWidth: 200,
-                                    },
-                                    {
-                                        id: 'connector',
-                                        header: 'Connector',
-                                        cell: (item) => item.connector,
-                                    },
-                                    {
-                                        id: 'query',
-                                        header: 'Primary Table',
-                                        cell: (item) =>
-                                            item?.query?.primary_table,
-                                    },
-                                    {
-                                        id: 'severity',
-                                        header: 'Severity',
-                                        sortingField: 'severity',
-                                        cell: (item) => (
-                                            <Badge
-                                                // @ts-ignore
-                                                color={`severity-${item.severity}`}
-                                            >
-                                                {item.severity
-                                                    .charAt(0)
-                                                    .toUpperCase() +
-                                                    item.severity.slice(1)}
-                                            </Badge>
-                                        ),
-                                        maxWidth: 100,
-                                    },
-                                    {
-                                        id: 'query.parameters',
-                                        header: 'Has Parametrs',
-                                        cell: (item) => (
-                                            // @ts-ignore
-                                            <>
-                                                {item.query?.parameters.length >
-                                                0
-                                                    ? 'True'
-                                                    : 'False'}
-                                            </>
-                                        ),
-                                    },
-                                    {
-                                        id: 'incidents',
-                                        header: 'Incidents',
-                                        // sortingField: 'incidents',
-
-                                        cell: (item) => (
-                                            // @ts-ignore
-                                            <>
-                                                {/**@ts-ignore */}
-                                                {item
-                                                    ?.compliance_results_summary
-                                                    ?.incident_count
-                                                    ? item
-                                                          ?.compliance_results_summary
-                                                          ?.incident_count
-                                                    : 0}
-                                            </>
-                                        ),
-                                        // minWidth: 50,
-                                        maxWidth: 100,
-                                    },
-                                    {
-                                        id: 'passing_resources',
-                                        header: 'Non Incidents ',
-
-                                        cell: (item) => (
-                                            // @ts-ignore
-                                            <>
-                                                {item
-                                                    ?.compliance_results_summary
-                                                    ?.non_incident_count
-                                                    ? item
-                                                          ?.compliance_results_summary
-                                                          ?.non_incident_count
-                                                    : 0}
-                                            </>
-                                        ),
-                                        maxWidth: 100,
-                                    },
-                                    {
-                                        id: 'noncompliant_resources',
-                                        header: 'Non-Compliant Resources',
-                                        sortingField: 'noncompliant_resources',
-
-                                        cell: (item) => (
-                                            // @ts-ignore
-                                            <>
-                                                {item
-                                                    ?.compliance_results_summary
-                                                    ?.noncompliant_resources
-                                                    ? item
-                                                          ?.compliance_results_summary
-                                                          ?.noncompliant_resources
-                                                    : 0}
-                                            </>
-                                        ),
-                                        maxWidth: 100,
-                                    },
-                                    {
-                                        id: 'waste',
-                                        header: 'Waste',
-                                        cell: (item) => (
-                                            // @ts-ignore
-                                            <>
-                                                {item
-                                                    ?.compliance_results_summary
-                                                    ?.cost_optimization
-                                                    ? item
-                                                          ?.compliance_results_summary
-                                                          ?.cost_optimization
-                                                    : 0}
-                                            </>
-                                        ),
-                                        maxWidth: 100,
-                                    },
-                                    {
-                                        id: 'action',
-                                        header: 'Action',
-                                        cell: (item) => (
-                                            // @ts-ignore
-                                            <KButton
-                                                onClick={() => {
-                                                    navigateToInsightsDetails(
-                                                        item.id
-                                                    )
-                                                }}
-                                                variant="inline-link"
-                                                ariaLabel={`Open Detail`}
-                                            >
-                                                Open
-                                            </KButton>
-                                        ),
-                                    },
-                                ]}
-                                columnDisplay={[
-                                    { id: 'id', visible: false },
-                                    { id: 'title', visible: true },
-                                    { id: 'connector', visible: false },
-                                    { id: 'query', visible: false },
-                                    { id: 'severity', visible: true },
-                                    { id: 'incidents', visible: false },
-                                    { id: 'passing_resources', visible: false },
-                                    {
-                                        id: 'noncompliant_resources',
-                                        visible: true,
-                                    },
-                                    {
-                                        id: 'waste',
-                                        visible:
-                                            (benchmarkId == 'sre_efficiency' ||
-                                                selected == 'sre_efficiency') &&
-                                            enable
-                                                ? true
-                                                : false,
-                                    },
-
-                                    // { id: 'action', visible: true },
-                                ]}
-                                enableKeyboardNavigation
-                                items={rows}
-                                loading={loading}
-                                loadingText="Loading resources"
-                                // stickyColumns={{ first: 0, last: 1 }}
-                                // stripedRows
-                                trackBy="id"
-                                empty={
-                                    <Box
-                                        margin={{ vertical: 'xs' }}
-                                        textAlign="center"
-                                        color="inherit"
+                </>
+            }
+            content={
+                <ContentLayout
+                    header={
+                        <Header className="w-full">
+                            Controls{' '}
+                            <span className=" font-medium">({totalCount})</span>
+                        </Header>
+                    }
+                    defaultPadding={true}
+                    breadcrumbs={
+                        <BreadcrumbGroup
+                            onClick={(event) => {
+                                event.preventDefault()
+                                setSelected(event.detail.href)
+                            }}
+                            items={selectedBread}
+                            ariaLabel="Breadcrumbs"
+                        />
+                    }
+                >
+                    <Table
+                        className="   "
+                        // resizableColumns
+                        variant="full-page"
+                        renderAriaLive={({
+                            firstIndex,
+                            lastIndex,
+                            totalItemsCount,
+                        }) =>
+                            `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
+                        }
+                        onSortingChange={(event) => {
+                            setSort(event.detail.sortingColumn.sortingField)
+                            setSortOrder(!sortOrder)
+                        }}
+                        onRowClick={(event) => {
+                            const row = event.detail.item
+                            setSelectedRow(undefined)
+                            getControlDetail(row.id)
+                            setOpen(true)
+                        }}
+                        sortingColumn={sort}
+                        sortingDescending={sortOrder}
+                        // sortingDescending={sortOrder == 'desc' ? true : false}
+                        columnDefinitions={[
+                            {
+                                id: 'id',
+                                header: 'ID',
+                                cell: (item) => item.id,
+                                sortingField: 'id',
+                                isRowHeader: true,
+                            },
+                            {
+                                id: 'title',
+                                header: 'Title',
+                                cell: (item) => item.title,
+                                sortingField: 'title',
+                                // minWidth: 400,
+                                maxWidth: 200,
+                            },
+                            {
+                                id: 'connector',
+                                header: 'Connector',
+                                cell: (item) => item.connector,
+                            },
+                            {
+                                id: 'query',
+                                header: 'Primary Table',
+                                cell: (item) => item?.query?.primary_table,
+                            },
+                            {
+                                id: 'severity',
+                                header: 'Severity',
+                                sortingField: 'severity',
+                                cell: (item) => (
+                                    <Badge
+                                        // @ts-ignore
+                                        color={`severity-${item.severity}`}
                                     >
-                                        <SpaceBetween size="m">
-                                            <b>No resources</b>
-                                        </SpaceBetween>
-                                    </Box>
-                                }
-                                filter={
-                                    <PropertyFilter
-                                        // @ts-ignore
-                                        query={queries}
-                                        // @ts-ignore
-                                        onChange={({ detail }) => {
-                                            // @ts-ignore
-                                            setQueries(detail)
+                                        {item.severity.charAt(0).toUpperCase() +
+                                            item.severity.slice(1)}
+                                    </Badge>
+                                ),
+                                maxWidth: 100,
+                            },
+                            {
+                                id: 'query.parameters',
+                                header: 'Has Parametrs',
+                                cell: (item) => (
+                                    // @ts-ignore
+                                    <>
+                                        {item.query?.parameters.length > 0
+                                            ? 'True'
+                                            : 'False'}
+                                    </>
+                                ),
+                            },
+                            {
+                                id: 'incidents',
+                                header: 'Incidents',
+                                // sortingField: 'incidents',
+
+                                cell: (item) => (
+                                    // @ts-ignore
+                                    <>
+                                        {/**@ts-ignore */}
+                                        {item?.compliance_results_summary
+                                            ?.incident_count
+                                            ? item?.compliance_results_summary
+                                                  ?.incident_count
+                                            : 0}
+                                    </>
+                                ),
+                                // minWidth: 50,
+                                maxWidth: 100,
+                            },
+                            {
+                                id: 'passing_resources',
+                                header: 'Non Incidents ',
+
+                                cell: (item) => (
+                                    // @ts-ignore
+                                    <>
+                                        {item?.compliance_results_summary
+                                            ?.non_incident_count
+                                            ? item?.compliance_results_summary
+                                                  ?.non_incident_count
+                                            : 0}
+                                    </>
+                                ),
+                                maxWidth: 100,
+                            },
+                            {
+                                id: 'noncompliant_resources',
+                                header: 'Non-Compliant Resources',
+                                sortingField: 'noncompliant_resources',
+
+                                cell: (item) => (
+                                    // @ts-ignore
+                                    <>
+                                        {item?.compliance_results_summary
+                                            ?.noncompliant_resources
+                                            ? item?.compliance_results_summary
+                                                  ?.noncompliant_resources
+                                            : 0}
+                                    </>
+                                ),
+                                maxWidth: 100,
+                            },
+                            {
+                                id: 'waste',
+                                header: 'Waste',
+                                cell: (item) => (
+                                    // @ts-ignore
+                                    <>
+                                        {item?.compliance_results_summary
+                                            ?.cost_optimization
+                                            ? item?.compliance_results_summary
+                                                  ?.cost_optimization
+                                            : 0}
+                                    </>
+                                ),
+                                maxWidth: 100,
+                            },
+                            {
+                                id: 'action',
+                                header: 'Action',
+                                cell: (item) => (
+                                    // @ts-ignore
+                                    <KButton
+                                        onClick={() => {
+                                            navigateToInsightsDetails(item.id)
                                         }}
-                                        // countText="5 matches"
-                                        enableTokenGroups
-                                        expandToViewport
-                                        filteringAriaLabel="Control Categories"
-                                        // @ts-ignore
-                                        // filteringOptions={filters}
-                                        filteringPlaceholder="Control Categories"
-                                        // @ts-ignore
-                                        filteringOptions={filters}
-                                        filteringProperties={filterOption}
-                                        // filteringProperties={
-                                        //     filterOption
-                                        // }
-                                    />
-                                }
-                                header={
-                                    <Header className="w-full">
-                                        Controls{' '}
-                                        <span className=" font-medium">
-                                            ({totalCount})
-                                        </span>
-                                    </Header>
-                                }
-                                pagination={
-                                    <CustomPagination
-                                        currentPageIndex={page}
-                                        pagesCount={totalPage}
-                                        onChange={({ detail }) =>
-                                            setPage(detail.currentPageIndex)
-                                        }
-                                    />
+                                        variant="inline-link"
+                                        ariaLabel={`Open Detail`}
+                                    >
+                                        Open
+                                    </KButton>
+                                ),
+                            },
+                        ]}
+                        columnDisplay={[
+                            { id: 'id', visible: false },
+                            { id: 'title', visible: true },
+                            { id: 'connector', visible: false },
+                            { id: 'query', visible: false },
+                            { id: 'severity', visible: true },
+                            { id: 'incidents', visible: false },
+                            { id: 'passing_resources', visible: false },
+                            {
+                                id: 'noncompliant_resources',
+                                visible: true,
+                            },
+                            {
+                                id: 'waste',
+                                visible:
+                                    (benchmarkId == 'sre_efficiency' ||
+                                        selected == 'sre_efficiency') &&
+                                    enable
+                                        ? true
+                                        : false,
+                            },
+
+                            // { id: 'action', visible: true },
+                        ]}
+                        enableKeyboardNavigation
+                        items={rows}
+                        loading={loading}
+                        loadingText="Loading resources"
+                        // stickyColumns={{ first: 0, last: 1 }}
+                        // stripedRows
+                        trackBy="id"
+                        empty={
+                            <Box
+                                margin={{ vertical: 'xs' }}
+                                textAlign="center"
+                                color="inherit"
+                            >
+                                <SpaceBetween size="m">
+                                    <b>No resources</b>
+                                </SpaceBetween>
+                            </Box>
+                        }
+                        filter={
+                            <PropertyFilter
+                                // @ts-ignore
+                                query={queries}
+                                // @ts-ignore
+                                onChange={({ detail }) => {
+                                    // @ts-ignore
+                                    setQueries(detail)
+                                }}
+                                // countText="5 matches"
+                                enableTokenGroups
+                                expandToViewport
+                                filteringAriaLabel="Control Categories"
+                                // @ts-ignore
+                                // filteringOptions={filters}
+                                filteringPlaceholder="Control Categories"
+                                // @ts-ignore
+                                filteringOptions={filters}
+                                filteringProperties={filterOption}
+                                // filteringProperties={
+                                //     filterOption
+                                // }
+                            />
+                        }
+                        pagination={
+                            <CustomPagination
+                                currentPageIndex={page}
+                                pagesCount={totalPage}
+                                onChange={({ detail }) =>
+                                    setPage(detail.currentPageIndex)
                                 }
                             />
-                        </Flex>
-                    </Col>
-                </Grid>
+                        }
+                    />
+                </ContentLayout>
             }
         />
     )

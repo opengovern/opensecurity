@@ -71,7 +71,7 @@ export default function Compliance() {
      }
      const body = {
          cursor: 1,
-         per_page: window.innerWidth > 1920 ? 6 : window.innerWidth > 768 ? 6 :3,
+         per_page: window.innerWidth > 1920 ? 3 : window.innerWidth > 768 ? 3 :3,
          sort_by: 'incidents',
          assigned: false,
          is_baseline: false,
@@ -140,7 +140,7 @@ export default function Compliance() {
     }
     
    }, [AllBenchmarks])
-   const array = window.innerWidth > 768 ? [1,2,3,4,5,6] : [1,2,3,4,5]
+   const array = window.innerWidth > 768 ? [1,2,3] : [1,2,3,4,5]
 
     return (
         <Flex flexDirection="col" alignItems="start" justifyContent="start">

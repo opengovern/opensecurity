@@ -51,7 +51,10 @@ import {
     PropertyFilter,
 } from '@cloudscape-design/components'
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
-import { dateTimeDisplay, shortDateTimeDisplayDelta } from '../../../../../../utilities/dateDisplay'
+import {
+    dateTimeDisplay,
+    shortDateTimeDisplayDelta,
+} from '../../../../../../utilities/dateDisplay'
 import StatusIndicator from '@cloudscape-design/components/status-indicator'
 import SeverityBar from './SeverityBar'
 import { useParams } from 'react-router-dom'
@@ -475,7 +478,7 @@ export default function EvaluateDetail() {
                     >
                         <KeyValuePairs
                             className="w-full"
-                            columns={window.innerWidth > 640 ? 4 :1}
+                            columns={window.innerWidth > 640 ? 4 : 1}
                             items={[
                                 {
                                     label: 'Job ID',
@@ -544,6 +547,34 @@ export default function EvaluateDetail() {
                                     ),
                                 },
                                 {
+                                    label: 'Total Time',
+                                    value: shortDateTimeDisplayDelta(
+                                        jobDetail?.updated_at,
+                                        jobDetail?.created_at
+                                    ),
+                                },
+                                {
+                                    label: 'Create With Incidents',
+                                    value: jobDetail?.with_incidents
+                                        ? 'True'
+                                        : 'False',
+                                },
+
+                                // {
+                                //     label: 'Download Results',
+                                //     value: (
+                                //         <KButton
+                                //             iconName="download"
+                                //             className="mt-2"
+                                //             variant="inline-icon"
+                                //             onClick={() => GetFullResults()}
+                                //             loading={fullLoading}
+                                //         >
+                                //             Click here for results in JSON
+                                //         </KButton>
+                                //     ),
+                                // },
+                                {
                                     label: 'Severity Status',
                                     columnSpan: 2,
                                     value: (
@@ -558,24 +589,6 @@ export default function EvaluateDetail() {
                                             </Flex>
                                         </>
                                     ),
-                                },
-                                {
-                                    label: 'Download Results',
-                                    value: (
-                                        <KButton
-                                            iconName="download"
-                                            className="mt-2"
-                                            variant="inline-icon"
-                                            onClick={() => GetFullResults()}
-                                            loading={fullLoading}
-                                        >
-                                            Click here for results in JSON
-                                        </KButton>
-                                    ),
-                                },
-                                {
-                                    label: 'Total Time',
-                                    value: shortDateTimeDisplayDelta(jobDetail?.updated_at, jobDetail?.created_at),
                                 },
                             ]}
                         />
@@ -855,26 +868,35 @@ export default function EvaluateDetail() {
                                                 </Box>
                                             }
                                             header={
-                                                <Header className="w-full">
-                                                    Controls{' '}
-                                                    <span className=" font-medium">
-                                                        ({runDetail?.length})
-                                                    </span>
-                                                </Header>
-                                            }
-                                            pagination={
-                                                <CustomPagination
-                                                    currentPageIndex={page + 1}
-                                                    pagesCount={Math.ceil(
-                                                        runDetail?.length / 10
-                                                    )}
-                                                    onChange={({ detail }) =>
-                                                        setPage(
-                                                            detail.currentPageIndex -
-                                                                1
-                                                        )
+                                                <Header
+                                                    actions={
+                                                        <CustomPagination
+                                                            currentPageIndex={
+                                                                page + 1
+                                                            }
+                                                            pagesCount={Math.ceil(
+                                                                runDetail?.length /
+                                                                    10
+                                                            )}
+                                                            onChange={({
+                                                                detail,
+                                                            }) =>
+                                                                setPage(
+                                                                    detail.currentPageIndex -
+                                                                        1
+                                                                )
+                                                            }
+                                                        />
                                                     }
-                                                />
+                                                    counter={
+                                                        runDetail?.length
+                                                            ? `(${runDetail?.length})`
+                                                            : ''
+                                                    }
+                                                    className="w-full"
+                                                >
+                                                    Controls{' '}
+                                                </Header>
                                             }
                                         />
                                     </>
@@ -1096,11 +1118,23 @@ export default function EvaluateDetail() {
                                                 </Box>
                                             }
                                             header={
-                                                <Header className="w-full">
+                                                <Header
+                                                    counter={
+                                                        runners?.length
+                                                            ? `(${runners?.length})`
+                                                            : ''
+                                                    }
+                                                    actions={
+                                                        <KButton
+                                                            onClick={() => {
+                                                                GetRunners()
+                                                            }}
+                                                            iconName="refresh"
+                                                        ></KButton>
+                                                    }
+                                                    className="w-full"
+                                                >
                                                     Runners{' '}
-                                                    <span className=" font-medium">
-                                                        ({runners?.length})
-                                                    </span>
                                                 </Header>
                                             }
                                             pagination={
@@ -1364,10 +1398,7 @@ export default function EvaluateDetail() {
                                 label: 'Integration ID',
                                 value: selectedRunner?.integration_id,
                             },
-                            {
-                                label: 'Worker Pod Name',
-                                value: selectedRunner?.worker_pod_name,
-                            },
+
                             {
                                 label: 'Queued At',
                                 value: dateTimeDisplay(
@@ -1385,6 +1416,10 @@ export default function EvaluateDetail() {
                                 value: dateTimeDisplay(
                                     selectedRunner?.completed_at
                                 ),
+                            },
+                            {
+                                label: 'Worker Pod Name',
+                                value: selectedRunner?.worker_pod_name,
                             },
                             { label: 'Status', value: selectedRunner?.status },
                             {
