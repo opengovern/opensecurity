@@ -427,7 +427,7 @@ const {
 
             <Grid
                 numItems={11}
-                className="w-full gap-8  h-fit mb-7"
+                className="w-full gap-8  h-fit "
                 style={window.innerWidth > 768 ? { gridAutoRows: '1fr' } : {}}
             >
                 <Col numColSpan={11} numColSpanSm={8}>
@@ -437,7 +437,7 @@ const {
                         className="gap-4 h-full"
                         id="myDIV"
                     >
-                        <Grid numItems={6} className="w-full gap-4 h-fit ">
+                        <Grid numItems={6} className="w-full gap-6 h-fit ">
                             <Col numColSpan={6} className="h-fit">
                                 <Shortcuts />
                             </Col>

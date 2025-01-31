@@ -190,6 +190,7 @@ function NumberMetric({ title, metricId, min, max }: INumberMetric) {
 
             <NumberInput
                 className="w-1/2"
+                
                 value={value}
                 min={min}
                 max={max}
@@ -197,7 +198,7 @@ function NumberMetric({ title, metricId, min, max }: INumberMetric) {
                 error={error !== undefined}
                 errorMessage={getErrorMessage(error)}
                 icon={isLoading ? Spinner : undefined}
-                disabled={isLoading}
+                disabled={true}
             />
         </Flex>
     )
@@ -297,7 +298,7 @@ export default function SettingsCustomization() {
                         min={1}
                         max={120}
                     />
-                    <Button
+                    {/* <Button
                         variant="secondary"
                         className="ml-2"
                         // icon={ArrowPathIcon}
@@ -308,7 +309,7 @@ export default function SettingsCustomization() {
                         }
                     >
                         Save
-                    </Button>
+                    </Button> */}
                 </Flex>
 
                 <Flex
@@ -323,7 +324,7 @@ export default function SettingsCustomization() {
                         min={24}
                         max={120}
                     />
-                    <Button
+                    {/* <Button
                         variant="secondary"
                         className="ml-2"
                         // icon={ArrowPathIcon}
@@ -332,7 +333,7 @@ export default function SettingsCustomization() {
                         onClick={() => complianceTrigger()}
                     >
                         Save
-                    </Button>
+                    </Button> */}
                 </Flex>
             </Flex>
 

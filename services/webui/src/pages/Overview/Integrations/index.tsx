@@ -202,7 +202,7 @@ export default function Integrations() {
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)
     const [loading, setLoading] = useState(false)
     const [url, setUrl] = useState('')
-    const number = window.innerWidth >768 ? 5 : 2
+    const number = window.innerWidth >768 ? 4 : 2
 
     const [open, setOpen] = useState(false)
     const {
