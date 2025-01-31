@@ -242,15 +242,15 @@ export default function EvaluateTable({
           case 'QUEUED':
               return false
           case 'IN_PROGRESS':
-              return false
+              return true
           case 'RUNNERS_IN_PROGRESS':
-              return false
+              return true
           case 'SUMMARIZER_IN_PROGRESS':
-              return false
+              return true
           case 'SINK_IN_PROGRESS':
-              return false
+              return true
           case 'OLD_RESOURCE_DELETION':
-              return false
+              return true
           case 'SUCCEEDED':
               return true
           case 'COMPLETED':

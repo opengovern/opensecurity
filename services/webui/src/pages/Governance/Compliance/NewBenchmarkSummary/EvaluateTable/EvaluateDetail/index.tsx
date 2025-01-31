@@ -475,7 +475,7 @@ export default function EvaluateDetail() {
                     >
                         <KeyValuePairs
                             className="w-full"
-                            columns={window.innerWidth > 640 ? 4 :1}
+                            columns={window.innerWidth > 640 ? 4 : 1}
                             items={[
                                 {
                                     label: 'Job ID',
@@ -575,7 +575,10 @@ export default function EvaluateDetail() {
                                 },
                                 {
                                     label: 'Total Time',
-                                    value: shortDateTimeDisplayDelta(jobDetail?.updated_at, jobDetail?.created_at),
+                                    value: shortDateTimeDisplayDelta(
+                                        jobDetail?.updated_at,
+                                        jobDetail?.created_at
+                                    ),
                                 },
                             ]}
                         />
@@ -1364,10 +1367,7 @@ export default function EvaluateDetail() {
                                 label: 'Integration ID',
                                 value: selectedRunner?.integration_id,
                             },
-                            {
-                                label: 'Worker Pod Name',
-                                value: selectedRunner?.worker_pod_name,
-                            },
+
                             {
                                 label: 'Queued At',
                                 value: dateTimeDisplay(
@@ -1385,6 +1385,10 @@ export default function EvaluateDetail() {
                                 value: dateTimeDisplay(
                                     selectedRunner?.completed_at
                                 ),
+                            },
+                            {
+                                label: 'Worker Pod Name',
+                                value: selectedRunner?.worker_pod_name,
                             },
                             { label: 'Status', value: selectedRunner?.status },
                             {
