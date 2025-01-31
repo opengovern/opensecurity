@@ -321,6 +321,39 @@ const setNotification = useSetAtom(notificationAtom)
                 return false
         }
     }
+      const checkStatusRedirect = (status) => {
+          switch (status) {
+              case 'CREATED':
+                  return false
+              case 'QUEUED':
+                  return false
+              case 'IN_PROGRESS':
+                  return false
+              case 'RUNNERS_IN_PROGRESS':
+                  return false
+              case 'SUMMARIZER_IN_PROGRESS':
+                  return false
+              case 'SINK_IN_PROGRESS':
+                  return false
+              case 'OLD_RESOURCE_DELETION':
+                  return false
+              case 'SUCCEEDED':
+                  return true
+              case 'COMPLETED':
+                  return true
+              case 'FAILED':
+                  return true
+              case 'COMPLETED_WITH_FAILURE':
+                  return true
+              case 'TIMEOUT':
+                  return false
+              case 'CANCELED':
+                  return false
+
+              default:
+                  return false
+          }
+      }
     const clickedJobDetails = [
         { title: 'ID', value: clickedJob?.job_id },
         { title: 'Title', value: clickedJob?.framework_title },
@@ -347,12 +380,11 @@ const setNotification = useSetAtom(notificationAtom)
             value: (
                 <>
                     <Link
-                        // href={`${
-                        //     checkStatus(clickedJob?.job_status)
-                        //         ? `/compliance/${clickedJob?.framework_id}/report/${clickedJob?.job_id}`
-                        //         : '#'
-                        // }`}
-                        href={`/compliance/${clickedJob?.framework_id}/report/${clickedJob?.job_id}`}
+                        href={`${
+                            checkStatusRedirect(clickedJob?.job_status)
+                                ? `/compliance/${clickedJob?.framework_id}/report/${clickedJob?.job_id}`
+                                : '#'
+                        }`}
                     >
                         {clickedJob?.framework_title}
                     </Link>
