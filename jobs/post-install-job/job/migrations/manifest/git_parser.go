@@ -1,4 +1,4 @@
-package integration_type
+package manifest
 
 import (
 	"encoding/json"
@@ -8,13 +8,14 @@ import (
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/opencomply/jobs/post-install-job/config"
+	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/shared"
 	"github.com/opengovern/opencomply/services/integration/models"
 	"go.uber.org/zap"
 	"os"
 )
 
 type GitParser struct {
-	Integrations IntegrationYaml
+	Manifest ManifestYAML
 }
 
 type Manifest struct {
@@ -44,20 +45,30 @@ type IntegrationPlugin struct {
 	} `json:"artifact_details" yaml:"artifact_details"`
 }
 
-type IntegrationYaml struct {
-	Type    string              `json:"type" yaml:"type"`
-	Plugins []IntegrationPlugin `json:"plugins" yaml:"plugins"`
+type Schedules struct {
+	IntegrationDiscoveryFrequency *string `json:"integration_discovery_frequency_hours" yaml:"integration_discovery_frequency_hours"`
+	ComplianceEvaluationFrequency *string `json:"compliance_evaluation_frequency_hours" yaml:"compliance_evaluation_frequency_hours"`
+}
+
+type ManifestYAML struct {
+	Type                      string                    `json:"type" yaml:"type"`
+	SupportedPlatformVersions []string                  `json:"supported_platform_versions" yaml:"supported_platform_versions"`
+	Parameters                []shared.ControlParameter `json:"parameters" yaml:"parameters"`
+	Schedules                 Schedules                 `json:"schedules" yaml:"schedules"`
+	Integrations              struct {
+		Plugins []IntegrationPlugin `json:"plugins" yaml:"plugins"`
+	} `json:"integrations" yaml:"integrations"`
 }
 
 func (g *GitParser) ExtractIntegrations(logger *zap.Logger) error {
 	// read file from path
-	f, err := os.Open(config.IntegrationTypesYamlPath)
+	f, err := os.Open(config.ManifestYamlPath)
 	if err != nil {
 		logger.Error("failed to open file", zap.Error(err))
 		return fmt.Errorf("open file: %w", err)
 	}
 	defer f.Close()
-	if err := yaml.NewDecoder(f).Decode(&g.Integrations); err != nil {
+	if err := yaml.NewDecoder(f).Decode(&g.Manifest); err != nil {
 		logger.Error("failed to decode json", zap.Error(err))
 		return fmt.Errorf("decode json: %w", err)
 	}
