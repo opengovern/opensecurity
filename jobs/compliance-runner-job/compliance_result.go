@@ -20,54 +20,28 @@ import (
 )
 
 func (w *Job) GetResourceTypeFromTableName(integrationClient client.IntegrationServiceClient, tableName string, queryIntegrationType []string) (string, integration.Type, error) {
-	var integrationType string
-var lastError error
+	ctx := &httpclient.Context{Ctx: context.Background(), UserRole: authApi.ViewerRole}
 
-if len(queryIntegrationType) == 1 {
-			integrationType = queryIntegrationType[0]
-
-			// Try for the single value
-			tableResourceType, err := integrationClient.GetResourceTypeFromTableName(
-				&httpclient.Context{Ctx: context.Background(), UserRole: authApi.ViewerRole},
-				integrationType,
-				tableName,
-			)
-			if err != nil {
-				return "", "", err
+	for _, integrationType := range queryIntegrationType {
+		tableResourceType, err := integrationClient.GetResourceTypeFromTableName(ctx, integrationType, tableName)
+		if err != nil {
+			if strings.Contains(err.Error(), "integration type not found") ||
+				strings.Contains(err.Error(), "resource type not found") {
+				continue
+			} else {
+				return "", "", fmt.Errorf("failed to get resource type from table: %s, integration-type: %s", err.Error(), integrationType)
 			}
-
-			return tableResourceType, integration.Type(integrationType), nil
-		} else if len(queryIntegrationType) > 1 {
-			// Try each integrationType and return the first successful result
-			for _, it := range queryIntegrationType {
-				tableResourceType, err := integrationClient.GetResourceTypeFromTableName(
-					&httpclient.Context{Ctx: context.Background(), UserRole: authApi.ViewerRole},
-					it,
-					tableName,
-				)
-				if err == nil {
-					return tableResourceType, integration.Type(it), nil // ✅ Return the first successful result
-				}
-				lastError = err // Store last error if it fails
-			}
-
-			// If all fail, return the last error encountered
-			return "", "", fmt.Errorf("all integration types failed: %v", lastError)
 		}
+		return tableResourceType, integration.Type(integrationType), nil
+	}
 
-		// If the list is empty
-		return "", "", fmt.Errorf("no integration types provided")
-
+	return "", "", fmt.Errorf("failed to get resource type from table: %s", tableName)
 }
 
 func (w *Job) ExtractComplianceResults(logger *zap.Logger, benchmarkCache map[string]api.Benchmark, integrationClient client.IntegrationServiceClient, caller model.Caller, res *steampipe.Result, query api.Policy) ([]types.ComplianceResult, error) {
 	var complianceResults []types.ComplianceResult
 	var integrationType integration.Type
 	var err error
-	// log res
-	logger.Info("ExtractComplianceResults", zap.Any("res", res))
-	logger.Sync()
-	logger.Info("ExtractComplianceResults", zap.Any("query", query))
 	queryResourceType := ""
 	if query.PrimaryResource != nil || len(query.ListOfResources) == 1 {
 		tableName := ""
@@ -77,8 +51,6 @@ func (w *Job) ExtractComplianceResults(logger *zap.Logger, benchmarkCache map[st
 			tableName = query.ListOfResources[0]
 		}
 		if tableName != "" {
-			logger.Info("ExtractComplianceResults", zap.String("tableName", tableName))
-			logger.Sync()
 			queryResourceType, integrationType, err = w.GetResourceTypeFromTableName(integrationClient, tableName, w.ExecutionPlan.Query.IntegrationType)
 			if err != nil {
 				return nil, err
@@ -108,8 +80,6 @@ func (w *Job) ExtractComplianceResults(logger *zap.Logger, benchmarkCache map[st
 		}
 		if v, ok := recordValue["platform_table_name"].(string); ok && resourceType == "" {
 			resourceType, integrationType, err = w.GetResourceTypeFromTableName(integrationClient, v, w.ExecutionPlan.Query.IntegrationType)
-			logger.Info("ExtractComplianceResults", zap.String("tableName", v))
-			logger.Sync()
 			if err != nil {
 				return nil, err
 			}
