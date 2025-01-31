@@ -59,7 +59,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 
 	if parser.Manifest.Type != "platform_manifest" {
-		return fmt.Errorf("manifest type %s is not supported, should be integrations", parser.Manifest.Type)
+		return fmt.Errorf("manifest type %s is not supported, should be platform_manifest", parser.Manifest.Type)
 	}
 
 	valid, platformVersion, err := m.CheckManifestVersion(parser.Manifest.SupportedPlatformVersions)

@@ -56,7 +56,6 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 	)
 	w.logger.Sync()
 
-
 	if err := w.Initialize(ctx, j); err != nil {
 		return 0, err
 	}
@@ -67,7 +66,7 @@ func (w *Worker) RunJob(ctx context.Context, j Job) (int, error) {
 	queryParamMap := make(map[string]string)
 	w.queryParamsMu.RLock()
 	for _, qp := range w.queryParameters {
-		if _, ok := queryParamMap[qp.Key]; !ok {
+		if qp.ControlID == "" {
 			queryParamMap[qp.Key] = qp.Value
 		} else if qp.ControlID == j.ExecutionPlan.ControlID {
 			queryParamMap[qp.Key] = qp.Value
