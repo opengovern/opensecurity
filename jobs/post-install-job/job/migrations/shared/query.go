@@ -46,5 +46,6 @@ type ParameterDefaultValue struct {
 }
 
 type ParameterDefaultValueFile struct {
+	Type       string                  `json:"type" yaml:"type"`
 	Parameters []ParameterDefaultValue `json:"parameters" yaml:"parameters"`
 }

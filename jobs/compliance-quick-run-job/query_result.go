@@ -44,7 +44,7 @@ func (w *Worker) RunQuery(ctx context.Context, j QueryJob, queryParams *coreApi.
 
 	queryParamMap := make(map[string]string)
 	for _, qp := range queryParams.Items {
-		if _, ok := queryParamMap[qp.Key]; !ok {
+		if qp.ControlID == "" {
 			queryParamMap[qp.Key] = qp.Value
 		} else if qp.ControlID == j.ExecutionPlan.ControlID {
 			queryParamMap[qp.Key] = qp.Value

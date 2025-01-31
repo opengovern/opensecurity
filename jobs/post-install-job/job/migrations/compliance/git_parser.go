@@ -164,29 +164,19 @@ func (g *GitParser) ExtractControls(complianceControlsPath string, controlEnrich
 	})
 }
 
-func (g *GitParser) ExtractParameters(complianceParametersPath string) error {
-	return filepath.WalkDir(complianceParametersPath, func(path string, d fs.DirEntry, err error) error {
-		if strings.HasSuffix(path, ".yaml") {
-			content, err := os.ReadFile(path)
-			if err != nil {
-				g.logger.Error("failed to read yaml", zap.String("path", path), zap.Error(err))
-				return err
-			}
+func (g *GitParser) ExtractParameters() error {
+	content, err := os.ReadFile(config.ParametersYamlPath)
+	if err != nil {
+		g.logger.Error("failed to read yaml", zap.String("path", config.ParametersYamlPath), zap.Error(err))
+		return err
+	}
 
-			var data map[string]interface{}
-			if err := yaml.Unmarshal(content, &data); err != nil {
-				g.logger.Error("failed to unmarshal yaml", zap.String("path", path), zap.Error(err))
-				return fmt.Errorf("cannot parse YAML as map: %w", err)
-			}
+	if err = g.parseParameterDefaulValuesFile(content, config.ParametersYamlPath); err != nil {
+		g.logger.Error("failed to parse control", zap.String("path", config.ParametersYamlPath), zap.Error(err))
+		return err
+	}
 
-			if err = g.parseParameterDefaulValuesFile(content, path); err != nil {
-				g.logger.Error("failed to parse control", zap.String("path", path), zap.Error(err))
-				return err
-			}
-
-		}
-		return nil
-	})
+	return nil
 }
 
 func (g *GitParser) parseParameterDefaulValuesFile(content []byte, path string) error {
@@ -195,6 +185,10 @@ func (g *GitParser) parseParameterDefaulValuesFile(content []byte, path string) 
 	if err != nil {
 		g.logger.Error("failed to unmarshal policy", zap.String("path", path), zap.Error(err))
 		return err
+	}
+
+	if parametersFile.Type != "parameters" {
+		return fmt.Errorf("manifest type %s is not supported, should be parameters", parametersFile.Type)
 	}
 
 	for _, p := range parametersFile.Parameters {
@@ -450,17 +444,14 @@ func (g *GitParser) parseControlFile(content []byte, path string) error {
 					PolicyID: control.ID,
 					Key:      parameter,
 				})
-
+				if g.checkGlobalParameters(parameter) {
+					continue
+				}
 				if v, ok := controlParameterValues[parameter]; ok {
 					g.policyParamValues = append(g.policyParamValues, models.PolicyParameterValues{
 						Key:       parameter,
 						Value:     v,
 						ControlID: control.ID,
-					})
-					g.policyParamValues = append(g.policyParamValues, models.PolicyParameterValues{
-						Key:       parameter,
-						Value:     "",
-						ControlID: "",
 					})
 				} else {
 					g.logger.Error("extract control failed: control does not contain parameter value", zap.String("control-id", control.ID),
@@ -474,6 +465,15 @@ func (g *GitParser) parseControlFile(content []byte, path string) error {
 	}
 	g.controls = append(g.controls, c)
 	return nil
+}
+
+func (g *GitParser) checkGlobalParameters(param string) bool {
+	for _, p := range g.policyParamValues {
+		if p.Key == param && p.ControlID == "" {
+			return true
+		}
+	}
+	return false
 }
 
 func (g *GitParser) ExtractFrameworks(complianceBenchmarksPath string) error {
@@ -787,6 +787,10 @@ func (g GitParser) ExtractBenchmarksMetadata() error {
 }
 
 func (g *GitParser) ExtractCompliance(compliancePath string, controlEnrichmentBasePath string) error {
+	if err := g.ExtractParameters(); err != nil {
+		return err
+	}
+
 	if err := g.ExtractNamedQueries(); err != nil {
 		return err
 	}
@@ -802,9 +806,6 @@ func (g *GitParser) ExtractCompliance(compliancePath string, controlEnrichmentBa
 	//if err := g.CheckForDuplicate(); err != nil {
 	//	return err
 	//}
-	if err := g.ExtractParameters(path.Join(compliancePath, "parameters-default-values")); err != nil {
-		return err
-	}
 
 	if err := g.ExtractBenchmarksMetadata(); err != nil {
 		return err
