@@ -111,9 +111,9 @@ const setNotification = useSetAtom(notificationAtom)
     const [totalCount, setTotalCount] = useState(0)
     const [totalPage, setTotalPage] = useState(0)
     const [date, setDate] = useState({
-        key: 'previous-6-hours',
-        amount: 6,
-        unit: 'hour',
+        key: 'previous-30-minutes',
+        amount: 30,
+        unit: 'minute',
         type: 'relative',
     })
     const [filter, setFilter] = useState()
@@ -373,7 +373,19 @@ const setNotification = useSetAtom(notificationAtom)
         { title: 'Status', value: clickedJob?.job_status },
         {
             title: 'Failure Reason',
-            value: truncate(clickedJob?.failure_message, 250),
+            value: (
+                <>
+                    <div className="group  important  relative w-full text-wrap justify-start">
+                        <Text className="test-start text-black w-full  ">
+                            {/* @ts-ignore */}
+                            {truncate(clickedJob?.failure_message, 250)}
+                        </Text>
+                        <Card className="absolute text-black w-full text-wrap z-40 top-0 scale-0 transition-all p-2 group-hover:scale-100">
+                            <Text>{clickedJob?.failure_message}</Text>
+                        </Card>
+                    </div>
+                </>
+            ),
         },
         {
             title: 'Report link',
@@ -430,9 +442,14 @@ const setNotification = useSetAtom(notificationAtom)
                                 })}
                             />
                             {!checkStatus(clickedJob?.job_status) && (
-                                <KButton loading={cancelLoading} onClick={()=>{
-                                    CancelJob()
-                                }}>Cancel Job</KButton>
+                                <KButton
+                                    loading={cancelLoading}
+                                    onClick={() => {
+                                        CancelJob()
+                                    }}
+                                >
+                                    Cancel Job
+                                </KButton>
                             )}
                         </Flex>
                     </SplitPanel>
@@ -698,27 +715,33 @@ const setNotification = useSetAtom(notificationAtom)
                                     value={date}
                                     relativeOptions={[
                                         {
-                                            key: 'previous-5-minutes',
-                                            amount: 5,
-                                            unit: 'minute',
-                                            type: 'relative',
-                                        },
-                                        {
                                             key: 'previous-30-minutes',
                                             amount: 30,
                                             unit: 'minute',
                                             type: 'relative',
                                         },
                                         {
-                                            key: 'previous-1-hour',
-                                            amount: 1,
+                                            key: 'previous-3-hour',
+                                            amount: 3,
                                             unit: 'hour',
                                             type: 'relative',
                                         },
                                         {
-                                            key: 'previous-6-hours',
-                                            amount: 6,
+                                            key: 'previous-8-hours',
+                                            amount: 8,
                                             unit: 'hour',
+                                            type: 'relative',
+                                        },
+                                        {
+                                            key: 'previous-1-days',
+                                            amount: 1,
+                                            unit: 'day',
+                                            type: 'relative',
+                                        },
+                                        {
+                                            key: 'previous-3-days',
+                                            amount: 3,
+                                            unit: 'day',
                                             type: 'relative',
                                         },
                                         {
