@@ -9,6 +9,7 @@ import {
     Divider,
     CategoryBar,
     Grid,
+    Col,
 } from '@tremor/react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronRightIcon } from '@heroicons/react/20/solid'
@@ -70,7 +71,7 @@ export default function Compliance() {
      }
      const body = {
          cursor: 1,
-         per_page: window.innerWidth > 1920 ? 6 : window.innerWidth > 768 ? 4 :5,
+         per_page: window.innerWidth > 1920 ? 6 : window.innerWidth > 768 ? 6 :3,
          sort_by: 'incidents',
          assigned: false,
          is_baseline: false,
@@ -139,16 +140,15 @@ export default function Compliance() {
     }
     
    }, [AllBenchmarks])
-   const array = window.innerWidth > 768 ? [1,2,3,4] : [1,2,3,4,5]
+   const array = window.innerWidth > 768 ? [1,2,3,4,5,6] : [1,2,3,4,5]
 
     return (
         <Flex flexDirection="col" alignItems="start" justifyContent="start">
-           
             {loading ? (
-                <Flex  className="gap-4 flex-wrap sm:flex-row flex-col">
+                <Flex className="gap-4 flex-wrap sm:flex-row flex-col">
                     {array.map((i) => {
                         return (
-                            <Card className="p-3 dark:ring-gray-500 sm:w-[calc(50%-0.5rem)] w-[calc(100%-0.5rem)] sm:h-64 h-32">
+                            <Card className="p-3 dark:ring-gray-500 sm:w-[calc(33%-0.5rem)] w-[calc(100%-0.5rem)] sm:h-64 h-32">
                                 <Flex
                                     flexDirection="col"
                                     alignItems="start"
@@ -164,13 +164,19 @@ export default function Compliance() {
                     })}
                 </Flex>
             ) : (
-                <Grid className="w-full gap-4 justify-items-start">
-                    <BenchmarkCards
-                        benchmark={BenchmarkDetails}
-                        all={AllBenchmarks}
-                        loading={loading}
-                    />
-                    
+                <Grid
+                    numItems={10}
+                    className="w-full gap-4 mt-4  justify-center items-center "
+                >
+                    {/* <Col numColSpan={0} numColSpanSm={1}></Col> */}
+                    <Col numColSpan={10} numColSpanSm={10}>
+                        <BenchmarkCards
+                            benchmark={BenchmarkDetails}
+                            all={AllBenchmarks}
+                            loading={loading}
+                        />
+                    </Col>
+                    {/* <Col numColSpan={0} numColSpanSm={1}></Col> */}
                 </Grid>
             )}
         </Flex>

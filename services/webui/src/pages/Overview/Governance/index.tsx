@@ -7,11 +7,11 @@ export default function Governance() {
      const workspace = useParams<{ ws: string }>().ws
      const navigate = useNavigate()
     return (
-        <Card className="border-0 ring-0 !shadow-sm h-full">
+        <Card className=" border-solid sm:inline hidden   border-2 border-b w-full rounded-xl border-tremor-border bg-tremor-background-muted p-4 dark:border-dark-tremor-border dark:bg-gray-950 sm:p-4 lg:p-4 ">
             <Flex justifyContent="between" className="sm:flex-row flex-col">
                 <Flex justifyContent="start" className="gap-2 sm:w-fit w-full ">
                     <Icon icon={ShieldCheckIcon} className="p-0" />
-                    <Title className="font-semibold sm:w-fit w-full">
+                    <Title className="sm:font-semibold sm:w-fit w-full">
                         Compliance Frameworks
                     </Title>
                 </Flex>
@@ -27,11 +27,11 @@ export default function Governance() {
                         iconPosition="right"
                         className="my-3"
                     >
-                        All Compliance Frameworks
+                       see all
                     </Button>
                 </a>
             </Flex>
-            <Grid numItems={1} className="w-full gap-6 px-2">
+            <Grid numItems={1} className="w-full gap-6 ">
                 <Compliance />
                 {/* <Col numColSpan={1}>
                     <Findings />

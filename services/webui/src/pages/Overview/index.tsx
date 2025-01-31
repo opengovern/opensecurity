@@ -18,6 +18,7 @@ import { useAuth } from '../../utilities/auth'
 import { useAuthApiV1UserInviteCreate } from '../../api/auth.gen'
 import Integrations from './Integrations'
 import { useComplianceApiV1QueriesSyncList } from '../../api/compliance.gen'
+import SRE from './KPI_Cards'
 
 export default function Overview() {
    
@@ -424,42 +425,39 @@ const {
                 )}
             </Modal>
 
-            <Grid numItems={6} className="w-full gap-4 h-fit mb-7" 
-                style={window.innerWidth >768 ?{"gridAutoRows" : "1fr"}: {}}
+            <Grid
+                numItems={11}
+                className="w-full gap-8  h-fit mb-7"
+                style={window.innerWidth > 768 ? { gridAutoRows: '1fr' } : {}}
             >
-                <Col numColSpan={6} numColSpanSm={4}>
-                    {/* <ScoreKPIs /> */}
-                    {/* <QuickNav /> */}
+                <Col numColSpan={11} numColSpanSm={8}>
                     <Flex
                         flexDirection="col"
                         alignItems="start"
                         className="gap-4 h-full"
                         id="myDIV"
                     >
-                        {/* <ScoreKPIs /> */}
-
-                        <Grid numItems={6} className="w-full gap-4 h-full ">
-                            <Col numColSpan={6}>
+                        <Grid numItems={6} className="w-full gap-4 h-fit ">
+                            <Col numColSpan={6} className="h-fit">
                                 <Shortcuts />
                             </Col>
-                            <Col numColSpan={6} className='h-full'>
-                                {/* <QuickNav /> */}
+                            <Col numColSpan={6} className="h-fit">
+                                <SRE />
+                            </Col>
+                            <Col numColSpan={6} className="h-full">
                                 <Governance />
                             </Col>
                         </Grid>
-                        {/* <Spend/> */}
                     </Flex>
                 </Col>
-                <Col numColSpan={6} numColSpanSm={2} className='sm:h-full h-fit'>
-                    {/* <Query height={880} /> */}
+                <Col
+                    numColSpan={11}
+                    numColSpanSm={3}
+                    className="sm:h-full h-fit"
+                >
                     <Integrations />
                 </Col>
             </Grid>
-
-            {/* <Grid numItems={6} className="w-full gap-6 h-fit mt-4">
-               
-                
-            </Grid> */}
         </>
     )
 }

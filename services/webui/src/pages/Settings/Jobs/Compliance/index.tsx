@@ -47,6 +47,8 @@ import KeyValuePairs from '@cloudscape-design/components/key-value-pairs'
 import axios from 'axios'
 import { dateTimeDisplay } from '../../../../utilities/dateDisplay'
 import CustomPagination from '../../../../components/Pagination'
+import { useSetAtom } from 'jotai'
+import { notificationAtom } from '../../../../store'
 
 const ShowHours = [
     {
@@ -100,11 +102,12 @@ export default function ComplianceJobs() {
     )
     const [allStatuses, setAllStatuses] = useState<Option[]>([])
     const [loading, setLoading] = useState(false)
+    const [cancelLoading, setCancelLoading] = useState(false)
     const [jobs, setJobs] = useState([])
     const [page, setPage] = useState(1)
     const [sort, setSort] = useState('updatedAt')
     const [sortOrder, setSortOrder] = useState(true)
-
+const setNotification = useSetAtom(notificationAtom)
     const [totalCount, setTotalCount] = useState(0)
     const [totalPage, setTotalPage] = useState(0)
     const [date, setDate] = useState({
@@ -234,6 +237,49 @@ export default function ComplianceJobs() {
                 // params.fail()
             })
     }
+      const CancelJob = () => {
+          setCancelLoading(true)
+
+          let url = ''
+          if (window.location.origin === 'http://localhost:3000') {
+              url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+          } else {
+              url = window.location.origin
+          }
+          // @ts-ignore
+          const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+          const config = {
+              headers: {
+                  Authorization: `Bearer ${token}`,
+              },
+          }
+         
+
+          axios
+              .put(
+                  `${url}/main/schedule/api/v3/jobs/cancel/byid?job_id=${clickedJob?.job_id}&job_type=compliance`,
+                  {},
+                  config
+              )
+              .then((resp) => {
+                setNotification({
+                    text: `Job Canceled`,
+                    type: 'success',
+                })
+                  setCancelLoading(false)
+              })
+              .catch((err) => {
+                  console.log(err)
+                   setNotification({
+                       text: `Failed to cancel job`,
+                       type: 'error',
+                   })
+                  setCancelLoading(false)
+
+                  // params.fail()
+              })
+      }
 
     useEffect(() => {
         GetRows()
@@ -268,11 +314,46 @@ export default function ComplianceJobs() {
                 return true
             case 'TIMEOUT':
                 return false
+            case 'CANCELED':
+                return true
 
             default:
                 return false
         }
     }
+      const checkStatusRedirect = (status) => {
+          switch (status) {
+              case 'CREATED':
+                  return false
+              case 'QUEUED':
+                  return false
+              case 'IN_PROGRESS':
+                  return false
+              case 'RUNNERS_IN_PROGRESS':
+                  return false
+              case 'SUMMARIZER_IN_PROGRESS':
+                  return false
+              case 'SINK_IN_PROGRESS':
+                  return false
+              case 'OLD_RESOURCE_DELETION':
+                  return false
+              case 'SUCCEEDED':
+                  return true
+              case 'COMPLETED':
+                  return true
+              case 'FAILED':
+                  return true
+              case 'COMPLETED_WITH_FAILURE':
+                  return true
+              case 'TIMEOUT':
+                  return false
+              case 'CANCELED':
+                  return false
+
+              default:
+                  return false
+          }
+      }
     const clickedJobDetails = [
         { title: 'ID', value: clickedJob?.job_id },
         { title: 'Title', value: clickedJob?.framework_title },
@@ -300,7 +381,7 @@ export default function ComplianceJobs() {
                 <>
                     <Link
                         href={`${
-                            checkStatus(clickedJob?.job_status)
+                            checkStatusRedirect(clickedJob?.job_status)
                                 ? `/compliance/${clickedJob?.framework_id}/report/${clickedJob?.job_id}`
                                 : '#'
                         }`}
@@ -334,8 +415,8 @@ export default function ComplianceJobs() {
                     >
                         <Flex
                             flexDirection="col"
-                            className="w-full"
-                            alignItems="center"
+                            className="w-full gap-4"
+                            alignItems="end"
                             justifyContent="center"
                         >
                             <KeyValuePairs
@@ -348,6 +429,11 @@ export default function ComplianceJobs() {
                                     }
                                 })}
                             />
+                            {!checkStatus(clickedJob?.job_status) && (
+                                <KButton loading={cancelLoading} onClick={()=>{
+                                    CancelJob()
+                                }}>Cancel Job</KButton>
+                            )}
                         </Flex>
                     </SplitPanel>
                 }
@@ -453,6 +539,10 @@ export default function ComplianceJobs() {
                                             break
                                         case 'TIMEOUT':
                                             jobStatus = 'time out'
+                                            jobColor = 'red'
+                                            break
+                                        case 'CANCELED':
+                                            jobStatus = 'canceled'
                                             jobColor = 'red'
                                             break
                                         default:
@@ -579,6 +669,10 @@ export default function ComplianceJobs() {
                                         {
                                             propertyKey: 'job_status',
                                             value: 'CREATED',
+                                        },
+                                        {
+                                            propertyKey: 'job_status',
+                                            value: 'CANCELED',
                                         },
                                     ]}
                                     // @ts-ignore

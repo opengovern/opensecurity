@@ -248,7 +248,7 @@ export default function Integrations() {
                         alignItems="center"
                     >
                         <div className="flex sm:flex-row flex-col justify-between w-full p-4 sm:p-6 lg:p-8 lg:pb-0 sm:pb-0 pb-0 mb-4">
-                            <span className="sm:text-2xl sm:mb-0 mb-2 text-lg font-bold">
+                            <span className="sm:text-2xl sm:mb-0 mb-2 sm:min-w-max text-lg font-bold">
                                 Integration Plugins
                                 {responseConnectors?.total_count
                                     ? ` (${responseConnectors?.total_count})`
@@ -408,7 +408,7 @@ export default function Integrations() {
                                             cardsPerRow={[
                                                 { cards: 1 },
                                                 { minWidth: 320, cards: 2 },
-                                                { minWidth: 700, cards: 3 },
+                                                { minWidth: 700, cards: 4 },
                                             ]}
                                             // @ts-ignore
                                             items={connectorList?.map(

@@ -1,22 +1,6 @@
 import {
-    Accordion,
-    AccordionBody,
-    AccordionHeader,
-    Button,
-    Card,
     Flex,
-    Icon,
-    Select,
-    SelectItem,
-    Tab,
-    TabGroup,
-    TabList,
-    TabPanel,
-    TabPanels,
-    Text,
-    TextInput,
-    Subtitle,
-    Title,
+ 
 } from '@tremor/react'
 import {
     ChevronDoubleLeftIcon,
@@ -36,17 +20,10 @@ import 'prismjs/components/prism-sql' // eslint-disable-next-line import/no-extr
 import 'prismjs/themes/prism.css'
 import Editor from 'react-simple-code-editor'
 
-import {
-    CheckCircleIcon,
-    ExclamationCircleIcon,
-} from '@heroicons/react/24/solid'
-import { Transition } from '@headlessui/react'
+
 import { useAtom, useAtomValue } from 'jotai'
 import {
-    useInventoryApiV1QueryList,
-    useInventoryApiV1QueryRunCreate,
-    useInventoryApiV2AnalyticsCategoriesList,
-    useInventoryApiV2QueryList,
+
     useInventoryApiV3AllQueryCategory,
     useInventoryApiV3QueryFiltersList,
 } from '../../../api/inventory.gen'
@@ -75,6 +52,7 @@ import {
     Link,
     Pagination,
     PropertyFilter,
+    Select,
 } from '@cloudscape-design/components'
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import { useIntegrationApiV1EnabledConnectorsList } from '../../../api/integration.gen'
@@ -85,22 +63,27 @@ import axios from 'axios'
 
 export interface Props {
     setTab: Function
+     setOpenLayout : Function
 }
 
-export default function AllQueries({ setTab }: Props) {
+export default function AllQueries({ setTab, setOpenLayout }: Props) {
+     const [filter, setFilter] = useState({
+         label: 'Bookmarked Queries',
+         value: '1',
+     })
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)
     const [loading, setLoading] = useState(false)
     const [savedQuery, setSavedQuery] = useAtom(queryAtom)
     const [query, setQuery] =
         useState<PlatformEnginePkgInventoryApiListQueryRequestV2>()
-    
-    
+
     const [engine, setEngine] = useState('odysseus-sql')
     const [integrations, setIntegrations] = useState<any[]>([])
     const [page, setPage] = useState(1)
     const [totalCount, setTotalCount] = useState(0)
     const [totalPage, setTotalPage] = useState(0)
     const [rows, setRows] = useState<any[]>()
+   
     const [filterQuery, setFilterQuery] = useState({
         tokens: [],
         operation: 'and',
@@ -126,19 +109,7 @@ export default function AllQueries({ setTab }: Props) {
         isExecuted: TypesExec,
     } = useIntegrationApiV1EnabledConnectorsList(0, 0)
 
-  
-    const recordToArray = (record?: Record<string, string[]> | undefined) => {
-        if (record === undefined) {
-            return []
-        }
-
-        return Object.keys(record).map((key) => {
-            return {
-                value: key,
-                resource_types: record[key],
-            }
-        })
-    }
+   
     const getIntegrations = () => {
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
@@ -172,16 +143,31 @@ export default function AllQueries({ setTab }: Props) {
             })
     }
 
-   
-
     const getRows = () => {
         setLoading(true)
         const api = new Api()
         api.instance = AxiosAPI
+        let tags = query?.tags
+        if(filter.value === '1'){
+            if(tags ){
+                tags['platform_queries_bookmark'] = ['true']
+
+            }
+            else{
+                tags = {
+                    platform_queries_bookmark: ['true']
+                }
+            }
+        }
+        else{
+            if(tags){
+                delete tags['platform_queries_bookmark']
+            }
+        }
 
         let body = {
             //  title_filter: '',
-            tags: query?.tags,
+            tags: tags,
             integration_types: query?.providers,
             list_of_tables: query?.list_of_tables,
             cursor: page,
@@ -216,11 +202,12 @@ export default function AllQueries({ setTab }: Props) {
 
     useEffect(() => {
         getRows()
-    }, [page, query])
-    useEffect(()=>{
+    }, [page, query, filter])
+   
+    useEffect(() => {
         getIntegrations()
+    }, [])
 
-    },[])
 
     useEffect(() => {
         if (
@@ -281,7 +268,14 @@ export default function AllQueries({ setTab }: Props) {
             setOptions(temp_option)
             setProperties(property)
         }
-    }, [filterExec, categoryExec, filtersLoading, categoryLoading, TypesExec,TypesLoading])
+    }, [
+        filterExec,
+        categoryExec,
+        filtersLoading,
+        categoryLoading,
+        TypesExec,
+        TypesLoading,
+    ])
 
     useEffect(() => {
         if (filterQuery) {
@@ -324,18 +318,18 @@ export default function AllQueries({ setTab }: Props) {
             })
         }
     }, [filterQuery])
-   const FindLogos = (types: string[]) => {
-       const temp: string[] = []
-       types.map((type) => {
-           const integration = integrations.find((i) => i.plugin_id === type)
-           if (integration) {
-               temp.push(
-                   `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${integration?.icon}`
-               )
-           }
-       })
-       return temp
-   }
+    const FindLogos = (types: string[]) => {
+        const temp: string[] = []
+        types.map((type) => {
+            const integration = integrations.find((i) => i.plugin_id === type)
+            if (integration) {
+                temp.push(
+                    `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${integration?.icon}`
+                )
+            }
+        })
+        return temp
+    }
     return (
         <>
             <Flex className="w-full flex-col justify-start items-start gap-4">
@@ -352,93 +346,127 @@ export default function AllQueries({ setTab }: Props) {
                         }
                     />
                 </Flex>
-                <PropertyFilter
-                    // @ts-ignore
-                    query={filterQuery}
-                    tokenLimit={2}
-                    onChange={({ detail }) =>
+                <Flex className='sm:flex-row flex-col justify-start sm:items-center items-start gap-4'>
+                    <Select
                         // @ts-ignore
-                        setFilterQuery(detail)
-                    }
-                    customGroupsText={[
-                        {
-                            properties: 'Tags',
-                            values: 'Tag values',
-                            group: 'tags',
-                        },
-                        {
-                            properties: 'Category',
-                            values: 'Category values',
-                            group: 'category',
-                        },
-                    ]}
-                    // countText="5 matches"
-                    expandToViewport
-                    filteringAriaLabel="Find Query"
-                    filteringPlaceholder="Find Query"
-                    filteringOptions={options}
-                    filteringProperties={properties}
-                    asyncProperties
-                    virtualScroll
-                />
+                        selectedOption={filter}
+                        className="sm:w-1/5 w-full min-w-[160px] mt-[-9px]"
+                        inlineLabelText={'Saved Filters'}
+                        placeholder="Select Filter Set"
+                        // @ts-ignore
+                        onChange={({ detail }) =>
+                            // @ts-ignore
+                            setFilter(detail.selectedOption)
+                        }
+                        options={[
+                            {
+                                label: 'Bookmarked Queries',
+                                value: '1',
+                            },
+                            {
+                                label: 'All Queries',
+                                value: '2',
+                            },
+                        ]}
+                    />
+                    <PropertyFilter
+                        // @ts-ignore
+                        query={filterQuery}
+                        className='w-full sm:w-fit'
+                        tokenLimit={2}
+                        onChange={({ detail }) =>
+                            // @ts-ignore
+                            setFilterQuery(detail)
+                        }
+                        customGroupsText={[
+                            {
+                                properties: 'Tags',
+                                values: 'Tag values',
+                                group: 'tags',
+                            },
+                            {
+                                properties: 'Category',
+                                values: 'Category values',
+                                group: 'category',
+                            },
+                        ]}
+                        // countText="5 matches"
+                        expandToViewport
+                        filteringAriaLabel="Find Query"
+                        filteringPlaceholder="Find Query"
+                        filteringOptions={options}
+                        filteringProperties={properties}
+                        asyncProperties
+                        virtualScroll
+                    />
+                </Flex>
+
                 <Flex
-                    className="gap-4 flex-wrap justify-start items-start w-full"
+                    className="gap-8 flex-wrap sm:flex-row flex-col justify-start items-start w-full"
                     // style={{flex: "1 1 0"}}
                 >
-                    {(rows?.length === 0 || loading) && (
+                    {rows?.length === 0 || loading ? (
                         <>
                             <Spinner className="mt-2" />
                         </>
-                    )}
-                    {rows
-                        ?.sort((a, b) => {
-                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                            // @ts-ignore
-                            if (a.title < b.title) {
-                                return -1
-                            }
-                            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                            // @ts-ignore
-                            if (a.title > b.title) {
-                                return 1
-                            }
-                            return 0
-                        })
-                        .map((q, i) => (
-                            <div
-                                className="h-full w-full"
-                                style={
-                                    window.innerWidth > 768
-                                        ? {
-                                              width: `calc(calc(100% - ${
-                                                  rows.length >= 4
-                                                      ? '3'
-                                                      : rows.length - 1
-                                              }rem) / ${
-                                                  rows.length >= 4
-                                                      ? '4'
-                                                      : rows.length
-                                              })`,
-                                          }
-                                        : {}
-                                }
-                            >
-                                <UseCaseCard
+                    ) : (
+                        <>
+                            {rows
+                                ?.sort((a, b) => {
+                                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                                     // @ts-ignore
-                                    title={q?.title}
-                                    description={q?.description}
-                                    logos={FindLogos(q?.integration_types)}
-                                    onClick={() => {
-                                        // @ts-ignore
-                                        setSavedQuery(
-                                            q?.query?.query_to_execute
-                                        )
-                                        setTab('3')
-                                    }}
-                                    tag="tag1"
-                                />
-                            </div>
-                        ))}
+                                    if (a.title < b.title) {
+                                        return -1
+                                    }
+                                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                    // @ts-ignore
+                                    if (a.title > b.title) {
+                                        return 1
+                                    }
+                                    return 0
+                                })
+                                .map((q, i) => (
+                                    <div
+                                        className="h-full w-full"
+                                        style={
+                                            window.innerWidth > 768
+                                                ? {
+                                                      width: `calc(calc(100% - ${
+                                                          rows.length >= 4
+                                                              ? '6'
+                                                              : (rows.length -
+                                                                    1) *
+                                                                2
+                                                      }rem) / ${
+                                                          rows.length >= 4
+                                                              ? '4'
+                                                              : rows.length
+                                                      })`,
+                                                  }
+                                                : {}
+                                        }
+                                    >
+                                        <UseCaseCard
+                                            // @ts-ignore
+                                            title={q?.title}
+                                            description={q?.description}
+                                            logos={FindLogos(
+                                                q?.integration_types
+                                            )}
+                                            onClick={() => {
+                                                // @ts-ignore
+                                                setSavedQuery(
+                                                    q?.query?.query_to_execute
+                                                )
+                                                setTab('3')
+                                                setOpenLayout(false)
+                                            }}
+                                            tag="tag1"
+                                        />
+                                    </div>
+                                ))}
+                        </>
+                    )}
                 </Flex>
             </Flex>
         </>

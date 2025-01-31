@@ -33,7 +33,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/nats-io/nats.go v1.38.0
 	github.com/open-policy-agent/opa v0.69.0
-	github.com/opengovern/og-util v1.13.0
+	github.com/opengovern/og-util v1.14.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/opensearch-project/opensearch-go/v4 v4.2.0
 	github.com/ory/dockertest/v3 v3.10.0
@@ -185,7 +185,7 @@ require (
 	github.com/hashicorp/hcl v1.0.1-vault // indirect
 	github.com/hashicorp/hcl/v2 v2.20.1 // indirect
 	github.com/hashicorp/vault/api/auth/kubernetes v0.7.0 // indirect
-	github.com/hashicorp/yamux v0.1.1 // indirect
+	github.com/hashicorp/yamux v0.1.2 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

@@ -411,7 +411,7 @@ export default function IntegrationList({
                                         }
                                         className="w-full"
                                     >
-                                        {name} Integrations{' '}
+                                         Integrations{' '}
                                         <span className=" font-medium">
                                             ({total_count})
                                         </span>
@@ -429,14 +429,7 @@ export default function IntegrationList({
                             />
                         }
                     />
-                    <CreateIntegration
-                        name={name}
-                        integration_type={integration_type}
-                        schema={schema}
-                        open={open}
-                        onClose={() => setOpen(false)}
-                        GetList={GetIntegrations}
-                    />
+                    
                     <UpdateIntegration
                         name={name}
                         integration_type={integration_type}

@@ -12,6 +12,7 @@ import {
 import {
     ArrowPathRoundedSquareIcon,
     CloudIcon,
+    InformationCircleIcon,
     PlayCircleIcon,
 } from '@heroicons/react/24/outline'
 import { Checkbox, useCheckboxState } from 'pretty-checkbox-react'
@@ -219,48 +220,7 @@ export default function EvaluateTable({
             })
     }
 
-    const GetDetail = () => {
-        
-        setLoading(true)
-        let url = ''
-        if (window.location.origin === 'http://localhost:3000') {
-            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-        } else {
-            url = window.location.origin
-        }
-        // @ts-ignore
-        const token = JSON.parse(localStorage.getItem('openg_auth')).token
-
-        const config = {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-        
-        axios
-            .get(
-                // @ts-ignore
-                `${url}/main/compliance/api/v3/job-report/${selected.job_id}/summary `,
-                config
-            )
-            .then((res) => {
-                //   setAccounts(res.data.integrations)
-                navigate(`/compliance/${id}/report/${selected.job_id}`)
-                // setDetail(res.data)
-                // setDetailLoading(false)
-            })
-            .catch((err) => {
-                const message = err.response.data.message
-                setNotification({
-                    text: `${message}`,
-                    type: 'error',
-                })
-                // setDetailLoading(false)
-
-                console.log(err)
-                setLoading(false)
-            })
-    }
+   
     useEffect(() => {
         GetHistory()
     }, [page, jobStatus, date, selectedIntegrations])
@@ -269,16 +229,45 @@ export default function EvaluateTable({
         GetIntegrations()
     }, [])
 
-    useEffect(() => {
-        if (selected) {
-            GetDetail()
-        }
-    }, [selected])
+
     const truncate = (text: string | undefined) => {
         if (text) {
             return text.length > 30 ? text.substring(0, 30) + '...' : text
         }
     }
+  const checkStatusRedirect = (status) => {
+      switch (status) {
+          case 'CREATED':
+              return false
+          case 'QUEUED':
+              return false
+          case 'IN_PROGRESS':
+              return false
+          case 'RUNNERS_IN_PROGRESS':
+              return false
+          case 'SUMMARIZER_IN_PROGRESS':
+              return false
+          case 'SINK_IN_PROGRESS':
+              return false
+          case 'OLD_RESOURCE_DELETION':
+              return false
+          case 'SUCCEEDED':
+              return true
+          case 'COMPLETED':
+              return true
+          case 'FAILED':
+              return true
+          case 'COMPLETED_WITH_FAILURE':
+              return true
+          case 'TIMEOUT':
+              return false
+          case 'CANCELED':
+              return false
+
+          default:
+              return false
+      }
+  }
     return (
         <>
             <div
@@ -312,7 +301,11 @@ export default function EvaluateTable({
                     onRowClick={(event) => {
                         const row = event.detail.item
                         // @ts-ignore
-                        setSelected(row)
+                        // setSelected(row)
+                        if(checkStatusRedirect(row.job_status)){
+                        navigate(`/compliance/${id}/report/${row.job_id}`)
+
+                        }
                     }}
                     columnDefinitions={[
                         {
@@ -406,12 +399,19 @@ export default function EvaluateTable({
                                 // @ts-ignore
                                 <KButton
                                     onClick={() => {
-                                        setSelected(item)
+                                        // setSelected(item)
+                                        navigate(
+                                            `/compliance/${id}/report/${selected.job_id}`
+                                        )
                                     }}
                                     variant="inline-link"
                                     ariaLabel={`Open Detail`}
                                 >
-                                    See Details
+                                    {window.innerWidth > 768 ? (
+                                        'See details'
+                                    ) : (
+                                        <InformationCircleIcon className="w-5" />
+                                    )}
                                 </KButton>
                             ),
                         },
@@ -421,8 +421,14 @@ export default function EvaluateTable({
                         { id: 'updated_at', visible: true },
                         { id: 'job_status', visible: true },
                         { id: 'integration_id', visible: false },
-                        { id: 'integration_name', visible: true },
-                        { id: 'integration_type', visible: true },
+                        {
+                            id: 'integration_name',
+                            visible: window.innerWidth > 640 ? true : false,
+                        },
+                        {
+                            id: 'integration_type',
+                            visible: window.innerWidth > 640 ? true : false,
+                        },
 
                         // { id: 'conformanceStatus', visible: true },
                         // { id: 'severity', visible: true },
@@ -520,6 +526,7 @@ export default function EvaluateTable({
                             />
                             {/* default last 24 */}
                             <DateRangePicker
+                                className="sm:w-fit w-full"
                                 onChange={({ detail }) => {
                                     setDate(detail.value)
                                 }}

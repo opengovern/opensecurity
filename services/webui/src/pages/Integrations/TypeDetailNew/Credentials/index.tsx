@@ -395,7 +395,7 @@ export default function CredentialsList({
                                         }
                                         className="w-full"
                                     >
-                                        {name} Credentials{' '}
+                                        Credentials{' '}
                                         <span className=" font-medium">
                                             ({total_count})
                                         </span>

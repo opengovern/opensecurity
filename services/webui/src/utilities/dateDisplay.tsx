@@ -51,6 +51,7 @@ export const dateTimeDisplay = (
         return dayjs.unix(value).utc().format('MMM DD, YYYY kk:mm UTC')
     }
     if (date) {
+      
         return dayjs.utc(date).format('MMM DD, YYYY kk:mm UTC')
     }
     return 'Not available'
@@ -65,6 +66,31 @@ export const shortDateTimeDisplay = (
     }
     if (date) {
         return dayjs.utc(date).format('MM-DD-YYYY HH:mm')
+    }
+    return 'Not available'
+}
+
+
+export const shortDateTimeDisplayDelta = (
+    date: Dayjs | Date | number | string | undefined,date2: Dayjs | Date | number | string | undefined
+) => {
+    
+    
+    if (date && date2) {
+        const d1 = dayjs.utc(date)
+        const d2 = dayjs.utc(date2)
+
+        const diff = d1.diff(d2, 'ms')
+        const minutes = Math.floor(diff / 60000) // 1 minute = 60000 ms
+        const seconds = Math.floor((diff % 60000) / 1000) // Remaining seconds
+        const milliseconds = diff % 1000 // Remaining milliseconds
+        if (minutes > 0) {
+            return `${minutes} min ${seconds} sec`
+        }
+        if(seconds > 0){
+            return `${seconds} sec`
+        }
+        return `${milliseconds} ms`
     }
     return 'Not available'
 }
