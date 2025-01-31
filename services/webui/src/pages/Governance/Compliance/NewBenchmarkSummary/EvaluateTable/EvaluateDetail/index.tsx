@@ -51,7 +51,10 @@ import {
     PropertyFilter,
 } from '@cloudscape-design/components'
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
-import { dateTimeDisplay, shortDateTimeDisplayDelta } from '../../../../../../utilities/dateDisplay'
+import {
+    dateTimeDisplay,
+    shortDateTimeDisplayDelta,
+} from '../../../../../../utilities/dateDisplay'
 import StatusIndicator from '@cloudscape-design/components/status-indicator'
 import SeverityBar from './SeverityBar'
 import { useParams } from 'react-router-dom'
@@ -858,11 +861,24 @@ export default function EvaluateDetail() {
                                                 </Box>
                                             }
                                             header={
-                                                <Header className="w-full">
+                                                <Header
+                                                    counter={
+                                                        runDetail?.length
+                                                            ? `(${runDetail?.length})`
+                                                            : ''
+                                                    }
+                                                    actions={
+                                                        <KButton
+                                                            onClick={() => {
+                                                                GetControls()
+                                                            }}
+                                                        >
+                                                            Reload
+                                                        </KButton>
+                                                    }
+                                                    className="w-full"
+                                                >
                                                     Controls{' '}
-                                                    <span className=" font-medium">
-                                                        ({runDetail?.length})
-                                                    </span>
                                                 </Header>
                                             }
                                             pagination={
@@ -1099,11 +1115,24 @@ export default function EvaluateDetail() {
                                                 </Box>
                                             }
                                             header={
-                                                <Header className="w-full">
+                                                <Header
+                                                    counter={
+                                                        runners?.length
+                                                            ? `(${runners?.length})`
+                                                            : ''
+                                                    }
+                                                    actions={
+                                                        <KButton
+                                                            onClick={() => {
+                                                                GetRunners()
+                                                            }}
+                                                        >
+                                                            Reload
+                                                        </KButton>
+                                                    }
+                                                    className="w-full"
+                                                >
                                                     Runners{' '}
-                                                    <span className=" font-medium">
-                                                        ({runners?.length})
-                                                    </span>
                                                 </Header>
                                             }
                                             pagination={
