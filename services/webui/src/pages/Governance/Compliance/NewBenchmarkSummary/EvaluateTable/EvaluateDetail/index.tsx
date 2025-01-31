@@ -547,6 +547,34 @@ export default function EvaluateDetail() {
                                     ),
                                 },
                                 {
+                                    label: 'Total Time',
+                                    value: shortDateTimeDisplayDelta(
+                                        jobDetail?.updated_at,
+                                        jobDetail?.created_at
+                                    ),
+                                },
+                                {
+                                    label: 'Create With Incidents',
+                                    value: jobDetail?.with_incidents
+                                        ? 'True'
+                                        : 'False',
+                                },
+
+                                // {
+                                //     label: 'Download Results',
+                                //     value: (
+                                //         <KButton
+                                //             iconName="download"
+                                //             className="mt-2"
+                                //             variant="inline-icon"
+                                //             onClick={() => GetFullResults()}
+                                //             loading={fullLoading}
+                                //         >
+                                //             Click here for results in JSON
+                                //         </KButton>
+                                //     ),
+                                // },
+                                {
                                     label: 'Severity Status',
                                     columnSpan: 2,
                                     value: (
@@ -560,27 +588,6 @@ export default function EvaluateDetail() {
                                                 />
                                             </Flex>
                                         </>
-                                    ),
-                                },
-                                {
-                                    label: 'Download Results',
-                                    value: (
-                                        <KButton
-                                            iconName="download"
-                                            className="mt-2"
-                                            variant="inline-icon"
-                                            onClick={() => GetFullResults()}
-                                            loading={fullLoading}
-                                        >
-                                            Click here for results in JSON
-                                        </KButton>
-                                    ),
-                                },
-                                {
-                                    label: 'Total Time',
-                                    value: shortDateTimeDisplayDelta(
-                                        jobDetail?.updated_at,
-                                        jobDetail?.created_at
                                     ),
                                 },
                             ]}
@@ -862,38 +869,34 @@ export default function EvaluateDetail() {
                                             }
                                             header={
                                                 <Header
+                                                    actions={
+                                                        <CustomPagination
+                                                            currentPageIndex={
+                                                                page + 1
+                                                            }
+                                                            pagesCount={Math.ceil(
+                                                                runDetail?.length /
+                                                                    10
+                                                            )}
+                                                            onChange={({
+                                                                detail,
+                                                            }) =>
+                                                                setPage(
+                                                                    detail.currentPageIndex -
+                                                                        1
+                                                                )
+                                                            }
+                                                        />
+                                                    }
                                                     counter={
                                                         runDetail?.length
                                                             ? `(${runDetail?.length})`
                                                             : ''
                                                     }
-                                                    actions={
-                                                        <KButton
-                                                            onClick={() => {
-                                                                GetControls()
-                                                            }}
-                                                        >
-                                                            Reload
-                                                        </KButton>
-                                                    }
                                                     className="w-full"
                                                 >
                                                     Controls{' '}
                                                 </Header>
-                                            }
-                                            pagination={
-                                                <CustomPagination
-                                                    currentPageIndex={page + 1}
-                                                    pagesCount={Math.ceil(
-                                                        runDetail?.length / 10
-                                                    )}
-                                                    onChange={({ detail }) =>
-                                                        setPage(
-                                                            detail.currentPageIndex -
-                                                                1
-                                                        )
-                                                    }
-                                                />
                                             }
                                         />
                                     </>
@@ -1126,9 +1129,8 @@ export default function EvaluateDetail() {
                                                             onClick={() => {
                                                                 GetRunners()
                                                             }}
-                                                        >
-                                                            Reload
-                                                        </KButton>
+                                                            iconName="refresh"
+                                                        ></KButton>
                                                     }
                                                     className="w-full"
                                                 >

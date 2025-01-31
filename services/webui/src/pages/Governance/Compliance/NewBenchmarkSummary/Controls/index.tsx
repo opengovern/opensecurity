@@ -424,7 +424,7 @@ export default function Controls({
                 !(tree && tree?.length > 0) || window.innerWidth < 640
             }
             disableContentPaddings={true}
-            splitPanelSize={300}
+            splitPanelSize={500}
             splitPanelOpen={open}
             onSplitPanelToggle={() => {
                 setOpen(!open)

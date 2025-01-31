@@ -50,7 +50,7 @@ import {
     PropertyFilter,
 } from '@cloudscape-design/components'
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
-import { dateTimeDisplay } from '../../../../../utilities/dateDisplay'
+import { dateTimeDisplay, dateTimeDisplayAgo } from '../../../../../utilities/dateDisplay'
 import StatusIndicator from '@cloudscape-design/components/status-indicator'
 import SeverityBar from '../../BenchmarkCard/SeverityBar'
 import { useNavigate } from 'react-router-dom'
@@ -110,9 +110,9 @@ export default function EvaluateTable({
     )
 
     const [date, setDate] = useState({
-        key: 'previous-6-hours',
-        amount: 6,
-        unit: 'hour',
+        key: 'previous-30-minutes',
+        amount: 30,
+        unit: 'minute',
         type: 'relative',
     })
     const GetHistory = () => {
@@ -302,9 +302,8 @@ export default function EvaluateTable({
                         const row = event.detail.item
                         // @ts-ignore
                         // setSelected(row)
-                        if(checkStatusRedirect(row.job_status)){
-                        navigate(`/compliance/${id}/report/${row.job_id}`)
-
+                        if (checkStatusRedirect(row.job_status)) {
+                            navigate(`/compliance/${id}/report/${row.job_id}`)
                         }
                     }}
                     columnDefinitions={[
@@ -320,7 +319,7 @@ export default function EvaluateTable({
                             header: 'Last Updated at',
                             cell: (item) => (
                                 // @ts-ignore
-                                <>{dateTimeDisplay(item.updated_at)}</>
+                                <>{dateTimeDisplayAgo(item.updated_at)}</>
                             ),
                         },
 
@@ -401,7 +400,7 @@ export default function EvaluateTable({
                                     onClick={() => {
                                         // setSelected(item)
                                         navigate(
-                                            `/compliance/${id}/report/${selected.job_id}`
+                                            `/compliance/${id}/report/${item?.job_id}`
                                         )
                                     }}
                                     variant="inline-link"
@@ -533,27 +532,33 @@ export default function EvaluateTable({
                                 value={date}
                                 relativeOptions={[
                                     {
-                                        key: 'previous-5-minutes',
-                                        amount: 5,
-                                        unit: 'minute',
-                                        type: 'relative',
-                                    },
-                                    {
                                         key: 'previous-30-minutes',
                                         amount: 30,
                                         unit: 'minute',
                                         type: 'relative',
                                     },
                                     {
-                                        key: 'previous-1-hour',
-                                        amount: 1,
+                                        key: 'previous-3-hour',
+                                        amount: 3,
                                         unit: 'hour',
                                         type: 'relative',
                                     },
                                     {
-                                        key: 'previous-6-hours',
-                                        amount: 6,
+                                        key: 'previous-8-hours',
+                                        amount: 8,
                                         unit: 'hour',
+                                        type: 'relative',
+                                    },
+                                    {
+                                        key: 'previous-1-days',
+                                        amount: 1,
+                                        unit: 'day',
+                                        type: 'relative',
+                                    },
+                                    {
+                                        key: 'previous-3-days',
+                                        amount: 3,
+                                        unit: 'day',
                                         type: 'relative',
                                     },
                                     {
@@ -609,9 +614,8 @@ export default function EvaluateTable({
                                     onClick={() => {
                                         GetHistory()
                                     }}
-                                >
-                                    Reload
-                                </KButton>
+                                    iconName="refresh"
+                                ></KButton>
                             }
                             className="w-full"
                         >

@@ -2,10 +2,13 @@ import dayjs, { Dayjs } from 'dayjs'
 import LocalizedFormat from 'dayjs/plugin/localizedFormat'
 import timezone from 'dayjs/plugin/timezone'
 import advancedFormat from 'dayjs/plugin/advancedFormat'
-
+import relativeTime from 'dayjs/plugin/relativeTime'
+import duration from 'dayjs/plugin/duration'
 dayjs.extend(LocalizedFormat)
 dayjs.extend(timezone)
 dayjs.extend(advancedFormat)
+dayjs.extend(relativeTime)
+dayjs.extend(duration)
 
 export const dateDisplay = (
     date: Dayjs | Date | number | string | undefined,
@@ -55,6 +58,49 @@ export const dateTimeDisplay = (
         return dayjs.utc(date).format('MMM DD, YYYY kk:mm:ss UTC')
     }
     return 'Not available'
+}
+
+export const dateTimeDisplayAgo = (
+    date: Dayjs | Date | number | string | undefined
+): string => {
+    if (!date) return 'Not available'
+
+    let parsedDate: Dayjs
+
+    // Check if it's already a Dayjs object
+    if (dayjs.isDayjs(date)) {
+        parsedDate = date
+    } else {
+        // If it's a number, determine if it's in seconds or milliseconds
+        const isNumber = /^\d+$/g.test(String(date))
+        if (isNumber) {
+            const v = parseInt(String(date), 10)
+            const value = v > 17066236800 ? v / 1000 : v // Convert if timestamp is too large
+            parsedDate = dayjs.unix(value).utc()
+        } else {
+            // Parse as a normal date
+            parsedDate = dayjs.utc(date)
+        }
+    }
+
+    // Calculate exact time difference
+    const now = dayjs.utc()
+    const diffMs = now.diff(parsedDate, 'milliseconds')
+    const diffDuration = dayjs.duration(diffMs)
+
+    const days = diffDuration.days()
+    const hours = diffDuration.hours()
+    const minutes = diffDuration.minutes()
+    const seconds = diffDuration.seconds()
+
+    let result = ''
+    if (days > 0) result += `${days} day${days !== 1 ? 's' : ''} `
+    if (hours > 0) result += `${hours} h `
+    if (minutes > 0) result += `${minutes} m `
+    if (seconds > 0 && result === '')
+        result += `${seconds} s ` // Show seconds only if no larger unit
+
+    return result.trim() + ' ago'
 }
 
 export const shortDateTimeDisplay = (
