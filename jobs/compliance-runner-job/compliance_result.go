@@ -21,18 +21,43 @@ import (
 
 func (w *Job) GetResourceTypeFromTableName(integrationClient client.IntegrationServiceClient, tableName string, queryIntegrationType []string) (string, integration.Type, error) {
 	var integrationType string
-	if len(queryIntegrationType) == 1 {
-		integrationType = queryIntegrationType[0]
-	} else {
-		integrationType = ""
-	}
+var lastError error
 
-	tableResourceType, err := integrationClient.GetResourceTypeFromTableName(&httpclient.Context{Ctx: context.Background(), UserRole: authApi.ViewerRole}, integrationType, tableName)
-	if err != nil {
-		return "", "", err
-	}
+if len(queryIntegrationType) == 1 {
+			integrationType = queryIntegrationType[0]
 
-	return tableResourceType, integration.Type(integrationType), nil
+			// Try for the single value
+			tableResourceType, err := integrationClient.GetResourceTypeFromTableName(
+				&httpclient.Context{Ctx: context.Background(), UserRole: authApi.ViewerRole},
+				integrationType,
+				tableName,
+			)
+			if err != nil {
+				return "", "", err
+			}
+
+			return tableResourceType, integration.Type(integrationType), nil
+		} else if len(queryIntegrationType) > 1 {
+			// Try each integrationType and return the first successful result
+			for _, it := range queryIntegrationType {
+				tableResourceType, err := integrationClient.GetResourceTypeFromTableName(
+					&httpclient.Context{Ctx: context.Background(), UserRole: authApi.ViewerRole},
+					it,
+					tableName,
+				)
+				if err == nil {
+					return tableResourceType, integration.Type(it), nil // ✅ Return the first successful result
+				}
+				lastError = err // Store last error if it fails
+			}
+
+			// If all fail, return the last error encountered
+			return "", "", fmt.Errorf("all integration types failed: %v", lastError)
+		}
+
+		// If the list is empty
+		return "", "", fmt.Errorf("no integration types provided")
+
 }
 
 func (w *Job) ExtractComplianceResults(logger *zap.Logger, benchmarkCache map[string]api.Benchmark, integrationClient client.IntegrationServiceClient, caller model.Caller, res *steampipe.Result, query api.Policy) ([]types.ComplianceResult, error) {
