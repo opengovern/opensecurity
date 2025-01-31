@@ -20,19 +20,22 @@ import (
 )
 
 func (w *Job) GetResourceTypeFromTableName(integrationClient client.IntegrationServiceClient, tableName string, queryIntegrationType []string) (string, integration.Type, error) {
-	var integrationType string
-	if len(queryIntegrationType) == 1 {
-		integrationType = queryIntegrationType[0]
-	} else {
-		integrationType = ""
+	ctx := &httpclient.Context{Ctx: context.Background(), UserRole: authApi.ViewerRole}
+
+	for _, integrationType := range queryIntegrationType {
+		tableResourceType, err := integrationClient.GetResourceTypeFromTableName(ctx, integrationType, tableName)
+		if err != nil {
+			if strings.Contains(err.Error(), "integration type not found") ||
+				strings.Contains(err.Error(), "resource type not found") {
+				continue
+			} else {
+				return "", "", fmt.Errorf("failed to get resource type from table: %s, integration-type: %s", err.Error(), integrationType)
+			}
+		}
+		return tableResourceType, integration.Type(integrationType), nil
 	}
 
-	tableResourceType, err := integrationClient.GetResourceTypeFromTableName(&httpclient.Context{Ctx: context.Background(), UserRole: authApi.ViewerRole}, integrationType, tableName)
-	if err != nil {
-		return "", "", err
-	}
-
-	return tableResourceType, integration.Type(integrationType), nil
+	return "", "", fmt.Errorf("failed to get resource type from table: %s", tableName)
 }
 
 func (w *Job) ExtractComplianceResults(logger *zap.Logger, benchmarkCache map[string]api.Benchmark, integrationClient client.IntegrationServiceClient, caller model.Caller, res *steampipe.Result, query api.Policy) ([]types.ComplianceResult, error) {
