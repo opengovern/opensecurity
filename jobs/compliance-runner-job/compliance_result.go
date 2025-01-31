@@ -39,6 +39,10 @@ func (w *Job) ExtractComplianceResults(logger *zap.Logger, benchmarkCache map[st
 	var complianceResults []types.ComplianceResult
 	var integrationType integration.Type
 	var err error
+	// log res
+	logger.Info("ExtractComplianceResults", zap.Any("res", res))
+	logger.Sync()
+	logger.Info("ExtractComplianceResults", zap.Any("query", query))
 	queryResourceType := ""
 	if query.PrimaryResource != nil || len(query.ListOfResources) == 1 {
 		tableName := ""
@@ -48,6 +52,8 @@ func (w *Job) ExtractComplianceResults(logger *zap.Logger, benchmarkCache map[st
 			tableName = query.ListOfResources[0]
 		}
 		if tableName != "" {
+			logger.Info("ExtractComplianceResults", zap.String("tableName", tableName))
+			logger.Sync()
 			queryResourceType, integrationType, err = w.GetResourceTypeFromTableName(integrationClient, tableName, w.ExecutionPlan.Query.IntegrationType)
 			if err != nil {
 				return nil, err
@@ -77,6 +83,8 @@ func (w *Job) ExtractComplianceResults(logger *zap.Logger, benchmarkCache map[st
 		}
 		if v, ok := recordValue["platform_table_name"].(string); ok && resourceType == "" {
 			resourceType, integrationType, err = w.GetResourceTypeFromTableName(integrationClient, v, w.ExecutionPlan.Query.IntegrationType)
+			logger.Info("ExtractComplianceResults", zap.String("tableName", v))
+			logger.Sync()
 			if err != nil {
 				return nil, err
 			}
