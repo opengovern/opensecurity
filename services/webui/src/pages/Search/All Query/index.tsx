@@ -1,22 +1,6 @@
 import {
-    Accordion,
-    AccordionBody,
-    AccordionHeader,
-    Button,
-    Card,
     Flex,
-    Icon,
-    Select,
-    SelectItem,
-    Tab,
-    TabGroup,
-    TabList,
-    TabPanel,
-    TabPanels,
-    Text,
-    TextInput,
-    Subtitle,
-    Title,
+ 
 } from '@tremor/react'
 import {
     ChevronDoubleLeftIcon,
@@ -36,17 +20,10 @@ import 'prismjs/components/prism-sql' // eslint-disable-next-line import/no-extr
 import 'prismjs/themes/prism.css'
 import Editor from 'react-simple-code-editor'
 
-import {
-    CheckCircleIcon,
-    ExclamationCircleIcon,
-} from '@heroicons/react/24/solid'
-import { Transition } from '@headlessui/react'
+
 import { useAtom, useAtomValue } from 'jotai'
 import {
-    useInventoryApiV1QueryList,
-    useInventoryApiV1QueryRunCreate,
-    useInventoryApiV2AnalyticsCategoriesList,
-    useInventoryApiV2QueryList,
+
     useInventoryApiV3AllQueryCategory,
     useInventoryApiV3QueryFiltersList,
 } from '../../../api/inventory.gen'
@@ -75,6 +52,7 @@ import {
     Link,
     Pagination,
     PropertyFilter,
+    Select,
 } from '@cloudscape-design/components'
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import { useIntegrationApiV1EnabledConnectorsList } from '../../../api/integration.gen'
@@ -89,6 +67,10 @@ export interface Props {
 }
 
 export default function AllQueries({ setTab, setOpenLayout }: Props) {
+     const [filter, setFilter] = useState({
+         label: 'Bookmarked Queries',
+         value: '1',
+     })
     const [runQuery, setRunQuery] = useAtom(runQueryAtom)
     const [loading, setLoading] = useState(false)
     const [savedQuery, setSavedQuery] = useAtom(queryAtom)
@@ -101,6 +83,7 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
     const [totalCount, setTotalCount] = useState(0)
     const [totalPage, setTotalPage] = useState(0)
     const [rows, setRows] = useState<any[]>()
+   
     const [filterQuery, setFilterQuery] = useState({
         tokens: [],
         operation: 'and',
@@ -126,18 +109,7 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
         isExecuted: TypesExec,
     } = useIntegrationApiV1EnabledConnectorsList(0, 0)
 
-    const recordToArray = (record?: Record<string, string[]> | undefined) => {
-        if (record === undefined) {
-            return []
-        }
-
-        return Object.keys(record).map((key) => {
-            return {
-                value: key,
-                resource_types: record[key],
-            }
-        })
-    }
+   
     const getIntegrations = () => {
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
@@ -175,10 +147,27 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
         setLoading(true)
         const api = new Api()
         api.instance = AxiosAPI
+        let tags = query?.tags
+        if(filter.value === '1'){
+            if(tags ){
+                tags['platform_queries_bookmark'] = ['true']
+
+            }
+            else{
+                tags = {
+                    platform_queries_bookmark: ['true']
+                }
+            }
+        }
+        else{
+            if(tags){
+                delete tags['platform_queries_bookmark']
+            }
+        }
 
         let body = {
             //  title_filter: '',
-            tags: query?.tags,
+            tags: tags,
             integration_types: query?.providers,
             list_of_tables: query?.list_of_tables,
             cursor: page,
@@ -213,10 +202,12 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
 
     useEffect(() => {
         getRows()
-    }, [page, query])
+    }, [page, query, filter])
+   
     useEffect(() => {
         getIntegrations()
     }, [])
+
 
     useEffect(() => {
         if (
@@ -355,37 +346,63 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
                         }
                     />
                 </Flex>
-                <PropertyFilter
-                    // @ts-ignore
-                    query={filterQuery}
-                    tokenLimit={2}
-                    onChange={({ detail }) =>
+                <Flex className='sm:flex-row flex-col justify-start sm:items-center items-start gap-4'>
+                    <Select
                         // @ts-ignore
-                        setFilterQuery(detail)
-                    }
-                    customGroupsText={[
-                        {
-                            properties: 'Tags',
-                            values: 'Tag values',
-                            group: 'tags',
-                        },
-                        {
-                            properties: 'Category',
-                            values: 'Category values',
-                            group: 'category',
-                        },
-                    ]}
-                    // countText="5 matches"
-                    expandToViewport
-                    filteringAriaLabel="Find Query"
-                    filteringPlaceholder="Find Query"
-                    filteringOptions={options}
-                    filteringProperties={properties}
-                    asyncProperties
-                    virtualScroll
-                />
+                        selectedOption={filter}
+                        className="sm:w-1/5 w-full min-w-[160px] mt-[-9px]"
+                        inlineLabelText={'Saved Filters'}
+                        placeholder="Select Filter Set"
+                        // @ts-ignore
+                        onChange={({ detail }) =>
+                            // @ts-ignore
+                            setFilter(detail.selectedOption)
+                        }
+                        options={[
+                            {
+                                label: 'Bookmarked Queries',
+                                value: '1',
+                            },
+                            {
+                                label: 'All Queries',
+                                value: '2',
+                            },
+                        ]}
+                    />
+                    <PropertyFilter
+                        // @ts-ignore
+                        query={filterQuery}
+                        className='w-full sm:w-fit'
+                        tokenLimit={2}
+                        onChange={({ detail }) =>
+                            // @ts-ignore
+                            setFilterQuery(detail)
+                        }
+                        customGroupsText={[
+                            {
+                                properties: 'Tags',
+                                values: 'Tag values',
+                                group: 'tags',
+                            },
+                            {
+                                properties: 'Category',
+                                values: 'Category values',
+                                group: 'category',
+                            },
+                        ]}
+                        // countText="5 matches"
+                        expandToViewport
+                        filteringAriaLabel="Find Query"
+                        filteringPlaceholder="Find Query"
+                        filteringOptions={options}
+                        filteringProperties={properties}
+                        asyncProperties
+                        virtualScroll
+                    />
+                </Flex>
+
                 <Flex
-                    className="gap-8 flex-wrap justify-start items-start w-full"
+                    className="gap-8 flex-wrap sm:flex-row flex-col justify-start items-start w-full"
                     // style={{flex: "1 1 0"}}
                 >
                     {rows?.length === 0 || loading ? (
@@ -417,7 +434,9 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
                                                       width: `calc(calc(100% - ${
                                                           rows.length >= 4
                                                               ? '6'
-                                                              : ((rows.length - 1)*2)
+                                                              : (rows.length -
+                                                                    1) *
+                                                                2
                                                       }rem) / ${
                                                           rows.length >= 4
                                                               ? '4'
