@@ -475,7 +475,7 @@ export default function EvaluateDetail() {
                     >
                         <KeyValuePairs
                             className="w-full"
-                            columns={6}
+                            columns={window.innerWidth > 640 ? 4 :1}
                             items={[
                                 {
                                     label: 'Job ID',
@@ -591,7 +591,7 @@ export default function EvaluateDetail() {
                                 label: 'Controls',
                                 id: '0',
                                 disabled: !(runDetail && runDetail?.length > 0),
-                                disabledReason: 'Jobs is still in progress',
+                                disabledReason: 'Job is still in progress',
                                 content: (
                                     <>
                                         {' '}
@@ -884,7 +884,7 @@ export default function EvaluateDetail() {
                                 label: 'Execution info',
                                 id: '1',
                                 disabled: !(runners && runners?.length > 0),
-                                disabledReason: 'Jobs completed',
+                                disabledReason: 'Job completed',
                                 content: (
                                     <>
                                         <KTable

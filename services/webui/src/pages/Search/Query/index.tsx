@@ -354,6 +354,7 @@ export default function Query() {
                 onSplitPanelToggle={() => {
                     setOpenLayout(!openLayout)
                 }}
+                splitPanelSize={1200}
                 splitPanel={
                     // @ts-ignore
                     <SplitPanel
