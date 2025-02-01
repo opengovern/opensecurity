@@ -98,7 +98,7 @@ export default function ResourcesWithFailure({ query }: ICount) {
             .apiV1ResourceFindingsCreate({
                 filters: {
                     // @ts-ignore
-                    integrationType: queries.connector.length
+                    integrationTypes: queries.connector.length
                         ? queries.connector
                         : [],
                     controlID: queries.controlID,
@@ -107,6 +107,8 @@ export default function ResourcesWithFailure({ query }: ICount) {
                     severity: queries.severity,
                     resourceTypeID: queries.resourceTypeID,
                     conformanceStatus: queries.conformanceStatus,
+                    compliance_job_id: queries?.jobID,
+
                     ...(!isRelative &&
                         date && {
                             evaluatedAt: {

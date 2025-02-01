@@ -122,54 +122,54 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
     const [jobData, setJobData] = useState([])
    
     const [jobs, setJobs] = useState([])
-    const GetJobs = () => {
+    // const GetJobs = () => {
         
-        let url = ''
-        if (window.location.origin === 'http://localhost:3000') {
-            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-        } else {
-            url = window.location.origin
-        }
-        const body = {
-            job_status: ['SUCCEEDED'],
-        }
-        // @ts-ignore
-        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+    //     let url = ''
+    //     if (window.location.origin === 'http://localhost:3000') {
+    //         url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+    //     } else {
+    //         url = window.location.origin
+    //     }
+    //     const body = {
+    //         job_status: ['SUCCEEDED'],
+    //     }
+    //     // @ts-ignore
+    //     const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-        const config = {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-        //    console.log(config)
-        axios
-            .post(`${url}/main//schedule/api/v3/jobs/compliance`, body, config)
-            .then((res) => {
-                // @ts-ignore
-                const temp = []
-                // @ts-ignore
-                res?.data?.map((d) => {
-                    temp.push({
-                        label: d.job_id.toString(),
-                        value: d.job_id.toString(),
-                    })
-                })
-                // @ts-ignore
-                setJobData(temp)
-            })
-            .catch((err) => {
-                console.log(err)
-            })
-    }
+    //     const config = {
+    //         headers: {
+    //             Authorization: `Bearer ${token}`,
+    //         },
+    //     }
+    //     //    console.log(config)
+    //     axios
+    //         .post(`${url}/main//schedule/api/v3/jobs/compliance`, body, config)
+    //         .then((res) => {
+    //             // @ts-ignore
+    //             const temp = []
+    //             // @ts-ignore
+    //             res?.data?.map((d) => {
+    //                 temp.push({
+    //                     label: d.job_id.toString(),
+    //                     value: d.job_id.toString(),
+    //                 })
+    //             })
+    //             // @ts-ignore
+    //             setJobData(temp)
+    //         })
+    //         .catch((err) => {
+    //             console.log(err)
+    //         })
+    // }
   const {
       response: Types,
       isLoading: TypesLoading,
       isExecuted: TypesExec,
   } = useIntegrationApiV1EnabledConnectorsList(0, 0)
 
-    useEffect(() => {
-        GetJobs()
-    }, [])
+    // useEffect(() => {
+    //     GetJobs()
+    // }, [])
     // const { value: eventTimeRange, setValue: setEventTimeRange } =
     //     useUrlDateRangeState(
     //         defaultEventTime(ws || ''),
@@ -390,7 +390,7 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
             defaultValue: defConformanceStatus,
             onDelete: undefined,
             data: jobData,
-            types: ['findings', 'events'],
+            types: ['findings', 'events','controls','resources'],
         },
 
         {
