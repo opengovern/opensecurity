@@ -2051,10 +2051,13 @@ func (h HttpServer) ListComplianceJobs(ctx echo.Context) error {
 
 	var jobsResults []api.GetComplianceJobsHistoryResponse
 	for _, j := range jobs {
-		Title := ""
+		var frameworks []api.ComplianceJobFrameworkInfo
 		for _, benchmark := range benchmarks {
 			if fmt.Sprintf("%v", benchmark.ID) == j.FrameworkIds[0] {
-				Title = benchmark.Title
+				frameworks = append(frameworks, api.ComplianceJobFrameworkInfo{
+					FrameworkID:   benchmark.ID,
+					FrameworkName: benchmark.Title,
+				})
 			}
 		}
 		var runnersStatus api.ComplianceRunnersStatus
@@ -2073,14 +2076,13 @@ func (h HttpServer) ListComplianceJobs(ctx echo.Context) error {
 		jobResult := api.GetComplianceJobsHistoryResponse{
 			JobId:           j.ID,
 			WithIncidents:   j.WithIncidents,
-			FrameworkID:     j.FrameworkIds[0],
 			IntegrationIds:  j.IntegrationIDs,
 			JobType:         "compliance",
+			Frameworks:      frameworks,
 			JobStatus:       j.Status.ToApi(),
 			LastUpdatedAt:   j.UpdatedAt,
 			StartTime:       j.CreatedAt,
 			FailureMessage:  j.FailureMessage,
-			FrameworkTitle:  Title,
 			CreatedBy:       j.CreatedBy,
 			TriggerType:     string(j.TriggerType),
 			StepFailed:      j.StepFailed.ToApi(),
