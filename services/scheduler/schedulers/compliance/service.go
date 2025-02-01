@@ -99,7 +99,7 @@ func (s *JobScheduler) Run(ctx context.Context) {
 func (s *JobScheduler) CleanupComplianceResults(ctx context.Context) {
 	s.logger.Info("Cleanup compliance results scheduler")
 
-	t := ticker.NewTicker(CleanupInterval, time.Second*10)
+	t := ticker.NewTicker(time.Minute*2, time.Second*10)
 	defer t.Stop()
 
 	for range t.C {
