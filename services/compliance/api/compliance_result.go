@@ -37,15 +37,14 @@ type ComplianceResultSummaryFilters struct {
 }
 
 type ComplianceResultFiltersWithMetadata struct {
-	IntegrationType    []FilterWithMetadata `json:"integrationType"`
-	BenchmarkID        []FilterWithMetadata `json:"benchmarkID"`
-	ControlID          []FilterWithMetadata `json:"controlID"`
-	ResourceTypeID     []FilterWithMetadata `json:"resourceTypeID"`
-	IntegrationID      []FilterWithMetadata `json:"integrationID"`
-	ResourceCollection []FilterWithMetadata `json:"resourceCollection"`
-	Severity           []FilterWithMetadata `json:"severity"`
-	ComplianceStatus   []FilterWithMetadata `json:"complianceStatus"`
-	StateActive        []FilterWithMetadata `json:"stateActive"`
+	IntegrationType  []FilterWithMetadata `json:"integrationType"`
+	BenchmarkID      []FilterWithMetadata `json:"benchmarkID"`
+	ControlID        []FilterWithMetadata `json:"controlID"`
+	ResourceTypeID   []FilterWithMetadata `json:"resourceTypeID"`
+	IntegrationID    []FilterWithMetadata `json:"integrationID"`
+	Severity         []FilterWithMetadata `json:"severity"`
+	ComplianceStatus []FilterWithMetadata `json:"complianceStatus"`
+	StateActive      []FilterWithMetadata `json:"stateActive"`
 }
 
 type ComplianceResultsSort struct {

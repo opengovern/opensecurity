@@ -328,7 +328,7 @@ func ComplianceResultsQuery(ctx context.Context, logger *zap.Logger, client open
 		filters = append(filters, opengovernance.NewTermsFilter("controlID", controlID))
 	}
 	if len(jobIDs) > 0 {
-		filters = append(filters, opengovernance.NewTermsFilter("parentComplianceJobID", jobIDs))
+		filters = append(filters, opengovernance.NewTermsFilter("complianceJobID", jobIDs))
 	}
 	if len(severity) > 0 {
 		strSeverity := make([]string, 0)
