@@ -1179,10 +1179,6 @@ func (h HttpServer) GetComplianceJobsHistory(ctx echo.Context) error {
 			sort.Slice(jobsResults, func(i, j int) bool {
 				return jobsResults[i].StartTime.After(jobsResults[j].StartTime)
 			})
-		case "benchmarkid":
-			sort.Slice(jobsResults, func(i, j int) bool {
-				return jobsResults[i].FrameworkID < jobsResults[j].FrameworkID
-			})
 		case "jobstatus":
 			sort.Slice(jobsResults, func(i, j int) bool {
 				return jobsResults[i].JobStatus < jobsResults[j].JobStatus
@@ -2049,7 +2045,7 @@ func (h HttpServer) ListComplianceJobs(ctx echo.Context) error {
 		return err
 	}
 
-	var jobsResults []api.GetComplianceJobsHistoryResponse
+	var jobsResults []api.ListComplianceJobsItem
 	for _, j := range jobs {
 		var frameworks []api.ComplianceJobFrameworkInfo
 		for _, benchmark := range benchmarks {
@@ -2073,7 +2069,7 @@ func (h HttpServer) ListComplianceJobs(ctx echo.Context) error {
 		if !j.SummarizerStartedAt.IsZero() && !j.SinkingStartedAt.IsZero() {
 			sinkingTime = int64(j.SummarizerStartedAt.Sub(j.SinkingStartedAt).Seconds())
 		}
-		jobResult := api.GetComplianceJobsHistoryResponse{
+		jobResult := api.ListComplianceJobsItem{
 			JobId:           j.ID,
 			WithIncidents:   j.WithIncidents,
 			IntegrationIds:  j.IntegrationIDs,
@@ -2110,10 +2106,6 @@ func (h HttpServer) ListComplianceJobs(ctx echo.Context) error {
 			sort.Slice(jobsResults, func(i, j int) bool {
 				return jobsResults[i].StartTime.After(jobsResults[j].StartTime)
 			})
-		case "benchmarkid", "benchmark_id":
-			sort.Slice(jobsResults, func(i, j int) bool {
-				return jobsResults[i].FrameworkID < jobsResults[j].FrameworkID
-			})
 		case "jobstatus", "job_status":
 			sort.Slice(jobsResults, func(i, j int) bool {
 				return jobsResults[i].JobStatus < jobsResults[j].JobStatus
@@ -2141,7 +2133,7 @@ func (h HttpServer) ListComplianceJobs(ctx echo.Context) error {
 		}
 	}
 
-	return ctx.JSON(http.StatusOK, api.GetComplianceJobsHistoryFinalResponse{
+	return ctx.JSON(http.StatusOK, api.ListComplianceJobsResponse{
 		TotalCount: totalCount,
 		Items:      jobsResults,
 	})
@@ -2599,10 +2591,6 @@ func (h HttpServer) GetComplianceJobsHistoryByIntegration(ctx echo.Context) erro
 		case "created_at", "createdat":
 			sort.Slice(jobsResults, func(i, j int) bool {
 				return jobsResults[i].StartTime.After(jobsResults[j].StartTime)
-			})
-		case "benchmarkid":
-			sort.Slice(jobsResults, func(i, j int) bool {
-				return jobsResults[i].FrameworkID < jobsResults[j].FrameworkID
 			})
 		case "jobstatus":
 			sort.Slice(jobsResults, func(i, j int) bool {

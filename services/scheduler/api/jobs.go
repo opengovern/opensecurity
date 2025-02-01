@@ -152,7 +152,7 @@ type ComplianceJobFrameworkInfo struct {
 	FrameworkName string `json:"framework_name"`
 }
 
-type GetComplianceJobsHistoryResponse struct {
+type ListComplianceJobsItem struct {
 	JobId          uint                         `json:"job_id"`
 	WithIncidents  bool                         `json:"with_incidents"`
 	Frameworks     []ComplianceJobFrameworkInfo `json:"frameworks"`
@@ -169,6 +169,27 @@ type GetComplianceJobsHistoryResponse struct {
 	RunnersStatus  ComplianceRunnersStatus      `json:"runners_status"`
 
 	DataSinkingTime int64 `json:"data_sinking_time"`
+}
+
+type ListComplianceJobsResponse struct {
+	Items      []ListComplianceJobsItem `json:"items"`
+	TotalCount int                      `json:"total_count"`
+}
+
+type GetComplianceJobsHistoryResponse struct {
+	JobId          uint                `json:"job_id"`
+	WithIncidents  bool                `json:"with_incidents"`
+	FrameworkID    string              `json:"framework_id"`
+	JobStatus      ComplianceJobStatus `json:"job_status"`
+	JobType        string              `json:"job_type"`
+	StartTime      time.Time           `json:"start_time"`
+	LastUpdatedAt  time.Time           `json:"last_updated_at"`
+	EndTime        *time.Time          `json:"end_time"`
+	StepFailed     ComplianceJobStatus `json:"step_failed"`
+	FailureMessage string              `json:"failure_message"`
+	IntegrationIds []string            `json:"integration_ids"`
+	CreatedBy      string              `json:"created_by"`
+	TriggerType    string              `json:"trigger_type"`
 }
 
 type GetComplianceJobsHistoryFinalResponse struct {
