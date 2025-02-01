@@ -123,6 +123,8 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 
 	v3.GET("/job-report/:run_id/details/by-control", httpserver2.AuthorizeHandler(h.GetComplianceJobReport, authApi.ViewerRole))
 	v3.GET("/job-report/:run_id/summary", httpserver2.AuthorizeHandler(h.GetJobReportSummary, authApi.ViewerRole))
+
+	v3.GET("/frameworks/:framework_id/coverage", httpserver2.AuthorizeHandler(h.GetFrameworkCoverage, authApi.ViewerRole))
 }
 
 func bindValidate(ctx echo.Context, i any) error {
@@ -5555,4 +5557,39 @@ func (h *HttpHandler) UpdateFrameworkSetting(echoCtx echo.Context) error {
 	}
 
 	return echoCtx.NoContent(http.StatusOK)
+}
+
+// GetFrameworkCoverage godoc
+//
+//	@Summary		Get Framework coverage
+//	@Description	Get Framework coverage
+//	@Security		BearerToken
+//	@Tags			workspace
+//	@Accept			json
+//	@Produce		json
+//	@Param			framework_id			path	string		true	"framework id"
+//	@Success		200
+//	@Router			/compliance/api/v3/frameworks/{framework_id}/coverage [get]
+func (h HttpHandler) GetFrameworkCoverage(ctx echo.Context) error {
+	frameworkId := ctx.Param("framework_id")
+	framework, err := h.db.GetFramework(ctx.Request().Context(), frameworkId)
+	if err != nil {
+		h.logger.Error("failed to get framework", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get framework")
+	}
+	var metadata db.BenchmarkMetadata
+	if framework.Metadata.Status == pgtype.Present {
+		if err := json.Unmarshal(framework.Metadata.Bytes, &metadata); err != nil {
+			h.logger.Error("failed to framework extract metadata", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to framework extract metadata")
+		}
+	}
+	coverage := api.FrameworkCoverage{
+		FrameworkID:      frameworkId,
+		PrimaryResources: metadata.PrimaryResources,
+		ListOfResources:  metadata.ListOfResources,
+		Controls:         metadata.Controls,
+	}
+
+	return ctx.JSON(http.StatusOK, coverage)
 }

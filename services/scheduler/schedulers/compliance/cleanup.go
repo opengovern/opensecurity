@@ -3,7 +3,6 @@ package compliance
 import (
 	"encoding/json"
 	"fmt"
-	es2 "github.com/opengovern/og-util/pkg/es"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/opencomply/pkg/types"
 	"go.uber.org/zap"
@@ -23,6 +22,7 @@ func (s *JobScheduler) cleanupComplianceResultsNotInIntegrations(ctx context.Con
 		}
 		totalDeletedCount += len(esResp.Hits.Hits)
 		if len(esResp.Hits.Hits) == 0 {
+			s.logger.Info("all compliance results have been cleared")
 			break
 		}
 		deletedCount := 0
@@ -30,22 +30,12 @@ func (s *JobScheduler) cleanupComplianceResultsNotInIntegrations(ctx context.Con
 			deletedIntegrationIDs[hit.Source.IntegrationID] = true
 			searchAfter = hit.Sort
 
-			complianceResult := types.ComplianceResult{
-				PlatformResourceID: hit.Source.PlatformResourceID,
-				ResourceID:         hit.Source.ResourceID,
-				IntegrationID:      hit.Source.IntegrationID,
-				ControlID:          hit.Source.ControlID,
-				BenchmarkID:        hit.Source.BenchmarkID,
-			}
-			keys, idx := complianceResult.KeysAndIndex()
 			deletedCount += 1
-			key := es2.HashOf(keys...)
-			complianceResult.EsID = key
-			complianceResult.EsIndex = idx
-			err = s.esClient.Delete(key, idx)
+
+			err = s.esClient.Delete(hit.ID, hit.Index)
 			if err != nil {
-				s.logger.Error("failed to delete complianceResult from open-search", zap.Error(err))
-				return
+				s.logger.Error("failed to delete complianceResult from opensearch", zap.Error(err))
+				continue
 			}
 		}
 	}

@@ -32,3 +32,10 @@ type UpdateFrameworkSettingRequest struct {
 	IsBaseline *bool `json:"is_baseline"`
 	Enabled    *bool `json:"enabled"`
 }
+
+type FrameworkCoverage struct {
+	FrameworkID      string   `json:"framework_id"`
+	PrimaryResources []string `json:"primary_resources"`
+	ListOfResources  []string `json:"list_of_resources"`
+	Controls         []string `json:"controls"`
+}
