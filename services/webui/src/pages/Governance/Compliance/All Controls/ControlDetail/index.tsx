@@ -172,7 +172,6 @@ export default function ControlDetail({
                     <KeyValuePairs
                         className="mb-8"
                         columns={window.innerWidth > 768 ? 4 : 1}
-                        
                         items={getItems()}
                     />
                     <Tabs
@@ -206,7 +205,7 @@ export default function ControlDetail({
                                                                     Parameters:
                                                                 </Title> */}
                                                                         <Flex
-                                                                            className="gap-1 flex-wrap w-full justify-start "
+                                                                            className="gap-2 flex-wrap w-full justify-start items-center "
                                                                             flexDirection="row"
                                                                         >
                                                                             <>
@@ -216,17 +215,20 @@ export default function ControlDetail({
                                                                                         index
                                                                                     ) => {
                                                                                         return (
-                                                                                            <Badge color="severity-neutral">
-                                                                                                <Flex
-                                                                                                    flexDirection="row"
-                                                                                                    justifyContent="start"
-                                                                                                    className="hover:cursor-pointer max-w-full w-fit  px-1"
-                                                                                                >
-                                                                                                    <AdjustmentsVerticalIcon className="min-w-4 w-4 mr-1" />
-                                                                                                    {/* @ts-ignore */}
-                                                                                                    {`${item?.key} : ${item?.value}`}
-                                                                                                </Flex>
-                                                                                            </Badge>
+                                                                                            <span className="inline-flex text-lg items-center gap-x-2.5 rounded-tremor-small bg-tremor-background  pl-2.5 pr-2.5 text-tremor-label  text-tremor-content-strong ring-1 ring-tremor-ring dark:bg-dark-tremor-background dark:text-dark-tremor-content dark:ring-dark-tremor-ring">
+                                                                                                {
+                                                                                                    // @ts-ignore
+
+                                                                                                    item?.key
+                                                                                                }
+                                                                                                <span className="h-4 w-px bg-tremor-ring dark:bg-dark-tremor-ring" />
+                                                                                                <span className="font-medium text-tremor-content dark:text-dark-tremor-content-emphasis">
+                                                                                                    {
+                                                                                                        // @ts-ignore
+                                                                                                        item?.value
+                                                                                                    }
+                                                                                                </span>
+                                                                                            </span>
                                                                                         )
                                                                                     }
                                                                                 )}
@@ -247,13 +249,8 @@ export default function ControlDetail({
                                                     label: 'Policy source',
                                                     value: selectedItem?.has_inline_policy
                                                         ? 'Inline'
-                                                        : selectedItem?.policy?.id,
-                                                },
-                                                {
-                                                    label: 'Last Updated At',
-                                                    value: selectedItem?.updated_at
-                                                        ? selectedItem?.updated_at
-                                                        : 'Not Available',
+                                                        : selectedItem?.policy
+                                                              ?.id,
                                                 },
 
                                                 {
@@ -261,7 +258,7 @@ export default function ControlDetail({
                                                     value: (
                                                         <>
                                                             <Flex
-                                                                className="gap-3 mt-2 flex-wrap w-full"
+                                                                className="gap-2 mt-2 flex-wrap w-full justify-start items-center"
                                                                 flexDirection="row"
                                                             >
                                                                 <>
@@ -275,14 +272,17 @@ export default function ControlDetail({
                                                                         ) => {
                                                                             return (
                                                                                 <>
-                                                                                    <Flex
-                                                                                        flexDirection="row"
-                                                                                        justifyContent="start"
-                                                                                        className="hover:cursor-pointer w-full  px-1"
-                                                                                    >
-                                                                                        <TagIcon className="min-w-4 w-4 mr-1" />
-                                                                                        {`${key[0]} : ${key[1]}`}
-                                                                                    </Flex>
+                                                                                    <span className="inline-flex items-center gap-x-2.5 rounded-tremor-full bg-tremor-background py-1 pl-2.5 pr-2.5 text-tremor-label text-tremor-content ring-1 ring-inset ring-tremor-ring dark:bg-dark-tremor-background dark:text-dark-tremor-content dark:ring-dark-tremor-ring">
+                                                                                        {
+                                                                                            key[0]
+                                                                                        }
+                                                                                        <span className="h-4 w-px bg-tremor-ring dark:bg-dark-tremor-ring" />
+                                                                                        <span className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-emphasis">
+                                                                                            {
+                                                                                                key[1]
+                                                                                            }
+                                                                                        </span>
+                                                                                    </span>
                                                                                 </>
                                                                             )
                                                                         }
