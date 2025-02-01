@@ -143,26 +143,30 @@ type ComplianceRunnersStatus struct {
 	RunnersTimedOut  int64 `json:"runners_timed_out"`
 	TotalCount       int64 `json:"total_count"`
 
-	TotalRunnersWaitingTime   int64 `json:"total_runners_waiting_time"`
-	TotalRunnersExecutionTime int64 `json:"total_runners_execution_time"`
+	AggregatedQueuedTimeOfAllRunners  int64 `json:"aggregate_queued_time_of_all_runners"`
+	AggregatedComputeTimeOfAllRunners int64 `json:"aggregate_compute_time_of_all_runners"`
+}
+
+type ComplianceJobFrameworkInfo struct {
+	FrameworkID   string `json:"framework_id"`
+	FrameworkName string `json:"framework_name"`
 }
 
 type GetComplianceJobsHistoryResponse struct {
-	JobId          uint                    `json:"job_id"`
-	WithIncidents  bool                    `json:"with_incidents"`
-	FrameworkID    string                  `json:"framework_id"`
-	JobStatus      ComplianceJobStatus     `json:"job_status"`
-	JobType        string                  `json:"job_type"`
-	StartTime      time.Time               `json:"start_time"`
-	LastUpdatedAt  time.Time               `json:"last_updated_at"`
-	EndTime        *time.Time              `json:"end_time"`
-	FrameworkTitle string                  `json:"framework_title"`
-	StepFailed     ComplianceJobStatus     `json:"step_failed"`
-	FailureMessage string                  `json:"failure_message"`
-	IntegrationIds []string                `json:"integration_ids"`
-	CreatedBy      string                  `json:"created_by"`
-	TriggerType    string                  `json:"trigger_type"`
-	RunnersStatus  ComplianceRunnersStatus `json:"runners_status"`
+	JobId          uint                         `json:"job_id"`
+	WithIncidents  bool                         `json:"with_incidents"`
+	Frameworks     []ComplianceJobFrameworkInfo `json:"frameworks"`
+	JobStatus      ComplianceJobStatus          `json:"job_status"`
+	JobType        string                       `json:"job_type"`
+	StartTime      time.Time                    `json:"start_time"`
+	LastUpdatedAt  time.Time                    `json:"last_updated_at"`
+	EndTime        *time.Time                   `json:"end_time"`
+	StepFailed     ComplianceJobStatus          `json:"step_failed"`
+	FailureMessage string                       `json:"failure_message"`
+	IntegrationIds []string                     `json:"integration_ids"`
+	CreatedBy      string                       `json:"created_by"`
+	TriggerType    string                       `json:"trigger_type"`
+	RunnersStatus  ComplianceRunnersStatus      `json:"runners_status"`
 
 	DataSinkingTime int64 `json:"data_sinking_time"`
 }

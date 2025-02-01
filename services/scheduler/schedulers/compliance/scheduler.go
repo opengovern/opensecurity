@@ -136,8 +136,8 @@ func (s *JobScheduler) updateJobRunnersState(job model.ComplianceJob) error {
 		}
 		status.TotalCount += 1
 	}
-	status.TotalRunnersExecutionTime = int64(totalExecutionTime)
-	status.TotalRunnersWaitingTime = int64(totalWaitingTime)
+	status.AggregatedComputeTimeOfAllRunners = int64(totalExecutionTime)
+	status.AggregatedQueuedTimeOfAllRunners = int64(totalWaitingTime)
 
 	statusJson, err := json.Marshal(status)
 	if err != nil {
