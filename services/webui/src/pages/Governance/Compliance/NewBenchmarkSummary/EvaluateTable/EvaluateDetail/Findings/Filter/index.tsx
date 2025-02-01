@@ -662,69 +662,8 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
             //     : undefined,
         })
     }, [query])
-      const [filter, setFilter] = useState({
-          label: 'Recent Incidents',
-          value: '1',
-      })
-      useEffect(() => {
-          // @ts-ignore
-          if (filter) {
-              // @ts-ignore
-
-              if (filter.value == '1') {
-                  setDate({
-                      key: 'previous-3-days',
-                      amount: 3,
-                      unit: 'day',
-                      type: 'relative',
-                  })
-                  setQuery({
-                      tokens: [
-                          {
-                              propertyKey: 'conformance_status',
-                              value: 'failed',
-                              operator: '=',
-                          },
-                        //   {
-                        //       propertyKey: 'connectionGroup',
-                        //       value: 'healthy',
-                        //       operator: '=',
-                        //   },
-                      ],
-                      operation: 'and',
-                  })
-              }
-              // @ts-ignore
-              else if (filter.value == '2') {
-                  setDate({
-                      key: 'previous-3-days',
-                      amount: 3,
-                      unit: 'day',
-                      type: 'relative',
-                  })
-                  setQuery({
-                      tokens: [
-                          {
-                              propertyKey: 'severity',
-                              value: 'critical',
-                              operator: '=',
-                          },
-                          {
-                              propertyKey: 'conformance_status',
-                              value: 'failed',
-                              operator: '=',
-                          },
-                        //   {
-                        //       propertyKey: 'connectionGroup',
-                        //       value: 'healthy',
-                        //       operator: '=',
-                        //   },
-                      ],
-                      operation: 'and',
-                  })
-              }
-          }
-      }, [filter])
+  
+     
     const renderFilters = () => {
         let date_filter = filterOptions.find((o) => o.id === 'date')
         let has_date = selectedFilters.includes('date')
@@ -786,22 +725,7 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
                     alignItems="start"
                     className="w-fit gap-2 sm:flex-row flex-col sm:justify-between justify-start "
                 >
-                    <Select
-                        // @ts-ignore
-                        selectedOption={filter}
-                        className="sm:w-2/5 w-full mt-[-9px]"
-                        inlineLabelText={'Saved Filters'}
-                        placeholder="Select Filter Set"
-                        // @ts-ignore
-                        onChange={({ detail }) =>
-                            // @ts-ignore
-                            setFilter(detail.selectedOption)
-                        }
-                        options={[
-                            { label: 'Recent Incidents', value: '1' },
-                            { label: 'Recent Critical Incidents', value: '2' },
-                        ]}
-                    />
+                    
                     <PropertyFilter
                         // @ts-ignore
                         query={query}
