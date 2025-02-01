@@ -1,23 +1,21 @@
 // @ts-nocheck
+
 import { Card, Flex, Text, Title } from '@tremor/react'
+
 import { useEffect, useMemo, useState } from 'react'
-
-import { useAtomValue, useSetAtom } from 'jotai'
-import { isDemoAtom, notificationAtom } from '../../../../../../../../store'
-
-import { dateTimeDisplay } from '../../../../../../../../utilities/dateDisplay'
+import { useAtomValue, useSetAtom } from 'jotai/index'
 import {
     Api,
     PlatformEnginePkgComplianceApiConformanceStatus,
-    PlatformEnginePkgComplianceApiFinding,
+    PlatformEnginePkgComplianceApiResourceFinding,
     SourceType,
     TypesFindingSeverity,
 } from '../../../../../../../../api/api'
 import AxiosAPI from '../../../../../../../../api/ApiConfig'
-
-// import { severityBadge, statusBadge } from '../../Controls'
+import { isDemoAtom, notificationAtom } from '../../../../../../../../store'
+import { dateTimeDisplay } from '../../../../utilities/dateDisplay'
 import { getConnectorIcon } from '../../../../../../../../components/Cards/ConnectorCard'
-import { DateRange } from '../../../../../../../../utilities/urlstate'
+import ResourceFindingDetail from '../ResourceFindingDetail'
 import KTable from '@cloudscape-design/components/table'
 import Box from '@cloudscape-design/components/box'
 import SpaceBetween from '@cloudscape-design/components/space-between'
@@ -32,11 +30,10 @@ import {
 } from '@cloudscape-design/components'
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import Filter from '../Filter'
-import FindingDetail from './Detail'
 import dayjs from 'dayjs'
 import CustomPagination from '../../../../../../../../components/Pagination'
 
-let sortKey = ''
+let sortKey: any[] = []
 
 interface ICount {
     query: {
@@ -50,35 +47,27 @@ interface ICount {
         benchmarkID: string[] | undefined
         resourceTypeID: string[] | undefined
         lifecycle: boolean[] | undefined
-        activeTimeRange: DateRange | undefined
-        eventTimeRange: DateRange | undefined
-        jobID: string[] | undefined
     }
     id: string
 }
 
-export default function FindingsWithFailure({ query,id }: ICount) {
+export default function ResourcesWithFailure({ query,id }: ICount) {
     const setNotification = useSetAtom(notificationAtom)
+    const [loading, setLoading] = useState(false)
 
     const [open, setOpen] = useState(false)
-    const [loading, setLoading] = useState(false)
     const [finding, setFinding] = useState<
-        PlatformEnginePkgComplianceApiFinding | undefined
+        PlatformEnginePkgComplianceApiResourceFinding | undefined
     >(undefined)
     const [rows, setRows] = useState<any[]>()
     const [page, setPage] = useState(1)
     const [totalCount, setTotalCount] = useState(0)
     const [totalPage, setTotalPage] = useState(0)
-    const isDemo = useAtomValue(isDemoAtom)
     const [queries, setQuery] = useState(query)
-  
 
-  
-    const truncate = (text: string | undefined) => {
-        if (text) {
-            return text.length > 40 ? text.substring(0, 40) + '...' : text
-        }
-    }
+    const isDemo = useAtomValue(isDemoAtom)
+
+   
     const GetRows = () => {
         setLoading(true)
         const api = new Api()
@@ -87,50 +76,39 @@ export default function FindingsWithFailure({ query,id }: ICount) {
         let relative = ''
         let start = ''
         let end = ''
-        
+      
         api.compliance
-            .apiV1FindingsCreate({
+            .apiV1ResourceFindingsCreate({
                 filters: {
-                    integrationType: queries.connector.length
-                        ? [query.connector]
+                    // @ts-ignore
+                    integrationTypes: queries.connector.length
+                        ? queries.connector
                         : [],
                     controlID: queries.controlID,
                     integrationID: queries.connectionID,
-                    benchmarkID: query.benchmarkID,
+                    benchmarkID: queries.benchmarkID,
                     severity: queries.severity,
                     resourceTypeID: queries.resourceTypeID,
-                    complianceStatus: queries.conformanceStatus,
-                    integrationGroup: queries.connectionGroup,
-                    stateActive: queries.lifecycle,
-                    jobID: [id],
-                    ...(queries.eventTimeRange && {
-                        lastEvent: {
-                            from: queries.eventTimeRange.start.unix(),
-                            to: queries.eventTimeRange.end.unix(),
-                        },
-                    }),
-                    
+                    conformanceStatus: queries.conformanceStatus,
+                    compliance_job_id: [id],
+
+                   
                 },
-                // sort: params.request.sortModel.length
-                //     ? [
-                //           {
-                //               [params.request.sortModel[0].colId]:
-                //                   params.request.sortModel[0].sort,
-                //           },
-                //       ]
-                //     : [],
-                limit: 10,
-                // eslint-disable-next-line prefer-destructuring,@typescript-eslint/ban-ts-comment
+                // sort: [],
+                limit: 15,
                 // @ts-ignore
                 afterSortKey: page == 1 ? [] : rows[rows?.length - 1].sortKey,
-                //     params.request.startRow === 0 ||
-                //     sortKey.length < 1 ||
-                //     sortKey === 'none'
-                //         ? []
-                //         : sortKey,
+
+                // afterSortKey:
+                //    [],
             })
             .then((resp) => {
                 setLoading(false)
+                if (resp.data.resourceFindings) {
+                    setRows(resp.data.resourceFindings)
+                } else {
+                    setRows([])
+                }
                 // @ts-ignore
 
                 setTotalPage(Math.ceil(resp.data.totalCount / 10))
@@ -138,14 +116,10 @@ export default function FindingsWithFailure({ query,id }: ICount) {
 
                 setTotalCount(resp.data.totalCount)
                 // @ts-ignore
-                if (resp.data.complianceResults) {
-                    setRows(resp.data.complianceResults)
-                } else {
-                    setRows([])
-                }
-
-                // eslint-disable-next-line prefer-destructuring,@typescript-eslint/ban-ts-comment
-                // @ts-ignore
+                // sortKey =
+                //     resp.data?.resourceFindings?.at(
+                //         (resp.data.resourceFindings?.length || 0) - 1
+                //     )?.sortKey || []
             })
             .catch((err) => {
                 setLoading(false)
@@ -159,13 +133,13 @@ export default function FindingsWithFailure({ query,id }: ICount) {
     useEffect(() => {
         GetRows()
     }, [page, queries])
+
     return (
         <>
             <AppLayout
                 toolsOpen={false}
                 navigationOpen={false}
                 contentType="table"
-                className="w-full"
                 toolsHide={true}
                 navigationHide={true}
                 splitPanelOpen={open}
@@ -182,27 +156,23 @@ export default function FindingsWithFailure({ query,id }: ICount) {
                         header={
                             finding ? (
                                 <>
-                                    <Flex
-                                        justifyContent="start"
-                                        className="sm:flex-row flex-col"
-                                    >
-                                        {getConnectorIcon(
-                                            finding?.integrationType
-                                        )}
+                                    <Flex justifyContent="start">
+                                        {getConnectorIcon(finding?.connector)}
                                         <Title className="text-lg font-semibold ml-2 my-1">
                                             {finding?.resourceName}
                                         </Title>
                                     </Flex>
                                 </>
                             ) : (
-                                'Incident not selected'
+                                'Resource not selected'
                             )
                         }
                     >
-                        <FindingDetail
-                            type="finding"
-                            finding={finding}
+                        <ResourceFindingDetail
+                            // type="resource"
+                            resourceFinding={finding}
                             open={open}
+                            showOnlyOneControl={false}
                             onClose={() => setOpen(false)}
                             onRefresh={() => window.location.reload()}
                         />
@@ -210,9 +180,8 @@ export default function FindingsWithFailure({ query,id }: ICount) {
                 }
                 content={
                     <KTable
-                        className="   min-h-[450px]"
+                        className="min-h-[450px]"
                         // resizableColumns
-                        variant="full-page"
                         renderAriaLive={({
                             firstIndex,
                             lastIndex,
@@ -220,6 +189,7 @@ export default function FindingsWithFailure({ query,id }: ICount) {
                         }) =>
                             `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
                         }
+                        variant="full-page"
                         onSortingChange={(event) => {
                             // setSort(event.detail.sortingColumn.sortingField)
                             // setSortOrder(!sortOrder)
@@ -230,7 +200,7 @@ export default function FindingsWithFailure({ query,id }: ICount) {
                         // @ts-ignore
                         onRowClick={(event) => {
                             const row = event.detail.item
-                            if (row.platformResourceID) {
+                            if (row?.platformResourceID) {
                                 setFinding(row)
                                 setOpen(true)
                             } else {
@@ -242,63 +212,90 @@ export default function FindingsWithFailure({ query,id }: ICount) {
                         }}
                         columnDefinitions={[
                             {
-                                id: 'providerConnectionName',
-                                header: 'Cloud Account',
-                                cell: (item) => item.integrationID,
-                                sortingField: 'id',
-                                isRowHeader: true,
-                            },
-                            {
                                 id: 'resourceName',
-                                header: 'Resource Name',
+                                header: 'Resource name',
                                 cell: (item) => (
                                     <>
                                         <Flex
                                             flexDirection="col"
                                             alignItems="start"
                                             justifyContent="center"
-                                            className={
-                                                isDemo ? 'h-full' : 'h-full'
-                                            }
+                                            className="h-full"
                                         >
                                             <Text className="text-gray-800">
                                                 {item.resourceName}
                                             </Text>
-                                            <Text>{item.resourceTypeName}</Text>
+                                            <Text
+                                                className={
+                                                    isDemo ? 'blur-sm' : ''
+                                                }
+                                            >
+                                                {item.platformResourceID}
+                                            </Text>
+                                        </Flex>
+                                    </>
+                                ),
+                                sortingField: 'id',
+                                isRowHeader: true,
+                                maxWidth: 200,
+                            },
+                            {
+                                id: 'resourceType',
+                                header: 'Resource type',
+                                cell: (item) => (
+                                    <>
+                                        <Flex
+                                            flexDirection="col"
+                                            alignItems="start"
+                                            justifyContent="center"
+                                        >
+                                            <Text className="text-gray-800">
+                                                {item.resourceType}
+                                            </Text>
+                                            <Text>
+                                                {item.resourceTypeLabel}
+                                            </Text>
                                         </Flex>
                                     </>
                                 ),
                                 sortingField: 'title',
                                 // minWidth: 400,
-                                maxWidth: 100,
+                                maxWidth: 200,
                             },
                             {
-                                id: 'benchmarkID',
-                                header: 'Benchmark',
+                                id: 'providerConnectionName',
+                                header: 'Integration Type',
                                 maxWidth: 100,
                                 cell: (item) => (
                                     <>
-                                        <Text className="text-gray-800">
-                                            {truncate(
-                                                item?.parentBenchmarkNames?.at(
-                                                    0
-                                                )
-                                            )}
-                                        </Text>
-                                        <Text>
-                                            {truncate(
-                                                item?.parentBenchmarkNames?.at(
-                                                    (item?.parentBenchmarkNames
-                                                        ?.length || 0) - 1
-                                                )
-                                            )}
-                                        </Text>
+                                        <Flex
+                                            justifyContent="start"
+                                            className={`h-full gap-3 group relative ${
+                                                isDemo ? 'blur-sm' : ''
+                                            }`}
+                                        >
+                                            {item.integrationType}
+                                            {/* <Flex
+                                                flexDirection="col"
+                                                alignItems="start"
+                                            >
+                                                <Text className="text-gray-800">
+                                                    {item.integrationID}
+                                                </Text>
+                                                <Text>
+                                                    {item.integrationName}
+                                                </Text>
+                                            </Flex> */}
+                                            {/* <Card className="cursor-pointer absolute w-fit h-fit z-40 right-1 scale-0 transition-all py-1 px-4 group-hover:scale-100">
+                                                <Text color="blue">Open</Text>
+                                            </Card> */}
+                                        </Flex>
                                     </>
                                 ),
                             },
                             {
-                                id: 'controlID',
-                                header: 'Control',
+                                id: 'totalCount',
+                                header: 'Findings',
                                 maxWidth: 100,
 
                                 cell: (item) => (
@@ -309,69 +306,64 @@ export default function FindingsWithFailure({ query,id }: ICount) {
                                             justifyContent="center"
                                             className="h-full"
                                         >
-                                            <Text className="text-gray-800">
-                                                {truncate(
-                                                    item?.parentBenchmarkNames?.at(
-                                                        0
-                                                    )
-                                                )}
-                                            </Text>
-                                            <Text>
-                                                {truncate(item?.controlTitle)}
-                                            </Text>
+                                            <Text className="text-gray-800">{`${item.totalCount} incidents`}</Text>
+                                            <Text>{`${
+                                                item.totalCount -
+                                                item.failedCount
+                                            } passed`}</Text>
                                         </Flex>
                                     </>
                                 ),
                             },
-                            {
-                                id: 'conformanceStatus',
-                                header: 'Status',
-                                sortingField: 'severity',
-                                cell: (item) => (
-                                    <Badge
-                                        // @ts-ignore
-                                        color={`${
-                                            item.complianceStatus == 'passed'
-                                                ? 'green'
-                                                : 'red'
-                                        }`}
-                                    >
-                                        {item.complianceStatus}
-                                    </Badge>
-                                ),
-                                maxWidth: 100,
-                            },
-                            {
-                                id: 'severity',
-                                header: 'Severity',
-                                sortingField: 'severity',
-                                cell: (item) => (
-                                    <Badge
-                                        // @ts-ignore
-                                        color={`severity-${item.severity}`}
-                                    >
-                                        {item.severity.charAt(0).toUpperCase() +
-                                            item.severity.slice(1)}
-                                    </Badge>
-                                ),
-                                maxWidth: 100,
-                            },
-                            {
-                                id: 'evaluatedAt',
-                                header: 'Last Evaluation',
-                                cell: (item) => (
-                                    // @ts-ignore
-                                    <>{dateTimeDisplay(item.evaluatedAt)}</>
-                                ),
-                            },
+                            // {
+                            //     id: 'conformanceStatus',
+                            //     header: 'Status',
+                            //     sortingField: 'severity',
+                            //     cell: (item) => (
+                            //         <Badge
+                            //             // @ts-ignore
+                            //             color={`${
+                            //                 item.conformanceStatus == 'passed'
+                            //                     ? 'green'
+                            //                     : 'red'
+                            //             }`}
+                            //         >
+                            //             {item.conformanceStatus}
+                            //         </Badge>
+                            //     ),
+                            //     maxWidth: 100,
+                            // },
+                            // {
+                            //     id: 'severity',
+                            //     header: 'Severity',
+                            //     sortingField: 'severity',
+                            //     cell: (item) => (
+                            //         <Badge
+                            //             // @ts-ignore
+                            //             color={`severity-${item.severity}`}
+                            //         >
+                            //             {item.severity.charAt(0).toUpperCase() +
+                            //                 item.severity.slice(1)}
+                            //         </Badge>
+                            //     ),
+                            //     maxWidth: 100,
+                            // },
+                            // {
+                            //     id: 'evaluatedAt',
+                            //     header: 'Last Evaluation',
+                            //     cell: (item) => (
+                            //         // @ts-ignore
+                            //         <>{dateTimeDisplay(item.value)}</>
+                            //     ),
+                            // },
                         ]}
                         columnDisplay={[
                             { id: 'resourceName', visible: true },
-                            { id: 'benchmarkID', visible: true },
-                            { id: 'controlID', visible: true },
-                            { id: 'conformanceStatus', visible: true },
-                            { id: 'severity', visible: true },
-                            { id: 'evaluatedAt', visible: true },
+                            { id: 'resourceType', visible: true },
+                            { id: 'providerConnectionName', visible: true },
+                            { id: 'totalCount', visible: true },
+                            // { id: 'severity', visible: true },
+                            // { id: 'evaluatedAt', visible: true },
 
                             // { id: 'action', visible: true },
                         ]}
@@ -399,23 +391,23 @@ export default function FindingsWithFailure({ query,id }: ICount) {
                                 flexDirection="row"
                                 justifyContent="start"
                                 alignItems="start"
-                                className="gap-1 mt-1 sm:flex-row flex-col sm:w-2/3"
+                                className="gap-1 mt-1 sm:flex-row flex-col"
                             >
                                 <Filter
                                     // @ts-ignore
-                                    type={'findings'}
+                                    type={'resources'}
                                     onApply={(e) => {
                                         // @ts-ignore
                                         setQuery(e)
                                     }}
-                                    setDate={()=>{}}
+                                    setDate={() => {}}
                                 />
-                              
+                             
                             </Flex>
                         }
                         header={
                             <Header className="w-full">
-                                Incidents{' '}
+                                Resources{' '}
                                 <span className=" font-medium">
                                     ({totalCount})
                                 </span>
