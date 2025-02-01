@@ -111,7 +111,7 @@ export default function FindingsWithFailure({ query }: ICount) {
                 resourceTypeID: queries.resourceTypeID,
                 complianceStatus: queries.conformanceStatus,
                 stateActive: queries.lifecycle,
-                compliance_job_id: queries?.jobID,
+                jobID: queries?.jobID,
                 integrationGroup: queries.connectionGroup,
                 // ...(queries.eventTimeRange && {
                 //     lastEvent: {
