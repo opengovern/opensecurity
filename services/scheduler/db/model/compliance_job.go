@@ -44,8 +44,8 @@ type ComplianceRunnersStatus struct {
 	RunnersTimedOut  int64 `json:"runners_timed_out"`
 	TotalCount       int64 `json:"total_count"`
 
-	TotalRunnersWaitingTime   int64 `json:"total_runners_waiting_time"`
-	TotalRunnersExecutionTime int64 `json:"total_runners_execution_time"`
+	AggregatedQueuedTimeOfAllRunners  int64 `json:"aggregate_queued_time_of_all_runners"`
+	AggregatedComputeTimeOfAllRunners int64 `json:"aggregate_compute_time_of_all_runners"`
 }
 
 type ComplianceJob struct {
