@@ -141,6 +141,13 @@ func ResourceFindingsQuery(ctx context.Context, logger *zap.Logger, client openg
 			},
 		})
 	}
+	if len(summaryJobIDs) > 0 {
+		nestedFilters = append(nestedFilters, map[string]any{
+			"terms": map[string]any{
+				"complianceResults.complianceJobID": summaryJobIDs,
+			},
+		})
+	}
 
 	filters := make([]map[string]any, 0)
 	if len(resourceTypes) > 0 {
@@ -157,13 +164,7 @@ func ResourceFindingsQuery(ctx context.Context, logger *zap.Logger, client openg
 			},
 		})
 	}
-	if len(summaryJobIDs) > 0 {
-		filters = append(filters, map[string]any{
-		"terms": map[string][]string{
-			"jobId": summaryJobIDs,
-		},
-	})
-	}
+	
 	if evaluatedAtFrom != nil && evaluatedAtTo != nil {
 		filters = append(filters, map[string]any{
 			"range": map[string]any{

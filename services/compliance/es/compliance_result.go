@@ -777,7 +777,7 @@ func ComplianceResultsTopFieldQuery(ctx context.Context, logger *zap.Logger, cli
 	if len(jobIDs) > 0 {
 		filters = append(filters, map[string]any{
 			"terms": map[string]any{
-				"parentComplianceJobID": jobIDs,
+				"complianceJobID": jobIDs,
 			},
 		})
 	}

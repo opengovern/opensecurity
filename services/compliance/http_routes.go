@@ -1540,7 +1540,7 @@ func (h *HttpHandler) ChangeBenchmarkSettings(echoCtx echo.Context) error {
 //	@Success		200		{object}	api.ListResourceFindingsResponse
 //	@Router			/compliance/api/v1/resource_findings [post]
 func (h *HttpHandler) ListResourceFindings(echoCtx echo.Context) error {
-	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
+	// clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
 
 	var err error
 	ctx := echoCtx.Request().Context()
@@ -1617,15 +1617,15 @@ func (h *HttpHandler) ListResourceFindings(echoCtx echo.Context) error {
 		esComplianceStatuses = append(esComplianceStatuses, status.GetEsComplianceStatuses()...)
 	}
 
-	summaryJobs, err := h.schedulerClient.GetSummaryJobs(clientCtx, req.Filters.ComplianceJobId)
-	if err != nil {
-		h.logger.Error("could not get Summary Job IDs", zap.Error(err))
-		return echoCtx.JSON(http.StatusInternalServerError, "could not get Summary Job IDs")
-	}
+	// summaryJobs, err := h.schedulerClient.GetSummaryJobs(clientCtx, req.Filters.ComplianceJobId)
+	// if err != nil {
+	// 	h.logger.Error("could not get Summary Job IDs", zap.Error(err))
+	// 	return echoCtx.JSON(http.StatusInternalServerError, "could not get Summary Job IDs")
+	// }
 
 	resourceFindings, totalCount, err := es.ResourceFindingsQuery(ctx, h.logger, h.client, req.Filters.IntegrationType, req.Filters.IntegrationID,
 		req.Filters.NotIntegrationID, req.Filters.ResourceCollection, req.Filters.ResourceTypeID, req.Filters.BenchmarkID,
-		req.Filters.ControlID, req.Filters.Severity, evaluatedAtFrom, evaluatedAtTo, esComplianceStatuses, req.Sort, req.Limit, req.AfterSortKey, summaryJobs)
+		req.Filters.ControlID, req.Filters.Severity, evaluatedAtFrom, evaluatedAtTo, esComplianceStatuses, req.Sort, req.Limit, req.AfterSortKey, req.Filters.ComplianceJobId)
 	if err != nil {
 		h.logger.Error("failed to get resource findings", zap.Error(err))
 		return err
