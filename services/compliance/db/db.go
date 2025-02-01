@@ -841,7 +841,9 @@ func (db Database) ListComplianceTagKeysWithPossibleValues(ctx context.Context) 
 
 func (db Database) ListControls(controlIDs []string, tags map[string][]string) ([]Control, error) {
 	var s []Control
-	tx := db.Orm.Model(&Control{}).
+	tx := db.Orm.Session(&gorm.Session{
+		Logger: db.Orm.Logger.LogMode(logger.Silent), // Temporarily disable logging
+	}).Model(&Control{}).
 		Preload(clause.Associations).
 		Preload("Policy.Parameters")
 

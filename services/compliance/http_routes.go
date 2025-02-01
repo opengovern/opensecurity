@@ -536,16 +536,16 @@ func (h *HttpHandler) GetSingleResourceFinding(echoCtx echo.Context) error {
 		response.ControlComplianceResults = append(response.ControlComplianceResults, complianceResult)
 	}
 
-	findingEvents, err := es.FetchComplianceResultDriftEventsByComplianceResultIDs(ctx, h.logger, h.client, complianceResultIDs)
-	if err != nil {
-		h.logger.Error("failed to fetch finding events", zap.Error(err))
-		return err
-	}
-
-	response.ComplianceResultDriftEvents = make([]api.ComplianceResultDriftEvent, 0, len(findingEvents))
-	for _, findingEvent := range findingEvents {
-		response.ComplianceResultDriftEvents = append(response.ComplianceResultDriftEvents, api.GetAPIComplianceResultDriftEventFromESComplianceResultDriftEvent(findingEvent))
-	}
+	//findingEvents, err := es.FetchComplianceResultDriftEventsByComplianceResultIDs(ctx, h.logger, h.client, complianceResultIDs)
+	//if err != nil {
+	//	h.logger.Error("failed to fetch finding events", zap.Error(err))
+	//	return err
+	//}
+	//
+	//response.ComplianceResultDriftEvents = make([]api.ComplianceResultDriftEvent, 0, len(findingEvents))
+	//for _, findingEvent := range findingEvents {
+	//	response.ComplianceResultDriftEvents = append(response.ComplianceResultDriftEvents, api.GetAPIComplianceResultDriftEventFromESComplianceResultDriftEvent(findingEvent))
+	//}
 
 	return echoCtx.JSON(http.StatusOK, response)
 }
@@ -672,17 +672,6 @@ func (h *HttpHandler) GetComplianceResultFilterValues(echoCtx echo.Context) erro
 	for _, item := range resourceTypeMetadata.ResourceTypes {
 		item := item
 		resourceTypeMetadataMap[strings.ToLower(item.ResourceType)] = &item
-	}
-
-	resourceCollectionMetadata, err := h.coreClient.ListResourceCollections(&httpclient.Context{UserRole: authApi.AdminRole})
-	if err != nil {
-		h.logger.Error("failed to get resource collection metadata", zap.Error(err))
-		return err
-	}
-	resourceCollectionMetadataMap := make(map[string]*coreApi.ResourceCollection)
-	for _, item := range resourceCollectionMetadata {
-		item := item
-		resourceCollectionMetadataMap[item.ID] = &item
 	}
 
 	integrations, err := h.integrationClient.ListIntegrations(&httpclient.Context{UserRole: authApi.AdminRole}, nil)
@@ -815,22 +804,6 @@ func (h *HttpHandler) GetComplianceResultFilterValues(echoCtx echo.Context) erro
 			})
 		} else {
 			response.IntegrationID = append(response.IntegrationID, api.FilterWithMetadata{
-				Key:         item.Key,
-				DisplayName: item.Key,
-				Count:       utils.GetPointer(item.DocCount),
-			})
-		}
-	}
-
-	for _, item := range possibleFilters.Aggregations.ResourceCollectionFilter.Buckets {
-		if resourceCollection, ok := resourceCollectionMetadataMap[item.Key]; ok {
-			response.ResourceCollection = append(response.ResourceCollection, api.FilterWithMetadata{
-				Key:         item.Key,
-				DisplayName: resourceCollection.Name,
-				Count:       utils.GetPointer(item.DocCount),
-			})
-		} else {
-			response.ResourceCollection = append(response.ResourceCollection, api.FilterWithMetadata{
 				Key:         item.Key,
 				DisplayName: item.Key,
 				Count:       utils.GetPointer(item.DocCount),
