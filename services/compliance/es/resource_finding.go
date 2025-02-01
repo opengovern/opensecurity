@@ -157,6 +157,13 @@ func ResourceFindingsQuery(ctx context.Context, logger *zap.Logger, client openg
 			},
 		})
 	}
+	if len(summaryJobIDs) > 0 {
+		filters = append(filters, map[string]any{
+		"terms": map[string][]string{
+			"jobId": summaryJobIDs,
+		},
+	})
+	}
 	if evaluatedAtFrom != nil && evaluatedAtTo != nil {
 		filters = append(filters, map[string]any{
 			"range": map[string]any{
