@@ -111,6 +111,8 @@ func (s *JobScheduler) updateJobRunnersState(job model.ComplianceJob) error {
 	if err != nil {
 		return fmt.Errorf("error while listing compliance runners: %v", err)
 	}
+	totalWaitingTime := float64(0)
+	totalExecutionTime := float64(0)
 	for _, r := range runners {
 		switch r.Status {
 		case model.ComplianceRunnerCreated:
@@ -126,8 +128,17 @@ func (s *JobScheduler) updateJobRunnersState(job model.ComplianceJob) error {
 		case model.ComplianceRunnerTimeOut:
 			status.RunnersTimedOut += 1
 		}
+		if !r.CompletedAt.IsZero() && !r.ExecutedAt.IsZero() {
+			totalExecutionTime += r.CompletedAt.Sub(r.ExecutedAt).Seconds()
+		}
+		if !r.QueuedAt.IsZero() && !r.ExecutedAt.IsZero() {
+			totalWaitingTime += r.ExecutedAt.Sub(r.QueuedAt).Seconds()
+		}
 		status.TotalCount += 1
 	}
+	status.TotalRunnersExecutionTime = int64(totalExecutionTime)
+	status.TotalRunnersWaitingTime = int64(totalWaitingTime)
+
 	statusJson, err := json.Marshal(status)
 	if err != nil {
 		return err

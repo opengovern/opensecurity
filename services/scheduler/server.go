@@ -2066,22 +2066,28 @@ func (h HttpServer) ListComplianceJobs(ctx echo.Context) error {
 			}
 		}
 
-		jobResult := api.GetComplianceJobsHistoryResponse{
-			JobId:          j.ID,
-			WithIncidents:  j.WithIncidents,
-			FrameworkID:    j.FrameworkIds[0],
-			IntegrationIds: j.IntegrationIDs,
-			JobType:        "compliance",
-			JobStatus:      j.Status.ToApi(),
-			LastUpdatedAt:  j.UpdatedAt,
-			StartTime:      j.CreatedAt,
-			FailureMessage: j.FailureMessage,
-			FrameworkTitle: Title,
-			CreatedBy:      j.CreatedBy,
-			TriggerType:    string(j.TriggerType),
-			StepFailed:     j.StepFailed.ToApi(),
-			RunnersStatus:  runnersStatus,
+		var sinkingTime int64
+		if !j.SummarizerStartedAt.IsZero() && !j.SinkingStartedAt.IsZero() {
+			sinkingTime = int64(j.SummarizerStartedAt.Sub(j.SinkingStartedAt).Seconds())
 		}
+		jobResult := api.GetComplianceJobsHistoryResponse{
+			JobId:           j.ID,
+			WithIncidents:   j.WithIncidents,
+			FrameworkID:     j.FrameworkIds[0],
+			IntegrationIds:  j.IntegrationIDs,
+			JobType:         "compliance",
+			JobStatus:       j.Status.ToApi(),
+			LastUpdatedAt:   j.UpdatedAt,
+			StartTime:       j.CreatedAt,
+			FailureMessage:  j.FailureMessage,
+			FrameworkTitle:  Title,
+			CreatedBy:       j.CreatedBy,
+			TriggerType:     string(j.TriggerType),
+			StepFailed:      j.StepFailed.ToApi(),
+			RunnersStatus:   runnersStatus,
+			DataSinkingTime: sinkingTime,
+		}
+
 		if jobResult.JobStatus == api.ComplianceJobSucceeded || jobResult.JobStatus == api.ComplianceJobFailed {
 			jobResult.EndTime = &j.UpdatedAt
 		}

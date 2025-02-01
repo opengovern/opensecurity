@@ -223,6 +223,9 @@ func (s *JobScheduler) CreateComplianceReportJobs(withIncident bool, frameworkID
 				TriggerType:         triggerType,
 				CreatedBy:           createdBy,
 				ParentID:            parentJobID,
+				SinkingStartedAt:    time.Time{},
+				SummarizerStartedAt: time.Time{},
+				CompletedAt:         time.Time{},
 			}
 			err = s.db.CreateComplianceJob(nil, &job)
 			if err != nil {
@@ -249,6 +252,9 @@ func (s *JobScheduler) CreateComplianceReportJobs(withIncident bool, frameworkID
 			TriggerType:         triggerType,
 			CreatedBy:           createdBy,
 			ParentID:            parentJobID,
+			SinkingStartedAt:    time.Time{},
+			SummarizerStartedAt: time.Time{},
+			CompletedAt:         time.Time{},
 		}
 		err = s.db.CreateComplianceJob(nil, &job)
 		if err != nil {

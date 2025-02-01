@@ -43,6 +43,9 @@ type ComplianceRunnersStatus struct {
 	RunnersSucceeded int64 `json:"runners_succeeded"`
 	RunnersTimedOut  int64 `json:"runners_timed_out"`
 	TotalCount       int64 `json:"total_count"`
+
+	TotalRunnersWaitingTime   int64 `json:"total_runners_waiting_time"`
+	TotalRunnersExecutionTime int64 `json:"total_runners_execution_time"`
 }
 
 type ComplianceJob struct {
@@ -59,6 +62,10 @@ type ComplianceJob struct {
 	TriggerType         ComplianceTriggerType
 	ParentID            *uint
 	CreatedBy           string
+
+	SinkingStartedAt    time.Time
+	SummarizerStartedAt time.Time
+	CompletedAt         time.Time
 }
 
 func (c ComplianceJob) ToApi() api.ComplianceJob {
