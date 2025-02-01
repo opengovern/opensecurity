@@ -100,10 +100,11 @@ export default function ControlsWithFailure({ query }: ICount) {
             }
         }
         GetRow('controlID', 10000, {
-            integrationType: queries.connector.length ? queries.connector : [],
+            integrationTypes: queries.connector.length ? queries.connector : [],
             severities: queries?.severity,
             connectionId: queries.connectionID,
             connectionGroup: queries?.connectionGroup,
+            jobId: queries?.jobID,
             ...(!isRelative &&
                 date && {
                     startTime: start?.unix(),

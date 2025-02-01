@@ -61,6 +61,7 @@ import { useParams } from 'react-router-dom'
 import { RunDetail } from './types'
 import TopHeader from '../../../../../../components/Layout/Header'
 import CustomPagination from '../../../../../../components/Pagination'
+import Findings from './Findings'
 
 const JOB_STATUS = {
     CANCELED: 'stopped',
@@ -618,6 +619,7 @@ export default function EvaluateDetail() {
                                             }) =>
                                                 `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
                                             }
+                                            variant="full-page"
                                             sortingDescending={
                                                 sortOrder == 'desc'
                                                     ? true
@@ -912,6 +914,7 @@ export default function EvaluateDetail() {
                                         <KTable
                                             className="p-3   min-h-[550px]"
                                             // resizableColumns
+                                            variant="full-page"
                                             renderAriaLive={({
                                                 firstIndex,
                                                 lastIndex,
@@ -1154,6 +1157,17 @@ export default function EvaluateDetail() {
                                                 />
                                             }
                                         />
+                                    </>
+                                ),
+                            },
+                            {
+                                label: 'Incidents',
+                                id: '2',
+                                disabled: !(runDetail && runDetail?.length > 0),
+                                disabledReason: 'Job completed',
+                                content: (
+                                    <>
+                                        <Findings id={id ? id : ''} />
                                     </>
                                 ),
                             },

@@ -1,20 +1,23 @@
 // @ts-nocheck
 import { Card, Flex, Text, Title } from '@tremor/react'
-
 import { useEffect, useMemo, useState } from 'react'
-import { useAtomValue, useSetAtom } from 'jotai/index'
+
+import { useAtomValue, useSetAtom } from 'jotai'
+import { isDemoAtom, notificationAtom } from '../../../../../../../../store'
+
+import { dateTimeDisplay } from '../../../../../../../../utilities/dateDisplay'
 import {
     Api,
     PlatformEnginePkgComplianceApiConformanceStatus,
-    PlatformEnginePkgComplianceApiResourceFinding,
+    PlatformEnginePkgComplianceApiFinding,
     SourceType,
     TypesFindingSeverity,
-} from '../../../../api/api'
-import AxiosAPI from '../../../../api/ApiConfig'
-import { isDemoAtom, notificationAtom } from '../../../../store'
-import { dateTimeDisplay } from '../../../../utilities/dateDisplay'
-import { getConnectorIcon } from '../../../../components/Cards/ConnectorCard'
-import ResourceFindingDetail from '../ResourceFindingDetail'
+} from '../../../../../../../../api/api'
+import AxiosAPI from '../../../../../../../../api/ApiConfig'
+
+// import { severityBadge, statusBadge } from '../../Controls'
+import { getConnectorIcon } from '../../../../../../../../components/Cards/ConnectorCard'
+import { DateRange } from '../../../../../../../../utilities/urlstate'
 import KTable from '@cloudscape-design/components/table'
 import Box from '@cloudscape-design/components/box'
 import SpaceBetween from '@cloudscape-design/components/space-between'
@@ -29,11 +32,11 @@ import {
 } from '@cloudscape-design/components'
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import Filter from '../Filter'
+import FindingDetail from './Detail'
 import dayjs from 'dayjs'
-import CustomPagination from '../../../../components/Pagination'
+import CustomPagination from '../../../../../../../../components/Pagination'
 
-
-let sortKey: any[] = []
+let sortKey = ''
 
 interface ICount {
     query: {
@@ -47,24 +50,33 @@ interface ICount {
         benchmarkID: string[] | undefined
         resourceTypeID: string[] | undefined
         lifecycle: boolean[] | undefined
+        activeTimeRange: DateRange | undefined
+        eventTimeRange: DateRange | undefined
+        jobID: string[] | undefined
     }
+    id: string
 }
 
-export default function ResourcesWithFailure({ query }: ICount) {
+export default function FindingsWithFailure({ query,id }: ICount) {
     const setNotification = useSetAtom(notificationAtom)
-    const [loading, setLoading] = useState(false)
 
     const [open, setOpen] = useState(false)
+    const [loading, setLoading] = useState(false)
     const [finding, setFinding] = useState<
-        PlatformEnginePkgComplianceApiResourceFinding | undefined
+        PlatformEnginePkgComplianceApiFinding | undefined
     >(undefined)
     const [rows, setRows] = useState<any[]>()
     const [page, setPage] = useState(1)
     const [totalCount, setTotalCount] = useState(0)
     const [totalPage, setTotalPage] = useState(0)
-    const [queries, setQuery] = useState(query)
-
     const isDemo = useAtomValue(isDemoAtom)
+    const [queries, setQuery] = useState(query)
+    const today = new Date()
+    const lastWeek = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() - 7
+    )
 
     const [date, setDate] = useState({
         key: 'previous-3-days',
@@ -72,6 +84,11 @@ export default function ResourcesWithFailure({ query }: ICount) {
         unit: 'day',
         type: 'relative',
     })
+    const truncate = (text: string | undefined) => {
+        if (text) {
+            return text.length > 40 ? text.substring(0, 40) + '...' : text
+        }
+    }
     const GetRows = () => {
         setLoading(true)
         const api = new Api()
@@ -84,7 +101,7 @@ export default function ResourcesWithFailure({ query }: ICount) {
             if (date.type == 'relative') {
                 // @ts-ignore
                 isRelative = true
-                relative = `${date.amount}${date.unit}s`
+                relative = `${date.amount} ${date.unit}s`
             } else {
                 // @ts-ignore
 
@@ -95,28 +112,30 @@ export default function ResourcesWithFailure({ query }: ICount) {
             }
         }
         api.compliance
-            .apiV1ResourceFindingsCreate({
+            .apiV1FindingsCreate({
                 filters: {
-                    // @ts-ignore
-                    integrationTypes: queries.connector.length
-                        ? queries.connector
+                    integrationType: queries.connector.length
+                        ? [query.connector]
                         : [],
                     controlID: queries.controlID,
                     integrationID: queries.connectionID,
-                    benchmarkID: queries.benchmarkID,
+                    benchmarkID: query.benchmarkID,
                     severity: queries.severity,
                     resourceTypeID: queries.resourceTypeID,
-                    conformanceStatus: queries.conformanceStatus,
-                    compliance_job_id: queries?.jobID,
-
+                    complianceStatus: queries.conformanceStatus,
+                    integrationGroup: queries.connectionGroup,
+                    stateActive: queries.lifecycle,
+                    jobID: [id],
+                    ...(queries.eventTimeRange && {
+                        lastEvent: {
+                            from: queries.eventTimeRange.start.unix(),
+                            to: queries.eventTimeRange.end.unix(),
+                        },
+                    }),
                     ...(!isRelative &&
                         date && {
                             evaluatedAt: {
-                                // @ts-ignore
-
                                 from: start?.unix(),
-                                // @ts-ignore
-
                                 to: end?.unix(),
                             },
                         }),
@@ -125,21 +144,26 @@ export default function ResourcesWithFailure({ query }: ICount) {
                             interval: relative,
                         }),
                 },
-                // sort: [],
-                limit: 15,
+                // sort: params.request.sortModel.length
+                //     ? [
+                //           {
+                //               [params.request.sortModel[0].colId]:
+                //                   params.request.sortModel[0].sort,
+                //           },
+                //       ]
+                //     : [],
+                limit: 10,
+                // eslint-disable-next-line prefer-destructuring,@typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 afterSortKey: page == 1 ? [] : rows[rows?.length - 1].sortKey,
-
-                // afterSortKey:
-                //    [],
+                //     params.request.startRow === 0 ||
+                //     sortKey.length < 1 ||
+                //     sortKey === 'none'
+                //         ? []
+                //         : sortKey,
             })
             .then((resp) => {
                 setLoading(false)
-                if (resp.data.resourceFindings) {
-                    setRows(resp.data.resourceFindings)
-                } else {
-                    setRows([])
-                }
                 // @ts-ignore
 
                 setTotalPage(Math.ceil(resp.data.totalCount / 10))
@@ -147,10 +171,14 @@ export default function ResourcesWithFailure({ query }: ICount) {
 
                 setTotalCount(resp.data.totalCount)
                 // @ts-ignore
-                // sortKey =
-                //     resp.data?.resourceFindings?.at(
-                //         (resp.data.resourceFindings?.length || 0) - 1
-                //     )?.sortKey || []
+                if (resp.data.complianceResults) {
+                    setRows(resp.data.complianceResults)
+                } else {
+                    setRows([])
+                }
+
+                // eslint-disable-next-line prefer-destructuring,@typescript-eslint/ban-ts-comment
+                // @ts-ignore
             })
             .catch((err) => {
                 setLoading(false)
@@ -164,13 +192,13 @@ export default function ResourcesWithFailure({ query }: ICount) {
     useEffect(() => {
         GetRows()
     }, [page, queries, date])
-
     return (
         <>
             <AppLayout
                 toolsOpen={false}
                 navigationOpen={false}
                 contentType="table"
+                className="w-full"
                 toolsHide={true}
                 navigationHide={true}
                 splitPanelOpen={open}
@@ -187,23 +215,27 @@ export default function ResourcesWithFailure({ query }: ICount) {
                         header={
                             finding ? (
                                 <>
-                                    <Flex justifyContent="start">
-                                        {getConnectorIcon(finding?.connector)}
+                                    <Flex
+                                        justifyContent="start"
+                                        className="sm:flex-row flex-col"
+                                    >
+                                        {getConnectorIcon(
+                                            finding?.integrationType
+                                        )}
                                         <Title className="text-lg font-semibold ml-2 my-1">
                                             {finding?.resourceName}
                                         </Title>
                                     </Flex>
                                 </>
                             ) : (
-                                'Resource not selected'
+                                'Incident not selected'
                             )
                         }
                     >
-                        <ResourceFindingDetail
-                            // type="resource"
-                            resourceFinding={finding}
+                        <FindingDetail
+                            type="finding"
+                            finding={finding}
                             open={open}
-                            showOnlyOneControl={false}
                             onClose={() => setOpen(false)}
                             onRefresh={() => window.location.reload()}
                         />
@@ -211,8 +243,9 @@ export default function ResourcesWithFailure({ query }: ICount) {
                 }
                 content={
                     <KTable
-                        className="min-h-[450px]"
+                        className="   min-h-[450px]"
                         // resizableColumns
+                        variant="full-page"
                         renderAriaLive={({
                             firstIndex,
                             lastIndex,
@@ -220,7 +253,6 @@ export default function ResourcesWithFailure({ query }: ICount) {
                         }) =>
                             `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
                         }
-                        variant="full-page"
                         onSortingChange={(event) => {
                             // setSort(event.detail.sortingColumn.sortingField)
                             // setSortOrder(!sortOrder)
@@ -231,7 +263,7 @@ export default function ResourcesWithFailure({ query }: ICount) {
                         // @ts-ignore
                         onRowClick={(event) => {
                             const row = event.detail.item
-                            if (row?.platformResourceID) {
+                            if (row.platformResourceID) {
                                 setFinding(row)
                                 setOpen(true)
                             } else {
@@ -243,90 +275,63 @@ export default function ResourcesWithFailure({ query }: ICount) {
                         }}
                         columnDefinitions={[
                             {
+                                id: 'providerConnectionName',
+                                header: 'Cloud Account',
+                                cell: (item) => item.integrationID,
+                                sortingField: 'id',
+                                isRowHeader: true,
+                            },
+                            {
                                 id: 'resourceName',
-                                header: 'Resource name',
+                                header: 'Resource Name',
                                 cell: (item) => (
                                     <>
                                         <Flex
                                             flexDirection="col"
                                             alignItems="start"
                                             justifyContent="center"
-                                            className="h-full"
+                                            className={
+                                                isDemo ? 'h-full' : 'h-full'
+                                            }
                                         >
                                             <Text className="text-gray-800">
                                                 {item.resourceName}
                                             </Text>
-                                            <Text
-                                                className={
-                                                    isDemo ? 'blur-sm' : ''
-                                                }
-                                            >
-                                                {item.platformResourceID}
-                                            </Text>
-                                        </Flex>
-                                    </>
-                                ),
-                                sortingField: 'id',
-                                isRowHeader: true,
-                                maxWidth: 200,
-                            },
-                            {
-                                id: 'resourceType',
-                                header: 'Resource type',
-                                cell: (item) => (
-                                    <>
-                                        <Flex
-                                            flexDirection="col"
-                                            alignItems="start"
-                                            justifyContent="center"
-                                        >
-                                            <Text className="text-gray-800">
-                                                {item.resourceType}
-                                            </Text>
-                                            <Text>
-                                                {item.resourceTypeLabel}
-                                            </Text>
+                                            <Text>{item.resourceTypeName}</Text>
                                         </Flex>
                                     </>
                                 ),
                                 sortingField: 'title',
                                 // minWidth: 400,
-                                maxWidth: 200,
+                                maxWidth: 100,
                             },
                             {
-                                id: 'providerConnectionName',
-                                header: 'Integration Type',
+                                id: 'benchmarkID',
+                                header: 'Benchmark',
                                 maxWidth: 100,
                                 cell: (item) => (
                                     <>
-                                        <Flex
-                                            justifyContent="start"
-                                            className={`h-full gap-3 group relative ${
-                                                isDemo ? 'blur-sm' : ''
-                                            }`}
-                                        >
-                                            {item.integrationType}
-                                            {/* <Flex
-                                                flexDirection="col"
-                                                alignItems="start"
-                                            >
-                                                <Text className="text-gray-800">
-                                                    {item.integrationID}
-                                                </Text>
-                                                <Text>
-                                                    {item.integrationName}
-                                                </Text>
-                                            </Flex> */}
-                                            {/* <Card className="cursor-pointer absolute w-fit h-fit z-40 right-1 scale-0 transition-all py-1 px-4 group-hover:scale-100">
-                                                <Text color="blue">Open</Text>
-                                            </Card> */}
-                                        </Flex>
+                                        <Text className="text-gray-800">
+                                            {truncate(
+                                                item?.parentBenchmarkNames?.at(
+                                                    0
+                                                )
+                                            )}
+                                        </Text>
+                                        <Text>
+                                            {truncate(
+                                                item?.parentBenchmarkNames?.at(
+                                                    (item?.parentBenchmarkNames
+                                                        ?.length || 0) - 1
+                                                )
+                                            )}
+                                        </Text>
                                     </>
                                 ),
                             },
                             {
-                                id: 'totalCount',
-                                header: 'Findings',
+                                id: 'controlID',
+                                header: 'Control',
                                 maxWidth: 100,
 
                                 cell: (item) => (
@@ -337,64 +342,69 @@ export default function ResourcesWithFailure({ query }: ICount) {
                                             justifyContent="center"
                                             className="h-full"
                                         >
-                                            <Text className="text-gray-800">{`${item.totalCount} incidents`}</Text>
-                                            <Text>{`${
-                                                item.totalCount -
-                                                item.failedCount
-                                            } passed`}</Text>
+                                            <Text className="text-gray-800">
+                                                {truncate(
+                                                    item?.parentBenchmarkNames?.at(
+                                                        0
+                                                    )
+                                                )}
+                                            </Text>
+                                            <Text>
+                                                {truncate(item?.controlTitle)}
+                                            </Text>
                                         </Flex>
                                     </>
                                 ),
                             },
-                            // {
-                            //     id: 'conformanceStatus',
-                            //     header: 'Status',
-                            //     sortingField: 'severity',
-                            //     cell: (item) => (
-                            //         <Badge
-                            //             // @ts-ignore
-                            //             color={`${
-                            //                 item.conformanceStatus == 'passed'
-                            //                     ? 'green'
-                            //                     : 'red'
-                            //             }`}
-                            //         >
-                            //             {item.conformanceStatus}
-                            //         </Badge>
-                            //     ),
-                            //     maxWidth: 100,
-                            // },
-                            // {
-                            //     id: 'severity',
-                            //     header: 'Severity',
-                            //     sortingField: 'severity',
-                            //     cell: (item) => (
-                            //         <Badge
-                            //             // @ts-ignore
-                            //             color={`severity-${item.severity}`}
-                            //         >
-                            //             {item.severity.charAt(0).toUpperCase() +
-                            //                 item.severity.slice(1)}
-                            //         </Badge>
-                            //     ),
-                            //     maxWidth: 100,
-                            // },
-                            // {
-                            //     id: 'evaluatedAt',
-                            //     header: 'Last Evaluation',
-                            //     cell: (item) => (
-                            //         // @ts-ignore
-                            //         <>{dateTimeDisplay(item.value)}</>
-                            //     ),
-                            // },
+                            {
+                                id: 'conformanceStatus',
+                                header: 'Status',
+                                sortingField: 'severity',
+                                cell: (item) => (
+                                    <Badge
+                                        // @ts-ignore
+                                        color={`${
+                                            item.complianceStatus == 'passed'
+                                                ? 'green'
+                                                : 'red'
+                                        }`}
+                                    >
+                                        {item.complianceStatus}
+                                    </Badge>
+                                ),
+                                maxWidth: 100,
+                            },
+                            {
+                                id: 'severity',
+                                header: 'Severity',
+                                sortingField: 'severity',
+                                cell: (item) => (
+                                    <Badge
+                                        // @ts-ignore
+                                        color={`severity-${item.severity}`}
+                                    >
+                                        {item.severity.charAt(0).toUpperCase() +
+                                            item.severity.slice(1)}
+                                    </Badge>
+                                ),
+                                maxWidth: 100,
+                            },
+                            {
+                                id: 'evaluatedAt',
+                                header: 'Last Evaluation',
+                                cell: (item) => (
+                                    // @ts-ignore
+                                    <>{dateTimeDisplay(item.evaluatedAt)}</>
+                                ),
+                            },
                         ]}
                         columnDisplay={[
                             { id: 'resourceName', visible: true },
-                            { id: 'resourceType', visible: true },
-                            { id: 'providerConnectionName', visible: true },
-                            { id: 'totalCount', visible: true },
-                            // { id: 'severity', visible: true },
-                            // { id: 'evaluatedAt', visible: true },
+                            { id: 'benchmarkID', visible: true },
+                            { id: 'controlID', visible: true },
+                            { id: 'conformanceStatus', visible: true },
+                            { id: 'severity', visible: true },
+                            { id: 'evaluatedAt', visible: true },
 
                             // { id: 'action', visible: true },
                         ]}
@@ -422,16 +432,16 @@ export default function ResourcesWithFailure({ query }: ICount) {
                                 flexDirection="row"
                                 justifyContent="start"
                                 alignItems="start"
-                                className="gap-1 mt-1 sm:flex-row flex-col"
+                                className="gap-1 mt-1 sm:flex-row flex-col sm:w-2/3"
                             >
                                 <Filter
                                     // @ts-ignore
-                                    type={'resources'}
+                                    type={'findings'}
                                     onApply={(e) => {
                                         // @ts-ignore
                                         setQuery(e)
                                     }}
-                                    setDate={() => {}}
+                                    setDate={setDate}
                                 />
                                 <DateRangePicker
                                     onChange={({ detail }) =>
@@ -439,6 +449,7 @@ export default function ResourcesWithFailure({ query }: ICount) {
                                         setDate(detail.value)
                                     }
                                     // @ts-ignore
+                                    className='sm:min-w-max sm:w-fit w-full'
 
                                     value={date}
                                     relativeOptions={[
@@ -467,12 +478,6 @@ export default function ResourcesWithFailure({ query }: ICount) {
                                             type: 'relative',
                                         },
                                         {
-                                            key: 'previous-3-days',
-                                            amount: 3,
-                                            unit: 'day',
-                                            type: 'relative',
-                                        },
-                                        {
                                             key: 'previous-7-days',
                                             amount: 7,
                                             unit: 'day',
@@ -480,7 +485,6 @@ export default function ResourcesWithFailure({ query }: ICount) {
                                         },
                                     ]}
                                     hideTimeOffset
-                                    // showClearButton={false}
                                     absoluteFormat="long-localized"
                                     isValidRange={(range) => {
                                         if (range.type === 'absolute') {
@@ -519,7 +523,7 @@ export default function ResourcesWithFailure({ query }: ICount) {
                         }
                         header={
                             <Header className="w-full">
-                                Resources{' '}
+                                Incidents{' '}
                                 <span className=" font-medium">
                                     ({totalCount})
                                 </span>
