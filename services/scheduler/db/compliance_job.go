@@ -47,6 +47,13 @@ func (db Database) UpdateComplianceJob(
 		Status:         status,
 		FailureMessage: failureMsg,
 	}
+	if status == model.ComplianceJobSinkInProgress {
+		update.SinkingStartedAt = time.Now()
+	} else if status == model.ComplianceJobSummarizerInProgress {
+		update.SummarizerStartedAt = time.Now()
+	} else if status == model.ComplianceJobSucceeded || status == model.ComplianceJobFailed {
+		update.CompletedAt = time.Now()
+	}
 	if stepFailed != nil {
 		update.StepFailed = *stepFailed
 	}

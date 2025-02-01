@@ -91,11 +91,12 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 	resourceFindings := v1.Group("/resource_findings")
 	resourceFindings.POST("", httpserver2.AuthorizeHandler(h.ListResourceFindings, authApi.ViewerRole))
 
-	complianceFrameworks := v1.Group("/compliance-frameworks")
+	complianceFrameworks := v1.Group("/frameworks")
 	complianceFrameworks.GET("/:framework-id/assignments", httpserver2.AuthorizeHandler(h.ListFrameworkAssignments, authApi.ViewerRole))
 	complianceFrameworks.PUT("/:framework-id/assignments/:integration-id", httpserver2.AuthorizeHandler(h.AddAssignment, authApi.EditorRole))
 	complianceFrameworks.DELETE("/:framework-id/assignments/:integration-id", httpserver2.AuthorizeHandler(h.DeleteAssignment, authApi.EditorRole))
 	complianceFrameworks.PUT("/:framework-id", httpserver2.AuthorizeHandler(h.UpdateFrameworkSetting, authApi.EditorRole))
+	complianceFrameworks.GET("/:framework_id/coverage", httpserver2.AuthorizeHandler(h.GetFrameworkCoverage, authApi.ViewerRole))
 
 	v3 := e.Group("/api/v3")
 
@@ -123,8 +124,6 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 
 	v3.GET("/job-report/:run_id/details/by-control", httpserver2.AuthorizeHandler(h.GetComplianceJobReport, authApi.ViewerRole))
 	v3.GET("/job-report/:run_id/summary", httpserver2.AuthorizeHandler(h.GetJobReportSummary, authApi.ViewerRole))
-
-	v3.GET("/frameworks/:framework_id/coverage", httpserver2.AuthorizeHandler(h.GetFrameworkCoverage, authApi.ViewerRole))
 }
 
 func bindValidate(ctx echo.Context, i any) error {
@@ -5247,7 +5246,7 @@ func (h HttpHandler) GetPolicy(c echo.Context) error {
 //	@Param		assignment_type		query		[]string	true	"assignment type. options: implicit, explicit, none"
 //	@Param		framework-id		path		string		true	"Framework ID"
 //	@Success	200					{object}	api.ListFrameworkAssignmentsResponse
-//	@Router		/compliance/api/v1/compliance-frameworks/{framework-id}/assignments [get]
+//	@Router		/compliance/api/v1/frameworks/{framework-id}/assignments [get]
 func (h *HttpHandler) ListFrameworkAssignments(echoCtx echo.Context) error {
 	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
 
@@ -5399,7 +5398,7 @@ func (h *HttpHandler) ListFrameworkAssignments(echoCtx echo.Context) error {
 //	@Param			framework-id	path	string							true	"Framework ID to add assignment"
 //	@Param			integration-id	path	string							true	"Integration ID to add assignment"
 //	@Success		200
-//	@Router			/compliance/api/v1/compliance-frameworks/{framework-id}/assignments/{integration-id} [put]
+//	@Router			/compliance/api/v1/frameworks/{framework-id}/assignments/{integration-id} [put]
 func (h *HttpHandler) AddAssignment(echoCtx echo.Context) error {
 	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
 	ctx := echoCtx.Request().Context()
@@ -5472,7 +5471,7 @@ func (h *HttpHandler) AddAssignment(echoCtx echo.Context) error {
 //	@Param			framework-id	path	string							true	"Framework ID to remove assignment"
 //	@Param			integration-id	path	string							true	"Integration ID to remove assignment"
 //	@Success		200
-//	@Router			/compliance/api/v1/compliance-frameworks/{framework-id}/assignments/{integration-id} [delete]
+//	@Router			/compliance/api/v1/frameworks/{framework-id}/assignments/{integration-id} [delete]
 func (h *HttpHandler) DeleteAssignment(echoCtx echo.Context) error {
 	ctx := echoCtx.Request().Context()
 
@@ -5514,7 +5513,7 @@ func (h *HttpHandler) DeleteAssignment(echoCtx echo.Context) error {
 //	@Param			framework-id	path	string								true	"Framework ID to assign"
 //	@Param			request			body	api.UpdateFrameworkSettingRequest	true	"Framework setting"
 //	@Success		200
-//	@Router			/compliance/api/v1/compliance-frameworks/{framework-id} [put]
+//	@Router			/compliance/api/v1/frameworks/{framework-id} [put]
 func (h *HttpHandler) UpdateFrameworkSetting(echoCtx echo.Context) error {
 	ctx := echoCtx.Request().Context()
 

@@ -142,6 +142,9 @@ type ComplianceRunnersStatus struct {
 	RunnersSucceeded int64 `json:"runners_succeeded"`
 	RunnersTimedOut  int64 `json:"runners_timed_out"`
 	TotalCount       int64 `json:"total_count"`
+
+	TotalRunnersWaitingTime   int64 `json:"total_runners_waiting_time"`
+	TotalRunnersExecutionTime int64 `json:"total_runners_execution_time"`
 }
 
 type GetComplianceJobsHistoryResponse struct {
@@ -160,7 +163,10 @@ type GetComplianceJobsHistoryResponse struct {
 	CreatedBy      string                  `json:"created_by"`
 	TriggerType    string                  `json:"trigger_type"`
 	RunnersStatus  ComplianceRunnersStatus `json:"runners_status"`
+
+	DataSinkingTime int64 `json:"data_sinking_time"`
 }
+
 type GetComplianceJobsHistoryFinalResponse struct {
 	Items      []GetComplianceJobsHistoryResponse `json:"items"`
 	TotalCount int                                `json:"total_count"`
