@@ -356,7 +356,7 @@ const setNotification = useSetAtom(notificationAtom)
       }
     const clickedJobDetails = [
         { title: 'ID', value: clickedJob?.job_id },
-        { title: 'Title', value: clickedJob?.framework_title },
+        { title: 'Title', value: clickedJob?.frameworks[0]?.framework_name },
         { title: 'Trigger Type', value: clickedJob?.trigger_type },
 
         { title: 'Created At', value: dateTimeDisplay(clickedJob?.start_time) },
@@ -394,11 +394,11 @@ const setNotification = useSetAtom(notificationAtom)
                     <Link
                         href={`${
                             checkStatusRedirect(clickedJob?.job_status)
-                                ? `/compliance/${clickedJob?.framework_id}/report/${clickedJob?.job_id}`
+                                ? `/compliance/${clickedJob?.frameworks[0]?.framework_id}/report/${clickedJob?.job_id}`
                                 : '#'
                         }`}
                     >
-                        {clickedJob?.framework_title}
+                        {clickedJob?.frameworks[0]?.framework_name}
                     </Link>
                 </>
             ),
@@ -420,8 +420,8 @@ const setNotification = useSetAtom(notificationAtom)
                 splitPanel={
                     <SplitPanel
                         header={
-                            clickedJob
-                                ? clickedJob.framework_title
+                            clickedJob?.frameworks
+                                ? clickedJob.frameworks[0]?.framework_name
                                 : 'Job not selected'
                         }
                     >
@@ -500,7 +500,7 @@ const setNotification = useSetAtom(notificationAtom)
                             {
                                 id: 'title',
                                 header: 'Title',
-                                cell: (item) => <>{item.framework_title}</>,
+                                cell: (item) => <>{item?.frameworks[0]?.framework_name}</>,
                                 sortingField: 'title',
                                 isRowHeader: true,
                                 maxWidth: 150,
