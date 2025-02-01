@@ -25,11 +25,13 @@ import {
     useURLState,
 } from '../../../../../../../utilities/urlstate'
 import Spinner from '../../../../../../../components/Spinner'
+import ControlsWithFailure from './ControlsWithFailure'
+import ResourcesWithFailure from './ResourcesWithFailure'
 interface Props {
     id: string
+    tab: number
 }
-export default function Findings({ id }: Props) {
-    const [tab, setTab] = useState<number>(0)
+export default function Findings({ id ,tab}: Props) {
     const [selectedGroup, setSelectedGroup] = useState<
         'findings' | 'resources' | 'controls' | 'accounts' | 'events'
     >('findings')
@@ -60,6 +62,11 @@ export default function Findings({ id }: Props) {
         switch (tab) {
             case 0:
                 return <FindingsWithFailure id={id} query={query} />
+            case 2:
+                return <ControlsWithFailure id={id} query={query} />
+            case 3:
+                return <ResourcesWithFailure id={id} query={query} />
+
             default:
                 return <Spinner />
         }

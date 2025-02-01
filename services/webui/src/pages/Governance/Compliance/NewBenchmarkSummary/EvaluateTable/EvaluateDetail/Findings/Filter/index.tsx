@@ -336,7 +336,7 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
             defaultValue: defConformanceStatus,
             onDelete: undefined,
             data: confarmance_data,
-            types: ['findings', 'resources', 'events'],
+            types: [  'events'],
         },
         // {
         //     id: 'connectionGroup',
@@ -376,7 +376,7 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
             defaultValue: defConformanceStatus,
             onDelete: undefined,
             data: jobData,
-            types: ['findings', 'resources', 'events'],
+            types: [, 'events'],
         },
 
         // {
@@ -593,16 +593,7 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
     ]
     const [query, setQuery] = useState({
         tokens: [
-            {
-                propertyKey: 'conformance_status',
-                value: 'failed',
-                operator: '=',
-            },
-            // {
-            //     propertyKey: 'connectionGroup',
-            //     value: 'healthy',
-            //     operator: '=',
-            // },
+           
         ],
         operation: 'and',
     })
@@ -725,7 +716,6 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
                     alignItems="start"
                     className="w-fit gap-2 sm:flex-row flex-col sm:justify-between justify-start "
                 >
-                    
                     <PropertyFilter
                         // @ts-ignore
                         query={query}
@@ -739,10 +729,10 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
                         hideOperations
                         tokenLimit={2}
                         filteringEmpty="No suggestions found"
-                        filteringAriaLabel="Find Incidents"
+                        filteringAriaLabel={`Filter`}
                         // @ts-ignore
                         filteringOptions={options}
-                        filteringPlaceholder="Find Incidents"
+                        filteringPlaceholder="Filter"
                         // @ts-ignore
 
                         filteringProperties={properties}
