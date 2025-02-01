@@ -38,6 +38,8 @@ func (s *JobScheduler) cleanupComplianceResultsNotInIntegrations(ctx context.Con
 				continue
 			}
 		}
+		s.logger.Info("deleted resource count", zap.Int("count", deletedCount),
+			zap.Any("deleted integrations", deletedIntegrationIDs))
 	}
 	s.logger.Info("total deleted resource count", zap.Int("count", totalDeletedCount),
 		zap.Any("deleted integrations", deletedIntegrationIDs))

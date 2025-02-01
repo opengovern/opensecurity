@@ -341,7 +341,7 @@ func (s *Scheduler) cleanupDescribeResourcesNotInIntegrations(ctx context.Contex
 				}
 			}
 		}
-		s.logger.Info("deleted resource count", zap.Int("count", totalDeletedCount),
+		s.logger.Info("deleted resource count", zap.Int("count", deletedCount),
 			zap.Any("deleted integrations", deletedIntegrationIDs))
 	}
 	s.logger.Info("total deleted resource count", zap.Int("count", totalDeletedCount),
