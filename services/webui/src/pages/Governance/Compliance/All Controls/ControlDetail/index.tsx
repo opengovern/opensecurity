@@ -172,7 +172,6 @@ export default function ControlDetail({
                     <KeyValuePairs
                         className="mb-8"
                         columns={window.innerWidth > 768 ? 4 : 1}
-                        
                         items={getItems()}
                     />
                     <Tabs
@@ -216,14 +215,14 @@ export default function ControlDetail({
                                                                                         index
                                                                                     ) => {
                                                                                         return (
-                                                                                            <span className="inline-flex items-center gap-x-2.5 rounded-tremor-small bg-tremor-background py-1 pl-2.5 pr-1 text-tremor-label text-tremor-content ring-1 ring-tremor-ring dark:bg-dark-tremor-background dark:text-dark-tremor-content dark:ring-dark-tremor-ring">
+                                                                                            <span className="inline-flex text-lg items-center gap-x-2.5 rounded-tremor-small bg-tremor-background  pl-2.5 pr-2.5 text-tremor-label  text-tremor-content-strong ring-1 ring-tremor-ring dark:bg-dark-tremor-background dark:text-dark-tremor-content dark:ring-dark-tremor-ring">
                                                                                                 {
                                                                                                     // @ts-ignore
 
                                                                                                     item?.key
                                                                                                 }
                                                                                                 <span className="h-4 w-px bg-tremor-ring dark:bg-dark-tremor-ring" />
-                                                                                                <span className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-emphasis">
+                                                                                                <span className="font-medium text-tremor-content dark:text-dark-tremor-content-emphasis">
                                                                                                     {
                                                                                                         // @ts-ignore
                                                                                                         item?.value
@@ -250,13 +249,8 @@ export default function ControlDetail({
                                                     label: 'Policy source',
                                                     value: selectedItem?.has_inline_policy
                                                         ? 'Inline'
-                                                        : selectedItem?.policy?.id,
-                                                },
-                                                {
-                                                    label: 'Last Updated At',
-                                                    value: selectedItem?.updated_at
-                                                        ? selectedItem?.updated_at
-                                                        : 'Not Available',
+                                                        : selectedItem?.policy
+                                                              ?.id,
                                                 },
 
                                                 {
@@ -278,7 +272,6 @@ export default function ControlDetail({
                                                                         ) => {
                                                                             return (
                                                                                 <>
-                                                                                  
                                                                                     <span className="inline-flex items-center gap-x-2.5 rounded-tremor-full bg-tremor-background py-1 pl-2.5 pr-2.5 text-tremor-label text-tremor-content ring-1 ring-inset ring-tremor-ring dark:bg-dark-tremor-background dark:text-dark-tremor-content dark:ring-dark-tremor-ring">
                                                                                         {
                                                                                             key[0]
@@ -290,7 +283,6 @@ export default function ControlDetail({
                                                                                             }
                                                                                         </span>
                                                                                     </span>
-                                                                                
                                                                                 </>
                                                                             )
                                                                         }
