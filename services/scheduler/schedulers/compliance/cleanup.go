@@ -11,6 +11,7 @@ import (
 )
 
 func (s *JobScheduler) cleanupComplianceResultsNotInIntegrations(ctx context.Context, integrationIDs []string) {
+	s.logger.Info("starting cleaning up compliance results")
 	var searchAfter []any
 	totalDeletedCount := 0
 	deletedIntegrationIDs := make(map[string]bool)

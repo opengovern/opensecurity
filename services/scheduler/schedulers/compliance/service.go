@@ -102,7 +102,7 @@ func (s *JobScheduler) CleanupComplianceResults(ctx context.Context) {
 	t := ticker.NewTicker(CleanupInterval, time.Second*10)
 	defer t.Stop()
 
-	for ; ; <-t.C {
+	for range t.C {
 		integrations, err := s.integrationClient.ListIntegrations(&httpclient.Context{UserRole: authAPI.AdminRole}, nil)
 		if err != nil {
 			s.logger.Error("Failed to list sources", zap.Error(err))
