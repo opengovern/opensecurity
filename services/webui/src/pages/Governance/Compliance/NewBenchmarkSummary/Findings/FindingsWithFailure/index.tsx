@@ -215,8 +215,13 @@ export default function FindingsWithFailure({ query }: ICount) {
                         header={
                             finding ? (
                                 <>
-                                    <Flex justifyContent="start" className='sm:flex-row flex-col'>
-                                        {getConnectorIcon(finding?.integrationType)}
+                                    <Flex
+                                        justifyContent="start"
+                                        className="sm:flex-row flex-col"
+                                    >
+                                        {getConnectorIcon(
+                                            finding?.integrationType
+                                        )}
                                         <Title className="text-lg font-semibold ml-2 my-1">
                                             {finding?.resourceName}
                                         </Title>
@@ -302,7 +307,7 @@ export default function FindingsWithFailure({ query }: ICount) {
                             },
                             {
                                 id: 'benchmarkID',
-                                header: 'Benchmark',
+                                header: 'Framework',
                                 maxWidth: 100,
                                 cell: (item) => (
                                     <>
