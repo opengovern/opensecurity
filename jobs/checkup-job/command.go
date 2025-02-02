@@ -14,7 +14,7 @@ import (
 var (
 	IntegrationBaseUrl = os.Getenv("INTEGRATION_BASE_URL")
 	AuthBaseUrl        = os.Getenv("AUTH_BASE_URL")
-	CoreBaseUrl    = os.Getenv("Core_BASE_URL")
+	CoreBaseUrl    = os.Getenv("CORE_BASE_URL")
 	NATSAddress        = os.Getenv("NATS_URL")
 )
 
