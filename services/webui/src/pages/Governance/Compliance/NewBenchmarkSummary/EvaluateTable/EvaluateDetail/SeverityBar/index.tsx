@@ -328,13 +328,14 @@ export default function SeverityBar({ benchmark }: ISeverityBar) {
             ) : (
                 <div className="bg-gray-200 h-5 rounded-md" />
             )}
-            <Text className="mb-2">{`${numberDisplay(
+            <Text className="mb-2 w-full">{`${numberDisplay(
                 (benchmark?.total_controls || 0) - calcPasses(benchmark),
                 0
-            )}  of ${numberDisplay(
-                benchmark?.total_controls || 0,
-                0
-            )} controls failed`}</Text>
+            )}  of ${numberDisplay(benchmark?.total_controls || 0, 0)} (${Math.ceil(
+                ((benchmark?.failed_controls ?? 0) /
+                    (benchmark?.total_controls || 1)) *
+                100
+            )}%) controls failed`}</Text>
         </Flex>
     )
 }

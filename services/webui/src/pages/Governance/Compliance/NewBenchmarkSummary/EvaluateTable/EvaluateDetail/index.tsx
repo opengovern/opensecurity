@@ -875,6 +875,7 @@ export default function EvaluateDetail() {
                                 items={[
                                     {
                                         label: ' Score',
+
                                         value: (
                                             <Flex className="flex-col gap-2 justify-start items-start">
                                                 <Link
