@@ -397,7 +397,7 @@ export default function IntegrationList({
                                                     }}
                                                     iconName="refresh"
                                                 ></Button>
-                                                <Button
+                                                {/* <Button
                                                     // icon={PlusIcon}
                                                     // variant='primary'
                                                     onClick={() =>
@@ -405,8 +405,7 @@ export default function IntegrationList({
                                                     }
                                                 >
                                                     Add
-                                                    {/* {`${name}`} */}
-                                                </Button>
+                                                </Button> */}
                                             </Flex>
                                         }
                                         className="w-full"

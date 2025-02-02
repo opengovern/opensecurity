@@ -92,7 +92,7 @@ export default function EvaluateDetail() {
     const [runnerOpen, setRunnerOpen] = useState(false)
     const [runnerPage, setRunnerPage] = useState(0)
     const [sortOrder, setSortOrder] = useState('asc')
-    const [openInfo,setOpenInfo] = useState(false)
+    const [openInfo, setOpenInfo] = useState(false)
     const [runnerTable, setRunnerTable] = useState(false)
 
     const [sortField, setSortField] = useState({
@@ -443,322 +443,325 @@ export default function EvaluateDetail() {
             .reverse()
             .slice(page * 10, (page + 1) * 10)
     }
-    const GetTabs =() => {
-        const temp: any = [
-         
-           
-    ]
+    const GetTabs = () => {
+        const temp: any = []
 
-    if(jobDetail?.with_incidents){
-        temp.push(
-            {
-                label: 'Incidents',
-                id: '2',
-                disabled: !jobDetail?.with_incidents,
-                disabledReason: 'Job Runned without incidents',
+        if (jobDetail?.with_incidents) {
+            temp.push(
+                {
+                    label: 'Incidents',
+                    id: '2',
+                    disabled: !jobDetail?.with_incidents,
+                    disabledReason: 'Job Runned without incidents',
+                    content: (
+                        <>
+                            <Findings id={id ? id : ''} tab={0} />
+                        </>
+                    ),
+                },
+                {
+                    label: 'Control summary',
+                    id: '3',
+                    disabled: !jobDetail?.with_incidents,
+                    disabledReason: 'Job Runned without incidents',
+                    content: (
+                        <>
+                            <Findings id={id ? id : ''} tab={2} />
+                        </>
+                    ),
+                },
+                {
+                    label: 'Resource summary',
+                    id: '4',
+                    disabled: !jobDetail?.with_incidents,
+                    disabledReason: 'Job Runned without incidents',
+                    content: (
+                        <>
+                            <Findings id={id ? id : ''} tab={3} />
+                        </>
+                    ),
+                }
+            )
+        }
+        if (!jobDetail?.with_incidents) {
+            temp.push({
+                label: 'Controls assements',
+                id: '0',
+                disabled: !(runDetail && runDetail?.length > 0),
+                disabledReason: 'Job is still in progress',
                 content: (
                     <>
-                        <Findings id={id ? id : ''} tab={0} />
-                    </>
-                ),
-            },
-            {
-                label: 'Control summary',
-                id: '3',
-                disabled: !jobDetail?.with_incidents,
-                disabledReason: 'Job Runned without incidents',
-                content: (
-                    <>
-                        <Findings id={id ? id : ''} tab={2} />
-                    </>
-                ),
-            },
-            {
-                label: 'Resource summary',
-                id: '4',
-                disabled: !jobDetail?.with_incidents,
-                disabledReason: 'Job Runned without incidents',
-                content: (
-                    <>
-                        <Findings id={id ? id : ''} tab={3} />
-                    </>
-                ),
-            }
-        )
-    }
-    if (!jobDetail?.with_incidents) {
-        temp.push({
-            label: 'Controls assements',
-            id: '0',
-            disabled: !(runDetail && runDetail?.length > 0),
-            disabledReason: 'Job is still in progress',
-            content: (
-                <>
-                    {' '}
-                    <KTable
-                        className="p-3   min-h-[550px]"
-                        // resizableColumns
-                        renderAriaLive={({
-                            firstIndex,
-                            lastIndex,
-                            totalItemsCount,
-                        }) =>
-                            `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
-                        }
-                        variant="full-page"
-                        sortingDescending={sortOrder == 'desc' ? true : false}
-                        sortingColumn={sortField}
-                        onSortingChange={({ detail }) => {
-                            const desc = detail.isDescending ? 'desc' : 'asc'
-                            setSortOrder(desc)
-                            setSortField(detail.sortingColumn)
-                        }}
-                        onRowClick={(event) => {
-                            const row = event.detail.item
-                            // @ts-ignore
-                            setSelectedControl(row)
-                            setResourcePage(0)
-                        }}
-                        columnDefinitions={[
-                            {
-                                id: 'id',
-                                header: 'Control ID',
-                                cell: (item) => item.title,
-                                // sortingField: 'id',
-                                isRowHeader: true,
-                            },
-
-                            {
-                                id: 'severity',
-                                header: 'Severity',
-                                sortingField: 'severity',
-                                cell: (item) => (
-                                    <Badge
-                                        // @ts-ignore
-                                        color={`severity-${item.severity}`}
-                                    >
-                                        {item.severity.charAt(0).toUpperCase() +
-                                            item.severity.slice(1)}
-                                    </Badge>
-                                ),
-                                maxWidth: 100,
-                                sortingComparator: (a, b) => {
-                                    if (a?.severity === b?.severity) {
-                                        return 0
-                                    }
-                                    if (a?.severity === 'critical') {
-                                        return -1
-                                    }
-                                    if (b?.severity === 'critical') {
-                                        return 1
-                                    }
-                                    if (a?.severity === 'high') {
-                                        return -1
-                                    }
-                                    if (b?.severity === 'high') {
-                                        return 1
-                                    }
-                                    if (a?.severity === 'medium') {
-                                        return -1
-                                    }
-                                    if (b?.severity === 'medium') {
-                                        return 1
-                                    }
-                                    if (a?.severity === 'low') {
-                                        return -1
-                                    }
-                                    if (b?.severity === 'low') {
-                                        return 1
-                                    }
+                        {' '}
+                        <KTable
+                            className="p-3   min-h-[550px]"
+                            // resizableColumns
+                            renderAriaLive={({
+                                firstIndex,
+                                lastIndex,
+                                totalItemsCount,
+                            }) =>
+                                `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
+                            }
+                            variant="full-page"
+                            sortingDescending={
+                                sortOrder == 'desc' ? true : false
+                            }
+                            sortingColumn={sortField}
+                            onSortingChange={({ detail }) => {
+                                const desc = detail.isDescending
+                                    ? 'desc'
+                                    : 'asc'
+                                setSortOrder(desc)
+                                setSortField(detail.sortingColumn)
+                            }}
+                            onRowClick={(event) => {
+                                const row = event.detail.item
+                                // @ts-ignore
+                                setSelectedControl(row)
+                                setResourcePage(0)
+                            }}
+                            columnDefinitions={[
+                                {
+                                    id: 'id',
+                                    header: 'Control ID',
+                                    cell: (item) => item.title,
+                                    // sortingField: 'id',
+                                    isRowHeader: true,
                                 },
-                            },
 
-                            {
-                                id: 'incidents',
-                                header: 'OK',
-                                sortingField: 'oks',
-
-                                cell: (item) => (
-                                    // @ts-ignore
-                                    <>
-                                        {/**@ts-ignore */}
-                                        {item.oks}
-                                    </>
-                                ),
-                                // minWidth: 50,
-                                maxWidth: 100,
-                                sortingComparator: (a, b) => {
-                                    console.log(a)
-                                    console.log(b)
-
-                                    if (a?.oks === b?.oks) {
-                                        return 0
-                                    }
-                                    if (a?.oks > b?.oks) {
-                                        return -1
-                                    }
-                                    if (a?.oks < b?.oks) {
-                                        return 1
-                                    }
-                                },
-                            },
-                            {
-                                id: 'passing_resources',
-                                header: 'Alarms ',
-                                sortingField: 'alarms',
-
-                                cell: (item) => (
-                                    // @ts-ignore
-                                    <>{item.alarms}</>
-                                ),
-                                maxWidth: 100,
-                                sortingComparator: (a, b) => {
-                                    if (a?.alarms === b?.alarms) {
-                                        return 0
-                                    }
-                                    if (a?.alarms > b?.alarms) {
-                                        return -1
-                                    }
-                                    if (a?.alarms < b?.alarms) {
-                                        return 1
-                                    }
-                                },
-                            },
-
-                            {
-                                id: 'action',
-                                header: '',
-                                cell: (item) => (
-                                    // @ts-ignore
-                                    <KButton
-                                        onClick={() => {
-                                            setSelectedControl(item)
-                                            setResourcePage(0)
-                                        }}
-                                        className="w-full"
-                                        variant="inline-link"
-                                        ariaLabel={`Open Detail`}
-                                    >
-                                        {window.innerWidth > 768 ? (
-                                            'See details'
-                                        ) : (
-                                            <InformationCircleIcon className="w-5" />
-                                        )}
-                                    </KButton>
-                                ),
-                            },
-                        ]}
-                        columnDisplay={[
-                            { id: 'id', visible: true },
-                            { id: 'title', visible: false },
-                            {
-                                id: 'connector',
-                                visible: false,
-                            },
-                            { id: 'query', visible: false },
-                            {
-                                id: 'severity',
-                                visible: true,
-                            },
-                            {
-                                id: 'incidents',
-                                visible: true,
-                            },
-                            {
-                                id: 'passing_resources',
-                                visible: true,
-                            },
-                            {
-                                id: 'noncompliant_resources',
-                                visible: true,
-                            },
-
-                            { id: 'action', visible: true },
-                        ]}
-                        enableKeyboardNavigation
-                        items={runDetail ? getRows() : []}
-                        loading={detailLoading}
-                        loadingText="Loading resources"
-                        // stickyColumns={{ first: 0, last: 1 }}
-                        // stripedRows
-                        trackBy="id"
-                        empty={
-                            <Box
-                                margin={{ vertical: 'xs' }}
-                                textAlign="center"
-                                color="inherit"
-                            >
-                                <SpaceBetween size="m">
-                                    <b>No resources</b>
-                                </SpaceBetween>
-                            </Box>
-                        }
-                        header={
-                            <Header
-                                actions={
-                                    <CustomPagination
-                                        currentPageIndex={page + 1}
-                                        pagesCount={Math.ceil(
-                                            runDetail?.length / 10
-                                        )}
-                                        onChange={({ detail }) =>
-                                            setPage(detail.currentPageIndex - 1)
+                                {
+                                    id: 'severity',
+                                    header: 'Severity',
+                                    sortingField: 'severity',
+                                    cell: (item) => (
+                                        <Badge
+                                            // @ts-ignore
+                                            color={`severity-${item.severity}`}
+                                        >
+                                            {item.severity
+                                                .charAt(0)
+                                                .toUpperCase() +
+                                                item.severity.slice(1)}
+                                        </Badge>
+                                    ),
+                                    maxWidth: 100,
+                                    sortingComparator: (a, b) => {
+                                        if (a?.severity === b?.severity) {
+                                            return 0
                                         }
-                                    />
-                                }
-                                counter={
-                                    runDetail?.length
-                                        ? `(${runDetail?.length})`
-                                        : ''
-                                }
-                                className="w-full"
-                            >
-                                Controls{' '}
-                            </Header>
-                        }
-                    />
-                </>
-            ),
-        })
-    }
-    return temp
-    }
-     const checkStatusRedirect = (status) => {
-         switch (status) {
-             case 'CREATED':
-                 return 0
-             case 'QUEUED':
-                 return 0
-             case 'IN_PROGRESS':
-                 return 1
-             case 'RUNNERS_IN_PROGRESS':
-                 return 1
-             case 'SUMMARIZER_IN_PROGRESS':
-                 return 1
-             case 'SINK_IN_PROGRESS':
-                 return 1
-             case 'OLD_RESOURCE_DELETION':
-                 return 1
-             case 'SUCCEEDED':
-                 return 2
-             case 'COMPLETED':
-                 return 2
-             case 'FAILED':
-                 return 3
-             case 'COMPLETED_WITH_FAILURE':
-                 return 3
-             case 'TIMEOUT':
-                 return 3
-             case 'CANCELED':
-                 return 3
+                                        if (a?.severity === 'critical') {
+                                            return -1
+                                        }
+                                        if (b?.severity === 'critical') {
+                                            return 1
+                                        }
+                                        if (a?.severity === 'high') {
+                                            return -1
+                                        }
+                                        if (b?.severity === 'high') {
+                                            return 1
+                                        }
+                                        if (a?.severity === 'medium') {
+                                            return -1
+                                        }
+                                        if (b?.severity === 'medium') {
+                                            return 1
+                                        }
+                                        if (a?.severity === 'low') {
+                                            return -1
+                                        }
+                                        if (b?.severity === 'low') {
+                                            return 1
+                                        }
+                                    },
+                                },
 
-             default:
-                 return false
-         }
-     }
-    const GetRunnerStatus = () => {
+                                {
+                                    id: 'incidents',
+                                    header: 'OK',
+                                    sortingField: 'oks',
 
+                                    cell: (item) => (
+                                        // @ts-ignore
+                                        <>
+                                            {/**@ts-ignore */}
+                                            {item.oks}
+                                        </>
+                                    ),
+                                    // minWidth: 50,
+                                    maxWidth: 100,
+                                    sortingComparator: (a, b) => {
+                                        console.log(a)
+                                        console.log(b)
+
+                                        if (a?.oks === b?.oks) {
+                                            return 0
+                                        }
+                                        if (a?.oks > b?.oks) {
+                                            return -1
+                                        }
+                                        if (a?.oks < b?.oks) {
+                                            return 1
+                                        }
+                                    },
+                                },
+                                {
+                                    id: 'passing_resources',
+                                    header: 'Alarms ',
+                                    sortingField: 'alarms',
+
+                                    cell: (item) => (
+                                        // @ts-ignore
+                                        <>{item.alarms}</>
+                                    ),
+                                    maxWidth: 100,
+                                    sortingComparator: (a, b) => {
+                                        if (a?.alarms === b?.alarms) {
+                                            return 0
+                                        }
+                                        if (a?.alarms > b?.alarms) {
+                                            return -1
+                                        }
+                                        if (a?.alarms < b?.alarms) {
+                                            return 1
+                                        }
+                                    },
+                                },
+
+                                {
+                                    id: 'action',
+                                    header: '',
+                                    cell: (item) => (
+                                        // @ts-ignore
+                                        <KButton
+                                            onClick={() => {
+                                                setSelectedControl(item)
+                                                setResourcePage(0)
+                                            }}
+                                            className="w-full"
+                                            variant="inline-link"
+                                            ariaLabel={`Open Detail`}
+                                        >
+                                            {window.innerWidth > 768 ? (
+                                                'See details'
+                                            ) : (
+                                                <InformationCircleIcon className="w-5" />
+                                            )}
+                                        </KButton>
+                                    ),
+                                },
+                            ]}
+                            columnDisplay={[
+                                { id: 'id', visible: true },
+                                { id: 'title', visible: false },
+                                {
+                                    id: 'connector',
+                                    visible: false,
+                                },
+                                { id: 'query', visible: false },
+                                {
+                                    id: 'severity',
+                                    visible: true,
+                                },
+                                {
+                                    id: 'incidents',
+                                    visible: true,
+                                },
+                                {
+                                    id: 'passing_resources',
+                                    visible: true,
+                                },
+                                {
+                                    id: 'noncompliant_resources',
+                                    visible: true,
+                                },
+
+                                { id: 'action', visible: true },
+                            ]}
+                            enableKeyboardNavigation
+                            items={runDetail ? getRows() : []}
+                            loading={detailLoading}
+                            loadingText="Loading resources"
+                            // stickyColumns={{ first: 0, last: 1 }}
+                            // stripedRows
+                            trackBy="id"
+                            empty={
+                                <Box
+                                    margin={{ vertical: 'xs' }}
+                                    textAlign="center"
+                                    color="inherit"
+                                >
+                                    <SpaceBetween size="m">
+                                        <b>No resources</b>
+                                    </SpaceBetween>
+                                </Box>
+                            }
+                            header={
+                                <Header
+                                    actions={
+                                        <CustomPagination
+                                            currentPageIndex={page + 1}
+                                            pagesCount={Math.ceil(
+                                                runDetail?.length / 10
+                                            )}
+                                            onChange={({ detail }) =>
+                                                setPage(
+                                                    detail.currentPageIndex - 1
+                                                )
+                                            }
+                                        />
+                                    }
+                                    counter={
+                                        runDetail?.length
+                                            ? `(${runDetail?.length})`
+                                            : ''
+                                    }
+                                    className="w-full"
+                                >
+                                    Controls{' '}
+                                </Header>
+                            }
+                        />
+                    </>
+                ),
+            })
+        }
+        return temp
     }
+    const checkStatusRedirect = (status) => {
+        switch (status) {
+            case 'CREATED':
+                return 0
+            case 'QUEUED':
+                return 0
+            case 'IN_PROGRESS':
+                return 1
+            case 'RUNNERS_IN_PROGRESS':
+                return 1
+            case 'SUMMARIZER_IN_PROGRESS':
+                return 1
+            case 'SINK_IN_PROGRESS':
+                return 1
+            case 'OLD_RESOURCE_DELETION':
+                return 1
+            case 'SUCCEEDED':
+                return 2
+            case 'COMPLETED':
+                return 2
+            case 'FAILED':
+                return 3
+            case 'COMPLETED_WITH_FAILURE':
+                return 3
+            case 'TIMEOUT':
+                return 3
+            case 'CANCELED':
+                return 3
+
+            default:
+                return false
+        }
+    }
+    const GetRunnerStatus = () => {}
     return (
         <>
             <div
@@ -880,7 +883,7 @@ export default function EvaluateDetail() {
                                                 href="#"
                                                 ariaLabel="Running instances (14)"
                                             >
-                                                {(
+                                                {((
                                                     1 -
                                                     detail?.job_details
                                                         ?.job_score
@@ -888,9 +891,18 @@ export default function EvaluateDetail() {
                                                         detail?.job_details
                                                             ?.job_score
                                                             ?.total_controls
-                                                )?.toFixed(2) *
-                                                    100 +
-                                                    '%'}
+                                                )?.toFixed(2) * 100
+                                                    ? (
+                                                          1 -
+                                                          detail?.job_details
+                                                              ?.job_score
+                                                              ?.failed_controls /
+                                                              detail
+                                                                  ?.job_details
+                                                                  ?.job_score
+                                                                  ?.total_controls
+                                                      )?.toFixed(2) * 100
+                                                    : '-- ') + '%'}
                                             </Link>
                                         ),
                                     },
@@ -1253,7 +1265,7 @@ export default function EvaluateDetail() {
                         }
                     />
                 </Modal>
-            
+
                 <Modal
                     visible={openInfo}
                     size="large"
@@ -1405,7 +1417,7 @@ export default function EvaluateDetail() {
                             <KTable
                                 className=""
                                 // resizableColumns
-                                variant='full-page'
+                                variant="full-page"
                                 // variant="table"
                                 renderAriaLive={({
                                     firstIndex,
