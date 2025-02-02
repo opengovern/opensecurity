@@ -288,14 +288,26 @@ type GetDescribeJobStatusResponse struct {
 }
 
 type GetComplianceJobStatusResponse struct {
-	JobId           uint                `json:"job_id"`
-	WithIncidents   bool                `json:"with_incidents"`
-	SummaryJobId    *uint               `json:"summary_job_id"`
-	IntegrationInfo []IntegrationInfo   `json:"integration_info"`
-	JobStatus       ComplianceJobStatus `json:"job_status"`
-	FrameworkId     string              `json:"framework_id"`
-	CreatedAt       time.Time           `json:"created_at"`
-	UpdatedAt       time.Time           `json:"updated_at"`
+	JobId          uint                         `json:"job_id"`
+	SummaryJobId   *uint                        `json:"summary_job_id"`
+	WithIncidents  bool                         `json:"with_incidents"`
+	Frameworks     []ComplianceJobFrameworkInfo `json:"frameworks"`
+	JobStatus      ComplianceJobStatus          `json:"job_status"`
+	JobType        string                       `json:"job_type"`
+	StartTime      time.Time                    `json:"start_time"`
+	LastUpdatedAt  time.Time                    `json:"last_updated_at"`
+	EndTime        *time.Time                   `json:"end_time"`
+	StepFailed     ComplianceJobStatus          `json:"step_failed"`
+	FailureMessage string                       `json:"failure_message"`
+	IntegrationIds []string                     `json:"integration_ids"`
+	CreatedBy      string                       `json:"created_by"`
+	TriggerType    string                       `json:"trigger_type"`
+	RunnersStatus  ComplianceRunnersStatus      `json:"runners_status"`
+
+	DataSinkingTime int64 `json:"data_sinking_time"`
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type ComplianceJobRunner struct {

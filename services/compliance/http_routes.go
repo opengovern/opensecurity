@@ -1551,14 +1551,18 @@ func (h *HttpHandler) ListResourceFindings(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	integrationGroupId := req.Filters.IntegrationGroup
-	if len(req.Filters.IntegrationID) == 0 && len(req.Filters.IntegrationGroup) == 0 {
-		integrationGroupId = []string{"active"}
-	}
-
-	req.Filters.IntegrationID, err = h.getIntegrationIdFilterFromInputs(ctx, req.Filters.IntegrationID, integrationGroupId)
-	if err != nil {
-		return err
+	if len(req.Filters.IntegrationID) == 0 {
+		var integrationIDs []string
+		integrations, err := h.integrationClient.ListIntegrations(&httpclient.Context{UserRole: authApi.AdminRole}, nil)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+		for _, c := range integrations.Integrations {
+			if c.State == integrationapi.IntegrationStateActive {
+				integrationIDs = append(integrationIDs, c.IntegrationID)
+			}
+		}
+		req.Filters.IntegrationID = integrationIDs
 	}
 
 	//req.Filters.IntegrationID, err = httpserver2.ResolveIntegrationIDs(echoCtx, req.Filters.IntegrationID)
@@ -2254,12 +2258,14 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 		integrationIDs = req.ComplianceResultFilters.IntegrationID
 	}
 	if len(integrationIDs) == 0 {
-		integrations, err := h.integrationClient.GetIntegrationGroup(&httpclient.Context{UserRole: authApi.AdminRole}, "active")
+		integrations, err := h.integrationClient.ListIntegrations(&httpclient.Context{UserRole: authApi.AdminRole}, nil)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 		for _, c := range integrations.Integrations {
-			integrationIDs = append(integrationIDs, c.IntegrationID)
+			if c.State == integrationapi.IntegrationStateActive {
+				integrationIDs = append(integrationIDs, c.IntegrationID)
+			}
 		}
 	}
 
@@ -5039,15 +5045,15 @@ func (h HttpHandler) GetJobReportSummary(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "job is in progress")
 	}
 
-	framework, err := h.db.GetFramework(ctx.Request().Context(), complianceJob.FrameworkId)
+	framework, err := h.db.GetFramework(ctx.Request().Context(), complianceJob.Frameworks[0].FrameworkID)
 	if err != nil {
-		h.logger.Error("failed to get framework by frameworkID", zap.String("framework", complianceJob.FrameworkId), zap.Error(err))
+		h.logger.Error("failed to get framework by frameworkID", zap.String("framework", complianceJob.Frameworks[0].FrameworkID), zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get framework by frameworkID")
 	}
 
-	controlsMap, err := h.getControlsUnderBenchmark(ctx.Request().Context(), complianceJob.FrameworkId, make(map[string]BenchmarkControlsCache))
+	controlsMap, err := h.getControlsUnderBenchmark(ctx.Request().Context(), complianceJob.Frameworks[0].FrameworkID, make(map[string]BenchmarkControlsCache))
 	if err != nil {
-		h.logger.Error("failed to get controls under benchmark", zap.String("framework", complianceJob.FrameworkId), zap.Error(err))
+		h.logger.Error("failed to get controls under benchmark", zap.String("framework", complianceJob.Frameworks[0].FrameworkID), zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "could not get framework by frameworkID")
 	}
 	var controlsStr []string
@@ -5066,8 +5072,8 @@ func (h HttpHandler) GetJobReportSummary(ctx echo.Context) error {
 	}
 
 	var integrationIDs []string
-	for _, ii := range complianceJob.IntegrationInfo {
-		integrationIDs = append(integrationIDs, ii.IntegrationID)
+	for _, ii := range complianceJob.IntegrationIds {
+		integrationIDs = append(integrationIDs, ii)
 	}
 
 	response := api.GetJobReportSummaryResponse{
