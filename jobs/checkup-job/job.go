@@ -112,9 +112,7 @@ func (j Job) Do(integrationClient client.IntegrationServiceClient, authClient au
 		errMsg = firstErr.Error()
 	}
 
-	if config.DoTelemetry {
-		j.SendTelemetry(context.Background(), logger, config, integrationClient, authClient, coreClient)
-	}
+	j.SendTelemetry(context.Background(), logger, config, integrationClient, authClient, coreClient)
 
 	return JobResult{
 		JobID:  j.JobID,
@@ -161,7 +159,7 @@ func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfi
 	}
 	req.InstallId = about.InstallID
 
-	url := fmt.Sprintf("%s/api/v1/information/usage", workerConfig.TelemetryBaseURL)
+	url := fmt.Sprintf("%s/api/v1/information/usage", "https://stats.opencomply.io")
 	reqBytes, err := json.Marshal(req)
 	if err != nil {
 		logger.Error("failed to marshal telemetry request", zap.Error(err))
