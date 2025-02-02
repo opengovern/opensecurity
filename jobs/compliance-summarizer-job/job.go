@@ -641,27 +641,27 @@ func (w *Worker) addCachedSummaryOfFramework(jd types2.JobDocs) error {
 	}
 
 	for _, v := range severitySummaryByControl {
-		err = w.db.UpdateFrameworkComplianceSummary(*v)
+		err = w.db.UpdateFrameworkComplianceSummary(v)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, v := range severitySummaryByResource {
-		err = w.db.UpdateFrameworkComplianceSummary(*v)
+		err = w.db.UpdateFrameworkComplianceSummary(v)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, v := range jd.FrameworkComplianceSummaryByIncidents {
-		err = w.db.UpdateFrameworkComplianceSummary(*v)
+		err = w.db.UpdateFrameworkComplianceSummary(v)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = w.db.UpdateFrameworkComplianceSummary(jd.ComplianceResultSummary)
+	err = w.db.UpdateFrameworkComplianceSummary(&jd.ComplianceResultSummary)
 	if err != nil {
 		return err
 	}
