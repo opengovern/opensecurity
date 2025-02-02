@@ -144,7 +144,7 @@ func (m *EsSinkModule) handleFailure(ctx context.Context, item opensearchutil.Bu
 }
 
 func (m *EsSinkModule) updateStatsCycle() {
-	statsTicker := time.NewTicker(30 * time.Second)
+	statsTicker := time.NewTicker(5 * time.Second)
 	defer statsTicker.Stop()
 	for range statsTicker.C {
 		stats := m.indexer.Stats()
