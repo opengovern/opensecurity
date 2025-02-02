@@ -92,7 +92,7 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 	resourceFindings.POST("", httpserver2.AuthorizeHandler(h.ListResourceFindings, authApi.ViewerRole))
 
 	complianceFrameworks := v1.Group("/frameworks")
-	complianceFrameworks.GET("", httpserver2.AuthorizeHandler(h.ListFrameworks, authApi.ViewerRole))
+	complianceFrameworks.POST("", httpserver2.AuthorizeHandler(h.ListFrameworks, authApi.ViewerRole))
 	complianceFrameworks.GET("/:framework-id/assignments", httpserver2.AuthorizeHandler(h.ListFrameworkAssignments, authApi.ViewerRole))
 	complianceFrameworks.PUT("/:framework-id/assignments/:integration-id", httpserver2.AuthorizeHandler(h.AddAssignment, authApi.EditorRole))
 	complianceFrameworks.DELETE("/:framework-id/assignments/:integration-id", httpserver2.AuthorizeHandler(h.DeleteAssignment, authApi.EditorRole))
@@ -2978,7 +2978,7 @@ func (h *HttpHandler) ListBenchmarksFiltered(echoCtx echo.Context) error {
 		integrationIDs = append(integrationIDs, c.IntegrationID)
 	}
 
-	benchmarks, err := h.db.ListBenchmarksFiltered(ctx, req.TitleRegex, isRoot, req.Tags, req.ParentBenchmarkID, req.Assigned, req.IsBaseline, integrationIDs)
+	benchmarks, err := h.db.ListBenchmarksFiltered(ctx, req.TitleRegex, isRoot, req.Tags, req.ParentBenchmarkID, req.Assigned, req.IsBaseline, integrationIDs, req.IntegrationTypes)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -3129,7 +3129,7 @@ func (h *HttpHandler) GetBenchmarksSummary(echoCtx echo.Context) error {
 		benchmarkAssignmentsCountMap[ba.BenchmarkId] = ba.Count
 	}
 
-	benchmarks, err := h.db.ListBenchmarksFiltered(ctx, req.TitleRegex, isRoot, nil, nil, req.Assigned, req.IsBaseline, nil)
+	benchmarks, err := h.db.ListBenchmarksFiltered(ctx, req.TitleRegex, isRoot, nil, nil, req.Assigned, req.IsBaseline, nil, req.IntegrationTypes)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -4061,7 +4061,7 @@ func (h *HttpHandler) ComplianceSummaryOfBenchmark(echoCtx echo.Context) error {
 	var err error
 	if len(req.Benchmarks) == 0 {
 		assigned := false
-		benchmarks, err = h.db.ListBenchmarksFiltered(ctx, nil, *req.IsRoot, nil, nil, &assigned, nil, nil)
+		benchmarks, err = h.db.ListBenchmarksFiltered(ctx, nil, *req.IsRoot, nil, nil, &assigned, nil, nil, nil)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
@@ -5607,19 +5607,44 @@ func (h HttpHandler) GetFrameworkCoverage(ctx echo.Context) error {
 //	@Tags		compliance
 //	@Accept		json
 //	@Produce	json
-//	@Param		framework_ids		query		[]string	true	"framework ids"
 //	@Success	200		{object}	[]api.GetBenchmarkListResponse
-//	@Router		/compliance/api/v1/frameworks [get]
+//	@Router		/compliance/api/v1/frameworks [post]
 func (h *HttpHandler) ListFrameworks(echoCtx echo.Context) error {
+	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
+
 	ctx := echoCtx.Request().Context()
-	frameworkIds := httpserver2.QueryArrayParam(echoCtx, "framework_ids")
-	if len(frameworkIds) == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "no framework provided")
+	var req api.ListFrameworksRequest
+	if err := bindValidate(echoCtx, &req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	frameworks, err := h.db.GetFrameworks(ctx, frameworkIds)
+	isRoot := true
+	if req.Root != nil {
+		isRoot = *req.Root
+	}
+	frameworks, err := h.db.ListBenchmarksFiltered(ctx, req.TitleRegex, isRoot, req.Tags, nil, req.Assigned, req.IsBaseline, nil, req.IntegrationTypes)
 	if err != nil {
-		h.logger.Error("failed to get frameworks", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get frameworks")
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	benchmarkAssignmentsCount, err := h.db.GetBenchmarkAssignmentsCount()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	benchmarkAssignmentsCountMap := make(map[string]int)
+	for _, ba := range benchmarkAssignmentsCount {
+		benchmarkAssignmentsCountMap[ba.BenchmarkId] = ba.Count
+	}
+	integrationsCountByType := make(map[string]int)
+	integrationsResp, err := h.integrationClient.ListIntegrations(clientCtx, nil)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	for _, s := range integrationsResp.Integrations {
+		if _, ok := integrationsCountByType[s.IntegrationType.String()]; ok {
+			integrationsCountByType[s.IntegrationType.String()]++
+		} else {
+			integrationsCountByType[s.IntegrationType.String()] = 1
+		}
 	}
 
 	var items []api.FrameworkItem
@@ -5744,15 +5769,47 @@ func (h *HttpHandler) ListFrameworks(echoCtx echo.Context) error {
 		if framework.SeveritySummaryByControl.Total.TotalCount > 0 {
 			framework.ComplianceScore = float64(framework.SeveritySummaryByControl.Total.PassedCount) / float64(framework.SeveritySummaryByControl.Total.TotalCount)
 		}
-		assignments, err := h.db.GetBenchmarkAssignmentsByBenchmarkId(ctx, framework.FrameworkID)
-		if err != nil {
-			h.logger.Error("cannot get explicit assignments", zap.Error(err))
-			return echo.NewHTTPError(http.StatusBadRequest, "cannot get explicit assignments")
+
+		if f.IsBaseline {
+			for _, c := range f.IntegrationType {
+				framework.NoOfTotalAssignments = framework.NoOfTotalAssignments + integrationsCountByType[c]
+			}
 		}
-		framework.NoOfTotalAssignments = len(assignments)
+		if bac, ok := benchmarkAssignmentsCountMap[f.ID]; ok {
+			framework.NoOfTotalAssignments = framework.NoOfTotalAssignments + bac
+		}
 
 		items = append(items, framework)
 	}
 
-	return echoCtx.JSON(http.StatusOK, items)
+	switch strings.ToLower(req.SortBy) {
+	case "assignments", "number_of_assignments":
+		sort.Slice(items, func(i, j int) bool {
+			return items[i].NoOfTotalAssignments > items[j].NoOfTotalAssignments
+		})
+	case "incidents", "number_of_incidents":
+		sort.Slice(items, func(i, j int) bool {
+			return items[i].IssuesCount > items[j].IssuesCount
+		})
+	case "title":
+		sort.Slice(items, func(i, j int) bool {
+			return items[i].FrameworkTitle < items[j].FrameworkTitle
+		})
+	}
+	totalCount := len(items)
+
+	if req.PerPage != nil {
+		if req.Cursor == nil {
+			items = utils.Paginate(1, *req.PerPage, items)
+		} else {
+			items = utils.Paginate(*req.Cursor, *req.PerPage, items)
+		}
+	}
+
+	response := api.ListFrameworksResponse{
+		Items:      items,
+		TotalCount: totalCount,
+	}
+
+	return echoCtx.JSON(http.StatusOK, response)
 }

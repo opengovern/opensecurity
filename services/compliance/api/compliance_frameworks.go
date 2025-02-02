@@ -45,6 +45,19 @@ type FrameworkCoverage struct {
 	Controls         []string `json:"controls"`
 }
 
+type ListFrameworksRequest struct {
+	FrameworkIDs     []string            `json:"framework_ids"`
+	Tags             map[string][]string `json:"tags"`
+	TitleRegex       *string             `json:"title_regex"`
+	Root             *bool               `json:"root"`
+	Assigned         *bool               `json:"assigned"`
+	IntegrationTypes []string            `json:"integration_types"`
+	IsBaseline       *bool               `json:"is_baseline"`
+	SortBy           string              `json:"sort_by"`
+	Cursor           *int64              `json:"cursor"`
+	PerPage          *int64              `json:"per_page"`
+}
+
 type FrameworkItem struct {
 	FrameworkID                string                             `json:"framework_id"`
 	FrameworkTitle             string                             `json:"framework_title"`
@@ -59,4 +72,9 @@ type FrameworkItem struct {
 	IsBaseline                 bool                               `json:"is_baseline"`
 	Enabled                    bool                               `json:"enabled"`
 	LastEvaluatedAt            *time.Time                         `json:"last_evaluated_at"`
+}
+
+type ListFrameworksResponse struct {
+	Items      []FrameworkItem `json:"items"`
+	TotalCount int             `json:"total_count"`
 }
