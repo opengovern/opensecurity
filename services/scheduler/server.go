@@ -1755,18 +1755,58 @@ func (h HttpServer) GetComplianceJobStatus(ctx echo.Context) error {
 		integrations = append(integrations, integrationInfo)
 	}
 
-	jobsResult := api.GetComplianceJobStatusResponse{
+	benchmarks, err := h.Scheduler.complianceClient.ListBenchmarks(&httpclient.Context{UserRole: apiAuth.AdminRole}, nil, nil)
+	if err != nil {
+		return err
+	}
+
+	var frameworks []api.ComplianceJobFrameworkInfo
+	for _, benchmark := range benchmarks {
+		if fmt.Sprintf("%v", benchmark.ID) == j.FrameworkIds[0] {
+			frameworks = append(frameworks, api.ComplianceJobFrameworkInfo{
+				FrameworkID:   benchmark.ID,
+				FrameworkName: benchmark.Title,
+			})
+		}
+	}
+	var runnersStatus api.ComplianceRunnersStatus
+
+	if len(j.RunnersStatus.Bytes) > 0 {
+		err := json.Unmarshal(j.RunnersStatus.Bytes, &runnersStatus)
+		if err != nil {
+			return err
+		}
+	}
+
+	var sinkingTime int64
+	if !j.SummarizerStartedAt.IsZero() && !j.SinkingStartedAt.IsZero() {
+		sinkingTime = int64(j.SummarizerStartedAt.Sub(j.SinkingStartedAt).Seconds())
+	}
+	jobResult := api.GetComplianceJobStatusResponse{
 		JobId:           j.ID,
-		WithIncidents:   j.WithIncidents,
 		SummaryJobId:    summaryJobId,
-		IntegrationInfo: integrations,
-		FrameworkId:     j.FrameworkIds[0], // TODO: need to change if we're actually giving more frameworks
+		WithIncidents:   j.WithIncidents,
+		IntegrationIds:  j.IntegrationIDs,
+		JobType:         "compliance",
+		Frameworks:      frameworks,
 		JobStatus:       j.Status.ToApi(),
+		LastUpdatedAt:   j.UpdatedAt,
+		StartTime:       j.CreatedAt,
+		FailureMessage:  j.FailureMessage,
+		CreatedBy:       j.CreatedBy,
+		TriggerType:     string(j.TriggerType),
+		StepFailed:      j.StepFailed.ToApi(),
+		RunnersStatus:   runnersStatus,
+		DataSinkingTime: sinkingTime,
 		CreatedAt:       j.CreatedAt,
 		UpdatedAt:       j.UpdatedAt,
 	}
 
-	return ctx.JSON(http.StatusOK, jobsResult)
+	if jobResult.JobStatus == api.ComplianceJobSucceeded || jobResult.JobStatus == api.ComplianceJobFailed {
+		jobResult.EndTime = &j.UpdatedAt
+	}
+
+	return ctx.JSON(http.StatusOK, jobResult)
 }
 
 // GetComplianceJobRunners godoc
