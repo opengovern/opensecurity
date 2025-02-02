@@ -52,7 +52,6 @@ export default function Compliance() {
     const searchParams = useAtomValue(searchAtom)
     const [loading,setLoading] = useState<boolean>(false);
  const [AllBenchmarks,setBenchmarks] = useState();
-        const [BenchmarkDetails, setBenchmarksDetails] = useState()
    const GetCard = () => {
      let url = ''
      setLoading(true)
@@ -77,69 +76,27 @@ export default function Compliance() {
          is_baseline: false,
      }
      axios
-         .post(`${url}/main/compliance/api/v3/benchmarks`, body,config)
+         .post(`${url}/main/compliance/api/v1/frameworks`, body, config)
          .then((res) => {
-             //  const temp = []
 
-            setBenchmarks(res.data.items)
+             setBenchmarks(res.data.items)
+             setLoading(false)
+
          })
          .catch((err) => {
-                setLoading(false)
+             setLoading(false)
 
              console.log(err)
          })
  }
 
-  const Detail = (benchmarks: string[]) => {
-      let url = ''
-      if (window.location.origin === 'http://localhost:3000') {
-          url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-      } else {
-          url = window.location.origin
-      }
-      // @ts-ignore
-      const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-      const config = {
-          headers: {
-              Authorization: `Bearer ${token}`,
-          },
-      }
-      const body = {
-         benchmarks: benchmarks
-      }
-      axios
-          .post(
-              `${url}/main/compliance/api/v3/compliance/summary/benchmark`,
-              body,
-              config
-          )
-          .then((res) => {
-              //  const temp = []
-                setLoading(false)
-              setBenchmarksDetails(res.data)
-          })
-          .catch((err) => {
-                setLoading(false)
-
-              console.log(err)
-          })
-  }
  
    useEffect(() => {
 
        GetCard()
    }, [])
-   useEffect(() => {
-    if(AllBenchmarks){
-  const temp = []
-  AllBenchmarks?.map((item) => {
-      temp.push(item.benchmark.id)
-  })
-  Detail(temp)
-    }
-    
-   }, [AllBenchmarks])
+
    const array = window.innerWidth > 768 ? [1,2,3] : [1,2,3,4,5]
 
     return (
@@ -171,7 +128,6 @@ export default function Compliance() {
                     {/* <Col numColSpan={0} numColSpanSm={1}></Col> */}
                     <Col numColSpan={10} numColSpanSm={10}>
                         <BenchmarkCards
-                            benchmark={BenchmarkDetails}
                             all={AllBenchmarks}
                             loading={loading}
                         />

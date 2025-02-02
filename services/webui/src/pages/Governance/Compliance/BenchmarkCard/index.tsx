@@ -78,7 +78,6 @@ export enum Field {
 }
 //    <SeverityBar benchmark={benchmark} />
 export default function BenchmarkCards({
-    benchmark,
     all,
     loading,
 }: IComplianceCard) {
@@ -169,15 +168,15 @@ export default function BenchmarkCards({
                             { minWidth: 700, cards: 3 },
                         ]}
                         // totalItemsCount={7}
-                        items={benchmark?.map((item) => {
+                        items={all?.map((item) => {
                             return {
-                                name: item?.benchmark_title,
+                                name: item?.framework_title,
                                 benchmark: item,
                                 security_score: (
                                     item?.compliance_score * 100
                                 ).toFixed(0),
-                                id: item.benchmark_id,
-                                connectors: item.connectors,
+                                id: item.framework_id,
+                                connectors: item.plugins,
                             }
                         })}
                         entireCardClickable
