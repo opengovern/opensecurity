@@ -830,7 +830,7 @@ export default function EvaluateDetail() {
                                         value: (
                                             <>
                                                 {dateTimeDisplay(
-                                                    jobDetail?.updated_at
+                                                    jobDetail?.UpdatedAt
                                                 )}
                                             </>
                                         ),
@@ -851,8 +851,8 @@ export default function EvaluateDetail() {
                                                 // iconName="status-info"
                                             >
                                                 {shortDateTimeDisplayDelta(
-                                                    jobDetail?.updated_at,
-                                                    jobDetail?.created_at
+                                                    jobDetail?.UpdatedAt,
+                                                    jobDetail?.CreatedAt
                                                 )}
                                             </KButton>
                                         ),
@@ -1316,6 +1316,14 @@ export default function EvaluateDetail() {
                                 value: jobDetail?.with_incidents
                                     ? 'True'
                                     : 'False',
+                            },
+                            {
+                                label: 'Create By',
+                                value: jobDetail?.created_by,
+                            },
+                            {
+                                label: 'Trigger Type',
+                                value: jobDetail?.trigger_type,
                             },
 
                             // {

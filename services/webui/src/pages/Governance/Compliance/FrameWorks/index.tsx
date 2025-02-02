@@ -167,7 +167,7 @@ export default function Framework() {
         }
 
         axios
-            .post(`${url}/main/compliance/api/v3/benchmarks`, body, config)
+            .post(`${url}/main/compliance/api/v1/frameworks`, body, config)
             .then((res) => {
                 //  const temp = []
                 if (!res.data.items) {
