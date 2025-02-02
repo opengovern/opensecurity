@@ -26,7 +26,7 @@ import MemberInvite from '../../Settings/Members/MemberInvite'
 const navList = [
     {
         title: 'CloudQL',
-        description: 'See all workloads - from code to cloud',
+        description: 'Query code, cloud, and everything in between.',
         icon: Terminal,
         link: 'cloudql',
         new: true,
