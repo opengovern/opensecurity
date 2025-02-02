@@ -17,7 +17,7 @@ export default function Footer() {
             >
                 {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                 <Text>
-                    © 2025 open governance Inc. d/b/a opencomply.io. All rights
+                    © 2025 open governance Inc. All rights
                     reserved.
                 </Text>{' '}
                 {/* {smaple && <>{" "}
