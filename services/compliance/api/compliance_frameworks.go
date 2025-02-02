@@ -1,5 +1,10 @@
 package api
 
+import (
+	"github.com/opengovern/opencomply/pkg/types"
+	"time"
+)
+
 type FrameworkAssignmentAssignmentType string
 
 const (
@@ -38,4 +43,20 @@ type FrameworkCoverage struct {
 	PrimaryResources []string `json:"primary_resources"`
 	ListOfResources  []string `json:"list_of_resources"`
 	Controls         []string `json:"controls"`
+}
+
+type FrameworkItem struct {
+	FrameworkID                string                             `json:"framework_id"`
+	FrameworkTitle             string                             `json:"framework_title"`
+	ComplianceScore            float64                            `json:"compliance_score"`
+	Plugins                    []string                           `json:"plugins"`
+	SeveritySummaryByControl   BenchmarkControlsSeverityStatusV2  `json:"severity_summary_by_control"`
+	SeveritySummaryByResource  BenchmarkResourcesSeverityStatusV2 `json:"severity_summary_by_resource"`
+	SeveritySummaryByIncidents types.SeverityResultV2             `json:"severity_summary_by_incidents"`
+	ComplianceResultsSummary   ComplianceStatusSummaryV2          `json:"compliance_results_summary"`
+	NoOfTotalAssignments       int64                              `json:"no_of_total_assignments"`
+	IssuesCount                int                                `json:"issues_count"`
+	IsBaseline                 bool                               `json:"is_baseline"`
+	Enabled                    bool                               `json:"enabled"`
+	LastEvaluatedAt            *time.Time                         `json:"last_evaluated_at"`
 }

@@ -49,7 +49,9 @@ func (db Database) ListBenchmarks(ctx context.Context) ([]Benchmark, error) {
 
 func (db Database) ListBenchmarksBare(ctx context.Context) ([]Benchmark, error) {
 	var s []Benchmark
-	tx := db.Orm.WithContext(ctx).Model(&Benchmark{}).Preload("Tags").
+	tx := db.Orm.Session(&gorm.Session{
+		Logger: db.Orm.Logger.LogMode(logger.Silent), // Temporarily disable logging
+	}).WithContext(ctx).Model(&Benchmark{}).Preload("Tags").
 		Find(&s)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -985,7 +987,7 @@ func (db Database) GetPolicyParameters(ctx context.Context) ([]string, error) {
 	return parameters, nil
 }
 
-func (db Database) UpdateFrameworkComplianceSummary(summary FrameworkComplianceSummary) error {
+func (db Database) UpdateFrameworkComplianceSummary(summary *FrameworkComplianceSummary) error {
 	err := db.Orm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "framework_id"}, {Name: "type"}, {Name: "severity"}},
 		DoUpdates: clause.AssignmentColumns([]string{"updated_at", "total", "passed", "failed"}),
