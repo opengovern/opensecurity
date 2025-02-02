@@ -26,6 +26,7 @@ func (db Database) Initialize(ctx context.Context) error {
 		&Benchmark{},
 		&BenchmarkTag{},
 		&BenchmarkAssignment{},
+		&FrameworkComplianceSummary{},
 	)
 	if err != nil {
 		return err
@@ -982,4 +983,15 @@ func (db Database) GetPolicyParameters(ctx context.Context) ([]string, error) {
 	}
 
 	return parameters, nil
+}
+
+func (db Database) UpdateFrameworkComplianceSummary(summary FrameworkComplianceSummary) error {
+	err := db.Orm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "framework_id"}, {Name: "type"}, {Name: "severity"}},
+		DoUpdates: clause.AssignmentColumns([]string{"updated_at", "total", "passed", "failed"}),
+	}).Create(summary).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

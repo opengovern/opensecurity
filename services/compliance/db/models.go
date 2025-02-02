@@ -303,3 +303,34 @@ func (q Policy) ToApi() api.Policy {
 	}
 	return query
 }
+
+type FrameworkComplianceSummaryType string
+
+const (
+	FrameworkComplianceSummaryTypeByControl     FrameworkComplianceSummaryType = "by_control"
+	FrameworkComplianceSummaryTypeByResource    FrameworkComplianceSummaryType = "by_resource"
+	FrameworkComplianceSummaryTypeByIncidents   FrameworkComplianceSummaryType = "by_incidents"
+	FrameworkComplianceSummaryTypeResultSummary FrameworkComplianceSummaryType = "result_summary"
+)
+
+type FrameworkComplianceSummaryResultSeverity string
+
+const (
+	ComplianceResultSeverityTotal    FrameworkComplianceSummaryResultSeverity = "total"
+	ComplianceResultSeverityNone     FrameworkComplianceSummaryResultSeverity = "none"
+	ComplianceResultSeverityLow      FrameworkComplianceSummaryResultSeverity = "low"
+	ComplianceResultSeverityMedium   FrameworkComplianceSummaryResultSeverity = "medium"
+	ComplianceResultSeverityHigh     FrameworkComplianceSummaryResultSeverity = "high"
+	ComplianceResultSeverityCritical FrameworkComplianceSummaryResultSeverity = "critical"
+)
+
+type FrameworkComplianceSummary struct {
+	FrameworkID string                                   `gorm:"primaryKey"`
+	Type        FrameworkComplianceSummaryType           `gorm:"primaryKey"`
+	Severity    FrameworkComplianceSummaryResultSeverity `gorm:"primaryKey"`
+	Total       int64
+	Passed      int64
+	Failed      int64
+
+	UpdatedAt time.Time
+}
