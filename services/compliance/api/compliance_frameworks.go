@@ -54,7 +54,7 @@ type FrameworkItem struct {
 	SeveritySummaryByResource  BenchmarkResourcesSeverityStatusV2 `json:"severity_summary_by_resource"`
 	SeveritySummaryByIncidents types.SeverityResultV2             `json:"severity_summary_by_incidents"`
 	ComplianceResultsSummary   ComplianceStatusSummaryV2          `json:"compliance_results_summary"`
-	NoOfTotalAssignments       int64                              `json:"no_of_total_assignments"`
+	NoOfTotalAssignments       int                                `json:"no_of_total_assignments"`
 	IssuesCount                int                                `json:"issues_count"`
 	IsBaseline                 bool                               `json:"is_baseline"`
 	Enabled                    bool                               `json:"enabled"`

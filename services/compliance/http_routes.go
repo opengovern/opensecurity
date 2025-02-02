@@ -5737,12 +5737,20 @@ func (h *HttpHandler) ListFrameworks(echoCtx echo.Context) error {
 					PassedCount: int(s.Passed),
 					FailedCount: int(s.Failed),
 				}
+				framework.IssuesCount = int(s.Failed)
 			}
 			framework.LastEvaluatedAt = &s.UpdatedAt
 		}
 		if framework.SeveritySummaryByControl.Total.TotalCount > 0 {
 			framework.ComplianceScore = float64(framework.SeveritySummaryByControl.Total.PassedCount) / float64(framework.SeveritySummaryByControl.Total.TotalCount)
 		}
+		assignments, err := h.db.GetBenchmarkAssignmentsByBenchmarkId(ctx, framework.FrameworkID)
+		if err != nil {
+			h.logger.Error("cannot get explicit assignments", zap.Error(err))
+			return echo.NewHTTPError(http.StatusBadRequest, "cannot get explicit assignments")
+		}
+		framework.NoOfTotalAssignments = len(assignments)
+
 		items = append(items, framework)
 	}
 
