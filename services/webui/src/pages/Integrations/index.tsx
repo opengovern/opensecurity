@@ -58,7 +58,7 @@ export default function Integrations() {
     // @ts-ignore
 
     //@ts-ignore
-    const totalPages = Math.ceil(responseConnectors?.total_count / 9)
+    const totalPages = Math.ceil(responseConnectors?.total_count / 12)
     useEffect(() => {
         getList(12, pageNo, 'count', 'desc', undefined)
     }, [pageNo])
