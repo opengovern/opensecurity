@@ -818,7 +818,7 @@ export default function EvaluateDetail() {
                                 Job
                             </Header>
                             <KeyValuePairs
-                                className="w-full"
+                                className="w-full "
                                 columns={2}
                                 items={[
                                     {
@@ -864,7 +864,7 @@ export default function EvaluateDetail() {
                     <Col numColSpan={12} numColSpanSm={8} className="h-full">
                         <Flex
                             flexDirection="col"
-                            className="w-full  bg-white p-4 rounded-lg mt-4 border border-slate-400 gap-8 h-full "
+                            className="w-full  bg-white p-4 pb-0 rounded-lg mt-4 border border-slate-400 gap-4 h-full "
                             alignItems="start"
                             justifyContent="start"
                         >
@@ -876,41 +876,52 @@ export default function EvaluateDetail() {
                                     {
                                         label: ' Score',
                                         value: (
-                                            <Link
-                                                // variant="awsui-value-large"
-                                                fontSize="display-l"
-                                                variant="secondary"
-                                                href="#"
-                                                ariaLabel="Running instances (14)"
-                                            >
-                                                {((
-                                                    1 -
-                                                    detail?.job_details
-                                                        ?.job_score
-                                                        ?.failed_controls /
+                                            <Flex className="flex-col gap-2 justify-start items-start">
+                                                <Link
+                                                    // variant="awsui-value-large"
+                                                    fontSize="heading-xl"
+                                                    variant="secondary"
+                                                    href="#"
+                                                    ariaLabel="Running instances (14)"
+                                                >
+                                                    {((
+                                                        1 -
                                                         detail?.job_details
                                                             ?.job_score
-                                                            ?.total_controls
-                                                )?.toFixed(2) * 100
-                                                    ? (
-                                                          1 -
-                                                          detail?.job_details
-                                                              ?.job_score
-                                                              ?.failed_controls /
+                                                            ?.failed_controls /
+                                                            detail?.job_details
+                                                                ?.job_score
+                                                                ?.total_controls
+                                                    )?.toFixed(2) * 100
+                                                        ? (
+                                                              1 -
                                                               detail
                                                                   ?.job_details
                                                                   ?.job_score
-                                                                  ?.total_controls
-                                                      )?.toFixed(2) * 100
-                                                    : '-- ') + '%'}
-                                            </Link>
+                                                                  ?.failed_controls /
+                                                                  detail
+                                                                      ?.job_details
+                                                                      ?.job_score
+                                                                      ?.total_controls
+                                                          )?.toFixed(2) * 100
+                                                        : '-- ') + '%'}
+                                                </Link>
+                                                <Flex className="w-full ">
+                                                    <SeverityBar
+                                                        benchmark={
+                                                            detail?.job_details
+                                                                ?.job_score
+                                                        }
+                                                    />
+                                                </Flex>
+                                            </Flex>
                                         ),
                                     },
                                     {
                                         label: 'Framework',
                                         value: (
                                             <Link
-                                                fontSize="display-l"
+                                                fontSize="heading-xl"
                                                 variant="secondary"
                                                 href="#"
                                                 ariaLabel="Running instances (14)"
@@ -928,7 +939,7 @@ export default function EvaluateDetail() {
                                         value: (
                                             <Link
                                                 // variant="awsui-value-large"
-                                                fontSize="display-l"
+                                                fontSize="heading-xl"
                                                 variant="secondary"
                                                 href="#"
                                                 ariaLabel="Running instances (14)"
@@ -947,7 +958,7 @@ export default function EvaluateDetail() {
                                             <>
                                                 <Link
                                                     // variant="awsui-value-large"
-                                                    fontSize="display-l"
+                                                    fontSize="heading-xl"
                                                     variant="secondary"
                                                     href="#"
                                                     ariaLabel="Running instances (14)"
@@ -980,6 +991,11 @@ export default function EvaluateDetail() {
                                             </>
                                         ),
                                     },
+                                    // {
+                                    //     label: '',
+                                    //     columnSpan: 2,
+                                    //     value: <></>,
+                                    // },
 
                                     // {
                                     //     label: 'Benchmark ID',
@@ -1279,14 +1295,14 @@ export default function EvaluateDetail() {
                                 label: 'Benchmark ID',
                                 value: jobDetail?.framework_id,
                             },
-                            {
-                                label: 'Last Evaulated at',
-                                value: (
-                                    <>
-                                        {dateTimeDisplay(jobDetail?.updated_at)}
-                                    </>
-                                ),
-                            },
+                            // {
+                            //     label: 'Last Evaulated at',
+                            //     value: (
+                            //         <>
+                            //             {dateTimeDisplay(jobDetail?.updated_at)}
+                            //         </>
+                            //     ),
+                            // },
                             // {
                             //     label: 'Total Time',
                             //     value: shortDateTimeDisplayDelta(
@@ -1301,22 +1317,22 @@ export default function EvaluateDetail() {
                                     : 'False',
                             },
 
-                            {
-                                label: 'Severity Status',
-                                columnSpan: 2,
-                                value: (
-                                    <>
-                                        <Flex className="w-full ">
-                                            <SeverityBar
-                                                benchmark={
-                                                    detail?.job_details
-                                                        ?.job_score
-                                                }
-                                            />
-                                        </Flex>
-                                    </>
-                                ),
-                            },
+                            // {
+                            //     label: 'Severity Status',
+                            //     columnSpan: 2,
+                            //     value: (
+                            //         <>
+                            //             <Flex className="w-full ">
+                            //                 <SeverityBar
+                            //                     benchmark={
+                            //                         detail?.job_details
+                            //                             ?.job_score
+                            //                     }
+                            //                 />
+                            //             </Flex>
+                            //         </>
+                            //     ),
+                            // },
                             {
                                 label: 'Download Results',
                                 value: (

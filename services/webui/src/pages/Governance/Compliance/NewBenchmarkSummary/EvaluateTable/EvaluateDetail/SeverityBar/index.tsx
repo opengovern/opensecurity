@@ -179,14 +179,14 @@ export default function SeverityBar({ benchmark }: ISeverityBar) {
             {/* @ts-ignore */}
             {benchmarkChecks(benchmark).total > 0 ? (
                 <>
-                    <Text className="mb-2">{`${numberDisplay(
+                    {/* <Text className="mb-2">{`${numberDisplay(
                         (benchmark?.total_controls || 0) -
                             calcPasses(benchmark),
                         0
                     )} out of ${numberDisplay(
                         benchmark?.total_controls || 0,
                         0
-                    )} controls failed`}</Text>
+                    )} controls failed`}</Text> */}
                 </>
             ) : (
                 <>
@@ -238,12 +238,9 @@ export default function SeverityBar({ benchmark }: ISeverityBar) {
                                                         <Text>
                                                             {`${numberDisplay(
                                                                 s.control
-                                                                    ?.total_controls 
-                                                                     -
-                                                                        (s
-                                                                            ?.control
-                                                                            ?.failed_controls 
-                                                                            ),
+                                                                    ?.total_controls -
+                                                                    s?.control
+                                                                        ?.failed_controls,
                                                                 0
                                                             )} out of ${numberDisplay(
                                                                 s.control
@@ -274,11 +271,11 @@ export default function SeverityBar({ benchmark }: ISeverityBar) {
                             <Flex className="border-x-2 h-1.5 border-x-gray-400">
                                 <div className="w-full h-0.5 bg-gray-400" />
                             </Flex>
-                            <Text className="mt-1 text-xs">{`${(
+                            {/* <Text className="mt-1 text-xs">{`${(
                                 ((benchmark?.failed_controls ?? 0) /
                                     (benchmark?.total_controls || 1)) *
                                 100
-                            ).toFixed(2)}% failed`}</Text>
+                            ).toFixed(2)}% failed`}</Text> */}
                         </Flex>
                     </Flex>
                     {passed.controlPercent > 0 && (
@@ -331,6 +328,13 @@ export default function SeverityBar({ benchmark }: ISeverityBar) {
             ) : (
                 <div className="bg-gray-200 h-5 rounded-md" />
             )}
+            <Text className="mb-2">{`${numberDisplay(
+                (benchmark?.total_controls || 0) - calcPasses(benchmark),
+                0
+            )}  of ${numberDisplay(
+                benchmark?.total_controls || 0,
+                0
+            )} controls failed`}</Text>
         </Flex>
     )
 }
