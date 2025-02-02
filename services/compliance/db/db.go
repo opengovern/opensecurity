@@ -995,3 +995,12 @@ func (db Database) UpdateFrameworkComplianceSummary(summary FrameworkComplianceS
 	}
 	return nil
 }
+
+func (db Database) GetFrameworkComplianceSummaries(frameworkId string) ([]FrameworkComplianceSummary, error) {
+	var summaries []FrameworkComplianceSummary
+	tx := db.Orm.Model(FrameworkComplianceSummary{}).Where("framework_id = ?", frameworkId).Find(&summaries)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	return summaries, nil
+}

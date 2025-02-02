@@ -34,7 +34,6 @@ func WorkerCommand() *cobra.Command {
 			w, err := NewWorker(
 				cnf,
 				logger,
-				cnf.PrometheusPushAddress,
 				cmd.Context(),
 			)
 			if err != nil {
