@@ -69,7 +69,6 @@ export default function Framework() {
     })
 
     const [AllBenchmarks, setBenchmarks] = useState()
-    const [BenchmarkDetails, setBenchmarksDetails] = useState()
     const [page, setPage] = useState<number>(1)
     const [totalPage, setTotalPage] = useState<number>(0)
     const [totalCount, setTotalCount] = useState<number>(0)
@@ -104,7 +103,7 @@ export default function Framework() {
 
         return temp
     }
-    const GetCard = () => {
+    const GetCard = (ids : string[] | undefined) => {
         let url = ''
         setLoading(true)
         if (window.location.origin === 'http://localhost:3000') {
@@ -155,7 +154,7 @@ export default function Framework() {
             }
         }
 
-        const body = {
+        let body = {
             cursor: page,
             per_page: number,
             sort_by: 'incidents',
@@ -165,9 +164,13 @@ export default function Framework() {
             root: true,
             title_regex: title[0],
         }
+        if(ids && ids?.length > 0){
+            // @ts-ignore
+            body["framework_ids"]= ids
+        }
 
         axios
-            .post(`${url}/main/compliance/api/v3/benchmarks`, body, config)
+            .post(`${url}/main/compliance/api/v1/frameworks`, body, config)
             .then((res) => {
                 //  const temp = []
                 if (!res.data.items) {
@@ -176,6 +179,8 @@ export default function Framework() {
                 setBenchmarks(res.data.items)
                 setTotalPage(Math.ceil(res.data.total_count / number))
                 setTotalCount(res.data.total_count)
+                setLoading(false)
+
             })
             .catch((err) => {
                 setLoading(false)
@@ -186,43 +191,7 @@ export default function Framework() {
             })
     }
 
-    const Detail = (benchmarks: string[]) => {
-        let url = ''
-        if (window.location.origin === 'http://localhost:3000') {
-            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-        } else {
-            url = window.location.origin
-        }
-        // @ts-ignore
-        const token = JSON.parse(localStorage.getItem('openg_auth')).token
-
-        const config = {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-        const body = {
-            benchmarks: benchmarks,
-        }
-        axios
-            .post(
-                `${url}/main/compliance/api/v3/compliance/summary/benchmark`,
-                body,
-                config
-            )
-            .then((res) => {
-                //  const temp = []
-                setLoading(false)
-                setBenchmarksDetails(res.data)
-            })
-            .catch((err) => {
-                setLoading(false)
-                // @ts-ignore
-                setBenchmarksDetails([])
-
-                console.log(err)
-            })
-    }
+ 
     const GetBenchmarks = (benchmarks: string[]) => {
         setIsLoading(true)
         let url = ''
@@ -240,18 +209,14 @@ export default function Framework() {
             },
         }
         const body = {
-            benchmarks: benchmarks,
+            framework_ids: benchmarks,
         }
         axios
-            .post(
-                `${url}/main/compliance/api/v3/compliance/summary/benchmark`,
-                body,
-                config
-            )
+            .post(`${url}/main/compliance/api/v1/frameworks`, body, config)
             .then((res) => {
                 const temp: any = []
                 setIsLoading(false)
-                res.data?.map((item: any) => {
+                res.data?.items?.map((item: any) => {
                     temp.push(item)
                 })
                 setResponse(temp)
@@ -263,19 +228,10 @@ export default function Framework() {
             })
     }
     useEffect(() => {
-        GetCard()
+        GetCard(undefined)
     }, [page, query])
 
-    useEffect(() => {
-        if (AllBenchmarks) {
-            const temp: any = []
-            // @ts-ignore
-            AllBenchmarks?.map((item: any) => {
-                temp.push(item.benchmark.id)
-            })
-            Detail(temp)
-        }
-    }, [AllBenchmarks])
+
     useEffect(() => {
         if(window.innerWidth > 768){
  GetBenchmarks([
@@ -412,7 +368,7 @@ export default function Framework() {
                                           return (
                                               <ScoreCategoryCard
                                                   title={
-                                                      item.benchmark_title || ''
+                                                      item.framework_title || ''
                                                   }
                                                   percentage={
                                                       (item
@@ -424,11 +380,11 @@ export default function Framework() {
                                                       100
                                                   }
                                                   costOptimization={
-                                                      item.cost_optimization
+                                                      item?.cost_optimization
                                                   }
                                                   value={item.issues_count}
                                                   kpiText="Incidents"
-                                                  category={item.benchmark_id}
+                                                  category={item.framework_id}
                                                   varient="minimized"
                                               />
                                           )
@@ -555,7 +511,7 @@ export default function Framework() {
                                                     </Col>
                                                 </Grid>
                                                 <BenchmarkCards
-                                                    benchmark={BenchmarkDetails}
+                                                  
                                                     // @ts-ignore
                                                     all={AllBenchmarks}
                                                     loading={loading}

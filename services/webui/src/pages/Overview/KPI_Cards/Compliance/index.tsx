@@ -73,18 +73,14 @@ export default function Compliance() {
              },
          }
          const body = {
-             benchmarks: benchmarks,
+             framework_ids: benchmarks,
          }
          axios
-             .post(
-                 `${url}/main/compliance/api/v3/compliance/summary/benchmark`,
-                 body,
-                 config
-             )
+             .post(`${url}/main/compliance/api/v1/frameworks`, body, config)
              .then((res) => {
                  const temp: any = []
                  setLoading(false)
-                 res.data?.map((item: any) => {
+                 res.data?.items?.map((item: any) => {
                      temp.push(item)
                  })
                  setResponse(temp)
@@ -174,7 +170,7 @@ export default function Compliance() {
                       .map((item: any) => {
                           return (
                               <ScoreCategoryCard
-                                  title={item.benchmark_title || ''}
+                                  title={item.framework_title || ''}
                                   percentage={
                                       (item.severity_summary_by_control.total
                                           .passed /
@@ -185,7 +181,7 @@ export default function Compliance() {
                                   costOptimization={item.cost_optimization}
                                   value={item.issues_count}
                                   kpiText="Incidents"
-                                  category={item.benchmark_id}
+                                  category={item.framework_id}
                                   varient="minimized"
                               />
                           )
