@@ -1551,14 +1551,18 @@ func (h *HttpHandler) ListResourceFindings(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	integrationGroupId := req.Filters.IntegrationGroup
-	if len(req.Filters.IntegrationID) == 0 && len(req.Filters.IntegrationGroup) == 0 {
-		integrationGroupId = []string{"active"}
-	}
-
-	req.Filters.IntegrationID, err = h.getIntegrationIdFilterFromInputs(ctx, req.Filters.IntegrationID, integrationGroupId)
-	if err != nil {
-		return err
+	if len(req.Filters.IntegrationID) == 0 {
+		var integrationIDs []string
+		integrations, err := h.integrationClient.ListIntegrations(&httpclient.Context{UserRole: authApi.AdminRole}, nil)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+		for _, c := range integrations.Integrations {
+			if c.State == integrationapi.IntegrationStateActive {
+				integrationIDs = append(integrationIDs, c.IntegrationID)
+			}
+		}
+		req.Filters.IntegrationID = integrationIDs
 	}
 
 	//req.Filters.IntegrationID, err = httpserver2.ResolveIntegrationIDs(echoCtx, req.Filters.IntegrationID)
