@@ -92,6 +92,7 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 	resourceFindings.POST("", httpserver2.AuthorizeHandler(h.ListResourceFindings, authApi.ViewerRole))
 
 	complianceFrameworks := v1.Group("/frameworks")
+	complianceFrameworks.GET("", httpserver2.AuthorizeHandler(h.ListFrameworks, authApi.ViewerRole))
 	complianceFrameworks.GET("/:framework-id/assignments", httpserver2.AuthorizeHandler(h.ListFrameworkAssignments, authApi.ViewerRole))
 	complianceFrameworks.PUT("/:framework-id/assignments/:integration-id", httpserver2.AuthorizeHandler(h.AddAssignment, authApi.EditorRole))
 	complianceFrameworks.DELETE("/:framework-id/assignments/:integration-id", httpserver2.AuthorizeHandler(h.DeleteAssignment, authApi.EditorRole))
@@ -5591,4 +5592,152 @@ func (h HttpHandler) GetFrameworkCoverage(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, coverage)
+}
+
+// ListFrameworks godoc
+//
+//	@Summary	List frameworks with compliance summary
+//	@Security	BearerToken
+//	@Tags		compliance
+//	@Accept		json
+//	@Produce	json
+//	@Param		framework_ids		query		[]string	true	"framework ids"
+//	@Success	200		{object}	[]api.GetBenchmarkListResponse
+//	@Router		/compliance/api/v1/frameworks [get]
+func (h *HttpHandler) ListFrameworks(echoCtx echo.Context) error {
+	ctx := echoCtx.Request().Context()
+	frameworkIds := httpserver2.QueryArrayParam(echoCtx, "framework_ids")
+	if len(frameworkIds) == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "no framework provided")
+	}
+	frameworks, err := h.db.GetFrameworks(ctx, frameworkIds)
+	if err != nil {
+		h.logger.Error("failed to get frameworks", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get frameworks")
+	}
+
+	var items []api.FrameworkItem
+	for _, f := range frameworks {
+		framework := api.FrameworkItem{
+			FrameworkID:    f.ID,
+			FrameworkTitle: f.Title,
+			Plugins:        f.IntegrationType,
+			IsBaseline:     f.IsBaseline,
+			Enabled:        f.Enabled,
+		}
+		summaries, err := h.db.GetFrameworkComplianceSummaries(f.ID)
+		if err != nil {
+			h.logger.Error("failed to get framework compliance summaries", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get framework compliance summaries")
+		}
+		for _, s := range summaries {
+			switch s.Type {
+			case db.FrameworkComplianceSummaryTypeByControl:
+				switch s.Severity {
+				case db.ComplianceResultSeverityTotal:
+					framework.SeveritySummaryByControl.Total = api.BenchmarkStatusResultV2{
+						TotalCount:  int(s.Total),
+						PassedCount: int(s.Passed),
+						FailedCount: int(s.Failed),
+					}
+				case db.ComplianceResultSeverityCritical:
+					framework.SeveritySummaryByControl.Critical = api.BenchmarkStatusResultV2{
+						TotalCount:  int(s.Total),
+						PassedCount: int(s.Passed),
+						FailedCount: int(s.Failed),
+					}
+				case db.ComplianceResultSeverityHigh:
+					framework.SeveritySummaryByControl.High = api.BenchmarkStatusResultV2{
+						TotalCount:  int(s.Total),
+						PassedCount: int(s.Passed),
+						FailedCount: int(s.Failed),
+					}
+				case db.ComplianceResultSeverityMedium:
+					framework.SeveritySummaryByControl.Medium = api.BenchmarkStatusResultV2{
+						TotalCount:  int(s.Total),
+						PassedCount: int(s.Passed),
+						FailedCount: int(s.Failed),
+					}
+				case db.ComplianceResultSeverityLow:
+					framework.SeveritySummaryByControl.Low = api.BenchmarkStatusResultV2{
+						TotalCount:  int(s.Total),
+						PassedCount: int(s.Passed),
+						FailedCount: int(s.Failed),
+					}
+				case db.ComplianceResultSeverityNone:
+					framework.SeveritySummaryByControl.None = api.BenchmarkStatusResultV2{
+						TotalCount:  int(s.Total),
+						PassedCount: int(s.Passed),
+						FailedCount: int(s.Failed),
+					}
+				}
+			case db.FrameworkComplianceSummaryTypeByResource:
+				switch s.Severity {
+				case db.ComplianceResultSeverityTotal:
+					framework.SeveritySummaryByResource.Total = api.BenchmarkStatusResultV2{
+						TotalCount:  int(s.Total),
+						PassedCount: int(s.Passed),
+						FailedCount: int(s.Failed),
+					}
+				case db.ComplianceResultSeverityCritical:
+					framework.SeveritySummaryByResource.Critical = api.BenchmarkStatusResultV2{
+						TotalCount:  int(s.Total),
+						PassedCount: int(s.Passed),
+						FailedCount: int(s.Failed),
+					}
+				case db.ComplianceResultSeverityHigh:
+					framework.SeveritySummaryByResource.High = api.BenchmarkStatusResultV2{
+						TotalCount:  int(s.Total),
+						PassedCount: int(s.Passed),
+						FailedCount: int(s.Failed),
+					}
+				case db.ComplianceResultSeverityMedium:
+					framework.SeveritySummaryByResource.Medium = api.BenchmarkStatusResultV2{
+						TotalCount:  int(s.Total),
+						PassedCount: int(s.Passed),
+						FailedCount: int(s.Failed),
+					}
+				case db.ComplianceResultSeverityLow:
+					framework.SeveritySummaryByResource.Low = api.BenchmarkStatusResultV2{
+						TotalCount:  int(s.Total),
+						PassedCount: int(s.Passed),
+						FailedCount: int(s.Failed),
+					}
+				case db.ComplianceResultSeverityNone:
+					framework.SeveritySummaryByResource.None = api.BenchmarkStatusResultV2{
+						TotalCount:  int(s.Total),
+						PassedCount: int(s.Passed),
+						FailedCount: int(s.Failed),
+					}
+				}
+			case db.FrameworkComplianceSummaryTypeByIncidents:
+				switch s.Severity {
+				case db.ComplianceResultSeverityTotal:
+					framework.SeveritySummaryByIncidents.Total = int(s.Total)
+				case db.ComplianceResultSeverityCritical:
+					framework.SeveritySummaryByIncidents.Critical = int(s.Total)
+				case db.ComplianceResultSeverityHigh:
+					framework.SeveritySummaryByIncidents.High = int(s.Total)
+				case db.ComplianceResultSeverityMedium:
+					framework.SeveritySummaryByIncidents.Medium = int(s.Total)
+				case db.ComplianceResultSeverityLow:
+					framework.SeveritySummaryByIncidents.Low = int(s.Total)
+				case db.ComplianceResultSeverityNone:
+					framework.SeveritySummaryByIncidents.None = int(s.Total)
+				}
+			case db.FrameworkComplianceSummaryTypeResultSummary:
+				framework.ComplianceResultsSummary = api.ComplianceStatusSummaryV2{
+					TotalCount:  int(s.Total),
+					PassedCount: int(s.Passed),
+					FailedCount: int(s.Failed),
+				}
+			}
+			framework.LastEvaluatedAt = &s.UpdatedAt
+		}
+		if framework.SeveritySummaryByControl.Total.TotalCount > 0 {
+			framework.ComplianceScore = float64(framework.SeveritySummaryByControl.Total.PassedCount) / float64(framework.SeveritySummaryByControl.Total.TotalCount)
+		}
+	}
+
+	return echoCtx.JSON(http.StatusOK, items)
 }
