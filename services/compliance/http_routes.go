@@ -5743,6 +5743,7 @@ func (h *HttpHandler) ListFrameworks(echoCtx echo.Context) error {
 		if framework.SeveritySummaryByControl.Total.TotalCount > 0 {
 			framework.ComplianceScore = float64(framework.SeveritySummaryByControl.Total.PassedCount) / float64(framework.SeveritySummaryByControl.Total.TotalCount)
 		}
+		items = append(items, framework)
 	}
 
 	return echoCtx.JSON(http.StatusOK, items)
