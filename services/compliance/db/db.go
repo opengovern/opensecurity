@@ -211,7 +211,7 @@ func (db Database) GetFrameworks(ctx context.Context, frameworkIds []string) ([]
 	var s []Benchmark
 	tx := db.Orm.WithContext(ctx).Model(&Benchmark{}).Preload(clause.Associations).
 		Where("id IN ?", frameworkIds).
-		First(&s)
+		Find(&s)
 
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
