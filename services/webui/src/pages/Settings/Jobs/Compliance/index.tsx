@@ -381,7 +381,7 @@ const setNotification = useSetAtom(notificationAtom)
                             {truncate(clickedJob?.failure_message, 250)}
                         </Text>
                         <Card className="absolute text-black w-full text-wrap z-40 top-0 scale-0 transition-all p-2 group-hover:scale-100">
-                            <Text>{clickedJob?.failure_message}</Text>
+                            <Text className='text-black'>{clickedJob?.failure_message}</Text>
                         </Card>
                     </div>
                 </>

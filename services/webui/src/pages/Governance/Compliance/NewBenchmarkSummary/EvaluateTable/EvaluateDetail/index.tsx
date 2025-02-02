@@ -451,8 +451,15 @@ export default function EvaluateDetail() {
                 {
                     label: 'Incidents',
                     id: '2',
-                    disabled: !jobDetail?.with_incidents,
-                    disabledReason: 'Job Runned without incidents',
+                    disabled:
+                        !jobDetail?.with_incidents ||
+                        checkStatusRedirect(jobDetail?.job_status) < 2,
+                    disabledReason:
+                        checkStatusRedirect(jobDetail?.job_status) < 2
+                            ? 'Job not completed yet'
+                            : !jobDetail?.with_incidents
+                            ? 'Job Runned without incidents'
+                            : 'Job not completed yet',
                     content: (
                         <>
                             <Findings id={id ? id : ''} tab={0} />
@@ -462,8 +469,15 @@ export default function EvaluateDetail() {
                 {
                     label: 'Control summary',
                     id: '3',
-                    disabled: !jobDetail?.with_incidents,
-                    disabledReason: 'Job Runned without incidents',
+                    disabled:
+                        !jobDetail?.with_incidents ||
+                        checkStatusRedirect(jobDetail?.job_status) < 2,
+                    disabledReason:
+                        checkStatusRedirect(jobDetail?.job_status) < 2
+                            ? 'Job not completed yet'
+                            : !jobDetail?.with_incidents
+                            ? 'Job Runned without incidents'
+                            : 'Job not completed yet',
                     content: (
                         <>
                             <Findings id={id ? id : ''} tab={2} />
@@ -473,8 +487,15 @@ export default function EvaluateDetail() {
                 {
                     label: 'Resource summary',
                     id: '4',
-                    disabled: !jobDetail?.with_incidents,
-                    disabledReason: 'Job Runned without incidents',
+                    disabled:
+                        !jobDetail?.with_incidents ||
+                        checkStatusRedirect(jobDetail?.job_status) < 2,
+                    disabledReason:
+                        checkStatusRedirect(jobDetail?.job_status) < 2
+                            ? 'Job not completed yet'
+                            : !jobDetail?.with_incidents
+                            ? 'Job Runned without incidents'
+                            : 'Job not completed yet',
                     content: (
                         <>
                             <Findings id={id ? id : ''} tab={3} />
@@ -720,6 +741,331 @@ export default function EvaluateDetail() {
                                 >
                                     Controls{' '}
                                 </Header>
+                            }
+                        />
+                    </>
+                ),
+            })
+        }
+        if (checkStatusRedirect(jobDetail?.job_status) < 2) {
+            temp.push({
+                label: 'Execution Detail',
+                id: '5',
+                disabled: false,
+                disabledReason: 'Job is still in progress',
+                content: (
+                    <>
+                        {' '}
+                        <AppLayout
+                            toolsOpen={false}
+                            navigationOpen={false}
+                            contentType="full-page"
+                            // className="w-full"
+                            toolsHide={true}
+                            navigationHide={true}
+                            splitPanelOpen={runnerOpen}
+                            onSplitPanelToggle={() => {
+                                setRunnerOpen(!runnerOpen)
+                            }}
+                            splitPanel={
+                                // @ts-ignore
+                                <SplitPanel
+                                    // @ts-ignore
+                                    header={selectedRunner?.runner_id}
+                                >
+                                    <KeyValuePairs
+                                        columns={3}
+                                        items={[
+                                            {
+                                                label: 'Compliance Job ID',
+                                                value: selectedRunner?.compliance_job_id,
+                                            },
+                                            {
+                                                label: 'Control ID',
+                                                value: selectedRunner?.control_id,
+                                            },
+                                            {
+                                                label: 'Integration ID',
+                                                value: selectedRunner?.integration_id,
+                                            },
+
+                                            {
+                                                label: 'Queued At',
+                                                value: dateTimeDisplay(
+                                                    selectedRunner?.queued_at
+                                                ),
+                                            },
+                                            {
+                                                label: 'Executed At',
+                                                value: dateTimeDisplay(
+                                                    selectedRunner?.executed_at
+                                                ),
+                                            },
+                                            {
+                                                label: 'Completed At',
+                                                value: dateTimeDisplay(
+                                                    selectedRunner?.completed_at
+                                                ),
+                                            },
+                                            {
+                                                label: 'Worker Pod Name',
+                                                value: selectedRunner?.worker_pod_name,
+                                            },
+                                            {
+                                                label: 'Status',
+                                                value: selectedRunner?.status,
+                                            },
+                                            {
+                                                label: 'Failure Message',
+                                                value:
+                                                    selectedRunner?.failure_message ||
+                                                    'N/A',
+                                            }, // Default if empty
+                                            {
+                                                label: 'Trigger Type',
+                                                value: selectedRunner?.trigger_type,
+                                            },
+                                        ]}
+                                    />
+                                </SplitPanel>
+                            }
+                            content={
+                                <KTable
+                                    className=""
+                                    // resizableColumns
+                                    variant="full-page"
+                                    // variant="table"
+                                    renderAriaLive={({
+                                        firstIndex,
+                                        lastIndex,
+                                        totalItemsCount,
+                                    }) =>
+                                        `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
+                                    }
+                                    onRowClick={(event) => {
+                                        const row = event.detail.item
+                                        // @ts-ignore
+                                        setSelectedRunner(row)
+                                        setRunnerOpen(true)
+                                    }}
+                                    columnDefinitions={[
+                                        {
+                                            id: 'id',
+                                            header: 'Runner ID',
+                                            cell: (item) => item.runner_id,
+                                            // sortingField: 'id',
+                                            isRowHeader: true,
+                                        },
+
+                                        {
+                                            id: 'control_id',
+                                            header: 'Control ID',
+                                            sortingField: 'severity',
+                                            cell: (item) => item?.control_id,
+                                            maxWidth: 100,
+                                        },
+
+                                        {
+                                            id: 'integration_id',
+                                            header: 'Integration ID',
+                                            sortingField: 'oks',
+
+                                            cell: (item) =>
+                                                item?.integration_id,
+                                            // minWidth: 50,
+                                            maxWidth: 100,
+                                        },
+                                        {
+                                            id: 'queued_at',
+                                            header: 'Queued At',
+                                            sortingField: 'oks',
+
+                                            cell: (item) =>
+                                                dateTimeDisplay(
+                                                    item?.queued_at
+                                                ),
+                                            // minWidth: 50,
+                                            maxWidth: 100,
+                                        },
+                                        {
+                                            id: 'executed_at',
+                                            header: 'Executed At',
+                                            sortingField: 'oks',
+
+                                            cell: (item) =>
+                                                dateTimeDisplay(
+                                                    item?.executed_at
+                                                ),
+                                            // minWidth: 50,
+                                            maxWidth: 100,
+                                        },
+                                        {
+                                            id: 'completed_at',
+                                            header: 'Completed At',
+                                            sortingField: 'oks',
+
+                                            cell: (item) =>
+                                                dateTimeDisplay(
+                                                    item?.completed_at
+                                                ),
+                                            // minWidth: 50,
+                                            maxWidth: 100,
+                                        },
+                                        {
+                                            id: 'wait',
+                                            header: 'Wait time',
+                                            sortingField: 'oks',
+
+                                            cell: (item) =>
+                                                shortDateTimeDisplayDelta(
+                                                    item?.executed_at,
+                                                    item?.queued_at
+                                                ),
+                                            // minWidth: 50,
+                                            maxWidth: 100,
+                                        },
+                                        {
+                                            id: 'execution_time',
+                                            header: 'Total time',
+                                            sortingField: 'oks',
+
+                                            cell: (item) =>
+                                                shortDateTimeDisplayDelta(
+                                                    item?.completed_at,
+                                                    item?.queued_at
+                                                ),
+                                            // minWidth: 50,
+                                            maxWidth: 100,
+                                        },
+
+                                        {
+                                            id: 'status',
+                                            header: 'status',
+                                            sortingField: 'oks',
+
+                                            cell: (item) => item?.status,
+                                            // minWidth: 50,
+                                            maxWidth: 100,
+                                        },
+                                        {
+                                            id: 'action',
+                                            header: '',
+                                            cell: (item) => (
+                                                // @ts-ignore
+                                                <KButton
+                                                    onClick={() => {
+                                                        setSelectedRunner(item)
+                                                        setRunnerOpen(true)
+                                                    }}
+                                                    className="w-full"
+                                                    variant="inline-link"
+                                                    ariaLabel={`Open Detail`}
+                                                >
+                                                    {window.innerWidth > 768 ? (
+                                                        'See details'
+                                                    ) : (
+                                                        <InformationCircleIcon className="w-5" />
+                                                    )}
+                                                </KButton>
+                                            ),
+                                        },
+                                    ]}
+                                    columnDisplay={[
+                                        { id: 'id', visible: true },
+                                        {
+                                            id: 'integration_id',
+                                            visible: true,
+                                        },
+                                        {
+                                            id: 'control_id',
+                                            visible: true,
+                                        },
+                                        {
+                                            id: 'queued_at',
+                                            visible: false,
+                                        },
+                                        {
+                                            id: 'executed_at',
+                                            visible: false,
+                                        },
+                                        {
+                                            id: 'completed_at',
+                                            visible: false,
+                                        },
+                                        {
+                                            id: 'execution_time',
+                                            visible: true,
+                                        },
+
+                                        {
+                                            id: 'status',
+                                            visible: true,
+                                        },
+                                        {
+                                            id: 'action',
+                                            visible: true,
+                                        },
+                                    ]}
+                                    enableKeyboardNavigation
+                                    items={
+                                        // @prettie
+                                        runners && runners.length > 0
+                                            ? runners?.slice(
+                                                  runnerPage * 20,
+                                                  (runnerPage + 1) * 20
+                                              )
+                                            : []
+                                    }
+                                    loading={detailLoading}
+                                    loadingText="Loading resources"
+                                    // stickyColumns={{ first: 0, last: 1 }}
+                                    // stripedRows
+                                    trackBy="id"
+                                    empty={
+                                        <Box
+                                            margin={{ vertical: 'xs' }}
+                                            textAlign="center"
+                                            color="inherit"
+                                        >
+                                            <SpaceBetween size="m">
+                                                <b>No resources</b>
+                                            </SpaceBetween>
+                                        </Box>
+                                    }
+                                    header={
+                                        <Header
+                                            counter={
+                                                runners?.length
+                                                    ? `(${runners?.length})`
+                                                    : ''
+                                            }
+                                            actions={
+                                                <KButton
+                                                    onClick={() => {
+                                                        GetRunners()
+                                                    }}
+                                                    iconName="refresh"
+                                                ></KButton>
+                                            }
+                                            className="w-full"
+                                        >
+                                            Runners{' '}
+                                        </Header>
+                                    }
+                                    pagination={
+                                        <CustomPagination
+                                            currentPageIndex={runnerPage + 1}
+                                            pagesCount={Math.ceil(
+                                                runners?.length / 20
+                                            )}
+                                            onChange={({ detail }) =>
+                                                setRunnerPage(
+                                                    detail.currentPageIndex - 1
+                                                )
+                                            }
+                                        />
+                                    }
+                                />
                             }
                         />
                     </>

@@ -258,13 +258,15 @@ export default function Evaluate({
                             GetEnabled()
                         }}
                         loading={false}
-                        variant={"primary" }
+                        variant={'primary'}
                         className="flex flex-row justify-center items-center w-full sm:min-w-20"
                         // iconAlign="left"
                     >
                         <div className="flex flex-row justify-center items-center w-full sm:min-w-20 gap-2">
-                            <PlayCircleIcon className="w-5" color='white' />
-                            <span className=' sm:inline-block  hidden'>Run</span>
+                            <PlayCircleIcon className="w-5" color="white" />
+                            <span className=" sm:inline-block  hidden">
+                                Run
+                            </span>
                         </div>
                     </KButton>
                 </>
@@ -281,12 +283,11 @@ export default function Evaluate({
                 footer={
                     <Box float="right">
                         <SpaceBetween direction="horizontal" size="xs">
-                            <Button
-                                variant="secondary"
+                            <KButton
                                 onClick={() => setOpen(false)}
                             >
                                 Close
-                            </Button>
+                            </KButton>
                             {/* <Button
                                 variant="secondary"
                                 onClick={() => {
@@ -297,8 +298,7 @@ export default function Evaluate({
                             >
                                 DeSelect All
                             </Button> */}
-                            <Button
-                                variant="secondary"
+                            <KButton
                                 onClick={() => {
                                     if (opened) {
                                         if (!selectedbenchmarks) {
@@ -333,8 +333,9 @@ export default function Evaluate({
                                 }}
                             >
                                 Select All
-                            </Button>
-                            <Button
+                            </KButton>
+                            <KButton
+                                variant={'primary'}
                                 onClick={() => {
                                     setOpen(false)
                                     if (opened) {
@@ -346,7 +347,7 @@ export default function Evaluate({
                                 }}
                             >
                                 Run
-                            </Button>
+                            </KButton>
                         </SpaceBetween>
                     </Box>
                 }
