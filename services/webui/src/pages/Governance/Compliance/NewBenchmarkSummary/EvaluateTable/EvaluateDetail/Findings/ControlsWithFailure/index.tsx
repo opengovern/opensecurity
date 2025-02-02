@@ -135,7 +135,7 @@ export default function ControlsWithFailure({ query ,id}: ICount) {
                                 >
                                     <Text className="text-gray-800">
                                         <Link
-                                            href={`${window.location}/${item.Control.id}`}
+                                            href={`/incidents/${item.Control.id}`}
                                             target="__blank"
                                         >
                                             {item.Control.title}
