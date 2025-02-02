@@ -5621,9 +5621,20 @@ func (h *HttpHandler) ListFrameworks(echoCtx echo.Context) error {
 	if req.Root != nil {
 		isRoot = *req.Root
 	}
-	frameworks, err := h.db.ListBenchmarksFiltered(ctx, req.TitleRegex, isRoot, req.Tags, nil, req.Assigned, req.IsBaseline, nil, req.IntegrationTypes)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+
+	var frameworks []db.Benchmark
+	var err error
+
+	if len(req.FrameworkIDs) > 0 {
+		frameworks, err = h.db.GetFrameworks(ctx, req.FrameworkIDs)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+	} else {
+		frameworks, err = h.db.ListBenchmarksFiltered(ctx, req.TitleRegex, isRoot, req.Tags, nil, req.Assigned, req.IsBaseline, nil, req.IntegrationTypes)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
 	}
 
 	benchmarkAssignmentsCount, err := h.db.GetBenchmarkAssignmentsCount()
