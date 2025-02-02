@@ -149,7 +149,7 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
                 // @ts-ignore
                 const temp = []
                 // @ts-ignore
-                res.data.map((d) => {
+                res.data?.items?.map((d) => {
                     temp.push({
                         label: d.job_id.toString(),
                         value: d.job_id.toString(),
