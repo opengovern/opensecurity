@@ -4,6 +4,7 @@ import (
 	"github.com/opengovern/og-util/pkg/es"
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/opencomply/pkg/types"
+	"github.com/opengovern/opencomply/services/compliance/db"
 	"go.uber.org/zap"
 )
 
@@ -12,8 +13,10 @@ type JobDocs struct {
 	ResourcesFindings map[string]types.ResourceFinding `json:"resourcesFindings"`
 
 	// these are used to track if the resource finding is done so we can remove it from the map and send it to queue to save memory
-	ResourcesFindingsIsDone map[string]bool `json:"-"`
-	LastResourceIdType      string          `json:"-"`
+	ResourcesFindingsIsDone               map[string]bool                                                                `json:"-"`
+	LastResourceIdType                    string                                                                         `json:"-"`
+	FrameworkComplianceSummaryByIncidents map[db.FrameworkComplianceSummaryResultSeverity]*db.FrameworkComplianceSummary `json:"-"`
+	ComplianceResultSummary               db.FrameworkComplianceSummary                                                  `json:"-"`
 }
 
 func (jd *JobDocs) AddComplianceResult(logger *zap.Logger, job Job,
@@ -100,6 +103,43 @@ func (jd *JobDocs) AddComplianceResult(logger *zap.Logger, job Job,
 	logger.Info("adding the resource finding", zap.String("platform_resource_id", platformResourceID),
 		zap.Any("resource", resource))
 	jd.ResourcesFindings[platformResourceID] = resourceFinding
+
+	if job.BenchmarkID == complianceResult.BenchmarkID {
+		jd.ComplianceResultSummary.Total += 1
+		if complianceResult.ComplianceStatus == types.ComplianceStatusOK || complianceResult.ComplianceStatus == types.ComplianceStatusINFO ||
+			complianceResult.ComplianceStatus == types.ComplianceStatusSKIP {
+			jd.ComplianceResultSummary.Passed += 1
+		} else {
+			jd.ComplianceResultSummary.Failed += 1
+			switch complianceResult.Severity {
+			case types.ComplianceResultSeverityNone:
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityTotal].Failed += 1
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityTotal].Total += 1
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityNone].Failed += 1
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityNone].Total += 1
+			case types.ComplianceResultSeverityLow:
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityTotal].Failed += 1
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityTotal].Total += 1
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityLow].Failed += 1
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityLow].Total += 1
+			case types.ComplianceResultSeverityMedium:
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityTotal].Failed += 1
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityTotal].Total += 1
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityMedium].Failed += 1
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityMedium].Total += 1
+			case types.ComplianceResultSeverityHigh:
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityTotal].Failed += 1
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityTotal].Total += 1
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityHigh].Failed += 1
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityHigh].Total += 1
+			case types.ComplianceResultSeverityCritical:
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityTotal].Failed += 1
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityTotal].Total += 1
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityCritical].Failed += 1
+				jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityCritical].Total += 1
+			}
+		}
+	}
 }
 
 func (jd *JobDocs) Summarize(logger *zap.Logger) {

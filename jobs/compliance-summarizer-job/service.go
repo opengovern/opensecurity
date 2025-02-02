@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/opengovern/og-util/pkg/postgres"
+	"github.com/opengovern/opencomply/services/compliance/db"
 	"os"
 	"runtime"
 	"time"
@@ -14,27 +16,30 @@ import (
 	"github.com/opengovern/og-util/pkg/jq"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/opencomply/jobs/compliance-summarizer-job/types"
-	integrationClient "github.com/opengovern/opencomply/services/integration/client"
 	coreClient "github.com/opengovern/opencomply/services/core/client"
+	integrationClient "github.com/opengovern/opencomply/services/integration/client"
 	"go.uber.org/zap"
 )
 
 type Config struct {
+	PostgreSQL            config.Postgres
 	ElasticSearch         config.ElasticSearch
 	NATS                  config.NATS
 	PrometheusPushAddress string
-	Core             config.OpenGovernanceService
+	Core                  config.OpenGovernanceService
 	Integration           config.OpenGovernanceService
 	EsSink                config.OpenGovernanceService
 }
 
 type Worker struct {
+	db db.Database
+
 	config   Config
 	logger   *zap.Logger
 	esClient opengovernance.Client
 	jq       *jq.JobQueue
 
-	coreClient   coreClient.CoreServiceClient
+	coreClient        coreClient.CoreServiceClient
 	integrationClient integrationClient.IntegrationServiceClient
 	esSinkClient      esSinkClient.EsSinkServiceClient
 }
@@ -46,9 +51,24 @@ var (
 func NewWorker(
 	config Config,
 	logger *zap.Logger,
-	prometheusPushAddress string,
 	ctx context.Context,
 ) (*Worker, error) {
+	cfg := postgres.Config{
+		Host:    config.PostgreSQL.Host,
+		Port:    config.PostgreSQL.Port,
+		User:    config.PostgreSQL.Username,
+		Passwd:  config.PostgreSQL.Password,
+		DB:      config.PostgreSQL.DB,
+		SSLMode: config.PostgreSQL.SSLMode,
+	}
+	orm, err := postgres.NewClient(&cfg, logger)
+	if err != nil {
+		return nil, fmt.Errorf("new postgres client: %w", err)
+	}
+
+	database := db.Database{Orm: orm}
+	fmt.Println("Connected to the postgres database: ", config.PostgreSQL.DB)
+
 	esClient, err := opengovernance.NewClient(opengovernance.ClientConfig{
 		Addresses:     []string{config.ElasticSearch.Address},
 		Username:      &config.ElasticSearch.Username,
@@ -80,8 +100,9 @@ func NewWorker(
 		config:            config,
 		logger:            logger,
 		esClient:          esClient,
+		db:                database,
 		jq:                jq,
-		coreClient:   coreClient.NewCoreServiceClient(config.Core.BaseURL),
+		coreClient:        coreClient.NewCoreServiceClient(config.Core.BaseURL),
 		integrationClient: integrationClient.NewIntegrationServiceClient(config.Integration.BaseURL),
 		esSinkClient:      esSinkClient.NewEsSinkServiceClient(logger, config.EsSink.BaseURL),
 	}

@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/opengovern/opencomply/services/compliance/db"
+	"strings"
 	"time"
 
 	"github.com/opensearch-project/opensearch-go/v2"
@@ -65,8 +67,44 @@ func (w *Worker) RunJob(ctx context.Context, j types2.Job) error {
 			},
 			ResourceCollections: map[string]types2.BenchmarkSummaryResult{},
 		},
-		ResourcesFindings:       make(map[string]types.ResourceFinding),
-		ResourcesFindingsIsDone: make(map[string]bool),
+		ResourcesFindings:                     make(map[string]types.ResourceFinding),
+		ResourcesFindingsIsDone:               make(map[string]bool),
+		FrameworkComplianceSummaryByIncidents: make(map[db.FrameworkComplianceSummaryResultSeverity]*db.FrameworkComplianceSummary),
+		ComplianceResultSummary: db.FrameworkComplianceSummary{
+			FrameworkID: j.BenchmarkID,
+			Type:        db.FrameworkComplianceSummaryTypeResultSummary,
+			Severity:    db.ComplianceResultSeverityTotal,
+		},
+	}
+	jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityTotal] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByIncidents,
+		Severity:    db.ComplianceResultSeverityTotal,
+	}
+	jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityNone] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByIncidents,
+		Severity:    db.ComplianceResultSeverityNone,
+	}
+	jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityLow] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByIncidents,
+		Severity:    db.ComplianceResultSeverityLow,
+	}
+	jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityMedium] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByIncidents,
+		Severity:    db.ComplianceResultSeverityMedium,
+	}
+	jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityHigh] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByIncidents,
+		Severity:    db.ComplianceResultSeverityHigh,
+	}
+	jd.FrameworkComplianceSummaryByIncidents[db.ComplianceResultSeverityCritical] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByIncidents,
+		Severity:    db.ComplianceResultSeverityCritical,
 	}
 
 	controlView := &types.ComplianceJobReportControlView{
@@ -224,13 +262,13 @@ func (w *Worker) RunJob(ctx context.Context, j types2.Job) error {
 
 	w.logger.Info("Deleting compliance results and resource findings of removed integrations", zap.String("benchmark_id", j.BenchmarkID), zap.Uint("job_id", j.ID))
 
-	currentInregrations, err := w.integrationClient.ListIntegrations(&httpclient.Context{Ctx: ctx, UserRole: api.AdminRole}, nil)
+	currentIntegrations, err := w.integrationClient.ListIntegrations(&httpclient.Context{Ctx: ctx, UserRole: api.AdminRole}, nil)
 	if err != nil {
 		w.logger.Error("failed to list integrations", zap.Error(err), zap.String("benchmark_id", j.BenchmarkID), zap.Uint("job_id", j.ID))
 		return err
 	}
-	currentIntegrationIds := make([]string, 0, len(currentInregrations.Integrations))
-	for _, i := range currentInregrations.Integrations {
+	currentIntegrationIds := make([]string, 0, len(currentIntegrations.Integrations))
+	for _, i := range currentIntegrations.Integrations {
 		currentIntegrationIds = append(currentIntegrationIds, i.IntegrationID)
 	}
 
@@ -276,6 +314,11 @@ func (w *Worker) RunJob(ctx context.Context, j types2.Job) error {
 	controlSummary.EsIndex = idx
 
 	err = sendDataToOpensearch(w.esClient.ES(), controlSummary)
+	if err != nil {
+		return err
+	}
+
+	err = w.addCachedSummaryOfFramework(jd)
 	if err != nil {
 		return err
 	}
@@ -512,4 +555,213 @@ func sendDataToOpensearch(client *opensearch.Client, doc es2.Doc) error {
 		return fmt.Errorf("error indexing document: %s", res.String())
 	}
 	return nil
+}
+
+func (w *Worker) addCachedSummaryOfFramework(jd types2.JobDocs) error {
+	controls, err := w.db.ListControlsByFrameworkID(context.Background(), jd.BenchmarkSummary.BenchmarkID)
+	if err != nil {
+		w.logger.Error("failed to get controls", zap.Error(err))
+		return err
+	}
+	controlsMap := make(map[string]*db.Control)
+	for _, control := range controls {
+		control := control
+		controlsMap[strings.ToLower(control.ID)] = &control
+	}
+
+	severitySummaryByControl := make(map[db.FrameworkComplianceSummaryResultSeverity]*db.FrameworkComplianceSummary)
+	severitySummaryByControl[db.ComplianceResultSeverityTotal] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByControl,
+		Severity:    db.ComplianceResultSeverityTotal,
+	}
+	severitySummaryByControl[db.ComplianceResultSeverityNone] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByControl,
+		Severity:    db.ComplianceResultSeverityNone,
+	}
+	severitySummaryByControl[db.ComplianceResultSeverityLow] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByControl,
+		Severity:    db.ComplianceResultSeverityLow,
+	}
+	severitySummaryByControl[db.ComplianceResultSeverityMedium] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByControl,
+		Severity:    db.ComplianceResultSeverityMedium,
+	}
+	severitySummaryByControl[db.ComplianceResultSeverityHigh] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByControl,
+		Severity:    db.ComplianceResultSeverityHigh,
+	}
+	severitySummaryByControl[db.ComplianceResultSeverityCritical] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByControl,
+		Severity:    db.ComplianceResultSeverityCritical,
+	}
+
+	severitySummaryByResource := make(map[db.FrameworkComplianceSummaryResultSeverity]*db.FrameworkComplianceSummary)
+	severitySummaryByResource[db.ComplianceResultSeverityTotal] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByResource,
+		Severity:    db.ComplianceResultSeverityTotal,
+	}
+	severitySummaryByResource[db.ComplianceResultSeverityNone] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByResource,
+		Severity:    db.ComplianceResultSeverityNone,
+	}
+	severitySummaryByResource[db.ComplianceResultSeverityLow] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByResource,
+		Severity:    db.ComplianceResultSeverityLow,
+	}
+	severitySummaryByResource[db.ComplianceResultSeverityMedium] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByResource,
+		Severity:    db.ComplianceResultSeverityMedium,
+	}
+	severitySummaryByResource[db.ComplianceResultSeverityHigh] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByResource,
+		Severity:    db.ComplianceResultSeverityHigh,
+	}
+	severitySummaryByResource[db.ComplianceResultSeverityCritical] = &db.FrameworkComplianceSummary{
+		FrameworkID: jd.BenchmarkSummary.BenchmarkID,
+		Type:        db.FrameworkComplianceSummaryTypeByResource,
+		Severity:    db.ComplianceResultSeverityCritical,
+	}
+
+	for controlId, c := range jd.BenchmarkSummary.Integrations.BenchmarkResult.Controls {
+		control := controlsMap[strings.ToLower(controlId)]
+		severitySummaryByControl = addToControlSeverityResult(severitySummaryByControl, control, c)
+
+		severitySummaryByResource = addToResourceSeverityResult(severitySummaryByResource, control, c)
+	}
+
+	for _, v := range severitySummaryByControl {
+		err = w.db.UpdateFrameworkComplianceSummary(*v)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, v := range severitySummaryByResource {
+		err = w.db.UpdateFrameworkComplianceSummary(*v)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, v := range jd.FrameworkComplianceSummaryByIncidents {
+		err = w.db.UpdateFrameworkComplianceSummary(*v)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = w.db.UpdateFrameworkComplianceSummary(jd.ComplianceResultSummary)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func addToResourceSeverityResult(resourceSeverityResult map[db.FrameworkComplianceSummaryResultSeverity]*db.FrameworkComplianceSummary,
+	control *db.Control, controlResult types2.ControlResult) map[db.FrameworkComplianceSummaryResultSeverity]*db.FrameworkComplianceSummary {
+	if control == nil {
+		control = &db.Control{
+			Severity: types.ComplianceResultSeverityNone,
+		}
+	}
+	resourceSeverityResult[db.ComplianceResultSeverityTotal].Failed += int64(controlResult.FailedResourcesCount)
+	resourceSeverityResult[db.ComplianceResultSeverityTotal].Total += int64(controlResult.TotalResourcesCount)
+	resourceSeverityResult[db.ComplianceResultSeverityTotal].Passed += int64(controlResult.TotalResourcesCount) - int64(controlResult.FailedResourcesCount)
+	switch control.Severity {
+	case types.ComplianceResultSeverityCritical:
+		resourceSeverityResult[db.ComplianceResultSeverityCritical].Failed += int64(controlResult.FailedResourcesCount)
+		resourceSeverityResult[db.ComplianceResultSeverityCritical].Total += int64(controlResult.TotalResourcesCount)
+		resourceSeverityResult[db.ComplianceResultSeverityCritical].Passed += int64(controlResult.TotalResourcesCount) - int64(controlResult.FailedResourcesCount)
+	case types.ComplianceResultSeverityHigh:
+		resourceSeverityResult[db.ComplianceResultSeverityHigh].Failed += int64(controlResult.FailedResourcesCount)
+		resourceSeverityResult[db.ComplianceResultSeverityHigh].Total += int64(controlResult.TotalResourcesCount)
+		resourceSeverityResult[db.ComplianceResultSeverityHigh].Passed += int64(controlResult.TotalResourcesCount) - int64(controlResult.FailedResourcesCount)
+	case types.ComplianceResultSeverityMedium:
+		resourceSeverityResult[db.ComplianceResultSeverityMedium].Failed += int64(controlResult.FailedResourcesCount)
+		resourceSeverityResult[db.ComplianceResultSeverityMedium].Total += int64(controlResult.TotalResourcesCount)
+		resourceSeverityResult[db.ComplianceResultSeverityMedium].Passed += int64(controlResult.TotalResourcesCount) - int64(controlResult.FailedResourcesCount)
+	case types.ComplianceResultSeverityLow:
+		resourceSeverityResult[db.ComplianceResultSeverityLow].Failed += int64(controlResult.FailedResourcesCount)
+		resourceSeverityResult[db.ComplianceResultSeverityLow].Total += int64(controlResult.TotalResourcesCount)
+		resourceSeverityResult[db.ComplianceResultSeverityLow].Passed += int64(controlResult.TotalResourcesCount) - int64(controlResult.FailedResourcesCount)
+	case types.ComplianceResultSeverityNone, "":
+		resourceSeverityResult[db.ComplianceResultSeverityNone].Failed += int64(controlResult.FailedResourcesCount)
+		resourceSeverityResult[db.ComplianceResultSeverityNone].Total += int64(controlResult.TotalResourcesCount)
+		resourceSeverityResult[db.ComplianceResultSeverityNone].Passed += int64(controlResult.TotalResourcesCount) - int64(controlResult.FailedResourcesCount)
+	}
+	return resourceSeverityResult
+}
+
+func addToControlSeverityResult(controlSeverityResult map[db.FrameworkComplianceSummaryResultSeverity]*db.FrameworkComplianceSummary,
+	control *db.Control, controlResult types2.ControlResult) map[db.FrameworkComplianceSummaryResultSeverity]*db.FrameworkComplianceSummary {
+	if control == nil {
+		control = &db.Control{
+			Severity: types.ComplianceResultSeverityNone,
+		}
+	}
+	switch control.Severity {
+	case types.ComplianceResultSeverityCritical:
+		controlSeverityResult[db.ComplianceResultSeverityTotal].Total++
+		controlSeverityResult[db.ComplianceResultSeverityCritical].Total++
+		if controlResult.Passed {
+			controlSeverityResult[db.ComplianceResultSeverityTotal].Passed++
+			controlSeverityResult[db.ComplianceResultSeverityCritical].Passed++
+		} else {
+			controlSeverityResult[db.ComplianceResultSeverityTotal].Failed++
+			controlSeverityResult[db.ComplianceResultSeverityCritical].Failed++
+		}
+	case types.ComplianceResultSeverityHigh:
+		controlSeverityResult[db.ComplianceResultSeverityTotal].Total++
+		controlSeverityResult[db.ComplianceResultSeverityHigh].Total++
+		if controlResult.Passed {
+			controlSeverityResult[db.ComplianceResultSeverityTotal].Passed++
+			controlSeverityResult[db.ComplianceResultSeverityHigh].Passed++
+		} else {
+			controlSeverityResult[db.ComplianceResultSeverityTotal].Failed++
+			controlSeverityResult[db.ComplianceResultSeverityHigh].Failed++
+		}
+	case types.ComplianceResultSeverityMedium:
+		controlSeverityResult[db.ComplianceResultSeverityTotal].Total++
+		controlSeverityResult[db.ComplianceResultSeverityMedium].Total++
+		if controlResult.Passed {
+			controlSeverityResult[db.ComplianceResultSeverityTotal].Passed++
+			controlSeverityResult[db.ComplianceResultSeverityMedium].Passed++
+		} else {
+			controlSeverityResult[db.ComplianceResultSeverityTotal].Failed++
+			controlSeverityResult[db.ComplianceResultSeverityMedium].Failed++
+		}
+	case types.ComplianceResultSeverityLow:
+		controlSeverityResult[db.ComplianceResultSeverityTotal].Total++
+		controlSeverityResult[db.ComplianceResultSeverityLow].Total++
+		if controlResult.Passed {
+			controlSeverityResult[db.ComplianceResultSeverityTotal].Passed++
+			controlSeverityResult[db.ComplianceResultSeverityLow].Passed++
+		} else {
+			controlSeverityResult[db.ComplianceResultSeverityTotal].Failed++
+			controlSeverityResult[db.ComplianceResultSeverityLow].Failed++
+		}
+	case types.ComplianceResultSeverityNone, "":
+		controlSeverityResult[db.ComplianceResultSeverityTotal].Total++
+		controlSeverityResult[db.ComplianceResultSeverityNone].Total++
+		if controlResult.Passed {
+			controlSeverityResult[db.ComplianceResultSeverityTotal].Passed++
+			controlSeverityResult[db.ComplianceResultSeverityNone].Passed++
+		} else {
+			controlSeverityResult[db.ComplianceResultSeverityTotal].Failed++
+			controlSeverityResult[db.ComplianceResultSeverityNone].Failed++
+		}
+	}
+	return controlSeverityResult
 }
