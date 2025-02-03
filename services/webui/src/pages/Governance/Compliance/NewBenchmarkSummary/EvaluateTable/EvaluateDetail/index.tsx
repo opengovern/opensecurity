@@ -138,11 +138,9 @@ export default function EvaluateDetail() {
             }
         },
     })
-    const [integrations, setIntegrations] = useState()
     const [integrationOpen, setIntegrationOpen] = useState(false)
     const [integrationDetail, setIntegrationDetail] = useState()
-    const [integrationDetailLoading, setIntegrationDetailLoading] =
-        useState(false)
+  
     const GetDetail = () => {
         setDetailLoading(true)
         let url = ''
@@ -169,7 +167,6 @@ export default function EvaluateDetail() {
             .then((res) => {
                 //   setAccounts(res.data.integrations)
                 setDetail(res.data)
-                setIntegrations(res.data?.job_details?.integration_ids)
 
                 setDetailLoading(false)
             })
@@ -311,41 +308,7 @@ export default function EvaluateDetail() {
                 console.log(err)
             })
     }
-    const GetIntegrationDetail = () => {
-        setIntegrationDetailLoading(true)
-        let url = ''
-        if (window.location.origin === 'http://localhost:3000') {
-            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-        } else {
-            url = window.location.origin
-        }
-        // @ts-ignore
-        const token = JSON.parse(localStorage.getItem('openg_auth')).token
-
-        const config = {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-        const body = {
-            integration_id: integrations,
-        }
-        axios
-            .post(
-                // @ts-ignore
-                `${url}/main/integration/api/v1/integrations/list`,
-                body,
-                config
-            )
-            .then((res) => {
-                //   setAccounts(res.data.integrations)
-                setIntegrationDetailLoading(false)
-                setIntegrationDetail(res.data?.integrations)
-            })
-            .catch((err) => {
-                console.log(err)
-            })
-    }
+ 
     const GetRunners = () => {
         setRunnerLoading(true)
         let url = ''
@@ -1316,19 +1279,15 @@ export default function EvaluateDetail() {
                                                     >
                                                         {
                                                             jobDetail
-                                                                ?.integration_info
+                                                                ?.integrations
                                                                 ?.length
                                                         }
                                                         <KButton
                                                             onClick={() => {
-                                                                if (
-                                                                    integrations
-                                                                ) {
-                                                                    GetIntegrationDetail()
-                                                                    setIntegrationOpen(
-                                                                        true
-                                                                    )
-                                                                }
+                                                               setIntegrationDetail(
+                                                                   jobDetail?.integrations
+                                                               )
+                                                               setIntegrationOpen(true)
                                                             }}
                                                             variant="inline-link"
                                                             iconName="status-info"
@@ -1598,11 +1557,11 @@ export default function EvaluateDetail() {
                             { id: 'provider_id', visible: true },
                             { id: 'name', visible: true },
                             { id: 'integration_type', visible: true },
-                            { id: 'state', visible: true },
+                            { id: 'state', visible: false },
                         ]}
                         enableKeyboardNavigation
                         items={integrationDetail ? integrationDetail : []}
-                        loading={integrationDetailLoading}
+                        loading={false}
                         loadingText="Loading resources"
                         // stickyColumns={{ first: 0, last: 1 }}
                         // stripedRows

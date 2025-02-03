@@ -119,7 +119,7 @@ export default function ControlDetail({
                 value: (
                     <>
                         <Flex
-                            className="gap-2 flex-wrap w-full"
+                            className="gap-2 flex-wrap w-full justify-start items-center"
                             flexDirection="row"
                         >
                             <>
@@ -138,11 +138,11 @@ export default function ControlDetail({
                                                             }
                                                             position="bottom"
                                                         >
-                                                            {key}
+                                                            {key},
                                                         </Popover>
                                                     </>
                                                 ) : (
-                                                    <>{key}</>
+                                                    <>{key},</>
                                                 )}
                                             </>
                                         )
