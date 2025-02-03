@@ -5073,8 +5073,8 @@ func (h HttpHandler) GetJobReportSummary(ctx echo.Context) error {
 	}
 
 	var integrationIDs []string
-	for _, ii := range complianceJob.IntegrationIds {
-		integrationIDs = append(integrationIDs, ii)
+	for _, ii := range complianceJob.Integrations {
+		integrationIDs = append(integrationIDs, ii.IntegrationID)
 	}
 
 	response := api.GetJobReportSummaryResponse{
