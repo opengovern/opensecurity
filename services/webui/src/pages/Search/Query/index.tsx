@@ -343,6 +343,20 @@ export default function Query() {
 
     return (
         <>
+            <Header
+                className={`   rounded-xl mb-4    ${
+                    false ? 'rounded-b-none' : ''
+                }`}
+                variant="h1"
+                description={
+                    <div className="group  important text-black  relative sm:flex hidden text-wrap justify-start">
+                        Query all discovered assets across clouds and
+                        integrations in SQL.
+                    </div>
+                }
+            >
+                CloudQL
+            </Header>
             <AppLayout
                 toolsOpen={false}
                 navigationOpen={false}
@@ -362,57 +376,6 @@ export default function Query() {
                         header={<>Saved Queries</>}
                     >
                         <>
-                            {/* <Tabs
-                                className="mt-2 w-fit"
-                                activeTabId={tab}
-                                onChange={(e) => setTab(e.detail.activeTabId)}
-                                tabs={[
-                                    {
-                                        id: '0',
-                                        label: 'Getting Started',
-                                        content: (
-                                            <>
-                                                <Bookmarks
-                                                    setTab={setTab}
-                                                    setOpenLayout={
-                                                        setOpenLayout
-                                                    }
-                                                />
-                                            </>
-                                        ),
-                                    },
-
-                                    {
-                                        id: '1',
-                                        label: 'All Queries',
-                                        content: (
-                                            <>
-                                                <AllQueries
-                                                    setTab={setTab}
-                                                    setOpenLayout={
-                                                        setOpenLayout
-                                                    }
-                                                />
-                                            </>
-                                        ),
-                                    },
-                                    {
-                                        id: '2',
-                                        label: 'Views',
-                                        content: (
-                                            <>
-                                                <View
-                                                    setTab={setTab}
-                                                    setOpenLayout={
-                                                        setOpenLayout
-                                                    }
-                                                />
-                                            </>
-                                        ),
-                                    },
-                                ]}
-                            /> */}
-
                             <AllQueries
                                 setTab={setTab}
                                 setOpenLayout={setOpenLayout}
@@ -429,7 +392,7 @@ export default function Query() {
                         >
                             <Flex
                                 flexDirection="row"
-                                className="gap-5"
+                                className="gap-5 "
                                 justifyContent="start"
                                 alignItems="start"
                                 style={{ flex: '1 1 0' }}
@@ -450,10 +413,10 @@ export default function Query() {
                                                 flexDirection="col"
                                                 justifyContent="start"
                                                 alignItems="start"
-                                                className="gap-2 overflow-y-scroll max-h-[500px] "
+                                                className="gap-2 overflow-y-scroll w-full max-h-[500px] "
                                             >
-                                                <Text className="font-bold text-xl text-black flex flex-row justify-between w-full">
-                                                    Tables
+                                                <Text className="text-base text-black flex flex-row justify-between w-full">
+                                                    <span className='w-full'>Plugin schema</span>
                                                     <Flex
                                                         justifyContent="end"
                                                         // className="mt-12"
@@ -680,7 +643,7 @@ export default function Query() {
                                             >
                                                 <TableCellsIcon />
                                                 <Text className="rotate-90">
-                                                    Tables
+                                                    Plugin schema
                                                 </Text>
                                             </Flex>
                                         </Button>
