@@ -10,7 +10,7 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0
 
 multielasticdump \
   --direction=load \
-  --input="/tmp/demo-data/es-demo/" \
+  --input="/demo-data/es-demo/" \
   --output="$NEW_ELASTICSEARCH_ADDRESS" \
   --parallel=20 \
   --limit=10000 \
