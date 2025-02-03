@@ -2,23 +2,14 @@ package demo_importer
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
-	"net/http"
 	"os"
 
-	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/config"
-	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/postgres"
 	db2 "github.com/opengovern/opencomply/jobs/demo-importer-job/db"
-	"github.com/opengovern/opencomply/jobs/demo-importer-job/fetch"
 	"github.com/opengovern/opencomply/jobs/demo-importer-job/types"
 	"github.com/opengovern/opencomply/jobs/demo-importer-job/worker"
-	"github.com/opengovern/opencomply/services/core/client"
-	"github.com/opengovern/opencomply/services/core/db/models"
-	"github.com/opensearch-project/opensearch-go/v4"
-	"github.com/opensearch-project/opensearch-go/v4/opensearchapi"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -44,67 +35,54 @@ func Command() *cobra.Command {
 				return fmt.Errorf("failure creating path: %w", err)
 			}
 
-			cfg := opensearchapi.Config{
-				opensearch.Config{
-					Addresses:           []string{cnf.ElasticSearch.Address},
-					Username:            cnf.ElasticSearch.Username,
-					Password:            cnf.ElasticSearch.Password,
-					CompressRequestBody: true,
-					Transport: &http.Transport{
-						TLSClientConfig: &tls.Config{
-							InsecureSkipVerify: true,
-						},
-					},
-				},
-			}
-			es, err := opensearchapi.NewClient(cfg)
+		
 
 			cmd.SilenceUsage = true
 
-			metadataClient := client.NewCoreServiceClient(cnf.Core.BaseURL)
+			// metadataClient := client.NewCoreServiceClient(cnf.Core.BaseURL)
 
-			s3Url := cnf.DemoDataS3URL
-			value, err := metadataClient.GetConfigMetadata(&httpclient.Context{
-				UserRole: api.AdminRole,
-			}, models.DemoDataS3URL)
-			if err == nil && len(value.GetValue().(string)) > 0 {
-				s3Url = value.GetValue().(string)
-			} else if err != nil {
-				logger.Error("failed to get demo data s3 url from metadata", zap.Error(err))
-			}
+			// s3Url := cnf.DemoDataS3URL
+			// value, err := metadataClient.GetConfigMetadata(&httpclient.Context{
+			// 	UserRole: api.AdminRole,
+			// }, models.DemoDataS3URL)
+			// if err == nil && len(value.GetValue().(string)) > 0 {
+			// 	s3Url = value.GetValue().(string)
+			// } else if err != nil {
+			// 	logger.Error("failed to get demo data s3 url from metadata", zap.Error(err))
+			// }
 
-			logger.Info("Downloading file", zap.String("address", s3Url))
-			filePath, err := fetch.DownloadS3Object(cnf.DemoDataS3URL)
-			if err != nil {
-				return err
-			}
+			// logger.Info("Downloading file", zap.String("address", s3Url))
+			// filePath, err := fetch.DownloadS3Object(cnf.DemoDataS3URL)
+			// if err != nil {
+			// 	return err
+			// }
 
-			logger.Info("File Downloaded", zap.String("file", filePath))
+			// logger.Info("File Downloaded", zap.String("file", filePath))
 
-			decryptedData, err := fetch.DecryptString(filePath, cnf.OpensslPassword)
+			// decryptedData, err := fetch.DecryptString(filePath, cnf.OpensslPassword)
 
-			logger.Info("Successfully decrypted", zap.String("file", filePath))
+			// logger.Info("Successfully decrypted", zap.String("file", filePath))
 
-			decryptedFile := types.DemoDecryptedDataFilePath
-			err = os.WriteFile(decryptedFile, decryptedData, 0644)
-			if err != nil {
-				return err
-			}
+			// decryptedFile := types.DemoDecryptedDataFilePath
+			// err = os.WriteFile(decryptedFile, decryptedData, 0644)
+			// if err != nil {
+			// 	return err
+			// }
 
-			logger.Info("Successfully decrypted file written", zap.String("file", filePath))
+			// logger.Info("Successfully decrypted file written", zap.String("file", filePath))
 
-			file, err := os.Open(decryptedFile)
-			if err != nil {
-				return err
-			}
-			defer file.Close()
+			// file, err := os.Open(decryptedFile)
+			// if err != nil {
+			// 	return err
+			// }
+			// defer file.Close()
 
-			err = fetch.Unzip(file)
-			if err != nil {
-				return fmt.Errorf("failure while unzipping file: %w", err)
-			}
+			// err = fetch.Unzip(file)
+			// if err != nil {
+			// 	return fmt.Errorf("failure while unzipping file: %w", err)
+			// }
 
-			logger.Info("Successfully unzipped", zap.String("file", filePath))
+			// logger.Info("Successfully unzipped", zap.String("file", filePath))
 			//err = worker.ImportSQLFiles(cnf, types.PostgresqlBackupPath)
 			//if err != nil {
 			//	return fmt.Errorf("failure while importing sql files to postgres: %w", err)
@@ -130,7 +108,7 @@ func Command() *cobra.Command {
 				return fmt.Errorf("failure while initializing database: %w", err)
 			}
 
-			err = worker.ImportJob(ctx, logger, migratorDb, es, "/demo-data/es-demo")
+			err = worker.ImportJob(ctx, logger, migratorDb)
 			if err != nil {
 				return fmt.Errorf("failure while importing es indices: %w", err)
 			}

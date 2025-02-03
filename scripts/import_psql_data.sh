@@ -5,6 +5,20 @@ curl -O "$DEMO_DATA_S3_URL"
 openssl enc -d -aes-256-cbc -md md5 -pass pass:"$OPENSSL_PASSWORD" -base64 -in demo_data.tar.gz.enc -out demo_data.tar.gz
 tar -xvf demo_data.tar.gz
 
+NEW_ELASTICSEARCH_ADDRESS="https://${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD}@${ELASTICSEARCH_ADDRESS#https://}"
+export NODE_TLS_REJECT_UNAUTHORIZED=0
+
+multielasticdump \
+  --direction=load \
+  --input="/tmp/demo-data/es-demo/" \
+  --output="$NEW_ELASTICSEARCH_ADDRESS" \
+  --parallel=20 \
+  --limit=10000 \
+  --scrollTime=10m \
+  --ignoreTemplate=true
+
+
+
 echo "$POSTGRESQL_HOST"
 echo "$POSTGRESQL_PORT"
 echo "$POSTGRESQL_USERNAME"

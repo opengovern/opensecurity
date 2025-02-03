@@ -14,6 +14,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get install -y nodejs
 
 
+RUN npm install -g elasticdump
+
 RUN mkdir -p /tmp/es_backup /tmp/postgres
 
 COPY ../scripts/import_psql_data.sh /usr/local/bin/import_psql_data.sh
