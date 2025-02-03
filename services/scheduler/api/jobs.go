@@ -287,6 +287,24 @@ type GetDescribeJobStatusResponse struct {
 	UpdatedAt       time.Time       `json:"updated_at"`
 }
 
+type ComplianceJobIncidentsSummary struct {
+	Ok    int64 `json:"ok"`
+	Alarm int64 `json:"alarm"`
+}
+
+type ComplianceJobIncidentsBySeverity struct {
+	Critical int64 `json:"critical"`
+	High     int64 `json:"high"`
+	Medium   int64 `json:"medium"`
+	Low      int64 `json:"low"`
+	None     int64 `json:"none"`
+}
+
+type ComplianceJobIncidents struct {
+	Summary         ComplianceJobIncidentsSummary    `json:"summary"`
+	AlarmsBreakdown ComplianceJobIncidentsBySeverity `json:"alarms_breakdown"`
+}
+
 type GetComplianceJobStatusResponse struct {
 	JobId          uint                         `json:"job_id"`
 	SummaryJobId   *uint                        `json:"summary_job_id"`
@@ -299,10 +317,11 @@ type GetComplianceJobStatusResponse struct {
 	EndTime        *time.Time                   `json:"end_time"`
 	StepFailed     ComplianceJobStatus          `json:"step_failed"`
 	FailureMessage string                       `json:"failure_message"`
-	IntegrationIds []string                     `json:"integration_ids"`
+	Integrations   []IntegrationInfo            `json:"integrations"`
 	CreatedBy      string                       `json:"created_by"`
 	TriggerType    string                       `json:"trigger_type"`
 	RunnersStatus  ComplianceRunnersStatus      `json:"runners_status"`
+	Incidents      ComplianceJobIncidents       `json:"incidents"`
 
 	DataSinkingTime int64 `json:"data_sinking_time"`
 

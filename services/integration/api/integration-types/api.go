@@ -295,7 +295,7 @@ func (a *API) LoadPluginWithID(c echo.Context) error {
 	err = a.CheckEnoughMemory()
 	if err != nil {
 		a.logger.Error("checking enough memory failed", zap.Error(err))
-		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	plugin.InstallState = models2.IntegrationTypeInstallStateInstalling
@@ -339,7 +339,7 @@ func (a *API) LoadPluginWithURL(c echo.Context) error {
 	err = a.CheckEnoughMemory()
 	if err != nil {
 		a.logger.Error("checking enough memory failed", zap.Error(err))
-		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	plugin, err := a.database.GetPluginByURL(url)
