@@ -346,7 +346,7 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
                         }
                     />
                 </Flex>
-                <Flex className='sm:flex-row flex-col justify-start sm:items-center items-start gap-4'>
+                <Flex className='sm:flex-row flex-col justify-start sm:items-start items-start gap-4'>
                     <Select
                         // @ts-ignore
                         selectedOption={filter}
