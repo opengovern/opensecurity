@@ -6,22 +6,19 @@ aws s3 cp ./test.txt "s3://test.txt" --endpoint-url="$ENDPOINT_URL" --region "$B
 mkdir -p /tmp/demo-data/es-demo
 NEW_ELASTICSEARCH_ADDRESS="https://${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD}@${ELASTICSEARCH_ADDRESS#https://}"
 
-curl -X GET "$ELASTICSEARCH_ADDRESS/_cat/indices?format=json" -u "$ELASTICSEARCH_USERNAME:$ELASTICSEARCH_PASSWORD" --insecure | jq -r '.[].index' | while read -r index; do
-  if [ "$(echo "$index" | cut -c 1)" != "." ] && [ "${index#security-auditlog-}" = "$index" ]; then
-    NODE_TLS_REJECT_UNAUTHORIZED=0 elasticdump \
-      --input="$NEW_ELASTICSEARCH_ADDRESS/$index" \
-      --output="/tmp/demo-data/es-demo/$index.settings.json" \
-      --type=settings
-    NODE_TLS_REJECT_UNAUTHORIZED=0 elasticdump \
-      --input="$NEW_ELASTICSEARCH_ADDRESS/$index" \
-      --output="/tmp/demo-data/es-demo/$index.mapping.json" \
-      --type=mapping
-    NODE_TLS_REJECT_UNAUTHORIZED=0 elasticdump \
-      --input="$NEW_ELASTICSEARCH_ADDRESS/$index" \
-      --output="/tmp/demo-data/es-demo/$index.json" \
-      --type=data
-  fi
-done
+echo $NEW_ELASTICSEARCH_ADDRESS 
+export NODE_TLS_REJECT_UNAUTHORIZED=0
+multielasticdump \
+  --direction=dump \
+  --input="$NEW_ELASTICSEARCH_ADDRESS" \
+  --output="/tmp/demo-data/es-demo/" \
+  --parallel=20 \
+  --match='^(?!\.)(?!.*(security|deleted)).*$' \
+  --matchType=alias \
+  --limit=10000 \
+  --scrollTime=10m \
+  --searchBody='{"query": {"bool": {"must_not": {"term": {"deleted": true}}}}}' \
+  --ignoreTemplate=true
 
 mkdir -p /tmp/demo-data/postgres
 pg_dump --dbname="postgresql://$POSTGRESQL_USERNAME:$POSTGRESQL_PASSWORD@$POSTGRESQL_HOST:$POSTGRESQL_PORT/describe" > /tmp/demo-data/postgres/describe.sql
