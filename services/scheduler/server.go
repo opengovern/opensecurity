@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	es2 "github.com/opengovern/opencomply/services/compliance/es"
 	"net/http"
 	"regexp"
 	"sort"
@@ -1786,7 +1787,7 @@ func (h HttpServer) GetComplianceJobStatus(ctx echo.Context) error {
 		JobId:           j.ID,
 		SummaryJobId:    summaryJobId,
 		WithIncidents:   j.WithIncidents,
-		IntegrationIds:  j.IntegrationIDs,
+		Integrations:    integrations,
 		JobType:         "compliance",
 		Frameworks:      frameworks,
 		JobStatus:       j.Status.ToApi(),
@@ -1804,6 +1805,32 @@ func (h HttpServer) GetComplianceJobStatus(ctx echo.Context) error {
 
 	if jobResult.JobStatus == api.ComplianceJobSucceeded || jobResult.JobStatus == api.ComplianceJobFailed {
 		jobResult.EndTime = &j.UpdatedAt
+	}
+
+	summary, err := es2.GetJobReportControlSummaryByJobID(ctx.Request().Context(), h.Scheduler.logger, h.Scheduler.es, strconv.Itoa(int(j.ID)), nil)
+	if err != nil {
+		h.Scheduler.logger.Error("failed to get job report", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get job report")
+	}
+	if summary != nil {
+		for _, v := range summary.Controls {
+			if v != nil {
+				jobResult.Incidents.Summary.Alarm += v.Alarms
+				jobResult.Incidents.Summary.Ok += v.Oks
+				switch v.Severity {
+				case types.ComplianceResultSeverityNone:
+					jobResult.Incidents.AlarmsBreakdown.None += v.Alarms
+				case types.ComplianceResultSeverityLow:
+					jobResult.Incidents.AlarmsBreakdown.Low += v.Alarms
+				case types.ComplianceResultSeverityMedium:
+					jobResult.Incidents.AlarmsBreakdown.Medium += v.Alarms
+				case types.ComplianceResultSeverityHigh:
+					jobResult.Incidents.AlarmsBreakdown.High += v.Alarms
+				case types.ComplianceResultSeverityCritical:
+					jobResult.Incidents.AlarmsBreakdown.Critical += v.Alarms
+				}
+			}
+		}
 	}
 
 	return ctx.JSON(http.StatusOK, jobResult)
