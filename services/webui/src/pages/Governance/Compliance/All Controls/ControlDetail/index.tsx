@@ -116,49 +116,53 @@ export default function ControlDetail({
                 value: selectedItem?.id,
             },
             {
-            label: 'Resource Tables',
-            //    @ts-ignore
-            value: (
-                <>
-                    <Flex className="gap-2 flex-wrap w-full" flexDirection="row">
-                        <>
-                            {/* @ts-ignore */}
-                            {selectedItem?.policy?.list_of_resources?.map(
-                                (key, index) => {
-                                    return (
-                                        <>
-                                            {key ===
-                                            selectedItem?.policy
-                                                ?.primary_resource ? (
-                                                <>
-                                                    <Popover
-                                                        content={
-                                                            'This is the table used to record and track incidents related to this control. '
-                                                        }
-                                                        position="bottom"
-                                                    >
-                                                        {key}
-                                                    </Popover>
-                                                </>
-                                            ) : (
-                                                <>{key}</>
-                                            )}
-                                        </>
-                                    )
-                                }
-                            )}
-                        </>
-                    </Flex>
-                </>
-            ),
-        },
+                label: 'Resource Tables',
+                //    @ts-ignore
+                value: (
+                    <>
+                        <Flex
+                            className="gap-2 flex-wrap w-full justify-start items-center"
+                            flexDirection="row"
+                        >
+                            <>
+                                {/* @ts-ignore */}
+                                {selectedItem?.policy?.list_of_resources?.map(
+                                    (key, index) => {
+                                        return (
+                                            <>
+                                                {key ===
+                                                selectedItem?.policy
+                                                    ?.primary_resource ? (
+                                                    <>
+                                                        <Popover
+                                                            content={
+                                                                'This is the table used to record and track incidents related to this control. '
+                                                            }
+                                                            position="bottom"
+                                                        >
+                                                            {key},
+                                                        </Popover>
+                                                    </>
+                                                ) : (
+                                                    <>{key},</>
+                                                )}
+                                            </>
+                                        )
+                                    }
+                                )}
+                            </>
+                        </Flex>
+                    </>
+                ),
+            },
             {
                 label: 'Policy Language',
                 value: selectedItem?.policy?.language,
-            },{
+            },
+            {
                 label: 'Frameworks',
-                value: selectedItem?.frameworks.length
-            }
+                value: selectedItem?.frameworks.length,
+            },
         ]
        
     
