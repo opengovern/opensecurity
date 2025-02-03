@@ -27,6 +27,7 @@ import (
 	metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 )
 
 const (
@@ -200,7 +201,7 @@ func isMetricsAPIAvailable(clientset *kubernetes.Clientset) bool {
 
 	// Check if "metrics.k8s.io" is present
 	for _, group := range apiGroups.Groups {
-		if group.Name == "metrics.k8s.io" {
+		if strings.Contains(group.Name, "metrics.k8s.io") {
 			return true
 		}
 	}
