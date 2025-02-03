@@ -413,6 +413,7 @@ export default function Controls({
                 // setLoading(false)
             })
     }
+    const [splitSize, setSplitSize] = useState(500)
     return (
         <AppLayout
             toolsOpen={false}
@@ -424,7 +425,10 @@ export default function Controls({
                 !(tree && tree?.length > 0) || window.innerWidth < 640
             }
             disableContentPaddings={true}
-            splitPanelSize={500}
+            splitPanelSize={splitSize}
+            onSplitPanelResize={({ detail }) => {
+                setSplitSize(detail.size)
+            }}
             splitPanelOpen={open}
             onSplitPanelToggle={() => {
                 setOpen(!open)

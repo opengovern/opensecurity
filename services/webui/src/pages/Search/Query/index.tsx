@@ -187,6 +187,8 @@ export default function Query() {
     const [expanded1, setExpanded1] = useState(-1)
     const [openIntegration, setOpenIntegration] = useState(false)
     const [openLayout, setOpenLayout] = useState(true)
+    const [splitSize, setSplitSize] = useState(1200)
+
 
     // const { response: categories, isLoading: categoryLoading } =
     //     useInventoryApiV2AnalyticsCategoriesList()
@@ -368,7 +370,10 @@ export default function Query() {
                 onSplitPanelToggle={() => {
                     setOpenLayout(!openLayout)
                 }}
-                splitPanelSize={1200}
+                splitPanelSize={splitSize}
+                onSplitPanelResize={({detail})=>{
+                    setSplitSize(detail.size)
+                }}
                 splitPanel={
                     // @ts-ignore
                     <SplitPanel
@@ -416,7 +421,9 @@ export default function Query() {
                                                 className="gap-2 overflow-y-scroll w-full max-h-[500px] "
                                             >
                                                 <Text className="text-base text-black flex flex-row justify-between w-full">
-                                                    <span className='w-full'>Plugin schema</span>
+                                                    <span className="w-full">
+                                                        Plugin schema
+                                                    </span>
                                                     <Flex
                                                         justifyContent="end"
                                                         // className="mt-12"
