@@ -2,9 +2,13 @@ package integration_types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	hczap "github.com/zaffka/zap-to-hclog"
 	"golang.org/x/net/context"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"math/big"
 	"net/http"
 	"os"
 	"os/exec"
@@ -28,6 +32,8 @@ import (
 	"go.uber.org/zap"
 	"sort"
 )
+
+const OneGB = 1024 * 1024 * 1024
 
 type API struct {
 	logger      *zap.Logger
@@ -286,6 +292,12 @@ func (a *API) LoadPluginWithID(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
 	}
 
+	err = a.CheckEnoughMemory()
+	if err != nil {
+		a.logger.Error("checking enough memory failed", zap.Error(err))
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	}
+
 	plugin.InstallState = models2.IntegrationTypeInstallStateInstalling
 
 	err = a.database.UpdatePlugin(plugin)
@@ -323,6 +335,12 @@ func (a *API) LoadPluginWithURL(c echo.Context) error {
 	url := pluginURL
 
 	var err error
+
+	err = a.CheckEnoughMemory()
+	if err != nil {
+		a.logger.Error("checking enough memory failed", zap.Error(err))
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+	}
 
 	plugin, err := a.database.GetPluginByURL(url)
 	if err != nil {
@@ -1095,6 +1113,69 @@ func (a *API) UnLoadPlugin(ctx context.Context, plugin models2.IntegrationPlugin
 	}
 	if _, ok := a.typeManager.PingLocks[plugin.IntegrationType]; ok {
 		delete(a.typeManager.PingLocks, plugin.IntegrationType)
+	}
+
+	return nil
+}
+
+func (a *API) CheckEnoughMemory() error {
+	if a.typeManager.MetricsClient == nil {
+		a.logger.Warn("Metrics API is not available")
+		return nil
+	}
+	a.logger.Info("start checking memory")
+	namespace, ok := os.LookupEnv("CURRENT_NAMESPACE")
+	if !ok {
+		a.logger.Error("current namespace lookup failed")
+		return errors.New("current namespace lookup failed")
+	}
+
+	labelSelector := "app=integration-service"
+
+	// Get the pod associated with the deployment
+	pods, err := a.typeManager.KubeClientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
+		LabelSelector: labelSelector,
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, pod := range pods.Items {
+		var memoryLimit *resource.Quantity
+		for _, container := range pod.Spec.Containers {
+			limit := container.Resources.Limits.Memory()
+			memoryLimit = limit
+		}
+		if memoryLimit == nil {
+			a.logger.Error("no memory limit found")
+			return nil
+		}
+		memoryLimitBytes := memoryLimit.Value()
+
+		podMetrics, err := a.typeManager.MetricsClient.MetricsV1beta1().PodMetricses(namespace).Get(context.TODO(), pod.Name, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+		var memoryUsage *resource.Quantity
+		for _, container := range podMetrics.Containers {
+			usage := container.Usage.Memory()
+			memoryUsage = usage
+		}
+		if memoryUsage == nil {
+			a.logger.Error("no memory usage found")
+			return nil
+		}
+		memoryUsageBytes := memoryUsage.Value()
+
+		availableMemory := big.NewInt(memoryLimitBytes).Sub(big.NewInt(memoryLimitBytes), big.NewInt(memoryUsageBytes)).Int64()
+
+		a.logger.Info("memory usage and available", zap.Int64("usage", memoryLimitBytes), zap.Int64("limit", memoryLimitBytes),
+			zap.Int64("available", availableMemory))
+		if availableMemory >= OneGB {
+			return nil
+		} else {
+			return fmt.Errorf("not enough available memory: %v", availableMemory)
+		}
 	}
 
 	return nil

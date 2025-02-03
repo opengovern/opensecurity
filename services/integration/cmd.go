@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -114,7 +115,16 @@ func Command() *cobra.Command {
 			if err != nil {
 				logger.Error("failed to create clientset", zap.Error(err))
 			}
-			typeManager := integration_type.NewIntegrationTypeManager(logger, db, integrationTypesDb, kubeClient, clientset, cnf.IntegrationPlugins)
+
+			var metricsClient *metricsv.Clientset
+			if isMetricsAPIAvailable(clientset) {
+				metricsClient, err = metricsv.NewForConfig(inClusterConfig)
+				if err != nil {
+					logger.Error("failed to create metricsClient", zap.Error(err))
+				}
+			}
+
+			typeManager := integration_type.NewIntegrationTypeManager(logger, db, integrationTypesDb, kubeClient, clientset, metricsClient, cnf.IntegrationPlugins)
 
 			cmd.SilenceUsage = true
 
@@ -179,4 +189,20 @@ type IntegrationType struct {
 	PackageTag       string              `json:"PackageTag"`
 	Enabled          bool                `json:"enabled"`
 	SchemaIDs        []string            `json:"schema_ids"`
+}
+
+func isMetricsAPIAvailable(clientset *kubernetes.Clientset) bool {
+	discoveryClient := clientset.Discovery()
+	apiGroups, err := discoveryClient.ServerGroups()
+	if err != nil {
+		return false
+	}
+
+	// Check if "metrics.k8s.io" is present
+	for _, group := range apiGroups.Groups {
+		if group.Name == "metrics.k8s.io" {
+			return true
+		}
+	}
+	return false
 }

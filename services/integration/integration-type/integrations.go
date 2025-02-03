@@ -20,6 +20,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
 	"net/http"
 	"os"
 	"os/exec"
@@ -54,7 +55,8 @@ type IntegrationTypeManager struct {
 	IntegrationTypes  map[integration.Type]interfaces.IntegrationType
 
 	kubeClient    client.Client
-	kubeClientset *kubernetes.Clientset
+	KubeClientset *kubernetes.Clientset
+	MetricsClient *metricsv.Clientset
 	database      db.Database
 
 	Clients    map[integration.Type]*plugin.Client
@@ -63,7 +65,8 @@ type IntegrationTypeManager struct {
 	maxRetries int
 }
 
-func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integrationTypeDb *gorm.DB, kubeClient client.Client, kubeClientset *kubernetes.Clientset, cnf config.IntegrationPluginsConfig) *IntegrationTypeManager {
+func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integrationTypeDb *gorm.DB,
+	kubeClient client.Client, kubeClientset *kubernetes.Clientset, metricsClient *metricsv.Clientset, cnf config.IntegrationPluginsConfig) *IntegrationTypeManager {
 	maxRetries := cnf.MaxAutoRebootRetries
 	if maxRetries == 0 {
 		maxRetries = 1
@@ -141,7 +144,8 @@ func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integra
 
 		database:      database,
 		kubeClient:    kubeClient,
-		kubeClientset: kubeClientset,
+		KubeClientset: kubeClientset,
+		MetricsClient: metricsClient,
 	}
 
 	for integrationType, p := range plugins {
@@ -858,7 +862,7 @@ func (a *IntegrationTypeManager) RestartCloudQLEnabledServices(ctx context.Conte
 		return errors.New("current namespace lookup failed")
 	}
 
-	err := a.kubeClientset.CoreV1().Pods(currentNamespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "cloudql-enabled=true"})
+	err := a.KubeClientset.CoreV1().Pods(currentNamespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "cloudql-enabled=true"})
 	if err != nil {
 		a.logger.Error("failed to delete pods", zap.Error(err))
 		return err
