@@ -1284,10 +1284,12 @@ export default function EvaluateDetail() {
                                                         }
                                                         <KButton
                                                             onClick={() => {
-                                                               setIntegrationDetail(
-                                                                   jobDetail?.integrations
-                                                               )
-                                                               setIntegrationOpen(true)
+                                                                setIntegrationDetail(
+                                                                    jobDetail?.integrations
+                                                                )
+                                                                setIntegrationOpen(
+                                                                    true
+                                                                )
                                                             }}
                                                             variant="inline-link"
                                                             iconName="status-info"
@@ -1483,6 +1485,7 @@ export default function EvaluateDetail() {
                     <KTable
                         className="p-3   min-h-[550px]"
                         // resizableColumns
+                        variant="full-page"
                         renderAriaLive={({
                             firstIndex,
                             lastIndex,
@@ -1503,7 +1506,7 @@ export default function EvaluateDetail() {
                                 cell: (item) => item.integration_id,
                                 sortingField: 'id',
                                 isRowHeader: true,
-                                // maxWidth: '70px',
+                                maxWidth: '100px',
                             },
 
                             {
@@ -1512,6 +1515,7 @@ export default function EvaluateDetail() {
                                 sortingField: 'severity',
                                 cell: (item) => item.provider_id,
                                 // maxWidth: '70px',
+                                maxWidth: '100px',
                             },
                             {
                                 id: 'name',
@@ -1519,6 +1523,7 @@ export default function EvaluateDetail() {
                                 sortingField: 'severity',
                                 cell: (item) => item.name,
                                 // maxWidth: 150,
+                                maxWidth: '100px',
                             },
                             {
                                 id: 'integration_type',
@@ -1526,6 +1531,7 @@ export default function EvaluateDetail() {
                                 sortingField: 'severity',
                                 cell: (item) => item.integration_type,
                                 // maxWidth: 100,
+                                maxWidth: '200px',
                             },
                             {
                                 id: 'state',
