@@ -166,7 +166,7 @@ export default function ImpactedResources({
     }, [page,conformanceFilter])
 
     // const serverSideRows = useMemo(() => ssr(), [conformanceFilter])
-
+const [splitSize, setSplitSize] = useState(400)
     return (
         <>
             {error.length > 0 && (
@@ -181,7 +181,10 @@ export default function ImpactedResources({
                 contentType="table"
                 toolsHide={true}
                 navigationHide={true}
-                splitPanelSize={400}
+                splitPanelSize={splitSize}
+                onSplitPanelResize={({ detail }) => {
+                    setSplitSize(detail.size)
+                }}
                 splitPanelOpen={open}
                 onSplitPanelToggle={() => {
                     setOpen(!open)

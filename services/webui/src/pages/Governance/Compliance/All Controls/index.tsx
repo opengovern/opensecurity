@@ -378,7 +378,7 @@ export default function AllControls() {
             })
         }
      }, [filterQuery])
-     
+     const [splitSize, setSplitSize] = useState(500)
      
     return (
         <>
@@ -392,7 +392,10 @@ export default function AllControls() {
                             className="w-full"
                             toolsHide={true}
                             navigationHide={true}
-                            splitPanelSize={500}
+                            splitPanelSize={splitSize}
+                            onSplitPanelResize={({ detail }) => {
+                                setSplitSize(detail.size)
+                            }}
                             splitPanelOpen={open}
                             onSplitPanelToggle={() => {
                                 setOpen(!open)
@@ -632,7 +635,7 @@ export default function AllControls() {
                                         <CustomPagination
                                             currentPageIndex={page}
                                             pagesCount={totalPage}
-                                            onChange={({ detail } :any) =>
+                                            onChange={({ detail }: any) =>
                                                 setPage(detail.currentPageIndex)
                                             }
                                         />
