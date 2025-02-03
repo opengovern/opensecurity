@@ -29,7 +29,7 @@ type Manifest struct {
 }
 
 type IntegrationPlugin struct {
-	ID              int                 `json:"id" yaml:"id"`
+	Order              int                 `json:"order" yaml:"order"`
 	IntegrationType integration.Type    `json:"integration_type" yaml:"integration_type"`
 	Name            string              `json:"name" yaml:"name"`
 	Tier            string              `json:"tier" yaml:"tier"`
@@ -163,7 +163,7 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 	operationalStatusUpdates.Set("[]")
 
 	return &models.IntegrationPlugin{
-			ID:                       iPlugin.ID,
+			ID:                       iPlugin.Order,
 			PluginID:                 iPlugin.IntegrationType.String(),
 			IntegrationType:          iPlugin.IntegrationType,
 			Name:                     iPlugin.Name,
