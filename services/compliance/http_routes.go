@@ -94,6 +94,7 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 	complianceFrameworks := v1.Group("/frameworks")
 	complianceFrameworks.POST("", httpserver2.AuthorizeHandler(h.ListFrameworks, authApi.ViewerRole))
 	complianceFrameworks.GET("/:framework-id/assignments", httpserver2.AuthorizeHandler(h.ListFrameworkAssignments, authApi.ViewerRole))
+	complianceFrameworks.GET("/:framework-id/assignments/available", httpserver2.AuthorizeHandler(h.ListFrameworkAvailableAssignments, authApi.ViewerRole))
 	complianceFrameworks.PUT("/:framework-id/assignments/:integration-id", httpserver2.AuthorizeHandler(h.AddAssignment, authApi.EditorRole))
 	complianceFrameworks.DELETE("/:framework-id/assignments/:integration-id", httpserver2.AuthorizeHandler(h.DeleteAssignment, authApi.EditorRole))
 	complianceFrameworks.PUT("/:framework-id", httpserver2.AuthorizeHandler(h.UpdateFrameworkSetting, authApi.EditorRole))
@@ -5391,6 +5392,110 @@ func (h *HttpHandler) ListFrameworkAssignments(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, api.ListFrameworkAssignmentsResponse{
 		PageInfo: pageInfo,
 		Data:     results,
+	})
+}
+
+// ListFrameworkAvailableAssignments godoc
+//
+//	@Summary	Get Benchmark Assignments by FrameworkIds
+//	@Security	BearerToken
+//	@Tags		compliance
+//	@Accept		json
+//	@Produce	json
+//	@Param		page				query		int			false	"Page Number"
+//	@Param		page_size			query		int			false	"Page Size"
+//	@Param		framework-id		path		string		true	"Framework ID"
+//	@Success	200					{object}	api.ListFrameworkAssignmentsResponse
+//	@Router		/compliance/api/v1/frameworks/{framework-id}/assignments/available [get]
+func (h *HttpHandler) ListFrameworkAvailableAssignments(echoCtx echo.Context) error {
+	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
+
+	var page, pageSize int64
+	var err error
+
+	pageStr := echoCtx.QueryParam("page")
+	if pageStr != "" {
+		page, err = strconv.ParseInt(pageStr, 10, 64)
+		if err != nil {
+			return err
+		}
+	}
+	pageSizeStr := echoCtx.QueryParam("page_size")
+	if pageSizeStr != "" {
+		pageSize, err = strconv.ParseInt(pageSizeStr, 10, 64)
+		if err != nil {
+			return err
+		}
+	}
+
+	ctx := echoCtx.Request().Context()
+
+	frameworkId := echoCtx.Param("framework-id")
+
+	integrationInfos := make(map[string]api.IntegrationInfo)
+	benchmark, err := h.db.GetFramework(ctx, frameworkId)
+	if err != nil {
+		h.logger.Error("failed to get framework", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get framework")
+	}
+	if !benchmark.Enabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "framework is not enabled")
+	}
+	if benchmark.IsBaseline {
+		return echo.NewHTTPError(http.StatusBadRequest, "framework is baseline")
+	}
+
+	integrations, err := h.integrationClient.ListIntegrations(clientCtx, benchmark.IntegrationType)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	for _, i := range integrations.Integrations {
+		if i.State != integrationapi.IntegrationStateActive {
+			continue
+		}
+		integrationInfos[i.IntegrationID] = api.IntegrationInfo{
+			IntegrationID:   &i.IntegrationID,
+			Name:            &i.Name,
+			ProviderID:      &i.ProviderID,
+			IntegrationType: i.IntegrationType.String(),
+		}
+	}
+
+	assignments, err := h.db.GetBenchmarkAssignmentsByBenchmarkId(ctx, frameworkId)
+	if err != nil {
+		h.logger.Error("cannot get explicit assignments", zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, "cannot get explicit assignments")
+	}
+
+	for _, assignment := range assignments {
+		if assignment.IntegrationID != nil {
+			if _, ok := integrationInfos[*assignment.IntegrationID]; ok {
+				delete(integrationInfos, *assignment.IntegrationID)
+			}
+		}
+	}
+
+	var results []api.IntegrationInfo
+	for _, info := range integrationInfos {
+		results = append(results, info)
+
+	}
+
+	totalCount := len(results)
+	sort.Slice(results, func(i, j int) bool {
+		return *results[i].IntegrationID < *results[j].IntegrationID
+	})
+	if pageSize != 0 {
+		if page == 0 {
+			results = utils.Paginate(1, pageSize, results)
+		} else {
+			results = utils.Paginate(page, pageSize, results)
+		}
+	}
+
+	return echoCtx.JSON(http.StatusOK, api.ListFrameworkAvailableAssignmentsResponse{
+		Items:      results,
+		TotalCount: totalCount,
 	})
 }
 

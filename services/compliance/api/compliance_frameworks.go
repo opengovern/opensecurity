@@ -78,3 +78,8 @@ type ListFrameworksResponse struct {
 	Items      []FrameworkItem `json:"items"`
 	TotalCount int             `json:"total_count"`
 }
+
+type ListFrameworkAvailableAssignmentsResponse struct {
+	Items      []IntegrationInfo `json:"items"`
+	TotalCount int               `json:"total_count"`
+}
