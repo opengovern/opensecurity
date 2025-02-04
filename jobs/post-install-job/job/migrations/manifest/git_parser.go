@@ -12,6 +12,7 @@ import (
 	"github.com/opengovern/opencomply/services/integration/models"
 	"go.uber.org/zap"
 	"os"
+	"path/filepath"
 )
 
 type GitParser struct {
@@ -29,7 +30,7 @@ type Manifest struct {
 }
 
 type IntegrationPlugin struct {
-	Order              int                 `json:"order" yaml:"order"`
+	Order           int                 `json:"order" yaml:"order"`
 	IntegrationType integration.Type    `json:"integration_type" yaml:"integration_type"`
 	Name            string              `json:"name" yaml:"name"`
 	Tier            string              `json:"tier" yaml:"tier"`
@@ -148,6 +149,19 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 			if err != nil {
 				logger.Error("failed to open cloudql-plugin file", zap.Error(err), zap.String("url", url))
 				return nil, nil, fmt.Errorf("open cloudql-plugin file for url %s: %w", iPlugin.IntegrationType.String(), err)
+			}
+
+			// copy contents of index-templates folder to config.IndexTemplatesPath/pluginName if it exists
+			if stat, err := os.Stat(filepath.Join(baseDir, "integarion_type", "index-templates")); err == nil && stat.IsDir() {
+				fs := os.DirFS(filepath.Join(baseDir, "integarion_type", "index-templates"))
+				err = os.CopyFS(filepath.Join(config.IndexTemplatesPath, iPlugin.IntegrationType.String()), fs)
+				if err != nil {
+					logger.Error("failed to copy index-templates folder", zap.Error(err))
+				} else {
+					logger.Info("index-templates folder copied successfully", zap.String("integrationType", iPlugin.IntegrationType.String()))
+				}
+			} else {
+				logger.Info("index-templates folder not found for integration type - skipping", zap.String("integrationType", iPlugin.IntegrationType.String()))
 			}
 
 			installState = models.IntegrationTypeInstallStateInstalled

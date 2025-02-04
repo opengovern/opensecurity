@@ -13,4 +13,6 @@ const (
 	IntegrationsGitPath       = ConfigzGitPath + "/integrations"
 	ManifestYamlPath          = ConfigzGitPath + "/manifest.yaml"
 	ParametersYamlPath        = ConfigzGitPath + "/parameters.yaml"
+
+	IndexTemplatesPath = "/elasticsearch-index-config"
 )

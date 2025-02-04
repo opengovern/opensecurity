@@ -8,9 +8,11 @@ import (
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/httpserver"
 	"github.com/opengovern/og-util/pkg/koanf"
+	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/og-util/pkg/steampipe"
 	"github.com/opengovern/og-util/pkg/vault"
+	"github.com/opengovern/opencomply/pkg/utils"
 	core "github.com/opengovern/opencomply/services/core/client"
 	"github.com/opengovern/opencomply/services/integration/api"
 	"github.com/opengovern/opencomply/services/integration/config"
@@ -25,8 +27,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
+	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strconv"
 	"strings"
 )
 
@@ -70,6 +74,42 @@ func Command() *cobra.Command {
 
 			err = db.Initialize()
 			if err != nil {
+				return err
+			}
+
+			isAKSString := os.Getenv("ELASTICSEARCH_ISONAKS")
+			var isAKSPtr *bool
+			if isAKSString != "" {
+				isAKS, err := strconv.ParseBool(isAKSString)
+				if err != nil {
+					logger.Error("failed to parse isAKS", zap.Error(err))
+					return err
+				}
+				isAKSPtr = &isAKS
+			}
+
+			isOpenSearchString := os.Getenv("ELASTICSEARCH_ISOPENSEARCH")
+			var isOpenSearchPtr *bool
+			if isOpenSearchString != "" {
+				isOpenSearch, err := strconv.ParseBool(isOpenSearchString)
+				if err != nil {
+					logger.Error("failed to parse isOpenSearch", zap.Error(err))
+					return err
+				}
+				isOpenSearchPtr = &isOpenSearch
+			}
+
+			elastic, err := opengovernance.NewClient(opengovernance.ClientConfig{
+				Addresses:     []string{os.Getenv("ELASTICSEARCH_ADDRESS")},
+				Username:      utils.GetPointer(os.Getenv("ELASTICSEARCH_USERNAME")),
+				Password:      utils.GetPointer(os.Getenv("ELASTICSEARCH_PASSWORD")),
+				IsOpenSearch:  isOpenSearchPtr,
+				IsOnAks:       isAKSPtr,
+				AwsRegion:     utils.GetPointer(os.Getenv("ELASTICSEARCH_AWS_REGION")),
+				AssumeRoleArn: utils.GetPointer(os.Getenv("ELASTICSEARCH_ASSUME_ROLE_ARN")),
+			})
+			if err != nil {
+				logger.Error("failed to create es client due to", zap.Error(err))
 				return err
 			}
 
@@ -141,7 +181,7 @@ func Command() *cobra.Command {
 				cmd.Context(),
 				logger,
 				cnf.Http.Address,
-				api.New(logger, db, vaultSc, &steampipeOption, kubeClient, typeManager),
+				api.New(logger, db, vaultSc, &steampipeOption, kubeClient, typeManager, elastic),
 			)
 		},
 	}
