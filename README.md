@@ -50,7 +50,11 @@ kubectl port-forward -n opencomply svc/nginx-proxy 8080:80
 ```
 Open http://localhost:8080/ in your browser, sign in with ```admin@opencomply.io``` as the username and ```password``` as the password.
 
-The app comes loaded with sample data. 
+To install with sample data:
+
+```bash
+helm install -n opencomply opencomply opencomply/opencomply --create-namespace --timeout=10m --set populateWithSampleData.enabled=true
+```
 
 ## Next Steps
 
