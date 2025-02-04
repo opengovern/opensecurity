@@ -219,7 +219,7 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
             !categoryLoading
         ) {
             const temp_option: any = []
-            Types?.items?.map((item) => {
+            Types?.integration_types?.map((item) => {
                 temp_option.push({
                     propertyKey: 'integrationType',
                     value: item.platform_name,

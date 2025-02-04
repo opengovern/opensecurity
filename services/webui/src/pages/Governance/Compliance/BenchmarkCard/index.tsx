@@ -94,6 +94,7 @@ export default function BenchmarkCards({
     const GetSections = () => {
         const temp = []
         if (window.innerWidth > 640) {
+            
             temp.push({
                 id: 'security_score',
                 header: '',
@@ -177,6 +178,8 @@ export default function BenchmarkCards({
                                 ).toFixed(0),
                                 id: item.framework_id,
                                 connectors: item.plugins,
+                                controls: item?.number_of_controls,
+                                assignments: item?.no_of_total_assignments,
                             }
                         })}
                         entireCardClickable

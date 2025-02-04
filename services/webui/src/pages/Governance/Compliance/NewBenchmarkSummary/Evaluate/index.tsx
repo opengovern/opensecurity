@@ -59,7 +59,7 @@ export default function Evaluate({
     const [benchmarks, setBenchmarks] = useState<any[]>([])
     const [selectedbenchmarks, setSelectedBenchmarks] = useState<any[]>()
     const setNotification = useSetAtom(notificationAtom)
-    const [withIncidents, setWithIncidents] = useState(false)
+    const [withIncidents, setWithIncidents] = useState(true)
 
     // useEffect(() => {
     //     checkbox.setState(connections)
@@ -452,6 +452,7 @@ export default function Evaluate({
                 <Checkbox
                     className="mt-2 w-full"
                     onChange={({ detail }) => setWithIncidents(detail.checked)}
+                    disabled={true}
                     checked={withIncidents}
                 >
                     Create auditable incident

@@ -94,7 +94,7 @@ export default function Framework() {
                 value: 'No',
             },
         ]
-        Types?.items?.map((item) => {
+        Types?.integration_types?.map((item) => {
             temp.push({
                 propertyKey: 'integrationType',
                 value: item.platform_name,

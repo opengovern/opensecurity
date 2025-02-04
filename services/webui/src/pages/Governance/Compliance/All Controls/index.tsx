@@ -255,7 +255,7 @@ export default function AllControls() {
                 groupValuesLabel: 'Primary Service values',
             },
         ]
-        Types?.items?.map((item)=>{
+        Types?.integration_types?.map((item) => {
             temp_option.push({
                 propertyKey: 'integrationType',
                 value: item.platform_name,

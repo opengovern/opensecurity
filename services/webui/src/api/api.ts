@@ -2342,7 +2342,7 @@ export interface PlatformEngineServicesIntegrationApiEntityConnectorCount {
 
 export interface PlatformEngineServicesIntegrationApiEntityConnectorResponse {
     total_count: number
-    items: PlatformEngineServicesIntegrationApiEntityConnectorCount[]
+    integration_types: PlatformEngineServicesIntegrationApiEntityConnectorCount[]
 }
 export interface PlatformEngineServicesIntegrationApiEntityCountConnectionsResponse {
     count?: number

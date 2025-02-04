@@ -1604,8 +1604,8 @@ export default function EvaluateDetail() {
                         columns={3}
                         items={[
                             {
-                                label: 'Benchmark ID',
-                                value: jobDetail?.framework_id,
+                                label: 'Framework ID',
+                                value: benchmarkId,
                             },
                             // {
                             //     label: 'Last Evaulated at',
