@@ -5765,12 +5765,22 @@ func (h *HttpHandler) ListFrameworks(echoCtx echo.Context) error {
 
 	var items []api.FrameworkItem
 	for _, f := range frameworks {
+		metadata := db.BenchmarkMetadata{}
+
+		if len(f.Metadata.Bytes) > 0 {
+			err := json.Unmarshal(f.Metadata.Bytes, &metadata)
+			if err != nil {
+				h.logger.Error("failed to unmarshal metadata", zap.Error(err))
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			}
+		}
 		framework := api.FrameworkItem{
-			FrameworkID:    f.ID,
-			FrameworkTitle: f.Title,
-			Plugins:        f.IntegrationType,
-			IsBaseline:     f.IsBaseline,
-			Enabled:        f.Enabled,
+			FrameworkID:      f.ID,
+			FrameworkTitle:   f.Title,
+			Plugins:          f.IntegrationType,
+			NumberOfControls: len(metadata.Controls),
+			IsBaseline:       f.IsBaseline,
+			Enabled:          f.Enabled,
 		}
 		summaries, err := h.db.GetFrameworkComplianceSummaries(f.ID)
 		if err != nil {
