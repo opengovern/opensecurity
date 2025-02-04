@@ -4,10 +4,10 @@
       <!-- Dark mode logo -->
       <source media="(prefers-color-scheme: dark)" srcset="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-dark.png">
       <!-- Light mode logo -->
-      <source media="(prefers-color-scheme: light)" srcset="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-light.png">
       <!-- Fallback/logo -->
       <img
-        width="50%"
+        width="70%"
         alt="opencomply"
         src="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-dark.png"
       >
