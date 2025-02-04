@@ -4,12 +4,12 @@
       <!-- Dark mode logo -->
       <source media="(prefers-color-scheme: dark)" srcset="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-dark.png">
       <!-- Light mode logo -->
-      <source media="(prefers-color-scheme: light)" srcset="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-light.png">
+      <source media="(prefers-color-scheme: light)" srcset="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-dark.png">
       <!-- Fallback/logo -->
       <img
         width="50%"
         alt="opencomply"
-        src="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-light_75.png"
+        src="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-dark.png"
       >
     </picture>
   </a>
@@ -45,7 +45,7 @@ opencomply is written in go, and uses KEDA & OpenSearch. It's little resource he
 
 ```bash
 helm repo add opencomply https://charts.opencomply.io --force-update
-helm install -n opencomply opencomply opencomply/opencomply --create-namespace --timeout=10m
+helm install -n opencomply opencomply opencomply/opencomply --create-namespace
 kubectl port-forward -n opencomply svc/nginx-proxy 8080:80
 ```
 Open http://localhost:8080/ in your browser, sign in with ```admin@opencomply.io``` as the username and ```password``` as the password.
@@ -53,7 +53,9 @@ Open http://localhost:8080/ in your browser, sign in with ```admin@opencomply.io
 To install with sample data:
 
 ```bash
-helm install -n opencomply opencomply opencomply/opencomply --create-namespace --timeout=10m --set populateWithSampleData.enabled=true
+helm install -n opencomply opencomply opencomply/opencomply --create-namespace --timeout=10m \
+  --set populateWithSampleData.enabled=true
+
 ```
 
 ## Next Steps
