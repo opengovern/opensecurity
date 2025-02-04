@@ -41,7 +41,7 @@
 
 **Helm Installation:** 
 
-opencomply is written in go, and uses KEDA & OpenSearch. It's little resource heavy - at least 3 nodes (4 vCPUs x 16GB RAM each). Optimizations are in flight to reduce.
+Install on any Kubernetes clusters with at least 3 nodes (4 vCPUs x 16GB RAM each).
 
 ```bash
 helm repo add opencomply https://charts.opencomply.io --force-update
