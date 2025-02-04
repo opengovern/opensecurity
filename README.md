@@ -4,12 +4,12 @@
       <!-- Dark mode logo -->
       <source media="(prefers-color-scheme: dark)" srcset="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-dark.png">
       <!-- Light mode logo -->
-      <source media="(prefers-color-scheme: light)" srcset="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-light.png">
+      <source media="(prefers-color-scheme: light)" srcset="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-dark.png">
       <!-- Fallback/logo -->
       <img
         width="50%"
         alt="opencomply"
-        src="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-light_75.png"
+        src="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-dark.png"
       >
     </picture>
   </a>
@@ -20,7 +20,7 @@
   <img 
     src="./assets/screenshots/app-screenshot-1.png"
     alt="App Screenshot"
-    width="70%"
+    width="100%"
   />
 </p>
 
@@ -41,16 +41,22 @@
 
 **Helm Installation:** 
 
-opencomply is written in go, and uses KEDA & OpenSearch. It's little resource heavy - at least 3 nodes (4 vCPUs x 16GB RAM each). Optimizations are in flight to reduce.
+Install on any Kubernetes clusters with at least 3 nodes (4 vCPUs x 16GB RAM each).
 
 ```bash
 helm repo add opencomply https://charts.opencomply.io --force-update
-helm install -n opencomply opencomply opencomply/opencomply --create-namespace --timeout=10m
+helm install -n opencomply opencomply opencomply/opencomply --create-namespace
 kubectl port-forward -n opencomply svc/nginx-proxy 8080:80
 ```
 Open http://localhost:8080/ in your browser, sign in with ```admin@opencomply.io``` as the username and ```password``` as the password.
 
-The app comes loaded with sample data. 
+To install with sample data:
+
+```bash
+helm install -n opencomply opencomply opencomply/opencomply --create-namespace --timeout=10m \
+  --set populateWithSampleData.enabled=true
+
+```
 
 ## Next Steps
 
