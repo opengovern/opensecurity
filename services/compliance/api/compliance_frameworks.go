@@ -63,6 +63,7 @@ type FrameworkItem struct {
 	FrameworkTitle             string                             `json:"framework_title"`
 	ComplianceScore            float64                            `json:"compliance_score"`
 	Plugins                    []string                           `json:"plugins"`
+	NumberOfControls           int                                `json:"number_of_controls"`
 	SeveritySummaryByControl   BenchmarkControlsSeverityStatusV2  `json:"severity_summary_by_control"`
 	SeveritySummaryByResource  BenchmarkResourcesSeverityStatusV2 `json:"severity_summary_by_resource"`
 	SeveritySummaryByIncidents types.SeverityResultV2             `json:"severity_summary_by_incidents"`

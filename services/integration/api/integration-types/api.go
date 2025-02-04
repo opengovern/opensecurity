@@ -2,7 +2,6 @@ package integration_types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	hczap "github.com/zaffka/zap-to-hclog"
 	"golang.org/x/net/context"
@@ -1127,7 +1126,7 @@ func (a *API) CheckEnoughMemory() error {
 	namespace, ok := os.LookupEnv("CURRENT_NAMESPACE")
 	if !ok {
 		a.logger.Error("current namespace lookup failed")
-		return errors.New("current namespace lookup failed")
+		return nil
 	}
 
 	labelSelector := "app=integration-service"
@@ -1137,7 +1136,8 @@ func (a *API) CheckEnoughMemory() error {
 		LabelSelector: labelSelector,
 	})
 	if err != nil {
-		return err
+		a.logger.Error("failed to get pods")
+		return nil
 	}
 
 	for _, pod := range pods.Items {
@@ -1154,7 +1154,8 @@ func (a *API) CheckEnoughMemory() error {
 
 		podMetrics, err := a.typeManager.MetricsClient.MetricsV1beta1().PodMetricses(namespace).Get(context.TODO(), pod.Name, metav1.GetOptions{})
 		if err != nil {
-			return err
+			a.logger.Error("failed to get metrics")
+			return nil
 		}
 		var memoryUsage *resource.Quantity
 		for _, container := range podMetrics.Containers {
