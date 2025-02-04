@@ -262,9 +262,9 @@ export default function FindingsWithFailure({ query,id }: ICount) {
                                             }
                                         >
                                             <Text className="text-gray-800">
-                                                {item.resourceName}
+                                                {item.resourceType}
                                             </Text>
-                                            <Text>{item.resourceTypeName}</Text>
+                                            <Text>{item.resourceID}</Text>
                                         </Flex>
                                     </>
                                 ),
@@ -285,14 +285,14 @@ export default function FindingsWithFailure({ query,id }: ICount) {
                                                 )
                                             )}
                                         </Text>
-                                        <Text>
+                                        {/* <Text>
                                             {truncate(
                                                 item?.parentBenchmarkNames?.at(
                                                     (item?.parentBenchmarkNames
                                                         ?.length || 0) - 1
                                                 )
                                             )}
-                                        </Text>
+                                        </Text> */}
                                     </>
                                 ),
                             },
@@ -309,13 +309,13 @@ export default function FindingsWithFailure({ query,id }: ICount) {
                                             justifyContent="center"
                                             className="h-full"
                                         >
-                                            <Text className="text-gray-800">
+                                            {/* <Text className="text-gray-800">
                                                 {truncate(
                                                     item?.parentBenchmarkNames?.at(
                                                         0
                                                     )
                                                 )}
-                                            </Text>
+                                            </Text> */}
                                             <Text>
                                                 {truncate(item?.controlTitle)}
                                             </Text>
@@ -408,9 +408,8 @@ export default function FindingsWithFailure({ query,id }: ICount) {
                                         // @ts-ignore
                                         setQuery(e)
                                     }}
-                                    setDate={()=>{}}
+                                    setDate={() => {}}
                                 />
-                              
                             </Flex>
                         }
                         header={
