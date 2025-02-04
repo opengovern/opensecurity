@@ -20,7 +20,7 @@
   <img 
     src="./assets/screenshots/app-screenshot-1.png"
     alt="App Screenshot"
-    width="70%"
+    width="100%"
   />
 </p>
 
