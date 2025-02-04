@@ -390,7 +390,7 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
             defaultValue: defConformanceStatus,
             onDelete: undefined,
             data: jobData,
-            types: ['findings', 'events','controls','resources'],
+            types: ['findings', 'events', 'controls', 'resources'],
         },
 
         {
@@ -408,7 +408,7 @@ export default function Filter({ onApply, type, setDate }: IFilters) {
             setCondition: (c: string) => undefined,
             value: [connector],
             defaultValue: [defConnector],
-            data: Types?.items?.map((d) => {
+            data: Types?.integration_types?.map((d) => {
                 return {
                     label: d.label,
                     value: d.platform_name,
