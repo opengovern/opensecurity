@@ -7357,7 +7357,7 @@ export class Api<
          */
         apiV1WorkspaceCurrentList: (params: RequestParams = {}) =>
             this.request<PlatformEnginePkgWorkspaceApiWorkspaceResponse, any>({
-                path: `/core/api/v3/about`,
+                path: `/core/api/v4/about`,
                 method: 'GET',
                 secure: true,
                 type: ContentType.Json,
