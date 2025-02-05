@@ -5251,7 +5251,8 @@ func (h HttpHandler) GetPolicy(c echo.Context) error {
 //	@Produce	json
 //	@Param		page				query		int			false	"Page Number"
 //	@Param		page_size			query		int			false	"Page Size"
-//	@Param		assignment_type		query		[]string	true	"assignment type. options: implicit, explicit, none"
+//	@Param		assignment_type		query		[]string	false	"assignment type. options: implicit, explicit, none"
+//	@Param		integration_type	query		[]string	false	"integration types"
 //	@Param		framework-id		path		string		true	"Framework ID"
 //	@Success	200					{object}	api.ListFrameworkAssignmentsResponse
 //	@Router		/compliance/api/v1/frameworks/{framework-id}/assignments [get]
@@ -5279,6 +5280,11 @@ func (h *HttpHandler) ListFrameworkAssignments(echoCtx echo.Context) error {
 	ctx := echoCtx.Request().Context()
 
 	frameworkId := echoCtx.Param("framework-id")
+	integrationTypes := httpserver2.QueryArrayParam(echoCtx, "integration_type")
+	integrationTypesMap := make(map[string]bool)
+	for _, t := range integrationTypes {
+		integrationTypesMap[strings.ToLower(t)] = true
+	}
 	assignmentType := httpserver2.QueryArrayParam(echoCtx, "assignment_type")
 	if len(assignmentType) == 0 {
 		assignmentType = []string{"explicit", "implicit", "none"}
@@ -5367,8 +5373,12 @@ func (h *HttpHandler) ListFrameworkAssignments(echoCtx echo.Context) error {
 
 	var results []api.ListFrameworkAssignmentsResponseData
 	for _, info := range integrationInfos {
+		if len(integrationTypes) > 0 {
+			if _, ok := integrationTypesMap[strings.ToLower(info.PluginID)]; !ok {
+				continue
+			}
+		}
 		results = append(results, info)
-
 	}
 
 	pageInfo := api.PageInfo{
