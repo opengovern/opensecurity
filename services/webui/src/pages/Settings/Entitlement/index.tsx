@@ -105,8 +105,8 @@ function TextMetric({ title, metricId, disabled }: ITextMetric) {
     }, [value])
 
     return (
-        <Flex flexDirection="row" className="mb-4 sm:flex-row flex-col">
-            <Flex justifyContent="start" className="truncate space-x-4 ">
+        <Flex flexDirection="row" className="mb-4 sm:flex-row gap-4 justify-start flex-col">
+            <Flex justifyContent="start" className="truncate space-x-4 w-fit min-w-max ">
                 <div className="truncate">
                     <Text className="truncate text-sm">{title}:</Text>
                 </div>
@@ -384,7 +384,8 @@ export default function SettingsEntitlement() {
                 <Card key="summary" className=" w-full">
                     <Title className="font-semibold mb-2">Settings</Title>
                     <KeyValuePairs
-                        columns={4}
+                        columns={5}
+                        // @ts-ignore
                         items={wsDetails.map((item) => {
                             return {
                                 label: item.title,
@@ -394,101 +395,114 @@ export default function SettingsEntitlement() {
                     />
 
                     <Divider />
-                    <Title className="font-semibold mt-8">
-                        Platform Configuration
-                    </Title>
-                    <Flex justifyContent="start" className="truncate space-x-4">
-                        <div className="truncate">
-                            <Text className="truncate text-sm">
-                                Platform Controls, Frameworks, and Queries are
-                                sourced from Git repositories. Currently, only
-                                public repositories are supported.
-                            </Text>
-                        </div>
-                    </Flex>
-                    <Flex
-                        flexDirection="row"
-                        className="mt-4 sm:flex-row flex-col sm:mb-0 mb-4"
-                        alignItems="start"
-                        justifyContent="start"
-                    >
-                        <TextMetric
-                            metricId="analytics_git_url"
-                            title="Configuration Git URL"
-                            disabled={
-                                loadingCustomizationEnabled ||
-                                isCustomizationEnabled === false
-                            }
-                        />
-                        <Button
-                            variant="secondary"
-                            className="ml-2"
-                            loading={syncExecuted && syncLoading}
-                            disabled={
-                                status !== 'SUCCEEDED' && status !== 'FAILED'
-                            }
-                            onClick={() => runSync()}
-                        >
-                            <Flex flexDirection="row" className="gap-2">
-                                {status !== 'SUCCEEDED' &&
-                                    status !== 'FAILED' && (
-                                        <Spinner className=" w-4 h-4" />
-                                    )}
-                                {status === 'SUCCEEDED' || status === 'FAILED'
-                                    ? 'Re-Sync'
-                                    : status}
-                            </Flex>
-                        </Button>
-                    </Flex>
-                    {(status !== 'SUCCEEDED' || status !== 'FAILED') && (
-                        <>
-                            <Flex className="w-full">
-                                <ProgressBar
-                                    value={percentage}
-                                    className="w-full"
-                                    // additionalInfo="Additional information"
-                                    // @ts-ignore
-                                    description={`${status}, Last Updated: ${dateTimeDisplay(
-                                        // @ts-ignore
-                                        migrations_status?.updated_at
-                                    )}`}
-                                    resultText="Configuration done"
-                                    label="Platform Configuration"
-                                />
-                            </Flex>
-                        </>
-                    )}
-                    <Divider />
-
-                    <Title className="font-semibold mt-8">
-                        App configurations
-                    </Title>
-
-                    <Flex
-                        flexDirection="row"
-                        justifyContent="between"
-                        className="w-full mt-4"
-                    >
-                        <Text className="font-normal">
-                            Show preview features
-                        </Text>
-                        <TabGroup
-                            index={preview === 'true' ? 0 : 1}
-                            onIndexChange={(idx) =>
-                                setPreview(idx === 0 ? 'true' : 'false')
-                            }
-                            className="w-fit"
-                        >
-                            <TabList
-                                className="border border-gray-200"
-                                variant="solid"
+                    <Flex className="flex-row gap-8 w-full justify-start items-start">
+                        <Flex className="flex-col w-full justify-start items-start gap-4 max-w-[50%] border-r pr-8">
+                            <Title className="font-semibold ">
+                                Platform Configuration
+                            </Title>
+                            <Flex
+                                justifyContent="start"
+                                className="truncate space-x-4"
                             >
-                                <Tab>On</Tab>
-                                <Tab>Off</Tab>
-                            </TabList>
-                        </TabGroup>
+                                <div className="truncate">
+                                    <Text className="truncate text-sm">
+                                        Platform Controls, Frameworks, and
+                                        Queries are sourced from Git
+                                        repositories. Currently, only public
+                                        repositories are supported.
+                                    </Text>
+                                </div>
+                            </Flex>
+                            <Flex
+                                flexDirection="row"
+                                className="mt-4 sm:flex-row flex-col sm:mb-0 mb-4"
+                                alignItems="start"
+                                justifyContent="start"
+                            >
+                                <TextMetric
+                                    metricId="analytics_git_url"
+                                    title="Configuration Git URL"
+                                    disabled={
+                                        loadingCustomizationEnabled ||
+                                        isCustomizationEnabled === false
+                                    }
+                                />
+                                <Button
+                                    variant="secondary"
+                                    className="ml-2"
+                                    loading={syncExecuted && syncLoading}
+                                    disabled={
+                                        status !== 'SUCCEEDED' &&
+                                        status !== 'FAILED'
+                                    }
+                                    onClick={() => runSync()}
+                                >
+                                    <Flex flexDirection="row" className="gap-2">
+                                        {status !== 'SUCCEEDED' &&
+                                            status !== 'FAILED' && (
+                                                <Spinner className=" w-4 h-4" />
+                                            )}
+                                        {status === 'SUCCEEDED' ||
+                                        status === 'FAILED'
+                                            ? 'Re-Sync'
+                                            : status}
+                                    </Flex>
+                                </Button>
+                            </Flex>
+                            {(status !== 'SUCCEEDED' ||
+                                status !== 'FAILED') && (
+                                <>
+                                    <Flex className="w-full">
+                                        <ProgressBar
+                                            value={percentage}
+                                            className="w-full"
+                                            // additionalInfo="Additional information"
+                                            // @ts-ignore
+                                            description={`${status}, Last Updated: ${dateTimeDisplay(
+                                                // @ts-ignore
+                                                migrations_status?.updated_at
+                                            )}`}
+                                            resultText="Configuration done"
+                                            label="Platform Configuration"
+                                        />
+                                    </Flex>
+                                </>
+                            )}
+                        </Flex>
+                        <Flex className="flex-col w-full justify-start items-start gap-4  ">
+                            {' '}
+                            <Title className="font-semibold ">
+                                App configurations
+                            </Title>
+                            <Flex
+                                flexDirection="row"
+                                justifyContent="between"
+                                className="w-full mt-4"
+                            >
+                                <Text className="font-normal">
+                                    Show preview features
+                                </Text>
+                                <TabGroup
+                                    index={preview === 'true' ? 0 : 1}
+                                    onIndexChange={(idx) =>
+                                        setPreview(idx === 0 ? 'true' : 'false')
+                                    }
+                                    className="w-fit"
+                                >
+                                    <TabList
+                                        className="border border-gray-200"
+                                        variant="solid"
+                                    >
+                                        <Tab>On</Tab>
+                                        <Tab>Off</Tab>
+                                    </TabList>
+                                </TabGroup>
+                            </Flex>
+                            <SettingsCustomization />
+                        </Flex>
                     </Flex>
-                    <SettingsCustomization />
+
+
                     <Divider />
 
                     <Title className="font-semibold mt-8">Sample Data</Title>
