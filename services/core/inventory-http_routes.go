@@ -529,7 +529,7 @@ func (h *HttpHandler) RunSQLNamedQuery(ctx context.Context, title, query string,
 
 	accountIDExists := false
 	for _, header := range res.Headers {
-		if header == "platform_account_id" {
+		if header == "platform_integration_id" {
 			accountIDExists = true
 		}
 	}
@@ -538,7 +538,7 @@ func (h *HttpHandler) RunSQLNamedQuery(ctx context.Context, title, query string,
 		// Add account name
 		res.Headers = append(res.Headers, "account_name")
 		for colIdx, header := range res.Headers {
-			if strings.ToLower(header) != "platform_account_id" {
+			if strings.ToLower(header) != "platform_integration_id" {
 				continue
 			}
 			for rowIdx, row := range res.Data {

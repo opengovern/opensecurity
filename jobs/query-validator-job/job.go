@@ -85,7 +85,7 @@ func (w *Worker) RunJob(ctx context.Context, job Job) error {
 			} else {
 				return fmt.Errorf(string(MissingPlatformResourceIDQueryError))
 			}
-			if _, ok := recordValue["platform_account_id"].(string); !ok {
+			if _, ok := recordValue["platform_integration_id"].(string); !ok {
 				return fmt.Errorf(string(MissingAccountIDQueryError))
 			}
 			w.logger.Info("Check Resource Exist")

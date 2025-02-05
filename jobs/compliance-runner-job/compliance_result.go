@@ -75,7 +75,7 @@ func (w *Job) ExtractComplianceResults(logger *zap.Logger, benchmarkCache map[st
 		if v, ok := recordValue["platform_resource_id"].(string); ok {
 			platformResourceID = v
 		}
-		if v, ok := recordValue["platform_account_id"].(string); ok {
+		if v, ok := recordValue["platform_integration_id"].(string); ok {
 			integrationID = v
 		}
 		if v, ok := recordValue["platform_table_name"].(string); ok && resourceType == "" {
