@@ -19,6 +19,7 @@ import { useAuthApiV1UserInviteCreate } from '../../api/auth.gen'
 import Integrations from './Integrations'
 import { useComplianceApiV1QueriesSyncList } from '../../api/compliance.gen'
 import SRE from './KPI_Cards'
+import { useWorkspaceApiV3LoadSampleData } from '../../api/metadata.gen'
 
 export default function Overview() {
    
@@ -66,6 +67,12 @@ export default function Overview() {
         {},
         false
     )
+      const {
+            isExecuted:isExecuted1,
+            isLoading: isLoadingLoad,
+            error:error1,
+            sendNow: loadData,
+        } = useWorkspaceApiV3LoadSampleData({}, false)
     const setNotification = useSetAtom(notificationAtom)
     const [loadingChange, setLoadingChange] = useState(false)
     const PassCheck = () => {
@@ -92,6 +99,7 @@ export default function Overview() {
                     setChange(true)
                     if (me?.email == 'admin@opencomply.io') {
                         runSync()
+                        
                     }
                 }
             })
@@ -183,6 +191,7 @@ const {
        
          if (me?.connector_id === 'local') {
              PassCheck()
+             loadData()
          }
          
     }, [me])
