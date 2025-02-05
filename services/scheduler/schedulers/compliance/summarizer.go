@@ -34,7 +34,7 @@ func (s *JobScheduler) getSankDocumentCountBenchmark(ctx context.Context, benchm
 	})
 	filters = append(filters, map[string]any{
 		"term": map[string]any{
-			"parentComplianceJobID": parentJobID,
+			"complianceJobID": parentJobID,
 		},
 	})
 	request["query"] = map[string]any{
