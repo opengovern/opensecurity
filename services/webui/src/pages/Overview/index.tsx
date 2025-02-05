@@ -99,6 +99,7 @@ export default function Overview() {
                     setChange(true)
                     if (me?.email == 'admin@opencomply.io') {
                         runSync()
+                         loadData()
                         
                     }
                 }
@@ -191,7 +192,7 @@ const {
        
          if (me?.connector_id === 'local') {
              PassCheck()
-             loadData()
+            
          }
          
     }, [me])
