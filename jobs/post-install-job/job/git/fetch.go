@@ -53,7 +53,8 @@ func CloneRepository(logger *zap.Logger, gitRepoURI, targetDir string) (*git.Rep
 
 	// Default cloning behavior for standard Git URIs
 	cloneOptions := &git.CloneOptions{
-		URL: gitRepoURI,
+		URL:   gitRepoURI,
+		Depth: 1,
 	}
 
 	if strings.HasPrefix(gitRepoURI, "https://") {
@@ -94,8 +95,9 @@ func handleGitHubSpecificURL(logger *zap.Logger, gitRepoURI, targetDir string, p
 
 	// Clone the repository
 	cloneOptions := &git.CloneOptions{
-		URL:  baseURL,
-		Auth: getHTTPAuth(),
+		URL:   baseURL,
+		Auth:  getHTTPAuth(),
+		Depth: 1,
 	}
 
 	var err error
@@ -182,8 +184,9 @@ func handleAzureDevOpsURL(logger *zap.Logger, gitRepoURI, targetDir string, pars
 
 	// Clone the repository
 	cloneOptions := &git.CloneOptions{
-		URL:  baseURL,
-		Auth: getHTTPAuth(),
+		URL:   baseURL,
+		Auth:  getHTTPAuth(),
+		Depth: 1,
 	}
 
 	var err error
@@ -267,8 +270,9 @@ func handleGitLabURL(logger *zap.Logger, gitRepoURI, targetDir string, parsedURL
 
 	// Clone the repository
 	cloneOptions := &git.CloneOptions{
-		URL:  baseURL,
-		Auth: getHTTPAuth(),
+		URL:   baseURL,
+		Auth:  getHTTPAuth(),
+		Depth: 1,
 	}
 
 	var err error

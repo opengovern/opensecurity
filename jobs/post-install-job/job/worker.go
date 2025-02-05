@@ -94,8 +94,9 @@ func InitializeJob(
 	if conf.IsManual {
 		w.commitRefs, err = GitClone(conf, logger)
 	} else {
-		w.commitRefs = "no fetch"
-
+		var refs string
+		refs, err = GitClone(conf, logger)
+		w.commitRefs = fmt.Sprintf("automated/%s", refs)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failure while running git clone: %w", err)
@@ -135,7 +136,6 @@ func (w *Job) Run(ctx context.Context) error {
 			FailureReason:    "",
 		}
 	}
-	
 
 	m.Status = "Started"
 	err = w.updateJob(m, m.Status, jobsStatus)
@@ -190,9 +190,8 @@ func (w *Job) Run(ctx context.Context) error {
 		if err != nil {
 			w.logger.Error("failed to update job status", zap.Error(err), zap.String("migrationName", name))
 		}
-	
+
 	}
-	
 
 	if hasFailed {
 		err = w.db.UpdateMigrationJob(m.ID, "FAILED", m.JobsStatus)

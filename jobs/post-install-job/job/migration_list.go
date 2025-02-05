@@ -15,18 +15,20 @@ import (
 
 var migrations = map[string]types.Migration{
 	"elasticsearch": elasticsearch.Migration{},
+	"manifest":      manifest.Migration{},
 }
 var Order = []string{
 	"elasticsearch",
+	"manifest",
 }
 
 var manualMigrations = map[string]types.Migration{
+	"elasticsearch":       elasticsearch.Migration{},
 	"manifest":            manifest.Migration{},
 	"core":                core.Migration{},
 	"integration":         integration.Migration{},
 	"inventory":           inventory.Migration{},
 	"resource_collection": resource_collection.Migration{},
-	"elasticsearch":       elasticsearch.Migration{},
 	"compliance":          compliance.Migration{},
 	"resource_info":       resource_info.Migration{},
 	"auth":                auth.Migration{},
@@ -34,12 +36,12 @@ var manualMigrations = map[string]types.Migration{
 
 // Ordered keys slice
 var ManualOrder = []string{
+	"elasticsearch",
 	"manifest",
 	"core",
 	"integration",
 	"inventory",
 	"resource_collection",
-	"elasticsearch",
 	"compliance",
 	"resource_info",
 	"auth",
