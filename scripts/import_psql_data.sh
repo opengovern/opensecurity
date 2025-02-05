@@ -5,18 +5,6 @@ curl -O "$DEMO_DATA_S3_URL"
 openssl enc -d -aes-256-cbc -md md5 -pass pass:"$OPENSSL_PASSWORD" -base64 -in demo_data.tar.gz.enc -out demo_data.tar.gz
 tar -xvf demo_data.tar.gz
 
-NEW_ELASTICSEARCH_ADDRESS="https://${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD}@${ELASTICSEARCH_ADDRESS#https://}"
-export NODE_TLS_REJECT_UNAUTHORIZED=0
-
-multielasticdump \
-  --direction=load \
-  --input="/demo-data/es-demo/" \
-  --output="$NEW_ELASTICSEARCH_ADDRESS" \
-  --parallel=20 \
-  --limit=10000 \
-  --scrollTime=10m \
-  --ignoreTemplate=true
-
 
 
 echo "$POSTGRESQL_HOST"
@@ -39,5 +27,23 @@ PGPASSWORD="$POSTGRESQL_PASSWORD" psql --host="$POSTGRESQL_HOST" --port="$POSTGR
 PGPASSWORD="$POSTGRESQL_PASSWORD" psql --host="$POSTGRESQL_HOST" --port="$POSTGRESQL_PORT" --username "$POSTGRESQL_USERNAME" --dbname "core" < /demo-data/postgres/core.sql
 PGPASSWORD="$POSTGRESQL_PASSWORD" psql --host="$POSTGRESQL_HOST" --port="$POSTGRESQL_PORT" --username "$POSTGRESQL_USERNAME" --dbname "compliance" < /demo-data/postgres/compliance.sql
 PGPASSWORD="$POSTGRESQL_PASSWORD" psql --host="$POSTGRESQL_HOST" --port="$POSTGRESQL_PORT" --username "$POSTGRESQL_USERNAME" --dbname "integration" -c "DELETE FROM credentials;"
+
+
+
+
+
+NEW_ELASTICSEARCH_ADDRESS="https://${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD}@${ELASTICSEARCH_ADDRESS#https://}"
+export NODE_TLS_REJECT_UNAUTHORIZED=0
+
+multielasticdump \
+  --direction=load \
+  --input="/demo-data/es-demo/" \
+  --output="$NEW_ELASTICSEARCH_ADDRESS" \
+  --parallel=20 \
+  --limit=10000 \
+  --scrollTime=10m \
+  --ignoreTemplate=true
+
+
 
 rm -rf /demo-data/postgres
