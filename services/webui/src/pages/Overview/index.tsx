@@ -22,7 +22,7 @@ import SRE from './KPI_Cards'
 import { useWorkspaceApiV3LoadSampleData } from '../../api/metadata.gen'
 
 export default function Overview() {
-   
+    
     const element = document.getElementById('myDIV')?.offsetHeight
     const [change, setChange] = useState<boolean>(false)
     const [userModal, setUserModal] = useState<boolean>(false)
@@ -99,7 +99,7 @@ export default function Overview() {
                     setChange(true)
                     if (me?.email == 'admin@opencomply.io') {
                         runSync()
-                         loadData()
+                        loadData()
                         
                     }
                 }
@@ -174,6 +174,7 @@ export default function Overview() {
                     text: `Password Changed`,
                     type: 'success',
                 })
+                logout()
             })
             .catch((err) => {
                 console.log(err)
