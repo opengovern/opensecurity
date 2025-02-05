@@ -86,6 +86,7 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v3.PUT("/configured/set", httpserver.AuthorizeHandler(h.SetConfiguredStatus, api3.AdminRole))
 	v3.PUT("/configured/unset", httpserver.AuthorizeHandler(h.UnsetConfiguredStatus, api3.ViewerRole))
 	v3.GET("/about", httpserver.AuthorizeHandler(h.GetAbout, api3.ViewerRole))
+	
 	v3.GET("/vault/configured", httpserver.AuthorizeHandler(h.VaultConfigured, api3.ViewerRole))
 
 	views := v3.Group("/views")
@@ -104,6 +105,10 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v3.GET("/tables/categories", httpserver.AuthorizeHandler(h.GetTablesResourceCategories, api3.ViewerRole))
 	v3.GET("/categories/queries", httpserver.AuthorizeHandler(h.GetCategoriesQueries, api3.ViewerRole))
 	v3.GET("/parameters/queries", httpserver.AuthorizeHandler(h.GetParametersQueries, api3.ViewerRole))
+	v4 := r.Group("/api/v4")
+	v4.GET("/about", httpserver.AuthorizeHandler(h.GetAboutShort, api3.ViewerRole))
+
+
 
 }
 
@@ -1173,6 +1178,52 @@ func (h HttpHandler) GetAbout(echoCtx echo.Context) error {
 		Integrations:          integrations,
 		SampleData:            loaded,
 		TotalSpendGoverned:    floatValue,
+	}
+
+	return echoCtx.JSON(http.StatusOK, response)
+}
+
+// GetAbout godoc
+//
+//	@Summary		Get About info
+//
+//	@Description	Syncs demo with the git backend.
+//
+//	@Security		BearerToken
+//	@Tags			compliance
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	api.About
+//	@Router			/workspace/api/v3/about [put]
+func (h HttpHandler) GetAboutShort(echoCtx echo.Context) error {
+
+	version := ""
+	var opengovernanceVersionConfig corev1.ConfigMap
+	err := h.kubeClient.Get(echoCtx.Request().Context(), k8sclient.ObjectKey{
+		Namespace: h.cfg.OpengovernanceNamespace,
+		Name:      "platform-version",
+	}, &opengovernanceVersionConfig)
+	if err == nil {
+		version = opengovernanceVersionConfig.Data["version"]
+	} else {
+		fmt.Printf("failed to load version due to %v\n", err)
+	}
+
+	appConfiguration, err := h.db.GetAppConfiguration()
+	if err != nil {
+		h.logger.Error("failed to get workspace", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get workspace")
+	}
+	creationTime := time.Time{}
+	if appConfiguration != nil {
+		creationTime = appConfiguration.CreatedAt
+	}
+
+	response := api.About{
+		InstallID:             appConfiguration.InstallID.String(),
+		AppVersion:            version,
+		WorkspaceCreationTime: creationTime,
+		PrimaryDomainURL:      h.cfg.PrimaryDomainURL,
 	}
 
 	return echoCtx.JSON(http.StatusOK, response)
