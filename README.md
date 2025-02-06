@@ -40,7 +40,7 @@
 - 🔍 **Unified Visibility**: Explore all 1000+ assets (containers, cloud resources, etc.) using SQL.
 - ⚙️ **Custom Controls**: Define compliance checks as SQL policies, managed in Git.
 - ✅ **Flexible Compliance**: Easily create custom, complex checks.
-- 🚀 **Scalable Audits**: Handles thousands of checks across large infrastructures.
+- 📈 **Scalable Audits**: Handles thousands of checks across large infrastructures.
 - 🔗 **Extensive Integrations**: Connect to AWS, Azure, DigitalOcean, Linode, GitHub, and more.
 
 ## Why OpenComply?
