@@ -110,9 +110,9 @@ export default function EvaluateTable({
     )
 
     const [date, setDate] = useState({
-        key: 'previous-30-minutes',
-        amount: 30,
-        unit: 'minute',
+        key: 'previous-7-days',
+        amount: 7,
+        unit: 'day',
         type: 'relative',
     })
     const GetHistory = () => {
@@ -173,7 +173,7 @@ export default function EvaluateTable({
                     setTotalCount(0)
                     setTotalPage(0)
                 } else {
-                    setAccounts(res.data.items)
+                    setAccounts(res.data?.items)
                     setTotalCount(res.data.total_count)
                     setTotalPage(Math.ceil(res.data.total_count / 20))
                 }
@@ -328,7 +328,7 @@ export default function EvaluateTable({
                             header: 'Integration Id',
                             cell: (item) => (
                                 // @ts-ignore
-                                <>{item.integration_info[0]?.integration_id}</>
+                                <>{item?.integration_info[0]?.integration_id}</>
                             ),
                         },
 
@@ -337,7 +337,7 @@ export default function EvaluateTable({
                             header: 'Integration(s)',
                             cell: (item) => {
                                 const names = []
-                                item.integration_info.map((i) => {
+                                item?.integration_info?.map((i) => {
                                     names.push(i.name)
                                 })
                                 var unique = names.filter(
@@ -369,7 +369,7 @@ export default function EvaluateTable({
                             header: 'Integration Type',
                             cell: (item) => {
                                 const types = []
-                                item.integration_info.map((i) => {
+                                item?.integration_info?.map((i) => {
                                     types.push(i.integration_type)
                                 })
                                 var unique = types.filter(

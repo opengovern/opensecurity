@@ -70,6 +70,7 @@ export default function Settings({
     const [loading, setLoading] = useState(false)
     const [rows,setRows] = useState<any>([])
        const [page, setPage] = useState(0)
+       const [totalPages,setTotalPages]=useState(1)
  
 
    
@@ -126,16 +127,16 @@ export default function Settings({
        }
        axios
            .get(
-               `${url}/main/compliance/api/v3/benchmark/${id}/assignments`,
+               `${url}/main/compliance/api/v1/frameworks/${id}/assignments?page_size=10&page=${page}`,
                config
            )
            .then((res) => {
-            setRows(res.data.items)
-       setLoading(false)
-              
+               setRows(res.data?.data)
+               setTotalPages(res.data?.page_info.total_items)
+               setLoading(false)
            })
            .catch((err) => {
-       setLoading(false)
+               setLoading(false)
 
                console.log(err)
            })
@@ -224,11 +225,9 @@ export default function Settings({
             })
     }
     useEffect(() => {
-        if (firstLoading) {
             GetEnabled()
-            setFirstLoading(false)
-        }
-    }, [firstLoading])
+        
+    }, [page])
   
     return (
         <>
@@ -267,63 +266,73 @@ export default function Settings({
                         {
                             id: 'id',
                             header: 'Id',
-                            cell: (item) => item?.integration?.integration_id,
+                            cell: (item) => item?.integration_id,
                             sortingField: 'id',
                             isRowHeader: true,
+                            // maxWidth
                         },
                         {
                             id: 'id_name',
                             header: 'Name',
-                            cell: (item) => item?.integration?.name,
+                            cell: (item) => item?.integration_name,
                             sortingField: 'id',
                             isRowHeader: true,
                         },
                         {
                             id: 'provider_id',
                             header: 'Provider ID',
-                            cell: (item) => item?.integration?.provider_id,
+                            cell: (item) => item?.integration_provider_id,
                             sortingField: 'id',
                             isRowHeader: true,
                         },
                         {
                             id: 'integration_type',
                             header: 'Integration Type',
-                            cell: (item) => item?.integration?.integration_type,
+                            cell: (item) => item?.plugin_id,
                             sortingField: 'id',
                             isRowHeader: true,
                         },
                         {
-                            id: 'enable',
-                            header: 'Enable',
-                            cell: (item) => (
-                                <>
-                                    <Switch
-                                        disabled={banner}
-                                        onChange={(e) => {
-                                            ChangeStatusItem(
-                                                e ? 'auto-enable' : 'disabled',
-                                                item?.integration
-                                                    ?.integration_id
-                                            )
-                                        }}
-                                        checked={item?.assigned}
-                                    />
-                                </>
-                            ),
+                            id: 'type',
+                            header: ' Type',
+                            cell: (item) => item?.assignment_type,
                             sortingField: 'id',
                             isRowHeader: true,
                         },
+                        // {
+                        //     id: 'enable',
+                        //     header: 'Enable',
+                        //     cell: (item) => (
+                        //         <>
+                        //             <Switch
+                        //                 disabled={banner}
+                        //                 onChange={(e) => {
+                        //                     ChangeStatusItem(
+                        //                         e ? 'auto-enable' : 'disabled',
+                        //                         item?.integration
+                        //                             ?.integration_id
+                        //                     )
+                        //                 }}
+                        //                 checked={item?.assigned}
+                        //             />
+                        //         </>
+                        //     ),
+                        //     sortingField: 'id',
+                        //     isRowHeader: true,
+                        // },
                     ]}
                     columnDisplay={[
                         { id: 'id', visible: true },
                         { id: 'name', visible: true },
                         { id: 'provider_id', visible: true },
                         { id: 'integration_type', visible: true },
+                        { id: 'type', visible: true },
+
                         { id: 'enable', visible: true },
                     ]}
                     enableKeyboardNavigation
                     // @ts-ignore
-                    items={rows ? rows.slice(page * 10, (page + 1) * 10) : []}
+                    items={rows ? rows : []}
                     loading={loading}
                     loadingText="Loading resources"
                     // stickyColumns={{ first: 0, last: 1 }}
@@ -370,37 +379,35 @@ export default function Settings({
                     header={
                         <Header
                             className="w-full"
-                            actions={
-                                <Flex className="gap-2">
-                                    <KButton
-                                        onClick={() => {
-                                            ChangeStatus('auto-enable')
-                                        }}
-                                    >
-                                        Enable All
-                                    </KButton>
-                                    <KButton
-                                        onClick={() => {
-                                            ChangeStatus('disabled')
-                                        }}
-                                    >
-                                        Disable All
-                                    </KButton>
-                                </Flex>
-                            }
+                            // actions={
+                            //     <Flex className="gap-2">
+                            //         <KButton
+                            //             onClick={() => {
+                            //                 ChangeStatus('auto-enable')
+                            //             }}
+                            //         >
+                            //             Enable All
+                            //         </KButton>
+                            //         <KButton
+                            //             onClick={() => {
+                            //                 ChangeStatus('disabled')
+                            //             }}
+                            //         >
+                            //             Disable All
+                            //         </KButton>
+                            //     </Flex>
+                            // }
                         >
                             Assigments{' '}
-                            <span className=" font-medium">
-                                ({rows?.length})
-                            </span>
+                            <span className=" font-medium">({totalPages})</span>
                         </Header>
                     }
                     pagination={
                         <CustomPagination
-                            currentPageIndex={page + 1}
-                            pagesCount={Math.ceil(rows?.length / 10)}
+                            currentPageIndex={page}
+                            pagesCount={Math.ceil(totalPages/10)}
                             onChange={({ detail }) =>
-                                setPage(detail.currentPageIndex - 1)
+                                setPage(detail.currentPageIndex)
                             }
                         />
                     }
