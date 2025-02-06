@@ -2335,6 +2335,12 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 	uniquePrimaryTables := make(map[string]bool)
 	uniqueListOfTables := make(map[string]bool)
 	uniqueTags := make(map[string]map[string]bool)
+
+	benchmarksControlSummary, _, err := es.BenchmarksControlSummary(ctx, h.logger, h.client, benchmarks, nil)
+	if err != nil {
+		h.logger.Error("failed to fetch BenchmarksControlSummary", zap.Error(err), zap.Any("benchmarkID", benchmarks))
+	}
+
 	for _, control := range controls {
 		if req.ComplianceResultFilters != nil {
 			if count, ok := fRes[control.ID]; ok {
@@ -2379,12 +2385,6 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			apiControl.Policy.Parameters = append(apiControl.Policy.Parameters, p.ToApi())
 		}
 
-		h.logger.Info("ListControlsByFilter", zap.Strings("benchmarks", benchmarks))
-		controlResult, _, err := es.BenchmarksControlSummary(ctx, h.logger, h.client, benchmarks, nil)
-		if err != nil {
-			h.logger.Error("failed to fetch control result", zap.Error(err), zap.String("controlID", control.ID), zap.Any("benchmarkID", benchmarks))
-		}
-
 		if req.ComplianceResultSummary {
 			var incidentCount, passingComplianceResultCount int64
 			if c, ok := fRes[control.ID]["ok"]; ok {
@@ -2412,10 +2412,10 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			}{
 				IncidentCount:         incidentCount,
 				NonIncidentCount:      passingComplianceResultCount,
-				CompliantResources:    controlResult[control.ID].TotalResourcesCount - controlResult[control.ID].FailedResourcesCount,
-				NonCompliantResources: controlResult[control.ID].FailedResourcesCount,
-				ImpactedResources:     controlResult[control.ID].TotalResourcesCount,
-				CostImpact:            controlResult[control.ID].CostImpact,
+				CompliantResources:    benchmarksControlSummary[control.ID].TotalResourcesCount - benchmarksControlSummary[control.ID].FailedResourcesCount,
+				NonCompliantResources: benchmarksControlSummary[control.ID].FailedResourcesCount,
+				ImpactedResources:     benchmarksControlSummary[control.ID].TotalResourcesCount,
+				CostImpact:            benchmarksControlSummary[control.ID].CostImpact,
 			}
 		}
 
