@@ -132,7 +132,7 @@ export default function Settings({
            )
            .then((res) => {
                setRows(res.data?.data)
-               setTotalPages(Math.ceil(res.data?.page_info.total_items /10))
+               setTotalPages(res.data?.page_info.total_items)
                setLoading(false)
            })
            .catch((err) => {
@@ -379,35 +379,33 @@ export default function Settings({
                     header={
                         <Header
                             className="w-full"
-                            actions={
-                                <Flex className="gap-2">
-                                    <KButton
-                                        onClick={() => {
-                                            ChangeStatus('auto-enable')
-                                        }}
-                                    >
-                                        Enable All
-                                    </KButton>
-                                    <KButton
-                                        onClick={() => {
-                                            ChangeStatus('disabled')
-                                        }}
-                                    >
-                                        Disable All
-                                    </KButton>
-                                </Flex>
-                            }
+                            // actions={
+                            //     <Flex className="gap-2">
+                            //         <KButton
+                            //             onClick={() => {
+                            //                 ChangeStatus('auto-enable')
+                            //             }}
+                            //         >
+                            //             Enable All
+                            //         </KButton>
+                            //         <KButton
+                            //             onClick={() => {
+                            //                 ChangeStatus('disabled')
+                            //             }}
+                            //         >
+                            //             Disable All
+                            //         </KButton>
+                            //     </Flex>
+                            // }
                         >
                             Assigments{' '}
-                            <span className=" font-medium">
-                                ({rows?.length})
-                            </span>
+                            <span className=" font-medium">({totalPages})</span>
                         </Header>
                     }
                     pagination={
                         <CustomPagination
                             currentPageIndex={page}
-                            pagesCount={totalPages}
+                            pagesCount={Math.ceil(totalPages/10)}
                             onChange={({ detail }) =>
                                 setPage(detail.currentPageIndex)
                             }
