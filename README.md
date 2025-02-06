@@ -24,20 +24,25 @@
   />
 </p>
 
-**opencomply** simplifies security and compliance across your entire stack—from containers to cloud—so you can ship faster and worry less.
 
-*   **See everything:** Get a complete view of your infrastructure, data, identities, configurations, and security posture across all your clouds and tools.
-*   **Govern anything:** Assess and enforce compliance for configurations, processes, and security across your entire environment.
-*   **Adapt easily:** Define any rule—best practices, regulatory, or change requirements—as code, manage them in Git, and integrate with your existing tools and CI/CD pipeline.
+# opencomply
 
-**Key Features**
+#### Simplify security and compliance across your entire stack—from containers to cloud—so you can ship faster and worry less.
 
-*   **CloudQL:** Based on Steampipe, CloudQL lets you use SQL to explore thousands of different asset types—like that old, unapproved Kubernetes cluster you've been meaning to address.
-*   **Policy-as-Query:** Define your configuration checks and other requirements (e.g., "Did X happen before Y?") as simple SQL queries, and then manage those checks in Git.
-*   **Customize:** Easily write your own checks—even handle hard-to-tackle policies like Approved Base Docker Images or OpenAI Assistants with governed data sources.
-*   **Scalable:** Built with KEDA and OpenSearch, CloudQL scales effortlessly to handle thousands of checks across even very large infrastructures.
-*   **Battle-Tested:** We've thoroughly tested CloudQL on over $50M of real-world cloud infrastructure, so you can be confident in its reliability.
-*   **Extensible:** Extensive integrations—AWS, Azure, DigitalOcean, Linode, GitHub, Render, Fly.io, Heroku, Cloudflare, and more. Fork one and write your own.
+
+**What *opencomply* Does:**
+
+*   **See Everything:** Complete visibility into your infrastructure, data, identities, configurations, and security across all your clouds and tools.
+*   **Govern Anything:** Assess and enforce compliance for configurations, processes, and security.
+*   **Adapt Easily:** Define any rule (best practices, regulatory, or internal) as code (SQL policies), manage in Git, and integrate with your tools and CI/CD.
+
+**Key Features:**
+
+*   **Unified Visibility (CloudQL):** Explore all your assets (containers, cloud resources, etc.) with SQL.
+*   **Customizable Controls (Policy-as-Code):** Define any compliance check as a SQL policy and manage it in Git.
+*   **Flexible Compliance:** Easily create your own checks, even complex ones.
+*   **Scalable Audits:** Handles thousands of checks across large infrastructures.
+*   **Extensive Integrations:** Connect to AWS, Azure, DigitalOcean, Linode, GitHub, and more.
 
 ## Getting Started
 
@@ -56,9 +61,5 @@ App includes sample data.
 
 ## Next Steps
 
-- **Download Open-Source:** Access the latest stable release from our GitHub releases.
-- **Try Cloud for Free:** Sign up for our hosted Cloud offering (coming soon).
-- **Explore Resources:** Check out recommended best practices and compliance guidelines:
-  - Reliability & Security Best Practices
-  - FedRAMP, HIPAA, CIS, CISA Cyber Essentials
-- **Customize:** Configure controls, frameworks, roles, SSO, policies, queries, and tasks to suit your environment.
+*   **Explore the Documentation:** Visit [docs.opencomply.io](https://docs.opencomply.io) for detailed information and guides.
+*   **Try Cloud for Free:** Sign up for our hosted Cloud offering (coming soon).
