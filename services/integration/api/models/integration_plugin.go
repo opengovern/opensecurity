@@ -34,3 +34,8 @@ type IntegrationPluginListResponse struct {
 	Items      []IntegrationPlugin `json:"items"`
 	TotalCount int                 `json:"total_count"`
 }
+
+type PluginTables struct {
+	PluginID string   `json:"plugin_id"`
+	Tables   []string `json:"tables"`
+}

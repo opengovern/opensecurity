@@ -74,6 +74,7 @@ func (a *API) Register(e *echo.Group) {
 	plugin.GET("/:id/integrations", httpserver.AuthorizeHandler(a.ListPluginIntegrations, api.ViewerRole))
 	plugin.GET("/:id/credentials", httpserver.AuthorizeHandler(a.ListPluginCredentials, api.ViewerRole))
 	plugin.POST("/:id/healthcheck", httpserver.AuthorizeHandler(a.HealthCheck, api.ViewerRole))
+	plugin.GET("/tables", httpserver.AuthorizeHandler(a.GetPluginsTables, api.ViewerRole))
 }
 
 // List godoc
@@ -916,6 +917,37 @@ func (a *API) HealthCheck(c echo.Context) error {
 	} else {
 		return echo.NewHTTPError(404, "integration type not found")
 	}
+}
+
+// GetPluginsTables godoc
+//
+// @Summary			Get plugins tables
+// @Description		Get plugins tables
+// @Security		BearerToken
+// @Tags			integration_types
+// @Produce			json
+// @Success			200 {object}  []models.PluginTables
+// @Router			/integration/api/v1/plugin/tables [get]
+func (a *API) GetPluginsTables(c echo.Context) error {
+	var plugins []models.PluginTables
+
+	for it, plugin := range a.typeManager.GetIntegrationTypeMap() {
+		tablesMap, err := plugin.ListAllTables()
+		if err != nil {
+			a.logger.Error("failed to list all tables", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to list all tables")
+		}
+		var tables []string
+		for t := range tablesMap {
+			tables = append(tables, t)
+		}
+		plugins = append(plugins, models.PluginTables{
+			PluginID: it.String(),
+			Tables:   tables,
+		})
+	}
+
+	return c.JSON(http.StatusOK, plugins)
 }
 
 func (a *API) InstallOrUpdatePlugin(ctx context.Context, plugin *models2.IntegrationPlugin) (err error) {
