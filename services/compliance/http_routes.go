@@ -5287,7 +5287,7 @@ func (h *HttpHandler) ListFrameworkAssignments(echoCtx echo.Context) error {
 	}
 	assignmentType := httpserver2.QueryArrayParam(echoCtx, "assignment_type")
 	if len(assignmentType) == 0 {
-		assignmentType = []string{"explicit", "implicit", "none"}
+		assignmentType = []string{"explicit", "implicit"}
 	}
 	assignmentTypesMap := make(map[string]bool)
 	for _, a := range assignmentType {
@@ -5353,20 +5353,22 @@ func (h *HttpHandler) ListFrameworkAssignments(echoCtx echo.Context) error {
 				assignedIntegrations = append(assignedIntegrations, *assignment.IntegrationID)
 			}
 		}
-		integrations, err := h.integrationClient.ListIntegrationsByFilters(clientCtx, integrationapi.ListIntegrationsRequest{
-			IntegrationID: assignedIntegrations,
-		})
-		if err != nil {
-			h.logger.Error("failed to get integrations", zap.Error(err))
-			return echo.NewHTTPError(http.StatusBadRequest, "failed to get integrations")
-		}
-		for _, i := range integrations.Integrations {
-			integrationInfos[i.IntegrationID] = api.ListFrameworkAssignmentsResponseData{
-				PluginID:              i.IntegrationType.String(),
-				IntegrationID:         i.IntegrationID,
-				IntegrationName:       i.Name,
-				IntegrationProviderID: i.ProviderID,
-				AssignmentType:        api.FrameworkAssignmentAssignmentTypeExplicit,
+		if len(assignedIntegrations) > 0 {
+			integrations, err := h.integrationClient.ListIntegrationsByFilters(clientCtx, integrationapi.ListIntegrationsRequest{
+				IntegrationID: assignedIntegrations,
+			})
+			if err != nil {
+				h.logger.Error("failed to get integrations", zap.Error(err))
+				return echo.NewHTTPError(http.StatusBadRequest, "failed to get integrations")
+			}
+			for _, i := range integrations.Integrations {
+				integrationInfos[i.IntegrationID] = api.ListFrameworkAssignmentsResponseData{
+					PluginID:              i.IntegrationType.String(),
+					IntegrationID:         i.IntegrationID,
+					IntegrationName:       i.Name,
+					IntegrationProviderID: i.ProviderID,
+					AssignmentType:        api.FrameworkAssignmentAssignmentTypeExplicit,
+				}
 			}
 		}
 	}
