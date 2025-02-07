@@ -95,7 +95,7 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 	complianceFrameworks.POST("", httpserver2.AuthorizeHandler(h.ListFrameworks, authApi.ViewerRole))
 	complianceFrameworks.GET("/:framework-id/assignments", httpserver2.AuthorizeHandler(h.ListFrameworkAssignments, authApi.ViewerRole))
 	complianceFrameworks.GET("/:framework-id/assignments/available", httpserver2.AuthorizeHandler(h.ListFrameworkAvailableAssignments, authApi.ViewerRole))
-	complianceFrameworks.PUT("/:framework-id/assignments/:integration-id", httpserver2.AuthorizeHandler(h.AddAssignment, authApi.EditorRole))
+	complianceFrameworks.PUT("/:framework-id/assignments", httpserver2.AuthorizeHandler(h.AddAssignment, authApi.EditorRole))
 	complianceFrameworks.DELETE("/:framework-id/assignments/:integration-id", httpserver2.AuthorizeHandler(h.DeleteAssignment, authApi.EditorRole))
 	complianceFrameworks.PUT("/:framework-id", httpserver2.AuthorizeHandler(h.UpdateFrameworkSetting, authApi.EditorRole))
 	complianceFrameworks.GET("/:framework_id/coverage", httpserver2.AuthorizeHandler(h.GetFrameworkCoverage, authApi.ViewerRole))
@@ -5526,11 +5526,41 @@ func (h *HttpHandler) ListFrameworkAvailableAssignments(echoCtx echo.Context) er
 func (h *HttpHandler) AddAssignment(echoCtx echo.Context) error {
 	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
 	ctx := echoCtx.Request().Context()
+	var req api.AddAssignmentsRequest
+	if err := bindValidate(echoCtx, &req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 
-	integrationId := echoCtx.Param("integration-id")
-	if integrationId == "" {
+	
+	if len(req.Integrations) == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "integration id is empty")
 	}
+	frameworkId := echoCtx.Param("framework-id")
+	if frameworkId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "framework id is empty")
+	}
+	framework, err := h.db.GetFramework(ctx, frameworkId)
+		if err != nil {
+		h.logger.Error("failed to get framework", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get framework")
+	}
+	if framework == nil {
+		return echo.NewHTTPError(http.StatusNotFound, fmt.Sprintf("framework %s not found", frameworkId))
+	}
+	if !framework.Enabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "framework is disabled")
+	}
+
+	if strings.HasPrefix(framework.ID, "baseline_") {
+		return echo.NewHTTPError(http.StatusBadRequest, "framework is baseline")
+	}
+	supportedPlugins := make(map[string]bool)
+	for _, it := range framework.IntegrationType {
+		supportedPlugins[it] = true
+	}
+	
+	// write a loop to add all integrations
+	for _, integrationId := range req.Integrations {
 
 	integration, err := h.integrationClient.GetIntegration(clientCtx, integrationId)
 	if err != nil {
@@ -5538,36 +5568,10 @@ func (h *HttpHandler) AddAssignment(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to get integration")
 	}
 
-	frameworkId := echoCtx.Param("framework-id")
-	if frameworkId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "framework id is empty")
-	}
-
-	framework, err := h.db.GetFramework(ctx, frameworkId)
-
-	if err != nil {
-		h.logger.Error("failed to get framework", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get framework")
-	}
-	if framework == nil {
-		return echo.NewHTTPError(http.StatusNotFound, fmt.Sprintf("framework %s not found", frameworkId))
-	}
-
-	supportedPlugins := make(map[string]bool)
-	for _, it := range framework.IntegrationType {
-		supportedPlugins[it] = true
-	}
+	
 
 	if _, ok := supportedPlugins[integration.IntegrationType.String()]; !ok {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("plugin %s is not supported in the framework", integration.IntegrationType))
-	}
-
-	if !framework.Enabled {
-		return echo.NewHTTPError(http.StatusBadRequest, "framework is disabled")
-	}
-
-	if strings.HasPrefix(framework.ID, "baseline_") {
-		return echo.NewHTTPError(http.StatusBadRequest, "framework is baseline")
 	}
 
 	assignment := &db.BenchmarkAssignment{
@@ -5580,6 +5584,7 @@ func (h *HttpHandler) AddAssignment(echoCtx echo.Context) error {
 		h.logger.Error("failed to add assignment", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to add assignment")
 	}
+}
 
 	return echoCtx.NoContent(http.StatusOK)
 }

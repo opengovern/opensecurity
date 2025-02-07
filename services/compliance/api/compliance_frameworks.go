@@ -84,3 +84,7 @@ type ListFrameworkAvailableAssignmentsResponse struct {
 	Items      []IntegrationInfo `json:"items"`
 	TotalCount int               `json:"total_count"`
 }
+
+type AddAssignmentsRequest struct {
+	Integrations []string `json:"integrations"`
+}
