@@ -303,7 +303,7 @@ export default function View({ setTab, setOpenLayout }: Props) {
 
     return (
         <>
-            {/* <TopHeader /> */}
+            
             <AppLayout
                 toolsOpen={false}
                 navigationOpen={false}

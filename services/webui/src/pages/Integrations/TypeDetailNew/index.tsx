@@ -507,7 +507,6 @@ export default function TypeDetail() {
 
     return (
         <>
-            {/* <TopHeader breadCrumb={[state?.name]} /> */}
 
             {shcema && !loading && shcema?.integration_type_id ? (
                 <>

@@ -93,7 +93,6 @@ export default function Findings() {
 
     return (
         <>
-            {/* <TopHeader /> */}
             {show ? (
                 <>
                     {/* <Filter type={selectedGroup} onApply={(e) => {

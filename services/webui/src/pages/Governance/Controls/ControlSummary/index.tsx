@@ -252,13 +252,7 @@ export default function ControlDetail() {
 
     return (
         <>
-            {/* <TopHeader
-                breadCrumb={[
-                    controlDetail
-                        ? controlDetail?.control?.title
-                        : 'Control detail',
-                ]}
-            /> */}
+         
             {isLoading ? (
                 <Spinner className="mt-56" />
             ) : (

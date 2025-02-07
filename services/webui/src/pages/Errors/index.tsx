@@ -6,7 +6,6 @@ import TopHeader from '../../components/Layout/Header'
 export default function NotFound() {
     return (
         <>
-            {/* <TopHeader /> */}
             <Flex justifyContent="center" className="md:mt-32">
                 <Grid numItems={1} numItemsMd={2}>
                     <img src={notFoundImg} alt="stack" />

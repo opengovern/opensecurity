@@ -91,11 +91,11 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
     const [properties, setProperties] = useState<any[]>([])
     const [options, setOptions] = useState<any[]>([])
 
-    const {
-        response: categories,
-        isLoading: categoryLoading,
-        isExecuted: categoryExec,
-    } = useInventoryApiV3AllQueryCategory()
+    // const {
+    //     response: categories,
+    //     isLoading: categoryLoading,
+    //     isExecuted: categoryExec,
+    // } = useInventoryApiV3AllQueryCategory()
 
     const {
         response: filters,
@@ -212,11 +212,11 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
     useEffect(() => {
         if (
             filterExec &&
-            categoryExec &&
+            // categoryExec &&
             TypesExec &&
             !TypesLoading &&
-            !filtersLoading &&
-            !categoryLoading
+            !filtersLoading 
+            // !categoryLoading
         ) {
             const temp_option: any = []
             Types?.integration_types?.map((item) => {
@@ -234,21 +234,21 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
                     groupValuesLabel: 'integrationType values',
                 },
             ]
-            categories?.categories?.map((item) => {
-                property.push({
-                    key: `list_of_table${item.category}`,
-                    operators: ['='],
-                    propertyLabel: item.category,
-                    groupValuesLabel: `${item.category} values`,
-                    group: 'category',
-                })
-                item?.tables?.map((sub) => {
-                    temp_option.push({
-                        propertyKey: `list_of_table${item.category}`,
-                        value: sub.table,
-                    })
-                })
-            })
+            // categories?.categories?.map((item) => {
+            //     property.push({
+            //         key: `list_of_table${item.category}`,
+            //         operators: ['='],
+            //         propertyLabel: item.category,
+            //         groupValuesLabel: `${item.category} values`,
+            //         group: 'category',
+            //     })
+            //     item?.tables?.map((sub) => {
+            //         temp_option.push({
+            //             propertyKey: `list_of_table${item.category}`,
+            //             value: sub.table,
+            //         })
+            //     })
+            // })
             filters?.tags?.map((unique, index) => {
                 property.push({
                     key: unique.Key,
@@ -270,9 +270,9 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
         }
     }, [
         filterExec,
-        categoryExec,
+        // categoryExec,
         filtersLoading,
-        categoryLoading,
+        // categoryLoading,
         TypesExec,
         TypesLoading,
     ])
