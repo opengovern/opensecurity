@@ -103,11 +103,11 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
         isExecuted: filterExec,
     } = useInventoryApiV3QueryFiltersList()
 
-    const {
-        response: Types,
-        isLoading: TypesLoading,
-        isExecuted: TypesExec,
-    } = useIntegrationApiV1EnabledConnectorsList(0, 0)
+    // const {
+    //     response: Types,
+    //     isLoading: TypesLoading,
+    //     isExecuted: TypesExec,
+    // } = useIntegrationApiV1EnabledConnectorsList(0, 0)
 
    
     const getIntegrations = () => {
@@ -213,18 +213,18 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
         if (
             filterExec &&
             // categoryExec &&
-            TypesExec &&
-            !TypesLoading &&
+            // TypesExec &&
+            // !TypesLoading &&
             !filtersLoading 
             // !categoryLoading
         ) {
             const temp_option: any = []
-            Types?.integration_types?.map((item) => {
-                temp_option.push({
-                    propertyKey: 'integrationType',
-                    value: item.platform_name,
-                })
-            })
+            // Types?.integration_types?.map((item) => {
+            //     temp_option.push({
+            //         propertyKey: 'integrationType',
+            //         value: item.platform_name,
+            //     })
+            // })
 
             const property: any = [
                 {
@@ -234,6 +234,13 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
                     groupValuesLabel: 'integrationType values',
                 },
             ]
+             filters?.providers?.map((unique, index) => {
+               
+                temp_option.push({
+                    propertyKey: 'integrationType',
+                    value:unique,
+                })
+             })
             // categories?.categories?.map((item) => {
             //     property.push({
             //         key: `list_of_table${item.category}`,
@@ -273,8 +280,8 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
         // categoryExec,
         filtersLoading,
         // categoryLoading,
-        TypesExec,
-        TypesLoading,
+        // TypesExec,
+        // TypesLoading,
     ])
 
     useEffect(() => {
