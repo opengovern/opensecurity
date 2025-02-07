@@ -247,7 +247,6 @@ export default function Bookmarks({ setTab, setOpenLayout }: Props) {
 
     return (
         <>
-            {/* <TopHeader /> */}
             {isLoading ? (
                 <Spinner />
             ) : (

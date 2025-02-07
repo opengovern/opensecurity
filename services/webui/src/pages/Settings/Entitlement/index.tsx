@@ -41,10 +41,13 @@ import axios from 'axios'
 import {
     Alert,
     KeyValuePairs,
+    Modal,
     ProgressBar,
 } from '@cloudscape-design/components'
 import SettingsCustomization from '../Jobs/Customization'
-
+import ReactMarkdown from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
+import { useMDXComponents } from '../../../components/MDX'
 interface ITextMetric {
     title: string
     metricId: string
@@ -129,6 +132,7 @@ export default function SettingsEntitlement() {
         useWorkspaceApiV1WorkspaceCurrentList()
 
     const [sample, setSample] = useAtom(sampleAtom)
+    const [open,setOpen] = useState(false)
    
    
     const [preview, setPreview] = useAtom(previewAtom)
@@ -152,7 +156,7 @@ export default function SettingsEntitlement() {
     }
     const wsDetails = [
         {
-            title: 'Version',
+            title: 'Community Version',
             // @ts-ignore
             value: currentWorkspace?.app_version,
         },
@@ -168,6 +172,20 @@ export default function SettingsEntitlement() {
             ),
         },
         {
+            title: 'Privacy',
+            value: (
+                <a
+                    onClick={()=>{
+                        setOpen(true)
+                    }}
+                    href="#"
+                    className="text-blue-600 underline"
+                >
+                    Usage Data Notice
+                </a>
+            ),
+        },
+        {
             title: 'Install date',
             value: dateTimeDisplay(
                 // @ts-ignore
@@ -175,10 +193,10 @@ export default function SettingsEntitlement() {
                     Date.now().toString()
             ),
         },
-        {
-            title: 'Edition',
-            value: wsTier(currentWorkspace?.tier),
-        },
+        // {
+        //     title: 'Edition',
+        //     value: wsTier(currentWorkspace?.tier),
+        // },
     ]
     const {
         isLoading: syncLoading,
@@ -502,7 +520,6 @@ export default function SettingsEntitlement() {
                         </Flex>
                     </Flex>
 
-
                     <Divider />
 
                     <Title className="font-semibold mt-8">Sample Data</Title>
@@ -576,6 +593,47 @@ export default function SettingsEntitlement() {
                     )}
                 </Card>
             </Flex>
+            <Modal
+                visible={open}
+                size='large'
+                onDismiss={() => setOpen(false)}
+                header="Usage Data Notice"
+            >
+                <ReactMarkdown
+                    children={`# Usage Data Notice
+
+*opencomply* Community Edition includes a built-in process to gather a minimal set of **anonymized** usage data once per day. This helps us understand how our community uses opencomply and guides future improvements. Specifically, the following information is sent to our analytics service at [https://stats.opencomply.io](https://stats.opencomply.io):
+
+1. **Product Version**: Used to identify which releases are actively in use.  
+2. **Number of Users**: Aggregated count of active users.  
+3. **Plugins and Plugin Counts**: Identifies plugins being used
+4. **Configured Hostname**: The hostname as configured in your environment.
+
+## Our Commitment to Your Privacy
+- The data we collect is strictly limited to the items above.  
+- We do **not** collect or store any personally identifiable information.  
+- **No confidential data is ever sent** from your environment.  
+- All data is transmitted and stored in an anonymized format.  
+- We only use this information to improve OpenComply and to better understand usage patterns and trends.
+
+## Open Source Code
+- **Client-Side Collection**: The relevant logic in opencomply that gathers and sends usage data can be found here:  
+  [https://github.com/opengovern/opencomply/blob/main/jobs/checkup-job/job.go](https://github.com/opengovern/opencomply/blob/main/jobs/checkup-job/job.go)  
+- **Server-Side Processing**: The server responsible for receiving and processing the data is here:  
+  [https://github.com/opengovern/usage-tracker](https://github.com/opengovern/usage-tracker)
+
+We encourage you to review this code to understand exactly what information is being sent, how it is transmitted, and how it is processed once received.
+
+## How to Disable Usage Data Collection
+If you wish to turn off this data collection process, you can simply modify and recompile opencomply with the relevant functionality disabled. The pertinent section can be found in the [job.go file](https://github.com/opengovern/opencomply/blob/main/jobs/checkup-job/job.go).
+
+If you have any concerns or questions about this data collection—or need guidance on disabling it—please consult our documentation or reach out to us at [insert your support channel or email]. We value your input and appreciate your support in making opencomply better for everyone.`}
+                    skipHtml={false}
+                    rehypePlugins={[rehypeRaw]}
+                    // @ts-ignore
+                    components={useMDXComponents({})}
+                />
+            </Modal>
         </div>
     )
 }

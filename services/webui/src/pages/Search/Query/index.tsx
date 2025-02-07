@@ -666,6 +666,8 @@ export default function Query() {
                                         onChange={({ detail }) => {
                                             setSavedQuery('')
                                             setCode(detail.value)
+                                                setOpenLayout(false)
+
                                             if (tab !== '3') {
                                                 setTab('3')
                                             }

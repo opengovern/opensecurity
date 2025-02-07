@@ -706,7 +706,7 @@ useEffect(()=>{
                 }
             />
 
-            {/* <TopHeader /> */}
+            
             {/* <Card key="summary" className="">
                 <Flex>
                     <Title className="font-semibold">Variables</Title>

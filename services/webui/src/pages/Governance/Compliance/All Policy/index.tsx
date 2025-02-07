@@ -200,7 +200,6 @@ export default function AllPolicy() {
      
     return (
         <>
-            {/* <TopHeader /> */}
 
             <Flex alignItems="start">
                 <Flex flexDirection="col" className="w-full ">

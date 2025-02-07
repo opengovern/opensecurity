@@ -91,11 +91,11 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
     const [properties, setProperties] = useState<any[]>([])
     const [options, setOptions] = useState<any[]>([])
 
-    const {
-        response: categories,
-        isLoading: categoryLoading,
-        isExecuted: categoryExec,
-    } = useInventoryApiV3AllQueryCategory()
+    // const {
+    //     response: categories,
+    //     isLoading: categoryLoading,
+    //     isExecuted: categoryExec,
+    // } = useInventoryApiV3AllQueryCategory()
 
     const {
         response: filters,
@@ -103,11 +103,11 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
         isExecuted: filterExec,
     } = useInventoryApiV3QueryFiltersList()
 
-    const {
-        response: Types,
-        isLoading: TypesLoading,
-        isExecuted: TypesExec,
-    } = useIntegrationApiV1EnabledConnectorsList(0, 0)
+    // const {
+    //     response: Types,
+    //     isLoading: TypesLoading,
+    //     isExecuted: TypesExec,
+    // } = useIntegrationApiV1EnabledConnectorsList(0, 0)
 
    
     const getIntegrations = () => {
@@ -212,43 +212,50 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
     useEffect(() => {
         if (
             filterExec &&
-            categoryExec &&
-            TypesExec &&
-            !TypesLoading &&
-            !filtersLoading &&
-            !categoryLoading
+            // categoryExec &&
+            // TypesExec &&
+            // !TypesLoading &&
+            !filtersLoading 
+            // !categoryLoading
         ) {
             const temp_option: any = []
-            Types?.integration_types?.map((item) => {
-                temp_option.push({
-                    propertyKey: 'integrationType',
-                    value: item.platform_name,
-                })
-            })
+            // Types?.integration_types?.map((item) => {
+            //     temp_option.push({
+            //         propertyKey: 'integrationType',
+            //         value: item.platform_name,
+            //     })
+            // })
 
             const property: any = [
                 {
-                    key: 'integrationType',
+                    key: 'plugin',
                     operators: ['='],
-                    propertyLabel: 'integration Type',
-                    groupValuesLabel: 'integrationType values',
+                    propertyLabel: 'Plugin',
+                    groupValuesLabel: 'Plugin values',
                 },
             ]
-            categories?.categories?.map((item) => {
-                property.push({
-                    key: `list_of_table${item.category}`,
-                    operators: ['='],
-                    propertyLabel: item.category,
-                    groupValuesLabel: `${item.category} values`,
-                    group: 'category',
+             filters?.providers?.map((unique, index) => {
+               
+                temp_option.push({
+                    propertyKey: 'plugin',
+                    value: unique,
                 })
-                item?.tables?.map((sub) => {
-                    temp_option.push({
-                        propertyKey: `list_of_table${item.category}`,
-                        value: sub.table,
-                    })
-                })
-            })
+             })
+            // categories?.categories?.map((item) => {
+            //     property.push({
+            //         key: `list_of_table${item.category}`,
+            //         operators: ['='],
+            //         propertyLabel: item.category,
+            //         groupValuesLabel: `${item.category} values`,
+            //         group: 'category',
+            //     })
+            //     item?.tables?.map((sub) => {
+            //         temp_option.push({
+            //             propertyKey: `list_of_table${item.category}`,
+            //             value: sub.table,
+            //         })
+            //     })
+            // })
             filters?.tags?.map((unique, index) => {
                 property.push({
                     key: unique.Key,
@@ -270,11 +277,11 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
         }
     }, [
         filterExec,
-        categoryExec,
+        // categoryExec,
         filtersLoading,
-        categoryLoading,
-        TypesExec,
-        TypesLoading,
+        // categoryLoading,
+        // TypesExec,
+        // TypesLoading,
     ])
 
     useEffect(() => {
@@ -282,15 +289,15 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
             const temp_provider: any = []
             const temp_tables: any = []
             const temp_tags = {}
-            filterQuery.tokens.map((item, index) => {
+            filterQuery?.tokens?.map((item, index) => {
                 // @ts-ignore
-                if (item.propertyKey === 'integrationType') {
+                if (item?.propertyKey === 'plugin') {
                     // @ts-ignore
 
                     temp_provider.push(item.value)
                 }
                 // @ts-ignore
-                else if (item.propertyKey.includes('list_of_table')) {
+                else if (item?.propertyKey?.includes('list_of_table')) {
                     // @ts-ignore
 
                     temp_tables.push(item.value)
@@ -405,7 +412,7 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
                     className="gap-8 flex-wrap sm:flex-row flex-col justify-start items-start w-full"
                     // style={{flex: "1 1 0"}}
                 >
-                    {rows?.length === 0 || loading ? (
+                    {  loading ? (
                         <>
                             <Spinner className="mt-2" />
                         </>
@@ -474,199 +481,3 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
 }
 
 
-{/*
-    <AppLayout
-                toolsOpen={false}
-                navigationOpen={false}
-                contentType="table"
-                className="w-full"
-                toolsHide={true}
-                navigationHide={true}
-                splitPanelOpen={openSlider}
-                onSplitPanelToggle={() => {
-                    setOpenSlider(!openSlider)
-                    if (openSlider) {
-                        setSelectedRow(undefined)
-                    }
-                }}
-                splitPanel={
-                    // @ts-ignore
-                    <SplitPanel
-                        // @ts-ignore
-                        header={
-                            selectedRow ? (
-                                <>
-                                    <Flex justifyContent="start">
-                                       
-                                        <Title className="text-lg font-semibold ml-2 my-1">
-                                            {selectedRow?.title}
-                                        </Title>
-                                    </Flex>
-                                </>
-                            ) : (
-                                'Query not selected'
-                            )
-                        }
-                    >
-                        <>
-                            {selectedRow ? (
-                                <QueryDetail
-                                    // type="resource"
-                                    query={selectedRow}
-                                    open={openSlider}
-                                    onClose={() => setOpenSlider(false)}
-                                    onRefresh={() => window.location.reload()}
-                                    setTab={setTab}
-                                />
-                            ) : (
-                                <Spinner />
-                            )}
-                        </>
-                    </SplitPanel>
-                }
-                content={
-                    <KTable
-                        className="   min-h-[450px]"
-                        // resizableColumns
-                        variant="full-page"
-                        renderAriaLive={({
-                            firstIndex,
-                            lastIndex,
-                            totalItemsCount,
-                        }) =>
-                            `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
-                        }
-                        onSortingChange={(event) => {
-                            // setSort(event.detail.sortingColumn.sortingField)
-                            // setSortOrder(!sortOrder)
-                        }}
-                        // sortingColumn={sort}
-                        // sortingDescending={sortOrder}
-                        // sortingDescending={sortOrder == 'desc' ? true : false}
-                        // @ts-ignore
-                        onRowClick={(event) => {
-                            const row = event.detail.item
-
-                            setSelectedRow(row)
-                            setOpenSlider(true)
-                        }}
-                        columnDefinitions={[
-                            {
-                                id: 'id',
-                                header: 'Id',
-                                cell: (item) => item.id,
-                                // sortingField: 'id',
-                                isRowHeader: true,
-                                maxWidth: 150,
-                            },
-                            {
-                                id: 'title',
-                                header: 'Title',
-                                cell: (item) => item.title,
-                                // sortingField: 'id',
-                                isRowHeader: true,
-                                maxWidth: 150,
-                            },
-                            {
-                                id: 'description',
-                                header: 'Description',
-                                cell: (item) => item.description,
-                                // sortingField: 'id',
-                                isRowHeader: true,
-                                maxWidth: 150,
-                            },
-                        ]}
-                        columnDisplay={[
-                            {
-                                id: 'id',
-                                visible: true,
-                            },
-                            {
-                                id: 'title',
-                                visible: true,
-                            },
-
-                            { id: 'description', visible: true },
-                            // {
-                            //     id: 'severity',
-                            //     visible: true,
-                            // },
-                            // { id: 'parameters', visible: true },
-                            // {
-                            //     id: 'evaluatedAt',
-                            //     visible: true,
-                            // },
-
-                            // { id: 'action', visible: true },
-                        ]}
-                        enableKeyboardNavigation
-                        // @ts-ignore
-                        items={rows}
-                        loading={loading}
-                        loadingText="Loading resources"
-                        // stickyColumns={{ first: 0, last: 1 }}
-                        // stripedRows
-                        trackBy="id"
-                        empty={
-                            <Box
-                                margin={{ vertical: 'xs' }}
-                                textAlign="center"
-                                color="inherit"
-                            >
-                                <SpaceBetween size="m">
-                                    <b>No resources</b>
-                                </SpaceBetween>
-                            </Box>
-                        }
-                        filter={
-                            <PropertyFilter
-                                // @ts-ignore
-                                query={filterQuery}
-                                tokenLimit={2}
-                                onChange={({ detail }) =>
-                                    // @ts-ignore
-                                    setFilterQuery(detail)
-                                }
-                                customGroupsText={[
-                                    {
-                                        properties: 'Tags',
-                                        values: 'Tag values',
-                                        group: 'tags',
-                                    },
-                                    {
-                                        properties: 'Category',
-                                        values: 'Category values',
-                                        group: 'category',
-                                    },
-                                ]}
-                                // countText="5 matches"
-                                expandToViewport
-                                filteringAriaLabel="Find Query"
-                                filteringPlaceholder="Find Query"
-                                filteringOptions={options}
-                                filteringProperties={properties}
-                                asyncProperties
-                                virtualScroll
-                            />
-                        }
-                        header={
-                            <Header className="w-full">
-                                Queries{' '}
-                                <span className=" font-medium">
-                                    ({totalCount})
-                                </span>
-                            </Header>
-                        }
-                        pagination={
-                            <CustomPagination
-                                currentPageIndex={page}
-                                pagesCount={totalPage}
-                                onChange={({ detail }: any) =>
-                                    setPage(detail.currentPageIndex)
-                                }
-                            />
-                        }
-                    />
-                }
-            />
-    */ }

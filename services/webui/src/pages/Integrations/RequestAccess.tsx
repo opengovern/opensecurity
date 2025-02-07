@@ -38,7 +38,6 @@ export default function RequestAccess() {
 
     return (
         <>
-            <TopHeader />
             <Title className="text-black !text-xl font-bold w-full text-center mb-4">
                 {title()}
             </Title>

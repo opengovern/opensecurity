@@ -51,7 +51,6 @@ export default function SearchLanding() {
 
     return (
         <>
-            {/* <TopHeader /> */}
             <>
                 <Flex
                     className="bg-white w-[90%] rounded-xl border-solid  border-2 border-gray-200   "
