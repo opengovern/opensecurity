@@ -228,17 +228,17 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
 
             const property: any = [
                 {
-                    key: 'integrationType',
+                    key: 'plugin',
                     operators: ['='],
-                    propertyLabel: 'integration Type',
-                    groupValuesLabel: 'integrationType values',
+                    propertyLabel: 'Plugin',
+                    groupValuesLabel: 'Plugin values',
                 },
             ]
              filters?.providers?.map((unique, index) => {
                
                 temp_option.push({
-                    propertyKey: 'integrationType',
-                    value:unique,
+                    propertyKey: 'plugin',
+                    value: unique,
                 })
              })
             // categories?.categories?.map((item) => {
@@ -291,7 +291,7 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
             const temp_tags = {}
             filterQuery?.tokens?.map((item, index) => {
                 // @ts-ignore
-                if (item?.propertyKey === 'integrationType') {
+                if (item?.propertyKey === 'plugin') {
                     // @ts-ignore
 
                     temp_provider.push(item.value)
