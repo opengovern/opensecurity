@@ -11,6 +11,7 @@ import (
 	"github.com/opengovern/opencomply/jobs/post-install-job/utils"
 	coreClient "github.com/opengovern/opencomply/services/core/client"
 	"github.com/opengovern/opencomply/services/core/db/models"
+	integrationClient "github.com/opengovern/opencomply/services/integration/client"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -300,7 +301,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		return err
 	}
 
-	err = populateQueries(logger, dbCore)
+	err = populateQueries(ctx, logger, dbCore, conf)
 	if err != nil {
 		return err
 	}
@@ -331,11 +332,24 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	return nil
 }
 
-func populateQueries(logger *zap.Logger, db db.Database) error {
-	err := db.Orm.Transaction(func(tx *gorm.DB) error {
+func populateQueries(ctx context.Context, logger *zap.Logger, db db.Database, conf config.MigratorConfig) error {
+	iClient := integrationClient.NewIntegrationServiceClient(conf.Integration.BaseURL)
+	pluginTables, err := iClient.GetPluginsTables(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole})
+	if err != nil {
+		logger.Error("failed to get plugin tables", zap.Error(err))
+		return nil
+	}
+	tablesPluginMap := make(map[string]string)
+	for _, p := range pluginTables {
+		for _, t := range p.Tables {
+			tablesPluginMap[t] = p.PluginID
+		}
+	}
+
+	err = db.Orm.Transaction(func(tx *gorm.DB) error {
 		err := filepath.Walk(config.QueriesGitPath, func(path string, info fs.FileInfo, err error) error {
 			if !info.IsDir() && strings.HasSuffix(path, ".yaml") {
-				return populateFinderItem(logger, tx, path, info)
+				return populateFinderItem(logger, tx, path, info, tablesPluginMap)
 			}
 			return nil
 		})
@@ -351,7 +365,7 @@ func populateQueries(logger *zap.Logger, db db.Database) error {
 	return nil
 }
 
-func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.FileInfo) error {
+func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.FileInfo, tablesPluginMap map[string]string) error {
 	id := strings.TrimSuffix(info.Name(), ".yaml")
 
 	content, err := os.ReadFile(path)
@@ -391,6 +405,22 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		tags = append(tags, tag)
 	}
 
+	listOfTables, err := utils.ExtractTableRefsFromPolicy("sql", item.Query)
+	if err != nil {
+		logger.Error("failed to extract table refs from query", zap.String("query-id", id), zap.Error(err))
+	}
+	if len(integrationTypes) == 0 {
+		integrationTypesMap := make(map[string]bool)
+		for _, t := range listOfTables {
+			if v, ok := tablesPluginMap[t]; ok {
+				integrationTypesMap[v] = true
+			}
+		}
+		for it := range integrationTypesMap {
+			integrationTypes = append(integrationTypes, it)
+		}
+	}
+
 	namedQuery := models.NamedQuery{
 		ID:               id,
 		IntegrationTypes: integrationTypes,
@@ -398,11 +428,6 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		Description:      item.Description,
 		IsBookmarked:     isBookmarked,
 		QueryID:          &id,
-	}
-
-	listOfTables, err := utils.ExtractTableRefsFromPolicy("sql", item.Query)
-	if err != nil {
-		logger.Error("failed to extract table refs from query", zap.String("query-id", namedQuery.ID), zap.Error(err))
 	}
 
 	parameters, err := utils.ExtractParameters("sql", item.Query)

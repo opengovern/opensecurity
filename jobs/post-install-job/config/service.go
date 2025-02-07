@@ -8,7 +8,8 @@ type MigratorConfig struct {
 	PostgreSQL              config.Postgres
 	Steampipe               config.Postgres
 	ElasticSearch           config.ElasticSearch
-	Core                config.OpenGovernanceService
+	Core                    config.OpenGovernanceService
+	Integration             config.OpenGovernanceService
 	AnalyticsGitURL         string `yaml:"analytics_git_url"`
 	ControlEnrichmentGitURL string `yaml:"control_enrichment_git_url"`
 	GithubToken             string `yaml:"github_token"`

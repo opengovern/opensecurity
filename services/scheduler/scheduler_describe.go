@@ -244,7 +244,7 @@ func (s *Scheduler) scheduleDescribeJob(ctx context.Context) {
 				}
 			}
 			if !haveRequiredParameters {
-				s.logger.Error("skipping resource type because doesn't have required parameters default values",
+				s.logger.Warn("skipping resource type because doesn't have required parameters default values",
 					zap.String("resource_type", resourceType.Name))
 				continue
 			}
