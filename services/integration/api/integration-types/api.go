@@ -927,7 +927,7 @@ func (a *API) HealthCheck(c echo.Context) error {
 // @Tags			integration_types
 // @Produce			json
 // @Success			200 {object}  []models.PluginTables
-// @Router			/integration/api/v1/plugin/tables [get]
+// @Router			/integration/api/v1/integration-types/plugin/tables [get]
 func (a *API) GetPluginsTables(c echo.Context) error {
 	var plugins []models.PluginTables
 

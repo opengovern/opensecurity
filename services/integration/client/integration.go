@@ -251,7 +251,7 @@ func (c *integrationClient) PurgeSampleData(ctx *httpclient.Context) ([]string, 
 }
 
 func (c *integrationClient) GetPluginsTables(ctx *httpclient.Context) ([]models.PluginTables, error) {
-	url := fmt.Sprintf("%s/api/v1/plugin/tables", c.baseURL)
+	url := fmt.Sprintf("%s/api/v1/integration-types/plugin/tables", c.baseURL)
 	var response []models.PluginTables
 
 	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &response); err != nil {
