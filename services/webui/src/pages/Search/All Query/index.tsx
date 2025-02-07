@@ -412,7 +412,7 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
                     className="gap-8 flex-wrap sm:flex-row flex-col justify-start items-start w-full"
                     // style={{flex: "1 1 0"}}
                 >
-                    {(rows?.length == 0 && !loading) || loading ? (
+                    {  loading ? (
                         <>
                             <Spinner className="mt-2" />
                         </>
