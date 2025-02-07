@@ -25,6 +25,7 @@ import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { Integration, Schema } from './types'
 import {
+    Alert,
     BreadcrumbGroup,
     Button,
     Checkbox,
@@ -67,7 +68,8 @@ export default function TypeDetail() {
     const [selectedIntegrations, setSelectedIntegrations] = useState<any>([])
     const [params, setParams] = useState<any>()
     const [enableSchedule, setEnableSchedule] = useState(false)
-     const [open, setOpen] = useState(false)
+    const [open, setOpen] = useState(false)
+    const [error, setError] = useState<string>()
     const GetSchema = () => {
         setLoading(true)
         let url = ''
@@ -284,6 +286,18 @@ export default function TypeDetail() {
                 })
             })
     }
+      const CheckRequiredParams = (resources: any) => {
+        var flag = true
+        resources?.map((item: any) => {
+            item?.params?.map((param: any) => {
+
+                if (param.required == true) {
+                    flag= false
+                }
+            })
+        })
+        return flag
+    }
     const RunDiscovery = () => {
         setActionLoading({ ...actionLoading, discovery: true })
         let url = ''
@@ -292,8 +306,30 @@ export default function TypeDetail() {
         } else {
             url = window.location.origin
         }
-        // @ts-ignore
-        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+      
+        if (!CheckRequiredParams(selectedResourceType)){
+            if(selectedResourceType?.length == 1){
+                if(selectedResourceType[0]?.params?.length > 0){
+                    if(!params){
+                        setNotification({
+                            text: `Error: Please fill all required params`,
+                            type: 'error',
+                        })
+                        setActionLoading({
+                            ...actionLoading,
+                            discovery: false,
+                        })
+                        setError('Please fill all required params')
+                        return
+
+                }
+            }
+        }
+           
+        }
+        setError('')
+            // @ts-ignore
+            const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
         const config = {
             headers: {
@@ -337,7 +373,7 @@ export default function TypeDetail() {
         }
 
         axios
-            .post(`${url}/main/schedule/api/v3/discovery/run`, body, config)
+            .post(`${url}/main/schedule/api/v3/discovery/run`, {}, config)
             .then((res) => {
                 GetIntegrations()
                 setActionLoading({
@@ -363,6 +399,7 @@ export default function TypeDetail() {
                 })
             })
     }
+  
     const GetResourceTypes = () => {
         setActionLoading({ ...actionLoading, discovery: true })
         let url = ''
@@ -393,13 +430,16 @@ export default function TypeDetail() {
                 const data = res.data
                 setResourceTypes(data?.integration_types)
                 const temp: any = []
-                data?.integration_types?.map((item: any) => {
-                    temp.push({
-                        label: item?.name,
-                        value: item?.name,
-                        params: item?.params,
+                if (CheckRequiredParams(data?.integration_types)) {
+                    data?.integration_types?.map((item: any) => {
+                        temp.push({
+                            label: item?.name,
+                            value: item?.name,
+                            params: item?.params,
+                        })
                     })
-                })
+                }
+
                 setSelectedResourceType(temp)
                 setActionLoading({ ...actionLoading, discovery: false })
             })
@@ -507,7 +547,6 @@ export default function TypeDetail() {
 
     return (
         <>
-
             {shcema && !loading && shcema?.integration_type_id ? (
                 <>
                     <div
@@ -555,9 +594,9 @@ export default function TypeDetail() {
                                                     GetStatus()
                                                     break
                                                 case 'discovery':
-                                                        GetIntegrations()
-                                                        GetResourceTypes()
-                                                        setRunOpen(true)
+                                                    GetIntegrations()
+                                                    GetResourceTypes()
+                                                    setRunOpen(true)
                                                     break
                                                 default:
                                                     break
@@ -593,7 +632,7 @@ export default function TypeDetail() {
                                         ]}
                                         mainAction={{
                                             text: 'Add new integration',
-                                            
+
                                             onClick: () => {
                                                 setOpen(true)
                                             },
@@ -705,31 +744,42 @@ export default function TypeDetail() {
                                     >
                                         Cancel
                                     </Button>
-                                    <Button
-                                        onClick={() => {
-                                            if (
-                                                selectedResourceType?.length ==
+                                    {CheckRequiredParams(resourceTypes) && (
+                                        <>
+                                            <Button
+                                                onClick={() => {
+                                                    if (
+                                                        selectedResourceType?.length ==
+                                                        resourceTypes?.length
+                                                    ) {
+                                                        setSelectedResourceType(
+                                                            []
+                                                        )
+                                                        return
+                                                    }
+                                                    const temp: any = []
+                                                    resourceTypes?.map(
+                                                        (item: any) => {
+                                                            temp.push({
+                                                                label: item?.name,
+                                                                value: item?.name,
+                                                                params: item?.params,
+                                                            })
+                                                        }
+                                                    )
+                                                    setSelectedResourceType(
+                                                        temp
+                                                    )
+                                                }}
+                                            >
+                                                {selectedResourceType?.length ==
                                                 resourceTypes?.length
-                                            ) {
-                                                setSelectedResourceType([])
-                                                return
-                                            }
-                                            const temp: any = []
-                                            resourceTypes?.map((item: any) => {
-                                                temp.push({
-                                                    label: item?.name,
-                                                    value: item?.name,
-                                                    params: item?.params,
-                                                })
-                                            })
-                                            setSelectedResourceType(temp)
-                                        }}
-                                    >
-                                        {selectedResourceType?.length ==
-                                        resourceTypes?.length
-                                            ? 'Unselect all types'
-                                            : 'Select all types'}
-                                    </Button>
+                                                    ? 'Unselect all types'
+                                                    : 'Select all types'}
+                                            </Button>
+                                        </>
+                                    )}
+
                                     <Button
                                         variant="primary"
                                         loading={actionLoading['discovery']}
@@ -829,6 +879,15 @@ export default function TypeDetail() {
                                         )}
                                     </>
                                 )}
+                                {error && error!='' && (<>
+                                    <Alert
+                                        className='w-full'
+                                        header="Error"
+                                        type='error'
+                                        >
+                                        {error}
+                                        </Alert>
+                                </>)}
                             </Flex>
                         </Modal>
                         <CreateIntegration
