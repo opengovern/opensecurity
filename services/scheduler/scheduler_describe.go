@@ -223,8 +223,8 @@ func (s *Scheduler) scheduleDescribeJob(ctx context.Context) {
 
 		resourceTypesWithParams, err := s.db.ListManualDiscoverySchedule(integration.IntegrationID)
 		if err != nil {
-			s.logger.Error("failed to list describe jobs with parameters for this integration", zap.String("integration_id", integration.IntegrationID),
-				zap.Error(err))
+			s.logger.Error("failed to list describe jobs with parameters for this integration",
+				zap.String("integration_id", integration.IntegrationID), zap.Error(err))
 			continue
 		}
 
@@ -233,7 +233,22 @@ func (s *Scheduler) scheduleDescribeJob(ctx context.Context) {
 			zap.String("integration_type", string(integration.IntegrationType)),
 			zap.String("resource_types", fmt.Sprintf("%v", len(resourceTypes))))
 		for _, resourceType := range resourceTypes {
-			_, err = s.describe(integration, resourceType.Name, true, false, false, nil, "scheduler", nil)
+			parametersMap := make(map[string]string)
+			haveRequiredParameters := true
+			for _, param := range resourceType.Params {
+				if param.Required && (param.Default == nil || *param.Default == "") {
+					haveRequiredParameters = false
+				}
+				if param.Default != nil {
+					parametersMap[param.Name] = *param.Default
+				}
+			}
+			if !haveRequiredParameters {
+				s.logger.Error("skipping resource type because doesn't have required parameters default values",
+					zap.String("resource_type", resourceType.Name))
+				continue
+			}
+			_, err = s.describe(integration, resourceType.Name, true, false, false, nil, "scheduler", parametersMap)
 			if err != nil {
 				s.logger.Error("failed to describe connection", zap.String("integration_id", integration.IntegrationID), zap.String("resource_type", resourceType.Name), zap.Error(err))
 			}
