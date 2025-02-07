@@ -210,10 +210,8 @@ export default function NewBenchmarkSummary() {
     const { benchmarkId } = useParams()
     const { value: selectedConnections } = useFilterState()
     const [assignments, setAssignments] = useState(0)
-
+    const [coverage, setCoverage] = useState([])
     const [recall, setRecall] = useState(false)
-    const [focusedItem, setFocusedItem] = useState<string>()
-    const [expandedItems, setExpandedItems] = useState<string[]>([])
     const topQuery = {
         ...(benchmarkId && { benchmarkId: [benchmarkId] }),
         ...(selectedConnections.provider && {
@@ -242,29 +240,7 @@ export default function NewBenchmarkSummary() {
             false
         )
 
-    const {
-        response: benchmarkKPIStart,
-        isLoading: benchmarkKPIStartLoading,
-        sendNow: benchmarkKPIStartSend,
-    } = useComplianceApiV1BenchmarksSummaryDetail(String(benchmarkId), {
-        ...topQuery,
-        timeAt: activeTimeRange.start.unix(),
-    })
-    const {
-        response: benchmarkKPIEnd,
-        isLoading: benchmarkKPIEndLoading,
-        sendNow: benchmarkKPIEndSend,
-    } = useComplianceApiV1BenchmarksSummaryDetail(String(benchmarkId), {
-        ...topQuery,
-        timeAt: activeTimeRange.end.unix(),
-    })
-
-    const hideKPIs =
-        (benchmarkKPIEnd?.conformanceStatusSummary?.failed || 0) +
-            (benchmarkKPIEnd?.conformanceStatusSummary?.passed || 0) +
-            (benchmarkKPIStart?.conformanceStatusSummary?.failed || 0) +
-            (benchmarkKPIStart?.conformanceStatusSummary?.passed || 0) ===
-        0
+ 
 
     const GetEnabled = () => {
         let url = ''
@@ -314,6 +290,36 @@ export default function NewBenchmarkSummary() {
                 console.log(err)
             })
     }
+     const GetCoverage = () => {
+         let url = ''
+         if (window.location.origin === 'http://localhost:3000') {
+             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+         } else {
+             url = window.location.origin
+         }
+         // @ts-ignore
+         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+         const config = {
+             headers: {
+                 Authorization: `Bearer ${token}`,
+             },
+         }
+         axios
+             .get(
+                 `${url}/main/compliance/api/v1/frameworks/${benchmarkId}/coverage`,
+                 config
+             )
+             .then((res) => {
+                 if (res.data) {
+                   
+                    setCoverage(res.data)
+                }
+             })
+             .catch((err) => {
+                 console.log(err)
+             })
+     }
     const GetChart = () => {
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
@@ -582,9 +588,13 @@ export default function NewBenchmarkSummary() {
                             </div>
                         }
                     >
-                        <span className="">{benchmarkDetail?.title}</span>
+                        <Flex className="gap-2">
+                            <span>{benchmarkDetail?.title}</span>
+                            <Button iconName="status-info" variant="icon" onClick={()=>{
+                                GetCoverage()
+                            }} />
+                        </Flex>
                     </Header>
-                 
 
                     <Flex flexDirection="col" className="w-full ">
                         {/* {chart && enable && ( */}
