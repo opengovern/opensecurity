@@ -8,7 +8,6 @@ import { KeyValuePairs } from '@cloudscape-design/components'
 import Spinner from '../../../../components/Spinner'
 import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
-import { useMDXComponents } from '../../../../components/MDX'
 interface IntegrationListProps {
     name?: string
     integration_type?: string
@@ -70,7 +69,6 @@ export default function Setup({
                 </>
             ) : (
                 <Flex className="flex-col gap-3 w-full">
-                 
                     <>
                         {' '}
                         {/* <h1 className=" font-bold text-2xl mb-2 w-full text-left ml-1">
@@ -81,13 +79,16 @@ export default function Setup({
                                 flexDirection="col"
                                 className=" p-5 justify-start w-full items-start"
                             >
-                                <ReactMarkdown
-                                    children={setup}
-                                    skipHtml={false}
-                                    rehypePlugins={[rehypeRaw]}
-                                    // @ts-ignore
-                                    components={useMDXComponents({})}
-                                />
+                                <div className=" markdown-container">
+                                    <ReactMarkdown
+                                        // @ts-ignore
+                                        children={setup}
+                                        skipHtml={false}
+                                        className={'markdown-body'}
+                                        rehypePlugins={[rehypeRaw]}
+                                    />
+                                </div>
+                               
                             </Flex>
                         </Card>
                     </>

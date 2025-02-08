@@ -194,3 +194,9 @@ table{
     border-radius: 0.75rem!important;
     border: 1px solid #e5e7eb!important;
 } */
+
+.markdown-body ol,
+.markdown-body ul,
+.markdown-body menu {
+  all: revert!important; /* Reverts styles to browser defaults */
+}
