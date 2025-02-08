@@ -26,6 +26,8 @@ import Box from '@cloudscape-design/components/box'
 import SpaceBetween from '@cloudscape-design/components/space-between'
 import {
     FormField,
+    Modal,
+    Multiselect,
     RadioGroup,
     Tiles,
     Toggle,
@@ -69,19 +71,23 @@ export default function Settings({
     const isDemo = useAtomValue(isDemoAtom)
     const [loading, setLoading] = useState(false)
     const [rows,setRows] = useState<any>([])
-       const [page, setPage] = useState(0)
-       const [totalPages,setTotalPages]=useState(1)
+       const [page, setPage] = useState(1)
+       const [totalPages,setTotalPages]=useState(0)
+       const [available,setAvailable]=useState([])
+       const [availableLoading,setAvailableLoading]=useState(false)
+       const [openAdd,setOpenAdd]=useState(false)
+       const [openDelete,setOpenDelete]=useState(false)
+       const [selected,setSelected]=useState<any>([])
+    const [selectedDelete,setSelectedDelete]=useState<any>([])
+    const [addLoading,setAddLoading]=useState(false)
+    const [deleteLoading,setDeleteLoading]=useState(false)
  
 
    
 
     
 
-    // const {
-    //     response: assignments,
-    //     isLoading,
-    //     sendNow: refreshList,
-    // } = useComplianceApiV1AssignmentsBenchmarkDetail(String(id), {}, false)
+  useComplianceApiV1AssignmentsBenchmarkDetail(String(id), {}, false)
 
     const {
         isLoading: changeSettingsLoading,
@@ -95,15 +101,7 @@ export default function Settings({
         }
     }, [changeSettingsLoading])
 
-    // useEffect(() => {
-    //     if (id && !assignments) {
-    //         refreshList()
-    //     }
-    //     if (assignments) {
-    //         const count = assignments.connections?.filter((c) => c.status)
-    //         response(count?.length || 0)
-    //     }
-    // }, [id, assignments])
+
 
 
 
@@ -141,8 +139,8 @@ export default function Settings({
                console.log(err)
            })
    }
-   const ChangeStatus = (status: string) => {
-       setLoading(true)
+   const GetAvailable = () => {
+       setAvailableLoading(true)
        let url = ''
        if (window.location.origin === 'http://localhost:3000') {
            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -157,29 +155,23 @@ export default function Settings({
                Authorization: `Bearer ${token}`,
            },
        }
-       const body = {
-           auto_enable: status == 'auto-enable' ? true : false,
-           disable: status == 'disabled' ? true : false,
-       }
        axios
-           .post(
-               `${url}/main/compliance/api/v3/benchmark/${id}/assign`,body,
+           .get(
+               `${url}/main/compliance/api/v1/frameworks/${id}/assignments/available`,
                config
            )
            .then((res) => {
-                window.location.reload()
-            //    setLoading(false)
-
+               setAvailable(res.data?.items)
+               setAvailableLoading(false)
            })
            .catch((err) => {
-               setLoading(false)
+               setAvailableLoading(false)
 
                console.log(err)
            })
    }
-    const ChangeStatusItem = (status: string,tracker_id: string) => {
-        
-        setLoading(true);
+    const Add = () => {
+        setAddLoading(true)
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -194,36 +186,65 @@ export default function Settings({
                 Authorization: `Bearer ${token}`,
             },
         }
-        console.log("tracker",tracker_id)
-        console.log("status",status)
-
         const body = {
-            auto_enable: status == 'auto-enable' ? true : false,
-            disable: status == 'disabled' ? true : false,
-            integration: [
-                {
-                    integration_id: tracker_id,
-                },
-            ],
+            integrations: selected.map((item) => {
+                return item?.value
+            }
+        )
         }
-       
-        
         axios
-            .post(
-                `${url}/main/compliance/api/v3/benchmark/${id}/assign`,
-                body,
+            .put(
+                `${url}/main/compliance/api/v1/frameworks/${id}/assignments`,body,
                 config
             )
             .then((res) => {
-                // window.location.reload()
+                setAddLoading(false)
+                setOpenAdd(false)
                 GetEnabled()
+                setSelected([])
             })
             .catch((err) => {
-                setLoading(false)
+                setAddLoading(false)
 
                 console.log(err)
             })
     }
+    const Delete = () => {
+        setDeleteLoading(true)
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+        axios
+            .delete(
+                `${url}/main/compliance/api/v1/frameworks/${id}/assignments/${selectedDelete.integration_id}`,
+                config
+            )
+            .then((res) => {
+              
+                setDeleteLoading(false)
+                setOpenDelete(false)
+                setSelectedDelete()
+                GetEnabled()
+
+            })
+            .catch((err) => {
+                setDeleteLoading(false)
+
+                console.log(err)
+            })
+    }
+  
     useEffect(() => {
             GetEnabled()
         
@@ -275,51 +296,39 @@ export default function Settings({
                             id: 'id_name',
                             header: 'Name',
                             cell: (item) => item?.integration_name,
-                            sortingField: 'id',
-                            isRowHeader: true,
                         },
                         {
                             id: 'provider_id',
                             header: 'Provider ID',
                             cell: (item) => item?.integration_provider_id,
-                            sortingField: 'id',
-                            isRowHeader: true,
                         },
                         {
                             id: 'integration_type',
                             header: 'Integration Type',
                             cell: (item) => item?.plugin_id,
-                            sortingField: 'id',
-                            isRowHeader: true,
                         },
                         {
                             id: 'type',
                             header: ' Type',
                             cell: (item) => item?.assignment_type,
-                            sortingField: 'id',
-                            isRowHeader: true,
                         },
-                        // {
-                        //     id: 'enable',
-                        //     header: 'Enable',
-                        //     cell: (item) => (
-                        //         <>
-                        //             <Switch
-                        //                 disabled={banner}
-                        //                 onChange={(e) => {
-                        //                     ChangeStatusItem(
-                        //                         e ? 'auto-enable' : 'disabled',
-                        //                         item?.integration
-                        //                             ?.integration_id
-                        //                     )
-                        //                 }}
-                        //                 checked={item?.assigned}
-                        //             />
-                        //         </>
-                        //     ),
-                        //     sortingField: 'id',
-                        //     isRowHeader: true,
-                        // },
+                        {
+                            id: 'enable',
+                            header: '',
+                            cell: (item) => (
+                                <>
+                                    <KButton
+                                        // variant="icon"
+                                        iconName="remove"
+                                        variant="inline-icon"
+                                        onClick={() => {
+                                            setSelectedDelete(item)
+                                            setOpenDelete(true)
+                                        }}
+                                    />
+                                </>
+                            ),
+                        },
                     ]}
                     columnDisplay={[
                         { id: 'id', visible: true },
@@ -349,54 +358,21 @@ export default function Settings({
                             </SpaceBetween>
                         </Box>
                     }
-                    filter={
-                        ''
-                        // <PropertyFilter
-                        //     // @ts-ignore
-                        //     query={undefined}
-                        //     // @ts-ignore
-                        //     onChange={({ detail }) => {
-                        //         // @ts-ignore
-                        //         setQueries(detail)
-                        //     }}
-                        //     // countText="5 matches"
-                        //     enableTokenGroups
-                        //     expandToViewport
-                        //     filteringAriaLabel="Control Categories"
-                        //     // @ts-ignore
-                        //     // filteringOptions={filters}
-                        //     filteringPlaceholder="Control Categories"
-                        //     // @ts-ignore
-                        //     filteringOptions={undefined}
-                        //     // @ts-ignore
-
-                        //     filteringProperties={undefined}
-                        //     // filteringProperties={
-                        //     //     filterOption
-                        //     // }
-                        // />
-                    }
                     header={
                         <Header
                             className="w-full"
-                            // actions={
-                            //     <Flex className="gap-2">
-                            //         <KButton
-                            //             onClick={() => {
-                            //                 ChangeStatus('auto-enable')
-                            //             }}
-                            //         >
-                            //             Enable All
-                            //         </KButton>
-                            //         <KButton
-                            //             onClick={() => {
-                            //                 ChangeStatus('disabled')
-                            //             }}
-                            //         >
-                            //             Disable All
-                            //         </KButton>
-                            //     </Flex>
-                            // }
+                            actions={
+                                <Flex className="gap-2">
+                                    <KButton
+                                        onClick={() => {
+                                            GetAvailable()
+                                            setOpenAdd(true)
+                                        }}
+                                    >
+                                        Add
+                                    </KButton>
+                                </Flex>
+                            }
                         >
                             Assigments{' '}
                             <span className=" font-medium">({totalPages})</span>
@@ -405,7 +381,7 @@ export default function Settings({
                     pagination={
                         <CustomPagination
                             currentPageIndex={page}
-                            pagesCount={Math.ceil(totalPages/10)}
+                            pagesCount={Math.ceil(totalPages / 10)}
                             onChange={({ detail }) =>
                                 setPage(detail.currentPageIndex)
                             }
@@ -413,6 +389,128 @@ export default function Settings({
                     }
                 />
             </div>
+            <Modal
+                visible={openAdd}
+                onDismiss={() => {
+                    setOpenAdd(false)
+                    setSelected([])
+                }}
+                header="Add Assignments"
+                footer={
+                    <Box float="right">
+                        <SpaceBetween direction="horizontal" size="xs">
+                            <KButton
+                                onClick={() => {
+                                    setOpenAdd(false)
+                                    setSelected([])
+                                }}
+                            >
+                                Close
+                            </KButton>
+
+                            {selected.length == available.length ? (
+                                <>
+                                    <KButton
+                                        onClick={() => {
+                                            setSelected([])
+                                        }}
+                                    >
+                                        UnSelect All
+                                    </KButton>
+                                </>
+                            ) : (
+                                <>
+                                    <KButton
+                                        onClick={() => {
+                                            setSelected(
+                                                available?.map((item) => {
+                                                    return {
+                                                        label: item?.name,
+                                                        value: item?.integration_id,
+                                                        description:
+                                                            item?.provider_id,
+                                                    }
+                                                })
+                                            )
+                                        }}
+                                    >
+                                        Select All
+                                    </KButton>
+                                </>
+                            )}
+
+                            <KButton
+                                variant={'primary'}
+                                loading={addLoading}
+                                onClick={() => {
+                                    Add()
+                                }}
+                            >
+                                Add
+                            </KButton>
+                        </SpaceBetween>
+                    </Box>
+                }
+            >
+                <Multiselect
+                    className="w-full"
+                    // @ts-ignore
+                    options={available?.map((item) => {
+                        return {
+                            label: item?.name,
+                            value: item?.integration_id,
+                            description: item?.provider_id,
+                        }
+                    })}
+                    // @ts-ignore
+                    selectedOptions={selected}
+                    loadingText="Loading Assignment"
+                    emptyText="No assignment"
+                    loading={availableLoading}
+                    tokenLimit={1}
+                    filteringType="auto"
+                    placeholder="Select Assignment"
+                    onChange={({ detail }) => {
+                        // @ts-ignore
+                        setSelected(detail.selectedOptions)
+                    }}
+                />
+            </Modal>
+            <Modal
+                visible={openDelete}
+                onDismiss={() => {
+                    setOpenDelete(false)
+                    setSelectedDelete()
+                }}
+                header="Delete Assignments"
+                footer={
+                    <Box float="right">
+                        <SpaceBetween direction="horizontal" size="xs">
+                            <KButton
+                                onClick={() => {
+                                    setOpenDelete(false)
+                                    setSelectedDelete()
+                                }}
+                            >
+                                Close
+                            </KButton>
+
+                            <KButton
+                                variant={'primary'}
+                                loading={deleteLoading}
+                                onClick={() => {
+                                    Delete()
+                                }}
+                            >
+                                Delete
+                            </KButton>
+                        </SpaceBetween>
+                    </Box>
+                }
+            >
+                Are you sure you want to delete assignment{' '}
+                {selectedDelete?.integration_name}?
+            </Modal>
         </>
     )
 }
