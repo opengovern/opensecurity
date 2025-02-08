@@ -325,8 +325,8 @@ type GetComplianceJobStatusResponse struct {
 
 	DataSinkingTime int64 `json:"data_sinking_time"`
 
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type ComplianceJobRunner struct {
