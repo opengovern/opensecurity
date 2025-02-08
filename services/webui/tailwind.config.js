@@ -2,6 +2,7 @@
 
 module.exports = {
     darkMode: 'class',
+    important: ':not(.markdown-body)',
     content: [
         './src/**/*.{js,jsx,ts,tsx}',
 

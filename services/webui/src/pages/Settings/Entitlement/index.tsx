@@ -47,7 +47,6 @@ import {
 import SettingsCustomization from '../Jobs/Customization'
 import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
-import { useMDXComponents } from '../../../components/MDX'
 interface ITextMetric {
     title: string
     metricId: string
@@ -595,12 +594,14 @@ export default function SettingsEntitlement() {
             </Flex>
             <Modal
                 visible={open}
-                size='large'
+                size="large"
                 onDismiss={() => setOpen(false)}
-                header="Usage Data Notice"
+                // header="Usage Data Notice"
             >
-                <ReactMarkdown
-                    children={`# Usage Data Notice
+                <div className=" markdown-container">
+                    <ReactMarkdown
+                        // @ts-ignore
+                        children={`# Usage Data Notice
 
 *opencomply* Community Edition includes a built-in process to gather a minimal set of **anonymized** usage data once per day. This helps us understand how our community uses opencomply and guides future improvements. Specifically, the following information is sent to our analytics service at [https://stats.opencomply.io](https://stats.opencomply.io):
 
@@ -628,11 +629,12 @@ We encourage you to review this code to understand exactly what information is b
 If you wish to turn off this data collection process, you can simply modify and recompile opencomply with the relevant functionality disabled. The pertinent section can be found in the [job.go file](https://github.com/opengovern/opencomply/blob/main/jobs/checkup-job/job.go).
 
 If you have any concerns or questions about this data collection—or need guidance on disabling it—please consult our documentation or reach out to us at [insert your support channel or email]. We value your input and appreciate your support in making opencomply better for everyone.`}
-                    skipHtml={false}
-                    rehypePlugins={[rehypeRaw]}
-                    // @ts-ignore
-                    components={useMDXComponents({})}
-                />
+                        skipHtml={false}
+                        className={'markdown-body'}
+                        rehypePlugins={[rehypeRaw]}
+                    />
+                </div>
+            
             </Modal>
         </div>
     )

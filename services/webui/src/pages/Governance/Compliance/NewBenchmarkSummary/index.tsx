@@ -590,9 +590,9 @@ export default function NewBenchmarkSummary() {
                     >
                         <Flex className="gap-2">
                             <span>{benchmarkDetail?.title}</span>
-                            <Button iconName="status-info" variant="icon" onClick={()=>{
+                            {/* <Button iconName="status-info" variant="icon" onClick={()=>{
                                 GetCoverage()
-                            }} />
+                            }} /> */}
                         </Flex>
                     </Header>
 

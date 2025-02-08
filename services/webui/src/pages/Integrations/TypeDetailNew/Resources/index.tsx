@@ -6,9 +6,7 @@ import axios from 'axios'
 
 import { AppLayout, Box, Button, Header, KeyValuePairs, Pagination, SpaceBetween, SplitPanel, Table } from '@cloudscape-design/components'
 import Spinner from '../../../../components/Spinner'
-import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
-import { useMDXComponents } from '../../../../components/MDX'
 import CustomPagination from '../../../../components/Pagination'
 interface IntegrationListProps {
     name?: string
