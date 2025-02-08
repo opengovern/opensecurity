@@ -1139,7 +1139,7 @@ export default function EvaluateDetail() {
                                         value: (
                                             <>
                                                 {dateTimeDisplay(
-                                                    jobDetail?.UpdatedAt
+                                                    jobDetail?.updated_at
                                                 )}
                                             </>
                                         ),
@@ -1160,8 +1160,8 @@ export default function EvaluateDetail() {
                                                 // iconName="status-info"
                                             >
                                                 {shortDateTimeDisplayDelta(
-                                                    jobDetail?.UpdatedAt,
-                                                    jobDetail?.CreatedAt
+                                                    jobDetail?.updated_at,
+                                                    jobDetail?.created_at
                                                 )}
                                             </KButton>
                                         ),
