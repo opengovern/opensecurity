@@ -1011,6 +1011,14 @@ func (db Database) GetFrameworkComplianceSummaries(frameworkId string) ([]Framew
 	return summaries, nil
 }
 
+func (db Database) PurgeFrameworkComplianceSummaries() error {
+	tx := db.Orm.Model(FrameworkComplianceSummary{}).Delete(&FrameworkComplianceSummary{})
+	if tx.Error != nil {
+		return tx.Error
+	}
+	return nil
+}
+
 func (db Database) GetFrameworkComplianceResultSummary(frameworkId string) (*FrameworkComplianceSummary, error) {
 	var summary FrameworkComplianceSummary
 	tx := db.Orm.Model(FrameworkComplianceSummary{}).Where("framework_id = ?", frameworkId).Where("type = 'result_summary'").Find(&summary)
