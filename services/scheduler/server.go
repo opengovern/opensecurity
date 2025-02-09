@@ -85,6 +85,7 @@ func (h HttpServer) Register(e *echo.Echo) {
 	v3.POST("/jobs/compliance/connections", httpserver.AuthorizeHandler(h.GetComplianceJobsHistoryByIntegration, apiAuth.ViewerRole))
 
 	v3.POST("/compliance/benchmark/:benchmark_id/run", httpserver.AuthorizeHandler(h.RunBenchmarkById, apiAuth.AdminRole))
+	v3.POST("/compliance/framework/:benchmark_id/run", httpserver.AuthorizeHandler(h.RunBenchmarkById, apiAuth.AdminRole))
 	v3.POST("/compliance/run", httpserver.AuthorizeHandler(h.RunBenchmark, apiAuth.AdminRole))
 	v3.POST("/discovery/run", httpserver.AuthorizeHandler(h.RunDiscovery, apiAuth.AdminRole))
 	v3.POST("/discovery/status", httpserver.AuthorizeHandler(h.GetIntegrationDiscoveryProgress, apiAuth.ViewerRole))
