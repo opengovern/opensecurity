@@ -2751,14 +2751,14 @@ export interface PlatformEnginePkgInventoryApiV3ControlListFilters {
     severity: string[]
     root_benchmark: string[]
     parent_benchmark: string[]
-    primary_table: string[]
-    list_of_tables: string[]
+    primary_resource: string[]
+    list_of_resources: string[]
     tags: PlatformEnginePkgInventoryApiV3ControlListFiltersTags[]
 }
 export interface PlatformEnginePkgControlApiListV2 {
     cursor: number
     per_page: number
-    primary_table?: string
+    primary_resource?: string
     severity?: string
     finding_summary?: boolean
     connector?: string[]
@@ -2766,7 +2766,7 @@ export interface PlatformEnginePkgControlApiListV2 {
     root_benchmark?: string[]
     has_parameters?: boolean
     tags?: PlatformEnginePkgControlApiListV2Tags[]
-    list_of_tables?: string[]
+    list_of_resources?: string[]
 }
 export interface PlatformEnginePkgInventoryApiV3ControlListFiltersTags {
     Key: string

@@ -200,39 +200,10 @@ export default function Controls({
     const [treePage, setTreePage] = useState(0)
     const [treeTotal, setTreeTotal] = useState(0)
     const [treeTotalPages, setTreeTotalPages] = useState(0)
+    const [coverage,setCoverage]= useState()
 
-    const [filters, setFilters] = useState([
-        {
-            propertyKey: 'severity',
-            value: 'High',
-        },
-        {
-            propertyKey: 'severity',
-            value: 'Critical',
-        },
-        {
-            propertyKey: 'severity',
-            value: 'Low',
-        },
-        {
-            propertyKey: 'severity',
-            value: 'Medium',
-        },
-    ])
-    const [filterOption, setFilterOptions] = useState([
-        {
-            key: 'severity',
-            operators: ['='],
-            propertyLabel: `Severity`,
-            groupValuesLabel: `Severity values`,
-        },
-        // {
-        //     key: 'severity',
-        //     operators: ['='],
-        //     propertyLabel: `Exclude Inactive Integration'`,
-        //     groupValuesLabel: `Exclude Inactive Integration' values`,
-        // },
-    ])
+    const [filters, setFilters] = useState([])
+    const [filterOption, setFilterOptions] = useState([])
     const [sort, setSort] = useState('noncompliant_resources')
     const [sortOrder, setSortOrder] = useState(true)
 
@@ -271,6 +242,8 @@ export default function Controls({
             severity: query?.severity,
             root_benchmark: flag ? [id] : [benchmarkId],
             compliance_result_summary: true,
+            list_of_resources: query?.list_of_resources,
+            primary_resource: query?.primary_resource,
             cursor: page,
             per_page: 10,
             sort_by: sort,
@@ -288,6 +261,9 @@ export default function Controls({
                 setTotalCount(resp.data.total_count)
                 if (resp.data.items) {
                     setRows(resp.data.items)
+                }
+                else{
+                    setRows([])
                 }
 
                 setLoading(false)
@@ -363,6 +339,36 @@ export default function Controls({
                 console.log(err)
             })
     }
+    const GetCoverages = (flag: boolean,id: string|undefined) => {
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+        axios
+            .get(
+                `${url}/main/compliance/api/v1/frameworks/${
+                    flag ? id : benchmarkId
+                }/coverage`,
+                config
+            )
+            .then((res) => {
+                setCoverage(res.data)
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+    }
+    
     useEffect(() => {
         if (window.innerWidth > 640) {
             GetTree()
@@ -370,11 +376,60 @@ export default function Controls({
     }, [])
     useEffect(() => {
         setPage(0)
+        GetCoverages(selected ? true : false, selected)
     }, [selected])
 
     useEffect(() => {
         GetControls(selected ? true : false, selected)
-    }, [selected, sort, sortOrder, page])
+    }, [selected, sort, sortOrder, page,query])
+
+useEffect(() => {
+    const temp_option = [
+        { propertyKey: 'severity', value: 'high' },
+        { propertyKey: 'severity', value: 'medium' },
+        { propertyKey: 'severity', value: 'low' },
+        { propertyKey: 'severity', value: 'critical' },
+        { propertyKey: 'severity', value: 'none' },
+    ]
+       const property = [
+           {
+               key: 'severity',
+               operators: ['='],
+               propertyLabel: 'Severity',
+               groupValuesLabel: 'Severity values',
+           },
+
+
+           {
+               key: 'list_of_resources',
+               operators: ['='],
+               propertyLabel: 'List of Resources',
+               groupValuesLabel: 'List of Resources values',
+           },
+           {
+               key: 'primary_resource',
+               operators: ['='],
+               propertyLabel: 'Primary Resources',
+               groupValuesLabel: 'Primary Resources values',
+           },
+       ]
+        coverage?.list_of_resources?.map((unique, index) => {
+            temp_option.push({
+                propertyKey: 'list_of_resources',
+                value: unique,
+            })
+        })
+        coverage?.primary_resources?.map((unique, index) => {
+            temp_option.push({
+                propertyKey: 'primary_resource',
+                value: unique,
+            })
+        })
+        setFilterOptions(property)
+        setFilters(temp_option)
+
+
+}, [coverage])
     useEffect(() => {
         let temp = {}
 
@@ -390,13 +445,7 @@ export default function Controls({
         setQuery(temp)
     }, [queries])
 
-    useEffect(() => {
-        if (selected) {
-            GetControls(true, selected)
-        } else {
-            GetControls(false)
-        }
-    }, [query])
+
 
     const getControlDetail = (id: string) => {
         const api = new Api()
