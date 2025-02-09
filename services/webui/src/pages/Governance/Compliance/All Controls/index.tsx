@@ -143,18 +143,7 @@ export default function AllControls() {
                 // setLoading(false)
             })
     }
-    const findFilters = (key: string) => {
-        const temp = filters?.tags.filter((item, index) => {
-            if (item.Key === key) {
-                return item
-            }
-        })
 
-        if (temp) {
-            return temp[0]
-        }
-        return undefined
-    }
 
     const GetRows = () => {
         // debugger;
@@ -168,8 +157,8 @@ export default function AllControls() {
         let body = {
             integration_types: query?.connector,
             severity: query?.severity,
-            list_of_tables: query?.list_of_tables,
-            primary_table: query?.primary_table,
+            list_of_resources: query?.list_of_resources,
+            primary_resource: query?.primary_resource,
             root_benchmark: query?.root_benchmark,
             parent_benchmark: query?.parent_benchmark,
             tags: query?.tags,
@@ -204,18 +193,13 @@ export default function AllControls() {
                 // params.fail()
             })
     }
-    const {
-        response: Types,
-        isLoading: TypesLoading,
-        isExecuted: TypesExec,
-    } = useIntegrationApiV1EnabledConnectorsList(0, 0)
+
     useEffect(() => {
         GetRows()
     }, [page,query])
     useEffect(() => {
         const temp_option = [
-            { propertyKey: 'connector', value: 'AWS' },
-            { propertyKey: 'connector', value: 'Azure' },
+           
             { propertyKey: 'severity', value: 'high' },
             { propertyKey: 'severity', value: 'medium' },
             { propertyKey: 'severity', value: 'low' },
@@ -243,22 +227,22 @@ export default function AllControls() {
                 groupValuesLabel: 'Parent Benchmark values',
             },
             {
-                key: 'list_of_tables',
+                key: 'list_of_resources',
                 operators: ['='],
-                propertyLabel: 'List of Tables',
-                groupValuesLabel: 'List of Tables values',
+                propertyLabel: 'List of Resources',
+                groupValuesLabel: 'List of Resources values',
             },
             {
-                key: 'primary_table',
+                key: 'primary_resource',
                 operators: ['='],
-                propertyLabel: 'Primary Service',
-                groupValuesLabel: 'Primary Service values',
+                propertyLabel: 'Primary Resources',
+                groupValuesLabel: 'Primary Resources values',
             },
         ]
-        Types?.integration_types?.map((item) => {
+        filters?.provider?.map((item) => {
             temp_option.push({
                 propertyKey: 'integrationType',
-                value: item.platform_name,
+                value: item,
             })
         })
         filters?.parent_benchmark?.map((unique, index) => {
@@ -267,15 +251,15 @@ export default function AllControls() {
                 value: unique,
             })
         })
-        filters?.list_of_tables?.map((unique, index) => {
+        filters?.list_of_resources?.map((unique, index) => {
             temp_option.push({
-                propertyKey: 'list_of_tables',
+                propertyKey: 'list_of_resources',
                 value: unique,
             })
         })
-        filters?.primary_table?.map((unique, index) => {
+        filters?.primary_resource?.map((unique, index) => {
             temp_option.push({
-                propertyKey: 'primary_table',
+                propertyKey: 'primary_resource',
                 value: unique,
             })
         })
@@ -298,15 +282,15 @@ export default function AllControls() {
         setProperties(property)
         setOptions(temp_option)
 
-    }, [filters,Types])
+    }, [filters])
     
      useEffect(() => {
         if(filterQuery){
             const temp_severity :any = []
             const temp_connector: any = []
             const temp_parent_benchmark: any = []
-            const temp_list_of_tables: any = []
-            const temp_primary_table: any = []
+            const temp_list_of_resources: any = []
+            const temp_primary_resource: any = []
             let temp_tags = {}
             filterQuery.tokens.map((item, index) => {
                 // @ts-ignore
@@ -328,16 +312,16 @@ export default function AllControls() {
                     temp_parent_benchmark.push(item.value)
                 }
                 // @ts-ignore
-                else if (item.propertyKey === 'list_of_tables') {
+                else if (item.propertyKey === 'list_of_resources') {
                     // @ts-ignore
 
-                    temp_list_of_tables.push(item.value)
+                    temp_list_of_resources.push(item.value)
                 }
                 // @ts-ignore
-                else if (item.propertyKey === 'primary_table') {
+                else if (item.propertyKey === 'primary_resource') {
                     // @ts-ignore
 
-                    temp_primary_table.push(item.value)
+                    temp_primary_resource.push(item.value)
                 }
                 
                 else {
@@ -365,13 +349,13 @@ export default function AllControls() {
                     temp_parent_benchmark?.length > 0
                         ? temp_parent_benchmark
                         : undefined,
-                list_of_tables:
-                    temp_list_of_tables?.length > 0
-                        ? temp_list_of_tables
+                list_of_resources:
+                    temp_list_of_resources?.length > 0
+                        ? temp_list_of_resources
                         : undefined,
-                primary_table:
-                    temp_primary_table?.length > 0
-                        ? temp_primary_table
+                primary_resource:
+                    temp_primary_resource?.length > 0
+                        ? temp_primary_resource
                         : undefined,
                 // @ts-ignore
                 tags: temp_tags,
