@@ -1012,7 +1012,7 @@ func (db Database) GetFrameworkComplianceSummaries(frameworkId string) ([]Framew
 }
 
 func (db Database) PurgeFrameworkComplianceSummaries() error {
-	tx := db.Orm.Model(FrameworkComplianceSummary{}).Delete(&FrameworkComplianceSummary{})
+	tx := db.Orm.Model(FrameworkComplianceSummary{}).Where("1 = 1").Delete(&FrameworkComplianceSummary{})
 	if tx.Error != nil {
 		return tx.Error
 	}
