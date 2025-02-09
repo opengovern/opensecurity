@@ -41,6 +41,7 @@ type OperationalStatusUpdate struct {
 
 type IntegrationPlugin struct {
 	ID                       int
+	UpdatedAt                time.Time
 	PluginID                 string `gorm:"primaryKey"`
 	IntegrationType          integration.Type
 	Name                     string

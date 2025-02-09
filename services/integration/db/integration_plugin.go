@@ -2,6 +2,7 @@ package db
 
 import (
 	"errors"
+	"fmt"
 	"github.com/opengovern/opencomply/services/integration/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -29,6 +30,34 @@ func (db Database) GetPluginByID(pluginID string) (*models.IntegrationPlugin, er
 		return nil, err
 	}
 	return &plugin, nil
+}
+
+func (db Database) UpdatePluginInstallTimedOut(pluginInstallTime int64) error {
+	tx := db.IntegrationTypeOrm.
+		Model(&models.IntegrationPlugin{}).
+		Where("install_state = ?", models.IntegrationTypeInstallStateInstalling).
+		Where(fmt.Sprintf("updated_at < NOW() - INTERVAL '%d MINUTES'", pluginInstallTime)).
+		Updates(models.IntegrationPlugin{
+			InstallState:      models.IntegrationTypeInstallStateNotInstalled,
+			OperationalStatus: models.IntegrationPluginOperationalStatusFailed})
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	return nil
+}
+
+func (db Database) ListInstallingPlugins() ([]models.IntegrationPlugin, error) {
+	var plugin []models.IntegrationPlugin
+	err := db.IntegrationTypeOrm.Model(models.IntegrationPlugin{}).Where("install_state = ?", models.IntegrationTypeInstallStateInstalling).
+		Find(&plugin).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return plugin, nil
 }
 
 func (db Database) GetPluginBinaryByID(pluginID string) (*models.IntegrationPluginBinary, error) {
