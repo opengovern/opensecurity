@@ -102,6 +102,8 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 
 	v3 := e.Group("/api/v3")
 
+	v3.PUT("/sample/purge", httpserver2.AuthorizeHandler(h.PurgeSampleData, authApi.AdminRole))
+
 	v3.GET("/policies", httpserver2.AuthorizeHandler(h.ListPolicies, authApi.ViewerRole))
 	v3.GET("/policies/:policy_id", httpserver2.AuthorizeHandler(h.GetPolicy, authApi.ViewerRole))
 
@@ -5993,4 +5995,25 @@ func (h *HttpHandler) ListFrameworks(echoCtx echo.Context) error {
 	}
 
 	return echoCtx.JSON(http.StatusOK, response)
+}
+
+// PurgeSampleData godoc
+//
+//	@Summary		List all workspaces with owner id
+//	@Description	Returns all workspaces with owner id
+//	@Security		BearerToken
+//	@Tags			workspace
+//	@Accept			json
+//	@Produce		json
+//	@Success		200
+//	@Router			/compliance/api/v3/sample/purge [put]
+func (h HttpHandler) PurgeSampleData(c echo.Context) error {
+	err := h.db.PurgeFrameworkComplianceSummaries()
+
+	if err != nil {
+		h.logger.Error("failed to remove framework compliance summaries", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to remove framework compliance summaries")
+	}
+
+	return c.NoContent(http.StatusOK)
 }

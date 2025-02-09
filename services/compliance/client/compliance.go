@@ -30,6 +30,7 @@ type ComplianceServiceClient interface {
 	GetControlDetails(ctx *httpclient.Context, controlID string) (*compliance.GetControlDetailsResponse, error)
 	SyncQueries(ctx *httpclient.Context) error
 	ListBenchmarksNestedForBenchmark(ctx *httpclient.Context, benchmarkId string) (*compliance.NestedBenchmark, error)
+	PurgeSampleData(ctx *httpclient.Context) error
 }
 
 type complianceClient struct {
@@ -396,4 +397,16 @@ func (s *complianceClient) ListBenchmarksNestedForBenchmark(ctx *httpclient.Cont
 		return nil, err
 	}
 	return &response, nil
+}
+
+func (s *complianceClient) PurgeSampleData(ctx *httpclient.Context) error {
+	url := fmt.Sprintf("%s/api/v3/sample/purge", s.baseURL)
+
+	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodPut, url, ctx.ToHeaders(), nil, nil); err != nil {
+		if 400 <= statusCode && statusCode < 500 {
+			return echo.NewHTTPError(statusCode, err.Error())
+		}
+		return err
+	}
+	return nil
 }

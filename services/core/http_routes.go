@@ -86,7 +86,7 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v3.PUT("/configured/set", httpserver.AuthorizeHandler(h.SetConfiguredStatus, api3.AdminRole))
 	v3.PUT("/configured/unset", httpserver.AuthorizeHandler(h.UnsetConfiguredStatus, api3.ViewerRole))
 	v3.GET("/about", httpserver.AuthorizeHandler(h.GetAbout, api3.ViewerRole))
-	
+
 	v3.GET("/vault/configured", httpserver.AuthorizeHandler(h.VaultConfigured, api3.ViewerRole))
 
 	views := v3.Group("/views")
@@ -107,8 +107,6 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v3.GET("/parameters/queries", httpserver.AuthorizeHandler(h.GetParametersQueries, api3.ViewerRole))
 	v4 := r.Group("/api/v4")
 	v4.GET("/about", httpserver.AuthorizeHandler(h.GetAboutShort, api3.ViewerRole))
-
-
 
 }
 
@@ -637,8 +635,8 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 
 // PurgeSampleData godoc
 //
-//	@Summary		List all workspaces with owner id
-//	@Description	Returns all workspaces with owner id
+//	@Summary		Purge all sample data
+//	@Description	Purge all sample data
 //	@Security		BearerToken
 //	@Tags			workspace
 //	@Accept			json
@@ -662,12 +660,20 @@ func (h HttpHandler) PurgeSampleData(c echo.Context) error {
 	schedulerURL := strings.ReplaceAll(h.cfg.Scheduler.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
 	schedulerClient := schedulerClient.NewSchedulerServiceClient(schedulerURL)
 
+	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
+	complianceClient := complianceClient.NewComplianceClient(complianceURL)
+
 	integrations, err := integrationClient.PurgeSampleData(ctx)
 	if err != nil {
 		return err
 	}
 
 	err = schedulerClient.PurgeSampleData(ctx, integrations)
+	if err != nil {
+		return err
+	}
+
+	err = complianceClient.PurgeSampleData(ctx)
 	if err != nil {
 		return err
 	}
