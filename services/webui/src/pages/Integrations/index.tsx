@@ -46,8 +46,21 @@ export default function Integrations() {
         response: responseConnectors,
         isLoading: connectorsLoading,
         sendNow: getList,
-    } = useIntegrationApiV1ConnectorsList(12, pageNo, undefined, 'count', 'desc')
+    } = useIntegrationApiV1ConnectorsList(12, pageNo, undefined, 'count', 'desc',{},false)
+    const {
+        response: allIntegrations,
+        isLoading: IntegrationsLoading,
+        sendNow: getALL,
+    } = useIntegrationApiV1ConnectorsList(
+        100,
+        pageNo,
+        undefined,
+        'count',
+        'desc',{},false
+    )
     const [open, setOpen] = useState(false)
+    const [openWait, setOpenWait] = useState(false)
+
     const navigate = useNavigate()
     const [selected, setSelected] = useState()
     const [loading, setLoading] = useState(false)
@@ -61,7 +74,9 @@ export default function Integrations() {
     const totalPages = Math.ceil(responseConnectors?.total_count / 12)
     useEffect(() => {
         getList(12, pageNo, 'count', 'desc', undefined)
+        getALL(100, pageNo, 'count', 'desc', undefined)
     }, [pageNo])
+   
     const EnableIntegration = () => {
         setLoading(true)
         let url = ''
@@ -87,6 +102,7 @@ export default function Integrations() {
             )
             .then((res) => {
                 getList(12, pageNo, 'count', 'desc', undefined)
+                getALL(100, pageNo, 'count', 'desc', undefined)
                 setLoading(false)
                 setOpen(false)
                 setNotification({
@@ -100,6 +116,7 @@ export default function Integrations() {
                     type: 'error',
                 })
                 getList(12, pageNo, 'count', 'desc', undefined)
+                getALL(100, pageNo, 'count', 'desc', undefined)
                 setLoading(false)
             })
     }
@@ -130,6 +147,7 @@ export default function Integrations() {
             .post(`${url}${path}`, {}, config)
             .then((res) => {
                 getList(12, pageNo, 'count', 'desc', undefined)
+                getALL(100, pageNo, 'count', 'desc', undefined)
                 setLoading(false)
                 setOpen(false)
                 setNotification({
@@ -143,9 +161,22 @@ export default function Integrations() {
                     type: 'error',
                 })
                 getList(12, pageNo, 'count', 'desc', undefined)
+                getALL(100, pageNo, 'count', 'desc', undefined)
                 setLoading(false)
             })
     }
+    const CheckInstalling =()=>{
+        var flag = false
+        allIntegrations?.items?.map((item)=>{
+            console.log(item.install_state)
+            if(item.install_state =='installing'){
+                flag =true
+            }
+        })
+        return flag
+
+    }
+  
     return (
         <>
             <Modal
@@ -198,6 +229,13 @@ export default function Integrations() {
                                     variant="primary"
                                     onClick={() => {
                                         getList(12, 1, 'count', 'desc', false)
+                                        getALL(
+                                            100,
+                                            pageNo,
+                                            'count',
+                                            'desc',
+                                            undefined
+                                        )
                                         setOpen(false)
                                     }}
                                     className="mt-6"
@@ -231,6 +269,46 @@ export default function Integrations() {
                                 )}
                             </>
                         )}
+                    </Flex>
+                </div>
+            </Modal>
+            <Modal
+                visible={openWait}
+                onDismiss={() => setOpenWait(false)}
+                header="Plugin Installation"
+            >
+                <div className="p-4">
+                    <Text>
+                        Installation is in progress. Please Wait.
+                    </Text>
+
+                    <Flex
+                        justifyContent="end"
+                        alignItems="center"
+                        flexDirection="row"
+                        className="gap-3"
+                    >
+                        <Button
+                            // loading={loading}
+                            disabled={false}
+                            onClick={() => setOpenWait(false)}
+                            className="mt-6"
+                        >
+                            Close
+                        </Button>
+                        <Button
+                            loading={loading}
+                            disabled={loading}
+                            variant="primary"
+                            onClick={() => {
+                                getList(12, 1, 'count', 'desc', false)
+                                getALL(100, pageNo, 'count', 'desc', undefined)
+                                setOpenWait(false)
+                            }}
+                            className="mt-6"
+                        >
+                            Refresh
+                        </Button>
                     </Flex>
                 </div>
             </Modal>
@@ -290,6 +368,10 @@ export default function Integrations() {
                                                     connector?.installed ===
                                                         'installing'
                                                 ) {
+                                                    if(CheckInstalling()){
+                                                        setOpenWait(true)
+                                                        return
+                                                    }
                                                     setOpen(true)
                                                     setSelected(connector)
                                                     return
@@ -336,7 +418,7 @@ export default function Integrations() {
                                                         }}
                                                     >
                                                         <div className="w-100 flex flex-row justify-between">
-                                                            <span className='sm:text-base text-sm'>
+                                                            <span className="sm:text-base text-sm">
                                                                 {item.title}
                                                             </span>
                                                         </div>
