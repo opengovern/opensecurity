@@ -189,7 +189,7 @@
     "Description": "Connect to JIRA for tickets, projects.",
     "Icon": "jira.svg",
     "Availability": "GA",
-    "schema_ids": ["jira_account"],
+    "schema_ids": ["jira"],
     "SourceCode": "https://github.com/opengovern/plugin-jira",
     "PackageURL": "ghcr.io/opengovern/og-describer-doppler",
     "PackageTag": "local-v0.1.5"
@@ -204,7 +204,7 @@
     "Icon": "tailscale.svg",
     "Availability": "GA",
     "SourceCode": "https://github.com/opengovern/og-describer-tailscale",
-    "schema_ids": ["tailscale_account"]
+    "schema_ids": ["tailscale"]
   },
 
   {
@@ -217,7 +217,7 @@
     "Icon": "heroku.svg",
     "Availability": "GA",
     "SourceCode": "https://github.com/opengovern/og-describer-heroku",
-    "schema_ids": ["heroku_account"]
+    "schema_ids": ["heroku"]
   },
 
   {
@@ -230,7 +230,7 @@
     "Icon": "fly_io.svg",
     "Availability": "GA",
     "SourceCode": "https://github.com/opengovern/og-describer-fly",
-    "schema_ids": ["fly_account"]
+    "schema_ids": ["fly"]
   },
  
   {
