@@ -205,6 +205,7 @@ export default function Integrations() {
     const number = window.innerWidth >768 ? 4 : 2
 
     const [open, setOpen] = useState(false)
+    const [openWait, setOpenWait] = useState(false)
     const {
         response: responseConnectors,
         isLoading: connectorsLoading,
@@ -218,10 +219,25 @@ export default function Integrations() {
         {},
         false
     )
+    const {
+        response: allIntegrations,
+        isLoading: IntegrationsLoading,
+        sendNow: getALL,
+    } = useIntegrationApiV1ConnectorsList(
+        100,
+        1,
+        undefined,
+        'count',
+        'desc',
+        {},
+        false
+    )
     const [selected, setSelected] = useState()
 
     useEffect(() => {
         getList(number, 1, 'count', 'desc', false)
+        getALL(100, 1, 'count', 'desc', undefined)
+
     }, [])
      const EnableIntegration = () => {
          setLoading(true)
@@ -247,7 +263,8 @@ export default function Integrations() {
                  config
              )
              .then((res) => {
-                 getList(number, pageNo, 'count', 'desc', undefined)
+                 getList(number, 1, 'count', 'desc', undefined)
+                 getALL(100, 1, 'count', 'desc', undefined)
                  setLoading(false)
                  setOpen(false)
                  setNotification({
@@ -260,7 +277,8 @@ export default function Integrations() {
                      text: `Failed to enable integration`,
                      type: 'error',
                  })
-                 getList(number, pageNo, 'count', 'desc', undefined)
+                 getList(number, 1, 'count', 'desc', undefined)
+                 getALL(100, 1, 'count', 'desc', undefined)
                  setLoading(false)
              })
      }
@@ -290,7 +308,8 @@ export default function Integrations() {
          axios
              .post(`${url}${path}`, {}, config)
              .then((res) => {
-                 getList(number, pageNo, 'count', 'desc', undefined)
+                 getList(number, 1, 'count', 'desc', undefined)
+                 getALL(100, 1, 'count', 'desc', undefined)
                  setLoading(false)
                  setOpen(false)
                  setNotification({
@@ -303,9 +322,20 @@ export default function Integrations() {
                      text: `Failed to install plugin`,
                      type: 'error',
                  })
-                 getList(number, pageNo, 'count', 'desc', undefined)
+                 getList(number, 1, 'count', 'desc', undefined)
+                 getALL(100, 1, 'count', 'desc', undefined)
                  setLoading(false)
              })
+     }
+     const CheckInstalling = () => {
+         var flag = false
+         allIntegrations?.items?.map((item) => {
+             console.log(item.install_state)
+             if (item.install_state == 'installing') {
+                 flag = true
+             }
+         })
+         return flag
      }
     return (
         <>
@@ -365,6 +395,13 @@ export default function Integrations() {
                                             'desc',
                                             false
                                         )
+                                        getALL(
+                                            100,
+                                            1,
+                                            'count',
+                                            'desc',
+                                            undefined
+                                        )
                                         setOpen(false)
                                     }}
                                     className="mt-6"
@@ -401,7 +438,44 @@ export default function Integrations() {
                     </Flex>
                 </div>
             </Modal>
+            <Modal
+                visible={openWait}
+                onDismiss={() => setOpenWait(false)}
+                header="Plugin Installation"
+            >
+                <div className="p-4">
+                    <Text>Installation is in progress. Please Wait.</Text>
 
+                    <Flex
+                        justifyContent="end"
+                        alignItems="center"
+                        flexDirection="row"
+                        className="gap-3"
+                    >
+                        <Button
+                            // loading={loading}
+                            disabled={false}
+                            onClick={() => setOpenWait(false)}
+                            className="mt-6"
+                        >
+                            Close
+                        </Button>
+                        <Button
+                            loading={loading}
+                            disabled={loading}
+                            variant="primary"
+                            onClick={() => {
+                                getList(12, 1, 'count', 'desc', false)
+                                getALL(100, 1, 'count', 'desc', undefined)
+                                setOpenWait(false)
+                            }}
+                            className="mt-6"
+                        >
+                            Refresh
+                        </Button>
+                    </Flex>
+                </div>
+            </Modal>
             <Card className="sm:h-full h-fit  sm:w-full overflow-scroll no-scrollbar sm:inline-block hidden border-solid  border-2 border-b w-full rounded-xl border-tremor-border bg-tremor-background-muted p-4 dark:border-dark-tremor-border dark:bg-gray-950 sm:py-2 px-6">
                 <Flex
                     justifyContent="between"
@@ -409,9 +483,7 @@ export default function Integrations() {
                 >
                     <Flex justifyContent="start" className="gap-2 ">
                         <Icon icon={MagnifyingGlassIcon} className="p-0" />
-                        <Title className="sm:font-semibold">
-                            Integrations
-                        </Title>
+                        <Title className="sm:font-semibold">Integrations</Title>
                     </Flex>
                     <a
                         target="__blank"
