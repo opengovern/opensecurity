@@ -214,12 +214,23 @@ func (h *HttpHandler) GetComplianceResults(echoCtx echo.Context) error {
 	if err != nil {
 		return err
 	}
-	//req.Filters.IntegrationID, err = httpserver2.ResolveIntegrationIDs(echoCtx, req.Filters.IntegrationID)
-	//if err != nil {
-	//	return err
-	//}
 
 	var response api.GetComplianceResultsResponse
+
+	hasResult := false
+	for _, f := range req.Filters.BenchmarkID {
+		summary, err := h.db.GetFrameworkComplianceResultSummary(f)
+		if err != nil {
+			h.logger.Error("failed to get compliance result summary", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get compliance result summary")
+		}
+		if summary != nil && summary.Total != 0 {
+			hasResult = true
+		}
+	}
+	if !hasResult {
+		return echoCtx.JSON(http.StatusOK, response)
+	}
 
 	if len(req.Filters.ComplianceStatus) == 0 {
 		req.Filters.ComplianceStatus = []api.ComplianceStatus{api.ComplianceStatusFailed}
@@ -1833,6 +1844,18 @@ func (h *HttpHandler) GetBenchmarkSummary(echoCtx echo.Context) error {
 
 	be := framework.ToApi()
 
+	summary, err := h.db.GetFrameworkComplianceResultSummary(frameworkID)
+	if err != nil {
+		h.logger.Error("failed to get compliance result summary", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get compliance result summary")
+	}
+	if summary == nil || summary.Total == 0 {
+		response := api.BenchmarkEvaluationSummary{
+			Benchmark: be,
+		}
+		return echoCtx.JSON(http.StatusOK, response)
+	}
+
 	if len(integrationTypes) > 0 && !utils.IncludesAny(be.IntegrationTypes, integrationTypes) {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid integration type")
 	}
@@ -2224,7 +2247,7 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	var benchmarks []string
+	var frameworks []string
 
 	if len(req.RootBenchmark) > 0 {
 		var rootBenchmarks []string
@@ -2242,16 +2265,16 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			}
 			for _, b := range rootBenchmarks {
 				if _, ok := parentBenchmarks[b]; ok {
-					benchmarks = append(benchmarks, b)
+					frameworks = append(frameworks, b)
 				}
 			}
 		} else {
 			for _, b := range rootBenchmarks {
-				benchmarks = append(benchmarks, b)
+				frameworks = append(frameworks, b)
 			}
 		}
 	} else if len(req.ParentBenchmark) > 0 {
-		benchmarks = req.ParentBenchmark
+		frameworks = req.ParentBenchmark
 	}
 
 	var integrationIDs []string
@@ -2270,13 +2293,28 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 		}
 	}
 
-	controls, err := h.db.ListControlsByFilter(ctx, nil, req.IntegrationTypes, req.Severity, benchmarks, req.Tags, req.HasParameters,
+	controls, err := h.db.ListControlsByFilter(ctx, nil, req.IntegrationTypes, req.Severity, frameworks, req.Tags, req.HasParameters,
 		req.PrimaryResource, req.ListOfResources, nil)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	var fRes map[string]map[string]int64
+
+	hasResult := false
+	for _, f := range frameworks {
+		summary, err := h.db.GetFrameworkComplianceResultSummary(f)
+		if err != nil {
+			h.logger.Error("failed to get compliance result summary", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get compliance result summary")
+		}
+		if summary != nil && summary.Total != 0 {
+			hasResult = true
+		}
+	}
+	if !hasResult {
+		req.ComplianceResultSummary = false
+	}
 
 	if req.ComplianceResultFilters != nil || req.ComplianceResultSummary {
 		var esComplianceStatuses []opengovernanceTypes.ComplianceStatus
@@ -2309,7 +2347,7 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			controlIDs = append(controlIDs, c.ID)
 		}
 		if req.ComplianceResultFilters != nil {
-			benchmarksFilter := benchmarks
+			benchmarksFilter := frameworks
 			if len(req.ComplianceResultFilters.BenchmarkID) > 0 {
 				benchmarksFilter = req.ComplianceResultFilters.BenchmarkID
 			}
@@ -2322,7 +2360,7 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			}
 		} else {
 			fRes, err = es.ComplianceResultsCountByControlID(ctx, h.logger, h.client, nil, nil, integrationIDs, nil,
-				nil, benchmarks, controlIDs, nil, lastEventFrom, lastEventTo, evaluatedAtFrom,
+				nil, frameworks, controlIDs, nil, lastEventFrom, lastEventTo, evaluatedAtFrom,
 				evaluatedAtTo, nil, esComplianceStatuses)
 		}
 
@@ -2336,9 +2374,9 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 	uniqueListOfTables := make(map[string]bool)
 	uniqueTags := make(map[string]map[string]bool)
 
-	benchmarksControlSummary, _, err := es.BenchmarksControlSummary(ctx, h.logger, h.client, benchmarks, nil)
+	benchmarksControlSummary, _, err := es.BenchmarksControlSummary(ctx, h.logger, h.client, frameworks, nil)
 	if err != nil {
-		h.logger.Error("failed to fetch BenchmarksControlSummary", zap.Error(err), zap.Any("benchmarkID", benchmarks))
+		h.logger.Error("failed to fetch BenchmarksControlSummary", zap.Error(err), zap.Any("benchmarkID", frameworks))
 	}
 
 	for _, control := range controls {
