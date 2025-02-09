@@ -371,9 +371,9 @@ export default function TypeDetail() {
                 }
             })
         }
-
+        console.log(body)
         axios
-            .post(`${url}/main/schedule/api/v3/discovery/run`, {}, config)
+            .post(`${url}/main/schedule/api/v3/discovery/run`, body, config)
             .then((res) => {
                 GetIntegrations()
                 setActionLoading({
