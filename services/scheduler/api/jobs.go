@@ -214,7 +214,7 @@ type BenchmarkAuditHistoryResponse struct {
 }
 
 type RunBenchmarkByIdRequest struct {
-	WithIncidents   bool `json:"with_incidents"`
+	WithIncidents   *bool `json:"with_incidents"`
 	IntegrationInfo []struct {
 		IntegrationType *string `json:"integration_type"`
 		ProviderID      *string `json:"provider_id"`

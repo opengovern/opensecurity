@@ -4,14 +4,18 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/steampipe"
+	"github.com/opengovern/og-util/pkg/ticker"
 	"github.com/opengovern/og-util/pkg/vault"
+	"github.com/opengovern/opencomply/pkg/utils"
 	"github.com/opengovern/opencomply/services/integration/api/credentials"
 	integration_type2 "github.com/opengovern/opencomply/services/integration/api/integration-types"
 	"github.com/opengovern/opencomply/services/integration/api/integrations"
 	"github.com/opengovern/opencomply/services/integration/db"
 	integration_type "github.com/opengovern/opencomply/services/integration/integration-type"
 	"go.uber.org/zap"
+	"golang.org/x/net/context"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"time"
 )
 
 type API struct {
@@ -56,4 +60,24 @@ func (api *API) Register(e *echo.Echo) {
 	integrationsApi.Register(e.Group("/api/v1/integrations"))
 	cred.Register(e.Group("/api/v1/credentials"))
 	integrationType.Register(e.Group("/api/v1/integration-types"))
+
+	utils.EnsureRunGoroutine(func() {
+		api.CheckPluginInstallTimeout(context.Background())
+	})
+}
+
+func (api *API) CheckPluginInstallTimeout(ctx context.Context) {
+	t := ticker.NewTicker(time.Second*30, time.Second*10)
+	defer t.Stop()
+	for {
+		select {
+		case <-t.C:
+			err := api.database.UpdatePluginInstallTimedOut(2)
+			if err != nil {
+				api.logger.Warn("failed to update plugin install timed out", zap.Error(err))
+			}
+		case <-ctx.Done():
+			return
+		}
+	}
 }

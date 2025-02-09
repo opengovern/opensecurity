@@ -289,6 +289,16 @@ func (a *API) ListTables(c echo.Context) error {
 func (a *API) LoadPluginWithID(c echo.Context) error {
 	pluginID := c.Param("id")
 
+	installingPlugins, err := a.database.ListInstallingPlugins()
+	if err != nil {
+		a.logger.Error("failed to list installing plugins", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list installing plugins")
+	}
+
+	if len(installingPlugins) > 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "other plugin install is in progress")
+	}
+
 	plugin, err := a.database.GetPluginByID(pluginID)
 	if err != nil {
 		a.logger.Error("failed to get plugin", zap.Error(err))
@@ -335,12 +345,20 @@ func (a *API) LoadPluginWithID(c echo.Context) error {
 func (a *API) LoadPluginWithURL(c echo.Context) error {
 	pluginURL := c.Param("http_url")
 
+	installingPlugins, err := a.database.ListInstallingPlugins()
+	if err != nil {
+		a.logger.Error("failed to list installing plugins", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list installing plugins")
+	}
+
+	if len(installingPlugins) > 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "other plugin install is in progress")
+	}
+
 	if pluginURL == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "plugin url is empty")
 	}
 	url := pluginURL
-
-	var err error
 
 	err = a.CheckEnoughMemory()
 	if err != nil {
