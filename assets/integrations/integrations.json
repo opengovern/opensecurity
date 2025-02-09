@@ -182,6 +182,59 @@
   },
   {
     "id": 14,
+    "integration_type": "jira_cloud",
+    "name": "Atlassian JIRA Cloud",
+    "tier": "Community",
+    "tags": { "usage": ["General"] },
+    "Description": "Connect to JIRA for tickets, projects.",
+    "Icon": "jira.svg",
+    "Availability": "GA",
+    "schema_ids": ["jira_account"],
+    "SourceCode": "https://github.com/opengovern/plugin-jira",
+    "PackageURL": "ghcr.io/opengovern/og-describer-doppler",
+    "PackageTag": "local-v0.1.5"
+  },
+  {
+    "id": 44,
+    "integration_type": "tailscale_account",
+    "name": "Tailscale",
+    "tier": "Community",
+    "tags": { "usage": ["VPN", "Code Security"] },
+    "Description": "Gain visibility in to Tailscale",
+    "Icon": "tailscale.svg",
+    "Availability": "GA",
+    "SourceCode": "https://github.com/opengovern/og-describer-tailscale",
+    "schema_ids": ["tailscale_account"]
+  },
+
+  {
+    "id": 45,
+    "integration_type": "heroku_account",
+    "name": "Heroku",
+    "tier": "Community",
+    "tags": { "usage": ["VPN", "Code Security"] },
+    "Description": "Gain visibility in to Heroku",
+    "Icon": "heroku.svg",
+    "Availability": "GA",
+    "SourceCode": "https://github.com/opengovern/og-describer-heroku",
+    "schema_ids": ["heroku_account"]
+  },
+
+  {
+    "id": 43,
+    "integration_type": "fly_account",
+    "name": "Fly.io",
+    "tier": "Community",
+    "tags": { "usage": ["DevOps", "Cloud Services"] },
+    "Description": "Deploy and manage applications with Fly.io.",
+    "Icon": "fly_io.svg",
+    "Availability": "GA",
+    "SourceCode": "https://github.com/opengovern/og-describer-fly",
+    "schema_ids": ["fly_account"]
+  },
+ 
+  {
+    "id": 15,
     "integration_type": "slack_account",
     "name": "Slack",
     "tier": "Premium",
@@ -193,18 +246,6 @@
     "schema_ids": []
   },
 
-  {
-    "id": 15,
-    "integration_type": "jira_cloud",
-    "name": "Atlassian JIRA Cloud",
-    "tier": "Premium",
-    "tags": { "usage": ["General"] },
-    "Description": "Connect to JIRA for tickets, projects.",
-    "Icon": "jira.svg",
-    "Availability": "Planned for Dec 2024",
-    "SourceCode": "",
-    "schema_ids": []
-  },
   {
     "id": 16,
     "integration_type": "chainguard_dev_account",
@@ -538,18 +579,6 @@
     "Description": "Inventory Networks, Gateways, Radios.",
     "Icon": "cisco.svg",
     "Availability": "Planned for Feb 2025",
-    "SourceCode": "",
-    "schema_ids": []
-  },
-  {
-    "id": 43,
-    "integration_type": "fly_io_account",
-    "name": "Fly.io",
-    "tier": "Premium",
-    "tags": { "usage": ["DevOps", "Cloud Services"] },
-    "Description": "Deploy and manage applications with Fly.io.",
-    "Icon": "fly_io.svg",
-    "Availability": "Planned for Dec 2024",
     "SourceCode": "",
     "schema_ids": []
   }
