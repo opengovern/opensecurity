@@ -475,6 +475,23 @@ func (h *API) IntegrationHealthcheck(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get integration")
 	}
 
+	defer func() {
+		if err != nil && integ != nil && integ.State != integration.IntegrationStateArchived {
+			h.logger.Error("healthcheck failed", zap.Error(err))
+			healthcheckTime := time.Now()
+			integ.LastCheck = &healthcheckTime
+			integ.State = integration.IntegrationStateInactive
+			_, err = integ.AddAnnotations("platform/integration/health-reason", err.Error())
+			if err != nil {
+				h.logger.Error("failed to add annotations", zap.Error(err))
+			}
+			err = h.database.UpdateIntegration(integ)
+			if err != nil {
+				h.logger.Error("failed to update integration", zap.Error(err), zap.Any("integration", *integ))
+			}
+		}
+	}()
+
 	credential, err := h.database.GetCredential(integ.CredentialID.String())
 	if err != nil {
 		h.logger.Error("failed to get credential", zap.Error(err))
@@ -1737,10 +1754,6 @@ func (h *API) GetIntegrationTypeResourceType(c echo.Context) error {
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, "resource type not found")
 
-
-
-
-		
 	} else {
 		return echo.NewHTTPError(http.StatusInternalServerError, "integration type resource types not found")
 	}
