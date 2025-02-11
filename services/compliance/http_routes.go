@@ -2249,34 +2249,37 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	var frameworks []string
+	var frameworkIDs []string
+	for _, f := range req.ParentBenchmark {
+		frameworkIDs = append(frameworkIDs, f)
+	}
+	for _, f := range req.RootBenchmark {
+		frameworkIDs = append(frameworkIDs, f)
+	}
 
-	if len(req.RootBenchmark) > 0 {
-		var rootBenchmarks []string
-		for _, rootBenchmark := range req.RootBenchmark {
-			childBenchmarks, err := h.getChildBenchmarks(ctx, rootBenchmark)
-			if err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-			}
-			rootBenchmarks = append(rootBenchmarks, childBenchmarks...)
-		}
-		if len(req.ParentBenchmark) > 0 {
-			parentBenchmarks := make(map[string]bool)
-			for _, parentBenchmark := range req.ParentBenchmark {
-				parentBenchmarks[parentBenchmark] = true
-			}
-			for _, b := range rootBenchmarks {
-				if _, ok := parentBenchmarks[b]; ok {
-					frameworks = append(frameworks, b)
-				}
-			}
-		} else {
-			for _, b := range rootBenchmarks {
-				frameworks = append(frameworks, b)
+	frameworks, err := h.db.GetFrameworks(ctx, frameworkIDs)
+	if err != nil {
+		h.logger.Error("failed to get frameworks", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get frameworks")
+	}
+
+	controlIDsMap := make(map[string]bool)
+	for _, framework := range frameworks {
+		var metadata db.BenchmarkMetadata
+		if framework.Metadata.Status == pgtype.Present {
+			if err := json.Unmarshal(framework.Metadata.Bytes, &metadata); err != nil {
+				h.logger.Error("failed to framework extract metadata", zap.Error(err))
+				return echo.NewHTTPError(http.StatusInternalServerError, "failed to framework extract metadata")
 			}
 		}
-	} else if len(req.ParentBenchmark) > 0 {
-		frameworks = req.ParentBenchmark
+		for _, c := range metadata.Controls {
+			controlIDsMap[c] = true
+		}
+	}
+
+	var controlsIDs []string
+	for c := range controlIDsMap {
+		controlsIDs = append(controlsIDs, c)
 	}
 
 	var integrationIDs []string
@@ -2295,7 +2298,7 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 		}
 	}
 
-	controls, err := h.db.ListControlsByFilter(ctx, nil, req.IntegrationTypes, req.Severity, frameworks, req.Tags, req.HasParameters,
+	controls, err := h.db.ListControlsByFilter(ctx, controlsIDs, req.IntegrationTypes, req.Severity, nil, req.Tags, req.HasParameters,
 		req.PrimaryResource, req.ListOfResources, nil)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -2304,7 +2307,7 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 	var fRes map[string]map[string]int64
 
 	hasResult := false
-	for _, f := range frameworks {
+	for _, f := range frameworkIDs {
 		summary, err := h.db.GetFrameworkComplianceResultSummary(f)
 		if err != nil {
 			h.logger.Error("failed to get compliance result summary", zap.Error(err))
@@ -2402,7 +2405,7 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			controlIDs = append(controlIDs, c.ID)
 		}
 		if req.ComplianceResultFilters != nil {
-			benchmarksFilter := frameworks
+			benchmarksFilter := frameworkIDs
 			if len(req.ComplianceResultFilters.BenchmarkID) > 0 {
 				benchmarksFilter = req.ComplianceResultFilters.BenchmarkID
 			}
@@ -2415,7 +2418,7 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			}
 		} else {
 			fRes, err = es.ComplianceResultsCountByControlID(ctx, h.logger, h.client, nil, nil, integrationIDs, nil,
-				nil, frameworks, controlIDs, nil, lastEventFrom, lastEventTo, evaluatedAtFrom,
+				nil, frameworkIDs, controlIDs, nil, lastEventFrom, lastEventTo, evaluatedAtFrom,
 				evaluatedAtTo, nil, esComplianceStatuses)
 		}
 
@@ -2424,9 +2427,9 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 
 	var resultControls []api.ListControlsFilterResultControl
 
-	benchmarksControlSummary, _, err := es.BenchmarksControlSummary(ctx, h.logger, h.client, frameworks, nil)
+	benchmarksControlSummary, _, err := es.BenchmarksControlSummary(ctx, h.logger, h.client, frameworkIDs, nil)
 	if err != nil {
-		h.logger.Error("failed to fetch BenchmarksControlSummary", zap.Error(err), zap.Any("benchmarkID", frameworks))
+		h.logger.Error("failed to fetch BenchmarksControlSummary", zap.Error(err), zap.Any("benchmarkID", frameworkIDs))
 	}
 
 	for _, control := range controls {
