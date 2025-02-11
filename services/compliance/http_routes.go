@@ -2314,8 +2314,61 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			hasResult = true
 		}
 	}
-	if !hasResult {
-		req.ComplianceResultSummary = false
+	if !hasResult || !req.ComplianceResultSummary {
+		var resultControls []api.ListControlsFilterResultControl
+		for _, control := range controls {
+			integrationTypes := make([]integration.Type, 0, len(control.IntegrationType))
+			for _, t := range control.IntegrationType {
+				integrationTypes = append(integrationTypes, integration.Type(t))
+			}
+			apiControl := api.ListControlsFilterResultControl{
+				ID:              control.ID,
+				Title:           control.Title,
+				Description:     control.Description,
+				IntegrationType: integrationTypes,
+				Severity:        control.Severity,
+				Tags:            filterTagsByRegex(req.TagsRegex, model.TrimPrivateTags(control.GetTagsMap())),
+				Policy: struct {
+					Type            string               `json:"type"`      // external/inline
+					Reference       *string              `json:"reference"` // null if inline
+					PrimaryResource string               `json:"primary_resource"`
+					ListOfResources []string             `json:"list_of_resources"`
+					Parameters      []api.QueryParameter `json:"parameters"`
+				}{
+					PrimaryResource: control.Policy.PrimaryResource,
+					ListOfResources: control.Policy.ListOfResources,
+					Parameters:      make([]api.QueryParameter, 0, len(control.Policy.Parameters)),
+				},
+			}
+			if control.ExternalPolicy {
+				apiControl.Policy.Type = "external"
+				apiControl.Policy.Reference = &control.Policy.ID
+			} else {
+				apiControl.Policy.Type = "inline"
+			}
+			for _, p := range control.Policy.Parameters {
+				apiControl.Policy.Parameters = append(apiControl.Policy.Parameters, p.ToApi())
+			}
+			resultControls = append(resultControls, apiControl)
+		}
+		totalCount := len(resultControls)
+		sort.Slice(resultControls, func(i, j int) bool {
+			return resultControls[i].ID < resultControls[j].ID
+		})
+		if req.PerPage != nil {
+			if req.Cursor == nil {
+				resultControls = utils.Paginate(1, *req.PerPage, resultControls)
+			} else {
+				resultControls = utils.Paginate(*req.Cursor, *req.PerPage, resultControls)
+			}
+		}
+
+		response := api.ListControlsFilterResponse{
+			Items:      resultControls,
+			TotalCount: totalCount,
+		}
+
+		return echoCtx.JSON(http.StatusOK, response)
 	}
 
 	if req.ComplianceResultFilters != nil || req.ComplianceResultSummary {
@@ -2370,11 +2423,6 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 	}
 
 	var resultControls []api.ListControlsFilterResultControl
-	uniqueIntegrationTypes := make(map[string]bool)
-	uniqueSeverities := make(map[string]bool)
-	uniquePrimaryTables := make(map[string]bool)
-	uniqueListOfTables := make(map[string]bool)
-	uniqueTags := make(map[string]map[string]bool)
 
 	benchmarksControlSummary, _, err := es.BenchmarksControlSummary(ctx, h.logger, h.client, frameworks, nil)
 	if err != nil {
@@ -2456,24 +2504,6 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 				NonCompliantResources: benchmarksControlSummary[control.ID].FailedResourcesCount,
 				ImpactedResources:     benchmarksControlSummary[control.ID].TotalResourcesCount,
 				CostImpact:            benchmarksControlSummary[control.ID].CostImpact,
-			}
-		}
-
-		for _, c := range apiControl.IntegrationType {
-			uniqueIntegrationTypes[c.String()] = true
-		}
-		uniqueSeverities[apiControl.Severity.String()] = true
-		for _, t := range apiControl.Policy.ListOfResources {
-			uniqueListOfTables[t] = true
-		}
-		uniquePrimaryTables[apiControl.Policy.PrimaryResource] = true
-
-		for k, vs := range apiControl.Tags {
-			if _, ok := uniqueTags[k]; !ok {
-				uniqueTags[k] = make(map[string]bool)
-			}
-			for _, v := range vs {
-				uniqueTags[k][v] = true
 			}
 		}
 
@@ -5571,7 +5601,6 @@ func (h *HttpHandler) AddAssignment(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	
 	if len(req.Integrations) == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "integration id is empty")
 	}
@@ -5580,7 +5609,7 @@ func (h *HttpHandler) AddAssignment(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "framework id is empty")
 	}
 	framework, err := h.db.GetFramework(ctx, frameworkId)
-		if err != nil {
+	if err != nil {
 		h.logger.Error("failed to get framework", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get framework")
 	}
@@ -5598,33 +5627,31 @@ func (h *HttpHandler) AddAssignment(echoCtx echo.Context) error {
 	for _, it := range framework.IntegrationType {
 		supportedPlugins[it] = true
 	}
-	
+
 	// write a loop to add all integrations
 	for _, integrationId := range req.Integrations {
 
-	integration, err := h.integrationClient.GetIntegration(clientCtx, integrationId)
-	if err != nil {
-		h.logger.Error("failed to get integration", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to get integration")
-	}
+		integration, err := h.integrationClient.GetIntegration(clientCtx, integrationId)
+		if err != nil {
+			h.logger.Error("failed to get integration", zap.Error(err))
+			return echo.NewHTTPError(http.StatusBadRequest, "failed to get integration")
+		}
 
-	
+		if _, ok := supportedPlugins[integration.IntegrationType.String()]; !ok {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("plugin %s is not supported in the framework", integration.IntegrationType))
+		}
 
-	if _, ok := supportedPlugins[integration.IntegrationType.String()]; !ok {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("plugin %s is not supported in the framework", integration.IntegrationType))
-	}
+		assignment := &db.BenchmarkAssignment{
+			BenchmarkId:   frameworkId,
+			IntegrationID: utils.GetPointer(integration.IntegrationID),
+			AssignedAt:    time.Now(),
+		}
 
-	assignment := &db.BenchmarkAssignment{
-		BenchmarkId:   frameworkId,
-		IntegrationID: utils.GetPointer(integration.IntegrationID),
-		AssignedAt:    time.Now(),
+		if err := h.db.AddBenchmarkAssignment(ctx, assignment); err != nil {
+			h.logger.Error("failed to add assignment", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to add assignment")
+		}
 	}
-
-	if err := h.db.AddBenchmarkAssignment(ctx, assignment); err != nil {
-		h.logger.Error("failed to add assignment", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to add assignment")
-	}
-}
 
 	return echoCtx.NoContent(http.StatusOK)
 }
