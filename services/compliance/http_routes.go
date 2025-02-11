@@ -5453,11 +5453,18 @@ func (h *HttpHandler) ListFrameworkAssignments(echoCtx echo.Context) error {
 		results = append(results, info)
 	}
 
+	var totalPages int64
+	if pageSize > 0 {
+		totalPages = int64(len(results)) / pageSize
+	} else {
+		totalPages = 1
+	}
+
 	pageInfo := api.PageInfo{
 		CurrentPage: page,
 		PageSize:    pageSize,
 		TotalItems:  int64(len(results)),
-		TotalPages:  int64(len(results)) / pageSize,
+		TotalPages:  totalPages,
 	}
 
 	sort.Slice(results, func(i, j int) bool {
