@@ -81,6 +81,7 @@ export default function Settings({
     const [selectedDelete,setSelectedDelete]=useState<any>([])
     const [addLoading,setAddLoading]=useState(false)
     const [deleteLoading,setDeleteLoading]=useState(false)
+    const [err,setError] = useState("")
  
 
    
@@ -161,12 +162,29 @@ export default function Settings({
                config
            )
            .then((res) => {
-               setAvailable(res.data?.items)
+               if (res?.data?.items) {
+                   const temp = res?.data?.items?.map((item) => {
+                       return {
+                           label: item?.name,
+                           value: item?.integration_id,
+                           description: item?.provider_id,
+                       }
+                   })
+                   setAvailable(temp)
+               } else {
+                   setAvailable([])
+               }
                setAvailableLoading(false)
            })
            .catch((err) => {
                setAvailableLoading(false)
-
+               setAvailable([])
+               setError(err?.response?.data?.message)
+               console.log(err)
+           })
+           .catch((err) => {
+               setAvailableLoading(false)
+               setAvailable([])
                console.log(err)
            })
    }
@@ -454,24 +472,18 @@ export default function Settings({
             >
                 <Multiselect
                     className="w-full"
-                    // @ts-ignore
-                    options={available?.map((item) => {
-                        return {
-                            label: item?.name,
-                            value: item?.integration_id,
-                            description: item?.provider_id,
-                        }
-                    })}
-                    // @ts-ignore
+                    options={ available}
                     selectedOptions={selected}
                     loadingText="Loading Assignment"
                     emptyText="No assignment"
-                    loading={availableLoading}
+                    
+                    empty={err && err !="" ? err : "No Assignment"}
+                    
+                    loading={false}
                     tokenLimit={1}
-                    filteringType="auto"
+                    // filteringType="auto"
                     placeholder="Select Assignment"
                     onChange={({ detail }) => {
-                        // @ts-ignore
                         setSelected(detail.selectedOptions)
                     }}
                 />

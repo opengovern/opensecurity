@@ -242,54 +242,7 @@ export default function NewBenchmarkSummary() {
 
  
 
-    const GetEnabled = () => {
-        let url = ''
-        if (window.location.origin === 'http://localhost:3000') {
-            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-        } else {
-            url = window.location.origin
-        }
-        // @ts-ignore
-        const token = JSON.parse(localStorage.getItem('openg_auth')).token
-
-        const config = {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-        axios
-            .get(
-                `${url}/main/compliance/api/v3/benchmark/${benchmarkId}/assignments`,
-                config
-            )
-            .then((res) => {
-                if (res.data) {
-                    if (
-                        res.data.status == 'enabled' ||
-                        res.data.status == 'auto-enable'
-                    ) {
-                        setEnable(true)
-                        setTab(0)
-                    } else {
-                        setEnable(false)
-                        setTab(1)
-                    }
-                    // if (res.data.items.length > 0) {
-                    //     setEnable(true)
-                    //     setTab(0)
-                    // } else {
-                    //     setEnable(false)
-                    //     setTab(1)
-                    // }
-                } else {
-                    setEnable(false)
-                    setTab(1)
-                }
-            })
-            .catch((err) => {
-                console.log(err)
-            })
-    }
+ 
      const GetCoverage = () => {
          let url = ''
          if (window.location.origin === 'http://localhost:3000') {
@@ -460,7 +413,6 @@ export default function NewBenchmarkSummary() {
         }
     }, [isExecuted, recall])
     useEffect(() => {
-        GetEnabled()
         if (enable) {
             GetChart()
         }
@@ -470,6 +422,9 @@ export default function NewBenchmarkSummary() {
             GetChart()
         }
     }, [enable])
+      useEffect(() => {
+         setEnable(benchmarkDetail?.enabled)
+      }, [benchmarkDetail])
     const find_tabs = () => {
         const tabs = []
         tabs.push({
@@ -497,7 +452,7 @@ export default function NewBenchmarkSummary() {
                 'This is available when the Framework has at least one assignments.',
         })
         if (
-            true
+            enable
         ) {
             tabs.push({
                 label: 'Settings',
