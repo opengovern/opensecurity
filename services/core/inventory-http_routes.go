@@ -1577,7 +1577,7 @@ func (h *HttpHandler) GetParametersQueries(ctx echo.Context) error {
 	})
 }
 
-func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context, req api.ListQueryV2Request) (*api.ListQueriesV2Response, error) {
+func (h *HttpHandler) ListQueriesV2Internal(req api.ListQueryV2Request) (*api.ListQueriesV2Response, error) {
 
 	var namedQuery api.ListQueriesV2Response
 	// if err := bindValidate(ctx, &req); err != nil {
@@ -1598,10 +1598,6 @@ func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context, req api.ListQueryV
 	for _, i := range integrations.Integrations {
 		integrationTypes[i.IntegrationType.String()] = true
 	}
-
-	// trace :
-	_, span := tracer.Start(ctx.Request().Context(), "new_GetQueriesWithTagsFilters", trace.WithSpanKind(trace.SpanKindServer))
-	span.SetName("new_GetQueriesWithTagsFilters")
 
 	var tablesFilter []string
 	if len(req.Categories) > 0 {
@@ -1660,11 +1656,8 @@ func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context, req api.ListQueryV
 	queries, err := h.db.ListQueriesByFilters(req.QueryIDs, search, req.Tags, req.IntegrationTypes, req.HasParameters, req.PrimaryTable,
 		tablesFilter, nil)
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
 		return &namedQuery, err
 	}
-	span.End()
 
 	var items []api.NamedQueryItemV2
 	for _, item := range queries {
