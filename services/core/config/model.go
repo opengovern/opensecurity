@@ -9,8 +9,8 @@ import (
 type Config struct {
 	Postgres koanf.Postgres `yaml:"postgres" koanf:"postgres"`
 
-	Steampipe      config.Postgres `yaml:"steampipe" koanf:"steampipe"`
-	PostgresPlugin config.Postgres `yaml:"postgresplugin" koanf:"postgresplugin"`
+	Steampipe      koanf.Postgres `yaml:"steampipe" koanf:"steampipe"`
+	PostgresPlugin koanf.Postgres `yaml:"postgresplugin" koanf:"postgresplugin"`
 
 	Http        koanf.HttpServer            `yaml:"http" koanf:"http"`
 	Integration koanf.OpenGovernanceService `yaml:"integration" koanf:"integration"`
