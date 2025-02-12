@@ -406,9 +406,8 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 	if req.Query == nil || *req.Query == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Policy is required")
 	}
-	// tracer :
-	outputS, span := tracer.Start(ctx.Request().Context(), "new_RunQuery", trace.WithSpanKind(trace.SpanKindServer))
-	span.SetName("new_RunQuery")
+
+	h.logger.Info("getting query parameters")
 
 	queryParams, err := h.ListQueryParametersInternal(ctx)
 	if err != nil {
@@ -419,6 +418,8 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		queryParamMap[qp.Key] = qp.Value
 	}
 
+	h.logger.Info("executing template")
+
 	queryTemplate, err := template.New("query").Parse(*req.Query)
 	if err != nil {
 		return err
@@ -428,29 +429,25 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		return fmt.Errorf("failed to execute query template: %w", err)
 	}
 
+	h.logger.Info("running query")
+
 	var resp *api.RunQueryResponse
 	if req.Engine == nil || *req.Engine == api.QueryEngineCloudQL {
-		resp, err = h.RunSQLNamedQuery(outputS, *req.Query, queryOutput.String(), &req)
+		resp, err = h.RunSQLNamedQuery(ctx.Request().Context(), *req.Query, queryOutput.String(), &req)
 		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
 			return err
 		}
 	} else if *req.Engine == api.QueryEngineCloudQLRego {
-		resp, err = h.RunRegoNamedQuery(outputS, *req.Query, queryOutput.String(), &req)
+		resp, err = h.RunRegoNamedQuery(ctx.Request().Context(), *req.Query, queryOutput.String(), &req)
 		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
 			return err
 		}
 	} else {
 		return fmt.Errorf("invalid query engine: %s", *req.Engine)
 	}
 
-	span.AddEvent("information", trace.WithAttributes(
-		attribute.String("query title ", resp.Title),
-	))
-	span.End()
+	h.logger.Info("running query finished")
+
 	return ctx.JSON(200, resp)
 }
 
@@ -499,7 +496,7 @@ func (h *HttpHandler) RunSQLNamedQuery(ctx context.Context, title, query string,
 	if len(req.Sorts) > 1 {
 		return nil, errors.New("multiple sort items not supported")
 	}
-
+	h.logger.Info("pinging steampipe connection")
 	for i := 0; i < 10; i++ {
 		err = h.steampipeConn.Conn().Ping(ctx)
 		if err == nil {
@@ -512,11 +509,16 @@ func (h *HttpHandler) RunSQLNamedQuery(ctx context.Context, title, query string,
 		return nil, echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	h.logger.Info("running query on steampipe engine")
+
 	h.logger.Info("executing named query", zap.String("query", query))
 	res, err := h.steampipeConn.Query(ctx, query, &lastIdx, &req.Page.Size, orderBy, steampipe.DirectionType(direction))
 	if err != nil {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	h.logger.Info("getting list of integrations")
+
 	// tracer :
 	integrations, err := h.integrationClient.ListIntegrations(&httpclient.Context{UserRole: api2.AdminRole}, nil)
 	if err != nil {
@@ -534,6 +536,7 @@ func (h *HttpHandler) RunSQLNamedQuery(ctx context.Context, title, query string,
 		}
 	}
 
+	h.logger.Info("adding account id")
 	if accountIDExists {
 		// Add account name
 		res.Headers = append(res.Headers, "account_name")
@@ -561,6 +564,8 @@ func (h *HttpHandler) RunSQLNamedQuery(ctx context.Context, title, query string,
 
 	_, span := tracer.Start(ctx, "new_UpdateQueryHistory", trace.WithSpanKind(trace.SpanKindServer))
 	span.SetName("new_UpdateQueryHistory")
+
+	h.logger.Info("updating history")
 
 	err = h.db.UpdateQueryHistory(query)
 	if err != nil {
