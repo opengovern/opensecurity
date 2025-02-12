@@ -19,14 +19,18 @@ import (
 )
 
 var (
-	SteampipeHost      = os.Getenv("STEAMPIPE_HOST")
-	SteampipePort      = os.Getenv("STEAMPIPE_PORT")
-	SteampipeDb        = os.Getenv("STEAMPIPE_DB")
-	SteampipeUser      = os.Getenv("STEAMPIPE_USERNAME")
-	SteampipePassword  = os.Getenv("STEAMPIPE_PASSWORD")
-	SchedulerBaseUrl   = os.Getenv("SCHEDULER_BASE_URL")
-	IntegrationBaseUrl = os.Getenv("INTEGRATION_BASE_URL")
-	ComplianceBaseUrl  = os.Getenv("COMPLIANCE_BASE_URL")
+	SteampipeHost          = os.Getenv("STEAMPIPE_HOST")
+	SteampipePort          = os.Getenv("STEAMPIPE_PORT")
+	SteampipeDb            = os.Getenv("STEAMPIPE_DB")
+	SteampipeUser          = os.Getenv("STEAMPIPE_USERNAME")
+	SteampipePassword      = os.Getenv("STEAMPIPE_PASSWORD")
+	PostgresPluginHost     = os.Getenv("POSTGRESPLUGIN_HOST")
+	PostgresPluginPort     = os.Getenv("POSTGRESPLUGIN_PORT")
+	PostgresPluginUsername = os.Getenv("POSTGRESPLUGIN_USERNAME")
+	PostgresPluginPassword = os.Getenv("POSTGRESPLUGIN_PASSWORD")
+	SchedulerBaseUrl       = os.Getenv("SCHEDULER_BASE_URL")
+	IntegrationBaseUrl     = os.Getenv("INTEGRATION_BASE_URL")
+	ComplianceBaseUrl      = os.Getenv("COMPLIANCE_BASE_URL")
 )
 
 func Command() *cobra.Command {

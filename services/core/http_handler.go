@@ -236,16 +236,10 @@ func InitializeHttpHandler(
 	// inventory
 	pluginJob := cloudql_init_job.NewJob(logger, cloudql_init_job.Config{
 		Postgres: config3.Postgres{
-			Host:            cfg.Postgres.Host,
-			Port:            cfg.Postgres.Port,
-			DB:              cfg.Postgres.DB,
-			Username:        cfg.Postgres.Username,
-			Password:        cfg.Postgres.Password,
-			SSLMode:         cfg.Postgres.SSLMode,
-			MaxIdleConns:    cfg.Postgres.MaxIdleConns,
-			MaxOpenConns:    cfg.Postgres.MaxOpenConns,
-			ConnMaxLifetime: cfg.Postgres.ConnMaxLifetime,
-			ConnMaxIdleTime: cfg.Postgres.ConnMaxIdleTime,
+			Host:     PostgresPluginHost,
+			Port:     PostgresPluginPort,
+			Username: PostgresPluginUsername,
+			Password: PostgresPluginPassword,
 		},
 		ElasticSearch: cfg.ElasticSearch,
 		Steampipe: config3.Postgres{
