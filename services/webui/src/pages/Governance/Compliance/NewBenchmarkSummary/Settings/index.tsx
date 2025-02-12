@@ -45,8 +45,6 @@ interface ISettings {
     id: string | undefined
     response: (x: number) => void
     autoAssign: boolean | undefined
-    tracksDriftEvents: boolean | undefined
-    isAutoResponse: (x: boolean) => void
     reload: () => void
 }
 
@@ -60,8 +58,6 @@ export default function Settings({
     id,
     response,
     autoAssign,
-    tracksDriftEvents,
-    isAutoResponse,
     reload,
 }: ISettings) {
     const [firstLoading, setFirstLoading] = useState<boolean>(true)

@@ -32,25 +32,22 @@ import Modal from '@cloudscape-design/components/modal'
 import KButton from '@cloudscape-design/components/button'
 import axios from 'axios'
 interface IEvaluate {
-    id: string | undefined
-    assignmentsCount: number
     benchmarkDetail:
         | PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary
         | undefined
     onEvaluate: (c: string[],b: boolean) => void
-    opened: boolean | undefined
-    setOpened: Function
+    open: boolean 
+    setOpen: Function
+    showBenchmark: boolean
 }
 
 export default function Evaluate({
-    id,
     benchmarkDetail,
-    assignmentsCount,
     onEvaluate,
-    opened,
-    setOpened,
+    open,
+    setOpen,
+    showBenchmark,
 }: IEvaluate) {
-    const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [accounts, setAccounts] = useState()
     const isDemo = useAtomValue(isDemoAtom)
@@ -61,21 +58,8 @@ export default function Evaluate({
     const setNotification = useSetAtom(notificationAtom)
     const [withIncidents, setWithIncidents] = useState(true)
 
-    // useEffect(() => {
-    //     checkbox.setState(connections)
-    //     console.log(assignments)
-    // }, [connections])
-
-    // useEffect(() => {
-    //     if (assignments) {
-    //         const activeAccounts = assignments?.connections
-    //             ?.filter((a) => a.status)
-    //             .map((a) => a.connectionID || '')
-    //         setConnections( [])
-    //     }
-    // }, [assignments])
+  
     const RunBenchmark = () => {
-        
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -134,7 +118,6 @@ export default function Evaluate({
     }
 
     const GetEnabled = () => {
-        
         setLoading(true)
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
@@ -150,21 +133,20 @@ export default function Evaluate({
                 Authorization: `Bearer ${token}`,
             },
         }
-        const integrations :any =[]
-        if (opened== true){
+        const integrations: any = []
+        if (showBenchmark) {
             // @ts-ignore
-           selectedbenchmarks?.connectors?.map((c)=>{
-            integrations.push(c)
-           })
+            selectedbenchmarks?.connectors?.map((c) => {
+                integrations.push(c)
+            })
+        } else {
+            // @ts-ignore
+            benchmarkDetail?.integrationTypes?.map((c) => {
+                integrations.push(c)
+            })
         }
-            else{
-                // @ts-ignore
-                benchmarkDetail?.integrationTypes?.map((c) => {
-                    integrations.push(c)
-                })
-            }
-        const body ={
-            integration_type: integrations
+        const body = {
+            integration_type: integrations,
         }
         axios
             .post(
@@ -229,18 +211,15 @@ export default function Evaluate({
     }
 
     useEffect(() => {
-        if (opened == true) {
-            setOpen(true)
+        if (showBenchmark) {
             GetCard()
-        } else if (opened == false) {
-            setOpen(false)
-        }
-    }, [opened])
-     useEffect(() => {
-         if(selectedbenchmarks){
+        } 
+    }, [showBenchmark])
+    useEffect(() => {
+        if (selectedbenchmarks) {
             GetEnabled()
-         }
-     }, [selectedbenchmarks])
+        }
+    }, [selectedbenchmarks])
     // useEffect(() => {
     //     if (opened) {
     //         setOpen(true)
@@ -250,42 +229,15 @@ export default function Evaluate({
 
     return (
         <>
-            {opened == undefined && (
-                <>
-                    <KButton
-                        onClick={() => {
-                            setOpen(true)
-                            GetEnabled()
-                        }}
-                        loading={false}
-                        variant={'primary'}
-                        className="flex flex-row justify-center items-center w-full sm:min-w-20"
-                        // iconAlign="left"
-                    >
-                        <div className="flex flex-row justify-center items-center w-full sm:min-w-20 gap-2">
-                            <PlayCircleIcon className="w-5" color="white" />
-                            <span className=" sm:inline-block  hidden">
-                                Run
-                            </span>
-                        </div>
-                    </KButton>
-                </>
-            )}
-
             <Modal
                 onDismiss={() => {
                     setOpen(false)
-                    if (opened) {
-                        setOpened(false)
-                    }
                 }}
                 visible={open}
                 footer={
                     <Box float="right">
                         <SpaceBetween direction="horizontal" size="xs">
-                            <KButton
-                                onClick={() => setOpen(false)}
-                            >
+                            <KButton onClick={() => setOpen(false)}>
                                 Close
                             </KButton>
                             {/* <Button
@@ -300,7 +252,7 @@ export default function Evaluate({
                             </Button> */}
                             <KButton
                                 onClick={() => {
-                                    if (opened) {
+                                    if (showBenchmark) {
                                         if (!selectedbenchmarks) {
                                             setNotification({
                                                 text: `Please Select Frameworks`,
@@ -338,9 +290,8 @@ export default function Evaluate({
                                 variant={'primary'}
                                 onClick={() => {
                                     setOpen(false)
-                                    if (opened) {
+                                    if (showBenchmark) {
                                         RunBenchmark()
-                                        setOpened(false)
                                     } else {
                                         onEvaluate(connections, withIncidents)
                                     }
@@ -352,12 +303,12 @@ export default function Evaluate({
                     </Box>
                 }
                 header={
-                    opened
+                    showBenchmark
                         ? 'Select Compliance Framework for Audit'
                         : 'Select Integrations'
                 }
             >
-                {opened && (
+                {showBenchmark && (
                     <>
                         <Select
                             className="w-full mb-2"

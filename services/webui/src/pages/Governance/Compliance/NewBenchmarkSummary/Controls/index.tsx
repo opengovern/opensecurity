@@ -166,7 +166,6 @@ export default function Controls({
     id,
     assignments,
     enable,
-    accounts,
 }: IPolicies) {
     const { response: controls, isLoading } =
         useComplianceApiV1BenchmarksControlsDetail(String(id))
