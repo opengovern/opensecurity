@@ -168,14 +168,13 @@ export default function Shortcuts() {
                                                 </Flex>
                                             </Card>
                                             <Evaluate
-                                                opened={open}
-                                                id=""
-                                                assignmentsCount={0}
+                                                open={open}
                                                 benchmarkDetail={undefined}
-                                                setOpened={(value: boolean) => {
+                                                setOpen={(value: boolean) => {
                                                     setOpen(value)
                                                 }}
                                                 onEvaluate={() => {}}
+                                                showBenchmark={true}
                                                 // complianceScore={0}
                                             />
                                             <Modal
@@ -275,13 +274,12 @@ export default function Shortcuts() {
                                             </Flex>
                                         </Card>
                                         <Evaluate
-                                            opened={open}
-                                            id=""
-                                            assignmentsCount={0}
+                                            open={open}
                                             benchmarkDetail={undefined}
-                                            setOpened={(value: boolean) => {
+                                            setOpen={(value: boolean) => {
                                                 setOpen(value)
                                             }}
+                                            showBenchmark={true}
                                             onEvaluate={() => {}}
                                             // complianceScore={0}
                                         />
