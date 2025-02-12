@@ -2,12 +2,43 @@
 import React, { useEffect, useRef } from 'react'
 import MonacoEditor, { loader } from '@monaco-editor/react'
 
-const SQLEditor = ({ value, onChange, tables }) => {
+const Map = {
+    aws_: 'aws_cloud_account',
+    azure_: 'azure_subscription',
+    entraid_: 'entraid_directory',
+    github_: 'github_account',
+    digitalocean_: 'digitalocean_team',
+    cloudflare_: 'cloudflare_account',
+    openai_: 'openai_integration',
+    linode_: 'linode_account',
+    cohereai_: 'cohereai_project',
+    google_: 'google_workspace_account',
+    oci_: 'oci_repository',
+    render_: 'render_account',
+    doppler_: 'doppler_account',
+    jira_: 'jira_cloud',
+    tailscale_: 'tailscale_account',
+    heroku_: 'heroku_account',
+    fly_: 'fly_account',
+    semgrep_: 'semgrep_account',
+    kubernetes_: 'kubernetes',
+}
+
+const handleName = (text: string) => {
+    const table = text.trim().split(' ').pop()
+    for (const key in Map) {
+        if (table == key) {
+            return Map[key]
+        }
+    }
+    return undefined
+}
+
+const SQLEditor = ({ value, onChange, tables,tableFetch,run }) => {
     // Ref to track whether completion provider has been registered
     const providerRegistered = useRef(false)
-
+      const editorRef = useRef(null)
     useEffect(() => {
-        console.log(tables)
         loader.init().then((monaco) => {
             if (providerRegistered.current) return // Prevent duplicate registration
             providerRegistered.current = true // Mark as registered
@@ -65,6 +96,11 @@ const SQLEditor = ({ value, onChange, tables }) => {
                             position.column
                         )
                     )
+                    const table_name = handleName(textUntilPosition)
+                    if (table_name) {
+                        tableFetch(table_name)
+                    }
+                    
 
                     const suggestions = []
 
@@ -135,12 +171,31 @@ const SQLEditor = ({ value, onChange, tables }) => {
             })
         })
     }, [tables]) // Effect runs only when `tables` changes
+     const handleShiftEnter = () => {
+        if (editorRef.current) {
+            const currentValue = editorRef.current.getValue() // Fetch the latest value
+            run(currentValue) // Pass the value to the `run` function
+        }
+     }
+      const handleEditorDidMount = (editor, monaco) => {
+          editorRef.current = editor
+
+          // Register Shift+Enter command
+          editor.addCommand(
+              monaco.KeyMod.Shift | monaco.KeyCode.Enter, // Detect Shift+Enter
+              () => {
+                  // Add your custom behavior here
+                  handleShiftEnter()
+              }
+          )
+      }
 
     return (
         <MonacoEditor
             language="sql"
             theme="vs"
             loading="Loading..."
+            onMount={handleEditorDidMount}
             value={value}
             onChange={onChange}
             options={{
@@ -149,9 +204,13 @@ const SQLEditor = ({ value, onChange, tables }) => {
                 quickSuggestions: true,
                 lineNumbers: 'on',
                 renderLineHighlight: 'all',
-                
-                
+                fontFamily: `var(--font-family-base-dnvic8, "Open Sans", "Helvetica Neue", Roboto, Arial, sans-serif)`,
+                fontSize: 16,
+                fontWeight: 400,
+
+                // fontLigatures: true,
             }}
+            
         />
     )
 }

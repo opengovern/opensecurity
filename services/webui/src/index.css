@@ -35,12 +35,16 @@
 
 body {
     margin: 0;
-    font-family: var(--font-family-base-dnvic8, "Open Sans", "Helvetica Neue", Roboto, Arial, sans-serif);
+    font-family: var(--font-family-base-dnvic8, "Open Sans", "Helvetica Neue", Roboto, Arial, sans-serif)!important;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     color: #374151;
     height: 100%;
     overflow: auto;
+}
+.view-lines{
+    /* font-family: var(--font-family-base-dnvic8, "Open Sans", "Helvetica Neue", Roboto, Arial, sans-serif)!important; */
+
 }
 
 html {
@@ -50,7 +54,7 @@ html {
 
 code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-        monospace;
+        monospace ;
 }
 
 .ag-theme-alpine {
