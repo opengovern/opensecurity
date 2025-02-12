@@ -672,6 +672,8 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/core-service:${{ needs.tag.outputs.latest_tag }}
           file: docker/CoreServiceDockerfile
+          build-args: |
+            PLUGIN_REGISTRY=ghcr.io/opengovern
           context: .
 
   deploy-post-install-job:
