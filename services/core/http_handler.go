@@ -273,7 +273,7 @@ func (h *HttpHandler) fetchParameters(ctx context.Context) {
 	defer ticker.Stop()
 
 	h.logger.Info("fetching parameters values")
-	queryParams, err := h.listQueryParametersInternal(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole})
+	queryParams, err := h.listQueryParametersInternal()
 	if err != nil {
 		h.logger.Error("failed to get query parameters", zap.Error(err))
 	} else {
@@ -286,7 +286,7 @@ func (h *HttpHandler) fetchParameters(ctx context.Context) {
 		select {
 		case <-ticker.C:
 			h.logger.Info("fetching parameters values")
-			queryParams, err = h.listQueryParametersInternal(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole})
+			queryParams, err = h.listQueryParametersInternal()
 			if err != nil {
 				h.logger.Error("failed to get query parameters", zap.Error(err))
 			} else {
@@ -298,7 +298,7 @@ func (h *HttpHandler) fetchParameters(ctx context.Context) {
 	}
 }
 
-func (h *HttpHandler) listQueryParametersInternal(ctx echo.Context) (coreApi.ListQueryParametersResponse, error) {
+func (h *HttpHandler) listQueryParametersInternal() (coreApi.ListQueryParametersResponse, error) {
 	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
 	var resp coreApi.ListQueryParametersResponse
 	var err error
@@ -311,7 +311,7 @@ func (h *HttpHandler) listQueryParametersInternal(ctx echo.Context) (coreApi.Lis
 		h.logger.Error("error listing controls", zap.Error(err))
 		return resp, echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
 	}
-	namedQueries, err := h.ListQueriesV2Internal(ctx, coreApi.ListQueryV2Request{})
+	namedQueries, err := h.ListQueriesV2Internal(coreApi.ListQueryV2Request{})
 	if err != nil {
 		h.logger.Error("error listing queries", zap.Error(err))
 		return resp, echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
