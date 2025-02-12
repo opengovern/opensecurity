@@ -1,9 +1,8 @@
-FROM docker.io/golang:alpine as build
-RUN apk --no-cache add ca-certificates
-
 ARG PLUGIN_REGISTRY
 FROM ${PLUGIN_REGISTRY}/cloudql-plugin-base:0.0.1 as base
 
-COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
 COPY ./build/core-service /
+
+ENTRYPOINT [ "/core-service" ]
 CMD [ "/core-service" ]
