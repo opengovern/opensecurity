@@ -406,18 +406,13 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 	if req.Query == nil || *req.Query == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Policy is required")
 	}
-	// tracer :
-	outputS, span := tracer.Start(ctx.Request().Context(), "new_RunQuery", trace.WithSpanKind(trace.SpanKindServer))
-	span.SetName("new_RunQuery")
 
-	queryParams, err := h.ListQueryParametersInternal(ctx)
-	if err != nil {
-		return err
-	}
 	queryParamMap := make(map[string]string)
-	for _, qp := range queryParams.Items {
+	h.queryParamsMu.RLock()
+	for _, qp := range h.queryParameters {
 		queryParamMap[qp.Key] = qp.Value
 	}
+	h.queryParamsMu.RUnlock()
 
 	queryTemplate, err := template.New("query").Parse(*req.Query)
 	if err != nil {
@@ -430,27 +425,19 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 
 	var resp *api.RunQueryResponse
 	if req.Engine == nil || *req.Engine == api.QueryEngineCloudQL {
-		resp, err = h.RunSQLNamedQuery(outputS, *req.Query, queryOutput.String(), &req)
+		resp, err = h.RunSQLNamedQuery(ctx.Request().Context(), *req.Query, queryOutput.String(), &req)
 		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
 			return err
 		}
 	} else if *req.Engine == api.QueryEngineCloudQLRego {
-		resp, err = h.RunRegoNamedQuery(outputS, *req.Query, queryOutput.String(), &req)
+		resp, err = h.RunRegoNamedQuery(ctx.Request().Context(), *req.Query, queryOutput.String(), &req)
 		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
 			return err
 		}
 	} else {
 		return fmt.Errorf("invalid query engine: %s", *req.Engine)
 	}
 
-	span.AddEvent("information", trace.WithAttributes(
-		attribute.String("query title ", resp.Title),
-	))
-	span.End()
 	return ctx.JSON(200, resp)
 }
 
@@ -499,7 +486,7 @@ func (h *HttpHandler) RunSQLNamedQuery(ctx context.Context, title, query string,
 	if len(req.Sorts) > 1 {
 		return nil, errors.New("multiple sort items not supported")
 	}
-
+	h.logger.Info("pinging steampipe connection")
 	for i := 0; i < 10; i++ {
 		err = h.steampipeConn.Conn().Ping(ctx)
 		if err == nil {
@@ -517,6 +504,7 @@ func (h *HttpHandler) RunSQLNamedQuery(ctx context.Context, title, query string,
 	if err != nil {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
 	// tracer :
 	integrations, err := h.integrationClient.ListIntegrations(&httpclient.Context{UserRole: api2.AdminRole}, nil)
 	if err != nil {
@@ -559,17 +547,11 @@ func (h *HttpHandler) RunSQLNamedQuery(ctx context.Context, title, query string,
 		}
 	}
 
-	_, span := tracer.Start(ctx, "new_UpdateQueryHistory", trace.WithSpanKind(trace.SpanKindServer))
-	span.SetName("new_UpdateQueryHistory")
-
 	err = h.db.UpdateQueryHistory(query)
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
 		h.logger.Error("failed to update query history", zap.Error(err))
 		return nil, err
 	}
-	span.End()
 
 	resp := api.RunQueryResponse{
 		Title:   title,
@@ -1081,15 +1063,12 @@ func (h *HttpHandler) RunQueryByID(ctx echo.Context) error {
 		engine = api.QueryEngine(engineStr)
 	}
 
-	queryParams, err := h.ListQueryParametersInternal(ctx)
-	if err != nil {
-		h.logger.Error("failed to get query parameters", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get query parameters")
-	}
 	queryParamMap := make(map[string]string)
-	for _, qp := range queryParams.Items {
+	h.queryParamsMu.RLock()
+	for _, qp := range h.queryParameters {
 		queryParamMap[qp.Key] = qp.Value
 	}
+	h.queryParamsMu.RUnlock()
 
 	for k, v := range req.QueryParams {
 		queryParamMap[k] = v
@@ -1577,7 +1556,7 @@ func (h *HttpHandler) GetParametersQueries(ctx echo.Context) error {
 	})
 }
 
-func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context, req api.ListQueryV2Request) (*api.ListQueriesV2Response, error) {
+func (h *HttpHandler) ListQueriesV2Internal(req api.ListQueryV2Request) (*api.ListQueriesV2Response, error) {
 
 	var namedQuery api.ListQueriesV2Response
 	// if err := bindValidate(ctx, &req); err != nil {
@@ -1598,10 +1577,6 @@ func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context, req api.ListQueryV
 	for _, i := range integrations.Integrations {
 		integrationTypes[i.IntegrationType.String()] = true
 	}
-
-	// trace :
-	_, span := tracer.Start(ctx.Request().Context(), "new_GetQueriesWithTagsFilters", trace.WithSpanKind(trace.SpanKindServer))
-	span.SetName("new_GetQueriesWithTagsFilters")
 
 	var tablesFilter []string
 	if len(req.Categories) > 0 {
@@ -1660,11 +1635,8 @@ func (h *HttpHandler) ListQueriesV2Internal(ctx echo.Context, req api.ListQueryV
 	queries, err := h.db.ListQueriesByFilters(req.QueryIDs, search, req.Tags, req.IntegrationTypes, req.HasParameters, req.PrimaryTable,
 		tablesFilter, nil)
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
 		return &namedQuery, err
 	}
-	span.End()
 
 	var items []api.NamedQueryItemV2
 	for _, item := range queries {
@@ -1740,14 +1712,12 @@ func (h *HttpHandler) RunQueryInternal(ctx echo.Context, req api.RunQueryRequest
 	outputS, span := tracer.Start(ctx.Request().Context(), "new_RunQuery", trace.WithSpanKind(trace.SpanKindServer))
 	span.SetName("new_RunQuery")
 
-	queryParams, err := h.ListQueryParametersInternal(ctx)
-	if err != nil {
-		return resp, err
-	}
 	queryParamMap := make(map[string]string)
-	for _, qp := range queryParams.Items {
+	h.queryParamsMu.RLock()
+	for _, qp := range h.queryParameters {
 		queryParamMap[qp.Key] = qp.Value
 	}
+	h.queryParamsMu.RUnlock()
 
 	queryTemplate, err := template.New("query").Parse(*req.Query)
 	if err != nil {

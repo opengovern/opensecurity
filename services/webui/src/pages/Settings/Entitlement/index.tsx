@@ -628,7 +628,7 @@ We encourage you to review this code to understand exactly what information is b
 ## How to Disable Usage Data Collection
 If you wish to turn off this data collection process, you can simply modify and recompile opencomply with the relevant functionality disabled. The pertinent section can be found in the [job.go file](https://github.com/opengovern/opencomply/blob/main/jobs/checkup-job/job.go).
 
-If you have any concerns or questions about this data collection—or need guidance on disabling it—please consult our documentation or reach out to us at [insert your support channel or email]. We value your input and appreciate your support in making opencomply better for everyone.`}
+If you have any concerns or questions reach out to us at [support@opencomply.io](mailto:support@opencomply.io)`}
                         skipHtml={false}
                         className={'markdown-body'}
                         rehypePlugins={[rehypeRaw]}

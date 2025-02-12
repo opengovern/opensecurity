@@ -1010,3 +1010,23 @@ func (db Database) GetFrameworkComplianceSummaries(frameworkId string) ([]Framew
 	}
 	return summaries, nil
 }
+
+func (db Database) PurgeFrameworkComplianceSummaries() error {
+	tx := db.Orm.Model(FrameworkComplianceSummary{}).Where("1 = 1").Delete(&FrameworkComplianceSummary{})
+	if tx.Error != nil {
+		return tx.Error
+	}
+	return nil
+}
+
+func (db Database) GetFrameworkComplianceResultSummary(frameworkId string) (*FrameworkComplianceSummary, error) {
+	var summary FrameworkComplianceSummary
+	tx := db.Orm.Model(FrameworkComplianceSummary{}).Where("framework_id = ?", frameworkId).Where("type = 'result_summary'").Find(&summary)
+	if tx.Error != nil {
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, tx.Error
+	}
+	return &summary, nil
+}

@@ -102,6 +102,8 @@ func (h *HttpHandler) Register(e *echo.Echo) {
 
 	v3 := e.Group("/api/v3")
 
+	v3.PUT("/sample/purge", httpserver2.AuthorizeHandler(h.PurgeSampleData, authApi.AdminRole))
+
 	v3.GET("/policies", httpserver2.AuthorizeHandler(h.ListPolicies, authApi.ViewerRole))
 	v3.GET("/policies/:policy_id", httpserver2.AuthorizeHandler(h.GetPolicy, authApi.ViewerRole))
 
@@ -214,12 +216,23 @@ func (h *HttpHandler) GetComplianceResults(echoCtx echo.Context) error {
 	if err != nil {
 		return err
 	}
-	//req.Filters.IntegrationID, err = httpserver2.ResolveIntegrationIDs(echoCtx, req.Filters.IntegrationID)
-	//if err != nil {
-	//	return err
-	//}
 
 	var response api.GetComplianceResultsResponse
+
+	hasResult := false
+	for _, f := range req.Filters.BenchmarkID {
+		summary, err := h.db.GetFrameworkComplianceResultSummary(f)
+		if err != nil {
+			h.logger.Error("failed to get compliance result summary", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get compliance result summary")
+		}
+		if summary != nil && summary.Total != 0 {
+			hasResult = true
+		}
+	}
+	if !hasResult {
+		return echoCtx.JSON(http.StatusOK, response)
+	}
 
 	if len(req.Filters.ComplianceStatus) == 0 {
 		req.Filters.ComplianceStatus = []api.ComplianceStatus{api.ComplianceStatusFailed}
@@ -1833,6 +1846,18 @@ func (h *HttpHandler) GetBenchmarkSummary(echoCtx echo.Context) error {
 
 	be := framework.ToApi()
 
+	summary, err := h.db.GetFrameworkComplianceResultSummary(frameworkID)
+	if err != nil {
+		h.logger.Error("failed to get compliance result summary", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get compliance result summary")
+	}
+	if summary == nil || summary.Total == 0 {
+		response := api.BenchmarkEvaluationSummary{
+			Benchmark: be,
+		}
+		return echoCtx.JSON(http.StatusOK, response)
+	}
+
 	if len(integrationTypes) > 0 && !utils.IncludesAny(be.IntegrationTypes, integrationTypes) {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid integration type")
 	}
@@ -2224,34 +2249,37 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	var benchmarks []string
+	var frameworkIDs []string
+	for _, f := range req.ParentBenchmark {
+		frameworkIDs = append(frameworkIDs, f)
+	}
+	for _, f := range req.RootBenchmark {
+		frameworkIDs = append(frameworkIDs, f)
+	}
 
-	if len(req.RootBenchmark) > 0 {
-		var rootBenchmarks []string
-		for _, rootBenchmark := range req.RootBenchmark {
-			childBenchmarks, err := h.getChildBenchmarks(ctx, rootBenchmark)
-			if err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-			}
-			rootBenchmarks = append(rootBenchmarks, childBenchmarks...)
-		}
-		if len(req.ParentBenchmark) > 0 {
-			parentBenchmarks := make(map[string]bool)
-			for _, parentBenchmark := range req.ParentBenchmark {
-				parentBenchmarks[parentBenchmark] = true
-			}
-			for _, b := range rootBenchmarks {
-				if _, ok := parentBenchmarks[b]; ok {
-					benchmarks = append(benchmarks, b)
-				}
-			}
-		} else {
-			for _, b := range rootBenchmarks {
-				benchmarks = append(benchmarks, b)
+	frameworks, err := h.db.GetFrameworks(ctx, frameworkIDs)
+	if err != nil {
+		h.logger.Error("failed to get frameworks", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get frameworks")
+	}
+
+	controlIDsMap := make(map[string]bool)
+	for _, framework := range frameworks {
+		var metadata db.BenchmarkMetadata
+		if framework.Metadata.Status == pgtype.Present {
+			if err := json.Unmarshal(framework.Metadata.Bytes, &metadata); err != nil {
+				h.logger.Error("failed to framework extract metadata", zap.Error(err))
+				return echo.NewHTTPError(http.StatusInternalServerError, "failed to framework extract metadata")
 			}
 		}
-	} else if len(req.ParentBenchmark) > 0 {
-		benchmarks = req.ParentBenchmark
+		for _, c := range metadata.Controls {
+			controlIDsMap[c] = true
+		}
+	}
+
+	var controlsIDs []string
+	for c := range controlIDsMap {
+		controlsIDs = append(controlsIDs, c)
 	}
 
 	var integrationIDs []string
@@ -2270,13 +2298,81 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 		}
 	}
 
-	controls, err := h.db.ListControlsByFilter(ctx, nil, req.IntegrationTypes, req.Severity, benchmarks, req.Tags, req.HasParameters,
+	controls, err := h.db.ListControlsByFilter(ctx, controlsIDs, req.IntegrationTypes, req.Severity, nil, req.Tags, req.HasParameters,
 		req.PrimaryResource, req.ListOfResources, nil)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	var fRes map[string]map[string]int64
+
+	hasResult := false
+	for _, f := range frameworkIDs {
+		summary, err := h.db.GetFrameworkComplianceResultSummary(f)
+		if err != nil {
+			h.logger.Error("failed to get compliance result summary", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get compliance result summary")
+		}
+		if summary != nil && summary.Total != 0 {
+			hasResult = true
+		}
+	}
+	if !hasResult || !req.ComplianceResultSummary {
+		var resultControls []api.ListControlsFilterResultControl
+		for _, control := range controls {
+			integrationTypes := make([]integration.Type, 0, len(control.IntegrationType))
+			for _, t := range control.IntegrationType {
+				integrationTypes = append(integrationTypes, integration.Type(t))
+			}
+			apiControl := api.ListControlsFilterResultControl{
+				ID:              control.ID,
+				Title:           control.Title,
+				Description:     control.Description,
+				IntegrationType: integrationTypes,
+				Severity:        control.Severity,
+				Tags:            filterTagsByRegex(req.TagsRegex, model.TrimPrivateTags(control.GetTagsMap())),
+				Policy: struct {
+					Type            string               `json:"type"`      // external/inline
+					Reference       *string              `json:"reference"` // null if inline
+					PrimaryResource string               `json:"primary_resource"`
+					ListOfResources []string             `json:"list_of_resources"`
+					Parameters      []api.QueryParameter `json:"parameters"`
+				}{
+					PrimaryResource: control.Policy.PrimaryResource,
+					ListOfResources: control.Policy.ListOfResources,
+					Parameters:      make([]api.QueryParameter, 0, len(control.Policy.Parameters)),
+				},
+			}
+			if control.ExternalPolicy {
+				apiControl.Policy.Type = "external"
+				apiControl.Policy.Reference = &control.Policy.ID
+			} else {
+				apiControl.Policy.Type = "inline"
+			}
+			for _, p := range control.Policy.Parameters {
+				apiControl.Policy.Parameters = append(apiControl.Policy.Parameters, p.ToApi())
+			}
+			resultControls = append(resultControls, apiControl)
+		}
+		totalCount := len(resultControls)
+		sort.Slice(resultControls, func(i, j int) bool {
+			return resultControls[i].ID < resultControls[j].ID
+		})
+		if req.PerPage != nil {
+			if req.Cursor == nil {
+				resultControls = utils.Paginate(1, *req.PerPage, resultControls)
+			} else {
+				resultControls = utils.Paginate(*req.Cursor, *req.PerPage, resultControls)
+			}
+		}
+
+		response := api.ListControlsFilterResponse{
+			Items:      resultControls,
+			TotalCount: totalCount,
+		}
+
+		return echoCtx.JSON(http.StatusOK, response)
+	}
 
 	if req.ComplianceResultFilters != nil || req.ComplianceResultSummary {
 		var esComplianceStatuses []opengovernanceTypes.ComplianceStatus
@@ -2309,7 +2405,7 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			controlIDs = append(controlIDs, c.ID)
 		}
 		if req.ComplianceResultFilters != nil {
-			benchmarksFilter := benchmarks
+			benchmarksFilter := frameworkIDs
 			if len(req.ComplianceResultFilters.BenchmarkID) > 0 {
 				benchmarksFilter = req.ComplianceResultFilters.BenchmarkID
 			}
@@ -2322,7 +2418,7 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 			}
 		} else {
 			fRes, err = es.ComplianceResultsCountByControlID(ctx, h.logger, h.client, nil, nil, integrationIDs, nil,
-				nil, benchmarks, controlIDs, nil, lastEventFrom, lastEventTo, evaluatedAtFrom,
+				nil, frameworkIDs, controlIDs, nil, lastEventFrom, lastEventTo, evaluatedAtFrom,
 				evaluatedAtTo, nil, esComplianceStatuses)
 		}
 
@@ -2330,15 +2426,10 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 	}
 
 	var resultControls []api.ListControlsFilterResultControl
-	uniqueIntegrationTypes := make(map[string]bool)
-	uniqueSeverities := make(map[string]bool)
-	uniquePrimaryTables := make(map[string]bool)
-	uniqueListOfTables := make(map[string]bool)
-	uniqueTags := make(map[string]map[string]bool)
 
-	benchmarksControlSummary, _, err := es.BenchmarksControlSummary(ctx, h.logger, h.client, benchmarks, nil)
+	benchmarksControlSummary, _, err := es.BenchmarksControlSummary(ctx, h.logger, h.client, frameworkIDs, nil)
 	if err != nil {
-		h.logger.Error("failed to fetch BenchmarksControlSummary", zap.Error(err), zap.Any("benchmarkID", benchmarks))
+		h.logger.Error("failed to fetch BenchmarksControlSummary", zap.Error(err), zap.Any("benchmarkID", frameworkIDs))
 	}
 
 	for _, control := range controls {
@@ -2416,24 +2507,6 @@ func (h *HttpHandler) ListControlsFiltered(echoCtx echo.Context) error {
 				NonCompliantResources: benchmarksControlSummary[control.ID].FailedResourcesCount,
 				ImpactedResources:     benchmarksControlSummary[control.ID].TotalResourcesCount,
 				CostImpact:            benchmarksControlSummary[control.ID].CostImpact,
-			}
-		}
-
-		for _, c := range apiControl.IntegrationType {
-			uniqueIntegrationTypes[c.String()] = true
-		}
-		uniqueSeverities[apiControl.Severity.String()] = true
-		for _, t := range apiControl.Policy.ListOfResources {
-			uniqueListOfTables[t] = true
-		}
-		uniquePrimaryTables[apiControl.Policy.PrimaryResource] = true
-
-		for k, vs := range apiControl.Tags {
-			if _, ok := uniqueTags[k]; !ok {
-				uniqueTags[k] = make(map[string]bool)
-			}
-			for _, v := range vs {
-				uniqueTags[k][v] = true
 			}
 		}
 
@@ -5383,11 +5456,18 @@ func (h *HttpHandler) ListFrameworkAssignments(echoCtx echo.Context) error {
 		results = append(results, info)
 	}
 
+	var totalPages int64
+	if pageSize > 0 {
+		totalPages = int64(len(results)) / pageSize
+	} else {
+		totalPages = 1
+	}
+
 	pageInfo := api.PageInfo{
 		CurrentPage: page,
 		PageSize:    pageSize,
 		TotalItems:  int64(len(results)),
-		TotalPages:  int64(len(results)) / pageSize,
+		TotalPages:  totalPages,
 	}
 
 	sort.Slice(results, func(i, j int) bool {
@@ -5531,7 +5611,6 @@ func (h *HttpHandler) AddAssignment(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	
 	if len(req.Integrations) == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "integration id is empty")
 	}
@@ -5540,7 +5619,7 @@ func (h *HttpHandler) AddAssignment(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "framework id is empty")
 	}
 	framework, err := h.db.GetFramework(ctx, frameworkId)
-		if err != nil {
+	if err != nil {
 		h.logger.Error("failed to get framework", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get framework")
 	}
@@ -5558,33 +5637,31 @@ func (h *HttpHandler) AddAssignment(echoCtx echo.Context) error {
 	for _, it := range framework.IntegrationType {
 		supportedPlugins[it] = true
 	}
-	
+
 	// write a loop to add all integrations
 	for _, integrationId := range req.Integrations {
 
-	integration, err := h.integrationClient.GetIntegration(clientCtx, integrationId)
-	if err != nil {
-		h.logger.Error("failed to get integration", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to get integration")
-	}
+		integration, err := h.integrationClient.GetIntegration(clientCtx, integrationId)
+		if err != nil {
+			h.logger.Error("failed to get integration", zap.Error(err))
+			return echo.NewHTTPError(http.StatusBadRequest, "failed to get integration")
+		}
 
-	
+		if _, ok := supportedPlugins[integration.IntegrationType.String()]; !ok {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("plugin %s is not supported in the framework", integration.IntegrationType))
+		}
 
-	if _, ok := supportedPlugins[integration.IntegrationType.String()]; !ok {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("plugin %s is not supported in the framework", integration.IntegrationType))
-	}
+		assignment := &db.BenchmarkAssignment{
+			BenchmarkId:   frameworkId,
+			IntegrationID: utils.GetPointer(integration.IntegrationID),
+			AssignedAt:    time.Now(),
+		}
 
-	assignment := &db.BenchmarkAssignment{
-		BenchmarkId:   frameworkId,
-		IntegrationID: utils.GetPointer(integration.IntegrationID),
-		AssignedAt:    time.Now(),
+		if err := h.db.AddBenchmarkAssignment(ctx, assignment); err != nil {
+			h.logger.Error("failed to add assignment", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to add assignment")
+		}
 	}
-
-	if err := h.db.AddBenchmarkAssignment(ctx, assignment); err != nil {
-		h.logger.Error("failed to add assignment", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to add assignment")
-	}
-}
 
 	return echoCtx.NoContent(http.StatusOK)
 }
@@ -5955,4 +6032,25 @@ func (h *HttpHandler) ListFrameworks(echoCtx echo.Context) error {
 	}
 
 	return echoCtx.JSON(http.StatusOK, response)
+}
+
+// PurgeSampleData godoc
+//
+//	@Summary		List all workspaces with owner id
+//	@Description	Returns all workspaces with owner id
+//	@Security		BearerToken
+//	@Tags			workspace
+//	@Accept			json
+//	@Produce		json
+//	@Success		200
+//	@Router			/compliance/api/v3/sample/purge [put]
+func (h HttpHandler) PurgeSampleData(c echo.Context) error {
+	err := h.db.PurgeFrameworkComplianceSummaries()
+
+	if err != nil {
+		h.logger.Error("failed to remove framework compliance summaries", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to remove framework compliance summaries")
+	}
+
+	return c.NoContent(http.StatusOK)
 }

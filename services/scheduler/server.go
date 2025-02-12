@@ -85,6 +85,7 @@ func (h HttpServer) Register(e *echo.Echo) {
 	v3.POST("/jobs/compliance/connections", httpserver.AuthorizeHandler(h.GetComplianceJobsHistoryByIntegration, apiAuth.ViewerRole))
 
 	v3.POST("/compliance/benchmark/:benchmark_id/run", httpserver.AuthorizeHandler(h.RunBenchmarkById, apiAuth.AdminRole))
+	v3.POST("/compliance/framework/:benchmark_id/run", httpserver.AuthorizeHandler(h.RunBenchmarkById, apiAuth.AdminRole))
 	v3.POST("/compliance/run", httpserver.AuthorizeHandler(h.RunBenchmark, apiAuth.AdminRole))
 	v3.POST("/discovery/run", httpserver.AuthorizeHandler(h.RunDiscovery, apiAuth.AdminRole))
 	v3.POST("/discovery/status", httpserver.AuthorizeHandler(h.GetIntegrationDiscoveryProgress, apiAuth.ViewerRole))
@@ -1231,6 +1232,11 @@ func (h HttpServer) RunBenchmarkById(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
 	}
 
+	withIncidents := true
+	if request.WithIncidents != nil {
+		withIncidents = *request.WithIncidents
+	}
+
 	benchmark, err := h.Scheduler.complianceClient.GetBenchmark(&httpclient.Context{UserRole: apiAuth.AdminRole}, benchmarkID)
 	if err != nil {
 		return fmt.Errorf("error while getting benchmarks: %v", err)
@@ -1297,7 +1303,7 @@ func (h HttpServer) RunBenchmarkById(ctx echo.Context) error {
 	}
 
 	var apiJobs []api.RunBenchmarkItem
-	if request.WithIncidents {
+	if withIncidents {
 		lastJob, err := h.Scheduler.db.GetLastComplianceJob(true, benchmark.ID)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
@@ -1310,7 +1316,7 @@ func (h HttpServer) RunBenchmarkById(ctx echo.Context) error {
 		for _, j := range jobs {
 			job := api.RunBenchmarkItem{
 				JobId:        j.ID,
-				WithIncident: request.WithIncidents,
+				WithIncident: withIncidents,
 				BenchmarkId:  benchmark.ID,
 			}
 			for _, integration := range j.IntegrationIDs {
@@ -1328,7 +1334,7 @@ func (h HttpServer) RunBenchmarkById(ctx echo.Context) error {
 		for _, j := range jobs {
 			job := api.RunBenchmarkItem{
 				JobId:        j.ID,
-				WithIncident: request.WithIncidents,
+				WithIncident: withIncidents,
 				BenchmarkId:  benchmark.ID,
 			}
 			for _, integration := range j.IntegrationIDs {

@@ -105,7 +105,7 @@ func ComplianceResultsCountByControlID(ctx context.Context, logger *zap.Logger, 
 		filters = append(filters, opengovernance.NewTermsFilter("resourceType", resourceTypes))
 	}
 	if len(benchmarkID) > 0 {
-		filters = append(filters, opengovernance.NewTermsFilter("parentBenchmarks", benchmarkID))
+		filters = append(filters, opengovernance.NewTermsFilter("benchmarkID", benchmarkID))
 	}
 	if len(controlID) > 0 {
 		filters = append(filters, opengovernance.NewTermsFilter("controlID", controlID))

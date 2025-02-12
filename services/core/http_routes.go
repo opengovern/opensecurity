@@ -86,7 +86,7 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v3.PUT("/configured/set", httpserver.AuthorizeHandler(h.SetConfiguredStatus, api3.AdminRole))
 	v3.PUT("/configured/unset", httpserver.AuthorizeHandler(h.UnsetConfiguredStatus, api3.ViewerRole))
 	v3.GET("/about", httpserver.AuthorizeHandler(h.GetAbout, api3.ViewerRole))
-	
+
 	v3.GET("/vault/configured", httpserver.AuthorizeHandler(h.VaultConfigured, api3.ViewerRole))
 
 	views := v3.Group("/views")
@@ -107,8 +107,6 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v3.GET("/parameters/queries", httpserver.AuthorizeHandler(h.GetParametersQueries, api3.ViewerRole))
 	v4 := r.Group("/api/v4")
 	v4.GET("/about", httpserver.AuthorizeHandler(h.GetAboutShort, api3.ViewerRole))
-
-
 
 }
 
@@ -344,7 +342,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 		}
 	} else if queryIDs != nil {
 		// TODO: Fix this part and write new client on inventory
-		queries, err := h.ListQueriesV2Internal(ctx, api.ListQueryV2Request{QueryIDs: queryIDs})
+		queries, err := h.ListQueriesV2Internal(api.ListQueryV2Request{QueryIDs: queryIDs})
 		if err != nil {
 			h.logger.Error("error getting query", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "error getting query")
@@ -388,7 +386,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 		h.logger.Error("error listing controls", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
 	}
-	namedQueries, err := h.ListQueriesV2Internal(ctx, api.ListQueryV2Request{})
+	namedQueries, err := h.ListQueriesV2Internal(api.ListQueryV2Request{})
 	if err != nil {
 		h.logger.Error("error listing queries", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
@@ -549,7 +547,7 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 		h.logger.Error("error listing controls", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
 	}
-	namedQueries, err := h.ListQueriesV2Internal(ctx, api.ListQueryV2Request{})
+	namedQueries, err := h.ListQueriesV2Internal(api.ListQueryV2Request{})
 	if err != nil {
 		h.logger.Error("error listing queries", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
@@ -637,8 +635,8 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 
 // PurgeSampleData godoc
 //
-//	@Summary		List all workspaces with owner id
-//	@Description	Returns all workspaces with owner id
+//	@Summary		Purge all sample data
+//	@Description	Purge all sample data
 //	@Security		BearerToken
 //	@Tags			workspace
 //	@Accept			json
@@ -662,12 +660,20 @@ func (h HttpHandler) PurgeSampleData(c echo.Context) error {
 	schedulerURL := strings.ReplaceAll(h.cfg.Scheduler.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
 	schedulerClient := schedulerClient.NewSchedulerServiceClient(schedulerURL)
 
+	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
+	complianceClient := complianceClient.NewComplianceClient(complianceURL)
+
 	integrations, err := integrationClient.PurgeSampleData(ctx)
 	if err != nil {
 		return err
 	}
 
 	err = schedulerClient.PurgeSampleData(ctx, integrations)
+	if err != nil {
+		return err
+	}
+
+	err = complianceClient.PurgeSampleData(ctx)
 	if err != nil {
 		return err
 	}
@@ -1402,79 +1408,4 @@ func (h HttpHandler) GetViews(echoCtx echo.Context) error {
 		Views:      apiViews,
 		TotalCount: totalCount,
 	})
-}
-
-//
-
-func (h HttpHandler) ListQueryParametersInternal(ctx echo.Context) (api.ListQueryParametersResponse, error) {
-	clientCtx := &httpclient.Context{UserRole: api3.AdminRole}
-	var resp api.ListQueryParametersResponse
-	var err error
-
-	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
-	complianceClient := complianceClient.NewComplianceClient(complianceURL)
-
-	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
-	if err != nil {
-		h.logger.Error("error listing controls", zap.Error(err))
-		return resp, echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
-	}
-	namedQueries, err := h.ListQueriesV2Internal(ctx, api.ListQueryV2Request{})
-	if err != nil {
-		h.logger.Error("error listing queries", zap.Error(err))
-		return resp, echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
-	}
-
-	var filteredQueryParams []string
-
-	var queryParams []models.PolicyParameterValues
-	if len(filteredQueryParams) > 0 {
-		queryParams, err = h.db.GetQueryParametersByIds(filteredQueryParams)
-		if err != nil {
-			h.logger.Error("error getting query parameters", zap.Error(err))
-			return resp, err
-		}
-	} else {
-		queryParams, err = h.db.GetQueryParametersValues(nil)
-		if err != nil {
-			h.logger.Error("error getting query parameters", zap.Error(err))
-			return resp, err
-		}
-	}
-
-	parametersMap := make(map[string]*api.QueryParameter)
-	for _, dbParam := range queryParams {
-		apiParam := dbParam.ToAPI()
-		parametersMap[apiParam.Key] = &apiParam
-	}
-
-	for _, c := range controls {
-		for _, p := range c.Policy.Parameters {
-			if _, ok := parametersMap[p.Key]; ok {
-				parametersMap[p.Key].ControlsCount += 1
-			}
-		}
-	}
-	for _, q := range namedQueries.Items {
-		for _, p := range q.Query.Parameters {
-			if _, ok := parametersMap[p.Key]; ok {
-				parametersMap[p.Key].QueriesCount += 1
-			}
-		}
-	}
-
-	var items []api.QueryParameter
-	for _, i := range parametersMap {
-		items = append(items, *i)
-	}
-
-	totalCount := len(items)
-	sort.Slice(items, func(i, j int) bool {
-		return items[i].Key < items[j].Key
-	})
-
-	return api.ListQueryParametersResponse{
-		TotalCount: totalCount,
-		Items:      items,
-	}, nil
 }
