@@ -409,14 +409,12 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 
 	h.logger.Info("getting query parameters")
 
-	queryParams, err := h.ListQueryParametersInternal(ctx)
-	if err != nil {
-		return err
-	}
 	queryParamMap := make(map[string]string)
-	for _, qp := range queryParams.Items {
+	h.queryParamsMu.RLock()
+	for _, qp := range h.queryParameters {
 		queryParamMap[qp.Key] = qp.Value
 	}
+	h.queryParamsMu.RUnlock()
 
 	h.logger.Info("executing template")
 
@@ -1086,15 +1084,12 @@ func (h *HttpHandler) RunQueryByID(ctx echo.Context) error {
 		engine = api.QueryEngine(engineStr)
 	}
 
-	queryParams, err := h.ListQueryParametersInternal(ctx)
-	if err != nil {
-		h.logger.Error("failed to get query parameters", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get query parameters")
-	}
 	queryParamMap := make(map[string]string)
-	for _, qp := range queryParams.Items {
+	h.queryParamsMu.RLock()
+	for _, qp := range h.queryParameters {
 		queryParamMap[qp.Key] = qp.Value
 	}
+	h.queryParamsMu.RUnlock()
 
 	for k, v := range req.QueryParams {
 		queryParamMap[k] = v
@@ -1745,14 +1740,12 @@ func (h *HttpHandler) RunQueryInternal(ctx echo.Context, req api.RunQueryRequest
 	outputS, span := tracer.Start(ctx.Request().Context(), "new_RunQuery", trace.WithSpanKind(trace.SpanKindServer))
 	span.SetName("new_RunQuery")
 
-	queryParams, err := h.ListQueryParametersInternal(ctx)
-	if err != nil {
-		return resp, err
-	}
 	queryParamMap := make(map[string]string)
-	for _, qp := range queryParams.Items {
+	h.queryParamsMu.RLock()
+	for _, qp := range h.queryParameters {
 		queryParamMap[qp.Key] = qp.Value
 	}
+	h.queryParamsMu.RUnlock()
 
 	queryTemplate, err := template.New("query").Parse(*req.Query)
 	if err != nil {

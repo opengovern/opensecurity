@@ -4,7 +4,14 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"github.com/labstack/echo/v4"
+	authApi "github.com/opengovern/og-util/pkg/api"
+	"github.com/opengovern/og-util/pkg/httpclient"
+	coreApi "github.com/opengovern/opencomply/services/core/api"
+	"net/http"
+	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	dexApi "github.com/dexidp/dex/api/v2"
@@ -33,14 +40,14 @@ import (
 )
 
 type HttpHandler struct {
-	client            opengovernance.Client
-	db                db.Database
-	steampipeConn     *steampipe.Database
-	schedulerClient   describeClient.SchedulerServiceClient
-	integrationClient integrationClient.IntegrationServiceClient
-	complianceClient  complianceClient.ComplianceServiceClient
-	logger *zap.Logger
-	viewCheckpoint time.Time
+	client             opengovernance.Client
+	db                 db.Database
+	steampipeConn      *steampipe.Database
+	schedulerClient    describeClient.SchedulerServiceClient
+	integrationClient  integrationClient.IntegrationServiceClient
+	complianceClient   complianceClient.ComplianceServiceClient
+	logger             *zap.Logger
+	viewCheckpoint     time.Time
 	cfg                config.Config
 	kubeClient         client.Client
 	vault              vault.VaultSourceConfig
@@ -48,13 +55,15 @@ type HttpHandler struct {
 	dexClient          dexApi.DexClient
 	migratorDb         *db2.Database
 
+	queryParameters []coreApi.QueryParameter
+	queryParamsMu   sync.RWMutex
 }
 
 func InitializeHttpHandler(
 	cfg config.Config,
 	steampipeHost string, steampipePort string, steampipeDb string, steampipeUsername string, steampipePassword string,
 	schedulerBaseUrl string, integrationBaseUrl string, complianceBaseUrl string,
-	logger *zap.Logger,dexClient dexApi.DexClient,esConf config3.ElasticSearch,
+	logger *zap.Logger, dexClient dexApi.DexClient, esConf config3.ElasticSearch,
 ) (h *HttpHandler, err error) {
 	h = &HttpHandler{}
 	ctx := context.Background()
@@ -115,7 +124,6 @@ func InitializeHttpHandler(
 		return nil, fmt.Errorf("gorm migrate: %w", err)
 	}
 	migratorDb := &db2.Database{ORM: migratorOrm}
-	
 
 	kubeClient, err := NewKubeClient()
 	if err != nil {
@@ -129,7 +137,7 @@ func InitializeHttpHandler(
 	h.cfg = cfg
 	h.migratorDb = migratorDb
 	h.dexClient = dexClient
-	h.viewCheckpoint =time.Now().Add(-time.Hour * 2)
+	h.viewCheckpoint = time.Now().Add(-time.Hour * 2)
 	switch cfg.Vault.Provider {
 	case vault.AwsKMS:
 		h.vault, err = vault.NewKMSVaultSourceConfig(ctx, cfg.Vault.Aws, cfg.Vault.KeyId)
@@ -235,9 +243,10 @@ func InitializeHttpHandler(
 
 	h.logger = logger
 
+	go h.fetchParameters(ctx)
+
 	return h, nil
 }
-
 
 func NewKubeClient() (client.Client, error) {
 	scheme := runtime.NewScheme()
@@ -255,4 +264,107 @@ func NewKubeClient() (client.Client, error) {
 		return nil, err
 	}
 	return kubeClient, nil
+}
+
+func (h *HttpHandler) fetchParameters(ctx context.Context) {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	h.logger.Info("fetching parameters values")
+	queryParams, err := h.listQueryParametersInternal(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole})
+	if err != nil {
+		h.logger.Error("failed to get query parameters", zap.Error(err))
+	} else {
+		h.queryParamsMu.Lock()
+		h.queryParameters = queryParams.Items
+		h.queryParamsMu.Unlock()
+	}
+
+	for {
+		select {
+		case <-ticker.C:
+			h.logger.Info("fetching parameters values")
+			queryParams, err = h.listQueryParametersInternal(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole})
+			if err != nil {
+				h.logger.Error("failed to get query parameters", zap.Error(err))
+			} else {
+				h.queryParamsMu.Lock()
+				h.queryParameters = queryParams.Items
+				h.queryParamsMu.Unlock()
+			}
+		}
+	}
+}
+
+func (h *HttpHandler) listQueryParametersInternal(ctx echo.Context) (coreApi.ListQueryParametersResponse, error) {
+	clientCtx := &httpclient.Context{UserRole: authApi.AdminRole}
+	var resp coreApi.ListQueryParametersResponse
+	var err error
+
+	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
+	complianceClient := complianceClient.NewComplianceClient(complianceURL)
+
+	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
+	if err != nil {
+		h.logger.Error("error listing controls", zap.Error(err))
+		return resp, echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
+	}
+	namedQueries, err := h.ListQueriesV2Internal(ctx, coreApi.ListQueryV2Request{})
+	if err != nil {
+		h.logger.Error("error listing queries", zap.Error(err))
+		return resp, echo.NewHTTPError(http.StatusInternalServerError, "error listing queries")
+	}
+
+	var filteredQueryParams []string
+
+	var queryParams []models.PolicyParameterValues
+	if len(filteredQueryParams) > 0 {
+		queryParams, err = h.db.GetQueryParametersByIds(filteredQueryParams)
+		if err != nil {
+			h.logger.Error("error getting query parameters", zap.Error(err))
+			return resp, err
+		}
+	} else {
+		queryParams, err = h.db.GetQueryParametersValues(nil)
+		if err != nil {
+			h.logger.Error("error getting query parameters", zap.Error(err))
+			return resp, err
+		}
+	}
+
+	parametersMap := make(map[string]*coreApi.QueryParameter)
+	for _, dbParam := range queryParams {
+		apiParam := dbParam.ToAPI()
+		parametersMap[apiParam.Key] = &apiParam
+	}
+
+	for _, c := range controls {
+		for _, p := range c.Policy.Parameters {
+			if _, ok := parametersMap[p.Key]; ok {
+				parametersMap[p.Key].ControlsCount += 1
+			}
+		}
+	}
+	for _, q := range namedQueries.Items {
+		for _, p := range q.Query.Parameters {
+			if _, ok := parametersMap[p.Key]; ok {
+				parametersMap[p.Key].QueriesCount += 1
+			}
+		}
+	}
+
+	var items []coreApi.QueryParameter
+	for _, i := range parametersMap {
+		items = append(items, *i)
+	}
+
+	totalCount := len(items)
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].Key < items[j].Key
+	})
+
+	return coreApi.ListQueryParametersResponse{
+		TotalCount: totalCount,
+		Items:      items,
+	}, nil
 }
