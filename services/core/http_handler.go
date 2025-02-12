@@ -65,7 +65,9 @@ func InitializeHttpHandler(
 	schedulerBaseUrl string, integrationBaseUrl string, complianceBaseUrl string,
 	logger *zap.Logger, dexClient dexApi.DexClient, esConf config3.ElasticSearch,
 ) (h *HttpHandler, err error) {
-	h = &HttpHandler{}
+	h = &HttpHandler{
+		queryParamsMu: sync.RWMutex{},
+	}
 	ctx := context.Background()
 
 	fmt.Println("Initializing http handler")
