@@ -62,15 +62,7 @@ import {
     SplitPanel,
     Tabs,
 } from '@cloudscape-design/components'
-import AceEditor from 'react-ace-builds'
-// import 'ace-builds/src-noconflict/theme-github'
-import 'ace-builds/css/ace.css'
-import 'ace-builds/css/theme/cloud_editor.css'
-import 'ace-builds/css/theme/cloud_editor_dark.css'
-import 'ace-builds/css/theme/cloud_editor_dark.css'
-import 'ace-builds/css/theme/twilight.css'
-import 'ace-builds/css/theme/sqlserver.css'
-import 'ace-builds/css/theme/xcode.css'
+
 
 import CodeEditor from '@cloudscape-design/components/code-editor'
 import KButton from '@cloudscape-design/components/button'
@@ -79,6 +71,10 @@ import View from '../View'
 import Bookmarks from '../Bookmarks'
 import axios from 'axios'
 import CustomPagination from '../../../components/Pagination'
+import MonacoEditor from '@monaco-editor/react'
+import * as monaco from 'monaco-editor'
+import SQLEditor from './editor'
+
 export const getTable = (
     headers: string[] | undefined,
     details: any[][] | undefined
@@ -178,6 +174,7 @@ export default function Query() {
     const [integrations, setIntegrations] = useState([])
     const [selectedIntegration, setSelectedIntegration] = useState('')
     const [tables, setTables] = useState([])
+    const [suggestTables, setSuggestTables] = useState([])
     const [selectedTable, setSelectedTable] = useState('')
     const [columns, setColumns] = useState([])
     const [schemaLoading, setSchemaLoading] = useState(false)
@@ -188,7 +185,16 @@ export default function Query() {
     const [openIntegration, setOpenIntegration] = useState(false)
     const [openLayout, setOpenLayout] = useState(true)
     const [splitSize, setSplitSize] = useState(1200)
-
+    const [tables1, setTables1] = useState([
+        {
+            table: 'users',
+            columns: ['id', 'name', 'email'],
+        },
+        {
+            table: 'orders',
+            columns: ['id', 'user_id', 'amount'],
+        },
+    ])
 
     // const { response: categories, isLoading: categoryLoading } =
     //     useInventoryApiV2AnalyticsCategoriesList()
@@ -229,31 +235,6 @@ export default function Query() {
     useEffect(() => {
         if (code.length) setShowEditor(true)
     }, [code])
-
-    const [ace, setAce] = useState()
-
-    useEffect(() => {
-        async function loadAce() {
-            const ace = await import('ace-builds')
-            await import('ace-builds/webpack-resolver')
-            ace.config.set('useStrictCSP', true)
-            // ace.config.setMode('ace/mode/sql')
-            // @ts-ignore
-            // ace.edit(element, {
-            //     mode: 'ace/mode/sql',
-            //     selectionStyle: 'text',
-            // })
-
-            return ace
-        }
-
-        loadAce()
-            .then((ace) => {
-                // @ts-ignore
-                setAce(ace)
-            })
-            .finally(() => {})
-    }, [])
 
     const memoCount = useMemo(
         () => getTable(queryResponse?.headers, queryResponse?.result).count,
@@ -338,6 +319,20 @@ export default function Query() {
                 setSchemaLoading1(false)
             })
     }
+    useEffect(() => {
+        const temp = suggestTables
+        Object.entries(tables)?.map((item,index)=>{
+            const entri = {
+                table: item[0],
+                // @ts-ignore
+                columns: item[1]?.map((column: any) => column.Name),
+            }
+            // @ts-ignore
+
+            temp.push(entri)
+        })
+        setSuggestTables(temp)
+    }, [tables])
 
     useEffect(() => {
         getIntegrations()
@@ -371,7 +366,7 @@ export default function Query() {
                     setOpenLayout(!openLayout)
                 }}
                 splitPanelSize={splitSize}
-                onSplitPanelResize={({detail})=>{
+                onSplitPanelResize={({ detail }) => {
                     setSplitSize(detail.size)
                 }}
                 splitPanel={
@@ -646,7 +641,7 @@ export default function Query() {
                                         >
                                             <Flex
                                                 flexDirection="col"
-                                                className="gap-4 w-4"
+                                                className="gap-4 w-4 h-full min-h-20"
                                             >
                                                 <TableCellsIcon />
                                                 <Text className="rotate-90">
@@ -656,41 +651,29 @@ export default function Query() {
                                         </Button>
                                     </Flex>
                                 )}
-
-                                <Flex className="h-full">
-                                    <CodeEditor
-                                        ace={ace}
-                                        language="sql"
-                                        value={code}
-                                        languageLabel="SQL"
-                                        onChange={({ detail }) => {
-                                            setSavedQuery('')
-                                            setCode(detail.value)
+                                <Flex
+                                    className={`h-full w-full ${
+                                        openSearch && 'max-w-[75%]'
+                                    } `}
+                                >
+                                    <Card className="h-full w-full">
+                                        <SQLEditor
+                                            value={code}
+                                            onChange={(
+                                                value: any,
+                                                event: any
+                                            ) => {
+                                                setSavedQuery('')
+                                                setCode(value)
                                                 setOpenLayout(false)
 
-                                            if (tab !== '3') {
-                                                setTab('3')
-                                            }
-                                        }}
-                                        preferences={preferences}
-                                        onPreferencesChange={(e) =>
-                                            // @ts-ignore
-                                            setPreferences(e.detail)
-                                        }
-                                        loading={false}
-                                        themes={{
-                                            light: [
-                                                'xcode',
-                                                'cloud_editor',
-                                                'sqlserver',
-                                            ],
-                                            dark: [
-                                                'cloud_editor_dark',
-                                                'twilight',
-                                            ],
-                                            // @ts-ignore
-                                        }}
-                                    />
+                                                if (tab !== '3') {
+                                                    setTab('3')
+                                                }
+                                            }}
+                                            tables={suggestTables}
+                                        />
+                                    </Card>
                                 </Flex>
                             </Flex>
                             <Flex flexDirection="col" className="w-full ">
