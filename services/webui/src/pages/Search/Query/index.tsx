@@ -63,7 +63,6 @@ import {
     Tabs,
 } from '@cloudscape-design/components'
 
-
 import CodeEditor from '@cloudscape-design/components/code-editor'
 import KButton from '@cloudscape-design/components/button'
 import AllQueries from '../All Query'
@@ -204,6 +203,7 @@ export default function Query() {
         isLoading,
         isExecuted,
         sendNow,
+        sendNowWithParams,
         error,
     } = useInventoryApiV1QueryRunCreate(
         {
@@ -321,7 +321,7 @@ export default function Query() {
     }
     useEffect(() => {
         const temp = suggestTables
-        Object.entries(tables)?.map((item,index)=>{
+        Object.entries(tables)?.map((item, index) => {
             const entri = {
                 table: item[0],
                 // @ts-ignore
@@ -337,6 +337,20 @@ export default function Query() {
     useEffect(() => {
         getIntegrations()
     }, [])
+    const RunCode =(query: string)=>{
+          setLoaded(true)
+          setPage(0)
+          sendNowWithParams(
+              {
+                  page: { no: 1, size: pageSize },
+                  // @ts-ignore
+                  engine: 'cloudql',
+                  query: query,
+              },
+              {}
+          )
+
+    }
 
     return (
         <>
@@ -672,6 +686,10 @@ export default function Query() {
                                                 }
                                             }}
                                             tables={suggestTables}
+                                            tableFetch={(name: string) => {
+                                                getMasterSchema(name)
+                                            }}
+                                            run={RunCode}
                                         />
                                     </Card>
                                 </Flex>
