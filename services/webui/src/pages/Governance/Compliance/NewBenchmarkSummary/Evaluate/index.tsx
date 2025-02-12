@@ -220,12 +220,11 @@ export default function Evaluate({
             GetEnabled()
         }
     }, [selectedbenchmarks])
-    // useEffect(() => {
-    //     if (opened) {
-    //         setOpen(true)
-    //         GetCard()
-    //     }
-    // }, [opened])
+    useEffect(() => {
+        if(!showBenchmark){
+            GetEnabled()
+        }
+    }, [showBenchmark])
 
     return (
         <>

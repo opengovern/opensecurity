@@ -52,6 +52,7 @@ import Button from '@cloudscape-design/components/button'
 // import { LineChart } from '@tremor/react'
 import {
     BreadcrumbGroup,
+    ButtonDropdown,
     ExpandableSection,
     SpaceBetween,
 } from '@cloudscape-design/components'
@@ -62,10 +63,12 @@ export default function NewBenchmarkSummary() {
     const { ws } = useParams()
 
     const [enable, setEnable] = useState<boolean>(false)
+    const [is_baseline, setIs_baseline] = useState<boolean>(false)
     const setNotification = useSetAtom(notificationAtom)
     const { benchmarkId } = useParams()
     const [assignments, setAssignments] = useState(0)
-   const [open, setOpen] = useState(false)
+    const [runLoading, setRunLoading] = useState(false)
+    const [open, setOpen] = useState(false)
 
     const {
         response: benchmarkDetail,
@@ -82,7 +85,6 @@ export default function NewBenchmarkSummary() {
             false
         )
 
- 
     const RunBenchmark = (c: any[], b: boolean) => {
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
@@ -108,7 +110,7 @@ export default function NewBenchmarkSummary() {
                 Authorization: `Bearer ${token}`,
             },
         }
-        //    console.log(config)
+        setRunLoading(true)
         axios
             .post(
                 `${url}/main/schedule/api/v3/compliance/benchmark/${benchmarkId}/run`,
@@ -117,7 +119,7 @@ export default function NewBenchmarkSummary() {
             )
             .then((res) => {
                 let ids = ''
-                res.data.jobs.map((item:any, index : number) => {
+                res.data.jobs.map((item: any, index: number) => {
                     if (index < 5) {
                         ids = ids + item.job_id + ','
                     }
@@ -126,6 +128,45 @@ export default function NewBenchmarkSummary() {
                     text: `Run is Done You Job id is ${ids}`,
                     type: 'success',
                 })
+                setRunLoading(false)
+            })
+            .catch((err) => {
+                console.log(err)
+                setRunLoading(false)
+            })
+    }
+    const UpdateBenchmark = (is_baseline: boolean,enabled:boolean) => {
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        const body = {
+            is_baseline,
+            enabled
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+        axios
+            .put(
+                `${url}/main/compliance/api/v1/frameworks/${benchmarkId}`,
+                body,
+                config
+            )
+            .then((res) => {
+              
+                setNotification({
+                    text: `Framework changed successfully`, 
+                    type: 'success',
+                })
+                window.location.reload()
             })
             .catch((err) => {
                 console.log(err)
@@ -136,18 +177,19 @@ export default function NewBenchmarkSummary() {
             return text.length > 600 ? text.substring(0, 600) + '...' : text
         }
     }
-  
-   
+
     useEffect(() => {
-        if (isExecuted ) {
+        if (isExecuted) {
             updateDetail()
         }
     }, [isExecuted])
- 
-      useEffect(() => {
+
+    useEffect(() => {
         // @ts-ignore
-         setEnable(benchmarkDetail?.enabled)
-      }, [benchmarkDetail])
+        setEnable(benchmarkDetail?.enabled)
+        // @ts-ignore
+        setIs_baseline(benchmarkDetail?.isBaseline)
+    }, [benchmarkDetail])
     const find_tabs = () => {
         const tabs = []
         tabs.push({
@@ -173,9 +215,7 @@ export default function NewBenchmarkSummary() {
             disabledReason:
                 'This is available when the Framework has at least one assignments.',
         })
-        if (
-            enable
-        ) {
+        if (enable) {
             tabs.push({
                 label: 'Settings',
                 id: 'fourth',
@@ -214,6 +254,34 @@ export default function NewBenchmarkSummary() {
         })
         return tabs
     }
+    const GetActions = () =>{
+        const temp = []
+        if(enable){
+            temp.push({
+                text: 'Disable framework',
+                id: 'disable',
+            })
+        }
+        else{
+            temp.push({
+                text: 'Enable framework',
+                id: 'enable',
+            })
+        }
+        if(!is_baseline){
+            temp.push({
+                text: 'Set as baseline',
+                id: 'add_baseline',
+            })
+        }
+        else{
+            temp.push({
+                text: 'Remove as baseline',
+                id: 'remove_baseline',
+            })
+        }
+        return temp
+    }
 
     return (
         <>
@@ -240,7 +308,56 @@ export default function NewBenchmarkSummary() {
                         }`}
                         actions={
                             <Flex className="w-max ">
-                                <></>
+                                <ButtonDropdown
+                                    onItemClick={({ detail }) => {
+                                        const id = detail.id
+                                        switch (id) {
+                                            case 'enable':
+                                                UpdateBenchmark(is_baseline,true)
+                                                break
+                                            case 'disable':
+                                                UpdateBenchmark(
+                                                    is_baseline,
+                                                    false
+                                                )
+
+                                                break
+                                            case 'add_baseline':
+                                                UpdateBenchmark(
+                                                    true,
+                                                    enable
+                                                )
+
+                                                break
+                                            case 'remove_baseline':
+                                                UpdateBenchmark(
+                                                    false,
+                                                    enable
+                                                )
+
+                                                break
+
+                                            default:
+                                                break
+                                        }
+                                    }}
+                                    variant="primary"
+                                    items={[
+                                        {
+                                            text: 'Settings',
+                                            items: GetActions()
+                                        },
+                                    ]}
+                                    mainAction={{
+                                        text: 'Run ',
+
+                                        onClick: () => {
+                                            setOpen(true)
+                                        },
+                                        loading: runLoading,
+                                    }}
+                                    
+                                />
                             </Flex>
                         }
                         variant="h2"
@@ -287,4 +404,3 @@ export default function NewBenchmarkSummary() {
         </>
     )
 }
-
