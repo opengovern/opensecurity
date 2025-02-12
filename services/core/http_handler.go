@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
+	cloudql_init_job "github.com/opengovern/opencomply/jobs/cloudql-init-job"
 	coreApi "github.com/opengovern/opencomply/services/core/api"
 	"net/http"
 	"sort"
@@ -211,20 +212,6 @@ func InitializeHttpHandler(
 	default:
 		h.logger.Error("unsupported vault provider", zap.Any("provider", h.cfg.Vault.Provider))
 	}
-	// setup steampipe connection
-	// inventory
-	steampipeConn, err := steampipe.NewSteampipeDatabase(steampipe.Option{
-		Host: steampipeHost,
-		Port: steampipePort,
-		User: steampipeUsername,
-		Pass: steampipePassword,
-		Db:   steampipeDb,
-	})
-	h.steampipeConn = steampipeConn
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println("Initialized steampipe database: ", steampipeConn)
 
 	h.client, err = opengovernance.NewClient(opengovernance.ClientConfig{
 		Addresses:     []string{esConf.Address},
@@ -244,6 +231,26 @@ func InitializeHttpHandler(
 	h.complianceClient = complianceClient.NewComplianceClient(complianceBaseUrl)
 
 	h.logger = logger
+
+	// setup steampipe connection
+	// inventory
+	pluginJob := cloudql_init_job.NewJob(logger, cloudql_init_job.Config{
+		Postgres:      cfg.PostgresPlugin,
+		ElasticSearch: cfg.ElasticSearch,
+		Steampipe:     cfg.Steampipe,
+	}, h.integrationClient)
+	logger.Info("running plugin job to initialize integrations in cloudql")
+	steampipeConn, err := pluginJob.Run(ctx)
+	if err != nil {
+		logger.Error("failed to run plugin job", zap.Error(err))
+		return nil, err
+	}
+
+	h.steampipeConn = steampipeConn
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("Initialized steampipe database: ", steampipeConn)
 
 	go h.fetchParameters(ctx)
 

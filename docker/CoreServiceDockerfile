@@ -1,3 +1,6 @@
+ARG PLUGIN_REGISTRY
+FROM ${PLUGIN_REGISTRY}/cloudql-plugin-base:0.0.1 as base
+
 FROM docker.io/golang:alpine as build
 RUN apk --no-cache add ca-certificates
 
