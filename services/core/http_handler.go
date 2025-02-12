@@ -236,29 +236,18 @@ func InitializeHttpHandler(
 	// inventory
 	pluginJob := cloudql_init_job.NewJob(logger, cloudql_init_job.Config{
 		Postgres: config3.Postgres{
-			Host:            cfg.PostgresPlugin.Host,
-			Port:            cfg.PostgresPlugin.Port,
-			DB:              cfg.PostgresPlugin.DB,
-			Username:        cfg.PostgresPlugin.Username,
-			Password:        cfg.PostgresPlugin.Password,
-			SSLMode:         cfg.PostgresPlugin.SSLMode,
-			MaxIdleConns:    cfg.PostgresPlugin.MaxIdleConns,
-			MaxOpenConns:    cfg.PostgresPlugin.MaxOpenConns,
-			ConnMaxLifetime: cfg.PostgresPlugin.ConnMaxLifetime,
-			ConnMaxIdleTime: cfg.PostgresPlugin.ConnMaxIdleTime,
+			Host:     PostgresPluginHost,
+			Port:     PostgresPluginPort,
+			Username: PostgresPluginUsername,
+			Password: PostgresPluginPassword,
 		},
 		ElasticSearch: cfg.ElasticSearch,
 		Steampipe: config3.Postgres{
-			Host:            cfg.Steampipe.Host,
-			Port:            cfg.Steampipe.Port,
-			DB:              cfg.Steampipe.DB,
-			Username:        cfg.Steampipe.Username,
-			Password:        cfg.Steampipe.Password,
-			SSLMode:         cfg.Steampipe.SSLMode,
-			MaxIdleConns:    cfg.Steampipe.MaxIdleConns,
-			MaxOpenConns:    cfg.Steampipe.MaxOpenConns,
-			ConnMaxLifetime: cfg.Steampipe.ConnMaxLifetime,
-			ConnMaxIdleTime: cfg.Steampipe.ConnMaxIdleTime,
+			Host:     steampipeHost,
+			Port:     steampipePort,
+			DB:       steampipeDb,
+			Username: steampipeUsername,
+			Password: steampipePassword,
 		},
 	}, h.integrationClient)
 	logger.Info("running plugin job to initialize integrations in cloudql")
