@@ -193,7 +193,7 @@ const SQLEditor = ({ value, onChange, tables,tableFetch,run }) => {
     return (
         <MonacoEditor
             language="sql"
-            theme="vs"
+            theme="vs-dark"
             loading="Loading..."
             onMount={handleEditorDidMount}
             value={value}
@@ -207,6 +207,8 @@ const SQLEditor = ({ value, onChange, tables,tableFetch,run }) => {
                 fontFamily: `var(--font-family-base-dnvic8, "Open Sans", "Helvetica Neue", Roboto, Arial, sans-serif)`,
                 fontSize: 16,
                 fontWeight: 400,
+                
+                
 
                 // fontLigatures: true,
             }}

@@ -58,6 +58,7 @@ import {
     Header,
     Modal,
     Pagination,
+    Popover,
     SpaceBetween,
     SplitPanel,
     Tabs,
@@ -670,28 +671,23 @@ export default function Query() {
                                         openSearch && 'max-w-[75%]'
                                     } `}
                                 >
-                                    <Card className="h-full w-full">
-                                        <SQLEditor
-                                            value={code}
-                                            onChange={(
-                                                value: any,
-                                                event: any
-                                            ) => {
-                                                setSavedQuery('')
-                                                setCode(value)
-                                                setOpenLayout(false)
+                                    <SQLEditor
+                                        value={code}
+                                        onChange={(value: any, event: any) => {
+                                            setSavedQuery('')
+                                            setCode(value)
+                                            setOpenLayout(false)
 
-                                                if (tab !== '3') {
-                                                    setTab('3')
-                                                }
-                                            }}
-                                            tables={suggestTables}
-                                            tableFetch={(name: string) => {
-                                                getMasterSchema(name)
-                                            }}
-                                            run={RunCode}
-                                        />
-                                    </Card>
+                                            if (tab !== '3') {
+                                                setTab('3')
+                                            }
+                                        }}
+                                        tables={suggestTables}
+                                        tableFetch={(name: string) => {
+                                            getMasterSchema(name)
+                                        }}
+                                        run={RunCode}
+                                    />
                                 </Flex>
                             </Flex>
                             <Flex flexDirection="col" className="w-full ">
@@ -756,26 +752,34 @@ export default function Query() {
                                                     Clear editor
                                                 </KButton>
                                             )}
-                                            <KButton
-                                                // icon={PlayCircleIcon}
-                                                variant="primary"
-                                                className="w-max  min-w-[300px]  "
-                                                onClick={() => {
-                                                    sendNow()
-                                                    setLoaded(true)
-                                                    setPage(0)
-                                                }}
-                                                disabled={!code.length}
-                                                loading={
-                                                    isLoading && isExecuted
-                                                }
-                                                loadingText="Running"
-                                                iconSvg={
-                                                    <PlayCircleIcon className="w-5 " />
-                                                }
+                                            <Popover
+                                                content="Press Shift+Enter to run query."
+                                                dismissButton={false}
+                                                position="top"
+                                                size="small"
+                                                triggerType="custom"
                                             >
-                                                Run
-                                            </KButton>
+                                                <KButton
+                                                    // icon={PlayCircleIcon}
+                                                    variant="primary"
+                                                    className="w-max  min-w-[400px]  "
+                                                    onClick={() => {
+                                                        sendNow()
+                                                        setLoaded(true)
+                                                        setPage(0)
+                                                    }}
+                                                    disabled={!code.length}
+                                                    loading={
+                                                        isLoading && isExecuted
+                                                    }
+                                                    loadingText="Running"
+                                                    iconSvg={
+                                                        <PlayCircleIcon className="w-5 " />
+                                                    }
+                                                >
+                                                    Run
+                                                </KButton>
+                                            </Popover>
                                         </Flex>
                                     </Flex>
                                     <Flex className="w-full">
