@@ -407,16 +407,12 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Policy is required")
 	}
 
-	h.logger.Info("getting query parameters")
-
 	queryParamMap := make(map[string]string)
 	h.queryParamsMu.RLock()
 	for _, qp := range h.queryParameters {
 		queryParamMap[qp.Key] = qp.Value
 	}
 	h.queryParamsMu.RUnlock()
-
-	h.logger.Info("executing template")
 
 	queryTemplate, err := template.New("query").Parse(*req.Query)
 	if err != nil {
@@ -426,8 +422,6 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 	if err := queryTemplate.Execute(&queryOutput, queryParamMap); err != nil {
 		return fmt.Errorf("failed to execute query template: %w", err)
 	}
-
-	h.logger.Info("running query")
 
 	var resp *api.RunQueryResponse
 	if req.Engine == nil || *req.Engine == api.QueryEngineCloudQL {
@@ -443,8 +437,6 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 	} else {
 		return fmt.Errorf("invalid query engine: %s", *req.Engine)
 	}
-
-	h.logger.Info("running query finished")
 
 	return ctx.JSON(200, resp)
 }
@@ -507,15 +499,11 @@ func (h *HttpHandler) RunSQLNamedQuery(ctx context.Context, title, query string,
 		return nil, echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	h.logger.Info("running query on steampipe engine")
-
 	h.logger.Info("executing named query", zap.String("query", query))
 	res, err := h.steampipeConn.Query(ctx, query, &lastIdx, &req.Page.Size, orderBy, steampipe.DirectionType(direction))
 	if err != nil {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-
-	h.logger.Info("getting list of integrations")
 
 	// tracer :
 	integrations, err := h.integrationClient.ListIntegrations(&httpclient.Context{UserRole: api2.AdminRole}, nil)
@@ -534,7 +522,6 @@ func (h *HttpHandler) RunSQLNamedQuery(ctx context.Context, title, query string,
 		}
 	}
 
-	h.logger.Info("adding account id")
 	if accountIDExists {
 		// Add account name
 		res.Headers = append(res.Headers, "account_name")
@@ -560,19 +547,11 @@ func (h *HttpHandler) RunSQLNamedQuery(ctx context.Context, title, query string,
 		}
 	}
 
-	_, span := tracer.Start(ctx, "new_UpdateQueryHistory", trace.WithSpanKind(trace.SpanKindServer))
-	span.SetName("new_UpdateQueryHistory")
-
-	h.logger.Info("updating history")
-
 	err = h.db.UpdateQueryHistory(query)
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
 		h.logger.Error("failed to update query history", zap.Error(err))
 		return nil, err
 	}
-	span.End()
 
 	resp := api.RunQueryResponse{
 		Title:   title,
