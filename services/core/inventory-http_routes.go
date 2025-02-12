@@ -407,6 +407,13 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Policy is required")
 	}
 
+	if req.Page.Size == 0 {
+		req.Page.Size = 1000
+	}
+	if req.Page.No == 0 {
+		req.Page.No = 1
+	}
+
 	queryParamMap := make(map[string]string)
 	h.queryParamsMu.RLock()
 	for _, qp := range h.queryParameters {
