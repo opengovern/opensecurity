@@ -234,6 +234,7 @@ func InitializeHttpHandler(
 
 	// setup steampipe connection
 	// inventory
+	h.logger.Info("es config", zap.Any("conf", esConf))
 	pluginJob := cloudql_init_job.NewJob(logger, cloudql_init_job.Config{
 		Postgres: config3.Postgres{
 			Host:     PostgresPluginHost,
@@ -241,7 +242,7 @@ func InitializeHttpHandler(
 			Username: PostgresPluginUsername,
 			Password: PostgresPluginPassword,
 		},
-		ElasticSearch: cfg.ElasticSearch,
+		ElasticSearch: esConf,
 		Steampipe:     config3.Postgres{},
 	}, h.integrationClient)
 	logger.Info("running plugin job to initialize integrations in cloudql")
