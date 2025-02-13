@@ -234,7 +234,6 @@ func InitializeHttpHandler(
 
 	// setup steampipe connection
 	// inventory
-	h.logger.Info("es config", zap.Any("conf", esConf))
 	pluginJob := cloudql_init_job.NewJob(logger, cloudql_init_job.Config{
 		Postgres: config3.Postgres{
 			Host:     PostgresPluginHost,
