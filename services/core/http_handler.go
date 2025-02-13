@@ -242,13 +242,7 @@ func InitializeHttpHandler(
 			Password: PostgresPluginPassword,
 		},
 		ElasticSearch: cfg.ElasticSearch,
-		Steampipe: config3.Postgres{
-			Host:     steampipeHost,
-			Port:     steampipePort,
-			DB:       steampipeDb,
-			Username: steampipeUsername,
-			Password: steampipePassword,
-		},
+		Steampipe:     config3.Postgres{},
 	}, h.integrationClient)
 	logger.Info("running plugin job to initialize integrations in cloudql")
 	steampipeConn, err := pluginJob.Run(ctx)
@@ -258,9 +252,6 @@ func InitializeHttpHandler(
 	}
 
 	h.steampipeConn = steampipeConn
-	if err != nil {
-		return nil, err
-	}
 	fmt.Println("Initialized steampipe database: ", steampipeConn)
 
 	go h.fetchParameters(ctx)
