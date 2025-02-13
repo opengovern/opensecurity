@@ -101,6 +101,9 @@ func (j *Job) Run(ctx context.Context) (*steampipe.Database, error) {
 			cloudqlBinary = ""
 		}
 	}
+	if j.cfg.Postgres.DB == "" {
+		j.cfg.Postgres.DB = "integration"
+	}
 	if err := steampipe.PopulateOpenGovernancePluginSteampipeConfig(j.cfg.ElasticSearch, j.cfg.Postgres); err != nil {
 		return nil, err
 	}
