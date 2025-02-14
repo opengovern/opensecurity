@@ -1,7 +1,6 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -9,7 +8,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/opengovern/og-util/pkg/httpclient"
 
-	"github.com/opengovern/og-util/pkg/source"
 	compliance "github.com/opengovern/opencomply/services/compliance/api"
 )
 
@@ -19,16 +17,11 @@ type ComplianceServiceClient interface {
 	GetBenchmarkSummary(ctx *httpclient.Context, benchmarkID string, connectionId []string, timeAt *time.Time) (*compliance.BenchmarkEvaluationSummary, error)
 	GetBenchmarkControls(ctx *httpclient.Context, benchmarkID string, connectionId []string, timeAt *time.Time) (*compliance.BenchmarkControlSummary, error)
 	GetControl(ctx *httpclient.Context, controlID string) (*compliance.Control, error)
-	GetQuery(ctx *httpclient.Context, queryID string) (*compliance.Policy, error)
-	GetComplianceResults(ctx *httpclient.Context, req compliance.GetComplianceResultsRequest) (compliance.GetComplianceResultsResponse, error)
 	ListBenchmarks(ctx *httpclient.Context, frameworkIDs []string, tags map[string][]string) ([]compliance.Benchmark, error)
 	ListAllBenchmarks(ctx *httpclient.Context, isBare bool) ([]compliance.Benchmark, error)
-	GetAccountsComplianceResultsSummary(ctx *httpclient.Context, benchmarkId string, connectionId []string, connector []source.Type) (compliance.GetAccountsComplianceResultsSummaryResponse, error)
-	CreateBenchmarkAssignment(ctx *httpclient.Context, benchmarkID, connectionId string) ([]compliance.BenchmarkAssignment, error)
 	ListQueries(ctx *httpclient.Context) ([]compliance.Policy, error)
 	ListControl(ctx *httpclient.Context, controlIDs []string, tags map[string][]string) ([]compliance.Control, error)
 	GetControlDetails(ctx *httpclient.Context, controlID string) (*compliance.GetControlDetailsResponse, error)
-	SyncQueries(ctx *httpclient.Context) error
 	ListBenchmarksNestedForBenchmark(ctx *httpclient.Context, benchmarkId string) (*compliance.NestedBenchmark, error)
 	PurgeSampleData(ctx *httpclient.Context) error
 }
@@ -39,18 +32,6 @@ type complianceClient struct {
 
 func NewComplianceClient(baseURL string) ComplianceServiceClient {
 	return &complianceClient{baseURL: baseURL}
-}
-
-func (s *complianceClient) SyncQueries(ctx *httpclient.Context) error {
-	url := fmt.Sprintf("%s/api/v1/queries/sync", s.baseURL)
-
-	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, nil); err != nil {
-		if 400 <= statusCode && statusCode < 500 {
-			return echo.NewHTTPError(statusCode, err.Error())
-		}
-		return err
-	}
-	return nil
 }
 
 func (s *complianceClient) ListAssignmentsByBenchmark(ctx *httpclient.Context, benchmarkID string) (*compliance.BenchmarkAssignedEntities, error) {
@@ -233,38 +214,6 @@ func (s *complianceClient) ListQueries(ctx *httpclient.Context) ([]compliance.Po
 	return response, nil
 }
 
-func (s *complianceClient) GetQuery(ctx *httpclient.Context, queryID string) (*compliance.Policy, error) {
-	url := fmt.Sprintf("%s/api/v1/queries/%s", s.baseURL, queryID)
-
-	var response compliance.Policy
-	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &response); err != nil {
-		if 400 <= statusCode && statusCode < 500 {
-			return nil, echo.NewHTTPError(statusCode, err.Error())
-		}
-		return nil, err
-	}
-	return &response, nil
-}
-
-func (s *complianceClient) GetComplianceResults(ctx *httpclient.Context, req compliance.GetComplianceResultsRequest) (compliance.GetComplianceResultsResponse, error) {
-	url := fmt.Sprintf("%s/api/v1/compliance_result", s.baseURL)
-
-	payload, err := json.Marshal(req)
-	if err != nil {
-		return compliance.GetComplianceResultsResponse{}, err
-	}
-
-	var response compliance.GetComplianceResultsResponse
-	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodPost, url, ctx.ToHeaders(), payload, &response); err != nil {
-		if 400 <= statusCode && statusCode < 500 {
-			return compliance.GetComplianceResultsResponse{}, echo.NewHTTPError(statusCode, err.Error())
-		}
-		return compliance.GetComplianceResultsResponse{}, err
-	}
-
-	return response, nil
-}
-
 func (s *complianceClient) ListBenchmarks(ctx *httpclient.Context, frameworkIDs []string, tags map[string][]string) ([]compliance.Benchmark, error) {
 	url := fmt.Sprintf("%s/api/v1/benchmarks", s.baseURL)
 
@@ -333,57 +282,6 @@ func (s *complianceClient) ListAllBenchmarks(ctx *httpclient.Context, isBare boo
 		return nil, err
 	}
 	return benchmarks, nil
-}
-
-func (s *complianceClient) GetAccountsComplianceResultsSummary(ctx *httpclient.Context, benchmarkId string, connectionIds []string, connector []source.Type) (compliance.GetAccountsComplianceResultsSummaryResponse, error) {
-	url := fmt.Sprintf("%s/api/v1/compliance_result/%s/accounts", s.baseURL, benchmarkId)
-
-	var firstParamAttached bool
-	firstParamAttached = false
-
-	if len(connectionIds) > 0 {
-		for _, connectionId := range connectionIds {
-			if !firstParamAttached {
-				url += "?"
-				firstParamAttached = true
-			} else {
-				url += "&"
-			}
-			url += fmt.Sprintf("connectionId=%v", &connectionId)
-		}
-	}
-
-	if connector != nil {
-		if !firstParamAttached {
-			url += "?"
-			firstParamAttached = true
-		} else {
-			url += "&"
-		}
-		url += fmt.Sprintf("connector=%v", &connector)
-	}
-
-	var res compliance.GetAccountsComplianceResultsSummaryResponse
-	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &res); err != nil {
-		if 400 <= statusCode && statusCode < 500 {
-			return compliance.GetAccountsComplianceResultsSummaryResponse{}, echo.NewHTTPError(statusCode, err.Error())
-		}
-		return compliance.GetAccountsComplianceResultsSummaryResponse{}, err
-	}
-	return res, nil
-}
-
-func (s *complianceClient) CreateBenchmarkAssignment(ctx *httpclient.Context, benchmarkID, connectionId string) ([]compliance.BenchmarkAssignment, error) {
-	url := fmt.Sprintf("%s/api/v1/assignments/%s/connection?connectionId=%s", s.baseURL, benchmarkID, connectionId)
-
-	var assignments []compliance.BenchmarkAssignment
-	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodPost, url, ctx.ToHeaders(), nil, &assignments); err != nil {
-		if 400 <= statusCode && statusCode < 500 {
-			return nil, echo.NewHTTPError(statusCode, err.Error())
-		}
-		return nil, err
-	}
-	return assignments, nil
 }
 
 func (s *complianceClient) ListBenchmarksNestedForBenchmark(ctx *httpclient.Context, benchmarkId string) (*compliance.NestedBenchmark, error) {

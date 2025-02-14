@@ -24,10 +24,8 @@ import (
 	model2 "github.com/opengovern/opencomply/jobs/demo-importer-job/db/model"
 	"github.com/opengovern/opencomply/jobs/post-install-job/db/model"
 	complianceapi "github.com/opengovern/opencomply/services/compliance/api"
-	complianceClient "github.com/opengovern/opencomply/services/compliance/client"
 	integrationApi "github.com/opengovern/opencomply/services/integration/api/models"
 	integrationClient "github.com/opengovern/opencomply/services/integration/client"
-	schedulerClient "github.com/opengovern/opencomply/services/scheduler/client"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -105,6 +103,7 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v3.GET("/tables/categories", httpserver.AuthorizeHandler(h.GetTablesResourceCategories, api3.ViewerRole))
 	v3.GET("/categories/queries", httpserver.AuthorizeHandler(h.GetCategoriesQueries, api3.ViewerRole))
 	v3.GET("/parameters/queries", httpserver.AuthorizeHandler(h.GetParametersQueries, api3.ViewerRole))
+
 	v4 := r.Group("/api/v4")
 	v4.GET("/about", httpserver.AuthorizeHandler(h.GetAboutShort, api3.ViewerRole))
 
@@ -322,12 +321,12 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	queryIDs := request.Queries
 	controlIDs := request.Controls
 
-	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
-	complianceClient := complianceClient.NewComplianceClient(complianceURL)
-
 	var filteredQueryParams []string
 	if controlIDs != nil {
-		all_control, err := complianceClient.ListControl(clientCtx, controlIDs, nil)
+		if !h.complianceEnabled {
+			return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+		}
+		all_control, err := h.complianceClient.ListControl(clientCtx, controlIDs, nil)
 		if err != nil {
 			h.logger.Error("error getting control", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "error getting control")
@@ -381,11 +380,16 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 		parametersMap[apiParam.Key+apiParam.ControlID] = &apiParam
 	}
 
-	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
-	if err != nil {
-		h.logger.Error("error listing controls", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
+	var controls []complianceapi.Control
+
+	if h.complianceEnabled {
+		controls, err = h.complianceClient.ListControl(clientCtx, nil, nil)
+		if err != nil {
+			h.logger.Error("error listing controls", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
+		}
 	}
+
 	namedQueries, err := h.ListQueriesV2Internal(api.ListQueryV2Request{})
 	if err != nil {
 		h.logger.Error("error listing queries", zap.Error(err))
@@ -539,13 +543,14 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 	key := ctx.Param("key")
 	clientCtx := &httpclient.Context{UserRole: api3.AdminRole}
 
-	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
-	complianceClient := complianceClient.NewComplianceClient(complianceURL)
-
-	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
-	if err != nil {
-		h.logger.Error("error listing controls", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
+	var controls []complianceapi.Control
+	var err error
+	if h.complianceEnabled {
+		controls, err = h.complianceClient.ListControl(clientCtx, nil, nil)
+		if err != nil {
+			h.logger.Error("error listing controls", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
+		}
 	}
 	namedQueries, err := h.ListQueriesV2Internal(api.ListQueryV2Request{})
 	if err != nil {
@@ -654,28 +659,21 @@ func (h HttpHandler) PurgeSampleData(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "Workspace does not contain sample data")
 	}
 
-	integrationURL := strings.ReplaceAll(h.cfg.Integration.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
-	integrationClient := integrationClient.NewIntegrationServiceClient(integrationURL)
-
-	schedulerURL := strings.ReplaceAll(h.cfg.Scheduler.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
-	schedulerClient := schedulerClient.NewSchedulerServiceClient(schedulerURL)
-
-	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
-	complianceClient := complianceClient.NewComplianceClient(complianceURL)
-
-	integrations, err := integrationClient.PurgeSampleData(ctx)
+	integrations, err := h.integrationClient.PurgeSampleData(ctx)
 	if err != nil {
 		return err
 	}
 
-	err = schedulerClient.PurgeSampleData(ctx, integrations)
+	err = h.schedulerClient.PurgeSampleData(ctx, integrations)
 	if err != nil {
 		return err
 	}
 
-	err = complianceClient.PurgeSampleData(ctx)
-	if err != nil {
-		return err
+	if h.complianceEnabled {
+		err = h.complianceClient.PurgeSampleData(ctx)
+		if err != nil {
+			return err
+		}
 	}
 
 	return c.NoContent(http.StatusOK)

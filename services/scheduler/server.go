@@ -183,6 +183,9 @@ func (h HttpServer) ListJobs(ctx echo.Context) error {
 		}
 
 		if job.JobType == "compliance" {
+			if !h.Scheduler.complianceEnabled {
+				continue
+			}
 			for _, benchmark := range benchmarks {
 				if fmt.Sprintf("%v", benchmark.ID) == job.Title {
 					job.Title = benchmark.Title
@@ -330,6 +333,9 @@ func (h HttpServer) CountJobsByDate(ctx echo.Context) error {
 		count, err = h.DB.CountDescribeJobsByDate(includeCost, time.UnixMilli(startDate), time.UnixMilli(endDate))
 
 	case api.JobType_Compliance:
+		if !h.Scheduler.complianceEnabled {
+			return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+		}
 		count, err = h.DB.CountComplianceJobsByDate(true, time.UnixMilli(startDate), time.UnixMilli(endDate))
 	default:
 		return errors.New("invalid job type")
@@ -506,6 +512,10 @@ func (h HttpServer) TriggerDescribeJob(ctx echo.Context) error {
 func (h HttpServer) TriggerConnectionsComplianceJob(ctx echo.Context) error {
 	userID := httpserver.GetUserID(ctx)
 
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
+
 	clientCtx := &httpclient.Context{UserRole: apiAuth.AdminRole}
 	benchmarkID := ctx.Param("benchmark_id")
 	benchmark, err := h.Scheduler.complianceClient.GetBenchmark(clientCtx, benchmarkID)
@@ -547,6 +557,10 @@ func (h HttpServer) TriggerConnectionsComplianceJob(ctx echo.Context) error {
 //	@Router			/schedule/api/v1/compliance/trigger [put]
 func (h HttpServer) TriggerConnectionsComplianceJobs(ctx echo.Context) error {
 	userID := httpserver.GetUserID(ctx)
+
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
 
 	clientCtx := &httpclient.Context{UserRole: apiAuth.AdminRole}
 	benchmarkIDs := httpserver.QueryArrayParam(ctx, "benchmark_id")
@@ -605,6 +619,10 @@ func (h HttpServer) TriggerConnectionsComplianceJobs(ctx echo.Context) error {
 func (h HttpServer) TriggerConnectionsComplianceJobSummary(ctx echo.Context) error {
 	clientCtx := &httpclient.Context{UserRole: apiAuth.AdminRole}
 	benchmarkID := ctx.Param("benchmark_id")
+
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
 
 	var benchmarks []complianceapi.Benchmark
 	var err error
@@ -690,30 +708,6 @@ func (h HttpServer) getReEvaluateParams(benchmarkID string, connectionIDs, contr
 	}, describeJobs, nil
 }
 
-func (h HttpServer) getBenchmarkChildrenControls(benchmarkID string) ([]string, error) {
-	benchmark, err := h.Scheduler.complianceClient.GetBenchmark(&httpclient.Context{UserRole: apiAuth.AdminRole}, benchmarkID)
-	if err != nil {
-		h.Scheduler.logger.Error("failed to get benchmark", zap.Error(err))
-		return nil, err
-	}
-	if benchmark == nil {
-		return nil, echo.NewHTTPError(http.StatusNotFound, "benchmark not found")
-	}
-
-	var controlIDs []string
-	for _, control := range benchmark.Controls {
-		controlIDs = append(controlIDs, control)
-	}
-	for _, childBenchmarkID := range benchmark.Children {
-		childControlIDs, err := h.getBenchmarkChildrenControls(childBenchmarkID)
-		if err != nil {
-			return nil, err
-		}
-		controlIDs = append(controlIDs, childControlIDs...)
-	}
-	return controlIDs, nil
-}
-
 // ReEvaluateComplianceJob godoc
 //
 //	@Summary		Re-evaluates compliance job
@@ -728,6 +722,11 @@ func (h HttpServer) getBenchmarkChildrenControls(benchmarkID string) ([]string, 
 //	@Router			/schedule/api/v1/compliance/re-evaluate/{benchmark_id} [put]
 func (h HttpServer) ReEvaluateComplianceJob(ctx echo.Context) error {
 	userID := httpserver.GetUserID(ctx)
+
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
+
 	benchmarkID := ctx.Param("benchmark_id")
 	integrationID := httpserver.QueryArrayParam(ctx, "integrationID")
 	if len(integrationID) == 0 {
@@ -794,6 +793,11 @@ func (h HttpServer) ReEvaluateComplianceJob(ctx echo.Context) error {
 //	@Router			/schedule/api/v1/compliance/re-evaluate/{benchmark_id} [get]
 func (h HttpServer) CheckReEvaluateComplianceJob(ctx echo.Context) error {
 	benchmarkID := ctx.Param("benchmark_id")
+
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
+
 	integrationID := httpserver.QueryArrayParam(ctx, "integrationID")
 	if len(integrationID) == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "integrationID is required")
@@ -888,6 +892,10 @@ func (h HttpServer) CheckReEvaluateComplianceJob(ctx echo.Context) error {
 }
 
 func (h HttpServer) GetComplianceBenchmarkStatus(ctx echo.Context) error {
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
+
 	benchmarkId := ctx.Param("benchmark_id")
 	lastComplianceJob, err := h.Scheduler.db.GetLastComplianceJob(true, benchmarkId)
 	if err != nil {
@@ -1143,6 +1151,10 @@ func (h HttpServer) GetDescribeJobsHistory(ctx echo.Context) error {
 //	@Success	200	{object}	[]api.GetComplianceJobsHistoryResponse
 //	@Router		/schedule/api/v3/jobs/compliance/connections/{connection_id} [post]
 func (h HttpServer) GetComplianceJobsHistory(ctx echo.Context) error {
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
+
 	var request api.GetComplianceJobsHistoryRequest
 	if err := ctx.Bind(&request); err != nil {
 		ctx.Logger().Errorf("bind the request: %v", err)
@@ -1222,6 +1234,9 @@ func (h HttpServer) GetComplianceJobsHistory(ctx echo.Context) error {
 //	@Success		200				{object}	api.RunBenchmarkResponse
 //	@Router			/schedule/api/v3/compliance/benchmark/{benchmark_id}/run [post]
 func (h HttpServer) RunBenchmarkById(ctx echo.Context) error {
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
 	clientCtx := &httpclient.Context{UserRole: apiAuth.AdminRole}
 	userID := httpserver.GetUserID(ctx)
 	benchmarkID := strings.ToLower(ctx.Param("benchmark_id"))
@@ -1362,6 +1377,9 @@ func (h HttpServer) RunBenchmarkById(ctx echo.Context) error {
 //	@Param			request	body		api.RunBenchmarkRequest	true	"Requst Body"
 //	@Router			/schedule/api/v3/compliance/run [post]
 func (h HttpServer) RunBenchmark(ctx echo.Context) error {
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
 	clientCtx := &httpclient.Context{UserRole: apiAuth.AdminRole}
 
 	userID := httpserver.GetUserID(ctx)
@@ -1724,6 +1742,9 @@ func (h HttpServer) GetDescribeJobStatus(ctx echo.Context) error {
 //	@Success	200	{object}	api.GetComplianceJobStatusResponse
 //	@Router		/schedule/api/v3/job/compliance/{job_id} [get]
 func (h HttpServer) GetComplianceJobStatus(ctx echo.Context) error {
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
 	clientCtx := &httpclient.Context{UserRole: apiAuth.AdminRole}
 
 	jobIdString := ctx.Param("job_id")
@@ -1852,6 +1873,9 @@ func (h HttpServer) GetComplianceJobStatus(ctx echo.Context) error {
 //	@Success	200	{object}	api.GetComplianceJobStatusResponse
 //	@Router		/schedule/api/v3/job/compliance/{job_id}/runners [get]
 func (h HttpServer) GetComplianceJobRunners(ctx echo.Context) error {
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
 	jobIdString := ctx.Param("job_id")
 	jobId, err := strconv.ParseUint(jobIdString, 10, 64)
 	if err != nil {
@@ -2060,6 +2084,9 @@ func (h HttpServer) ListDescribeJobs(ctx echo.Context) error {
 //	@Success	200	{object}	[]api.GetComplianceJobsHistoryResponse
 //	@Router		/schedule/api/v3/jobs/compliance [post]
 func (h HttpServer) ListComplianceJobs(ctx echo.Context) error {
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
 	clientCtx := &httpclient.Context{UserRole: apiAuth.AdminRole}
 
 	var request api.ListComplianceJobsRequest
@@ -2223,6 +2250,9 @@ func (h HttpServer) ListComplianceJobs(ctx echo.Context) error {
 //	@Success	200	{object}	api.BenchmarkAuditHistoryResponse
 //	@Router		/schedule/api/v3/benchmark/:benchmark_id/run-history [post]
 func (h HttpServer) BenchmarkAuditHistory(ctx echo.Context) error {
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
 	clientCtx := &httpclient.Context{UserRole: apiAuth.AdminRole}
 
 	benchmarkID := ctx.Param("benchmark_id")
@@ -2376,6 +2406,9 @@ func (h HttpServer) BenchmarkAuditHistory(ctx echo.Context) error {
 //	@Success	200	{object}	[]api.IntegrationInfo
 //	@Router		/schedule/api/v3/benchmark/run-history/integrations [get]
 func (h HttpServer) BenchmarkAuditHistoryIntegrations(ctx echo.Context) error {
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
 	clientCtx := &httpclient.Context{UserRole: apiAuth.AdminRole}
 
 	connectionIDs, err := h.DB.GetComplianceJobsIntegrations()
@@ -2589,6 +2622,9 @@ func (h HttpServer) GetDescribeJobsHistoryByIntegration(ctx echo.Context) error 
 //	@Success	200	{object}	[]api.GetComplianceJobsHistoryResponse
 //	@Router		/schedule/api/v3/jobs/compliance/connections [post]
 func (h HttpServer) GetComplianceJobsHistoryByIntegration(ctx echo.Context) error {
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
 	clientCtx := &httpclient.Context{UserRole: apiAuth.AdminRole}
 
 	var request api.GetComplianceJobsHistoryByIntegrationRequest
@@ -2710,6 +2746,9 @@ func (h HttpServer) CancelJobById(ctx echo.Context) error {
 
 	switch jobType {
 	case "compliance":
+		if !h.Scheduler.complianceEnabled {
+			return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+		}
 		jobId, err := strconv.ParseUint(jobIdStr, 10, 64)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid job id")
@@ -2897,6 +2936,9 @@ func (h HttpServer) CancelJob(ctx echo.Context) error {
 		var integrationIDs []string
 		switch strings.ToLower(request.JobType) {
 		case "compliance":
+			if !h.Scheduler.complianceEnabled {
+				return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+			}
 			jobs, err := h.DB.ListPendingComplianceJobsByIntegrationID(aws.Bool(true), integrationIDs)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -2918,6 +2960,9 @@ func (h HttpServer) CancelJob(ctx echo.Context) error {
 		for _, status := range request.Status {
 			switch strings.ToLower(request.JobType) {
 			case "compliance":
+				if !h.Scheduler.complianceEnabled {
+					return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+				}
 				if model2.ComplianceJobStatus(strings.ToUpper(status)) != model2.ComplianceJobCreated &&
 					model2.ComplianceJobStatus(strings.ToUpper(status)) != model2.ComplianceJobRunnersInProgress {
 					continue
@@ -2953,6 +2998,9 @@ func (h HttpServer) CancelJob(ctx echo.Context) error {
 		var canceled bool
 		switch strings.ToLower(request.JobType) {
 		case "compliance":
+			if !h.Scheduler.complianceEnabled {
+				return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+			}
 			jobId, err := strconv.ParseUint(jobIdStr, 10, 64)
 			if err != nil {
 				failureReason = "invalid job id"
@@ -3180,6 +3228,9 @@ func (h HttpServer) ListJobsByType(ctx echo.Context) error {
 				})
 			}
 		case "compliance":
+			if !h.Scheduler.complianceEnabled {
+				return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+			}
 			jobs, err := h.DB.ListComplianceJobsByIds(aws.Bool(true), request.JobId)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -3246,6 +3297,9 @@ func (h HttpServer) ListJobsByType(ctx echo.Context) error {
 		var connectionIDs []string
 		switch strings.ToLower(request.JobType) {
 		case "compliance":
+			if !h.Scheduler.complianceEnabled {
+				return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+			}
 			jobs, err := h.DB.ListComplianceJobsByIntegrationID(aws.Bool(true), connectionIDs)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -3279,6 +3333,9 @@ func (h HttpServer) ListJobsByType(ctx echo.Context) error {
 		for _, status := range request.Status {
 			switch strings.ToLower(request.JobType) {
 			case "compliance":
+				if !h.Scheduler.complianceEnabled {
+					return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+				}
 				jobs, err := h.DB.ListComplianceJobsByStatus(aws.Bool(true), model2.ComplianceJobStatus(strings.ToUpper(status)))
 				if err != nil {
 					return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -3310,6 +3367,9 @@ func (h HttpServer) ListJobsByType(ctx echo.Context) error {
 			}
 		}
 	case "benchmark":
+		if !h.Scheduler.complianceEnabled {
+			return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+		}
 		jobs, err := h.DB.ListComplianceJobsByFrameworkID(aws.Bool(true), request.Benchmark)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -3422,6 +3482,9 @@ func (h HttpServer) ListJobsInterval(ctx echo.Context) error {
 
 	switch strings.ToLower(jobType) {
 	case "compliance":
+		if !h.Scheduler.complianceEnabled {
+			return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+		}
 		jobs, err := h.DB.ListComplianceJobsForInterval(aws.Bool(true), convertedInterval, triggerType, createdBy)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -3494,6 +3557,10 @@ func (h HttpServer) ListJobsInterval(ctx echo.Context) error {
 //	@Success	200	{object}	[]string
 //	@Router		/schedule/api/v3/jobs/compliance/summary/jobs [get]
 func (h HttpServer) GetSummaryJobs(ctx echo.Context) error {
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
+
 	jobIds := httpserver.QueryArrayParam(ctx, "job_ids")
 
 	jobs, err := h.DB.ListSummaryJobs(jobIds)
@@ -3763,6 +3830,9 @@ func (h HttpServer) GetIntegrationDiscoveryProgress(ctx echo.Context) error {
 //	@Success	200	{object}	api.ListComplianceJobsHistoryResponse
 //	@Router		/schedule/api/v3/jobs/history/compliance [get]
 func (h HttpServer) ListComplianceJobsHistory(ctx echo.Context) error {
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
 	clientCtx := &httpclient.Context{UserRole: apiAuth.AdminRole}
 
 	interval := ctx.QueryParam("interval")
@@ -3927,6 +3997,9 @@ func parseTimeInterval(intervalStr string) (*time.Time, *time.Time, error) {
 //	@Success		200
 //	@Router			/schedule/api/v3/compliance/quick/sequence [post]
 func (h HttpServer) CreateComplianceQuickSequence(c echo.Context) error {
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
 	var request api.CreateAuditJobRequest
 	if err := c.Bind(&request); err != nil {
 		c.Logger().Errorf("bind the request: %v", err)
@@ -3961,6 +4034,9 @@ func (h HttpServer) CreateComplianceQuickSequence(c echo.Context) error {
 //	@Success		200
 //	@Router			/schedule/api/v3/compliance/quick/sequence/{run_id} [get]
 func (h HttpServer) GetComplianceQuickSequence(c echo.Context) error {
+	if !h.Scheduler.complianceEnabled {
+		return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+	}
 	jobIdStr := c.Param("run_id")
 
 	var jobId int64
@@ -4011,52 +4087,54 @@ func (h HttpServer) PurgeSampleData(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete describe connection jobs")
 	}
 
-	complianceJobs, err := h.DB.ListComplianceJobsByFilters(nil, integrations, nil, nil, nil, nil)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get compliance jobs")
-	}
+	if h.Scheduler.complianceEnabled {
+		complianceJobs, err := h.DB.ListComplianceJobsByFilters(nil, integrations, nil, nil, nil, nil)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get compliance jobs")
+		}
 
-	var complianceJobsIds []uint
-	for _, job := range complianceJobs {
-		complianceJobsIds = append(complianceJobsIds, job.ID)
-	}
+		var complianceJobsIds []uint
+		for _, job := range complianceJobs {
+			complianceJobsIds = append(complianceJobsIds, job.ID)
+		}
 
-	summaryJobs, err := h.DB.ListAllComplianceSummarizerJobsByComplianceJobs(complianceJobsIds)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get summary jobs")
-	}
-	var summaryJobsIds []uint
-	for _, job := range summaryJobs {
-		summaryJobsIds = append(summaryJobsIds, job.ID)
-	}
+		summaryJobs, err := h.DB.ListAllComplianceSummarizerJobsByComplianceJobs(complianceJobsIds)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get summary jobs")
+		}
+		var summaryJobsIds []uint
+		for _, job := range summaryJobs {
+			summaryJobsIds = append(summaryJobsIds, job.ID)
+		}
 
-	err = h.DB.CleanupAllComplianceJobsForIntegrations(integrations)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete compliance jobs")
-	}
-	err = h.DB.CleanupAllComplianceSummarizerJobsByComplianceJobs(complianceJobsIds)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete compliance summarizer jobs")
-	}
-	err = h.DB.CleanupAllComplianceRunnersByComplianceJobs(complianceJobsIds)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete compliance runners")
-	}
+		err = h.DB.CleanupAllComplianceJobsForIntegrations(integrations)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete compliance jobs")
+		}
+		err = h.DB.CleanupAllComplianceSummarizerJobsByComplianceJobs(complianceJobsIds)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete compliance summarizer jobs")
+		}
+		err = h.DB.CleanupAllComplianceRunnersByComplianceJobs(complianceJobsIds)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete compliance runners")
+		}
 
-	maxID := uint(0)
-	for _, i := range summaryJobsIds {
-		maxID = max(i, maxID)
-	}
+		maxID := uint(0)
+		for _, i := range summaryJobsIds {
+			maxID = max(i, maxID)
+		}
 
-	var ids []uint
-	for i := uint(1); i <= maxID; i++ {
-		ids = append(ids, i)
-	}
+		var ids []uint
+		for i := uint(1); i <= maxID; i++ {
+			ids = append(ids, i)
+		}
 
-	_, err = h.Scheduler.es.ES().Indices.Delete([]string{types.BenchmarkSummaryIndex}, h.Scheduler.es.ES().Indices.Delete.WithContext(context.Background()))
-	if err != nil {
-		h.Scheduler.logger.Error("failed to delete summary job", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete summary jobs")
+		_, err = h.Scheduler.es.ES().Indices.Delete([]string{types.BenchmarkSummaryIndex}, h.Scheduler.es.ES().Indices.Delete.WithContext(context.Background()))
+		if err != nil {
+			h.Scheduler.logger.Error("failed to delete summary job", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete summary jobs")
+		}
 	}
 
 	return c.NoContent(http.StatusOK)

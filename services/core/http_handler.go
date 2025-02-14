@@ -8,6 +8,7 @@ import (
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	cloudql_init_job "github.com/opengovern/opencomply/jobs/cloudql-init-job"
+	complianceapi "github.com/opengovern/opencomply/services/compliance/api"
 	coreApi "github.com/opengovern/opencomply/services/core/api"
 	"net/http"
 	"sort"
@@ -58,13 +59,15 @@ type HttpHandler struct {
 
 	queryParameters []coreApi.QueryParameter
 	queryParamsMu   sync.RWMutex
+
+	complianceEnabled bool
 }
 
 func InitializeHttpHandler(
 	cfg config.Config,
-	steampipeHost string, steampipePort string, steampipeDb string, steampipeUsername string, steampipePassword string,
 	schedulerBaseUrl string, integrationBaseUrl string, complianceBaseUrl string,
 	logger *zap.Logger, dexClient dexApi.DexClient, esConf config3.ElasticSearch,
+	complianceEnabled string,
 ) (h *HttpHandler, err error) {
 	h = &HttpHandler{
 		queryParamsMu: sync.RWMutex{},
@@ -228,7 +231,11 @@ func InitializeHttpHandler(
 	h.schedulerClient = describeClient.NewSchedulerServiceClient(schedulerBaseUrl)
 
 	h.integrationClient = integrationClient.NewIntegrationServiceClient(integrationBaseUrl)
-	h.complianceClient = complianceClient.NewComplianceClient(complianceBaseUrl)
+
+	if strings.ToLower(complianceEnabled) == "true" {
+		h.complianceClient = complianceClient.NewComplianceClient(complianceBaseUrl)
+		h.complianceEnabled = true
+	}
 
 	h.logger = logger
 
@@ -312,13 +319,13 @@ func (h *HttpHandler) listQueryParametersInternal() (coreApi.ListQueryParameters
 	var resp coreApi.ListQueryParametersResponse
 	var err error
 
-	complianceURL := strings.ReplaceAll(h.cfg.Compliance.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
-	complianceClient := complianceClient.NewComplianceClient(complianceURL)
-
-	controls, err := complianceClient.ListControl(clientCtx, nil, nil)
-	if err != nil {
-		h.logger.Error("error listing controls", zap.Error(err))
-		return resp, echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
+	var controls []complianceapi.Control
+	if h.complianceEnabled {
+		controls, err = h.complianceClient.ListControl(clientCtx, nil, nil)
+		if err != nil {
+			h.logger.Error("error listing controls", zap.Error(err))
+			return resp, echo.NewHTTPError(http.StatusInternalServerError, "error listing controls")
+		}
 	}
 	namedQueries, err := h.ListQueriesV2Internal(coreApi.ListQueryV2Request{})
 	if err != nil {

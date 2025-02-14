@@ -3,6 +3,7 @@ package describe
 import (
 	"errors"
 	"os"
+	"strings"
 
 	"github.com/opengovern/og-util/pkg/config"
 	config2 "github.com/opengovern/opencomply/services/scheduler/config"
@@ -48,6 +49,8 @@ var (
 	DoProcessReceivedMsgs = os.Getenv("DO_PROCESS_RECEIVED_MSGS")
 
 	MaxConcurrentCall = os.Getenv("MAX_CONCURRENT_CALL")
+
+	ComplianceEnabled = os.Getenv("COMPLIANCE_ENABLED")
 )
 
 func SchedulerCommand() *cobra.Command {
@@ -65,6 +68,10 @@ func SchedulerCommand() *cobra.Command {
 			}
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			var complianceEnabled bool
+			if strings.ToLower(ComplianceEnabled) == "true" {
+				complianceEnabled = true
+			}
 			s, err := InitializeScheduler(
 				id,
 				conf,
@@ -79,6 +86,7 @@ func SchedulerCommand() *cobra.Command {
 				CheckupIntervalHours,
 				MustSummarizeIntervalHours,
 				cmd.Context(),
+				complianceEnabled,
 			)
 			if err != nil {
 				return err
