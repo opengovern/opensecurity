@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgtype"
@@ -13,6 +15,10 @@ import (
 	"github.com/opengovern/opencomply/jobs/post-install-job/db/model"
 	"github.com/opengovern/opencomply/jobs/post-install-job/job/types"
 	"go.uber.org/zap"
+)
+
+var (
+	ComplianceEnabled = os.Getenv("COMPLIANCE_ENABLED")
 )
 
 type GitConfig struct {
@@ -142,6 +148,9 @@ func (w *Job) Run(ctx context.Context) error {
 
 	hasFailed := false
 	for _, name := range order {
+		if name == "compliance" && !(strings.ToLower(ComplianceEnabled) == "true") {
+			continue
+		}
 		mig := migrationList[name]
 		w.logger.Info("running migration", zap.String("migrationName", name))
 

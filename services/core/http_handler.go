@@ -235,6 +235,10 @@ func InitializeHttpHandler(
 	if strings.ToLower(complianceEnabled) == "true" {
 		h.complianceClient = complianceClient.NewComplianceClient(complianceBaseUrl)
 		h.complianceEnabled = true
+	} else if strings.ToLower(complianceEnabled) == "false" {
+		h.complianceEnabled = false
+	} else {
+		logger.Error("unsupported compliance enabled", zap.String("complianceEnabled", complianceEnabled))
 	}
 
 	h.logger = logger
