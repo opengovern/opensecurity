@@ -34,10 +34,6 @@ import (
 	"strings"
 )
 
-const (
-	IntegrationsJsonFilePath string = "/integrations/integrations.json"
-)
-
 func Command() *cobra.Command {
 	cnf := koanf.Provide("integration", config.IntegrationConfig{})
 

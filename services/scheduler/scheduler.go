@@ -129,6 +129,8 @@ type Scheduler struct {
 	queryRunnerScheduler    *queryrunnerscheduler.JobScheduler
 	queryValidatorScheduler *queryrvalidatorscheduler.JobScheduler
 	conf                    config.SchedulerConfig
+
+	complianceEnabled bool
 }
 
 func InitializeScheduler(
@@ -145,6 +147,7 @@ func InitializeScheduler(
 	checkupIntervalHours string,
 	mustSummarizeIntervalHours string,
 	ctx context.Context,
+	complianceEnabled bool,
 ) (s *Scheduler, err error) {
 	if id == "" {
 		return nil, fmt.Errorf("'id' must be set to a non empty string")
@@ -282,6 +285,8 @@ func InitializeScheduler(
 		s.MaxConcurrentCall = MaxGetQueuedAtATime
 	}
 
+	s.complianceEnabled = complianceEnabled
+
 	s.discoveryScheduler = discovery.New(
 		conf,
 		s.logger,
@@ -315,9 +320,11 @@ func (s *Scheduler) SetupNats(ctx context.Context) error {
 		return err
 	}
 
-	if err := s.jq.Stream(ctx, summarizer.StreamName, "compliance summarizer job queues", []string{summarizer.JobQueueTopic, summarizer.JobQueueTopicManuals, summarizer.ResultQueueTopic}, 1000); err != nil {
-		s.logger.Error("Failed to stream to compliance summarizer queue", zap.Error(err))
-		return err
+	if s.complianceEnabled {
+		if err := s.jq.Stream(ctx, summarizer.StreamName, "compliance summarizer job queues", []string{summarizer.JobQueueTopic, summarizer.JobQueueTopicManuals, summarizer.ResultQueueTopic}, 1000); err != nil {
+			s.logger.Error("Failed to stream to compliance summarizer queue", zap.Error(err))
+			return err
+		}
 	}
 
 	if err := s.jq.Stream(ctx, runner.StreamName, "compliance runner job queues", []string{runner.JobQueueTopic, runner.JobQueueTopicManuals, runner.ResultQueueTopic}, 1000000); err != nil {
@@ -506,20 +513,22 @@ func (s *Scheduler) Run(ctx context.Context) error {
 	)
 	s.queryRunnerScheduler.Run(ctx)
 
-	s.auditScheduler = compliance_quick_run.New(
-		func(ctx context.Context) error {
-			return s.SetupNats(ctx)
-		},
-		s.conf,
-		s.logger,
-		s.db,
-		s.jq,
-		s.es,
-		s.complianceClient,
-		s.coreClient,
-		s.integrationClient,
-	)
-	s.auditScheduler.Run(ctx)
+	if s.complianceEnabled {
+		s.auditScheduler = compliance_quick_run.New(
+			func(ctx context.Context) error {
+				return s.SetupNats(ctx)
+			},
+			s.conf,
+			s.logger,
+			s.db,
+			s.jq,
+			s.es,
+			s.complianceClient,
+			s.coreClient,
+			s.integrationClient,
+		)
+		s.auditScheduler.Run(ctx)
+	}
 
 	if s.conf.QueryValidatorEnabled == "true" {
 		// Policy Validator
@@ -539,28 +548,30 @@ func (s *Scheduler) Run(ctx context.Context) error {
 	}
 
 	// Compliance
-	s.complianceScheduler = compliance.New(
-		func(ctx context.Context) error {
-			return s.SetupNats(ctx)
-		},
-		s.conf,
-		s.logger,
-		s.complianceClient,
-		s.coreClient,
-		s.integrationClient,
-		s.db,
-		s.jq,
-		s.es,
-		s.complianceIntervalHours,
-	)
-	s.complianceScheduler.Run(ctx)
-	utils.EnsureRunGoroutine(func() {
-		s.RunJobSequencer(ctx)
-	})
+	if s.complianceEnabled {
+		s.complianceScheduler = compliance.New(
+			func(ctx context.Context) error {
+				return s.SetupNats(ctx)
+			},
+			s.conf,
+			s.logger,
+			s.complianceClient,
+			s.coreClient,
+			s.integrationClient,
+			s.db,
+			s.jq,
+			s.es,
+			s.complianceIntervalHours,
+		)
+		s.complianceScheduler.Run(ctx)
+		utils.EnsureRunGoroutine(func() {
+			s.RunJobSequencer(ctx)
+		})
 
-	utils.EnsureRunGoroutine(func() {
-		s.ScheduleQuickScanSequence(ctx)
-	})
+		utils.EnsureRunGoroutine(func() {
+			s.ScheduleQuickScanSequence(ctx)
+		})
+	}
 
 	utils.EnsureRunGoroutine(func() {
 		s.RunCheckupJobScheduler(ctx)

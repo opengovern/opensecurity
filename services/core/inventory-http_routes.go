@@ -1050,6 +1050,9 @@ func (h *HttpHandler) RunQueryByID(ctx echo.Context) error {
 		query = namedQuery.Query.QueryToExecute
 		engineStr = namedQuery.Query.Engine
 	} else if strings.ToLower(req.Type) == "control" {
+		if !h.complianceEnabled {
+			return echo.NewHTTPError(http.StatusBadRequest, "compliance service is not enabled")
+		}
 		control, err := h.complianceClient.GetControl(&httpclient.Context{UserRole: api2.AdminRole}, req.ID)
 		if err != nil || control == nil {
 			h.logger.Error("failed to get compliance", zap.Error(err))

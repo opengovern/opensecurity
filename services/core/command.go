@@ -19,11 +19,6 @@ import (
 )
 
 var (
-	SteampipeHost          = os.Getenv("STEAMPIPE_HOST")
-	SteampipePort          = os.Getenv("STEAMPIPE_PORT")
-	SteampipeDb            = os.Getenv("STEAMPIPE_DB")
-	SteampipeUser          = os.Getenv("STEAMPIPE_USERNAME")
-	SteampipePassword      = os.Getenv("STEAMPIPE_PASSWORD")
 	PostgresPluginHost     = os.Getenv("POSTGRESPLUGIN_HOST")
 	PostgresPluginPort     = os.Getenv("POSTGRESPLUGIN_PORT")
 	PostgresPluginUsername = os.Getenv("POSTGRESPLUGIN_USERNAME")
@@ -31,6 +26,7 @@ var (
 	SchedulerBaseUrl       = os.Getenv("SCHEDULER_BASE_URL")
 	IntegrationBaseUrl     = os.Getenv("INTEGRATION_BASE_URL")
 	ComplianceBaseUrl      = os.Getenv("COMPLIANCE_BASE_URL")
+	ComplianceEnabled      = os.Getenv("COMPLIANCE_ENABLED")
 )
 
 func Command() *cobra.Command {
@@ -141,10 +137,10 @@ func start(ctx context.Context, cnf config2.Config) error {
 
 	handler, err := InitializeHttpHandler(
 		cfg,
-		SteampipeHost, SteampipePort, SteampipeDb, SteampipeUser, SteampipePassword,
 		SchedulerBaseUrl, IntegrationBaseUrl, ComplianceBaseUrl,
 		logger, dexClient,
 		cnf.ElasticSearch,
+		ComplianceEnabled,
 	)
 	if err != nil {
 		return fmt.Errorf("init http handler: %w", err)
