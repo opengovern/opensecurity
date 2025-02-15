@@ -232,7 +232,19 @@
     "SourceCode": "https://github.com/opengovern/og-describer-fly",
     "schema_ids": ["fly"]
   },
- 
+  {
+    "id": 24,
+    "integration_type": "kubernetes",
+    "name": "Kubernetes",
+    "tier": "Community",
+    "tags": { "usage": ["DevOps", "Containers"] },
+    "Description": "Gain visibility into Kubernetes objects.",
+    "Icon": "kubernetes.svg",
+    "Availability": "GA",
+    "SourceCode": "https://github.com/opengovern/og-describer-kubernetes",
+    "schema_ids": ["kubernetes"]
+  },
+
   {
     "id": 15,
     "integration_type": "slack_account",
@@ -342,18 +354,7 @@
     "SourceCode": "",
     "schema_ids": []
   },
-  {
-    "id": 24,
-    "integration_type": "kubernetes",
-    "name": "Kubernetes",
-    "tier": "Community",
-    "tags": { "usage": ["DevOps", "Containers"] },
-    "Description": "Gain visibility into Kubernetes objects.",
-    "Icon": "kubernetes.svg",
-    "Availability": "Planned for Jan 2025",
-    "SourceCode": "",
-    "schema_ids": []
-  },
+
   {
     "id": 25,
     "integration_type": "jamf_account",
