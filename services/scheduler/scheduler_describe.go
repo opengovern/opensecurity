@@ -214,7 +214,7 @@ func (s *Scheduler) scheduleDescribeJob(ctx context.Context) {
 			UserRole: apiAuth.AdminRole,
 			Ctx:      ctx,
 		}
-		resourceTypes, err := s.integrationClient.GetResourceTypesByLabels(httpCtx, integration.IntegrationType.String(), integration.Labels)
+		resourceTypes, err := s.integrationClient.GetResourceTypesByLabels(httpCtx, integration.IntegrationType.String(), integration.Labels, &integration.IntegrationID)
 		if err != nil {
 			s.logger.Error("failed to get integration resourceTypes", zap.String("integrationType", string(integration.IntegrationType)),
 				zap.String("spot", "ListDiscoveryResourceTypes"), zap.Error(err))
@@ -317,7 +317,7 @@ func (s *Scheduler) describe(integration integrationapi.Integration, resourceTyp
 		UserRole: apiAuth.AdminRole,
 		Ctx:      context.Background(),
 	}
-	validResourceTypes, err := s.integrationClient.GetResourceTypesByLabels(httpCtx, integration.IntegrationType.String(), integration.Labels)
+	validResourceTypes, err := s.integrationClient.GetResourceTypesByLabels(httpCtx, integration.IntegrationType.String(), integration.Labels, &integration.IntegrationID)
 	if err != nil {
 		return nil, err
 	}

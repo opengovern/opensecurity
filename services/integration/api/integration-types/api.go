@@ -214,8 +214,6 @@ func (a *API) GetManifest(c echo.Context) error {
 	}
 }
 
-// GetResourceTypesByLabelsRequest in body
-
 // GetResourceTypesByLabels godoc
 //
 // @Summary			Get resource types by labels
@@ -235,14 +233,40 @@ func (a *API) GetResourceTypesByLabels(c echo.Context) error {
 		return echo.NewHTTPError(400, "invalid request")
 	}
 
+	validResourcetypes := make(map[string]bool)
+	if req.IntegrationID != nil {
+		resourceTypes, err := a.database.GetIntegrationResourcetypes(*req.IntegrationID)
+		if err != nil {
+			a.logger.Error("could not get integration resource types", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "could not get integration resource types")
+		}
+		if resourceTypes != nil {
+			for _, rt := range resourceTypes.ResourceTypes {
+				validResourcetypes[rt] = true
+			}
+		}
+	}
+
 	rtMap := a.typeManager.GetIntegrationTypeMap()
 	if value, ok := rtMap[a.typeManager.ParseType(integrationType)]; ok {
 		rts, err := value.GetResourceTypesByLabels(req.Labels)
 		if err != nil {
 			return echo.NewHTTPError(500, err.Error())
 		}
+
+		var finalRts []interfaces.ResourceTypeConfiguration
+
+		if len(validResourcetypes) > 0 {
+			for _, rt := range rts {
+				if _, ok2 := validResourcetypes[rt.Name]; ok2 {
+					finalRts = append(finalRts, rt)
+				}
+			}
+		} else {
+			finalRts = rts
+		}
 		res := models.GetResourceTypesByLabelsResponse{
-			ResourceTypes: rts,
+			ResourceTypes: finalRts,
 		}
 
 		return c.JSON(200, res)
