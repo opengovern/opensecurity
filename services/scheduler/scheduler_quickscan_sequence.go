@@ -252,7 +252,7 @@ func (s *DescribeDependencies) getIntegrationTypesValidResourceTypes(integration
 		Ctx:      context.Background(),
 	}
 	resourceTypesMap := make(map[string]bool)
-	resourceTypes, err := s.s.integrationClient.GetResourceTypesByLabels(httpCtx, integration.IntegrationType.String(), integration.Labels)
+	resourceTypes, err := s.s.integrationClient.GetResourceTypesByLabels(httpCtx, integration.IntegrationType.String(), integration.Labels, &integration.IntegrationID)
 	if err != nil {
 		return nil, err
 	}
