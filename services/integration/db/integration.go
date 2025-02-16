@@ -170,7 +170,7 @@ func (db Database) GetIntegrationResourcetypes(integrationID string) (*models.In
 // SetIntegrationResourcetypes updates integration resource types or create a row for it
 func (db Database) SetIntegrationResourcetypes(integration *models.IntegrationResourcetypes) error {
 	// Use GORM's upsert functionality
-	err := db.IntegrationTypeOrm.Clauses(clause.OnConflict{
+	err := db.Orm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "integration_id"}},            // Define the unique key or conflict target
 		DoUpdates: clause.AssignmentColumns([]string{"resource_types"}), // Columns to update
 	}).Create(integration).Error
