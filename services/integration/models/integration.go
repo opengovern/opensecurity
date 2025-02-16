@@ -2,7 +2,9 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
+	"github.com/lib/pq"
 	"github.com/opengovern/og-util/pkg/integration"
 	api "github.com/opengovern/opencomply/services/integration/api/models"
 )
@@ -83,4 +85,9 @@ func (i *Integration) ToApi() (*api.Integration, error) {
 		Labels:          labels,
 		Annotations:     annotations,
 	}, nil
+}
+
+type IntegrationResourcetypes struct {
+	IntegrationID uuid.UUID      `gorm:"primaryKey;type:uuid"` // Auto-generated UUID
+	ResourceTypes pq.StringArray `gorm:"type:text[]"`
 }

@@ -1,10 +1,12 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/opencomply/services/integration/models"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -145,5 +147,36 @@ func (db Database) InactiveIntegrationType(it integration.Type) error {
 		return tx.Error
 	}
 
+	return nil
+}
+
+// GetIntegrationResourcetypes get a Integration
+func (db Database) GetIntegrationResourcetypes(integrationID string) (*models.IntegrationResourcetypes, error) {
+	var integration models.IntegrationResourcetypes
+	tx := db.Orm.
+		Model(&models.IntegrationResourcetypes{}).
+		Where("integration_id = ?", integrationID).
+		First(&integration)
+	if tx.Error != nil {
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, tx.Error
+	}
+
+	return &integration, nil
+}
+
+// SetIntegrationResourcetypes updates integration resource types or create a row for it
+func (db Database) SetIntegrationResourcetypes(integration *models.IntegrationResourcetypes) error {
+	// Use GORM's upsert functionality
+	err := db.IntegrationTypeOrm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "integration_id"}},            // Define the unique key or conflict target
+		DoUpdates: clause.AssignmentColumns([]string{"resource_types"}), // Columns to update
+	}).Create(integration).Error
+
+	if err != nil {
+		return err
+	}
 	return nil
 }

@@ -65,3 +65,7 @@ type ListIntegrationsRequest struct {
 	Cursor          *int64   `json:"cursor"`
 	PerPage         *int64   `json:"per_page"`
 }
+
+type SetResourceTypesForIntegration struct {
+	ResourceTypes []string `json:"resource_types"`
+}

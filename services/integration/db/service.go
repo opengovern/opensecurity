@@ -22,6 +22,7 @@ func (db Database) Initialize() error {
 		&models.Integration{},
 		&models.Credential{},
 		&models.IntegrationGroup{},
+		&models.IntegrationResourcetypes{},
 	)
 	if err != nil {
 		return err

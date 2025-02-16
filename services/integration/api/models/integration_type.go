@@ -41,7 +41,8 @@ type GetResourceTypeFromTableNameResponse struct {
 }
 
 type GetResourceTypesByLabelsRequest struct {
-	Labels map[string]string `json:"labels"`
+	IntegrationID *string           `json:"integration_id"`
+	Labels        map[string]string `json:"labels"`
 }
 
 type GetResourceTypesByLabelsResponse struct {

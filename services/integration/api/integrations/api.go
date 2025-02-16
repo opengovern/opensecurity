@@ -87,6 +87,7 @@ func (h *API) Register(g *echo.Group) {
 	g.GET("/integration-groups", httpserver.AuthorizeHandler(h.ListIntegrationGroups, api.ViewerRole))
 	g.GET("/integration-groups/:integrationGroupName", httpserver.AuthorizeHandler(h.GetIntegrationGroup, api.ViewerRole))
 	g.PUT("/sample/purge", httpserver.AuthorizeHandler(h.PurgeSampleData, api.EditorRole))
+	g.PUT("/:integration_id/resource", httpserver.AuthorizeHandler(h.SetResourceTypesForIntegration, api.EditorRole))
 
 	types := g.Group("/types")
 	types.GET("", httpserver.AuthorizeHandler(h.ListIntegrationTypes, api.ViewerRole))
@@ -1757,4 +1758,35 @@ func (h *API) GetIntegrationTypeResourceType(c echo.Context) error {
 	} else {
 		return echo.NewHTTPError(http.StatusInternalServerError, "integration type resource types not found")
 	}
+}
+
+// SetResourceTypesForIntegration godoc
+//
+// @Summary			Set valid resource types for an integration
+// @Description		Set valid resource types for an integration
+// @Security		BearerToken
+// @Tags			integration_types
+// @Produce			json
+// @Param			integration_id	path	string	true	"Integration id"
+// @Param			request	body	models.SetResourceTypesForIntegration	true	"Request"
+// @Success			200	{object}
+// @Router			/integration/api/v1/integrations/:integration_id/resource [put]
+func (a *API) SetResourceTypesForIntegration(c echo.Context) error {
+	integrationID, err := uuid.Parse(c.Param("integration_id"))
+	if err != nil {
+		a.logger.Error("failed to parse integration id", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to parse integration id")
+	}
+
+	req := new(models.SetResourceTypesForIntegration)
+	if err = c.Bind(req); err != nil {
+		return echo.NewHTTPError(400, "invalid request")
+	}
+
+	err = a.database.SetIntegrationResourcetypes(&models2.IntegrationResourcetypes{
+		IntegrationID: integrationID,
+		ResourceTypes: req.ResourceTypes,
+	})
+
+	return c.NoContent(http.StatusOK)
 }

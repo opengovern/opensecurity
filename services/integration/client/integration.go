@@ -14,7 +14,7 @@ import (
 type IntegrationServiceClient interface {
 	ListIntegrationTypes(ctx *httpclient.Context) ([]string, error)
 	GetResourceTypeFromTableName(ctx *httpclient.Context, integrationType string, tableName string) (string, error)
-	GetResourceTypesByLabels(ctx *httpclient.Context, integrationType string, labels map[string]string) ([]interfaces.ResourceTypeConfiguration, error)
+	GetResourceTypesByLabels(ctx *httpclient.Context, integrationType string, labels map[string]string, integrationID *string) ([]interfaces.ResourceTypeConfiguration, error)
 	GetIntegrationTypeTables(ctx *httpclient.Context, integrationType string) (map[string][]interfaces.CloudQLColumn, error)
 	GetIntegrationConfiguration(ctx *httpclient.Context, integrationType string) (interfaces.IntegrationConfiguration, error)
 	GetIntegration(ctx *httpclient.Context, integrationID string) (*models.Integration, error)
@@ -63,11 +63,12 @@ func (c *integrationClient) GetResourceTypeFromTableName(ctx *httpclient.Context
 	return response.ResourceType, nil
 }
 
-func (c *integrationClient) GetResourceTypesByLabels(ctx *httpclient.Context, integrationType string, labels map[string]string) ([]interfaces.ResourceTypeConfiguration, error) {
+func (c *integrationClient) GetResourceTypesByLabels(ctx *httpclient.Context, integrationType string, labels map[string]string, integrationID *string) ([]interfaces.ResourceTypeConfiguration, error) {
 	url := fmt.Sprintf("%s/api/v1/integration-types/%s/resource-type/label", c.baseURL, integrationType)
 
 	req := models.GetResourceTypesByLabelsRequest{
-		Labels: labels,
+		IntegrationID: integrationID,
+		Labels:        labels,
 	}
 
 	payload, err := json.Marshal(req)
