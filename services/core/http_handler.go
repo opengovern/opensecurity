@@ -257,7 +257,7 @@ func InitializeHttpHandler(
 		Steampipe:     config3.Postgres{},
 	}, h.integrationClient)
 	h.PluginJob = pluginJob
-	go h.initializeSteampipePluginsWithRetry(ctx, 5, 2*time.Second)
+	h.initializeSteampipePluginsWithRetry(ctx, 5, 2*time.Second)
 
 	go h.fetchParameters(ctx)
 
