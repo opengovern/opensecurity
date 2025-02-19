@@ -109,9 +109,9 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			mClient := core.NewCoreServiceClient(cnf.Core.BaseURL)
+			coreClient := core.NewCoreServiceClient(cnf.Core.BaseURL)
 
-			_, err = mClient.VaultConfigured(&httpclient.Context{UserRole: api3.AdminRole})
+			_, err = coreClient.VaultConfigured(&httpclient.Context{UserRole: api3.AdminRole})
 			if err != nil && errors.Is(err, core.ErrConfigNotFound) {
 				return err
 			}
@@ -177,7 +177,7 @@ func Command() *cobra.Command {
 				cmd.Context(),
 				logger,
 				cnf.Http.Address,
-				api.New(logger, db, vaultSc, &steampipeOption, kubeClient, typeManager, elastic),
+				api.New(logger, db, vaultSc, &steampipeOption, kubeClient, typeManager, elastic, coreClient),
 			)
 		},
 	}

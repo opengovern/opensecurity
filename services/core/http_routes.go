@@ -104,6 +104,9 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v3.GET("/categories/queries", httpserver.AuthorizeHandler(h.GetCategoriesQueries, api3.ViewerRole))
 	v3.GET("/parameters/queries", httpserver.AuthorizeHandler(h.GetParametersQueries, api3.ViewerRole))
 
+	v3.PUT("/plugins/:plugin_id/reload", httpserver.AuthorizeHandler(h.ReloadPluginSteampipeConfig, api3.AdminRole))
+	v3.PUT("/plugins/:plugin_id/remove", httpserver.AuthorizeHandler(h.RemovePluginSteampipeConfig, api3.AdminRole))
+
 	v4 := r.Group("/api/v4")
 	v4.GET("/about", httpserver.AuthorizeHandler(h.GetAboutShort, api3.ViewerRole))
 
@@ -1308,7 +1311,7 @@ func (h HttpHandler) ReloadViews(echoCtx echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{object}	api.GetViewsCheckpointResponse
-//	@Router			/metadata/api/v3/views/checkpoint [get]
+//	@Router			/core/api/v3/views/checkpoint [get]
 func (h HttpHandler) GetViewsCheckpoint(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, api.GetViewsCheckpointResponse{
 		Checkpoint: h.viewCheckpoint,
@@ -1328,7 +1331,7 @@ func (h HttpHandler) GetViewsCheckpoint(echoCtx echo.Context) error {
 //	@Param			cursor		query		int	false	"Cursor"
 //	@Param			per_page	query		int	false	"Per Page"
 //	@Success		200			{object}	api.GetViewsResponse
-//	@Router			/metadata/api/v3/views [get]
+//	@Router			/core/api/v3/views [get]
 func (h HttpHandler) GetViews(echoCtx echo.Context) error {
 	views, err := h.db.ListQueryViews()
 	if err != nil {
@@ -1406,4 +1409,46 @@ func (h HttpHandler) GetViews(echoCtx echo.Context) error {
 		Views:      apiViews,
 		TotalCount: totalCount,
 	})
+}
+
+// ReloadPluginSteampipeConfig godoc
+//
+//	@Summary		Update plugin steampipe binary file and config
+//	@Description	Update plugin steampipe binary file and config
+//	@Security		BearerToken
+//	@Tags			compliance
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}
+//	@Router			/core/api/v3/plugins/{plugin_id}/reload [put]
+func (h HttpHandler) ReloadPluginSteampipeConfig(echoCtx echo.Context) error {
+	pluginId := echoCtx.Param("plugin_id")
+	go func() {
+		err := h.PluginJob.ReloadSinglePlugin(context.Background(), pluginId)
+		if err != nil {
+			h.logger.Error("failed to reload plugin", zap.String("plugin_id", pluginId), zap.Error(err))
+		}
+	}()
+	return echoCtx.NoContent(http.StatusOK)
+}
+
+// RemovePluginSteampipeConfig godoc
+//
+//	@Summary		Remove plugin steampipe binary file and config
+//	@Description	Remove plugin steampipe binary file and config
+//	@Security		BearerToken
+//	@Tags			compliance
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}
+//	@Router			/core/api/v3/plugins/{plugin_id}/remove [put]
+func (h HttpHandler) RemovePluginSteampipeConfig(echoCtx echo.Context) error {
+	pluginId := echoCtx.Param("plugin_id")
+	go func() {
+		err := h.PluginJob.RemoveSinglePlugin(context.Background(), pluginId)
+		if err != nil {
+			h.logger.Error("failed to reload plugin", zap.String("plugin_id", pluginId), zap.Error(err))
+		}
+	}()
+	return echoCtx.NoContent(http.StatusOK)
 }

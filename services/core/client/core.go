@@ -38,6 +38,8 @@ type CoreServiceClient interface {
 	GetViewsCheckpoint(ctx *httpclient.Context) (*api.GetViewsCheckpointResponse, error)
 	ReloadViews(ctx *httpclient.Context) error
 	GetAbout(ctx *httpclient.Context) (*api.About, error)
+	ReloadPluginSteampipeConfig(ctx *httpclient.Context, pluginId string) error
+	RemovePluginSteampipeConfig(ctx *httpclient.Context, pluginId string) error
 }
 
 type coreClient struct {
@@ -536,4 +538,30 @@ func (s *coreClient) GetAbout(ctx *httpclient.Context) (*api.About, error) {
 	}
 
 	return &about, nil
+}
+
+func (s *coreClient) ReloadPluginSteampipeConfig(ctx *httpclient.Context, pluginId string) error {
+	url := fmt.Sprintf("%s/api/v3/plugins/%s/reload", s.baseURL, pluginId)
+
+	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodPut, url, ctx.ToHeaders(), nil, nil); err != nil {
+		if 400 <= statusCode && statusCode < 500 {
+			return echo.NewHTTPError(statusCode, err.Error())
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (s *coreClient) RemovePluginSteampipeConfig(ctx *httpclient.Context, pluginId string) error {
+	url := fmt.Sprintf("%s/api/v3/plugins/%s/remove", s.baseURL, pluginId)
+
+	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodPut, url, ctx.ToHeaders(), nil, nil); err != nil {
+		if 400 <= statusCode && statusCode < 500 {
+			return echo.NewHTTPError(statusCode, err.Error())
+		}
+		return err
+	}
+
+	return nil
 }
