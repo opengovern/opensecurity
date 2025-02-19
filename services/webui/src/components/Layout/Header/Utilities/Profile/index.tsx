@@ -294,7 +294,7 @@ export default function Profile() {
                                 >
                                     <MagnifyingGlassIcon className="h-6 w-6 stroke-2" />
                                     <Text className="text-inherit">
-                                        CloudQl
+                                        CloudQL
                                     </Text>
                                 </Flex>
                                 <Flex
