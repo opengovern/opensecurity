@@ -118,7 +118,7 @@ func (j *Job) Run(ctx context.Context) (*steampipe.Database, error) {
 	return cloudqlConn, nil
 }
 
-func (j *Job) UpdateSinglePlugin(ctx context.Context, pluginID string) error {
+func (j *Job) ReloadSinglePlugin(ctx context.Context, pluginID string) error {
 	db, err := postgres.NewClient(&postgres.Config{
 		Host:    j.cfg.Postgres.Host,
 		Port:    j.cfg.Postgres.Port,

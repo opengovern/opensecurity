@@ -7,6 +7,7 @@ import (
 	"github.com/opengovern/og-util/pkg/ticker"
 	"github.com/opengovern/og-util/pkg/vault"
 	"github.com/opengovern/opencomply/pkg/utils"
+	coreClient "github.com/opengovern/opencomply/services/core/client"
 	"github.com/opengovern/opencomply/services/integration/api/credentials"
 	integration_type2 "github.com/opengovern/opencomply/services/integration/api/integration-types"
 	"github.com/opengovern/opencomply/services/integration/api/integrations"
@@ -30,6 +31,8 @@ type API struct {
 	vault           vault.VaultSourceConfig
 
 	steampipeOption *steampipe.Option
+
+	coreClient coreClient.CoreServiceClient
 }
 
 func New(
@@ -40,6 +43,7 @@ func New(
 	kubeClient client.Client,
 	typeManager *integration_type.IntegrationTypeManager,
 	elastic opengovernance.Client,
+	coreClient coreClient.CoreServiceClient,
 ) *API {
 	return &API{
 		logger:          logger.Named("api"),
@@ -49,13 +53,14 @@ func New(
 		kubeClient:      kubeClient,
 		typeManager:     typeManager,
 		elastic:         elastic,
+		coreClient:      coreClient,
 	}
 }
 
 func (api *API) Register(e *echo.Echo) {
 	integrationsApi := integrations.New(api.vault, api.database, api.logger, api.steampipeOption, api.kubeClient, api.typeManager)
 	cred := credentials.New(api.vault, api.database, api.logger)
-	integrationType := integration_type2.New(api.typeManager, api.database, api.logger, api.elastic)
+	integrationType := integration_type2.New(api.typeManager, api.database, api.logger, api.elastic, api.coreClient)
 
 	integrationsApi.Register(e.Group("/api/v1/integrations"))
 	cred.Register(e.Group("/api/v1/credentials"))

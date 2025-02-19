@@ -61,6 +61,8 @@ type HttpHandler struct {
 	queryParamsMu   sync.RWMutex
 
 	complianceEnabled bool
+
+	PluginJob *cloudql_init_job.Job
 }
 
 func InitializeHttpHandler(
@@ -244,7 +246,18 @@ func InitializeHttpHandler(
 	h.logger = logger
 
 	// setup steampipe connection
-	go h.initializeSteampipePluginsWithRetry(ctx, esConf, 5, 2*time.Second)
+	pluginJob := cloudql_init_job.NewJob(h.logger, cloudql_init_job.Config{
+		Postgres: config3.Postgres{
+			Host:     PostgresPluginHost,
+			Port:     PostgresPluginPort,
+			Username: PostgresPluginUsername,
+			Password: PostgresPluginPassword,
+		},
+		ElasticSearch: esConf,
+		Steampipe:     config3.Postgres{},
+	}, h.integrationClient)
+	h.PluginJob = pluginJob
+	go h.initializeSteampipePluginsWithRetry(ctx, 5, 2*time.Second)
 
 	go h.fetchParameters(ctx)
 
@@ -372,19 +385,9 @@ func (h *HttpHandler) listQueryParametersInternal() (coreApi.ListQueryParameters
 	}, nil
 }
 
-func (h *HttpHandler) initializeSteampipePlugins(ctx context.Context, esConf config3.ElasticSearch) {
-	pluginJob := cloudql_init_job.NewJob(h.logger, cloudql_init_job.Config{
-		Postgres: config3.Postgres{
-			Host:     PostgresPluginHost,
-			Port:     PostgresPluginPort,
-			Username: PostgresPluginUsername,
-			Password: PostgresPluginPassword,
-		},
-		ElasticSearch: esConf,
-		Steampipe:     config3.Postgres{},
-	}, h.integrationClient)
+func (h *HttpHandler) initializeSteampipePlugins(ctx context.Context) {
 	h.logger.Info("running plugin job to initialize integrations in cloudql")
-	steampipeConn, err := pluginJob.Run(ctx)
+	steampipeConn, err := h.PluginJob.Run(ctx)
 	if err != nil {
 		h.logger.Error("failed to run plugin job", zap.Error(err))
 	}
@@ -393,13 +396,13 @@ func (h *HttpHandler) initializeSteampipePlugins(ctx context.Context, esConf con
 	fmt.Println("Initialized steampipe database: ", steampipeConn)
 }
 
-func (h *HttpHandler) initializeSteampipePluginsWithRetry(ctx context.Context, esConf config3.ElasticSearch, maxRetries int, initialBackoff time.Duration) {
+func (h *HttpHandler) initializeSteampipePluginsWithRetry(ctx context.Context, maxRetries int, initialBackoff time.Duration) {
 	retries := 0
 	backoff := initialBackoff
 
 	for {
 		h.logger.Info("Initializing Steampipe plugins. Attempt:", zap.Int("retry", retries+1))
-		h.initializeSteampipePlugins(ctx, esConf)
+		h.initializeSteampipePlugins(ctx)
 
 		if h.steampipeConn != nil {
 			h.logger.Info("Successfully initialized Steampipe plugins")

@@ -3,8 +3,10 @@ package integration_types
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/elasticsearch"
+	coreClient "github.com/opengovern/opencomply/services/core/client"
 	hczap "github.com/zaffka/zap-to-hclog"
 	"golang.org/x/net/context"
 	"io/fs"
@@ -43,14 +45,16 @@ type API struct {
 	typeManager *integration_type.IntegrationTypeManager
 	database    db.Database
 	elastic     opengovernance.Client
+	coreClient  coreClient.CoreServiceClient
 }
 
-func New(typeManager *integration_type.IntegrationTypeManager, database db.Database, logger *zap.Logger, elastic opengovernance.Client) *API {
+func New(typeManager *integration_type.IntegrationTypeManager, database db.Database, logger *zap.Logger, elastic opengovernance.Client, coreClient coreClient.CoreServiceClient) *API {
 	return &API{
 		logger:      logger.Named("integration_types"),
 		typeManager: typeManager,
 		database:    database,
 		elastic:     elastic,
+		coreClient:  coreClient,
 	}
 }
 
@@ -1203,10 +1207,16 @@ func (a *API) LoadPlugin(ctx context.Context, plugin *models2.IntegrationPlugin,
 		return err
 	}
 	// Restart cloudql enabled services so that they can use the new plugin
-	err = a.typeManager.RestartCloudQLEnabledServices(ctx)
+	//err = a.typeManager.RestartCloudQLEnabledServices(ctx)
+	//if err != nil {
+	//	a.logger.Error("failed to restart cloudql enabled services", zap.Error(err))
+	//	return echo.NewHTTPError(http.StatusInternalServerError, "failed to restart cloudql enabled services", err)
+	//}
+
+	err = a.coreClient.ReloadPluginSteampipeConfig(&httpclient.Context{UserRole: api.AdminRole}, plugin.PluginID)
 	if err != nil {
-		a.logger.Error("failed to restart cloudql enabled services", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to restart cloudql enabled services", err)
+		a.logger.Error("failed to reload plugin config", zap.Error(err), zap.String("id", plugin.PluginID))
+		return err
 	}
 
 	return nil
@@ -1228,6 +1238,12 @@ func (a *API) UnLoadPlugin(ctx context.Context, plugin models2.IntegrationPlugin
 	}
 	if _, ok := a.typeManager.PingLocks[plugin.IntegrationType]; ok {
 		delete(a.typeManager.PingLocks, plugin.IntegrationType)
+	}
+
+	err = a.coreClient.RemovePluginSteampipeConfig(&httpclient.Context{UserRole: api.AdminRole}, plugin.PluginID)
+	if err != nil {
+		a.logger.Error("failed to reload plugin config", zap.Error(err), zap.String("id", plugin.PluginID))
+		return err
 	}
 
 	return nil
