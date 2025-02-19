@@ -27,6 +27,9 @@ import EvaluateDetail from '../pages/Governance/Compliance/NewBenchmarkSummary/E
 import Tasks from '../pages/Tasks'
 import TaskDetail from '../pages/Tasks/TaskDetail'
 
+const show_compliance = process.env.REACT_APP_SHOW_COMPLIANCE
+
+
 const authRoutes = [
     {
         key: 'callback',
@@ -168,7 +171,7 @@ const authRoutes = [
     {
         key: 'home',
         path: '/',
-        element: <Overview />,
+        element: show_compliance !=='false' ?<Overview /> : <Search/>,
     },
 
     {
