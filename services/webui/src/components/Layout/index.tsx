@@ -6,12 +6,13 @@ import Notification from '../Notification'
 import { useNavigate } from 'react-router-dom'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { sampleAtom } from '../../store'
+import TopHeader from './Header'
 type IProps = {
     children: ReactNode
     onScroll?: (e: UIEvent) => void
     scrollRef?: any
 }
-
+const show_compliance = process.env.REACT_APP_SHOW_COMPLIANCE
 export default function Layout({ children, onScroll, scrollRef }: IProps) {
     const url = window.location.pathname.split('/')
     const smaple = useAtomValue(sampleAtom)
@@ -33,8 +34,8 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
             className="h-screen overflow-hidden"
             justifyContent="start"
         >
-            {showSidebar && (
-                <Sidebar  currentPage={current} />
+            {showSidebar && show_compliance != 'false' && (
+                <Sidebar currentPage={current} />
             )}
             <div className="z-10 w-full h-full relative">
                 <Flex
@@ -52,15 +53,18 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                     }}
                     ref={scrollRef}
                 >
+                    {show_compliance == 'false' && (
+                        <>
+                            <TopHeader />
+                        </>
+                    )}
                     <Flex
                         justifyContent="center"
                         className={`${
                             current === 'assistant'
                                 ? 'h-fit'
                                 : 'sm:px-6 px-2  sm:mt-16 mt-4 h-fit '
-                        } ${showSidebar && ' 2xl:px-24'} ${
-                            'sm:mt-6'
-                        } `}
+                        } ${showSidebar && ' 2xl:px-24'} ${ show_compliance =='false' ? 'sm:mt-16':'sm:mt-6'} `}
                         // pl-44
                     >
                         <div
@@ -72,10 +76,7 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                                     : 'py-6'
                             }`}
                         >
-                            <>
-                             
-                                {children}
-                            </>
+                            <>{children}</>
                         </div>
                     </Flex>
                     <Footer />

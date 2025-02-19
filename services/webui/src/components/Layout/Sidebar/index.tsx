@@ -165,6 +165,41 @@ export default function Sidebar({ currentPage }: ISidebar) {
     }, [isAuthenticated])
 
     const navigation: () => ISidebarItem[] = () => {
+        const show_compliance = process.env.REACT_APP_SHOW_COMPLIANCE
+        if (show_compliance === 'false') {
+            return [
+                {
+                    name: 'CloudQL',
+                    page: ['cloudql', 'cloudql'],
+                    icon: MagnifyingGlassIcon,
+                    isPreview: false,
+                },
+
+                {
+                    name: 'Integration',
+                    page: [
+                        'integration/plugins',
+                        'plugins/AWS',
+                        'plugins/Azure',
+                        'plugins/EntraID',
+                    ],
+                    icon: PuzzlePieceIcon,
+                    isLoading: false,
+                    // count: 0,
+
+                    // count: numericDisplay(connectionCount?.count) || 0,
+                    error: undefined,
+                    isPreview: false,
+                },
+
+                {
+                    name: 'Administration',
+                    page: ['administration'],
+                    icon: Cog6ToothIcon,
+                    isPreview: false,
+                },
+            ]
+        }
         return [
             {
                 name: 'Overview',
@@ -623,12 +658,14 @@ export default function Sidebar({ currentPage }: ISidebar) {
                                                                 : ''
                                                         }`}
                                         >
-                                            <div className="group relative" onClick={()=>{
-                                                setShowTooltip(true)
-                                            }}>
+                                            <div
+                                                className="group relative"
+                                                onClick={() => {
+                                                    setShowTooltip(true)
+                                                }}
+                                            >
                                                 {item.isPreview === true ? (
                                                     <item.icon
-                                                        
                                                         className={`h-6 w-6 stroke-2 ${
                                                             isCurrentPage(
                                                                 item.page
@@ -656,7 +693,7 @@ export default function Sidebar({ currentPage }: ISidebar) {
                                                         }`}
                                                     />
                                                 )}
-                                                {collapsed&& showTooltip && (
+                                                {collapsed && showTooltip && (
                                                     <div
                                                         className="absolute z-50 scale-0 transition-all  duration-500 rounded p-2 shadow-md bg-openg-950 group-hover:scale-100  "
                                                         style={{
