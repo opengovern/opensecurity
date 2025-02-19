@@ -434,12 +434,12 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 	if req.Engine == nil || *req.Engine == api.QueryEngineCloudQL {
 		resp, err = h.RunSQLNamedQuery(ctx.Request().Context(), *req.Query, queryOutput.String(), &req)
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	} else if *req.Engine == api.QueryEngineCloudQLRego {
 		resp, err = h.RunRegoNamedQuery(ctx.Request().Context(), *req.Query, queryOutput.String(), &req)
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	} else {
 		return fmt.Errorf("invalid query engine: %s", *req.Engine)
@@ -494,6 +494,9 @@ func (h *HttpHandler) RunSQLNamedQuery(ctx context.Context, title, query string,
 		return nil, errors.New("multiple sort items not supported")
 	}
 	h.logger.Info("pinging steampipe connection")
+	if h.steampipeConn == nil {
+		return nil, errors.New("steampipe config has not been loaded up yet, you need to wait")
+	}
 	for i := 0; i < 10; i++ {
 		err = h.steampipeConn.Conn().Ping(ctx)
 		if err == nil {
@@ -1102,9 +1105,7 @@ func (h *HttpHandler) RunQueryByID(ctx echo.Context) error {
 			Sorts:  req.Sorts,
 		})
 		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-			return err
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	} else if engine == api.QueryEngineCloudQLRego {
 		resp, err = h.RunRegoNamedQuery(newCtx, query, queryOutput.String(), &api.RunQueryRequest{
@@ -1114,9 +1115,7 @@ func (h *HttpHandler) RunQueryByID(ctx echo.Context) error {
 			Sorts:  req.Sorts,
 		})
 		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-			return err
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	} else {
 		resp, err = h.RunSQLNamedQuery(newCtx, query, queryOutput.String(), &api.RunQueryRequest{
@@ -1126,9 +1125,7 @@ func (h *HttpHandler) RunQueryByID(ctx echo.Context) error {
 			Sorts:  req.Sorts,
 		})
 		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-			return err
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	}
 
