@@ -493,10 +493,10 @@ func (h *HttpHandler) RunSQLNamedQuery(ctx context.Context, title, query string,
 	if len(req.Sorts) > 1 {
 		return nil, errors.New("multiple sort items not supported")
 	}
-	h.logger.Info("pinging steampipe connection")
 	if h.steampipeConn == nil {
 		return nil, errors.New("steampipe config has not been loaded up yet, you need to wait")
 	}
+	h.logger.Info("pinging steampipe connection")
 	for i := 0; i < 10; i++ {
 		err = h.steampipeConn.Conn().Ping(ctx)
 		if err == nil {
