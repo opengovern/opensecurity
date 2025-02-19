@@ -117,3 +117,115 @@ func (j *Job) Run(ctx context.Context) (*steampipe.Database, error) {
 
 	return cloudqlConn, nil
 }
+
+func (j *Job) UpdateSinglePlugin(ctx context.Context, pluginID string) error {
+	db, err := postgres.NewClient(&postgres.Config{
+		Host:    j.cfg.Postgres.Host,
+		Port:    j.cfg.Postgres.Port,
+		User:    j.cfg.Postgres.Username,
+		Passwd:  j.cfg.Postgres.Password,
+		DB:      "integration_types",
+		SSLMode: j.cfg.Postgres.SSLMode,
+	}, j.logger.Named("postgres"))
+	if err != nil {
+		j.logger.Error("failed to create postgres client", zap.Error(err))
+		return err
+	}
+
+	var plugin models.IntegrationPlugin
+	err = db.Model(models.IntegrationPlugin{}).Where("plugin_id = ?", pluginID).First(&plugin).Error
+	if err != nil {
+		j.logger.Error("failed to get integration binaries", zap.Error(err))
+		return err
+	}
+
+	httpCtx := httpclient.Context{Ctx: ctx, UserRole: api.AdminRole}
+
+	basePath := "/home/steampipe/.steampipe/plugins/hub.steampipe.io/plugins/turbot"
+	describerConfig, err := j.integrationClient.GetIntegrationConfiguration(&httpCtx, plugin.IntegrationType.String())
+	if err != nil {
+		j.logger.Error("failed to get integration configuration", zap.Error(err))
+		return err
+	}
+	err = steampipe.PopulateSteampipeConfig(j.cfg.ElasticSearch, describerConfig.SteampipePluginName)
+	if err != nil {
+		return err
+	}
+
+	dirPath := basePath + "/" + describerConfig.SteampipePluginName + "@latest"
+	// create directory if not exists
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+		err = os.MkdirAll(dirPath, os.ModePerm)
+		if err != nil {
+			j.logger.Error("failed to create directory", zap.Error(err), zap.String("path", dirPath))
+			return err
+		}
+	}
+
+	var cloudqlBinary string
+	err = db.Raw("SELECT cloud_ql_plugin FROM integration_plugin_binaries WHERE plugin_id = ?", plugin.PluginID).Scan(&cloudqlBinary).Error
+	if err != nil {
+		j.logger.Error("failed to get plugin binary", zap.Error(err), zap.String("plugin_id", plugin.PluginID))
+		return err
+	}
+
+	// write the plugin to the file system
+	pluginPath := dirPath + "/steampipe-plugin-" + describerConfig.SteampipePluginName + ".plugin"
+	err = os.WriteFile(pluginPath, []byte(cloudqlBinary), 0777)
+	if err != nil {
+		j.logger.Error("failed to write plugin to file system", zap.Error(err), zap.String("plugin", describerConfig.SteampipePluginName))
+		return err
+	}
+
+	cloudqlBinary = ""
+
+	return nil
+}
+
+func (j *Job) RemoveSinglePlugin(ctx context.Context, pluginID string) error {
+	httpCtx := httpclient.Context{Ctx: ctx, UserRole: api.AdminRole}
+
+	db, err := postgres.NewClient(&postgres.Config{
+		Host:    j.cfg.Postgres.Host,
+		Port:    j.cfg.Postgres.Port,
+		User:    j.cfg.Postgres.Username,
+		Passwd:  j.cfg.Postgres.Password,
+		DB:      "integration_types",
+		SSLMode: j.cfg.Postgres.SSLMode,
+	}, j.logger.Named("postgres"))
+	if err != nil {
+		j.logger.Error("failed to create postgres client", zap.Error(err))
+		return err
+	}
+	var plugin models.IntegrationPlugin
+	err = db.Model(models.IntegrationPlugin{}).Where("plugin_id = ?", pluginID).First(&plugin).Error
+	if err != nil {
+		j.logger.Error("failed to get integration binaries", zap.Error(err))
+		return err
+	}
+
+	basePath := "/home/steampipe/.steampipe/plugins/hub.steampipe.io/plugins/turbot"
+
+	describerConfig, err := j.integrationClient.GetIntegrationConfiguration(&httpCtx, plugin.IntegrationType.String())
+	if err != nil {
+		j.logger.Error("failed to get integration configuration", zap.Error(err))
+		return err
+	}
+
+	err = steampipe.RemoveSpecFile(describerConfig.SteampipePluginName)
+	if err != nil {
+		return err
+	}
+
+	dirPath := basePath + "/" + describerConfig.SteampipePluginName + "@latest"
+
+	pluginPath := dirPath + "/steampipe-plugin-" + describerConfig.SteampipePluginName + ".plugin"
+
+	err = os.Remove(pluginPath)
+	if err != nil {
+		j.logger.Error("failed to remove plugin file", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
