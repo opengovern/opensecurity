@@ -408,7 +408,7 @@ func (h HttpServer) TriggerPerConnectionDescribeJob(ctx echo.Context) error {
 		resourceTypes := ctx.QueryParams()["resource_type"]
 
 		if resourceTypes == nil {
-			resourceTypesMap, err := h.Scheduler.integrationClient.GetResourceTypesByLabels(ctx2, src.IntegrationType.String(), src.Labels, &src.IntegrationID)
+			resourceTypesMap, err := h.Scheduler.integrationClient.GetResourceTypesByLabels(ctx2, src.IntegrationType.String(), src.Labels, nil)
 			if err != nil {
 				h.Scheduler.logger.Error("failed to get resource types by labels", zap.Error(err))
 				return echo.NewHTTPError(http.StatusInternalServerError, "failed to get resource types by labels")
@@ -478,7 +478,7 @@ func (h HttpServer) TriggerDescribeJob(ctx echo.Context) error {
 		rtToDescribe := resourceTypes
 
 		if len(rtToDescribe) == 0 {
-			resourceTypesMap, err := h.Scheduler.integrationClient.GetResourceTypesByLabels(ctx2, integration.IntegrationType.String(), integration.Labels, &integration.IntegrationID)
+			resourceTypesMap, err := h.Scheduler.integrationClient.GetResourceTypesByLabels(ctx2, integration.IntegrationType.String(), integration.Labels, nil)
 			if err != nil {
 				h.Scheduler.logger.Error("failed to get resource types by labels", zap.Error(err))
 				return echo.NewHTTPError(http.StatusInternalServerError, "failed to get resource types by labels")
@@ -687,7 +687,7 @@ func (h HttpServer) getReEvaluateParams(benchmarkID string, connectionIDs, contr
 			return nil, nil, fmt.Errorf("unknown integration type")
 		}
 
-		possibleRt, err := h.Scheduler.integrationClient.GetResourceTypesByLabels(ctx2, integration.IntegrationType.String(), integration.Labels, &integration.IntegrationID)
+		possibleRt, err := h.Scheduler.integrationClient.GetResourceTypesByLabels(ctx2, integration.IntegrationType.String(), integration.Labels, nil)
 		if err != nil {
 			h.Scheduler.logger.Error("failed to get resource types by labels", zap.Error(err))
 			return nil, nil, fmt.Errorf("failed to get resource types by labels")
@@ -1593,7 +1593,7 @@ func (h HttpServer) RunDiscovery(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "unknown integration type")
 		}
 
-		possibleRtMap, err := h.Scheduler.integrationClient.GetResourceTypesByLabels(clientCtx, integration.IntegrationType.String(), integration.Labels, &integration.IntegrationID)
+		possibleRtMap, err := h.Scheduler.integrationClient.GetResourceTypesByLabels(clientCtx, integration.IntegrationType.String(), integration.Labels, nil)
 		if err != nil {
 			h.Scheduler.logger.Error("failed to get resource types by labels", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get resource types by labels")
