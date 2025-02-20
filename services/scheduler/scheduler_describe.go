@@ -317,7 +317,7 @@ func (s *Scheduler) describe(integration integrationapi.Integration, resourceTyp
 		UserRole: apiAuth.AdminRole,
 		Ctx:      context.Background(),
 	}
-	validResourceTypes, err := s.integrationClient.GetResourceTypesByLabels(httpCtx, integration.IntegrationType.String(), integration.Labels, &integration.IntegrationID)
+	validResourceTypes, err := s.integrationClient.GetResourceTypesByLabels(httpCtx, integration.IntegrationType.String(), integration.Labels, nil)
 	if err != nil {
 		return nil, err
 	}
