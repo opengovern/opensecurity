@@ -230,7 +230,7 @@ func (h *HttpHandler) GetComplianceResults(echoCtx echo.Context) error {
 			hasResult = true
 		}
 	}
-	if !hasResult {
+	if !hasResult && len(req.Filters.BenchmarkID) > 0 {
 		return echoCtx.JSON(http.StatusOK, response)
 	}
 
