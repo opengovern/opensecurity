@@ -219,20 +219,20 @@ func (h *HttpHandler) GetComplianceResults(echoCtx echo.Context) error {
 
 	var response api.GetComplianceResultsResponse
 
-	hasResult := false
-	for _, f := range req.Filters.BenchmarkID {
-		summary, err := h.db.GetFrameworkComplianceResultSummary(f)
-		if err != nil {
-			h.logger.Error("failed to get compliance result summary", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get compliance result summary")
-		}
-		if summary != nil && summary.Total != 0 {
-			hasResult = true
-		}
-	}
-	if !hasResult && len(req.Filters.BenchmarkID) > 0 {
-		return echoCtx.JSON(http.StatusOK, response)
-	}
+	//hasResult := false
+	//for _, f := range req.Filters.BenchmarkID {
+	//	summary, err := h.db.GetFrameworkComplianceResultSummary(f)
+	//	if err != nil {
+	//		h.logger.Error("failed to get compliance result summary", zap.Error(err))
+	//		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get compliance result summary")
+	//	}
+	//	if summary != nil && summary.Total != 0 {
+	//		hasResult = true
+	//	}
+	//}
+	//if !hasResult && len(req.Filters.BenchmarkID) > 0 {
+	//	return echoCtx.JSON(http.StatusOK, response)
+	//}
 
 	if len(req.Filters.ComplianceStatus) == 0 {
 		req.Filters.ComplianceStatus = []api.ComplianceStatus{api.ComplianceStatusFailed}
