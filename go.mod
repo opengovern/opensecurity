@@ -1,4 +1,4 @@
-module github.com/opengovern/opencomply
+module github.com/opengovern/opensecurity
 
 go 1.23.3
 
