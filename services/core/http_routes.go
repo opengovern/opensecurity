@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opengovern/opencomply/pkg/utils"
+	"github.com/opengovern/opensecurity/pkg/utils"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	dexApi "github.com/dexidp/dex/api/v2"
@@ -21,11 +21,11 @@ import (
 	api3 "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/httpserver"
-	model2 "github.com/opengovern/opencomply/jobs/demo-importer-job/db/model"
-	"github.com/opengovern/opencomply/jobs/post-install-job/db/model"
-	complianceapi "github.com/opengovern/opencomply/services/compliance/api"
-	integrationApi "github.com/opengovern/opencomply/services/integration/api/models"
-	integrationClient "github.com/opengovern/opencomply/services/integration/client"
+	model2 "github.com/opengovern/opensecurity/jobs/demo-importer-job/db/model"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/db/model"
+	complianceapi "github.com/opengovern/opensecurity/services/compliance/api"
+	integrationApi "github.com/opengovern/opensecurity/services/integration/api/models"
+	integrationClient "github.com/opengovern/opensecurity/services/integration/client"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -40,9 +40,9 @@ import (
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/labstack/echo/v4"
-	"github.com/opengovern/opencomply/services/core/api"
-	"github.com/opengovern/opencomply/services/core/db/models"
-	coreUtils "github.com/opengovern/opencomply/services/core/utils"
+	"github.com/opengovern/opensecurity/services/core/api"
+	"github.com/opengovern/opensecurity/services/core/db/models"
+	coreUtils "github.com/opengovern/opensecurity/services/core/utils"
 )
 
 func (h HttpHandler) Register(r *echo.Echo) {

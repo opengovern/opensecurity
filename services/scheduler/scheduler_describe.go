@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgtype"
-	"github.com/opengovern/opencomply/services/integration/api/models"
+	"github.com/opengovern/opensecurity/services/integration/api/models"
 
 	apiAuth "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
@@ -19,11 +19,11 @@ import (
 	"github.com/opengovern/og-util/pkg/describe/enums"
 	"github.com/opengovern/og-util/pkg/ticker"
 	opengovernanceTrace "github.com/opengovern/og-util/pkg/trace"
-	integrationapi "github.com/opengovern/opencomply/services/integration/api/models"
-	"github.com/opengovern/opencomply/services/scheduler/api"
-	apiDescribe "github.com/opengovern/opencomply/services/scheduler/api"
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
-	"github.com/opengovern/opencomply/services/scheduler/es"
+	integrationapi "github.com/opengovern/opensecurity/services/integration/api/models"
+	"github.com/opengovern/opensecurity/services/scheduler/api"
+	apiDescribe "github.com/opengovern/opensecurity/services/scheduler/api"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
+	"github.com/opengovern/opensecurity/services/scheduler/es"
 	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 )

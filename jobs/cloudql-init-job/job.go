@@ -6,8 +6,8 @@ import (
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/og-util/pkg/steampipe"
-	"github.com/opengovern/opencomply/services/integration/client"
-	"github.com/opengovern/opencomply/services/integration/models"
+	"github.com/opengovern/opensecurity/services/integration/client"
+	"github.com/opengovern/opensecurity/services/integration/models"
 	"go.uber.org/zap"
 	"os"
 )
