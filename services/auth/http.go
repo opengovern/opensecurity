@@ -292,8 +292,7 @@ func (r *httpRoutes) CreateAPIKey(ctx echo.Context) error {
 	}
 
 	u := userClaim{
-		Role: api2.EditorRole,
-
+		Role: req.Role,
 		Email:          usr.Email,
 		ExternalUserID: usr.ExternalId,
 	}
