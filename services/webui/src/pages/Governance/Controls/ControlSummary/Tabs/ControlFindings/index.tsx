@@ -153,7 +153,7 @@ const columns = (isDemo: boolean) => {
         },
         {
             field: 'connectionID',
-            headerName: 'opencomply connection ID',
+            headerName: 'opensecurity connection ID',
             type: 'string',
             hide: true,
             enableRowGroup: true,

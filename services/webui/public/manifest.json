@@ -1,6 +1,6 @@
 {
-    "short_name": "opencomply",
-    "name": "opencomply app",
+    "short_name": "opensecurity",
+    "name": "opensecurity app",
     "icons": [
         {
             "src": "ios/iphone.png",
@@ -26,11 +26,11 @@
         }
     ],
     "start_url": "/",
-    "scope": "https://app.opencomply.io/",
+    "scope": "https://app.opensecurity.io/",
     "display": "standalone",
     "theme_color": "#0D2239",
     "background_color": "#F3F4F6",
-    "id": "opencomply",
+    "id": "opensecurity",
     "description": "Manage your clouds like a PRO!",
     "dir": "ltr",
     "lang": "en",
