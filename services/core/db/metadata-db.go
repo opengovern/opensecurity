@@ -2,7 +2,7 @@ package db
 
 import (
 	"errors"
-	"github.com/opengovern/opencomply/services/core/db/models"
+	"github.com/opengovern/opensecurity/services/core/db/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

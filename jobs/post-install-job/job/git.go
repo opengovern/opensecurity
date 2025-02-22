@@ -7,10 +7,10 @@ import (
 	// "strings"
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	"github.com/opengovern/opencomply/jobs/post-install-job/config"
-	git2 "github.com/opengovern/opencomply/jobs/post-install-job/job/git"
-	"github.com/opengovern/opencomply/services/core/client"
-	"github.com/opengovern/opencomply/services/core/db/models"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/config"
+	git2 "github.com/opengovern/opensecurity/jobs/post-install-job/job/git"
+	"github.com/opengovern/opensecurity/services/core/client"
+	"github.com/opengovern/opensecurity/services/core/db/models"
 	"go.uber.org/zap"
 )
 

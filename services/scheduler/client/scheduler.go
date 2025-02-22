@@ -8,11 +8,11 @@ import (
 
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/httpserver"
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/opengovern/opencomply/services/scheduler/api"
+	"github.com/opengovern/opensecurity/services/scheduler/api"
 )
 
 type TimeRangeFilter struct {

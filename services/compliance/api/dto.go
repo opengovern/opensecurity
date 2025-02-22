@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/opengovern/og-util/pkg/integration"
-	coreClient "github.com/opengovern/opencomply/services/core/api"
-	integrationapi "github.com/opengovern/opencomply/services/integration/api/models"
+	coreClient "github.com/opengovern/opensecurity/services/core/api"
+	integrationapi "github.com/opengovern/opensecurity/services/integration/api/models"
 )
 
 type PolicyLanguage string

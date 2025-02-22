@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opengovern/opencomply/pkg/types"
+	"github.com/opengovern/opensecurity/pkg/types"
 
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
@@ -17,8 +17,8 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	es2 "github.com/opengovern/og-util/pkg/es"
 	"github.com/opengovern/og-util/pkg/ticker"
-	"github.com/opengovern/opencomply/services/scheduler/api"
-	"github.com/opengovern/opencomply/services/scheduler/es"
+	"github.com/opengovern/opensecurity/services/scheduler/api"
+	"github.com/opengovern/opensecurity/services/scheduler/es"
 	"go.uber.org/zap"
 )
 

@@ -2,7 +2,7 @@ package cloudql_init_job
 
 import (
 	"github.com/opengovern/og-util/pkg/config"
-	"github.com/opengovern/opencomply/services/integration/client"
+	"github.com/opengovern/opensecurity/services/integration/client"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"os/exec"

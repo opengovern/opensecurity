@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/jackc/pgtype"
-	"github.com/opengovern/opencomply/jobs/demo-importer-job/db"
-	"github.com/opengovern/opencomply/jobs/demo-importer-job/db/model"
-	// "github.com/opengovern/opencomply/jobs/demo-importer-job/types"
+	"github.com/opengovern/opensecurity/jobs/demo-importer-job/db"
+	"github.com/opengovern/opensecurity/jobs/demo-importer-job/db/model"
+	// "github.com/opengovern/opensecurity/jobs/demo-importer-job/types"
 	"go.uber.org/zap"
 )
 

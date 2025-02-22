@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/opengovern/og-util/pkg/postgres"
-	"github.com/opengovern/opencomply/services/compliance/db"
+	"github.com/opengovern/opensecurity/services/compliance/db"
 	"os"
 	"runtime"
 	"time"
@@ -15,9 +15,9 @@ import (
 	esSinkClient "github.com/opengovern/og-util/pkg/es/ingest/client"
 	"github.com/opengovern/og-util/pkg/jq"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
-	"github.com/opengovern/opencomply/jobs/compliance-summarizer-job/types"
-	coreClient "github.com/opengovern/opencomply/services/core/client"
-	integrationClient "github.com/opengovern/opencomply/services/integration/client"
+	"github.com/opengovern/opensecurity/jobs/compliance-summarizer-job/types"
+	coreClient "github.com/opengovern/opensecurity/services/core/client"
+	integrationClient "github.com/opengovern/opensecurity/services/integration/client"
 	"go.uber.org/zap"
 )
 

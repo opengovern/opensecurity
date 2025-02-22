@@ -2,7 +2,7 @@ package db
 
 
 import (
-	"github.com/opengovern/opencomply/services/core/db/models"
+	"github.com/opengovern/opensecurity/services/core/db/models"
 	"gorm.io/gorm"
 )
 

@@ -3,8 +3,8 @@ package compliance_quick_run
 import (
 	"context"
 	"encoding/json"
-	auditjob "github.com/opengovern/opencomply/jobs/compliance-quick-run-job"
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	auditjob "github.com/opengovern/opensecurity/jobs/compliance-quick-run-job"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 
 	"github.com/nats-io/nats.go/jetstream"
 	"go.uber.org/zap"

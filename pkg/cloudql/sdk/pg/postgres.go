@@ -3,7 +3,7 @@ package pg
 import (
 	"context"
 	"errors"
-	integration "github.com/opengovern/opencomply/services/integration/models"
+	integration "github.com/opengovern/opensecurity/services/integration/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

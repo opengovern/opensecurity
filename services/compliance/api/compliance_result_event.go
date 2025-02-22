@@ -3,7 +3,7 @@ package api
 import (
 	"github.com/opengovern/og-util/pkg/es"
 	"github.com/opengovern/og-util/pkg/integration"
-	"github.com/opengovern/opencomply/pkg/types"
+	"github.com/opengovern/opensecurity/pkg/types"
 	"time"
 )
 

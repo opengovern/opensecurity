@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/opengovern/opencomply/services/auth/db"
+	"github.com/opengovern/opensecurity/services/auth/db"
 )
 
 type Service struct {

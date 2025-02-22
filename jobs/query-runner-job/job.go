@@ -9,8 +9,8 @@ import (
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/es"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	"github.com/opengovern/opencomply/pkg/types"
-	"github.com/opengovern/opencomply/services/core/api"
+	"github.com/opengovern/opensecurity/pkg/types"
+	"github.com/opengovern/opensecurity/services/core/api"
 	"go.uber.org/zap"
 )
 

@@ -7,10 +7,10 @@ import (
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/integration"
-	complianceApi "github.com/opengovern/opencomply/services/compliance/api"
-	integrationapi "github.com/opengovern/opencomply/services/integration/api/models"
+	complianceApi "github.com/opengovern/opensecurity/services/compliance/api"
+	integrationapi "github.com/opengovern/opensecurity/services/integration/api/models"
 
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"go.uber.org/zap"
 )
 

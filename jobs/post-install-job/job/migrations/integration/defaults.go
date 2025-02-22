@@ -1,7 +1,7 @@
 package integration
 
 import (
-	"github.com/opengovern/opencomply/services/integration/models"
+	"github.com/opengovern/opensecurity/services/integration/models"
 )
 
 var defaultIntegrationGroups = []models.IntegrationGroup{

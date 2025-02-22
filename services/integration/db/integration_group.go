@@ -1,7 +1,7 @@
 package db
 
 import (
-	"github.com/opengovern/opencomply/services/integration/models"
+	"github.com/opengovern/opensecurity/services/integration/models"
 )
 
 // DeleteIntegrationGroup deletes an Integration Group

@@ -7,10 +7,10 @@ import (
 
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	"github.com/opengovern/opencomply/pkg/cloudql/sdk/config"
-	"github.com/opengovern/opencomply/pkg/cloudql/sdk/services"
-	"github.com/opengovern/opencomply/pkg/utils"
-	complianceApi "github.com/opengovern/opencomply/services/compliance/api"
+	"github.com/opengovern/opensecurity/pkg/cloudql/sdk/config"
+	"github.com/opengovern/opensecurity/pkg/cloudql/sdk/services"
+	"github.com/opengovern/opensecurity/pkg/utils"
+	complianceApi "github.com/opengovern/opensecurity/services/compliance/api"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 )
 

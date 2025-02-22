@@ -1,8 +1,8 @@
 package runner
 
 import (
-	complianceApi "github.com/opengovern/opencomply/services/compliance/api"
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	complianceApi "github.com/opengovern/opensecurity/services/compliance/api"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"time"
 )
 

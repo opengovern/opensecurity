@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	"github.com/opengovern/opencomply/services/auth/api"
+	"github.com/opengovern/opensecurity/services/auth/api"
 	"net/http"
 )
 

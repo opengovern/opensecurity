@@ -3,9 +3,9 @@ package integration
 import (
 	"context"
 	"fmt"
-	"github.com/opengovern/opencomply/jobs/post-install-job/config"
-	"github.com/opengovern/opencomply/jobs/post-install-job/db"
-	integrationModels "github.com/opengovern/opencomply/services/integration/models"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/config"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/db"
+	integrationModels "github.com/opengovern/opensecurity/services/integration/models"
 	"gorm.io/gorm/clause"
 
 	"github.com/opengovern/og-util/pkg/postgres"

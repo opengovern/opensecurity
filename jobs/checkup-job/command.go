@@ -5,7 +5,7 @@ import (
 	"os"
 
 	config2 "github.com/opengovern/og-util/pkg/config"
-	"github.com/opengovern/opencomply/jobs/checkup-job/config"
+	"github.com/opengovern/opensecurity/jobs/checkup-job/config"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"

@@ -7,7 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/opengovern/og-util/pkg/steampipe"
-	coreApi "github.com/opengovern/opencomply/services/core/api"
+	coreApi "github.com/opengovern/opensecurity/services/core/api"
 	"go.uber.org/zap"
 )
 

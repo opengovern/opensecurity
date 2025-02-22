@@ -19,8 +19,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpserver"
-	"github.com/opengovern/opencomply/services/auth/db"
-	"github.com/opengovern/opencomply/services/auth/utils"
+	"github.com/opengovern/opensecurity/services/auth/db"
+	"github.com/opengovern/opensecurity/services/auth/utils"
 	"go.uber.org/zap"
 	"google.golang.org/genproto/googleapis/rpc/status"
 )

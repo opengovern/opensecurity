@@ -10,7 +10,7 @@ import (
 	"github.com/opengovern/og-util/pkg/es"
 	"github.com/opengovern/og-util/pkg/jq"
 	essdk "github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
-	"github.com/opengovern/opencomply/pkg/utils"
+	"github.com/opengovern/opensecurity/pkg/utils"
 	"go.uber.org/zap"
 	"time"
 )

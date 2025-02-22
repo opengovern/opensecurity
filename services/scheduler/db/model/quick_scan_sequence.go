@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/lib/pq"
-	"github.com/opengovern/opencomply/services/scheduler/api"
+	"github.com/opengovern/opensecurity/services/scheduler/api"
 	"gorm.io/gorm"
 )
 

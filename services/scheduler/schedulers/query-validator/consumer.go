@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/nats-io/nats.go/jetstream"
-	queryvalidator "github.com/opengovern/opencomply/jobs/query-validator-job"
+	queryvalidator "github.com/opengovern/opensecurity/jobs/query-validator-job"
 	"go.uber.org/zap"
 )
 

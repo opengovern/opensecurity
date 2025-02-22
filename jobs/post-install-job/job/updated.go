@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opengovern/opencomply/jobs/post-install-job/db/model"
-	"github.com/opengovern/opencomply/jobs/post-install-job/job/types"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/db/model"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/job/types"
 	"go.uber.org/zap"
 )
 

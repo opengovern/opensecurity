@@ -2,14 +2,14 @@
   <a href="https://opencomply.io">
     <picture>
       <!-- Dark mode logo -->
-      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-dark.png">
+      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/opengovern/opensecurity/blob/main/assets/logos/logo-dark.png">
       <!-- Light mode logo -->
-      <source media="(prefers-color-scheme: light)" srcset="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-light.png">
+      <source media="(prefers-color-scheme: light)" srcset="https://github.com/opengovern/opensecurity/blob/main/assets/logos/logo-light.png">
       <!-- Fallback/logo -->
       <img
         width="70%"
         alt="opencomply"
-        src="https://github.com/opengovern/opencomply/blob/main/assets/logos/logo-dark.png"
+        src="https://github.com/opengovern/opensecurity/blob/main/assets/logos/logo-dark.png"
       >
     </picture>
   </a>

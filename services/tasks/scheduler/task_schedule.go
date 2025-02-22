@@ -3,9 +3,9 @@ package scheduler
 import (
 	"github.com/opengovern/og-util/pkg/jq"
 	"github.com/opengovern/og-util/pkg/ticker"
-	"github.com/opengovern/opencomply/pkg/utils"
-	"github.com/opengovern/opencomply/services/tasks/config"
-	"github.com/opengovern/opencomply/services/tasks/db"
+	"github.com/opengovern/opensecurity/pkg/utils"
+	"github.com/opengovern/opensecurity/services/tasks/config"
+	"github.com/opengovern/opensecurity/services/tasks/db"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"time"

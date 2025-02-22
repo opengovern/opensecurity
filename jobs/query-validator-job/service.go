@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
-	cloudql_init_job "github.com/opengovern/opencomply/jobs/cloudql-init-job"
-	"github.com/opengovern/opencomply/services/integration/client"
+	cloudql_init_job "github.com/opengovern/opensecurity/jobs/cloudql-init-job"
+	"github.com/opengovern/opensecurity/services/integration/client"
 	"strconv"
 	"time"
 

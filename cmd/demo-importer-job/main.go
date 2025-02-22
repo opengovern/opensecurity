@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	demoimporter "github.com/opengovern/opencomply/jobs/demo-importer-job"
+	demoimporter "github.com/opengovern/opensecurity/jobs/demo-importer-job"
 )
 
 func main() {

@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgtype"
 	"github.com/lib/pq"
 	"github.com/opengovern/og-util/pkg/integration"
-	api "github.com/opengovern/opencomply/services/integration/api/models"
+	api "github.com/opengovern/opensecurity/services/integration/api/models"
 )
 
 type Integration struct {

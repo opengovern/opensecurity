@@ -7,10 +7,10 @@ import (
 	"github.com/jackc/pgtype"
 	kedav1alpha1 "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
 	"github.com/opengovern/og-util/pkg/koanf"
-	"github.com/opengovern/opencomply/services/tasks/config"
-	"github.com/opengovern/opencomply/services/tasks/db/models"
-	"github.com/opengovern/opencomply/services/tasks/scheduler"
-	"github.com/opengovern/opencomply/services/tasks/worker"
+	"github.com/opengovern/opensecurity/services/tasks/config"
+	"github.com/opengovern/opensecurity/services/tasks/db/models"
+	"github.com/opengovern/opensecurity/services/tasks/scheduler"
+	"github.com/opengovern/opensecurity/services/tasks/worker"
 	"gopkg.in/yaml.v3"
 	"io/fs"
 	"io/ioutil"
@@ -26,7 +26,7 @@ import (
 
 	"github.com/opengovern/og-util/pkg/httpserver"
 	"github.com/opengovern/og-util/pkg/postgres"
-	"github.com/opengovern/opencomply/services/tasks/db"
+	"github.com/opengovern/opensecurity/services/tasks/db"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )

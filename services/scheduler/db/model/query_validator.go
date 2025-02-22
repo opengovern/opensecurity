@@ -1,7 +1,7 @@
 package model
 
 import (
-	queryvalidator "github.com/opengovern/opencomply/jobs/query-validator-job"
+	queryvalidator "github.com/opengovern/opensecurity/jobs/query-validator-job"
 	"gorm.io/gorm"
 )
 

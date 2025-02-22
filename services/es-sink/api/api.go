@@ -4,8 +4,8 @@ import (
 	"github.com/labstack/echo/v4"
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpserver"
-	"github.com/opengovern/opencomply/services/es-sink/api/ingest"
-	"github.com/opengovern/opencomply/services/es-sink/service"
+	"github.com/opengovern/opensecurity/services/es-sink/api/ingest"
+	"github.com/opengovern/opensecurity/services/es-sink/service"
 	"go.uber.org/zap"
 )
 

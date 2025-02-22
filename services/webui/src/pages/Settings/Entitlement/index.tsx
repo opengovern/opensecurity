@@ -619,14 +619,14 @@ export default function SettingsEntitlement() {
 
 ## Open Source Code
 - **Client-Side Collection**: The relevant logic in opencomply that gathers and sends usage data can be found here:  
-  [https://github.com/opengovern/opencomply/blob/main/jobs/checkup-job/job.go](https://github.com/opengovern/opencomply/blob/main/jobs/checkup-job/job.go)  
+  [https://github.com/opengovern/opensecurity/blob/main/jobs/checkup-job/job.go](https://github.com/opengovern/opensecurity/blob/main/jobs/checkup-job/job.go)  
 - **Server-Side Processing**: The server responsible for receiving and processing the data is here:  
   [https://github.com/opengovern/usage-tracker](https://github.com/opengovern/usage-tracker)
 
 We encourage you to review this code to understand exactly what information is being sent, how it is transmitted, and how it is processed once received.
 
 ## How to Disable Usage Data Collection
-If you wish to turn off this data collection process, you can simply modify and recompile opencomply with the relevant functionality disabled. The pertinent section can be found in the [job.go file](https://github.com/opengovern/opencomply/blob/main/jobs/checkup-job/job.go).
+If you wish to turn off this data collection process, you can simply modify and recompile opencomply with the relevant functionality disabled. The pertinent section can be found in the [job.go file](https://github.com/opengovern/opensecurity/blob/main/jobs/checkup-job/job.go).
 
 If you have any concerns or questions reach out to us at [support@opencomply.io](mailto:support@opencomply.io)`}
                         skipHtml={false}

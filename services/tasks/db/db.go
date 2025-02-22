@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 	"github.com/jackc/pgtype"
-	"github.com/opengovern/opencomply/services/tasks/db/models"
+	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	"gorm.io/gorm"
 )
 

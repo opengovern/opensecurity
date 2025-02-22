@@ -8,7 +8,7 @@ import (
 	"github.com/opengovern/og-util/pkg/es"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/integration"
-	"github.com/opengovern/opencomply/services/core/api"
+	"github.com/opengovern/opensecurity/services/core/api"
 	"go.uber.org/zap"
 	"regexp"
 	"strings"

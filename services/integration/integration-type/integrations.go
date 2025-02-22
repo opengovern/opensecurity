@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/go-plugin"
 	kedav1alpha1 "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
 	"github.com/labstack/echo/v4"
-	"github.com/opengovern/opencomply/services/integration/config"
-	"github.com/opengovern/opencomply/services/integration/db"
+	"github.com/opengovern/opensecurity/services/integration/config"
+	"github.com/opengovern/opensecurity/services/integration/db"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
@@ -33,7 +33,7 @@ import (
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/og-util/pkg/integration/interfaces"
 
-	"github.com/opengovern/opencomply/services/integration/models"
+	"github.com/opengovern/opensecurity/services/integration/models"
 	hczap "github.com/zaffka/zap-to-hclog"
 )
 

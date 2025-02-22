@@ -4,9 +4,9 @@ import (
 	"fmt"
 	api2 "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	"github.com/opengovern/opencomply/services/compliance/api"
-	coreApi "github.com/opengovern/opencomply/services/core/api"
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	"github.com/opengovern/opensecurity/services/compliance/api"
+	coreApi "github.com/opengovern/opensecurity/services/core/api"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"go.uber.org/zap"
 )
 

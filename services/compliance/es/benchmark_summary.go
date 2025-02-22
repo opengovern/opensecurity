@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	types2 "github.com/opengovern/opencomply/jobs/compliance-summarizer-job/types"
-	"github.com/opengovern/opencomply/pkg/types"
+	types2 "github.com/opengovern/opensecurity/jobs/compliance-summarizer-job/types"
+	"github.com/opengovern/opensecurity/pkg/types"
 
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"go.uber.org/zap"

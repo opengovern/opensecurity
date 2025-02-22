@@ -2,8 +2,8 @@ package entities
 
 import (
 	"github.com/opengovern/og-util/pkg/steampipe"
-	api "github.com/opengovern/opencomply/services/integration/api/models"
-	"github.com/opengovern/opencomply/services/integration/models"
+	api "github.com/opengovern/opensecurity/services/integration/api/models"
+	"github.com/opengovern/opensecurity/services/integration/models"
 	"golang.org/x/net/context"
 )
 

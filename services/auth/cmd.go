@@ -14,7 +14,7 @@ import (
 	config2 "github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/httpserver"
 	"github.com/opengovern/og-util/pkg/postgres"
-	"github.com/opengovern/opencomply/services/auth/db"
+	"github.com/opengovern/opensecurity/services/auth/db"
 
 	"crypto/rand"
 

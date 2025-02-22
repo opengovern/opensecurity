@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/opengovern/og-util/pkg/httpclient"
 
-	compliance "github.com/opengovern/opencomply/services/compliance/api"
+	compliance "github.com/opengovern/opensecurity/services/compliance/api"
 )
 
 type ComplianceServiceClient interface {

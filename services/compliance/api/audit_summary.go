@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/opengovern/opencomply/pkg/types"
+	"github.com/opengovern/opensecurity/pkg/types"
 	"time"
 )
 

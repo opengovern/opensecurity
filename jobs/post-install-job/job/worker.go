@@ -10,10 +10,10 @@ import (
 
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-util/pkg/postgres"
-	"github.com/opengovern/opencomply/jobs/post-install-job/config"
-	"github.com/opengovern/opencomply/jobs/post-install-job/db"
-	"github.com/opengovern/opencomply/jobs/post-install-job/db/model"
-	"github.com/opengovern/opencomply/jobs/post-install-job/job/types"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/config"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/db"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/db/model"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/job/types"
 	"go.uber.org/zap"
 )
 

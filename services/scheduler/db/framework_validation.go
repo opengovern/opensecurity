@@ -2,7 +2,7 @@ package db
 
 import (
 	"errors"
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"gorm.io/gorm"
 )
 
