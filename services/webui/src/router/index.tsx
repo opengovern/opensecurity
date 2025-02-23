@@ -28,7 +28,7 @@ import Tasks from '../pages/Tasks'
 import TaskDetail from '../pages/Tasks/TaskDetail'
 
 const show_compliance = process.env.REACT_APP_SHOW_COMPLIANCE
-
+console.log(show_compliance)
 
 const authRoutes = [
     {
