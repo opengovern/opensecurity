@@ -1,9 +1,9 @@
 
 FROM node:18-alpine
 
-COPY ./services/webui/build ./
+COPY ./services/webui/build ./build
 
 
 RUN npm install -g serve --force
 
-CMD ["serve","-s",".","-p" ,"7298"]
+CMD ["serve","-s","build","-p" ,"7298"]
