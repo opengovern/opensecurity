@@ -190,7 +190,7 @@ export default function TopHeader({
             <Flex className=" flex-row items-center justify-between w-full">
                 <Flex className="w-full">
                     <Title className="font-semibold !text-xl whitespace-nowrap">
-                        OpenComply
+                        opensecurity
                     </Title>
                 </Flex>
                 <Flex className="w-full flex-row items-center justify-end"><Utilities/></Flex>

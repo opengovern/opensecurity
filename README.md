@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://opencomply.io">
+  <a href="https://opensecurity.io">
     <picture>
       <!-- Dark mode logo -->
       <source media="(prefers-color-scheme: dark)" srcset="https://github.com/opengovern/opensecurity/blob/main/assets/logos/logo-dark.png">
@@ -8,7 +8,7 @@
       <!-- Fallback/logo -->
       <img
         width="70%"
-        alt="opencomply"
+        alt="opensecurity"
         src="https://github.com/opengovern/opensecurity/blob/main/assets/logos/logo-dark.png"
       >
     </picture>
@@ -25,11 +25,11 @@
 </p>
 
 
-# opencomply
+# opensecurity
 
 #### Simplify security and compliance across your entire stack—from containers to cloud—so you can ship faster and worry less.
 
-## What OpenComply Does
+## What opensecurity Does
 
 - **Full Visibility**: See everything across your clouds and tools—infrastructure, data, identities, configurations, and security.
 - **Centralized Compliance**: Manage and enforce all your compliance checks for configurations, processes, and security in one place.
@@ -43,7 +43,7 @@
 - 📈 **Scalable Audits**: Handles thousands of checks across large infrastructures.
 - 🔗 **Extensive Integrations**: Connect to AWS, Azure, DigitalOcean, Linode, GitHub, and more.
 
-## Why OpenComply?
+## Why opensecurity?
 
 - **Unified Security & Compliance**: Manage security and compliance checks together, simplifying audits.
 - **Automated Governance**: Continuously monitor and enforce policies, reducing manual effort.
@@ -58,16 +58,16 @@ Get up and running in minutes:
 Install on any Kubernetes clusters with at least 3 nodes (4 vCPUs x 16GB RAM each).
 
 ```bash
-helm repo add opencomply https://charts.opencomply.io --force-update
-helm install -n opencomply opencomply opencomply/opencomply --create-namespace
-kubectl port-forward -n opencomply svc/nginx-proxy 8080:80
+helm repo add opensecurity https://charts.opensecurity.io --force-update
+helm install -n opensecurity opensecurity opensecurity/opensecurity --create-namespace
+kubectl port-forward -n opensecurity svc/nginx-proxy 8080:80
 ```
 
-Open http://localhost:8080/ in your browser, sign in with ```admin@opencomply.io``` as the username and ```password``` as the password.
+Open http://localhost:8080/ in your browser, sign in with ```admin@opensecurity.io``` as the username and ```password``` as the password.
 
 App includes sample data.
 
 ## Next Steps
 
-*   **Explore the Documentation:** Visit [docs.opencomply.io](https://docs.opencomply.io) for detailed information and guides.
+*   **Explore the Documentation:** Visit [docs.opensecurity.io](https://docs.opensecurity.io) for detailed information and guides.
 *   **Try Cloud for Free:** Sign up for our hosted Cloud offering (coming soon).

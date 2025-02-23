@@ -21,7 +21,7 @@ spec:
             - weight: 1
               preference:
                 matchExpressions:
-                  - key: opencomply-node
+                  - key: opensecurity-node
                     operator: In
                     values:
                       - worker

@@ -24,7 +24,7 @@ SERVICES=""
 while read -r SVC; do
 	cd cmd/$SVC
 	while read -r PKG; do
-		if [[ $PKG == *"opencomply"* ]]; then
+		if [[ $PKG == *"opensecurity"* ]]; then
 			PKGN=$(echo "$PKG" | sed 's;github.com/opengovern/opensecurity/;;g')
 			SEARCH="0"
 			while read -r CHANGE; do

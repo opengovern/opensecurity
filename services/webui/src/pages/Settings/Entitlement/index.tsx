@@ -163,7 +163,7 @@ export default function SettingsEntitlement() {
             title: 'License',
             value: (
                 <a
-                    href="https://opencomply.io/license"
+                    href="https://opensecurity.io/license"
                     className="text-blue-600 underline"
                 >
                     Business Source License v1.1
@@ -603,7 +603,7 @@ export default function SettingsEntitlement() {
                         // @ts-ignore
                         children={`# Usage Data Notice
 
-*opencomply* Community Edition includes a built-in process to gather a minimal set of **anonymized** usage data once per day. This helps us understand how our community uses opencomply and guides future improvements. Specifically, the following information is sent to our analytics service at [https://stats.opencomply.io](https://stats.opencomply.io):
+*opensecurity* Community Edition includes a built-in process to gather a minimal set of **anonymized** usage data once per day. This helps us understand how our community uses opensecurity and guides future improvements. Specifically, the following information is sent to our analytics service at [https://stats.opensecurity.io](https://stats.opensecurity.io):
 
 1. **Product Version**: Used to identify which releases are actively in use.  
 2. **Number of Users**: Aggregated count of active users.  
@@ -615,10 +615,10 @@ export default function SettingsEntitlement() {
 - We do **not** collect or store any personally identifiable information.  
 - **No confidential data is ever sent** from your environment.  
 - All data is transmitted and stored in an anonymized format.  
-- We only use this information to improve OpenComply and to better understand usage patterns and trends.
+- We only use this information to improve opensecurity and to better understand usage patterns and trends.
 
 ## Open Source Code
-- **Client-Side Collection**: The relevant logic in opencomply that gathers and sends usage data can be found here:  
+- **Client-Side Collection**: The relevant logic in opensecurity that gathers and sends usage data can be found here:  
   [https://github.com/opengovern/opensecurity/blob/main/jobs/checkup-job/job.go](https://github.com/opengovern/opensecurity/blob/main/jobs/checkup-job/job.go)  
 - **Server-Side Processing**: The server responsible for receiving and processing the data is here:  
   [https://github.com/opengovern/usage-tracker](https://github.com/opengovern/usage-tracker)
@@ -626,9 +626,9 @@ export default function SettingsEntitlement() {
 We encourage you to review this code to understand exactly what information is being sent, how it is transmitted, and how it is processed once received.
 
 ## How to Disable Usage Data Collection
-If you wish to turn off this data collection process, you can simply modify and recompile opencomply with the relevant functionality disabled. The pertinent section can be found in the [job.go file](https://github.com/opengovern/opensecurity/blob/main/jobs/checkup-job/job.go).
+If you wish to turn off this data collection process, you can simply modify and recompile opensecurity with the relevant functionality disabled. The pertinent section can be found in the [job.go file](https://github.com/opengovern/opensecurity/blob/main/jobs/checkup-job/job.go).
 
-If you have any concerns or questions reach out to us at [support@opencomply.io](mailto:support@opencomply.io)`}
+If you have any concerns or questions reach out to us at [support@opensecurity.io](mailto:support@opensecurity.io)`}
                         skipHtml={false}
                         className={'markdown-body'}
                         rehypePlugins={[rehypeRaw]}

@@ -159,7 +159,7 @@ func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfi
 	}
 	req.InstallId = about.InstallID
 
-	url := fmt.Sprintf("%s/api/v1/information/usage", "https://stats.opencomply.io")
+	url := fmt.Sprintf("%s/api/v1/information/usage", "https://stats.opensecurity.io")
 	reqBytes, err := json.Marshal(req)
 	if err != nil {
 		logger.Error("failed to marshal telemetry request", zap.Error(err))

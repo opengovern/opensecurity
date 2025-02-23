@@ -69,7 +69,7 @@ export default function RequestDemo() {
                         <span className="font-bold text-gray-800">
                             Book a Demo
                         </span>{' '}
-                        to navigate opencomply product
+                        to navigate opensecurity product
                     </Text>
                     <Flex
                         flexDirection="row"
@@ -81,14 +81,14 @@ export default function RequestDemo() {
                     </Flex>
                 </Flex>
                 <Text>
-                    © 2025 open governance Inc. d/b/a opencomply.io. All rights
+                    © 2025 open governance Inc. d/b/a opensecurity.io. All rights
                     reserved.
                 </Text>
             </Flex>
             <iframe
                 title="Setup a meeting"
                 className="w-full h-full relative max-w-[630px]"
-                src="https://cal.com/team/opencomply/try-enterprise"
+                src="https://cal.com/team/opensecurity/try-enterprise"
             />
         </Grid>
     )
