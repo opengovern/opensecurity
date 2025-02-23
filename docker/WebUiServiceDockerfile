@@ -3,6 +3,7 @@ FROM node:18-alpine
 
 COPY ./services/webui/build ./build
 
+RUN chmod 777 ./build/*
 
 RUN npm install -g serve --force
 
