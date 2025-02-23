@@ -2,7 +2,6 @@
 FROM node:18-alpine
 
 COPY ./services/webui/build ./
-COPY ./services/webui/.env.example /usr/share/nginx/html/.env
 
 
 RUN npm install -g serve --force
