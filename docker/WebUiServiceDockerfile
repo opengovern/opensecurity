@@ -7,4 +7,4 @@ RUN chmod 777 ./build/*
 
 RUN npm install -g serve --force
 
-CMD ["serve","-s","build","-p" ,"7298"]
+CMD ["serve","-s","./build","-p" ,"7298"]
