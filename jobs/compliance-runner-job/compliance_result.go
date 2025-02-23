@@ -5,17 +5,17 @@ import (
 	"fmt"
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	"github.com/opengovern/opencomply/services/integration/client"
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	"github.com/opengovern/opensecurity/services/integration/client"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/og-util/pkg/steampipe"
-	"github.com/opengovern/opencomply/pkg/types"
-	"github.com/opengovern/opencomply/pkg/utils"
-	"github.com/opengovern/opencomply/services/compliance/api"
+	"github.com/opengovern/opensecurity/pkg/types"
+	"github.com/opengovern/opensecurity/pkg/utils"
+	"github.com/opengovern/opensecurity/services/compliance/api"
 	"go.uber.org/zap"
 )
 

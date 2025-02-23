@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	queryrunner "github.com/opengovern/opencomply/jobs/query-runner-job"
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	queryrunner "github.com/opengovern/opensecurity/jobs/query-runner-job"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"gorm.io/gorm"
 )
 

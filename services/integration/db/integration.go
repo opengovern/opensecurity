@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/opengovern/og-util/pkg/integration"
-	"github.com/opengovern/opencomply/services/integration/models"
+	"github.com/opengovern/opensecurity/services/integration/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

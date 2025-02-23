@@ -72,7 +72,7 @@ func (r *RegoEngine) getRegoFunctionForTables(ctx context.Context) ([]func(*rego
 		r.logger.Info("scanned table name", zap.String("table", tableName))
 
 		f := rego.FunctionDyn(&rego.Function{
-			Name:             fmt.Sprintf("opencomply.%s", tableName),
+			Name:             fmt.Sprintf("opensecurity.%s", tableName),
 			Description:      "",
 			Decl:             types.NewFunction([]types.Type{types.NewObject(nil, &types.DynamicProperty{Key: types.S, Value: types.NewArray(nil, types.A)})}, types.NewArray(nil, types.A)),
 			Memoize:          true,
@@ -143,7 +143,7 @@ func (r *RegoEngine) getRegoFunctionForTables(ctx context.Context) ([]func(*rego
 
 	// Add raw query function
 	f := rego.FunctionDyn(&rego.Function{
-		Name:             "opencomply.cloudql",
+		Name:             "opensecurity.cloudql",
 		Description:      "",
 		Decl:             types.NewFunction([]types.Type{types.S}, types.NewArray(nil, types.A)),
 		Memoize:          true,
@@ -180,7 +180,7 @@ func (r *RegoEngine) getRegoFunctionForTables(ctx context.Context) ([]func(*rego
 		return ast.NewTerm(value), nil
 	})
 
-	r.logger.Info("created rego function", zap.String("function", "opencomply.cloudql"))
+	r.logger.Info("created rego function", zap.String("function", "opensecurity.cloudql"))
 	results = append(results, f)
 
 	return results, nil

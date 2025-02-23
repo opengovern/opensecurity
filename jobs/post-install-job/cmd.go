@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/opengovern/og-util/pkg/config"
-	config2 "github.com/opengovern/opencomply/jobs/post-install-job/config"
-	"github.com/opengovern/opencomply/jobs/post-install-job/job"
+	config2 "github.com/opengovern/opensecurity/jobs/post-install-job/config"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/job"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )

@@ -2,9 +2,9 @@ package opengovernance
 
 import (
 	"context"
-	"github.com/opengovern/opencomply/pkg/cloudql/sdk/config"
-	"github.com/opengovern/opencomply/pkg/cloudql/sdk/extra/utils"
-	"github.com/opengovern/opencomply/pkg/cloudql/sdk/extra/view-sync"
+	"github.com/opengovern/opensecurity/pkg/cloudql/sdk/config"
+	"github.com/opengovern/opensecurity/pkg/cloudql/sdk/extra/utils"
+	"github.com/opengovern/opensecurity/pkg/cloudql/sdk/extra/view-sync"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 )

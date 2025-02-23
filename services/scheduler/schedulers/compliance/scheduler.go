@@ -7,8 +7,8 @@ import (
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	integrationapi "github.com/opengovern/opencomply/services/integration/api/models"
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	integrationapi "github.com/opengovern/opensecurity/services/integration/api/models"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"go.uber.org/zap"
 	"time"
 )

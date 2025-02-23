@@ -7,15 +7,15 @@ import (
 	"fmt"
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	"github.com/opengovern/opencomply/services/compliance/api"
+	"github.com/opengovern/opensecurity/services/compliance/api"
 	"strings"
 	"text/template"
 
 	"github.com/opengovern/og-util/pkg/es"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/steampipe"
-	"github.com/opengovern/opencomply/pkg/types"
-	es2 "github.com/opengovern/opencomply/services/compliance/es"
+	"github.com/opengovern/opensecurity/pkg/types"
+	es2 "github.com/opengovern/opensecurity/services/compliance/es"
 	"go.uber.org/zap"
 )
 

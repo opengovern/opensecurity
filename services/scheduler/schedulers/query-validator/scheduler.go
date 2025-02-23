@@ -5,8 +5,8 @@ import (
 
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	queryvalidator "github.com/opengovern/opencomply/jobs/query-validator-job"
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	queryvalidator "github.com/opengovern/opensecurity/jobs/query-validator-job"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"go.uber.org/zap"
 )
 

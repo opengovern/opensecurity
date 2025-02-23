@@ -11,12 +11,12 @@ import (
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	steampipesdk "github.com/opengovern/og-util/pkg/steampipe"
-	"github.com/opengovern/opencomply/pkg/cloudql/sdk/config"
-	"github.com/opengovern/opencomply/pkg/cloudql/sdk/pg"
-	"github.com/opengovern/opencomply/pkg/cloudql/utils/dag"
-	"github.com/opengovern/opencomply/pkg/utils"
-	"github.com/opengovern/opencomply/services/core/client"
-	"github.com/opengovern/opencomply/services/core/db/models"
+	"github.com/opengovern/opensecurity/pkg/cloudql/sdk/config"
+	"github.com/opengovern/opensecurity/pkg/cloudql/sdk/pg"
+	"github.com/opengovern/opensecurity/pkg/cloudql/utils/dag"
+	"github.com/opengovern/opensecurity/pkg/utils"
+	"github.com/opengovern/opensecurity/services/core/client"
+	"github.com/opengovern/opensecurity/services/core/db/models"
 	"go.uber.org/zap"
 )
 

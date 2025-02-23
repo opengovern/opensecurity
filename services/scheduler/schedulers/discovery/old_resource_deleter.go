@@ -6,8 +6,8 @@ import (
 
 	es2 "github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/ticker"
-	"github.com/opengovern/opencomply/services/scheduler/api"
-	"github.com/opengovern/opencomply/services/scheduler/es"
+	"github.com/opengovern/opensecurity/services/scheduler/api"
+	"github.com/opengovern/opensecurity/services/scheduler/es"
 
 	"strings"
 	"time"

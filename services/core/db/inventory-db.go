@@ -11,7 +11,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/opengovern/og-util/pkg/model"
 	"gorm.io/gorm/clause"
-	"github.com/opengovern/opencomply/services/core/db/models"
+	"github.com/opengovern/opensecurity/services/core/db/models"
 )
 
 

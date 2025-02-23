@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	"github.com/opengovern/opencomply/jobs/post-install-job/db/model"
-	coreClient "github.com/opengovern/opencomply/services/core/client"
-	integrationClient "github.com/opengovern/opencomply/services/integration/client"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/db/model"
+	coreClient "github.com/opengovern/opensecurity/services/core/client"
+	integrationClient "github.com/opengovern/opensecurity/services/integration/client"
 	"github.com/sashabaranov/go-openai"
 	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -17,8 +17,8 @@ import (
 
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/postgres"
-	"github.com/opengovern/opencomply/services/compliance/db"
-	describeClient "github.com/opengovern/opencomply/services/scheduler/client"
+	"github.com/opengovern/opensecurity/services/compliance/db"
+	describeClient "github.com/opengovern/opensecurity/services/scheduler/client"
 
 	"go.uber.org/zap"
 )

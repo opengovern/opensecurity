@@ -7,7 +7,7 @@ import (
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/integration/interfaces"
-	"github.com/opengovern/opencomply/services/integration/api/models"
+	"github.com/opengovern/opensecurity/services/integration/api/models"
 	"net/http"
 )
 

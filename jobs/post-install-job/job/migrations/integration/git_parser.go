@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/goccy/go-yaml"
-	"github.com/opengovern/opencomply/services/integration/models"
+	"github.com/opengovern/opensecurity/services/integration/models"
 	"io/fs"
 	"os"
 	"path/filepath"

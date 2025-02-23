@@ -7,20 +7,20 @@ License text copyright (c) 2020 MariaDB Corporation Ab, All Rights Reserved.
 
 For the purposes of this document:
 
-- **"opencomply"** refers to the product.
-- **"opencomply.io"** refers to the company Open Governance, Inc., doing business as opencomply.io.
+- **"opensecurity"** refers to the product.
+- **"opensecurity.io"** refers to the company Open Governance, Inc., doing business as opensecurity.io.
 - **"open governance"** or **"open governance inc."** refers to the company Open Governance, Inc.
 - **"You"** and **"Your"** refer to an individual or entity accessing the Business Source License (BSL) or licensed software.
-- **"Licensed Work"** refers to all versions of opencomply.
-- **"Competitive Offering"** is any product sold to third parties—including paid support—that overlaps the capabilities of opencomply's paid version of the Licensed Work.
-- **"Embedded"** means including source code or executable code from the Licensed Work in a competitive product or packaging the competitive product in a way that requires an opencomply product to be accessed or downloaded for the competitive product to operate.
+- **"Licensed Work"** refers to all versions of opensecurity.
+- **"Competitive Offering"** is any product sold to third parties—including paid support—that overlaps the capabilities of opensecurity's paid version of the Licensed Work.
+- **"Embedded"** means including source code or executable code from the Licensed Work in a competitive product or packaging the competitive product in a way that requires an opensecurity product to be accessed or downloaded for the competitive product to operate.
 - **"Product"** refers to software offered to end users for self-management or as a hosted service.
 - **"Internal Use"** refers to use within a single organization, including affiliates under common control.
 
 ## Parameters
 
 - **Licensor:**             Open Governance, Inc.
-- **Licensed Work:**        All versions of opencomply.
+- **Licensed Work:**        All versions of opensecurity.
 - **Additional Use Grant:** You may make production use of the Licensed Work, provided your use does not include offering the Licensed Work to third parties on a hosted or embedded basis in order to compete with Open Governance's paid version(s) of the Licensed Work. For purposes of this license:
 
   - **"Competitive Offering"** is a Product that is offered to third parties on a paid basis, including through paid support arrangements, that significantly overlaps with the capabilities of Open Governance's paid version(s) of the Licensed Work, including paid support.
@@ -33,12 +33,12 @@ For the purposes of this document:
   
   - Hosting or using the Licensed Work(s) for internal purposes within an organization is not considered a competitive offering. Open Governance considers your organization to include all of your affiliates under common control.
   
-  - For binding interpretive guidance on using Open Governance products under the Business Source License, please visit our [FAQ](https://www.opencomply.io/license-faq).
+  - For binding interpretive guidance on using Open Governance products under the Business Source License, please visit our [FAQ](https://www.opensecurity.io/license-faq).
 
 - **Change Date:**          Four years after the Licensed Work’s publication, starting from November 1, 2024 (meaning the earliest date of conversion would be November 1, 2028).
 - **Change License:**       MPL 2.0
 
-For information about alternative licensing arrangements for the Licensed Work, please contact [licensing@opencomply.io](mailto:licensing@opencomply.io).
+For information about alternative licensing arrangements for the Licensed Work, please contact [licensing@opensecurity.io](mailto:licensing@opensecurity.io).
 
 ## Notice
 
@@ -69,4 +69,4 @@ This License does not grant you any right in any trademark or logo of Licensor o
 
 ---
 
-For any specifics regarding interpretation or other detailed inquiries, please refer to the [Business Source License FAQ](https://www.opencomply.io/license-faq) or contact us at [licensing@opencomply.io](mailto:licensing@opencomply.io).
+For any specifics regarding interpretation or other detailed inquiries, please refer to the [Business Source License FAQ](https://www.opensecurity.io/license-faq) or contact us at [licensing@opensecurity.io](mailto:licensing@opensecurity.io).

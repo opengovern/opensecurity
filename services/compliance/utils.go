@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/opengovern/og-util/pkg/model"
-	opengovernanceTypes "github.com/opengovern/opencomply/pkg/types"
-	"github.com/opengovern/opencomply/services/compliance/api"
-	"github.com/opengovern/opencomply/services/compliance/es"
+	opengovernanceTypes "github.com/opengovern/opensecurity/pkg/types"
+	"github.com/opengovern/opensecurity/services/compliance/api"
+	"github.com/opengovern/opensecurity/services/compliance/es"
 	"go.uber.org/zap"
 )
 

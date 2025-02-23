@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/lib/pq"
-	summarizer "github.com/opengovern/opencomply/jobs/compliance-summarizer-job"
-	"github.com/opengovern/opencomply/services/scheduler/api"
+	summarizer "github.com/opengovern/opensecurity/jobs/compliance-summarizer-job"
+	"github.com/opengovern/opensecurity/services/scheduler/api"
 	"gorm.io/gorm"
 )
 

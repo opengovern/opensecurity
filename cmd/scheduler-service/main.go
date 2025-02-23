@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	describe "github.com/opengovern/opencomply/services/scheduler"
+	describe "github.com/opengovern/opensecurity/services/scheduler"
 )
 
 func main() {

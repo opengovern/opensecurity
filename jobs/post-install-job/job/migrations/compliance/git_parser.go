@@ -3,9 +3,9 @@ package compliance
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/opengovern/opencomply/jobs/post-install-job/config"
-	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/shared"
-	"github.com/opengovern/opencomply/jobs/post-install-job/utils"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/config"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/shared"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/utils"
 	"io/fs"
 	"os"
 	"path"
@@ -15,10 +15,10 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-util/pkg/model"
-	"github.com/opengovern/opencomply/jobs/post-install-job/job/git"
-	"github.com/opengovern/opencomply/pkg/types"
-	"github.com/opengovern/opencomply/services/compliance/db"
-	"github.com/opengovern/opencomply/services/core/db/models"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/job/git"
+	"github.com/opengovern/opensecurity/pkg/types"
+	"github.com/opengovern/opensecurity/services/compliance/db"
+	"github.com/opengovern/opensecurity/services/core/db/models"
 	"go.uber.org/zap"
 )
 

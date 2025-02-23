@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/opengovern/og-util/pkg/integration"
-	"github.com/opengovern/opencomply/pkg/types"
-	coreClient "github.com/opengovern/opencomply/services/core/api"
+	"github.com/opengovern/opensecurity/pkg/types"
+	coreClient "github.com/opengovern/opensecurity/services/core/api"
 )
 
 type Control struct {

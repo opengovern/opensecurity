@@ -7,7 +7,7 @@ import (
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/tasks"
-	"github.com/opengovern/opencomply/services/tasks/db/models"
+	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )

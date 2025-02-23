@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	"github.com/opengovern/opencomply/pkg/types"
+	"github.com/opengovern/opensecurity/pkg/types"
 	pg_query "github.com/pganalyze/pg_query_go/v4"
 	"regexp"
 )

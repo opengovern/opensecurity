@@ -8,11 +8,11 @@ import (
 
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	"github.com/opengovern/opencomply/services/compliance/api"
+	"github.com/opengovern/opensecurity/services/compliance/api"
 
 	"github.com/opengovern/og-util/pkg/ticker"
-	describeApi "github.com/opengovern/opencomply/services/scheduler/api"
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	describeApi "github.com/opengovern/opensecurity/services/scheduler/api"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"go.uber.org/zap"
 )
 

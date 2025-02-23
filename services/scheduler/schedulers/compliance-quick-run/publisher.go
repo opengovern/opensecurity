@@ -7,8 +7,8 @@ import (
 
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	auditjob "github.com/opengovern/opencomply/jobs/compliance-quick-run-job"
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	auditjob "github.com/opengovern/opensecurity/jobs/compliance-quick-run-job"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"go.uber.org/zap"
 )
 

@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/opengovern/opencomply/services/tasks"
+	"github.com/opengovern/opensecurity/services/tasks"
 	"os"
 	"os/signal"
 	"syscall"

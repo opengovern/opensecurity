@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/opengovern/og-util/pkg/postgres"
-	"github.com/opengovern/opencomply/pkg/cloudql/sdk/config"
+	"github.com/opengovern/opensecurity/pkg/cloudql/sdk/config"
 	"github.com/turbot/steampipe-plugin-sdk/v5/connection"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 	"go.uber.org/zap"

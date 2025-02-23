@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 )
 
 func (db Database) CreateJobSequencer(job *model.JobSequencer) error {

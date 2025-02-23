@@ -9,14 +9,14 @@ import (
 	authAPI "github.com/opengovern/og-util/pkg/api"
 	shared_entities "github.com/opengovern/og-util/pkg/api/shared-entities"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	"github.com/opengovern/opencomply/jobs/checkup-job/config"
-	authClient "github.com/opengovern/opencomply/services/auth/client"
-	coreClient "github.com/opengovern/opencomply/services/core/client"
+	"github.com/opengovern/opensecurity/jobs/checkup-job/config"
+	authClient "github.com/opengovern/opensecurity/services/auth/client"
+	coreClient "github.com/opengovern/opensecurity/services/core/client"
 	"golang.org/x/net/context"
 
 	"github.com/go-errors/errors"
-	"github.com/opengovern/opencomply/jobs/checkup-job/api"
-	"github.com/opengovern/opencomply/services/integration/client"
+	"github.com/opengovern/opensecurity/jobs/checkup-job/api"
+	"github.com/opengovern/opensecurity/services/integration/client"
 	"go.uber.org/zap"
 )
 
@@ -159,7 +159,7 @@ func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfi
 	}
 	req.InstallId = about.InstallID
 
-	url := fmt.Sprintf("%s/api/v1/information/usage", "https://stats.opencomply.io")
+	url := fmt.Sprintf("%s/api/v1/information/usage", "https://stats.opensecurity.io")
 	reqBytes, err := json.Marshal(req)
 	if err != nil {
 		logger.Error("failed to marshal telemetry request", zap.Error(err))

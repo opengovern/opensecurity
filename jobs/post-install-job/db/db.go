@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/jackc/pgtype"
-	"github.com/opengovern/opencomply/jobs/post-install-job/db/model"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/db/model"
 	"gorm.io/gorm"
 )
 

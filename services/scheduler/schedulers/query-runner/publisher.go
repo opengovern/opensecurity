@@ -9,8 +9,8 @@ import (
 
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	queryrunner "github.com/opengovern/opencomply/jobs/query-runner-job"
-	coreApi "github.com/opengovern/opencomply/services/core/api"
+	queryrunner "github.com/opengovern/opensecurity/jobs/query-runner-job"
+	coreApi "github.com/opengovern/opensecurity/services/core/api"
 	"go.uber.org/zap"
 )
 

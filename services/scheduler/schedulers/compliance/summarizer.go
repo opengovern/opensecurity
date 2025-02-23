@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	summarizer "github.com/opengovern/opencomply/jobs/compliance-summarizer-job"
-	types2 "github.com/opengovern/opencomply/jobs/compliance-summarizer-job/types"
-	"github.com/opengovern/opencomply/pkg/types"
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	summarizer "github.com/opengovern/opensecurity/jobs/compliance-summarizer-job"
+	types2 "github.com/opengovern/opensecurity/jobs/compliance-summarizer-job/types"
+	"github.com/opengovern/opensecurity/pkg/types"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"go.uber.org/zap"
 )
 

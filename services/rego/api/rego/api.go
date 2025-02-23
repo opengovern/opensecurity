@@ -2,8 +2,8 @@ package rego
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/opengovern/opencomply/services/rego/api/models"
-	"github.com/opengovern/opencomply/services/rego/service"
+	"github.com/opengovern/opensecurity/services/rego/api/models"
+	"github.com/opengovern/opensecurity/services/rego/service"
 	"go.uber.org/zap"
 )
 

@@ -3,8 +3,8 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/opengovern/opencomply/pkg/types"
-	"github.com/opengovern/opencomply/services/scheduler/api"
+	"github.com/opengovern/opensecurity/pkg/types"
+	"github.com/opengovern/opensecurity/services/scheduler/api"
 	"gorm.io/gorm"
 	"strconv"
 	"time"

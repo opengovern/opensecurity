@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/opengovern/og-util/pkg/config"
-	config2 "github.com/opengovern/opencomply/services/scheduler/config"
+	config2 "github.com/opengovern/opensecurity/services/scheduler/config"
 	"github.com/spf13/cobra"
 )
 

@@ -2,18 +2,18 @@ package compliance_quick_run
 
 import (
 	"context"
-	integrationClient "github.com/opengovern/opencomply/services/integration/client"
+	integrationClient "github.com/opengovern/opensecurity/services/integration/client"
 	"time"
 
 	"github.com/opengovern/og-util/pkg/jq"
-	coreClient "github.com/opengovern/opencomply/services/core/client"
+	coreClient "github.com/opengovern/opensecurity/services/core/client"
 
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/ticker"
-	"github.com/opengovern/opencomply/pkg/utils"
-	complianceClient "github.com/opengovern/opencomply/services/compliance/client"
-	"github.com/opengovern/opencomply/services/scheduler/config"
-	"github.com/opengovern/opencomply/services/scheduler/db"
+	"github.com/opengovern/opensecurity/pkg/utils"
+	complianceClient "github.com/opengovern/opensecurity/services/compliance/client"
+	"github.com/opengovern/opensecurity/services/scheduler/config"
+	"github.com/opengovern/opensecurity/services/scheduler/db"
 
 	"go.uber.org/zap"
 )

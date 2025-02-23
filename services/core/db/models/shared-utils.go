@@ -1,6 +1,6 @@
 package models
 
-import "github.com/opengovern/opencomply/services/core/api"
+import "github.com/opengovern/opensecurity/services/core/api"
 
 func (qp PolicyParameterValues) GetKey() string {
 	return qp.Key

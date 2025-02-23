@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/opengovern/opencomply/services/compliance/db"
+	"github.com/opengovern/opensecurity/services/compliance/db"
 	"strings"
 	"time"
 
@@ -16,10 +16,10 @@ import (
 	es2 "github.com/opengovern/og-util/pkg/es"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
-	types2 "github.com/opengovern/opencomply/jobs/compliance-summarizer-job/types"
-	"github.com/opengovern/opencomply/pkg/types"
-	"github.com/opengovern/opencomply/services/compliance/es"
-	es3 "github.com/opengovern/opencomply/services/scheduler/es"
+	types2 "github.com/opengovern/opensecurity/jobs/compliance-summarizer-job/types"
+	"github.com/opengovern/opensecurity/pkg/types"
+	"github.com/opengovern/opensecurity/services/compliance/es"
+	es3 "github.com/opengovern/opensecurity/services/scheduler/es"
 	"go.uber.org/zap"
 )
 

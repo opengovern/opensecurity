@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/opengovern/opencomply/services/rego"
+	"github.com/opengovern/opensecurity/services/rego"
 	"os"
 	"os/signal"
 	"syscall"

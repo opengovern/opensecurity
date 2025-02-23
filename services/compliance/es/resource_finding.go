@@ -9,9 +9,9 @@ import (
 
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
-	"github.com/opengovern/opencomply/pkg/types"
-	"github.com/opengovern/opencomply/pkg/utils"
-	"github.com/opengovern/opencomply/services/compliance/api"
+	"github.com/opengovern/opensecurity/pkg/types"
+	"github.com/opengovern/opensecurity/pkg/utils"
+	"github.com/opengovern/opensecurity/services/compliance/api"
 	"go.uber.org/zap"
 )
 

@@ -3,7 +3,7 @@ package ingest
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/opengovern/og-util/pkg/es/ingest/entity"
-	"github.com/opengovern/opencomply/services/es-sink/service"
+	"github.com/opengovern/opensecurity/services/es-sink/service"
 	"go.uber.org/zap"
 	"net/http"
 )

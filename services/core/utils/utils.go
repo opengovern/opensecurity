@@ -4,9 +4,9 @@ package utils
 import (
 	"time"
 	"github.com/haoel/downsampling/core"
-	"github.com/opengovern/opencomply/services/core/api"
-	"github.com/opengovern/opencomply/services/core/db"
-	"github.com/opengovern/opencomply/services/core/db/models"
+	"github.com/opengovern/opensecurity/services/core/api"
+	"github.com/opengovern/opensecurity/services/core/db"
+	"github.com/opengovern/opensecurity/services/core/db/models"
 
 )
 

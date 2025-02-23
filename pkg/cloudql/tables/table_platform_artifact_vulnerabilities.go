@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 
-	og_client "github.com/opengovern/opencomply/pkg/cloudql/client"
+	og_client "github.com/opengovern/opensecurity/pkg/cloudql/client"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 )

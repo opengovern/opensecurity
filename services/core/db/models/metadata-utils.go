@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	metadataErrors "github.com/opengovern/opencomply/services/core/errors"
+	metadataErrors "github.com/opengovern/opensecurity/services/core/errors"
 	"strings"
 
 	"github.com/opengovern/og-util/pkg/api"

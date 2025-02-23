@@ -8,7 +8,7 @@ import (
 
 	es "github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	steampipesdk "github.com/opengovern/og-util/pkg/steampipe"
-	"github.com/opengovern/opencomply/pkg/cloudql/sdk/config"
+	"github.com/opengovern/opensecurity/pkg/cloudql/sdk/config"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 )

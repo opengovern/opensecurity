@@ -8,7 +8,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/opengovern/og-util/pkg/describe/enums"
 	"github.com/opengovern/og-util/pkg/integration"
-	"github.com/opengovern/opencomply/services/scheduler/api"
+	"github.com/opengovern/opensecurity/services/scheduler/api"
 	"gorm.io/gorm"
 )
 

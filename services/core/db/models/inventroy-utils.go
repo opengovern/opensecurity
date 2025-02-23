@@ -2,7 +2,7 @@ package models
 
 import (
 	"github.com/opengovern/og-util/pkg/model"
-	"github.com/opengovern/opencomply/services/core/api"
+	"github.com/opengovern/opensecurity/services/core/api"
 )
 
 

@@ -7,12 +7,12 @@ import (
 
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	integrationapi "github.com/opengovern/opencomply/services/integration/api/models"
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	integrationapi "github.com/opengovern/opensecurity/services/integration/api/models"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"golang.org/x/net/context"
 
-	runner "github.com/opengovern/opencomply/jobs/compliance-runner-job"
-	complianceApi "github.com/opengovern/opencomply/services/compliance/api"
+	runner "github.com/opengovern/opensecurity/jobs/compliance-runner-job"
+	complianceApi "github.com/opengovern/opensecurity/services/compliance/api"
 	"go.uber.org/zap"
 )
 

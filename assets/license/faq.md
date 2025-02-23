@@ -1,26 +1,26 @@
 # License Overview
 
-Learn how opencomply is licensed, what’s considered competitive use, and how professional services and internal hosting are permitted.
+Learn how opensecurity is licensed, what’s considered competitive use, and how professional services and internal hosting are permitted.
 
 ## Definitions
 
 For the purposes of this document:
 
-- **"opencomply"** refers to the product.
-- **"opencomply.io"** refers to the company Open Governance, Inc., doing business as opencomply.io.
+- **"opensecurity"** refers to the product.
+- **"opensecurity.io"** refers to the company Open Governance, Inc., doing business as opensecurity.io.
 - **"open governance"** or **"open governance inc."** refers to the company Open Governance, Inc.
 - **"You"** and **"Your"** refer to an individual or entity accessing the Business Source License (BSL) or licensed software.
-- **"Licensed Work"** refers to all versions of opencomply.
-- **"Competitive Offering"** is any product sold to third parties—including paid support—that overlaps the capabilities of opencomply's paid version of the Licensed Work.
-- **"Embedded"** means including source code or executable code from the Licensed Work in a competitive product or packaging the competitive product in a way that requires an opencomply product to be accessed or downloaded for the competitive product to operate.
+- **"Licensed Work"** refers to all versions of opensecurity.
+- **"Competitive Offering"** is any product sold to third parties—including paid support—that overlaps the capabilities of opensecurity's paid version of the Licensed Work.
+- **"Embedded"** means including source code or executable code from the Licensed Work in a competitive product or packaging the competitive product in a way that requires an opensecurity product to be accessed or downloaded for the competitive product to operate.
 - **"Product"** refers to software offered to end users for self-management or as a hosted service.
 - **"Internal Use"** refers to use within a single organization, including affiliates under common control.
 
 ## 1. Licensing
 
-### How is opencomply licensed?
+### How is opensecurity licensed?
 
-opencomply is licensed under version 1.1 of the Business Source License (BSL), a source-available license that allows copying, modification, redistribution, non-commercial use, and commercial use under certain conditions. This enables our community to use our source code for a wide range of purposes while preventing commercially competitive use of opencomply’s paid version of the Licensed Work.
+opensecurity is licensed under version 1.1 of the Business Source License (BSL), a source-available license that allows copying, modification, redistribution, non-commercial use, and commercial use under certain conditions. This enables our community to use our source code for a wide range of purposes while preventing commercially competitive use of opensecurity’s paid version of the Licensed Work.
 
 ### What’s the difference between the BSL and other licenses (AGPL, SSPL, Common Clause)?
 
@@ -28,7 +28,7 @@ The Business Source License (BSL) used by Open Governance is designed to balance
 
 **BSL**: This license is highly permissive, allowing **You** to freely use, modify, and redistribute the software. Think of it as a "trial period" for open source. Here's why:
 
-- **Time-Limited**: The BSL has a specific duration. For opencomply, this duration is the later of:
+- **Time-Limited**: The BSL has a specific duration. For opensecurity, this duration is the later of:
   - Four years after November 1, 2024: This provides a fixed date for the transition.
   - The fourth anniversary of the first public distribution of a specific version: This ensures that each version of the software has its own 4-year BSL period.
   
@@ -43,14 +43,14 @@ No. **Your** modified version is a derivative work that includes the original BS
 
 ### What is a "competitive offering"?
 
-A "competitive offering" is any product or service sold to third parties that competes directly with opencomply's paid version. This includes:
+A "competitive offering" is any product or service sold to third parties that competes directly with opensecurity's paid version. This includes:
 
-- **Similar Functionality**: Offering a product or service that performs the same or substantially similar functions as opencomply's paid version.
-- **Indirect Competition**: Hosting or embedding opencomply's product in a solution that competes with opencomply's commercial edition.
+- **Similar Functionality**: Offering a product or service that performs the same or substantially similar functions as opensecurity's paid version.
+- **Indirect Competition**: Hosting or embedding opensecurity's product in a solution that competes with opensecurity's commercial edition.
 
 Products or services that are not sold or supported on a paid basis are generally not considered competitive.
 
-If you have any questions about whether a specific use case falls under the definition of a "competitive offering," please contact opencomply's licensing team at [licensing@opencomply.io](mailto:licensing@opencomply.io). Custom licensing terms may be available to enable use cases that are not covered by the standard BSL license.
+If you have any questions about whether a specific use case falls under the definition of a "competitive offering," please contact opensecurity's licensing team at [licensing@opensecurity.io](mailto:licensing@opensecurity.io). Custom licensing terms may be available to enable use cases that are not covered by the standard BSL license.
 
 ### What is a "paid support arrangement"?
 
@@ -63,29 +63,29 @@ Essentially, if you receive any form of payment for providing support related to
 
 ### What does "embedded" mean?
 
-"Embedded" means incorporating opencomply's code into a competing product in a way that makes opencomply essential to its operation. This includes:
+"Embedded" means incorporating opensecurity's code into a competing product in a way that makes opensecurity essential to its operation. This includes:
 
-- **Direct Inclusion**: Adding opencomply's source code or executable code (including libraries and frameworks) into your product.
-- **Indirect Dependence**: Designing your product so that it needs to access or download opencomply to function.
+- **Direct Inclusion**: Adding opensecurity's source code or executable code (including libraries and frameworks) into your product.
+- **Indirect Dependence**: Designing your product so that it needs to access or download opensecurity to function.
 
 **Examples of embedding**:
 
-- Offering a compliance service that uses opencomply's software as part of its functionality.
-- Distributing a product that relies on opencomply running within a container or as a separate process.
+- Offering a compliance service that uses opensecurity's software as part of its functionality.
+- Distributing a product that relies on opensecurity running within a container or as a separate process.
 
-Essentially, if your product relies on opencomply in any way to work, it is considered "embedded."
+Essentially, if your product relies on opensecurity in any way to work, it is considered "embedded."
 
 ## 3. Professional Services & Internal Use
 
-### Is it okay to offer consulting or support services for opencomply?
+### Is it okay to offer consulting or support services for opensecurity?
 
-Yes, **you** can offer consulting and professional services to help others use opencomply. This includes assistance with deployment, management, and operation. The BSL only restricts embedding opencomply into a competing product or offering it as a hosted service that competes with opencomply's commercial offerings.
+Yes, **you** can offer consulting and professional services to help others use opensecurity. This includes assistance with deployment, management, and operation. The BSL only restricts embedding opensecurity into a competing product or offering it as a hosted service that competes with opensecurity's commercial offerings.
 
 
-### Can I run (or host) opencomply on my company's internal servers?
+### Can I run (or host) opensecurity on my company's internal servers?
 
-Yes, **you** can host opencomply for internal use within your organization. This includes both production and non-production environments. The restriction on hosting only applies when you offer opencomply as a service to external parties in a way that competes with opencomply's commercial offerings.
+Yes, **you** can host opensecurity for internal use within your organization. This includes both production and non-production environments. The restriction on hosting only applies when you offer opensecurity as a service to external parties in a way that competes with opensecurity's commercial offerings.
 
 ## Note
 
-This document is for general informational purposes only and does not constitute legal advice. For specific legal questions, please consult an attorney. If **You** need additional clarifications regarding the opencomply BSL license, contact us at [licensing@opencomply.io](mailto:licensing@opencomply.io).
+This document is for general informational purposes only and does not constitute legal advice. For specific legal questions, please consult an attorney. If **You** need additional clarifications regarding the opensecurity BSL license, contact us at [licensing@opensecurity.io](mailto:licensing@opensecurity.io).

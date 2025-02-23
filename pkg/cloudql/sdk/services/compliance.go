@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/opengovern/opencomply/pkg/cloudql/sdk/config"
-	complianceClient "github.com/opengovern/opencomply/services/compliance/client"
+	"github.com/opengovern/opensecurity/pkg/cloudql/sdk/config"
+	complianceClient "github.com/opengovern/opensecurity/services/compliance/client"
 	"github.com/turbot/steampipe-plugin-sdk/v5/connection"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 )

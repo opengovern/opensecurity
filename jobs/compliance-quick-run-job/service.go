@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	cloudql_init_job "github.com/opengovern/opencomply/jobs/cloudql-init-job"
-	"github.com/opengovern/opencomply/services/integration/client"
+	cloudql_init_job "github.com/opengovern/opensecurity/jobs/cloudql-init-job"
+	"github.com/opengovern/opensecurity/services/integration/client"
 	"os"
 	"time"
 
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/opengovern/og-util/pkg/config"
@@ -17,8 +17,8 @@ import (
 	"github.com/opengovern/og-util/pkg/jq"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/steampipe"
-	complianceClient "github.com/opengovern/opencomply/services/compliance/client"
-	coreClient "github.com/opengovern/opencomply/services/core/client"
+	complianceClient "github.com/opengovern/opensecurity/services/compliance/client"
+	coreClient "github.com/opengovern/opensecurity/services/core/client"
 	"go.uber.org/zap"
 )
 

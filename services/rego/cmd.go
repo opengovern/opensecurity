@@ -3,11 +3,11 @@ package rego
 import (
 	config2 "github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/httpserver"
-	cloudql_init_job "github.com/opengovern/opencomply/jobs/cloudql-init-job"
-	"github.com/opengovern/opencomply/services/integration/client"
-	"github.com/opengovern/opencomply/services/rego/api"
-	"github.com/opengovern/opencomply/services/rego/config"
-	"github.com/opengovern/opencomply/services/rego/service"
+	cloudql_init_job "github.com/opengovern/opensecurity/jobs/cloudql-init-job"
+	"github.com/opengovern/opensecurity/services/integration/client"
+	"github.com/opengovern/opensecurity/services/rego/api"
+	"github.com/opengovern/opensecurity/services/rego/config"
+	"github.com/opengovern/opensecurity/services/rego/service"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )

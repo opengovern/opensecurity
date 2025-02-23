@@ -11,12 +11,12 @@ import (
 
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/ticker"
-	"github.com/opengovern/opencomply/pkg/utils"
-	"github.com/opengovern/opencomply/services/compliance/client"
-	coreClient "github.com/opengovern/opencomply/services/core/client"
-	integrationClient "github.com/opengovern/opencomply/services/integration/client"
-	"github.com/opengovern/opencomply/services/scheduler/config"
-	"github.com/opengovern/opencomply/services/scheduler/db"
+	"github.com/opengovern/opensecurity/pkg/utils"
+	"github.com/opengovern/opensecurity/services/compliance/client"
+	coreClient "github.com/opengovern/opensecurity/services/core/client"
+	integrationClient "github.com/opengovern/opensecurity/services/integration/client"
+	"github.com/opengovern/opensecurity/services/scheduler/config"
+	"github.com/opengovern/opensecurity/services/scheduler/db"
 	"go.uber.org/zap"
 )
 

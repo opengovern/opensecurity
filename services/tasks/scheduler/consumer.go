@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/opengovern/opencomply/services/tasks/db/models"
+	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )

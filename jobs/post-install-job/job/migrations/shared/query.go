@@ -1,6 +1,6 @@
 package shared
 
-import "github.com/opengovern/opencomply/pkg/types"
+import "github.com/opengovern/opensecurity/pkg/types"
 
 type Query struct {
 	QueryID        *string `json:"QueryID,omitempty" yaml:"QueryID,omitempty"`

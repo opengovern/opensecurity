@@ -11,9 +11,9 @@ import (
 	"github.com/opengovern/og-util/pkg/jq"
 	opengovernanceTrace "github.com/opengovern/og-util/pkg/trace"
 	"github.com/opengovern/og-util/proto/src/golang"
-	"github.com/opengovern/opencomply/services/scheduler/api"
-	"github.com/opengovern/opencomply/services/scheduler/config"
-	"github.com/opengovern/opencomply/services/scheduler/db"
+	"github.com/opengovern/opensecurity/services/scheduler/api"
+	"github.com/opengovern/opensecurity/services/scheduler/config"
+	"github.com/opengovern/opensecurity/services/scheduler/db"
 	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 )

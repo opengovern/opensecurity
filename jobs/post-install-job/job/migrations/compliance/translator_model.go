@@ -2,7 +2,7 @@ package compliance
 
 import (
 	"github.com/opengovern/og-util/pkg/integration"
-	"github.com/opengovern/opencomply/jobs/post-install-job/job/migrations/shared"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/shared"
 )
 
 type Framework struct {

@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/jackc/pgtype"
-	"github.com/opengovern/opencomply/pkg/cloudql/sdk/config"
-	"github.com/opengovern/opencomply/pkg/cloudql/sdk/pg"
-	integration "github.com/opengovern/opencomply/services/integration/models"
+	"github.com/opengovern/opensecurity/pkg/cloudql/sdk/config"
+	"github.com/opengovern/opensecurity/pkg/cloudql/sdk/pg"
+	integration "github.com/opengovern/opensecurity/services/integration/models"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 )
 

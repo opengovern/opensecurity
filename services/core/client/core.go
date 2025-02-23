@@ -13,8 +13,8 @@ import (
 	"github.com/opengovern/og-util/pkg/integration"
 
 	"github.com/labstack/echo/v4"
-	"github.com/opengovern/opencomply/services/core/api"
-	"github.com/opengovern/opencomply/services/core/db/models"
+	"github.com/opengovern/opensecurity/services/core/api"
+	"github.com/opengovern/opensecurity/services/core/db/models"
 )
 
 type CoreServiceClient interface {

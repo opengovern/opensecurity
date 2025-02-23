@@ -7,9 +7,9 @@ import (
 
 	"github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/postgres"
-	db2 "github.com/opengovern/opencomply/jobs/demo-importer-job/db"
-	"github.com/opengovern/opencomply/jobs/demo-importer-job/types"
-	"github.com/opengovern/opencomply/jobs/demo-importer-job/worker"
+	db2 "github.com/opengovern/opensecurity/jobs/demo-importer-job/db"
+	"github.com/opengovern/opensecurity/jobs/demo-importer-job/types"
+	"github.com/opengovern/opensecurity/jobs/demo-importer-job/worker"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )

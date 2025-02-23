@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/opengovern/opencomply/services/scheduler/db/model"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
-	runner "github.com/opengovern/opencomply/jobs/compliance-runner-job"
-	summarizer "github.com/opengovern/opencomply/jobs/compliance-summarizer-job"
+	runner "github.com/opengovern/opensecurity/jobs/compliance-runner-job"
+	summarizer "github.com/opengovern/opensecurity/jobs/compliance-summarizer-job"
 	"go.uber.org/zap"
 )
 
