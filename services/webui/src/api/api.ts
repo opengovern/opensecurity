@@ -4979,7 +4979,7 @@ export class Api<
             params: RequestParams = {}
         ) =>
             this.request<void, any>({
-                path: `/compliance/api/v1/queries/sync`,
+                path: `/core/api/v4/queries/sync`,
                 method: 'GET',
                 query: query,
                 secure: true,
