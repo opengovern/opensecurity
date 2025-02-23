@@ -12,7 +12,8 @@ type IProps = {
     onScroll?: (e: UIEvent) => void
     scrollRef?: any
 }
-const show_compliance = process.env.REACT_APP_SHOW_COMPLIANCE
+const show_compliance =
+    window.__RUNTIME_CONFIG__.REACT_APP_SHOW_COMPLIANCE
 export default function Layout({ children, onScroll, scrollRef }: IProps) {
     const url = window.location.pathname.split('/')
     const smaple = useAtomValue(sampleAtom)

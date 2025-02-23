@@ -74,10 +74,7 @@
         "web-vitals": "^2.1.4"
     },
     "scripts": {
-        "start": "NODE_ENV=development runtime-env-cra --config-name=./public/runtime-env.js && react-scripts start",
-        "start-demo": "NODE_ENV=development runtime-env-cra --config-name=./public/env-demo-config.js && react-scripts start",
-        "start-win": "set NODE_ENV=development&&runtime-env-cra --config-name=./public/env-config.js && react-scripts start",
-        "start-demo-local-win": "SET NODE_ENV=demo runtime-env-cra --config-name=./public/env-demo-config.js && react-scripts start",
+        "start": "NODE_ENV=development runtime-env-cra --config-name=./public/env-config.js && react-scripts start",
         "build": "react-scripts build",
         "build:stg": "env-cmd -f stg.env react-scripts build",
         "test": "react-scripts test",
