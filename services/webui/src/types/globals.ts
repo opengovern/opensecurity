@@ -7,6 +7,7 @@ declare global {
             REACT_APP_RUNTIME_ENVIRONMENT: string
             REACT_APP_BASE_URL: string
             REACT_APP_AUTH_BASE_URL: string
+            REACT_APP_SHOW_COMPLIANCE: string
         }
     }
 }

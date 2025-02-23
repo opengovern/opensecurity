@@ -27,7 +27,7 @@ import EvaluateDetail from '../pages/Governance/Compliance/NewBenchmarkSummary/E
 import Tasks from '../pages/Tasks'
 import TaskDetail from '../pages/Tasks/TaskDetail'
 
-const show_compliance = process.env.REACT_APP_SHOW_COMPLIANCE
+const show_compliance = window.__RUNTIME_CONFIG__.REACT_APP_SHOW_COMPLIANCE
 console.log(show_compliance)
 
 const authRoutes = [

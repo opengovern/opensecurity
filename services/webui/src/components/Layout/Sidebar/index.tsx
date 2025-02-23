@@ -165,7 +165,8 @@ export default function Sidebar({ currentPage }: ISidebar) {
     }, [isAuthenticated])
 
     const navigation: () => ISidebarItem[] = () => {
-        const show_compliance = process.env.REACT_APP_SHOW_COMPLIANCE
+        const show_compliance =
+            window.__RUNTIME_CONFIG__.REACT_APP_SHOW_COMPLIANCE
         if (show_compliance === 'false') {
             return [
                 {
