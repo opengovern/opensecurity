@@ -109,6 +109,7 @@ func (h HttpHandler) Register(r *echo.Echo) {
 
 	v4 := r.Group("/api/v4")
 	v4.GET("/about", httpserver.AuthorizeHandler(h.GetAboutShort, api3.ViewerRole))
+	v4.GET("/queries/sync", httpserver.AuthorizeHandler(h.SyncQueries, api3.ViewerRole))
 
 }
 
@@ -1451,4 +1452,131 @@ func (h HttpHandler) RemovePluginSteampipeConfig(echoCtx echo.Context) error {
 		}
 	}()
 	return echoCtx.NoContent(http.StatusOK)
+}
+
+// SyncQueries godoc
+//
+//	@Summary		Sync queries
+//
+//	@Description	Syncs queries with the git backend.
+//
+//	@Security		BearerToken
+//	@Tags			compliance
+//	@Param			configzGitURL	query	string	false	"Git URL"
+//	@Accept			json
+//	@Produce		json
+//	@Success		200
+//	@Router			/core/api/v4/queries/sync [get]
+func (h HttpHandler) SyncQueries(echoCtx echo.Context) error {
+	ctx := echoCtx.Request().Context()
+
+	var mig *model2.Migration
+	tx := h.migratorDb.ORM.Model(&model2.Migration{}).Where("id = ?", "main").First(&mig)
+	if tx.Error != nil && !errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+		h.logger.Error("failed to get migration", zap.Error(tx.Error))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get migration")
+	}
+	if mig != nil {
+		if mig.Status == "PENDING" || mig.Status == "IN_PROGRESS" {
+			return echo.NewHTTPError(http.StatusBadRequest, "sync sample data already in progress")
+		}
+	}
+
+	enabled, err := coreUtils.GetConfigMetadata(h.db, string(models.MetadataKeyCustomizationEnabled))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return echo.NewHTTPError(http.StatusNotFound, "config not found")
+		}
+		return err
+	}
+
+	if !enabled.GetValue().(bool) {
+		return echo.NewHTTPError(http.StatusForbidden, "customization is not allowed")
+	}
+
+	configzGitURL := echoCtx.QueryParam("configzGitURL")
+	if configzGitURL != "" {
+		// validate url
+		_, err := url.ParseRequestURI(configzGitURL)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid url")
+		}
+
+		err = coreUtils.SetConfigMetadata(h.db, models.MetadataKeyAnalyticsGitURL, configzGitURL)
+		if err != nil {
+			return err
+		}
+	}
+
+	var migratorJob batchv1.Job
+	err = h.kubeClient.Get(ctx, k8sclient.ObjectKey{
+		Namespace: h.cfg.OpengovernanceNamespace,
+		Name:      "post-install-configuration",
+	}, &migratorJob)
+	if err != nil {
+		return err
+	}
+
+	err = h.kubeClient.Delete(ctx, &migratorJob)
+	if err != nil {
+		return err
+	}
+	envsMap := make(map[string]corev1.EnvVar)
+	for _, env := range migratorJob.Spec.Template.Spec.Containers[0].Env {
+		envsMap[env.Name] = env
+	}
+	envsMap["IS_MANUAL"] = corev1.EnvVar{
+		Name:  "IS_MANUAL",
+		Value: "true",
+	}
+	var newEnvs []corev1.EnvVar
+	for _, v := range envsMap {
+		newEnvs = append(newEnvs, v)
+	}
+	for {
+		err = h.kubeClient.Get(ctx, k8sclient.ObjectKey{
+			Namespace: h.cfg.OpengovernanceNamespace,
+			Name:      "post-install-configuration",
+		}, &migratorJob)
+		if err != nil {
+			if k8sclient.IgnoreNotFound(err) == nil {
+				break
+			}
+			return err
+		}
+
+		time.Sleep(1 * time.Second)
+	}
+
+	migratorJob.ObjectMeta = metav1.ObjectMeta{
+		Name:      "post-install-configuration",
+		Namespace: h.cfg.OpengovernanceNamespace,
+		Annotations: map[string]string{
+			"helm.sh/hook":        "post-install,post-upgrade",
+			"helm.sh/hook-weight": "0",
+		},
+	}
+	migratorJob.Spec.Selector = nil
+	migratorJob.Spec.Suspend = aws.Bool(false)
+	migratorJob.Spec.Template.ObjectMeta = metav1.ObjectMeta{}
+	migratorJob.Spec.Template.Spec.Containers[0].Env = newEnvs
+	migratorJob.Status = batchv1.JobStatus{}
+
+	err = h.kubeClient.Create(ctx, &migratorJob)
+	if err != nil {
+		return err
+	}
+
+	jp := pgtype.JSONB{}
+	err = jp.Set([]byte(""))
+	if err != nil {
+		return err
+	}
+	tx = h.migratorDb.ORM.Model(&model2.Migration{}).Where("id = ?", "main").Update("status", "Started").Update("jobs_status", jp)
+	if tx.Error != nil && !errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+		h.logger.Error("failed to update migration", zap.Error(tx.Error))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update migration")
+	}
+
+	return echoCtx.JSON(http.StatusOK, struct{}{})
 }
