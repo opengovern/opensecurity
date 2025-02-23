@@ -97,7 +97,7 @@ export default function Overview() {
                 //  const temp = []
                 if (res.data == 'CHANGE_REQUIRED') {
                     setChange(true)
-                    if (me?.email == 'admin@opencomply.io') {
+                    if (me?.email == 'admin@opensecurity.io') {
                         runSync()
                         loadData()
                         
