@@ -1,15 +1,15 @@
 <p align="center">
-  <a href="https://opensecurity.io">
+  <a href="https://opencomply.io">
     <picture>
       <!-- Dark mode logo -->
-      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/opengovern/opensecurity/blob/main/assets/logos/logo-dark.png">
+      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/opengovern/opensecurity/blob/main/assets/logos/logo-dark.svg">
       <!-- Light mode logo -->
-      <source media="(prefers-color-scheme: light)" srcset="https://github.com/opengovern/opensecurity/blob/main/assets/logos/logo-light.png">
+      <source media="(prefers-color-scheme: light)" srcset="https://github.com/opengovern/opensecurity/blob/main/assets/logos/logo-light.svg">
       <!-- Fallback/logo -->
       <img
         width="70%"
         alt="opensecurity"
-        src="https://github.com/opengovern/opensecurity/blob/main/assets/logos/logo-dark.png"
+        src="https://github.com/opengovern/opensecurity/blob/main/assets/logos/logo-dark.svg"
       >
     </picture>
   </a>
