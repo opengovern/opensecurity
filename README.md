@@ -69,5 +69,5 @@ App includes sample data.
 
 ## Next Steps
 
-*   **Explore the Documentation:** Visit [docs.opensecurity.io](https://docs.opensecurity.io) for detailed information and guides.
+*   **Explore the Documentation:** Visit [docs.opencomply.io](https://docs.opencomply.io) for detailed information and guides.
 *   **Try Cloud for Free:** Sign up for our hosted Cloud offering (coming soon).
