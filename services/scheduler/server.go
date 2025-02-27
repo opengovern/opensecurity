@@ -113,7 +113,7 @@ func (h HttpServer) Register(e *echo.Echo) {
 	v3.POST("/compliance/quick/sequence", httpserver.AuthorizeHandler(h.CreateComplianceQuickSequence, apiAuth.EditorRole))
 	v3.GET("/compliance/quick/sequence/:run_id", httpserver.AuthorizeHandler(h.GetComplianceQuickSequence, apiAuth.ViewerRole))
 
-	v3.GET("/tables/:tables/described/count", httpserver.AuthorizeHandler(h.GetResourceTypeDescribedCount, apiAuth.ViewerRole))
+	v3.GET("/tables/:table/described/count", httpserver.AuthorizeHandler(h.GetResourceTypeDescribedCount, apiAuth.ViewerRole))
 }
 
 // ListJobs godoc
