@@ -113,7 +113,7 @@ func (h HttpServer) Register(e *echo.Echo) {
 	v3.POST("/compliance/quick/sequence", httpserver.AuthorizeHandler(h.CreateComplianceQuickSequence, apiAuth.EditorRole))
 	v3.GET("/compliance/quick/sequence/:run_id", httpserver.AuthorizeHandler(h.GetComplianceQuickSequence, apiAuth.ViewerRole))
 
-	v3.GET("/resource_type/:resource_type/described/count", httpserver.AuthorizeHandler(h.GetResourceTypeDescribedCount, apiAuth.ViewerRole))
+	v3.GET("/tables/:tables/described/count", httpserver.AuthorizeHandler(h.GetResourceTypeDescribedCount, apiAuth.ViewerRole))
 }
 
 // ListJobs godoc
@@ -4151,11 +4151,11 @@ func (h HttpServer) PurgeSampleData(c echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Success		200
-//	@Router			/schedule/api/v3/resource_type/:resource_type/described/count [get]
+//	@Router			/schedule/api/v3/tables/:table/described/count [get]
 func (h HttpServer) GetResourceTypeDescribedCount(c echo.Context) error {
-	rt := c.Param("resource_type")
+	rt := c.Param("table")
 
-	rtCount, err := h.DB.GetResourceTypeDescribedCountByResourceType(rt)
+	rtCount, err := h.DB.GetResourceTypeDescribedCountByTable(rt)
 	if err != nil {
 		h.Scheduler.logger.Error("failed to get resource type described count", zap.String("resource_type", rt), zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get resource type described count")

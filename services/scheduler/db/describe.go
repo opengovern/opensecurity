@@ -964,6 +964,19 @@ func (db Database) GetResourceTypeDescribedCountByResourceType(rt string) ([]mod
 	return rts, nil
 }
 
+func (db Database) GetResourceTypeDescribedCountByTable(t string) ([]model.ResourceTypeDescribedCount, error) {
+	var rts []model.ResourceTypeDescribedCount
+	tx := db.ORM.
+		Model(&model.ResourceTypeDescribedCount{}).
+		Where("table_name = ?", t).
+		Find(&rts)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return rts, nil
+}
+
 func (db Database) GetResourceTypeDescribedCountByResourceTypeAndIntegration(rt, integrationId string) ([]model.ResourceTypeDescribedCount, error) {
 	var rts []model.ResourceTypeDescribedCount
 	tx := db.ORM.
