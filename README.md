@@ -25,7 +25,7 @@
 </p>
 
 
-# opensecurity
+# opensecurity (formally opencomply)
 
 #### Simplify security and compliance across your entire stack—from containers to cloud—so you can ship faster and worry less.
 
@@ -58,12 +58,12 @@ Get up and running in minutes:
 Install on any Kubernetes clusters with at least 3 nodes (4 vCPUs x 16GB RAM each).
 
 ```bash
-helm repo add opensecurity https://charts.opensecurity.io --force-update
-helm install -n opensecurity opensecurity opensecurity/opensecurity --create-namespace
+helm repo add opensecurity https://charts.opencomply.io --force-update
+helm install -n opencomply opencomply opencomply/opencomply --create-namespace
 kubectl port-forward -n opensecurity svc/nginx-proxy 8080:80
 ```
 
-Open http://localhost:8080/ in your browser, sign in with ```admin@opensecurity.io``` as the username and ```password``` as the password.
+Open http://localhost:8080/ in your browser, sign in with ```admin@opencomply.io``` as the username and ```password``` as the password.
 
 App includes sample data.
 
