@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/jackc/pgtype"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"strings"
 	"time"
 
@@ -100,6 +101,28 @@ func (s *Scheduler) RunDescribeJobResultsConsumer(ctx context.Context) error {
 			}
 
 			s.logger.Info("updating job status", zap.Uint("jobID", result.JobID), zap.String("status", string(result.Status)))
+			if result.Status == api.DescribeResourceJobSucceeded {
+				tableName := ""
+				rt, err := s.integrationClient.GetIntegrationTypeResourceType(&httpclient.Context{UserRole: authApi.AdminRole},
+					result.DescribeJob.IntegrationType.String(), result.DescribeJob.ResourceType)
+				if err != nil {
+					s.logger.Error("failed to get resource type details", zap.String("resource_type", result.DescribeJob.ResourceType))
+				} else if rt != nil {
+					tableName = rt.Table
+				}
+				err = s.db.UpdateResourceTypeDescribedCount(model.ResourceTypeDescribedCount{
+					ResourceType:           result.DescribeJob.ResourceType,
+					TableName:              tableName,
+					IntegrationID:          result.DescribeJob.IntegrationID,
+					DescribedResourceCount: int64(len(result.DescribedResourceIDs)),
+					UpdatedAt:              time.Now(),
+				})
+				if err != nil {
+					s.logger.Error("failed to update resource type details",
+						zap.Uint("job_id", result.DescribeJob.JobID),
+						zap.String("resource_type", result.DescribeJob.ResourceType))
+				}
+			}
 			if err := s.db.UpdateDescribeIntegrationJobStatus(result.JobID, result.Status, errStr, errCodeStr, int64(len(result.DescribedResourceIDs)), deletedCount); err != nil {
 				ResultsProcessedCount.WithLabelValues(string(result.DescribeJob.IntegrationType), "failure").Inc()
 

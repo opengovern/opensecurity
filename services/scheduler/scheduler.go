@@ -635,6 +635,11 @@ func (s *Scheduler) RunDeletedIntegrationsResourcesCleanup(ctx context.Context) 
 			integrationIds = append(integrationIds, integration.IntegrationID)
 		}
 		s.cleanupDescribeResourcesNotInIntegrations(ctx, integrationIds)
+		err = s.db.DeleteResourceTypeDescribedCountByIntegrationID(integrationIds)
+		if err != nil {
+			s.logger.Error("Failed to delete resource type count", zap.Error(err))
+			continue
+		}
 	}
 }
 

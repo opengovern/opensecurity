@@ -78,3 +78,11 @@ type DescribeIntegrationJob struct {
 
 	NatsSequenceNumber uint64
 }
+
+type ResourceTypeDescribedCount struct {
+	ResourceType           string
+	TableName              string
+	IntegrationID          string
+	DescribedResourceCount int64
+	UpdatedAt              time.Time
+}

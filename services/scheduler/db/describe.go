@@ -938,3 +938,75 @@ func (db Database) CheckJobsDoneByParentIDAndCreatedBy(createdBy string, parentI
 
 	return jobs, nil
 }
+
+func (db Database) UpdateResourceTypeDescribedCount(r model.ResourceTypeDescribedCount) error {
+	err := db.ORM.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "resource_type"}, {Name: "integration_id"}},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"described_resource_count": r.DescribedResourceCount,
+			"updated_at":               r.UpdatedAt,
+		}),
+	}).Create(&r).Error
+
+	return err
+}
+
+func (db Database) GetResourceTypeDescribedCountByResourceType(rt string) ([]model.ResourceTypeDescribedCount, error) {
+	var rts []model.ResourceTypeDescribedCount
+	tx := db.ORM.
+		Model(&model.ResourceTypeDescribedCount{}).
+		Where("resource_type = ?", rt).
+		Find(&rts)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return rts, nil
+}
+
+func (db Database) GetResourceTypeDescribedCountByTable(t string) ([]model.ResourceTypeDescribedCount, error) {
+	var rts []model.ResourceTypeDescribedCount
+	tx := db.ORM.
+		Model(&model.ResourceTypeDescribedCount{}).
+		Where("table_name = ?", t).
+		Find(&rts)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return rts, nil
+}
+
+func (db Database) GetResourceTypeDescribedCountByResourceTypeAndIntegration(rt, integrationId string) ([]model.ResourceTypeDescribedCount, error) {
+	var rts []model.ResourceTypeDescribedCount
+	tx := db.ORM.
+		Model(&model.ResourceTypeDescribedCount{}).
+		Where("resource_type = ?", rt).
+		Where("integration_id = ?", integrationId).
+		Find(&rts)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return rts, nil
+}
+
+func (db Database) DeleteResourceTypeDescribedCountByIntegrationID(integrationID []string) error {
+	if len(integrationID) == 0 {
+		tx := db.ORM.
+			Where("1 = 1").
+			Delete(&model.ResourceTypeDescribedCount{})
+		if tx.Error != nil {
+			return tx.Error
+		}
+	} else {
+		tx := db.ORM.
+			Where("integration_id NOT IN ?", integrationID).
+			Delete(&model.ResourceTypeDescribedCount{})
+		if tx.Error != nil {
+			return tx.Error
+		}
+	}
+
+	return nil
+}
