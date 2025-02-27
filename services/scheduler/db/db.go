@@ -15,5 +15,6 @@ func (db Database) Initialize() error {
 		&model.DescribeIntegrationJob{}, &model.IntegrationDiscovery{},
 		&model.JobSequencer{}, &model.QueryRunnerJob{}, &model.QueryValidatorJob{},
 		&model.QuickScanSequence{}, &model.FrameworkValidation{}, &model.ManualDiscoverySchedule{},
+		&model.ResourceTypeDescribedCount{},
 	)
 }

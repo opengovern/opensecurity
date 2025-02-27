@@ -27,6 +27,7 @@ type IntegrationServiceClient interface {
 	ListIntegrationGroups(ctx *httpclient.Context) ([]models.IntegrationGroup, error)
 	PurgeSampleData(ctx *httpclient.Context) ([]string, error)
 	GetPluginsTables(ctx *httpclient.Context) ([]models.PluginTables, error)
+	GetIntegrationTypeResourceType(ctx *httpclient.Context, integrationType string, resourceType string) (*models.ResourceTypeConfiguration, error)
 }
 
 type integrationClient struct {
@@ -262,4 +263,18 @@ func (c *integrationClient) GetPluginsTables(ctx *httpclient.Context) ([]models.
 		return nil, err
 	}
 	return response, nil
+}
+
+func (c *integrationClient) GetIntegrationTypeResourceType(ctx *httpclient.Context, integrationType string, resourceType string) (*models.ResourceTypeConfiguration, error) {
+	url := fmt.Sprintf("%s/api/v1/integrations/types/%s/resource_types/%s", c.baseURL, integrationType, resourceType)
+	var response models.ResourceTypeConfiguration
+
+	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &response); err != nil {
+		if 400 <= statusCode && statusCode < 500 {
+			return nil, echo.NewHTTPError(statusCode, err.Error())
+		}
+		return nil, err
+	}
+
+	return &response, nil
 }

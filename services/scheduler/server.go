@@ -112,6 +112,8 @@ func (h HttpServer) Register(e *echo.Echo) {
 
 	v3.POST("/compliance/quick/sequence", httpserver.AuthorizeHandler(h.CreateComplianceQuickSequence, apiAuth.EditorRole))
 	v3.GET("/compliance/quick/sequence/:run_id", httpserver.AuthorizeHandler(h.GetComplianceQuickSequence, apiAuth.ViewerRole))
+
+	v3.GET("/resource_type/:resource_type/described/count", httpserver.AuthorizeHandler(h.GetResourceTypeDescribedCount, apiAuth.ViewerRole))
 }
 
 // ListJobs godoc
@@ -4138,4 +4140,43 @@ func (h HttpServer) PurgeSampleData(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusOK)
+}
+
+// GetResourceTypeDescribedCount godoc
+//
+//	@Summary		Get Resource Type described count
+//	@Description	Get Resource Type described count
+//	@Security		BearerToken
+//	@Tags			audit
+//	@Accept			json
+//	@Produce		json
+//	@Success		200
+//	@Router			/schedule/api/v3/resource_type/:resource_type/described/count [get]
+func (h HttpServer) GetResourceTypeDescribedCount(c echo.Context) error {
+	rt := c.Param("resource_type")
+
+	rtCount, err := h.DB.GetResourceTypeDescribedCountByResourceType(rt)
+	if err != nil {
+		h.Scheduler.logger.Error("failed to get resource type described count", zap.String("resource_type", rt), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get resource type described count")
+	}
+
+	integrations, err := h.Scheduler.integrationClient.ListIntegrations(&httpclient.Context{UserRole: apiAuth.AdminRole}, nil)
+	if err != nil {
+		h.Scheduler.logger.Error("failed to get resource type described count", zap.String("resource_type", rt), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get resource type described count")
+	}
+	integrationIds := make(map[string]bool)
+	for _, integration := range integrations.Integrations {
+		integrationIds[integration.IntegrationID] = true
+	}
+
+	totalCount := int64(0)
+	for _, c := range rtCount {
+		if _, ok := integrationIds[c.IntegrationID]; ok {
+			totalCount += c.DescribedResourceCount
+		}
+	}
+
+	return c.JSON(http.StatusOK, totalCount)
 }
