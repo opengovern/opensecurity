@@ -80,9 +80,9 @@ type DescribeIntegrationJob struct {
 }
 
 type ResourceTypeDescribedCount struct {
-	ResourceType           string
+	ResourceType           string `gorm:"primaryKey"`
 	TableName              string
-	IntegrationID          string
+	IntegrationID          string `gorm:"primaryKey"`
 	DescribedResourceCount int64
 	UpdatedAt              time.Time
 }
