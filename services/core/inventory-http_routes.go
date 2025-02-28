@@ -445,6 +445,15 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		return fmt.Errorf("invalid query engine: %s", *req.Engine)
 	}
 
+	if req.ResultType != nil && strings.ToLower(*req.ResultType) == "csv" {
+		csvData, err := resp.ToCSV()
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+
+		ctx.Response().Header().Set("Content-Type", "text/csv")
+		return ctx.String(http.StatusOK, csvData)
+	}
 	return ctx.JSON(200, resp)
 }
 
