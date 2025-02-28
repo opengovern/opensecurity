@@ -7,7 +7,8 @@
       <source media="(prefers-color-scheme: light)" srcset="https://github.com/opengovern/opensecurity/blob/main/assets/logos/logo-light.svg">
       <!-- Fallback/logo -->
       <img
-        width="70%"
+        height="70%"
+        width="50%"
         alt="opensecurity"
         src="https://github.com/opengovern/opensecurity/blob/main/assets/logos/logo-dark.svg"
       >
@@ -16,58 +17,55 @@
 </p>
 
 
+<p align="center"><em>(formerly opencomply)</em></p>
+
+<p align="center">Simplify security and compliance across your entire stack—from containers to cloud—so you can ship faster and worry less.</p>
+
 <p align="center">
-  <img 
-    src="./assets/screenshots/app-screenshot-1.png"
-    alt="App Screenshot"
-    width="100%"
-  />
+  <a target="_blank" href="https://opensecurity.sh">Website</a> ·
+  <a target="_blank" href="https://docs.opencomply.io">Docs</a> ·
 </p>
 
 
-# opensecurity (formally opencomply)
 
-#### Simplify security and compliance across your entire stack—from containers to cloud—so you can ship faster and worry less.
+<p align="center">
+  <img src="./assets/screenshots/app-screenshot-1.png" alt="Opensecurity Application Screenshot" width="800" height="400" />
+</p>
 
-## What opensecurity Does
+## What opensecurity Offers
 
-- **Full Visibility**: See everything across your clouds and tools—infrastructure, data, identities, configurations, and security.
-- **Centralized Compliance**: Manage and enforce all your compliance checks for configurations, processes, and security in one place.
-- **Automated Policies**: Define custom rules (best practices, regulatory, or internal) as code (SQL policies), manage them in Git, and integrate with your tools and CI/CD.
+* **Comprehensive Visibility:** Gain a clear view of your clouds and tools, including infrastructure, data, identities, configurations, and security posture.
+* **Unified Compliance Management:** Streamline compliance checks for configurations, processes, and security in a single, centralized platform.
+* **Automated Policy Enforcement:** Define custom rules (best practices, regulatory, or internal) as code using SQL policies, manage them via Git, and seamlessly integrate with your existing tools and CI/CD pipelines.
 
-## Features
+## Key Features
 
-- 🔍 **Unified Visibility**: Explore all 1000+ assets (containers, cloud resources, etc.) using SQL.
-- ⚙️ **Custom Controls**: Define compliance checks as SQL policies, managed in Git.
-- ✅ **Flexible Compliance**: Easily create custom, complex checks.
-- 📈 **Scalable Audits**: Handles thousands of checks across large infrastructures.
-- 🔗 **Extensive Integrations**: Connect to AWS, Azure, DigitalOcean, Linode, GitHub, and more.
+* **🔍 Unified Visibility:** Effortlessly explore and analyze 1000+ assets (containers, cloud resources, and more) using intuitive SQL queries.
+* **⚙️ Customizable Controls:** Define compliance checks as SQL policies, leveraging the power of version control with Git.
+* **✅ Flexible Compliance:** Easily create custom, intricate compliance checks tailored to your specific needs.
+* **📈 Scalable Audits:** Efficiently manage thousands of checks across even the largest infrastructures.
+* **🔗 Broad Integrations:** Seamlessly connect with popular platforms like AWS, Azure, DigitalOcean, Linode, GitHub, and many more.
 
-## Why opensecurity?
+## Why Choose opensecurity?
 
-- **Unified Security & Compliance**: Manage security and compliance checks together, simplifying audits.
-- **Automated Governance**: Continuously monitor and enforce policies, reducing manual effort.
-- **Developer Friendly**: Define compliance as code, integrating seamlessly with your workflow.
-- **Scalable & Flexible**: Adapt to your growing infrastructure and unique requirements.
-  
+* **Integrated Security & Compliance:** Manage security and compliance in a unified manner, simplifying audit processes.
+* **Automated Governance:** Continuously monitor and enforce policies, significantly reducing manual effort.
+* **Developer-Friendly Approach:** Define compliance as code, integrating smoothly into your development workflow.
+* **Scalable & Adaptable:** Grow with your infrastructure and adapt to your unique compliance requirements.
 
-## 🚀 Quick Start
+## 🚀 Quick Start: Get Up and Running in Minutes
 
-Get up and running in minutes:
-
-Install on any Kubernetes clusters with at least 3 nodes (4 vCPUs x 16GB RAM each).
+Install opensecurity on any Kubernetes cluster with at least 3 nodes (4 vCPUs x 16GB RAM each).
 
 ```bash
-helm repo add opensecurity https://charts.opencomply.io --force-update
-helm install -n opencomply opencomply opencomply/opencomply --create-namespace
+helm repo add opensecurity https://charts.opensecurity.sh --force-update
+helm install -n opensecurity opensecurity opensecurity/opensecurity --create-namespace
 kubectl port-forward -n opensecurity svc/nginx-proxy 8080:80
 ```
 
-Open http://localhost:8080/ in your browser, sign in with ```admin@opensecurity.sh``` as the username and ```password``` as the password.
-
-App includes sample data.
+Open http://localhost:8080/ in your browser and sign in with `admin@opencomply.sh` as the username and `password` as the password. The application comes pre-loaded with sample data.
 
 ## Next Steps
 
-*   **Explore the Documentation:** Visit [docs.opencomply.io](https://docs.opencomply.io) for detailed information and guides.
-*   **Try Cloud for Free:** Sign up for our hosted Cloud offering (coming soon).
+* **Explore the Documentation:** Dive deeper into Opensecurity with comprehensive guides and information at [docs.opencomply.io](https://docs.opencomply.io).
+* **Try Cloud for Free:** Schedule a meeting to explore our hosted Cloud offering and experience the benefits of Opensecurity without the setup: [Schedule a Meeting](https://cal.com/team/opensecurity/try) 
