@@ -31,7 +31,7 @@ jobs:
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GHCR_PAT }}
 
       - name: Use Node.js 20.x
         uses: actions/setup-node@v3
