@@ -1,0 +1,44 @@
+run:
+  timeout: 30m
+  issues-exit-code: 1
+  tests: true
+  skip-dirs-use-default: true
+output:
+  format: line-number
+  print-issued-lines: true
+  print-linter-name: true
+linters-settings:
+  errcheck:
+    check-type-assertions: false
+    check-blank: false
+    ignore: "[cClose]"
+  govet:
+    check-shadowing: false
+    settings:
+      printf: # analyzer name, run `go tool vet help` to see all analyzers
+        funcs: # run `go tool vet help printf` to see available settings for `printf` analyzer
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+    disable:
+      - timeformat
+  gofmt:
+    simplify: true
+  goimports:
+linters:
+  disable-all: true
+  enable:
+    - gofmt
+    - goimports
+    - govet
+    - errcheck
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false

@@ -1,0 +1,7 @@
+# Cache directories
+cache/*
+.cache/*
+
+# Go build and cache directories
+.go/*
+

@@ -1,0 +1,27 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: og-describer-template-manuals-scaled-object
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "1"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: og-describer-template-manuals
+  pollingInterval: 5
+  cooldownPeriod:  300
+  minReplicaCount: 0
+  maxReplicaCount: 20
+  fallback:
+    failureThreshold: 1
+    replicas: 1
+  triggers:
+    - type: nats-jetstream
+      metadata:
+        account: "$G"
+        stream: "og_describer_template"
+        consumer: "describer-template-manuals-service"
+        lagThreshold: "20"
+        useHttps: "false"

@@ -1,0 +1,6 @@
+FROM ghcr.io/dexidp/dex:latest
+
+ENV DEX_FRONTEND_DIR=/srv/dex/custom-web
+ENV DEX_API_CONNECTORS_CRUD=true
+
+COPY --chown=root:root ./assets/dex-login/web /srv/dex/custom-web

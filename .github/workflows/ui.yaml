@@ -1,0 +1,92 @@
+name: Web UI Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildWebUI:
+        type: choice
+        description: "build web ui image"
+        options:
+          - "true"
+        default: "true"
+  push:
+    branches:
+      - main  # Only run this workflow on pushes to the main branch
+
+jobs:
+  build:
+    # Check if the last commit is a merge from the `ui-changes` branch
+    if: (github.event.inputs.buildWebUI == 'true') || (contains(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, 'ui-changes') &&  github.event_name != 'pull_request')
+    runs-on: ubuntu-latest
+    environment: docker
+    permissions:
+      id-token: write
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: GitHub Tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+
+      - name: NPM Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            ~/.cache
+            ./node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Go to Code Directory
+        working-directory: services/webui
+        run: |
+          echo "Navigating to code directory..."
+
+      - name: Install Dependencies
+        run: npm install
+        working-directory: services/webui
+
+      - name: Build
+        env:
+          CI: false
+        run: npm run build
+        working-directory: services/webui
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to the Container Registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+      - name: Go Back  to main Code Directory
+        working-directory: ../
+        run: |
+          echo "Navigating to main directory..."
+          pwd
+          ls
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/web-ui:${{ steps.tag_version.outputs.new_tag }}
+          file: docker/WebUiServiceDockerfile
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

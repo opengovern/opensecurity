@@ -1,0 +1,8 @@
+ARG PLUGIN_REGISTRY
+FROM ${PLUGIN_REGISTRY}/cloudql-plugin-base:0.0.1 as base
+
+
+COPY ./build/query-runner-job /
+
+ENTRYPOINT [ "/query-runner-job" ]
+CMD [ "/query-runner-job" ]

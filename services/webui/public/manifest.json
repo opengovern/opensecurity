@@ -1,0 +1,40 @@
+{
+    "short_name": "opensecurity",
+    "name": "opensecurity app",
+    "icons": [
+        {
+            "src": "ios/iphone.png",
+            "sizes": "1024x1024"
+        },
+        {
+            "src": "android/Android.png",
+            "sizes": "1024x1024"
+        },
+        {
+            "src": "ios/iphone.png",
+            "sizes": "1024x1024"
+        },
+        {
+            "src": "/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "start_url": "/",
+    "scope": "https://app.opensecurity.io/",
+    "display": "standalone",
+    "theme_color": "#0D2239",
+    "background_color": "#F3F4F6",
+    "id": "opensecurity",
+    "description": "Manage your clouds like a PRO!",
+    "dir": "ltr",
+    "lang": "en",
+    "orientation": "landscape",
+    "display_override": ["standalone", "fullscreen"],
+    "categories": ["business", "finance", "productivity", "security"]
+}

@@ -1,0 +1,54 @@
+#!/bin/bash
+
+#GIT_CHANGE=$(git status -s | awk '{print $2}')
+if [[ ! -z $SERVICE_LIST ]]; then
+  if [[ "$SERVICE_LIST" == "all" ]]; then
+    ls cmd/
+    echo "steampipe"
+    exit 0
+  fi
+  echo "$SERVICE_LIST"
+  exit 0
+fi
+
+
+GIT_CHANGE=$(git  diff --name-only HEAD~1 HEAD)
+MOD_CHANGE=$(echo "$GIT_CHANGE" | grep "go.mod\|go.sum" | wc -l)
+if [[ $MOD_CHANGE != "0" ]]; then
+  ls cmd/
+  echo "steampipe"
+  exit 0
+fi
+
+SERVICES=""
+while read -r SVC; do
+	cd cmd/$SVC
+	while read -r PKG; do
+		if [[ $PKG == *"opensecurity"* ]]; then
+			PKGN=$(echo "$PKG" | sed 's;github.com/opengovern/opensecurity/;;g')
+			SEARCH="0"
+			while read -r CHANGE; do
+				if [[ $CHANGE == *"$PKGN"* ]]; then
+					SEARCH="1"
+				fi
+			done <<< "$GIT_CHANGE"
+
+
+			if [[ $SEARCH == "1" ]]; then
+				while read -r FILE; do
+					while read -r CHANGE; do
+						FILENAME="$PKGN/$FILE"
+						CHANGENAME=$(echo "$CHANGE" | sed 's;\<../../\>;;g')
+						if [[ $FILENAME == "$CHANGENAME" ]]; then
+							SERVICES="$SVC
+$SERVICES"
+						fi
+					done <<< "$GIT_CHANGE"
+				done <<< "$(go list -f '{{ join .GoFiles "\n" }}' $PKG)"
+			fi 
+		fi
+	done <<< "$(go list -f '{{ join .Deps "\n" }}')"
+	cd ../..
+done <<< "$(ls cmd)"
+
+echo "$SERVICES" | sort -u

@@ -1,0 +1,3 @@
+FROM alpine:latest
+
+COPY ./build/cloudql /cloudql.plugin

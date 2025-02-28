@@ -1,0 +1,21 @@
+# Build artifacts
+build/*
+
+# IDE directories
+.idea
+.vscode
+
+# Cache
+cache/*
+
+# Environment files
+
+# PEM files
+*.pem
+
+# Terraform files
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfplan.*
+

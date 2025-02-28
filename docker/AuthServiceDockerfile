@@ -1,0 +1,25 @@
+# Build stage
+FROM golang:1.23-alpine AS build
+WORKDIR /app
+# Install required packages
+RUN apk --no-cache add ca-certificates git build-base
+
+# Copy in go modules manifests and download dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the rest of the source code
+COPY . .
+
+# Build the auth-service binary
+RUN CGO_ENABLED=0 GOOS=linux go build -o auth-service ./cmd/auth-service
+
+# Final minimal stage
+FROM scratch
+# Copy CA certificates
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# Copy the compiled binary from the builder stage
+COPY --from=build /app/auth-service /auth-service
+
+# Specify the start command
+CMD ["/auth-service"]

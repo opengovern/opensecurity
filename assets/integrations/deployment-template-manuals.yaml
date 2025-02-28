@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: og-describer-template-manuals
+  labels:
+    app: og-describer-template-manuals
+spec:
+  minReadySeconds: 10
+  replicas: 0
+  selector:
+    matchLabels:
+      app: og-describer-template-manuals
+  template:
+    metadata:
+      labels:
+        app: og-describer-template-manuals
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: opensecurity-node
+                    operator: In
+                    values:
+                      - worker
+      containers:
+        - name: og-describer-template
+          command: [ "/og-describer-template" ]
+          imagePullPolicy: Always
+          env:
+            - name: MANUAL_TRIGGERS
+              value: "true"

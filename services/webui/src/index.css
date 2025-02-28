@@ -1,0 +1,206 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import "@cloudscape-design/global-styles/index.css";
+
+@layer utilities {
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .no-scrollbar {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+    }
+    .scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 2px;
+  }
+   .scrollbar::-webkit-scrollbar-track {
+    border-radius: 100vh;
+    background: #f7f4ed;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb {
+    background: #e0cbcb;
+    border-radius: 100vh;
+    border: 3px solid #f6f7ed;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #c0a0b9;
+  }
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-family-base-dnvic8, "Open Sans", "Helvetica Neue", Roboto, Arial, sans-serif)!important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: #374151;
+    height: 100%;
+    overflow: auto;
+}
+.view-lines{
+    /* font-family: var(--font-family-base-dnvic8, "Open Sans", "Helvetica Neue", Roboto, Arial, sans-serif)!important; */
+
+}
+
+html {
+    overflow: hidden;
+    height: 100%;
+}
+
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+        monospace ;
+}
+
+.ag-theme-alpine {
+    --ag-row-border-color: #e5e7eb !important;
+    --ag-border-color: #e5e7eb !important;
+    --ag-header-background-color: #fff !important;
+    --ag-checkbox-unchecked-color: #e5e7eb !important;
+    --ag-odd-row-background-color: #f9fafb !important;
+    --ag-control-panel-background-color: #f9fafb !important;
+    --ag-chip-background-color: #e5e7eb !important;
+    --ag-foreground-color: #6b7280 !important;
+}
+
+.ag-header-cell-menu-button {
+    display: none !important;
+}
+
+.ag-theme-alpine-dark {
+    --ag-background-color: #1f2937 !important;
+    --ag-foreground-color: #6b7280 !important;
+    --ag-border-color: #374151 !important;
+    --ag-header-background-color: #1f2937 !important;
+    color-scheme: dark;
+}
+
+.ag-theme-alpine-dark .ag-header-cell-text {
+    color: white !important;
+}
+
+.ag-root-wrapper {
+    border-radius: 8px !important;
+}
+
+.ag-header-cell-text {
+    color: #374151 !important;
+}
+
+.queryBuilder {
+    width: 100%;
+    font-size: 14px;
+    border-radius: 8px;
+}
+
+.queryBuilder select {
+    border-radius: 8px;
+    font-size: 14px;
+    padding: 2px 28px 2px 12px;
+}
+
+.queryBuilder input {
+    border-radius: 8px;
+    font-size: 14px;
+    padding: 2px 12px;
+}
+
+.ruleGroup-addRule,
+.ruleGroup-addGroup {
+    border: 1px solid #6b7280;
+    padding: 3px 12px;
+    border-radius: 8px;
+    background-color: white;
+}
+
+.editor .ruleGroup-addRule,
+.editor .ruleGroup-addGroup {
+    opacity: 0;
+}
+
+.rule-operators {
+    width: 60px;
+}
+
+.pretty {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pretty input[type='checkbox'] {
+    margin-top: 2px;
+    border-radius: 2px !important;
+    /*color: #6b7280 !important;*/
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+    outline: none !important;
+    --tw-ring-color: transparent !important;
+}
+
+.ag-paging-page-size {
+    display: none;
+}
+
+.dark pre {
+    color: #cccccc;
+}
+
+.dark pre .operator {
+    color: #000;
+}
+
+.compliance-fix span {
+    width: 100%;
+}
+
+.sidebar-accordion .tremor-AccordionHeader-arrowIcon {
+    position: absolute;
+    right: 95%;
+    top: 10px;
+}
+.ag-body-viewport-wrapper.ag-layout-normal {
+    overflow-x: scroll;
+    overflow-y: scroll;
+}
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 2px;
+    height: 2px;
+}
+::-webkit-scrollbar-thumb {
+
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+table{
+    border-collapse: separate!important;
+}
+.awsui-context-content-header{
+    border-radius: 12px!important;
+}
+
+.awsui_selection-control_p8a6i_g1lwj_311{
+  display: none;
+}
+/* .awsui_scrolling-background_hyvsj_lgv7x_152{
+    border-radius: 0.75rem!important;
+    border: 1px solid #e5e7eb!important;
+} */
+
+.markdown-body ol,
+.markdown-body ul,
+.markdown-body menu {
+  all: revert!important; /* Reverts styles to browser defaults */
+}

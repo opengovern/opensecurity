@@ -1,0 +1,16 @@
+ version: "2.15.1" #We specify a version for Compose. Make sure Compose is compatible with Docker
+ services:
+   front: #Define the client service so we can run it in an isolated environment.
+     stdin_open: true
+     container_name : webUI
+     build:
+       context: .
+       dockerfile: Dockerfile #The client service requires a docker file to be specified. For development, we’re going to use the Dockerfile.dev file.
+     volumes:
+       - "/app/node_modules"
+       - "./:/app"
+     networks:
+       - front
+ networks:
+  front:
+    driver: bridge

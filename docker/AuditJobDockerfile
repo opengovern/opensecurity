@@ -1,0 +1,9 @@
+
+ARG PLUGIN_REGISTRY
+FROM ${PLUGIN_REGISTRY}/cloudql-plugin-base:0.0.1 as base
+
+
+COPY ./build/audit-job /
+
+ENTRYPOINT [ "/audit-job" ]
+CMD [ "/audit-job" ]
