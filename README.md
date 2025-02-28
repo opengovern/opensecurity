@@ -63,7 +63,7 @@ helm install -n opencomply opencomply opencomply/opencomply --create-namespace
 kubectl port-forward -n opensecurity svc/nginx-proxy 8080:80
 ```
 
-Open http://localhost:8080/ in your browser, sign in with ```admin@opencomply.io``` as the username and ```password``` as the password.
+Open http://localhost:8080/ in your browser, sign in with ```admin@opensecurity.sh``` as the username and ```password``` as the password.
 
 App includes sample data.
 

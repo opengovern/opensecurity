@@ -97,10 +97,9 @@ export default function Overview() {
                 //  const temp = []
                 if (res.data == 'CHANGE_REQUIRED') {
                     setChange(true)
-                    if (me?.email == 'admin@opensecurity.io') {
+                    if (me?.email == 'admin@opensecurity.sh') {
                         runSync()
                         loadData()
-                        
                     }
                 }
             })
