@@ -60,7 +60,8 @@ Install opensecurity on any Kubernetes cluster with at least 3 nodes (4 vCPUs x 
 ```bash
 helm repo add opensecurity [https://charts.opencomply.io](https://charts.opencomply.io) --force-update
 helm install -n opensecurity opencomply opencomply/opencomply --create-namespace
-kubectl port-forward -n opensecurity svc/nginx-proxy 8080:80```
+kubectl port-forward -n opensecurity svc/nginx-proxy 8080:80
+```
 
 Open http://localhost:8080/ in your browser and sign in with `admin@opencomply.io` as the username and `password` as the password. The application comes pre-loaded with sample data.
 
