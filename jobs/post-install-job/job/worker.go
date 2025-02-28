@@ -136,6 +136,9 @@ func (w *Job) Run(ctx context.Context) error {
 		order = Order
 	}
 	for _, key := range order {
+		if key == "compliance" && !(strings.ToLower(ComplianceEnabled) == "true") {
+			continue
+		}
 		jobsStatus[key] = model.JobInfo{
 			MigrationJobName: key,
 			Status:           model.JobStatusPending,
