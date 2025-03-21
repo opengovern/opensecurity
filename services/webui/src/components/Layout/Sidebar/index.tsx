@@ -23,6 +23,7 @@ import {
     ChevronDoubleUpIcon,
     CalendarDateRangeIcon,
     CommandLineIcon,
+    UserIcon,
 } from '@heroicons/react/24/outline'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { Popover, Transition } from '@headlessui/react'
@@ -262,6 +263,12 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 name: 'Jobs',
                 page: 'jobs',
                 icon: CalendarDateRangeIcon,
+                isPreview: false,
+            },
+            {
+                name: 'Agent AI',
+                page: 'ai',
+                icon: UserIcon,
                 isPreview: false,
             },
             {

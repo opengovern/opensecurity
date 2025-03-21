@@ -86,7 +86,7 @@ const KInput: FunctionComponent<any> = ({
             disabled={disabled}
             className={` absolute  right-3 ${is_dark ? 'text-white' : 'text-black'} rounded-full p-2 disabled:text-gray-500 `}
           >
-            <PaperAirplaneIcon />
+            <PaperAirplaneIcon color="black" className="w-5" />
           </button>
         </div>
       </div>
