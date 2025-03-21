@@ -3,6 +3,7 @@ package opengovernance
 import (
 	"context"
 	"github.com/opengovern/opensecurity/pkg/cloudql/sdk/config"
+	"github.com/opengovern/opensecurity/pkg/cloudql/sdk/extra/create_functions"
 	"github.com/opengovern/opensecurity/pkg/cloudql/sdk/extra/utils"
 	"github.com/opengovern/opensecurity/pkg/cloudql/sdk/extra/view-sync"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
@@ -33,6 +34,8 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 
 	viewSync := view_sync.NewViewSync(extraLogger)
 	go viewSync.Start(ctx)
+
+	create_functions.CreatePostgresFunctions(ctx, extraLogger)
 
 	return p
 }
