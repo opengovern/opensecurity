@@ -266,17 +266,18 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 isPreview: false,
             },
             {
-                name: 'Agent AI',
-                page: 'ai',
-                icon: UserIcon,
-                isPreview: false,
-            },
-            {
                 name: 'Administration',
                 page: ['administration'],
                 icon: Cog6ToothIcon,
                 isPreview: false,
             },
+            {
+                name: 'Agent AI',
+                page: 'ai',
+                icon: UserIcon,
+                isPreview: true,
+            },
+
             {
                 name: 'Automation',
                 page: 'automation',
