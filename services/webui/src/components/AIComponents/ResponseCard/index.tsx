@@ -104,7 +104,7 @@ const KResponseCard: FunctionComponent<any> = ({
                         ) : (
                           <>
                             <span className="text-slate-800 dark:text-slate-200">
-                              {pre_loaded ? showText : useAnimatedText(showText, 0.5).text}
+                              {pre_loaded ? showText : useAnimatedText(showText, 3).text}
                             </span>
                           </>
                         )}

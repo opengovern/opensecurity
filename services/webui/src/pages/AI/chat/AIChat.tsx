@@ -16,8 +16,8 @@ function AIChat() {
 
     const [chats, setChats] = useState<ChatList>({
         '0': {
-            message: 'Hello here is your AI assitant',
-            text: 'Hello here is your AI assitant',
+            message: '',
+            text: 'Hi there! This is your Identity & Access Agent. I can help you with anything related to identity management and access tools. What can I assist you with today? For example, you can ask me things like:',
             loading: false,
             time: 0,
             error: '',
@@ -25,14 +25,12 @@ function AIChat() {
             pre_loaded: false,
             clarify_needed: false,
             messageTime: '',
-            responseTime: `${
-                new Date().getHours() > 12
-                    ? new Date().getHours() - 12
-                    : new Date().getHours()
-            }:${new Date().getMinutes()}${
-                new Date().getHours() > 12 ? 'PM' : 'AM'
-            }`,
-            suggestions: [],
+            responseTime: '1:5AM',
+            suggestions: [
+                'Get me the list of users who have access to Azure Subscriptions.',
+                'Get me all SPNs with expired passwords.',
+                'Show me the access activity for user John Doe.',
+            ],
             response: {},
         },
     })
