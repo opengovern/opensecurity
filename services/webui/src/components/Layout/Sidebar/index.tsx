@@ -25,6 +25,7 @@ import {
     CommandLineIcon,
     UserIcon,
 } from '@heroicons/react/24/outline'
+import { RiChatSmileAiLine, RiChatSmileLine } from '@remixicon/react'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { Popover, Transition } from '@headlessui/react'
 import { Fragment, useEffect, useState } from 'react'
@@ -266,17 +267,18 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 isPreview: false,
             },
             {
-                name: 'Agent AI',
-                page: 'ai',
-                icon: UserIcon,
-                isPreview: false,
-            },
-            {
                 name: 'Administration',
                 page: ['administration'],
                 icon: Cog6ToothIcon,
                 isPreview: false,
             },
+            {
+                name: 'Agent AI',
+                page: 'ai',
+                icon: RiChatSmileAiLine,
+                isPreview: true,
+            },
+
             {
                 name: 'Automation',
                 page: 'automation',

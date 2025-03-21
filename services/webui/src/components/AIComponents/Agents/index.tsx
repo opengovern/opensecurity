@@ -42,21 +42,7 @@ function Agents() {
           enabled: true,
           is_available: true,
       },
-      {
-          name: 'Sales',
-          description:
-              'Answers questions about sales activities, including: total activities per rep, activity breakdown by type, activity per deal, deal stage progression activity, and time to first activity. Enables analysis of sales rep performance and deal progression.',
-          welcome_message:
-              'Hello! This is your Sales Agent. I can answer questions about sales activities, including total activities per rep, activity breakdown by type, activity per deal, deal stage progression activity, and time to first activity. What can I help you with? For example:',
-          sample_questions: [
-              'Show me the total activities (calls, emails, meetings) for each sales rep.',
-              'Which sales reps had the most/least activities?',
-              'How much activity was logged for each deal we closed?',
-          ],
-          id: 'sales',
-          enabled: true,
-          is_available: true,
-      },
+    
   ])
   const selected_agent = {
       id: 'identity_access',

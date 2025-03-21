@@ -2,6 +2,7 @@ import { useState } from "react"
 import Agents from "../../components/AIComponents/Agents"
 import AIChat from "./chat/AIChat"
 import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/24/outline"
+import { RiArrowLeftLine, RiArrowRightLine } from "@remixicon/react"
 
 
 export default function AI() {
@@ -33,7 +34,7 @@ export default function AI() {
                                         className="text-slate-950 dark:text-slate-200 w-full justify-end flex pr-2 cursor-pointer"
                                         onClick={() => setIsOpen(false)}
                                     >
-                                        <ArrowRightIcon className="w-5" />
+                                        <RiArrowLeftLine className="w-5" />
                                     </span>
                                 </>
                             ) : (
@@ -42,7 +43,7 @@ export default function AI() {
                                         className="text-slate-950 dark:text-slate-200 w-full justify-start flex pr-2 cursor-pointer"
                                         onClick={() => setIsOpen(true)}
                                     >
-                                        <ArrowLeftIcon className="w-5" />
+                                        <RiArrowRightLine className="w-5" />
                                     </span>
                                 </>
                             )}
