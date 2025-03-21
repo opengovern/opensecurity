@@ -25,7 +25,7 @@ import {
     CommandLineIcon,
     UserIcon,
 } from '@heroicons/react/24/outline'
-import { RiChatSmileAiLine, RiChatSmileLine } from '@remixicon/react'
+import { RiAdminLine, RiChatSmileAiLine, RiChatSmileLine, RiFileWarningFill, RiHome2Line, RiPuzzleLine, RiRefreshLine, RiRobot2Line, RiShieldCheckLine, RiSlideshowLine, RiTaskLine, RiTerminalBoxLine } from '@remixicon/react'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { Popover, Transition } from '@headlessui/react'
 import { Fragment, useEffect, useState } from 'react'
@@ -207,19 +207,19 @@ export default function Sidebar({ currentPage }: ISidebar) {
             {
                 name: 'Overview',
                 page: '',
-                icon: Squares2X2Icon,
+                icon: RiHome2Line,
                 isPreview: false,
             },
 
             {
                 name: 'CloudQL',
                 page: ['cloudql', 'cloudql'],
-                icon: MagnifyingGlassIcon,
+                icon: RiTerminalBoxLine,
                 isPreview: false,
             },
             {
                 name: 'Compliance',
-                icon: ShieldCheckIcon,
+                icon: RiShieldCheckLine,
                 page: [
                     'compliance',
                     'compliance/:benchmarkId',
@@ -234,7 +234,7 @@ export default function Sidebar({ currentPage }: ISidebar) {
 
             {
                 name: 'All Incidents',
-                icon: DocumentMagnifyingGlassIcon,
+                icon: RiFileWarningFill,
                 page: [
                     'incidents',
                     'incidents/summary',
@@ -251,7 +251,7 @@ export default function Sidebar({ currentPage }: ISidebar) {
                     'plugins/Azure',
                     'plugins/EntraID',
                 ],
-                icon: PuzzlePieceIcon,
+                icon: RiPuzzleLine,
                 isLoading: false,
                 // count: 0,
 
@@ -263,26 +263,26 @@ export default function Sidebar({ currentPage }: ISidebar) {
             {
                 name: 'Jobs',
                 page: 'jobs',
-                icon: CalendarDateRangeIcon,
+                icon: RiTaskLine,
                 isPreview: false,
             },
             {
                 name: 'Administration',
                 page: ['administration'],
-                icon: Cog6ToothIcon,
+                icon: RiAdminLine,
                 isPreview: false,
             },
             {
                 name: 'Agent AI',
                 page: 'ai',
-                icon: RiChatSmileAiLine,
+                icon: RiRobot2Line,
                 isPreview: true,
             },
 
             {
                 name: 'Automation',
                 page: 'automation',
-                icon: BoltIcon,
+                icon: RiRefreshLine,
                 isPreview: true,
             },
             {
@@ -296,7 +296,7 @@ export default function Sidebar({ currentPage }: ISidebar) {
                     'dashboards/spend-accounts',
                     'dashboards/spend-metrics',
                 ],
-                icon: PresentationChartBarIcon,
+                icon: RiSlideshowLine,
                 isPreview: true,
             },
         ]
