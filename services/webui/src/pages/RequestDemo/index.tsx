@@ -81,14 +81,14 @@ export default function RequestDemo() {
                     </Flex>
                 </Flex>
                 <Text>
-                    © 2025 open governance Inc. d/b/a opensecurity.io. All rights
-                    reserved.
+                    © 2025 open governance Inc. d/b/a opensecurity.io. All
+                    rights reserved.
                 </Text>
             </Flex>
             <iframe
                 title="Setup a meeting"
                 className="w-full h-full relative max-w-[630px]"
-                src="https://cal.com/team/opensecurity/try-enterprise"
+                src="https://cal.com/team/clearcompass/try-enterprise"
             />
         </Grid>
     )

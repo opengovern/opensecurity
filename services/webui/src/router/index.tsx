@@ -26,6 +26,7 @@ import TypeDetail from '../pages/Integrations/TypeDetailNew'
 import EvaluateDetail from '../pages/Governance/Compliance/NewBenchmarkSummary/EvaluateTable/EvaluateDetail'
 import Tasks from '../pages/Tasks'
 import TaskDetail from '../pages/Tasks/TaskDetail'
+import AI from '../pages/AI'
 
 const show_compliance = window.__RUNTIME_CONFIG__.REACT_APP_SHOW_COMPLIANCE
 console.log(show_compliance)
@@ -171,7 +172,7 @@ const authRoutes = [
     {
         key: 'home',
         path: '/',
-        element: show_compliance !=='false' ?<Overview /> : <Search/>,
+        element: show_compliance !== 'false' ? <Overview /> : <Search />,
     },
 
     {
@@ -194,6 +195,11 @@ const authRoutes = [
         key: 'Tasks',
         path: '/tasks/:id',
         element: <TaskDetail />,
+    },
+    {
+        key: 'Ai',
+        path: '/ai',
+        element: <AI />,
     },
 ]
 
