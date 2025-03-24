@@ -55,7 +55,7 @@ export default function AI() {
                                     </>
                                 )}
                             </div>
-                            {isOpen && <Agents />}
+                            {isOpen && <Agents setOpen={setOpen} />}
                         </div>
                     )}
                     <div
@@ -64,7 +64,7 @@ export default function AI() {
                             `${isOpen ? 'col-span-8' : 'col-span-10'}`
                         } `}
                     >
-                        <AIChat />
+                        <AIChat setOpen={setOpen} />
                     </div>
                 </div>
             </div>

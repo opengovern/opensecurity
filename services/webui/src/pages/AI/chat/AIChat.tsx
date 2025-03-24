@@ -6,7 +6,7 @@ import KChatCard from '../../../components/AIComponents/ChatCard';
 import KResponseCard from '../../../components/AIComponents/ResponseCard';
 import KInput from '../../../components/AIComponents/Input'
 
-function AIChat() {
+function AIChat({setOpen}:any) {
     const [message, setMessage] = useState('')
 
 
