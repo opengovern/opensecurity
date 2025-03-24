@@ -5,13 +5,9 @@ import { dateTimeDisplay } from '../../../utilities/dateDisplay';
 import KChatCard from '../../../components/AIComponents/ChatCard';
 import KResponseCard from '../../../components/AIComponents/ResponseCard';
 import KInput from '../../../components/AIComponents/Input'
-import { Button, Modal } from '@cloudscape-design/components';
-import Cal, { getCalApi } from '@calcom/embed-react'
-import { Flex } from '@tremor/react';
+
 function AIChat() {
     const [message, setMessage] = useState('')
-    const [open,setOpen] = useState(false)
-    const [openCal, setOpenCal] = useState(false)
 
 
     const [chats, setChats] = useState<ChatList>({
@@ -140,43 +136,7 @@ function AIChat() {
                     }}
                 />
             </div>
-            <Modal
-                size="medium"
-                visible={open}
-                onDismiss={() => setOpen(false)}
-                header="Not available"
-            >
-                <Flex className="flex-col gap-2">
-                    <span>
-                        {' '}
-                        This feature is only available on commercial version.
-                    </span>
-                    <Button
-                        onClick={() => {
-                            setOpenCal(true)
-                        }}
-                    >
-                        Contact us
-                    </Button>
-                </Flex>
-            </Modal>
-            <Modal
-                size="large"
-                visible={openCal}
-                onDismiss={() => setOpenCal(false)}
-                header="Not available"
-            >
-                <Cal
-                    namespace="try-enterprise"
-                    calLink="team/clearcompass/try-enterprise"
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        overflow: 'scroll',
-                    }}
-                    config={{ layout: 'month_view' }}
-                />
-            </Modal>
+        
         </>
     )
 }
