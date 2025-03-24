@@ -7,7 +7,7 @@ import Tooltip from '../Tooltip';
 import { Button, Modal } from '@cloudscape-design/components'
 import Cal, { getCalApi } from '@calcom/embed-react'
 import { Flex } from '@tremor/react'
-function Agents({ setOpen }: any) {
+function Agents() {
     const [agents, setAgents] = useState<Agent[]>([
         {
             name: 'Identity & Access',
@@ -40,11 +40,8 @@ function Agents({ setOpen }: any) {
             is_available: true,
         },
     ])
-    const selected_agent = {
-        id: 'identity_access',
-    }
-    const navigate = useNavigate()
-
+ 
+    const [agent, setAgent] = useState<Agent | null>(localStorage.getItem('agent') ? JSON.parse(localStorage.getItem('agent') as string) : agents[0])
     return (
         <>
             <div className="  bg-slate-200 dark:bg-gray-950      h-full w-full max-w-sm  justify-start items-start  max-h-[90vh]  flex flex-col gap-2 ">
@@ -52,23 +49,24 @@ function Agents({ setOpen }: any) {
                     id="k-agent-bar"
                     className="flex flex-col gap-2 max-h-[90vh] overflow-y-scroll mt-2 "
                 >
-                    {agents?.map((agent) => {
+                    {agents?.map((Fagent) => {
                         return (
                             <div
-                                key={agent.id}
+                                key={Fagent.id}
                                 onClick={() => {
-                                    setOpen(true)
+                                    localStorage.setItem('agent', JSON.stringify(Fagent))
+                                    window.location.reload()
                                 }}
                                 className={`rounded-sm flex flex-col justify-start items-start gap-2 hover:dark:bg-gray-700 hover:bg-gray-400 cursor-pointer p-2 ${
-                                    selected_agent?.id == agent.id &&
+                                    agent?.id == Fagent.id &&
                                     ' bg-slate-400 dark:bg-slate-800'
                                 }`}
                             >
                                 <span className="text-base text-slate-950 dark:text-slate-200">
-                                    {agent.name}
+                                    {Fagent.name}
                                 </span>
                                 <span className="text-sm text-slate-500 dark:text-slate-400">
-                                    {agent.description}
+                                    {Fagent.description}
                                 </span>
                             </div>
                         )

@@ -12,6 +12,7 @@ export default function AI() {
     const is_ai_page = true
         const [open, setOpen] = useState(false)
         const [openCal, setOpenCal] = useState(false)
+      
 
 
     return (
@@ -55,7 +56,11 @@ export default function AI() {
                                     </>
                                 )}
                             </div>
-                            {isOpen && <Agents setOpen={setOpen} />}
+                            {isOpen && (
+                                <Agents
+                                 
+                                />
+                            )}
                         </div>
                     )}
                     <div
@@ -64,7 +69,9 @@ export default function AI() {
                             `${isOpen ? 'col-span-8' : 'col-span-10'}`
                         } `}
                     >
-                        <AIChat setOpen={setOpen} />
+                        <AIChat
+                            setOpen={setOpen}
+                        />
                     </div>
                 </div>
             </div>

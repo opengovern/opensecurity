@@ -1,36 +1,19 @@
-import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
-import { Chat, ChatList } from '../types';
-import axios from 'axios';
-import { dateTimeDisplay } from '../../../utilities/dateDisplay';
-import KChatCard from '../../../components/AIComponents/ChatCard';
-import KResponseCard from '../../../components/AIComponents/ResponseCard';
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
+import { Chat, ChatList } from '../types'
+import axios from 'axios'
+import { dateTimeDisplay } from '../../../utilities/dateDisplay'
+import KChatCard from '../../../components/AIComponents/ChatCard'
+import KResponseCard from '../../../components/AIComponents/ResponseCard'
 import KInput from '../../../components/AIComponents/Input'
+import { DEVOPS, IDENTITY } from './responses'
 
-function AIChat({setOpen}:any) {
+function AIChat({ setOpen, }: any) {
     const [message, setMessage] = useState('')
+    const agent = JSON.parse(localStorage.getItem('agent') as string)
+    const [chats, setChats] = useState<ChatList>(
+        agent.id == 'identity_access' ? IDENTITY : DEVOPS
+    )
 
-
-    const [chats, setChats] = useState<ChatList>({
-        '0': {
-            message: '',
-            text: 'Hi there! This is your Identity & Access Agent. I can help you with anything related to identity management and access tools. What can I assist you with today? For example, you can ask me things like:',
-            loading: false,
-            time: 0,
-            error: '',
-            isWelcome: true,
-            pre_loaded: false,
-            clarify_needed: false,
-            messageTime: '',
-            responseTime: '1:5AM',
-            suggestions: [
-                'Get me the list of users who have access to Azure Subscriptions.',
-                'Get me all SPNs with expired passwords.',
-                'Show me the access activity for user John Doe.',
-            ],
-            response: {},
-        },
-    })
-   
     const lastMessageRef = useRef(null)
     const scroll = () => {
         const layout = document.getElementById('layout')
@@ -59,6 +42,7 @@ function AIChat({setOpen}:any) {
     useEffect(() => {
         scroll()
     }, [chats])
+   
 
     return (
         <>
@@ -73,52 +57,105 @@ function AIChat({setOpen}:any) {
                                 Object.keys(chats).map((key) => {
                                     return (
                                         <>
-                                            {!chats[key].isWelcome && (
-                                                <KChatCard
-                                                    date={
-                                                        chats[key].messageTime
-                                                    }
-                                                    key={parseInt(key) + 'chat'}
-                                                    message={chats[key].message}
-                                                />
+                                            {chats[key].show && (
+                                                <>
+                                                    {!chats[key].isWelcome && (
+                                                        <KChatCard
+                                                            date={
+                                                                chats[key]
+                                                                    .messageTime
+                                                            }
+                                                            key={
+                                                                parseInt(key) +
+                                                                'chat'
+                                                            }
+                                                            message={
+                                                                chats[key]
+                                                                    .message
+                                                            }
+                                                        />
+                                                    )}
+                                                    <KResponseCard
+                                                        key={
+                                                            parseInt(key) +
+                                                            'result'
+                                                        }
+                                                        ref={
+                                                            key ===
+                                                            (
+                                                                Object.keys(
+                                                                    chats
+                                                                )?.length - 1
+                                                            ).toString()
+                                                                ? lastMessageRef
+                                                                : null
+                                                        }
+                                                        scroll={scroll}
+                                                        response={
+                                                            chats[key].response
+                                                        }
+                                                        loading={
+                                                            chats[key].loading
+                                                        }
+                                                        pre_loaded={
+                                                            chats[key]
+                                                                .pre_loaded
+                                                        }
+                                                        chat_id={chats[key].id}
+                                                        error={chats[key].error}
+                                                        time={chats[key].time}
+                                                        text={chats[key].text}
+                                                        isWelcome={
+                                                            chats[key].isWelcome
+                                                        }
+                                                        date={
+                                                            chats[key]
+                                                                .responseTime
+                                                        }
+                                                        clarify_needed={
+                                                            chats[key]
+                                                                .clarify_needed
+                                                        }
+                                                        clarify_questions={
+                                                            chats[key]
+                                                                .clarify_questions
+                                                        }
+                                                        id={''}
+                                                        suggestions={
+                                                            chats[key]
+                                                                .suggestions
+                                                        }
+                                                        onClickSuggestion={(
+                                                            suggestion: string
+                                                        ) => {
+                                                            // find suggestoin index
+                                                            const sug =
+                                                                chats['0']
+                                                                    .suggestions
+                                                            const index =
+                                                                sug?.indexOf(
+                                                                    suggestion
+                                                                )
+
+                                                            const temp = chats
+                                                            if (
+                                                                index !==
+                                                                undefined
+                                                            ) {
+                                                                temp[
+                                                                    (
+                                                                        index +
+                                                                        1
+                                                                    )?.toString()
+                                                                ].show = true
+                                                                setChats({
+                                                                    ...temp,
+                                                                })
+                                                            }
+                                                        }}
+                                                    />
+                                                </>
                                             )}
-                                            <KResponseCard
-                                                key={parseInt(key) + 'result'}
-                                                ref={
-                                                    key ===
-                                                    (
-                                                        Object.keys(chats)
-                                                            ?.length - 1
-                                                    ).toString()
-                                                        ? lastMessageRef
-                                                        : null
-                                                }
-                                                scroll={scroll}
-                                                response={chats[key].response}
-                                                loading={chats[key].loading}
-                                                pre_loaded={
-                                                    chats[key].pre_loaded
-                                                }
-                                                chat_id={chats[key].id}
-                                                error={chats[key].error}
-                                                time={chats[key].time}
-                                                text={chats[key].text}
-                                                isWelcome={chats[key].isWelcome}
-                                                date={chats[key].responseTime}
-                                                clarify_needed={
-                                                    chats[key].clarify_needed
-                                                }
-                                                clarify_questions={
-                                                    chats[key].clarify_questions
-                                                }
-                                                id={''}
-                                                suggestions={
-                                                    chats[key].suggestions
-                                                }
-                                                onClickSuggestion={(
-                                                    suggestion: string
-                                                ) => {}}
-                                            />
                                         </>
                                     )
                                 })}
@@ -136,9 +173,8 @@ function AIChat({setOpen}:any) {
                     }}
                 />
             </div>
-        
         </>
     )
 }
 
-export default AIChat;
+export default AIChat
