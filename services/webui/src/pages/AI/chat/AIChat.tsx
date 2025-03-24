@@ -1,42 +1,19 @@
-import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
-import { Chat, ChatList } from '../types';
-import axios from 'axios';
-import { dateTimeDisplay } from '../../../utilities/dateDisplay';
-import KChatCard from '../../../components/AIComponents/ChatCard';
-import KResponseCard from '../../../components/AIComponents/ResponseCard';
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
+import { Chat, ChatList } from '../types'
+import axios from 'axios'
+import { dateTimeDisplay } from '../../../utilities/dateDisplay'
+import KChatCard from '../../../components/AIComponents/ChatCard'
+import KResponseCard from '../../../components/AIComponents/ResponseCard'
 import KInput from '../../../components/AIComponents/Input'
-import { Button, Modal } from '@cloudscape-design/components';
-import Cal, { getCalApi } from '@calcom/embed-react'
-import { Flex } from '@tremor/react';
-function AIChat() {
+import { DEVOPS, IDENTITY } from './responses'
+
+function AIChat({ setOpen, }: any) {
     const [message, setMessage] = useState('')
-    const [open,setOpen] = useState(false)
-    const [openCal, setOpenCal] = useState(false)
+    const agent = JSON.parse(localStorage.getItem('agent') as string)
+    const [chats, setChats] = useState<ChatList>(
+        agent.id == 'identity_access' ? IDENTITY : DEVOPS
+    )
 
-
-    const [chats, setChats] = useState<ChatList>({
-        '0': {
-            message: 'Hello here is your AI assitant',
-            text: 'Hello here is your AI assitant',
-            loading: false,
-            time: 0,
-            error: '',
-            isWelcome: true,
-            pre_loaded: false,
-            clarify_needed: false,
-            messageTime: '',
-            responseTime: `${
-                new Date().getHours() > 12
-                    ? new Date().getHours() - 12
-                    : new Date().getHours()
-            }:${new Date().getMinutes()}${
-                new Date().getHours() > 12 ? 'PM' : 'AM'
-            }`,
-            suggestions: [],
-            response: {},
-        },
-    })
-   
     const lastMessageRef = useRef(null)
     const scroll = () => {
         const layout = document.getElementById('layout')
@@ -65,6 +42,7 @@ function AIChat() {
     useEffect(() => {
         scroll()
     }, [chats])
+   
 
     return (
         <>
@@ -79,52 +57,105 @@ function AIChat() {
                                 Object.keys(chats).map((key) => {
                                     return (
                                         <>
-                                            {!chats[key].isWelcome && (
-                                                <KChatCard
-                                                    date={
-                                                        chats[key].messageTime
-                                                    }
-                                                    key={parseInt(key) + 'chat'}
-                                                    message={chats[key].message}
-                                                />
+                                            {chats[key].show && (
+                                                <>
+                                                    {!chats[key].isWelcome && (
+                                                        <KChatCard
+                                                            date={
+                                                                chats[key]
+                                                                    .messageTime
+                                                            }
+                                                            key={
+                                                                parseInt(key) +
+                                                                'chat'
+                                                            }
+                                                            message={
+                                                                chats[key]
+                                                                    .message
+                                                            }
+                                                        />
+                                                    )}
+                                                    <KResponseCard
+                                                        key={
+                                                            parseInt(key) +
+                                                            'result'
+                                                        }
+                                                        ref={
+                                                            key ===
+                                                            (
+                                                                Object.keys(
+                                                                    chats
+                                                                )?.length - 1
+                                                            ).toString()
+                                                                ? lastMessageRef
+                                                                : null
+                                                        }
+                                                        scroll={scroll}
+                                                        response={
+                                                            chats[key].response
+                                                        }
+                                                        loading={
+                                                            chats[key].loading
+                                                        }
+                                                        pre_loaded={
+                                                            chats[key]
+                                                                .pre_loaded
+                                                        }
+                                                        chat_id={chats[key].id}
+                                                        error={chats[key].error}
+                                                        time={chats[key].time}
+                                                        text={chats[key].text}
+                                                        isWelcome={
+                                                            chats[key].isWelcome
+                                                        }
+                                                        date={
+                                                            chats[key]
+                                                                .responseTime
+                                                        }
+                                                        clarify_needed={
+                                                            chats[key]
+                                                                .clarify_needed
+                                                        }
+                                                        clarify_questions={
+                                                            chats[key]
+                                                                .clarify_questions
+                                                        }
+                                                        id={''}
+                                                        suggestions={
+                                                            chats[key]
+                                                                .suggestions
+                                                        }
+                                                        onClickSuggestion={(
+                                                            suggestion: string
+                                                        ) => {
+                                                            // find suggestoin index
+                                                            const sug =
+                                                                chats['0']
+                                                                    .suggestions
+                                                            const index =
+                                                                sug?.indexOf(
+                                                                    suggestion
+                                                                )
+
+                                                            const temp = chats
+                                                            if (
+                                                                index !==
+                                                                undefined
+                                                            ) {
+                                                                temp[
+                                                                    (
+                                                                        index +
+                                                                        1
+                                                                    )?.toString()
+                                                                ].show = true
+                                                                setChats({
+                                                                    ...temp,
+                                                                })
+                                                            }
+                                                        }}
+                                                    />
+                                                </>
                                             )}
-                                            <KResponseCard
-                                                key={parseInt(key) + 'result'}
-                                                ref={
-                                                    key ===
-                                                    (
-                                                        Object.keys(chats)
-                                                            ?.length - 1
-                                                    ).toString()
-                                                        ? lastMessageRef
-                                                        : null
-                                                }
-                                                scroll={scroll}
-                                                response={chats[key].response}
-                                                loading={chats[key].loading}
-                                                pre_loaded={
-                                                    chats[key].pre_loaded
-                                                }
-                                                chat_id={chats[key].id}
-                                                error={chats[key].error}
-                                                time={chats[key].time}
-                                                text={chats[key].text}
-                                                isWelcome={chats[key].isWelcome}
-                                                date={chats[key].responseTime}
-                                                clarify_needed={
-                                                    chats[key].clarify_needed
-                                                }
-                                                clarify_questions={
-                                                    chats[key].clarify_questions
-                                                }
-                                                id={''}
-                                                suggestions={
-                                                    chats[key].suggestions
-                                                }
-                                                onClickSuggestion={(
-                                                    suggestion: string
-                                                ) => {}}
-                                            />
                                         </>
                                     )
                                 })}
@@ -142,45 +173,8 @@ function AIChat() {
                     }}
                 />
             </div>
-            <Modal
-                size="medium"
-                visible={open}
-                onDismiss={() => setOpen(false)}
-                header="Not available"
-            >
-                <Flex className="flex-col gap-2">
-                    <span>
-                        {' '}
-                        This feature is only available on commercial version.
-                    </span>
-                    <Button
-                        onClick={() => {
-                            setOpenCal(true)
-                        }}
-                    >
-                        Contact us
-                    </Button>
-                </Flex>
-            </Modal>
-            <Modal
-                size="large"
-                visible={openCal}
-                onDismiss={() => setOpenCal(false)}
-                header="Not available"
-            >
-                <Cal
-                    namespace="try-enterprise"
-                    calLink="team/clearcompass/try-enterprise"
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        overflow: 'scroll',
-                    }}
-                    config={{ layout: 'month_view' }}
-                />
-            </Modal>
         </>
     )
 }
 
-export default AIChat;
+export default AIChat

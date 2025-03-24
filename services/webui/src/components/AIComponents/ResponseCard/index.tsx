@@ -53,7 +53,7 @@ const KResponseCard: FunctionComponent<any> = ({
 
   const [loadingText, setText] = useState('Running sql query');
   const [showText, setShowText] = useState(' ');
-  const animatedtText = useAnimatedText(showText, 3);
+  const animatedtText = useAnimatedText(showText, 1);
   useEffect(() => {
     setShowText(text);
   }, [text]);
@@ -104,7 +104,7 @@ const KResponseCard: FunctionComponent<any> = ({
                         ) : (
                           <>
                             <span className="text-slate-800 dark:text-slate-200">
-                              {pre_loaded ? showText : useAnimatedText(showText, 2).text}
+                              {pre_loaded ? showText : useAnimatedText(showText, 3).text}
                             </span>
                           </>
                         )}

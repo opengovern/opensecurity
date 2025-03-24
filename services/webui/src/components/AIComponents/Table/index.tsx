@@ -63,7 +63,6 @@ export const getTable = (
     for (let i = 0; i < details.length; i += 1) {
       const row: any = {};
       for (let j = 0; j < columns.length; j += 1) {
-        console.log(typeof details[i][j]);
         row[headerField?.at(j) || ''] =
           typeof details[i][j] == 'string'
             ? // @ts-ignore
