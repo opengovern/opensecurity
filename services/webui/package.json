@@ -36,7 +36,7 @@
         "@types/react-dom": "^18.2.17",
         "@uiw/react-markdown-preview": "^5.0.7",
         "@visx/xychart": "^3.11.0",
-        "axios": "^1.6.2",
+        "axios": "^1.8.2",
         "clipboard-copy": "^4.0.1",
         "cookie": "^1.0.1",
         "css-select": "^5.1.0",
