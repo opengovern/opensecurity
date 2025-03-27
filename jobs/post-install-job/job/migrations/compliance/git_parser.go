@@ -813,52 +813,6 @@ func (g *GitParser) ExtractCompliance(compliancePath string, controlEnrichmentBa
 	return nil
 }
 
-func (g *GitParser) ExtractQueryViews(viewsPath string) error {
-	return filepath.WalkDir(viewsPath, func(path string, d fs.DirEntry, err error) error {
-		if !strings.HasSuffix(path, ".yaml") {
-			return nil
-		}
-
-		content, err := os.ReadFile(path)
-		if err != nil {
-			g.logger.Error("failed to read query view", zap.String("path", path), zap.Error(err))
-			return err
-		}
-
-		var obj QueryView
-		err = yaml.Unmarshal(content, &obj)
-		if err != nil {
-			g.logger.Error("failed to unmarshal query view", zap.String("path", path), zap.Error(err))
-			return nil
-		}
-
-		qv := models.QueryView{
-			ID:          obj.ID,
-			Title:       obj.Title,
-			Description: obj.Description,
-		}
-
-		listOfTables, err := utils.ExtractTableRefsFromPolicy(types.PolicyLanguageSQL, obj.Query)
-		if err != nil {
-			g.logger.Error("failed to extract table refs from query", zap.String("query-id", obj.ID), zap.Error(err))
-		}
-
-		q := models.Query{
-			ID:             obj.ID,
-			QueryToExecute: obj.Query,
-			ListOfTables:   listOfTables,
-			Engine:         "sql",
-		}
-
-		g.coreServiceQueries = append(g.coreServiceQueries, q)
-		qv.QueryID = &obj.ID
-
-		g.queryViews = append(g.queryViews, qv)
-
-		return nil
-	})
-}
-
 func contains[T uint | int | string](arr []T, ob T) bool {
 	for _, o := range arr {
 		if o == ob {

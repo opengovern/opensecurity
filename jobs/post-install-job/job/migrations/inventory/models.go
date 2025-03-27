@@ -2,6 +2,7 @@ package inventory
 
 import (
 	"github.com/opengovern/og-util/pkg/integration"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/shared"
 )
 
 type Metric struct {
@@ -21,4 +22,14 @@ type QueryView struct {
 	Description string              `json:"description" yaml:"description"`
 	Query       string              `json:"query" yaml:"query"`
 	Tags        map[string][]string `json:"tags" yaml:"tags"`
+}
+
+type NamedQuery struct {
+	ID               string                    `json:"id" yaml:"id"`
+	Title            string                    `json:"title" yaml:"title"`
+	Description      string                    `json:"description" yaml:"description"`
+	Parameters       []shared.ControlParameter `json:"parameters" yaml:"parameters"`
+	IntegrationTypes []integration.Type        `json:"integration_type" yaml:"integration_type"`
+	Query            string                    `json:"query" yaml:"query"`
+	Tags             map[string][]string       `json:"tags" yaml:"tags"`
 }

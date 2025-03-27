@@ -221,6 +221,9 @@ func ExtractQueryViews(ctx context.Context, logger *zap.Logger, dbm db.Database,
 
 	err = dbm.ORM.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		tx.Model(&models.QueryView{}).Where("1=1").Unscoped().Delete(&models.QueryView{})
+		tx.Model(&models.QueryParameter{}).Where("1=1").Unscoped().Delete(&models.QueryParameter{})
+		tx.Model(&models.NamedQuery{}).Where("1=1").Unscoped().Delete(&models.NamedQuery{})
+		tx.Model(&models.NamedQueryTag{}).Where("1=1").Unscoped().Delete(&models.NamedQueryTag{})
 		tx.Model(&models.Query{}).Where("1=1").Unscoped().Delete(&models.Query{})
 
 		for _, q := range queries {
@@ -241,6 +244,15 @@ func ExtractQueryViews(ctx context.Context, logger *zap.Logger, dbm db.Database,
 			}).Create(&qv).Error
 			if err != nil {
 				return err
+			}
+			for _, tag := range qv.Tags {
+				err = tx.Clauses(clause.OnConflict{
+					Columns:   []clause.Column{{Name: "key"}, {Name: "query_view_id"}}, // key columns
+					DoNothing: true,
+				}).Create(&tag).Error
+				if err != nil {
+					return fmt.Errorf("failure in control tag insert: %v", err)
+				}
 			}
 		}
 		return nil
