@@ -235,11 +235,9 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	loadedQueryViewsQueries := make(map[string]bool)
 	missingQueryViewsQueries := make(map[string]bool)
 	err = dbCore.Orm.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		tx.Model(&models.QueryView{}).Where("1=1").Unscoped().Delete(&models.QueryView{})
 		tx.Model(&models.QueryParameter{}).Where("1=1").Unscoped().Delete(&models.QueryParameter{})
 		tx.Model(&models.NamedQuery{}).Where("1=1").Unscoped().Delete(&models.NamedQuery{})
 		tx.Model(&models.NamedQueryTag{}).Where("1=1").Unscoped().Delete(&models.NamedQueryTag{})
-		tx.Model(&models.Query{}).Where("1=1").Unscoped().Delete(&models.Query{})
 		for _, obj := range p.coreServiceQueries {
 			obj.QueryViews = nil
 			err := tx.Clauses(clause.OnConflict{

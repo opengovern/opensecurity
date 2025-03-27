@@ -4,9 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/goccy/go-yaml"
 	"github.com/opengovern/og-util/pkg/integration"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/utils"
+	"github.com/opengovern/opensecurity/pkg/types"
+	"io/fs"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/opengovern/og-util/pkg/model"
@@ -159,5 +164,87 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		return fmt.Errorf("failure in azure transaction: %v", err)
 	}
 
+	err = ExtractQueryViews(ctx, logger, dbm, config.QueryViewsGitPath)
+
 	return nil
+}
+
+func ExtractQueryViews(ctx context.Context, logger *zap.Logger, dbm db.Database, viewsPath string) error {
+	var queries []models.Query
+	var queryViews []models.QueryView
+	err := filepath.WalkDir(viewsPath, func(path string, d fs.DirEntry, err error) error {
+		if !strings.HasSuffix(path, ".yaml") {
+			return nil
+		}
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			logger.Error("failed to read query view", zap.String("path", path), zap.Error(err))
+			return err
+		}
+
+		var obj QueryView
+		err = yaml.Unmarshal(content, &obj)
+		if err != nil {
+			logger.Error("failed to unmarshal query view", zap.String("path", path), zap.Error(err))
+			return nil
+		}
+
+		qv := models.QueryView{
+			ID:          obj.ID,
+			Title:       obj.Title,
+			Description: obj.Description,
+		}
+
+		listOfTables, err := utils.ExtractTableRefsFromPolicy(types.PolicyLanguageSQL, obj.Query)
+		if err != nil {
+			logger.Error("failed to extract table refs from query", zap.String("query-id", obj.ID), zap.Error(err))
+		}
+
+		q := models.Query{
+			ID:             obj.ID,
+			QueryToExecute: obj.Query,
+			ListOfTables:   listOfTables,
+			Engine:         "sql",
+		}
+
+		queries = append(queries, q)
+		qv.QueryID = &obj.ID
+
+		queryViews = append(queryViews, qv)
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	err = dbm.ORM.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		tx.Model(&models.QueryView{}).Where("1=1").Unscoped().Delete(&models.QueryView{})
+		tx.Model(&models.Query{}).Where("1=1").Unscoped().Delete(&models.Query{})
+
+		for _, q := range queries {
+			q.QueryViews = nil
+			err := tx.Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "id"}}, // key column
+				DoNothing: true,
+			}).Create(&q).Error
+			if err != nil {
+				return err
+			}
+		}
+
+		for _, qv := range queryViews {
+			err := tx.Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "id"}}, // key column
+				DoNothing: true,
+			}).Create(&qv).Error
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
+	return err
 }
