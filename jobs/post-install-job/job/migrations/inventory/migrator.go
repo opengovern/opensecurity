@@ -3,6 +3,7 @@ package inventory
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/goccy/go-yaml"
 	authApi "github.com/opengovern/og-util/pkg/api"
@@ -11,6 +12,7 @@ import (
 	"github.com/opengovern/opensecurity/jobs/post-install-job/utils"
 	"github.com/opengovern/opensecurity/pkg/types"
 	coreClient "github.com/opengovern/opensecurity/services/core/client"
+	integrationClient "github.com/opengovern/opensecurity/services/integration/client"
 	"io/fs"
 	"os"
 	"path"
@@ -171,7 +173,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	if err != nil {
 		return err
 	}
-	err = ExtractNamedQueries(ctx, logger, dbm)
+	err = populateQueries(ctx, logger, dbm, conf)
 	if err != nil {
 		return err
 	}
@@ -278,64 +280,176 @@ func ExtractQueryViews(ctx context.Context, logger *zap.Logger, dbm db.Database,
 	return err
 }
 
-func ExtractNamedQueries(ctx context.Context, logger *zap.Logger, dbm db.Database) error {
-	var queries []NamedQuery
-	err := filepath.Walk(config.QueriesGitPath, func(path string, info fs.FileInfo, err error) error {
-		if !info.IsDir() && strings.HasSuffix(path, ".yaml") {
-			id := strings.TrimSuffix(info.Name(), ".yaml")
+func populateQueries(ctx context.Context, logger *zap.Logger, dbm db.Database, conf config.MigratorConfig) error {
+	iClient := integrationClient.NewIntegrationServiceClient(conf.Integration.BaseURL)
+	pluginTables, err := iClient.GetPluginsTables(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole})
+	if err != nil {
+		logger.Error("failed to get plugin tables", zap.Error(err))
+		return nil
+	}
+	tablesPluginMap := make(map[string]string)
+	for _, p := range pluginTables {
+		for _, t := range p.Tables {
+			tablesPluginMap[t] = p.PluginID
+		}
+	}
 
-			content, err := os.ReadFile(path)
-			if err != nil {
-				return err
+	err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
+		err := filepath.Walk(config.QueriesGitPath, func(path string, info fs.FileInfo, err error) error {
+			if !info.IsDir() && strings.HasSuffix(path, ".yaml") {
+				return populateFinderItem(logger, tx, path, info, tablesPluginMap)
 			}
-
-			var item NamedQuery
-			err = yaml.Unmarshal(content, &item)
-			if err != nil {
-				logger.Error("failure in unmarshal", zap.String("path", path), zap.Error(err))
-				return nil
-			}
-
-			if item.ID == "" {
-				item.ID = id
-			}
-
-			queries = append(queries, item)
+			return nil
+		})
+		if err != nil && !errors.Is(err, fs.ErrNotExist) {
+			logger.Error("failed to get queries", zap.Error(err))
+			return err
 		}
 		return nil
 	})
 	if err != nil {
 		return err
 	}
+	return nil
+}
 
-	err = dbm.ORM.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		for _, q := range queries {
-			err = tx.Clauses(clause.OnConflict{
-				Columns:   []clause.Column{{Name: "id"}}, // key column
-				DoNothing: true,
-			}).Create(&q).Error
-			if err != nil {
-				return err
-			}
-			for k, v := range q.Tags {
-				tag := models.NamedQueryTag{
-					NamedQueryID: q.ID,
-					Tag: model.Tag{
-						Key:   k,
-						Value: v,
-					},
-				}
-				err = tx.Clauses(clause.OnConflict{
-					Columns:   []clause.Column{{Name: "named_query_id"}, {Name: "key"}}, // key column
-					DoNothing: true,
-				}).Create(&tag).Error
-				if err != nil {
-					return err
-				}
+func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.FileInfo, tablesPluginMap map[string]string) error {
+	id := strings.TrimSuffix(info.Name(), ".yaml")
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	var item NamedQuery
+	err = yaml.Unmarshal(content, &item)
+	if err != nil {
+		logger.Error("failure in unmarshal", zap.String("path", path), zap.Error(err))
+		return err
+	}
+
+	if item.ID != "" {
+		id = item.ID
+	}
+
+	var integrationTypes []string
+	for _, c := range item.IntegrationTypes {
+		integrationTypes = append(integrationTypes, string(c))
+	}
+
+	isBookmarked := false
+	tags := make([]models.NamedQueryTag, 0, len(item.Tags))
+	for k, v := range item.Tags {
+		if k == "platform_queries_bookmark" {
+			isBookmarked = true
+		}
+		tag := models.NamedQueryTag{
+			NamedQueryID: id,
+			Tag: model.Tag{
+				Key:   k,
+				Value: v,
+			},
+		}
+		tags = append(tags, tag)
+	}
+
+	listOfTables, err := utils.ExtractTableRefsFromPolicy("sql", item.Query)
+	if err != nil {
+		logger.Error("failed to extract table refs from query", zap.String("query-id", id), zap.Error(err))
+	}
+	if len(integrationTypes) == 0 {
+		integrationTypesMap := make(map[string]bool)
+		for _, t := range listOfTables {
+			if v, ok := tablesPluginMap[t]; ok {
+				integrationTypesMap[v] = true
 			}
 		}
+		for it := range integrationTypesMap {
+			integrationTypes = append(integrationTypes, it)
+		}
+	}
+
+	namedQuery := models.NamedQuery{
+		ID:               id,
+		IntegrationTypes: integrationTypes,
+		Title:            item.Title,
+		Description:      item.Description,
+		IsBookmarked:     isBookmarked,
+		QueryID:          &id,
+	}
+
+	parameters, err := utils.ExtractParameters("sql", item.Query)
+	if err != nil {
+		logger.Error("extract control failed: failed to extract parameters from query", zap.String("control-id", namedQuery.ID), zap.Error(err))
 		return nil
-	})
+	}
+	queryParams := []models.QueryParameter{}
+	for _, p := range parameters {
+		queryParams = append(queryParams, models.QueryParameter{
+			QueryID: namedQuery.ID,
+			Key:     p,
+		})
+	}
+
+	query := models.Query{
+		ID:             namedQuery.ID,
+		QueryToExecute: item.Query,
+		ListOfTables:   listOfTables,
+		Engine:         "sql",
+		Parameters:     queryParams,
+	}
+	err = tx.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}}, // key column
+		DoNothing: true,
+	}).Create(&query).Error
+	if err != nil {
+		logger.Error("failure in Creating Policy", zap.String("query_id", id), zap.Error(err))
+		return err
+	}
+	for _, param := range query.Parameters {
+		err = tx.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "key"}, {Name: "query_id"}}, // key columns
+			DoNothing: true,
+		}).Create(&param).Error
+		if err != nil {
+			return fmt.Errorf("failure in query parameter insert: %v", err)
+		}
+	}
+
+	err = tx.Model(&models.NamedQuery{}).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}}, // key column
+		DoNothing: true,                          // column needed to be updated
+	}).Create(namedQuery).Error
+	if err != nil {
+		logger.Error("failure in insert query", zap.Error(err))
+		return err
+	}
+
+	if len(tags) > 0 {
+		for _, tag := range tags {
+			err = tx.Model(&models.NamedQueryTag{}).Create(&tag).Error
+			if err != nil {
+				logger.Error("failure in insert tags", zap.Error(err))
+				return err
+			}
+		}
+	}
+
+	for _, p := range item.Parameters {
+		err := tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "key"}, {Name: "control_id"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{
+				"value": gorm.Expr("CASE WHEN policy_parameter_values.value = '' THEN ? ELSE policy_parameter_values.value END", p.Value),
+			}),
+		}).Create(&models.PolicyParameterValues{
+			Key:       p.Key,
+			ControlID: "",
+			Value:     p.Value,
+		}).Error
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

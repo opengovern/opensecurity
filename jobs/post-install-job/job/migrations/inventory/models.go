@@ -29,7 +29,7 @@ type NamedQuery struct {
 	Title            string                    `json:"title" yaml:"title"`
 	Description      string                    `json:"description" yaml:"description"`
 	Parameters       []shared.ControlParameter `json:"parameters" yaml:"parameters"`
-	IntegrationTypes []integration.Type        `json:"integration_type" yaml:"integration_type"`
+	IntegrationTypes []string                  `json:"integration_type" yaml:"integration_type"`
 	Query            string                    `json:"query" yaml:"query"`
 	Tags             map[string][]string       `json:"tags" yaml:"tags"`
 }
