@@ -16,9 +16,9 @@ const (
 )
 
 type ArtifactSbom struct {
-	ImageURL   string      `json:"imageUrl"`
-	ArtifactID string      `json:"artifactId"`
-	SbomFormat string      `json:"sbomFormat"`
+	ImageURL   string      `json:"image_url"`
+	ArtifactID string      `json:"artifact_id"`
+	SbomFormat string      `json:"sbom_format"`
 	Sbom       interface{} `json:"sbom"`
 }
 
