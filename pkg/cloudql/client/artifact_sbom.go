@@ -26,7 +26,7 @@ type ArtifactSbomResult struct {
 	PlatformID   string            `json:"platform_id"`
 	ResourceID   string            `json:"resource_id"`
 	ResourceName string            `json:"resource_name"`
-	Description  ArtifactSbom      `json:"description"`
+	Description  ArtifactSbom      `json:"Description"`
 	TaskType     string            `json:"task_type"`
 	ResultType   string            `json:"result_type"`
 	Metadata     map[string]string `json:"metadata"`
@@ -102,8 +102,9 @@ func (p ArtifactSbomPaginator) NextPage(ctx context.Context) ([]ArtifactSbomResu
 }
 
 var artifactSbomsMapping = map[string]string{
-	"image_url":       "Description.imageUrl",
-	"artifact_digest": "Description.artifactDigest",
+	"image_url":   "Description.imageUrl",
+	"artifact_id": "Description.artifactId",
+	"sbom_format": "Description.sbomFormat",
 }
 
 func ListArtifactSboms(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (any, error) {
