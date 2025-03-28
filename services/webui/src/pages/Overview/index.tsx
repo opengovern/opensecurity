@@ -190,10 +190,10 @@ const {
 
     useEffect(() => {
        
-         if (me?.connector_id === 'local') {
-             PassCheck()
+        //  if (me?.connector_id === 'local') {
+        //      PassCheck()
             
-         }
+        //  }
          
     }, [me])
     const CheckEmail = () => {

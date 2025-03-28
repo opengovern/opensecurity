@@ -897,7 +897,7 @@ export default function TypeDetail() {
                             open={open}
                             onClose={() => setOpen(false)}
                             GetList={() => {
-                                window.location.reload()
+                                // window.location.reload()
                             }}
                         />
                     </div>
