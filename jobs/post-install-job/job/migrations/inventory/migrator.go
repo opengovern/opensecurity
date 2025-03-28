@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/goccy/go-yaml"
+	authApi "github.com/opengovern/og-util/pkg/api"
+	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/utils"
 	"github.com/opengovern/opensecurity/pkg/types"
+	coreClient "github.com/opengovern/opensecurity/services/core/client"
 	"io/fs"
 	"os"
 	"path"
@@ -164,12 +167,19 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		return fmt.Errorf("failure in azure transaction: %v", err)
 	}
 
-	err = ExtractQueryViews(ctx, logger, dbm, config.QueryViewsGitPath)
+	err = ExtractQueryViews(ctx, logger, dbm, conf, config.QueryViewsGitPath)
+	if err != nil {
+		return err
+	}
+	err = ExtractNamedQueries(ctx, logger, dbm)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func ExtractQueryViews(ctx context.Context, logger *zap.Logger, dbm db.Database, viewsPath string) error {
+func ExtractQueryViews(ctx context.Context, logger *zap.Logger, dbm db.Database, conf config.MigratorConfig, viewsPath string) error {
 	var queries []models.Query
 	var queryViews []models.QueryView
 	err := filepath.WalkDir(viewsPath, func(path string, d fs.DirEntry, err error) error {
@@ -258,5 +268,74 @@ func ExtractQueryViews(ctx context.Context, logger *zap.Logger, dbm db.Database,
 		return nil
 	})
 
+	mClient := coreClient.NewCoreServiceClient(conf.Core.BaseURL)
+	err = mClient.ReloadViews(&httpclient.Context{Ctx: ctx, UserRole: authApi.AdminRole})
+	if err != nil {
+		logger.Error("failed to reload views", zap.Error(err))
+		return fmt.Errorf("failed to reload views: %s", err.Error())
+	}
+
 	return err
+}
+
+func ExtractNamedQueries(ctx context.Context, logger *zap.Logger, dbm db.Database) error {
+	var queries []NamedQuery
+	err := filepath.Walk(config.QueriesGitPath, func(path string, info fs.FileInfo, err error) error {
+		if !info.IsDir() && strings.HasSuffix(path, ".yaml") {
+			id := strings.TrimSuffix(info.Name(), ".yaml")
+
+			content, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+
+			var item NamedQuery
+			err = yaml.Unmarshal(content, &item)
+			if err != nil {
+				logger.Error("failure in unmarshal", zap.String("path", path), zap.Error(err))
+				return nil
+			}
+
+			if item.ID == "" {
+				item.ID = id
+			}
+
+			queries = append(queries, item)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	err = dbm.ORM.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, q := range queries {
+			err = tx.Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "id"}}, // key column
+				DoNothing: true,
+			}).Create(&q).Error
+			if err != nil {
+				return err
+			}
+			for k, v := range q.Tags {
+				tag := models.NamedQueryTag{
+					NamedQueryID: q.ID,
+					Tag: model.Tag{
+						Key:   k,
+						Value: v,
+					},
+				}
+				err = tx.Clauses(clause.OnConflict{
+					Columns:   []clause.Column{{Name: "named_query_id"}, {Name: "key"}}, // key column
+					DoNothing: true,
+				}).Create(&tag).Error
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+
+	return nil
 }

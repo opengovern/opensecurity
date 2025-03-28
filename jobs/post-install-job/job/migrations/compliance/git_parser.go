@@ -30,8 +30,6 @@ type GitParser struct {
 	controls           []db.Control
 	policies           []db.Policy
 	policyParamValues  []models.PolicyParameterValues
-	queryViews         []models.QueryView
-	coreServiceQueries []models.Query
 	controlsPolicies   map[string]db.Policy
 	namedPolicies      map[string]NamedQuery
 	Comparison         *git.ComparisonResultGrouped
@@ -63,37 +61,6 @@ func populateMdMapFromPath(path string) (map[string]string, error) {
 		return nil, err
 	}
 	return result, nil
-}
-
-func (g *GitParser) ExtractNamedQueries() error {
-	err := filepath.Walk(config.QueriesGitPath, func(path string, info fs.FileInfo, err error) error {
-		if !info.IsDir() && strings.HasSuffix(path, ".yaml") {
-			id := strings.TrimSuffix(info.Name(), ".yaml")
-
-			content, err := os.ReadFile(path)
-			if err != nil {
-				return err
-			}
-
-			var item NamedQuery
-			err = yaml.Unmarshal(content, &item)
-			if err != nil {
-				g.logger.Error("failure in unmarshal", zap.String("path", path), zap.Error(err))
-				return nil
-			}
-
-			if item.ID != "" {
-				id = item.ID
-			}
-
-			g.namedPolicies[id] = item
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (g *GitParser) ExtractControls(complianceControlsPath string, controlEnrichmentBasePath string) error {
@@ -791,9 +758,6 @@ func (g *GitParser) ExtractCompliance(compliancePath string, controlEnrichmentBa
 		return err
 	}
 
-	if err := g.ExtractNamedQueries(); err != nil {
-		return err
-	}
 	if err := g.ExtractPolicies(path.Join(compliancePath, "policies")); err != nil {
 		return err
 	}
