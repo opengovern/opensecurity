@@ -27,6 +27,7 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			"platform_api_benchmark_summary":    tablePlatformApiBenchmarkSummary(ctx),
 			"platform_api_benchmark_controls":   tablePlatformApiBenchmarkControls(ctx),
 			"platform_artifact_vulnerabilities": tablePlatformArtifactVulnerabilities(ctx),
+			"platform_artifact_sbom":            tablePlatformArtifactSboms(ctx),
 		},
 	}
 
