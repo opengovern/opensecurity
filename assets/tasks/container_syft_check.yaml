@@ -1,0 +1,14 @@
+ID: "container-syft-check"
+Name: "Container SYFT Check"
+Description: "Check if all container artifacts are free of vulnerabilities using SYFT"
+ImageURL: "ghcr.io/opengovern/og-task-syft:local-latest"
+Command: "/og-task-syft"
+ResultType: "artifact_sbom"
+WorkloadType: "deployment"
+EnvVars: {}
+Interval: 0 # Minutes
+Timeout: 120 # Minutes
+ScaleConfig:
+  LagThreshold: "1"
+  MinReplica: 0
+  MaxReplica: 5
