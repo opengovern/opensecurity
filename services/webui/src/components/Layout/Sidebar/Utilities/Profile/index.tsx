@@ -123,6 +123,11 @@ export default function Profile({ isCollapsed }: IProfile) {
             setLoadingChange(false)
          })
  }
+  const truncate = (text: string | undefined, number: number) => {
+      if (text) {
+          return text.length > number ? text.substring(0, number) + '...' : text
+      }
+  }
     useEffect(() => {
         if (isPageLoading) {
             setIsPageLoading(false)
@@ -256,13 +261,13 @@ export default function Profile({ isCollapsed }: IProfile) {
 
             <Popover className="relative asb z-50 border-0 w-full">
                 <Popover.Button
-                    className={`p-3 w-full cursor-pointer ${
+                    className={`p-3 w-full  cursor-pointer ${
                         isCollapsed ? '!p-1' : 'border-t border-t-gray-700'
                     }`}
                     id="profile"
                 >
-                    <Flex>
-                        <Flex className="w-fit gap-3">
+                    <Flex className="w-full">
+                        <Flex className="w-full gap-3 ">
                             {user?.picture && (
                                 <img
                                     className={`${
@@ -275,12 +280,16 @@ export default function Profile({ isCollapsed }: IProfile) {
                                 />
                             )}
                             {!isCollapsed && (
-                                <Flex flexDirection="col" alignItems="start">
+                                <Flex
+                                    flexDirection="col"
+                                    alignItems="start"
+                                    className=""
+                                >
                                     <Text className="text-gray-200">
-                                        {user?.name}
+                                        {truncate(user?.name,15)}
                                     </Text>
                                     <Text className="text-gray-400">
-                                        {user?.email}
+                                        {truncate(user?.email,15)}
                                     </Text>
                                 </Flex>
                             )}
