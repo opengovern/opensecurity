@@ -11,7 +11,7 @@ function AIChat({ setOpen, }: any) {
     const [message, setMessage] = useState('')
     const agent = JSON.parse(localStorage.getItem('agent') as string)
     const [chats, setChats] = useState<ChatList>(
-        agent.id == 'identity_access' ? IDENTITY : DEVOPS
+        agent?.id == 'devop' ? DEVOPS : IDENTITY
     )
 
     const lastMessageRef = useRef(null)
