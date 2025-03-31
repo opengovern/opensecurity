@@ -13,6 +13,14 @@ type CreateConnectorRequest struct {
 	ID               string `json:"id,omitempty"`   // Optional
 	Name             string `json:"name,omitempty"` // Optional
 }
+type CreateAuth0ConnectorRequest struct {
+
+	
+	Issuer           string `json:"issuer,omitempty" validate:"omitempty,url"`
+	ClientID         string `json:"client_id" validate:"required"`
+	ClientSecret     string `json:"client_secret" validate:"required"`
+	Domain 		 string `json:"domain" validate:"required"`
+}
 type UpdateConnectorRequest struct {
 	ConnectorID 	string `json:"connector_id" validate:"required"`
 	ConnectorType    string `json:"connector_type" validate:"required,oneof=oidc"`                                  // 'oidc' is supported for now

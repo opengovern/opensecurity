@@ -25,6 +25,13 @@ type CreateConnectorRequest struct {
 	ID               string `json:"id,omitempty"`   // Optional
 	Name             string `json:"name,omitempty"` // Optional
 }
+type CreateAuth0ConnectorRequest struct {
+
+	Issuer           string `json:"issuer,omitempty" validate:"omitempty,url"`
+	ClientID         string `json:"client_id" validate:"required"`
+	ClientSecret     string `json:"client_secret" validate:"required"`
+	Domain 		 string `json:"domain" validate:"required"`
+}
 type UpdateConnectorRequest struct {
 	ConnectorID 	string `json:"connector_id" validate:"required"`
 	ConnectorType    string `json:"connector_type" validate:"required,oneof=oidc"`                                  // 'oidc' is supported for now
@@ -88,10 +95,6 @@ func  CreateOIDCConnector(params CreateConnectorRequest) (*dexapi.CreateConnecto
 
 
 		}
-		
-
-		
-
 	case "entraid":
 		// Required: tenantID, clientID, clientSecret
 		if   params.TenantID != "" && params.Issuer == "" {
@@ -157,6 +160,49 @@ func  CreateOIDCConnector(params CreateConnectorRequest) (*dexapi.CreateConnecto
 	}
 
 	
+
+	// Execute the CreateConnector RPC.
+	
+
+	return req, nil
+}
+
+func  CreateAuth0Connector(params CreateAuth0ConnectorRequest) (*dexapi.CreateConnectorReq, error) {
+
+
+	var oidcConfig OIDCConfig
+	var connectorID, connectorName string
+	connectorID = "auth0"
+	connectorName = "Auth0"
+	oidcConfig = OIDCConfig{
+			Issuer:       params.Issuer,
+			ClientID:     params.ClientID,
+			ClientSecret: params.ClientSecret,
+			RedirectURIs: []string{params.Domain},
+			RedirectURI: params.Domain,
+			InsecureEnableGroups: true,
+			InsecureSkipEmailVerified: true,
+
+
+		}
+	// Serialize the OIDCConfig to JSON.
+	configBytes, err := json.Marshal(oidcConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal OIDC config: %w", err)
+	}
+
+	// Construct the Connector message.
+	connector := &dexapi.Connector{
+		Id:     connectorID,
+		Type:   "oidc",
+		Name:   connectorName,
+		Config: configBytes,
+	}
+	// Create the CreateConnectorReq message.
+	req := &dexapi.CreateConnectorReq{
+		Connector: connector,
+	}
+
 
 	// Execute the CreateConnector RPC.
 	
