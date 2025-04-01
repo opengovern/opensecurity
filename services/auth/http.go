@@ -1140,25 +1140,7 @@ func (r *httpRoutes) CreateAuth0Connector(ctx echo.Context) error {
 		r.logger.Error("failed to create dex client", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex client")
 	}
-	res, err := dexClient.CreateConnector(context.TODO(), dexreq)
-	if err != nil {
-		r.logger.Error("failed to create dex connector", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex connector")
-	}
-	if res.AlreadyExists {
-		return echo.NewHTTPError(http.StatusBadRequest, "connector already exists")
-	}
-	err = r.db.CreateConnector(&db.Connector{
-		LastUpdate:       time.Now(),
-		ConnectorID:      "auth0",
-		ConnectorType:    "oidc",
-		ConnectorSubType: "auth0",
-	})
-	if err != nil {
-		r.logger.Error("failed to create connector", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create connector")
-	}
-	publicUris:= req.PublickURIS
+	publicUris:= req.PublicURIS
 	publicClientResp, _ := dexClient.GetClient(context.TODO(), &dexApi.GetClientReq{
 		Id: "public-client",
 	})
@@ -1228,6 +1210,27 @@ func (r *httpRoutes) CreateAuth0Connector(ctx echo.Context) error {
 			return err
 		}
 	}
+
+
+	res, err := dexClient.CreateConnector(context.TODO(), dexreq)
+	if err != nil {
+		r.logger.Error("failed to create dex connector", zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex connector")
+	}
+	if res.AlreadyExists {
+		return echo.NewHTTPError(http.StatusBadRequest, "connector already exists")
+	}
+	err = r.db.CreateConnector(&db.Connector{
+		LastUpdate:       time.Now(),
+		ConnectorID:      "auth0",
+		ConnectorType:    "oidc",
+		ConnectorSubType: "auth0",
+	})
+	if err != nil {
+		r.logger.Error("failed to create connector", zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to create connector")
+	}
+	
 
 	// restart dex pod on connector creation
 	err = utils.RestartDexPod()

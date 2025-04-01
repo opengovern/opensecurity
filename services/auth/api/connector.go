@@ -19,7 +19,7 @@ type CreateAuth0ConnectorRequest struct {
 	ClientSecret     string `json:"client_secret" validate:"required"`
 	Domain 		 string `json:"domain" validate:"required"`
 	// string array
-	PublickURIS []string `json:"publick_uris" validate:"required"`
+	PublicURIS []string `json:"public_uris" validate:"required"`
 	PrivateURIS []string `json:"private_uris" validate:"required"`
 
 }
