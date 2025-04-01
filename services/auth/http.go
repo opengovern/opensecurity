@@ -1158,12 +1158,85 @@ func (r *httpRoutes) CreateAuth0Connector(ctx echo.Context) error {
 		r.logger.Error("failed to create connector", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to create connector")
 	}
+	publicUris:= req.PublickURIS
+	publicClientResp, _ := dexClient.GetClient(context.TODO(), &dexApi.GetClientReq{
+		Id: "public-client",
+	})
+
+	r.logger.Info("public URIS", zap.Any("uris", publicUris))
+
+	if publicClientResp != nil && publicClientResp.Client != nil {
+		publicClientReq := dexApi.UpdateClientReq{
+			Id:           "public-client",
+			Name:         "Public Client",
+			RedirectUris: publicUris,
+		}
+
+		_, err = dexClient.UpdateClient(context.TODO(), &publicClientReq)
+		if err != nil {
+			r.logger.Error("Auth Migrator: failed to create dex public client", zap.Error(err))
+			return err
+		}
+	} else {
+		publicClientReq := dexApi.CreateClientReq{
+			Client: &dexApi.Client{
+				Id:           "public-client",
+				Name:         "Public Client",
+				RedirectUris: publicUris,
+				Public:       true,
+			},
+		}
+
+		_, err = dexClient.CreateClient(context.TODO(), &publicClientReq)
+		if err != nil {
+			r.logger.Error("Auth Migrator: failed to create dex public client", zap.Error(err))
+			return err
+		}
+	}
+	privateUris := req.PrivateURIS
+
+	r.logger.Info("private URIS", zap.Any("uris", privateUris))
+
+	privateClientResp, _ := dexClient.GetClient(context.TODO(), &dexApi.GetClientReq{
+		Id: "private-client",
+	})
+	if privateClientResp != nil && privateClientResp.Client != nil {
+		privateClientReq := dexApi.UpdateClientReq{
+			Id:           "private-client",
+			Name:         "Private Client",
+			RedirectUris: privateUris,
+		}
+
+		_, err = dexClient.UpdateClient(context.TODO(), &privateClientReq)
+		if err != nil {
+			r.logger.Error("Auth Migrator: failed to create dex private client", zap.Error(err))
+			return err
+		}
+	} else {
+		privateClientReq := dexApi.CreateClientReq{
+			Client: &dexApi.Client{
+				Id:           "private-client",
+				Name:         "Private Client",
+				RedirectUris: privateUris,
+				Secret:       "secret",
+			},
+		}
+
+		_, err = dexClient.CreateClient(context.TODO(), &privateClientReq)
+		if err != nil {
+			r.logger.Error("Auth Migrator: failed to create dex private client", zap.Error(err))
+			return err
+		}
+	}
+
 	// restart dex pod on connector creation
 	err = utils.RestartDexPod()
 	if err != nil {
 		r.logger.Error("failed to restart dex pod", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to restart dex pod")
 	}
+
+
 
 	return ctx.JSON(http.StatusCreated, res)
 }

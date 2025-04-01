@@ -14,12 +14,14 @@ type CreateConnectorRequest struct {
 	Name             string `json:"name,omitempty"` // Optional
 }
 type CreateAuth0ConnectorRequest struct {
-
-	
 	Issuer           string `json:"issuer,omitempty" validate:"omitempty,url"`
 	ClientID         string `json:"client_id" validate:"required"`
 	ClientSecret     string `json:"client_secret" validate:"required"`
 	Domain 		 string `json:"domain" validate:"required"`
+	// string array
+	PublickURIS []string `json:"publick_uris" validate:"required"`
+	PrivateURIS []string `json:"private_uris" validate:"required"`
+
 }
 type UpdateConnectorRequest struct {
 	ConnectorID 	string `json:"connector_id" validate:"required"`
