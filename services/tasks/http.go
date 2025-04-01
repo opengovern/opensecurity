@@ -85,7 +85,6 @@ func (r *httpRoutes) ListTasks(ctx echo.Context) error {
 
 	}
 
-
 	totalCount := len(items)
 	if perPage != 0 {
 		if cursor == 0 {
@@ -102,11 +101,10 @@ func (r *httpRoutes) ListTasks(ctx echo.Context) error {
 			ResultType:  task.ResultType,
 			Description: task.Description,
 			ImageUrl:    task.ImageUrl,
-			Interval: task.Interval,
-			Timeout: task.Timeout,
+			Interval:    task.Interval,
+			Timeout:     task.Timeout,
 		})
 	}
-
 
 	return ctx.JSON(http.StatusOK, api.TaskListResponse{
 		TotalCount: totalCount,
@@ -137,10 +135,9 @@ func (r *httpRoutes) GetTask(ctx echo.Context) error {
 		ResultType:  task.ResultType,
 		Description: task.Description,
 		ImageUrl:    task.ImageUrl,
-		Interval: task.Interval,
-		Timeout: task.Timeout,
+		Interval:    task.Interval,
+		Timeout:     task.Timeout,
 	}
-
 
 	return ctx.JSON(http.StatusOK, taskResponse)
 }
@@ -241,20 +238,20 @@ func (r *httpRoutes) GetTaskRunResult(ctx echo.Context) error {
 			r.logger.Error("failed to unmarshal params", zap.Error(err))
 			return ctx.JSON(http.StatusInternalServerError, "failed to unmarshal params")
 		}
-		// var result map[string]interface{}
-		// err = json.Unmarshal(task.Result.Bytes, &result)
-		// if err != nil {
-		// 	r.logger.Error("failed to unmarshal result", zap.Error(err))
-		// 	return ctx.JSON(http.StatusInternalServerError, "failed to unmarshal result")
-		// }
+		var result map[string]interface{}
+		err = json.Unmarshal(task.Result.Bytes, &result)
+		if err != nil {
+			r.logger.Error("failed to unmarshal result", zap.Error(err))
+			return ctx.JSON(http.StatusInternalServerError, "failed to unmarshal result")
+		}
 		taskRunResponses = append(taskRunResponses, api.TaskRun{
 			ID:             task.ID,
 			CreatedAt:      task.CreatedAt,
 			UpdatedAt:      task.UpdatedAt,
 			TaskID:         task.TaskID,
 			Status:         string(task.Status),
-			// Result:         result,
-			Params: 	   params,
+			Result:         result,
+			Params:         params,
 			FailureMessage: task.FailureMessage,
 		})
 	}
@@ -329,7 +326,7 @@ func (r *httpRoutes) ListTaskRunResult(ctx echo.Context) error {
 			TaskID:         task.TaskID,
 			Status:         string(task.Status),
 			Result:         result,
-			Params: 	   params,
+			Params:         params,
 			FailureMessage: task.FailureMessage,
 		})
 	}
