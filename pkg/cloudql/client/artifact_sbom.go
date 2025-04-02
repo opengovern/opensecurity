@@ -102,8 +102,9 @@ func (p ArtifactSbomPaginator) NextPage(ctx context.Context) ([]ArtifactSbomResu
 }
 
 var artifactSbomsMapping = map[string]string{
-	"image_url":   "Description.imageUrl",
-	"artifact_id": "Description.artifactId",
+	"image_url":   "Description.ImageURL",
+	"artifact_id": "Description.ArtifactID",
+	"packages":    "Description.Packages",
 }
 
 func ListArtifactSboms(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (any, error) {

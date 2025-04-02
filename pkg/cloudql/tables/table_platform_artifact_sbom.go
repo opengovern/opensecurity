@@ -32,6 +32,11 @@ func tablePlatformArtifactSboms(_ context.Context) *plugin.Table {
 				Type:      proto.ColumnType_STRING,
 			},
 			{
+				Name:      "packages",
+				Transform: transform.FromField("Description.Packages"),
+				Type:      proto.ColumnType_JSON,
+			},
+			{
 				Name:      "sbom_spdx_json",
 				Transform: transform.FromField("Description.SbomSpdxJson"),
 				Type:      proto.ColumnType_JSON,
