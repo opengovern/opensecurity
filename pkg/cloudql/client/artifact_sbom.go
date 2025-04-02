@@ -16,10 +16,10 @@ const (
 )
 
 type ArtifactSbom struct {
-	ImageURL   string      `json:"image_url"`
-	ArtifactID string      `json:"artifact_id"`
-	SbomFormat string      `json:"sbom_format"`
-	Sbom       interface{} `json:"sbom"`
+	ImageURL          string      `json:"image_url"`
+	ArtifactID        string      `json:"artifact_id"`
+	SbomSpdxJson      interface{} `json:"sbom_spdx_json"`
+	SbomCyclonedxJson interface{} `json:"sbom_cyclonedx_json"`
 }
 
 type ArtifactSbomResult struct {
@@ -104,7 +104,6 @@ func (p ArtifactSbomPaginator) NextPage(ctx context.Context) ([]ArtifactSbomResu
 var artifactSbomsMapping = map[string]string{
 	"image_url":   "Description.imageUrl",
 	"artifact_id": "Description.artifactId",
-	"sbom_format": "Description.sbomFormat",
 }
 
 func ListArtifactSboms(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (any, error) {
