@@ -11,7 +11,7 @@ import (
 
 func tablePlatformOsvVulnerabilityDetails(_ context.Context) *plugin.Table {
 	return &plugin.Table{
-		Name:        "platform_osv_vulnerability_details",
+		Name:        "osv_vulnerability_details",
 		Description: "Provides detailed information about OSV vulnerabilities.",
 		List: &plugin.ListConfig{
 			Hydrate: og_client.ListOsvVulnerabilityDetail,

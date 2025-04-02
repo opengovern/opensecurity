@@ -12,82 +12,85 @@ import (
 )
 
 const (
-	ArtifactSbomsIndex = "artifact_sbom"
+	ArtifactPackageListIndex = "artifact_package_list"
 )
 
-type ArtifactSbom struct {
-	ImageURL          string      `json:"image_url"`
-	ArtifactID        string      `json:"artifact_id"`
-	Packages          []Package   `json:"packages"`
-	SbomSpdxJson      interface{} `json:"sbom_spdx_json"`
-	SbomCyclonedxJson interface{} `json:"sbom_cyclonedx_json"`
+type ArtifactPackageList struct {
+	ImageURL   string    `json:"image_url"`
+	ArtifactID string    `json:"artifact_id"`
+	Packages   []Package `json:"packages"`
+}
+type Package struct {
+	Ecosystem string `json:"ecosystem"`
+	Name      string `json:"name"`
+	Version   string `json:"version"`
 }
 
-type ArtifactSbomResult struct {
-	PlatformID   string            `json:"platform_id"`
-	ResourceID   string            `json:"resource_id"`
-	ResourceName string            `json:"resource_name"`
-	Description  ArtifactSbom      `json:"Description"`
-	TaskType     string            `json:"task_type"`
-	ResultType   string            `json:"result_type"`
-	Metadata     map[string]string `json:"metadata"`
-	DescribedBy  string            `json:"described_by"`
-	DescribedAt  int64             `json:"described_at"`
+type ArtifactPackageListResult struct {
+	PlatformID   string              `json:"platform_id"`
+	ResourceID   string              `json:"resource_id"`
+	ResourceName string              `json:"resource_name"`
+	Description  ArtifactPackageList `json:"Description"`
+	TaskType     string              `json:"task_type"`
+	ResultType   string              `json:"result_type"`
+	Metadata     map[string]string   `json:"metadata"`
+	DescribedBy  string              `json:"described_by"`
+	DescribedAt  int64               `json:"described_at"`
 }
 
-type ArtifactSbomHit struct {
-	ID      string             `json:"_id"`
-	Score   float64            `json:"_score"`
-	Index   string             `json:"_index"`
-	Type    string             `json:"_type"`
-	Version int64              `json:"_version,omitempty"`
-	Source  ArtifactSbomResult `json:"_source"`
-	Sort    []any              `json:"sort"`
+type ArtifactPackageListHit struct {
+	ID      string                    `json:"_id"`
+	Score   float64                   `json:"_score"`
+	Index   string                    `json:"_index"`
+	Type    string                    `json:"_type"`
+	Version int64                     `json:"_version,omitempty"`
+	Source  ArtifactPackageListResult `json:"_source"`
+	Sort    []any                     `json:"sort"`
 }
 
-type ArtifactSbomHits struct {
-	Total es.SearchTotal    `json:"total"`
-	Hits  []ArtifactSbomHit `json:"hits"`
+type ArtifactPackageListHits struct {
+	Total es.SearchTotal           `json:"total"`
+	Hits  []ArtifactPackageListHit `json:"hits"`
 }
 
-type ArtifactSbomSearchResponse struct {
-	PitID string           `json:"pit_id"`
-	Hits  ArtifactSbomHits `json:"hits"`
+type ArtifactPackageListResponse struct {
+	PitID string                  `json:"pit_id"`
+	Hits  ArtifactPackageListHits `json:"hits"`
 }
 
-type ArtifactSbomPaginator struct {
+type ArtifactPackageListPaginator struct {
 	paginator *es.BaseESPaginator
 }
 
-func (k Client) NewArtifactSbomPaginator(filters []es.BoolFilter, limit *int64) (ArtifactSbomPaginator, error) {
-	paginator, err := es.NewPaginator(k.ES.ES(), ArtifactSbomsIndex, filters, limit)
+func (k Client) NewArtifactPackageListPaginator(filters []es.BoolFilter, limit *int64) (ArtifactPackageListPaginator, error) {
+	paginator, err := es.NewPaginator(k.ES.ES(), ArtifactPackageListIndex, filters, limit)
 	if err != nil {
-		return ArtifactSbomPaginator{}, err
+		return ArtifactPackageListPaginator{}, err
 	}
 
-	p := ArtifactSbomPaginator{
+	p := ArtifactPackageListPaginator{
 		paginator: paginator,
 	}
 
 	return p, nil
 }
 
-func (p ArtifactSbomPaginator) HasNext() bool {
+func (p ArtifactPackageListPaginator) HasNext() bool {
 	return !p.paginator.Done()
 }
 
-func (p ArtifactSbomPaginator) Close(ctx context.Context) error {
+func (p ArtifactPackageListPaginator) Close(ctx context.Context) error {
 	return p.paginator.Deallocate(ctx)
 }
 
-func (p ArtifactSbomPaginator) NextPage(ctx context.Context) ([]ArtifactSbomResult, error) {
-	var response ArtifactSbomSearchResponse
+func (p ArtifactPackageListPaginator) NextPage(ctx context.Context) ([]ArtifactPackageListResult, error) {
+	var response ArtifactPackageListResponse
 	err := p.paginator.SearchWithLog(ctx, &response, true)
 	if err != nil {
 		return nil, err
 	}
 
-	var values []ArtifactSbomResult
+	var values []ArtifactPackageListResult
 	for _, hit := range response.Hits.Hits {
 		values = append(values, hit.Source)
 	}
@@ -102,12 +105,12 @@ func (p ArtifactSbomPaginator) NextPage(ctx context.Context) ([]ArtifactSbomResu
 	return values, nil
 }
 
-var artifactSbomsMapping = map[string]string{
+var artifactPackageListMapping = map[string]string{
 	"image_url":   "Description.ImageURL",
 	"artifact_id": "Description.ArtifactID",
 }
 
-func ListArtifactSboms(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (any, error) {
+func ListArtifactPackageList(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (any, error) {
 	plugin.Logger(ctx).Trace("ListArtifactSboms", d)
 	runtime.GC()
 	// create service
@@ -136,8 +139,8 @@ func ListArtifactSboms(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydra
 	}
 
 	plugin.Logger(ctx).Trace("Columns", d.FetchType)
-	paginator, err := k.NewArtifactSbomPaginator(
-		es.BuildFilterWithDefaultFieldName(ctx, d.QueryContext, artifactSbomsMapping,
+	paginator, err := k.NewArtifactPackageListPaginator(
+		es.BuildFilterWithDefaultFieldName(ctx, d.QueryContext, artifactPackageListMapping,
 			nil, encodedResourceCollectionFilters, clientType, true),
 		d.QueryContext.Limit)
 	if err != nil {

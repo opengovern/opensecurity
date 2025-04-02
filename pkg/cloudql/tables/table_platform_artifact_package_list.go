@@ -9,40 +9,30 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 )
 
-func tablePlatformPackageVulnerabilities(_ context.Context) *plugin.Table {
+func tableArtifactPackageList(_ context.Context) *plugin.Table {
 	return &plugin.Table{
-		Name:        "packages_with_vulnerabilities",
-		Description: "Platform Package Vulnerabilities",
+		Name:        "artifact_package_list",
+		Description: "Platform Artifact SBOMs",
 		Cache: &plugin.TableCacheOptions{
 			Enabled: false,
 		},
 		List: &plugin.ListConfig{
-			Hydrate: og_client.ListPackageWithVulnIDs,
+			Hydrate: og_client.ListArtifactPackageList,
 		},
 		Columns: []*plugin.Column{
 			{
-				Name:      "package_identifier",
-				Transform: transform.FromField("Description.PackageIdentifier"),
+				Name:      "image_url",
+				Transform: transform.FromField("Description.ImageURL"),
 				Type:      proto.ColumnType_STRING,
 			},
 			{
-				Name:      "package_name",
-				Transform: transform.FromField("Description.PackageName"),
+				Name:      "artifact_id",
+				Transform: transform.FromField("Description.ArtifactID"),
 				Type:      proto.ColumnType_STRING,
 			},
 			{
-				Name:      "ecosystem",
-				Transform: transform.FromField("Description.Ecosystem"),
-				Type:      proto.ColumnType_STRING,
-			},
-			{
-				Name:      "version",
-				Transform: transform.FromField("Description.Version"),
-				Type:      proto.ColumnType_STRING,
-			},
-			{
-				Name:      "vulnerabilities",
-				Transform: transform.FromField("Description.Vulnerabilities"),
+				Name:      "packages",
+				Transform: transform.FromField("Description.Packages"),
 				Type:      proto.ColumnType_JSON,
 			},
 			{
