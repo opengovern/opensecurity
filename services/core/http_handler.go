@@ -147,23 +147,6 @@ func InitializeHttpHandler(
 	h.dexClient = dexClient
 	h.viewCheckpoint = time.Now().Add(-time.Hour * 2)
 	switch cfg.Vault.Provider {
-	case vault.AwsKMS:
-		h.vault, err = vault.NewKMSVaultSourceConfig(ctx, cfg.Vault.Aws, cfg.Vault.KeyId)
-		if err != nil {
-			logger.Error("new kms vaultClient source config", zap.Error(err))
-			return nil, fmt.Errorf("new kms vaultClient source config: %w", err)
-		}
-	case vault.AzureKeyVault:
-		h.vault, err = vault.NewAzureVaultClient(ctx, logger, cfg.Vault.Azure, cfg.Vault.KeyId)
-		if err != nil {
-			logger.Error("new azure vaultClient source config", zap.Error(err))
-			return nil, fmt.Errorf("new azure vaultClient source config: %w", err)
-		}
-		h.vaultSecretHandler, err = vault.NewAzureVaultSecretHandler(logger, cfg.Vault.Azure)
-		if err != nil {
-			logger.Error("new azure vaultClient secret handler", zap.Error(err))
-			return nil, fmt.Errorf("new azure vaultClient secret handler: %w", err)
-		}
 	case vault.HashiCorpVault:
 		h.vaultSecretHandler, err = vault.NewHashiCorpVaultSecretHandler(ctx, logger, cfg.Vault.HashiCorp)
 		if err != nil {

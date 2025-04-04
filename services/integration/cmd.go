@@ -118,18 +118,6 @@ func Command() *cobra.Command {
 
 			var vaultSc vault.VaultSourceConfig
 			switch cnf.Vault.Provider {
-			case vault.AwsKMS:
-				vaultSc, err = vault.NewKMSVaultSourceConfig(ctx, cnf.Vault.Aws, cnf.Vault.KeyId)
-				if err != nil {
-					logger.Error("failed to create vault source config", zap.Error(err))
-					return err
-				}
-			case vault.AzureKeyVault:
-				vaultSc, err = vault.NewAzureVaultClient(ctx, logger, cnf.Vault.Azure, cnf.Vault.KeyId)
-				if err != nil {
-					logger.Error("failed to create vault source config", zap.Error(err))
-					return err
-				}
 			case vault.HashiCorpVault:
 				vaultSc, err = vault.NewHashiCorpVaultClient(ctx, logger, cnf.Vault.HashiCorp, cnf.Vault.KeyId)
 				if err != nil {
