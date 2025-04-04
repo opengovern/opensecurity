@@ -110,6 +110,9 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v4 := r.Group("/api/v4")
 	v4.GET("/about", httpserver.AuthorizeHandler(h.GetAboutShort, api3.ViewerRole))
 	v4.GET("/queries/sync", httpserver.AuthorizeHandler(h.SyncQueries, api3.ViewerRole))
+	v4.POST("layout/get", httpserver.AuthorizeHandler(h.GetUserLayout, api3.ViewerRole))
+	v4.POST("layout/set", httpserver.AuthorizeHandler(h.SetUserLayout, api3.ViewerRole))
+
 
 }
 
@@ -1579,4 +1582,48 @@ func (h HttpHandler) SyncQueries(echoCtx echo.Context) error {
 	}
 
 	return echoCtx.JSON(http.StatusOK, struct{}{})
+}
+
+func (h HttpHandler) GetUserLayout(echoCtx echo.Context) error {
+	var req api.GetUserLayout
+	if err := bindValidate(echoCtx, &req); err != nil {
+		return err
+	}
+	userId := req.UserID
+	layout,err:= h.db.GetUserLayout(userId)
+	if( err != nil) {
+		h.logger.Error("failed to get user layout", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user layout")
+	}
+	if layout == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "user layout not found")
+	}
+	return echoCtx.JSON(http.StatusOK, layout)
+	
+}
+func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
+	var req api.SetUserLayout
+	if err := bindValidate(echoCtx, &req); err != nil {
+		return err
+	}
+	userId := req.UserID
+	// convert req.layoutconfig to jsonb
+	layout, err := json.Marshal(req.LayoutConfig)
+	if err != nil {
+		h.logger.Error("failed to marshal layout config", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to marshal layout config")
+	}
+	 layout_config := pgtype.JSONB{}
+	 layout_config.Set(layout)
+
+	user_layout := models.UserLayout{
+		UserID: userId,
+		LayoutConfig: layout_config,
+	}
+	err = h.db.SetUserLayout(user_layout)
+	if err != nil {
+		h.logger.Error("failed to set user layout", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to set user layout")
+	}
+	return echoCtx.NoContent(http.StatusOK)
 }
