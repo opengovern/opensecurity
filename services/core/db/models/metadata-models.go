@@ -1,10 +1,10 @@
 package models
 
-
-
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgtype"
 	"github.com/lib/pq"
 	"github.com/opengovern/og-util/pkg/model"
 )
@@ -50,6 +50,14 @@ type QueryView struct {
 	Dependencies pq.StringArray `gorm:"type:text[]"`
 	Tags         []QueryViewTag `gorm:"foreignKey:QueryViewID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
+type UserLayout struct{
+	UserID string `gorm:"primaryKey" ,json:"user_id"`
+	LayoutConfig pgtype.JSONB `gorm:"type:jsonb"`
+}
+// Array of widgets 
+// example: 
+// [{"id":"table1","type":"table","title":"Table 1","query_id":"query1","layout":{"x":0,"y":0,"w":6,"h":4}},{"id":"table2","type":"table","title":"Table 2","query_id":"query2","layout":{"x":6,"y":0,"w":6,"h":4}}]}]
+// 
 
 
 type MetadataKey string
