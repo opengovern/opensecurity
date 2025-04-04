@@ -144,3 +144,30 @@ func (db Database) ListQueryViews() ([]models.QueryView, error) {
 	}
 	return queryViews, nil
 }
+// get user layout
+func (db Database) GetUserLayout(userID string) (*models.UserLayout, error) {
+	var userLayout models.UserLayout
+	err := db.orm.First(&userLayout, "user_id = ?", userID).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &userLayout, nil
+}
+// set user layout
+func (db Database) SetUserLayout( layoutConfig models.UserLayout) error {
+	err:= db.orm.Model(&models.UserLayout{}).
+		Where("user_id = ?", layoutConfig.UserID).Update("layout_config", layoutConfig.LayoutConfig).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+		return err
+	}
+	return nil
+	
+}
+
+
