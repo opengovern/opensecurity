@@ -421,6 +421,10 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 	}
 	h.queryParamsMu.RUnlock()
 
+	for k, v := range req.Params {
+		queryParamMap[k] = v
+	}
+
 	queryTemplate, err := template.New("query").Parse(*req.Query)
 	if err != nil {
 		return err

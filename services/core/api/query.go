@@ -20,6 +20,7 @@ type RunQueryRequest struct {
 	AccountId  *string              `json:"account_id"`
 	SourceId   *string              `json:"source_id"`
 	ResultType *string              `json:"result_type"`
+	Params     map[string]string    `json:"params"`
 	Engine     *QueryEngine         `json:"engine"`
 	Sorts      []NamedQuerySortItem `json:"sorts"`
 }
