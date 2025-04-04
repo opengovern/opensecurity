@@ -112,6 +112,9 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v4.GET("/queries/sync", httpserver.AuthorizeHandler(h.SyncQueries, api3.ViewerRole))
 	v4.POST("layout/get", httpserver.AuthorizeHandler(h.GetUserLayout, api3.ViewerRole))
 	v4.POST("layout/set", httpserver.AuthorizeHandler(h.SetUserLayout, api3.ViewerRole))
+	v4.POST("layout/change-privacy", httpserver.AuthorizeHandler(h.ChangePrivacy, api3.ViewerRole))
+	v4.GET("layout/public", httpserver.AuthorizeHandler(h.GetPublicLayouts, api3.ViewerRole))
+
 
 
 }
@@ -1585,7 +1588,7 @@ func (h HttpHandler) SyncQueries(echoCtx echo.Context) error {
 }
 
 func (h HttpHandler) GetUserLayout(echoCtx echo.Context) error {
-	var req api.GetUserLayout
+	var req api.GetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return err
 	}
@@ -1626,4 +1629,33 @@ func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to set user layout")
 	}
 	return echoCtx.NoContent(http.StatusOK)
+}
+
+func (h HttpHandler) ChangePrivacy (echoCtx echo.Context) error{
+	var req api.ChangePrivacyRequest
+	if err := bindValidate(echoCtx, &req); err != nil {
+		return err
+	}
+	userId := req.UserID
+	privacy := req.IsPrivate
+	err := h.db.ChangeLayoutPrivacy(userId, privacy)
+	if err != nil {
+		h.logger.Error("failed to change privacy", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to change privacy")
+	}
+	return echoCtx.NoContent(http.StatusOK)
+}
+
+// get public layouts
+func (h HttpHandler) GetPublicLayouts(echoCtx echo.Context) error {
+
+	layouts, err := h.db.GetPublicLayouts()
+	if err != nil {
+		h.logger.Error("failed to get public layouts", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get public layouts")
+	}
+	if layouts == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "public layouts not found")
+	}
+	return echoCtx.JSON(http.StatusOK, layouts)
 }

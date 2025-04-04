@@ -169,5 +169,22 @@ func (db Database) SetUserLayout( layoutConfig models.UserLayout) error {
 	return nil
 	
 }
+// get public layouts 
 
+func (db Database) GetPublicLayouts() ([]models.UserLayout, error) {
+	var userLayouts []models.UserLayout
+	err := db.orm.Where("is_private = ?", false).Find(&userLayouts).Error
+	if err != nil {
+		return nil, err
+	}
+	return userLayouts, nil
+}
+// change layout privacy
+func (db Database) ChangeLayoutPrivacy(userID string, isPrivate bool) error {
+	err := db.orm.Model(&models.UserLayout{}).Where("user_id = ?", userID).Update("is_private", isPrivate).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
 

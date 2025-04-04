@@ -53,6 +53,10 @@ type QueryView struct {
 type UserLayout struct{
 	UserID string `gorm:"primaryKey" ,json:"user_id"`
 	LayoutConfig pgtype.JSONB `gorm:"type:jsonb"`
+	Name string `gorm:"type:text"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	IsPrivate bool `json:"is_private"`
 }
 // Array of widgets 
 // example: 
