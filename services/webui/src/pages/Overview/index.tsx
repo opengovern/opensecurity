@@ -435,7 +435,7 @@ const {
                 )}
             </Modal>
 
-            <Grid
+            {/* <Grid
                 numItems={11}
                 className="w-full gap-8  h-fit "
                 style={window.innerWidth > 768 ? { gridAutoRows: '1fr' } : {}}
@@ -467,7 +467,7 @@ const {
                 >
                     <Integrations />
                 </Col>
-            </Grid>
+            </Grid> */}
         </>
     )
 }
