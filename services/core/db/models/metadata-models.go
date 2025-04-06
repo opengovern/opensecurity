@@ -52,8 +52,8 @@ type QueryView struct {
 }
 type UserLayout struct{
 	UserID string `gorm:"primaryKey" ,json:"user_id"`
-	LayoutConfig pgtype.JSONB `gorm:"type:jsonb"`
-	Name string `gorm:"type:text"`
+	LayoutConfig pgtype.JSONB `gorm:"type:jsonb" ,json:"layout_config"`
+	Name string `gorm:"type:text" ,json:"name"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	IsPrivate bool `json:"is_private"`
