@@ -17,6 +17,7 @@ const (
 type RunQueryRequest struct {
 	Page       Page                 `json:"page" validate:"required"`
 	Query      *string              `json:"query"`
+	UseCache   bool                 `json:"use_cache"`
 	QueryId    *string              `json:"query_id"`
 	AccountId  *string              `json:"account_id"`
 	SourceId   *string              `json:"source_id"`

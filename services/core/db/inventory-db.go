@@ -3,11 +3,13 @@ package db
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/lib/pq"
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/og-util/pkg/model"
 	"github.com/opengovern/opensecurity/services/core/db/models"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"strings"
 	"time"
@@ -546,7 +548,7 @@ func (db Database) GetQueryParameters() ([]string, error) {
 	return parameters, nil
 }
 
-func (db Database) UpsertNamedQueryCache(cacheEntry models.NamedQueryRunCache) error {
+func (db Database) UpsertRunNamedQueryCache(cacheEntry models.RunNamedQueryRunCache) error {
 	tx := db.orm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "query_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"last_run", "result"}),
@@ -557,4 +559,16 @@ func (db Database) UpsertNamedQueryCache(cacheEntry models.NamedQueryRunCache) e
 	}
 
 	return nil
+}
+
+func (db Database) GetRunNamedQueryCache(queryId string) (*models.RunNamedQueryRunCache, error) {
+	var queryParam models.RunNamedQueryRunCache
+	err := db.orm.First(&queryParam, "query_id = ?", queryId).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &queryParam, nil
 }

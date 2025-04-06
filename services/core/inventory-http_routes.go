@@ -408,8 +408,34 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Policy is required")
 	}
 
+	var query *models.NamedQuery
+	var err error
 	if req.QueryId != nil && (req.Query == nil || *req.Query == "") {
-		query, err := h.db.GetQuery(*req.QueryId)
+		if req.UseCache {
+			runQueryCache, err := h.db.GetRunNamedQueryCache(*req.QueryId)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			}
+			if runQueryCache != nil && runQueryCache.Result.Status == pgtype.Present && runQueryCache.LastRun.After(time.Now().Add(-1*time.Hour)) &&
+				runQueryCache.Result.Bytes != nil {
+				var resp api.RunQueryResponse
+				err = json.Unmarshal(runQueryCache.Result.Bytes, &resp)
+
+				if req.ResultType != nil && strings.ToLower(*req.ResultType) == "csv" {
+					csvData, err := resp.ToCSV()
+					if err != nil {
+						return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+					}
+
+					ctx.Response().Header().Set("Content-Type", "text/csv")
+					return ctx.String(http.StatusOK, csvData)
+				}
+
+				return ctx.JSON(200, resp)
+			}
+		}
+
+		query, err = h.db.GetQuery(*req.QueryId)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
@@ -458,6 +484,13 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		return fmt.Errorf("invalid query engine: %s", *req.Engine)
 	}
 
+	if query != nil {
+		err = h.CacheQueryResult(*req.QueryId, *resp)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
 	if req.ResultType != nil && strings.ToLower(*req.ResultType) == "csv" {
 		csvData, err := resp.ToCSV()
 		if err != nil {
@@ -468,18 +501,11 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		return ctx.String(http.StatusOK, csvData)
 	}
 
-	if req.QueryId != nil {
-		err = h.CacheQueryResult(*req.QueryId, *resp)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
-	}
-
 	return ctx.JSON(200, resp)
 }
 
 func (h *HttpHandler) CacheQueryResult(queryId string, resp api.RunQueryResponse) error {
-	c := models.NamedQueryRunCache{
+	c := models.RunNamedQueryRunCache{
 		QueryID: queryId,
 		LastRun: time.Now(),
 	}
@@ -495,7 +521,7 @@ func (h *HttpHandler) CacheQueryResult(queryId string, resp api.RunQueryResponse
 	}
 	c.Result = respJsonb
 
-	return h.db.UpsertNamedQueryCache(c)
+	return h.db.UpsertRunNamedQueryCache(c)
 }
 
 // GetRecentRanQueries godoc

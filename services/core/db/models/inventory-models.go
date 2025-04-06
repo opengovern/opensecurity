@@ -37,6 +37,7 @@ type NamedQuery struct {
 	Query            *Query `gorm:"foreignKey:QueryID;references:ID;constraint:OnDelete:SET NULL"`
 	IsBookmarked     bool
 	Tags             []NamedQueryTag `gorm:"foreignKey:NamedQueryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	CacheEnabled     bool
 }
 
 type NamedQueryHistory struct {
@@ -115,7 +116,7 @@ type CategoriesTables struct {
 	Tables   []string `json:"tables"`
 }
 
-type NamedQueryRunCache struct {
+type RunNamedQueryRunCache struct {
 	QueryID string `gorm:"primaryKey"`
 	LastRun time.Time
 	Result  pgtype.JSONB
