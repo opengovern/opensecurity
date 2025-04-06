@@ -93,6 +93,7 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	views.GET("", httpserver.AuthorizeHandler(h.GetViews, api3.ViewerRole))
 	// inventory
 	v3.POST("/queries", httpserver.AuthorizeHandler(h.ListQueriesV2, api3.ViewerRole))
+	v3.POST("/queries/cache-enabled", httpserver.AuthorizeHandler(h.ListCacheEnabledQueries, api3.ViewerRole))
 	v3.GET("/queries/filters", httpserver.AuthorizeHandler(h.ListQueriesFilters, api3.ViewerRole))
 	v3.GET("/queries/:query_id", httpserver.AuthorizeHandler(h.GetQuery, api3.ViewerRole))
 	v3.GET("/queries/tags", httpserver.AuthorizeHandler(h.ListQueriesTags, api3.ViewerRole))
@@ -114,8 +115,6 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v4.POST("layout/set", httpserver.AuthorizeHandler(h.SetUserLayout, api3.ViewerRole))
 	v4.POST("layout/change-privacy", httpserver.AuthorizeHandler(h.ChangePrivacy, api3.ViewerRole))
 	v4.GET("layout/public", httpserver.AuthorizeHandler(h.GetPublicLayouts, api3.ViewerRole))
-
-
 
 }
 
@@ -1593,8 +1592,8 @@ func (h HttpHandler) GetUserLayout(echoCtx echo.Context) error {
 		return err
 	}
 	userId := req.UserID
-	layout,err:= h.db.GetUserLayout(userId)
-	if( err != nil) {
+	layout, err := h.db.GetUserLayout(userId)
+	if err != nil {
 		h.logger.Error("failed to get user layout", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user layout")
 	}
@@ -1602,7 +1601,7 @@ func (h HttpHandler) GetUserLayout(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "user layout not found")
 	}
 	return echoCtx.JSON(http.StatusOK, layout)
-	
+
 }
 func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	var req api.SetUserLayoutRequest
@@ -1616,14 +1615,14 @@ func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 		h.logger.Error("failed to marshal layout config", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to marshal layout config")
 	}
-	 layout_config := pgtype.JSONB{}
-	 layout_config.Set(layout)
+	layout_config := pgtype.JSONB{}
+	layout_config.Set(layout)
 
 	user_layout := models.UserLayout{
-		UserID: userId,
+		UserID:       userId,
 		LayoutConfig: layout_config,
-		Name: req.Name,
-		IsPrivate: req.IsPrivate,
+		Name:         req.Name,
+		IsPrivate:    req.IsPrivate,
 	}
 	err = h.db.SetUserLayout(user_layout)
 	if err != nil {
@@ -1633,7 +1632,7 @@ func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	return echoCtx.NoContent(http.StatusOK)
 }
 
-func (h HttpHandler) ChangePrivacy (echoCtx echo.Context) error{
+func (h HttpHandler) ChangePrivacy(echoCtx echo.Context) error {
 	var req api.ChangePrivacyRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return err

@@ -387,6 +387,29 @@ func (h *HttpHandler) ListQueriesTags(ctx echo.Context) error {
 	return ctx.JSON(200, res)
 }
 
+// ListCacheEnabledQueries godoc
+//
+//	@Summary		List cache enabled queries
+//	@Description	List cache enabled queries
+//	@Security		BearerToken
+//	@Tags			named_query
+//	@Produce		json
+//	@Success		200	{object}	[]api.NamedQueryTagsResult
+//	@Router			/inventory/api/v3/queries/cache-enabled [get]
+func (h *HttpHandler) ListCacheEnabledQueries(ctx echo.Context) error {
+	var queryIds []string
+	queries, err := h.db.ListCacheEnabledNamedQueries()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	for _, query := range queries {
+		queryIds = append(queryIds, query.ID)
+	}
+
+	return ctx.JSON(200, queryIds)
+}
+
 // RunQuery godoc
 //
 //	@Summary		Run query

@@ -591,6 +591,10 @@ func (s *Scheduler) Run(ctx context.Context) error {
 		s.RunScheduledJobCleanup()
 	})
 
+	utils.EnsureRunGoroutine(func() {
+		s.RunScheduledJobCleanup()
+	})
+
 	wg.Add(1)
 	utils.EnsureRunGoroutine(func() {
 		s.logger.Fatal("DescribeJobResults consumer exited", zap.Error(s.RunDescribeJobResultsConsumer(ctx)))

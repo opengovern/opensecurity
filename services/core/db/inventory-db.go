@@ -563,7 +563,7 @@ func (db Database) UpsertRunNamedQueryCache(cacheEntry models.RunNamedQueryRunCa
 
 func (db Database) GetRunNamedQueryCache(queryId string) (*models.RunNamedQueryRunCache, error) {
 	var queryParam models.RunNamedQueryRunCache
-	err := db.orm.First(&queryParam, "query_id = ?", queryId).Error
+	err := db.orm.Where("query_id = ?", queryId).First(&queryParam).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -571,4 +571,18 @@ func (db Database) GetRunNamedQueryCache(queryId string) (*models.RunNamedQueryR
 		return nil, err
 	}
 	return &queryParam, nil
+}
+
+func (db Database) ListCacheEnabledNamedQueries() ([]models.NamedQuery, error) {
+	var namedQueries []models.NamedQuery
+
+	tx := db.orm.
+		Model(&models.NamedQuery{}).
+		Where("cache_enabled = ?", true).
+		Scan(&namedQueries)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return namedQueries, nil
 }
