@@ -113,11 +113,7 @@ export default function TableWidget({query}: TableProps) {
         {},
         true
     )
-      const memoCount = useMemo(
-          () => getTable(queryResponse?.headers, queryResponse?.result).count,
-          [queryResponse]
-      )
-
+  
 
     return (
         <>

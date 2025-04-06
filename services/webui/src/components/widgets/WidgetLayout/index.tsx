@@ -24,6 +24,14 @@ export default function WidgetLayout() {
         }
 
     },[layout])
+    const GetComponent =(name,props)=>{
+        const Component = COMPONENT_MAPPING[name]
+        if(Component){
+            return <Component {...props} />
+        }
+        return null
+
+    }
 
 
     
@@ -32,7 +40,7 @@ export default function WidgetLayout() {
             <Board
                 renderItem={(item) => (
                     <BoardItem
-                        header={<Header>{item.data.title}</Header>}
+                        header={<Header description={item?.data?.description}>{item.data.title}</Header>}
                         settings={
                             <ButtonDropdown
                                 items={[
@@ -55,7 +63,7 @@ export default function WidgetLayout() {
                                 'Use Space or Enter to activate resize, arrow keys to move, Space or Enter to submit, or Escape to discard. Be sure to temporarily disable any screen reader navigation feature that may interfere with the functionality of the arrow keys.',
                         }}
                     >
-                        {COMPONENT_MAPPING["table"](item?.data?.props) }
+                        {GetComponent(item?.data?.componentId,item?.data?.props) }
                     </BoardItem>
                 )}
                 onItemsChange={(event) => {
