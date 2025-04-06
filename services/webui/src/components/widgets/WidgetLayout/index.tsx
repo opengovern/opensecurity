@@ -82,6 +82,10 @@ export default function WidgetLayout() {
 
             })
     }
+    const HandleRemoveItemByID = (id: string) => {
+        const newItems = items.filter((item: any) => item.id !== id)
+        setItems(newItems)
+    }
 
 
     
@@ -124,12 +128,14 @@ export default function WidgetLayout() {
                             settings={
                                 <ButtonDropdown
                                     items={[
-                                        {
-                                            id: 'preferences',
-                                            text: 'Preferences',
-                                        },
+                                        
                                         { id: 'remove', text: 'Remove' },
                                     ]}
+                                    onItemClick={(event)=>{
+                                        if (event.detail.id === 'remove') {
+                                            HandleRemoveItemByID(item.id)
+                                        }
+                                    }}
                                     ariaLabel="Board item settings"
                                     variant="icon"
                                 />
