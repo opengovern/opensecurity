@@ -145,6 +145,7 @@ export interface PlatformEnginePkgAuthApiGetMeResponse {
      */
     status?: 'accepted' | 'pending'
     theme?: PlatformEnginePkgAuthApiTheme
+    id: string
     /**
      * Unique identifier for the user
      * @example "auth|123456789"

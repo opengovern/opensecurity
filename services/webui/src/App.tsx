@@ -7,13 +7,14 @@ import { Button, Card, Flex, Text, Title } from '@tremor/react'
 import Router from './router'
 import Spinner from './components/Spinner'
 import { setAuthHeader } from './api/ApiConfig'
-import { colorBlindModeAtom, ForbiddenAtom, meAtom, RoleAccess, tokenAtom } from './store'
+import { colorBlindModeAtom, ForbiddenAtom, LayoutAtom, meAtom, RoleAccess, tokenAtom } from './store'
 import { applyTheme } from './utilities/theme'
 import { OpenGovernance } from './icons/icons'
 import { useAuth } from './utilities/auth'
 import { useAuthApiV1MeList, useAuthApiV1UserDetail } from './api/auth.gen'
 import { PlatformEnginePkgAuthApiTheme } from './api/api'
 import { Modal } from '@cloudscape-design/components'
+import axios from 'axios'
 
 
 export default function App() {
@@ -26,12 +27,15 @@ export default function App() {
     } = useAuth()
     const [token, setToken] = useAtom(tokenAtom)
     const [me, setMe] = useAtom(meAtom)
+    const [layout, setLayout] = useAtom(LayoutAtom)
+
     const [accessTokenLoading, setAccessTokenLoading] = useState<boolean>(true)
     const [colorBlindMode, setColorBlindMode] = useAtom(colorBlindModeAtom)
     const [expire, setExpire] = useState<number>(0)
     const [showExpired, setShowExpired] = useState<boolean>(false)
     const forbidden = useAtomValue(ForbiddenAtom)
     const [roleAccess, setRoleAccess] = useAtom(RoleAccess)
+    const [layoutLoading, setLayoutLoading] = useState<boolean>(true)
     const {
         response: meResponse,
         isExecuted: meIsExecuted,
@@ -48,6 +52,90 @@ export default function App() {
             }
         }
     }
+const GetDefaultLayout = () => {
+    
+
+    axios
+        .get(
+            `https://raw.githubusercontent.com/opengovern/platform-configuration/refs/heads/main/default_layout.json`
+        )
+        .then((res) => {
+            setLayout(res?.data)
+            
+            setLayoutLoading(false)
+        })
+        .catch((err) => {
+            setLayoutLoading(false)
+        })
+}
+
+const GetLayout = (meResponse :any) => {
+        setLayoutLoading(true)
+         let url = ''
+         if (window.location.origin === 'http://localhost:3000') {
+             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+         } else {
+             url = window.location.origin
+         }
+         // @ts-ignore
+         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+         const config = {
+             headers: {
+                 Authorization: `Bearer ${token}`,
+             },
+         }
+         const body = {
+             user_id: meResponse?.id,
+         }
+
+         axios
+             .post(`${url}/main/core/api/v4/layout/get `, body, config)
+             .then((res) => {
+
+                setLayoutLoading(false)
+             })
+             .catch((err) => {
+                 console.log(err)
+                //  check if error is 404
+                    if (err.response.status === 404) {
+                        GetDefaultLayout()
+                    } else {
+                        setLayoutLoading(false)
+                    }
+             })
+     }
+const SetDefaultLayout = (layout:any) => {
+          let url = ''
+          if (window.location.origin === 'http://localhost:3000') {
+              url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+          } else {
+              url = window.location.origin
+          }
+          // @ts-ignore
+          const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+          const config = {
+              headers: {
+                  Authorization: `Bearer ${token}`,
+              },
+          }
+          const body = {
+              user_id: me?.id,
+              layout_config:layout,
+              name: 'default',
+              is_private: true,
+          }
+
+          axios
+              .post(`${url}/main/core/api/v4/layout/set `, body, config)
+              .then((res) => {
+              })
+              .catch((err) => {
+                  console.log(err)
+                  
+              })
+      }
 
     useEffect(() => {
         const t = setInterval(checkExpire, 5000)
@@ -55,6 +143,7 @@ export default function App() {
             clearInterval(t)
         }
     }, [expire])
+
 
     useEffect(() => {
         if (meIsExecuted && !meIsLoading) {
@@ -64,6 +153,7 @@ export default function App() {
                     PlatformEnginePkgAuthApiTheme.ThemeLight
             )
             setColorBlindMode( false)
+            GetLayout(meResponse)
         }
     }, [meIsLoading])
 
@@ -86,7 +176,7 @@ export default function App() {
         }
     }, [isAuthenticated])
 
-    return isLoading || accessTokenLoading || meIsLoading ? (
+    return isLoading || accessTokenLoading || meIsLoading || layoutLoading ? (
         <Flex
             justifyContent="center"
             alignItems="center"

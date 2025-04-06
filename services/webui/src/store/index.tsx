@@ -46,6 +46,7 @@ export const previewAtom = atom(
         : 'false'
 )
 export const runQueryAtom = atom('')
+export const LayoutAtom = atom(undefined)
 
 export const tokenAtom = atom<string>('')
 export const colorBlindModeAtom = atom<boolean>(false)
