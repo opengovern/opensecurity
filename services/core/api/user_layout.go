@@ -10,7 +10,9 @@ type ChangePrivacyRequest struct {
 	IsPrivate bool `json:"is_private"`
 }
 
-type SetUserLayout struct {
+type SetUserLayoutRequest struct {
 	UserID      string `json:"user_id"`
 	LayoutConfig []map[string]any `json:"layout_config"`
+	Name 	  string `json:"name"`
+	IsPrivate 	  bool `json:"is_private"`
 }

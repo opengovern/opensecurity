@@ -1605,7 +1605,7 @@ func (h HttpHandler) GetUserLayout(echoCtx echo.Context) error {
 	
 }
 func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
-	var req api.SetUserLayout
+	var req api.SetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return err
 	}
@@ -1622,6 +1622,8 @@ func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	user_layout := models.UserLayout{
 		UserID: userId,
 		LayoutConfig: layout_config,
+		Name: req.Name,
+		IsPrivate: req.IsPrivate,
 	}
 	err = h.db.SetUserLayout(user_layout)
 	if err != nil {

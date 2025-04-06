@@ -158,12 +158,11 @@ func (db Database) GetUserLayout(userID string) (*models.UserLayout, error) {
 }
 // set user layout
 func (db Database) SetUserLayout( layoutConfig models.UserLayout) error {
-	err:= db.orm.Model(&models.UserLayout{}).
-		Where("user_id = ?", layoutConfig.UserID).Update("layout_config", layoutConfig.LayoutConfig).Error
+	err := db.orm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"layout_config", "name", "is_private"}),
+	}).Create(&layoutConfig).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
 		return err
 	}
 	return nil
