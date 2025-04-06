@@ -8,9 +8,11 @@ import { Button, ButtonDropdown, Spinner } from "@cloudscape-design/components"
 import { useEffect, useState } from 'react'
 import TableWidget from "../table"
 import axios from "axios"
+import ChartWidget from "../charts"
 
 const  COMPONENT_MAPPING ={
-    'table': TableWidget
+    'table': TableWidget,
+    'chart': ChartWidget
      
 }
 
