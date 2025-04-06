@@ -6,6 +6,7 @@
         "@azure/msal-browser": "^2.38.3",
         "@azure/msal-react": "^1.5.12",
         "@calcom/embed-react": "^1.5.0",
+        "@cloudscape-design/board-components": "^3.0.96",
         "@cloudscape-design/components": "^3.0.765",
         "@cloudscape-design/global-styles": "^1.0.32",
         "@djthoms/pretty-checkbox": "^3.1.0",
@@ -23,6 +24,7 @@
         "@react-aria/overlays": "^3.19.0",
         "@react-spectrum/view": "^3.6.5",
         "@react-spring/web": "^9.7.2",
+        "@remixicon/react": "^4.3.0",
         "@superset-ui/embedded-sdk": "^0.1.0-alpha.11",
         "@tailwindcss/forms": "^0.5.7",
         "@testing-library/jest-dom": "^5.17.0",
@@ -69,7 +71,6 @@
         "runtime-env-cra": "^0.2.4",
         "styled-components": "^6.1.8",
         "swagger-typescript-api": "^13.0.23",
-        "@remixicon/react": "^4.3.0",
         "swr": "^2.2.4",
         "typescript": "^4.9.5",
         "web-vitals": "^2.1.4"
