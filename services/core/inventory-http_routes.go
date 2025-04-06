@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgtype"
 	"net/http"
 	"regexp"
 	"sort"
@@ -403,8 +404,16 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 	if err := bindValidate(ctx, &req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	if req.Query == nil || *req.Query == "" {
+	if (req.Query == nil || *req.Query == "") && req.QueryId == nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Policy is required")
+	}
+
+	if req.QueryId != nil && (req.Query == nil || *req.Query == "") {
+		query, err := h.db.GetQuery(*req.QueryId)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+		req.Query = &query.Query.QueryToExecute
 	}
 
 	if req.Page.Size == 0 {
@@ -458,7 +467,35 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		ctx.Response().Header().Set("Content-Type", "text/csv")
 		return ctx.String(http.StatusOK, csvData)
 	}
+
+	if req.QueryId != nil {
+		err = h.CacheQueryResult(*req.QueryId, *resp)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
 	return ctx.JSON(200, resp)
+}
+
+func (h *HttpHandler) CacheQueryResult(queryId string, resp api.RunQueryResponse) error {
+	c := models.NamedQueryRunCache{
+		QueryID: queryId,
+		LastRun: time.Now(),
+	}
+
+	respJsonData, err := json.Marshal(resp)
+	if err != nil {
+		return err
+	}
+	respJsonb := pgtype.JSONB{}
+	err = respJsonb.Set(respJsonData)
+	if err != nil {
+		return err
+	}
+	c.Result = respJsonb
+
+	return h.db.UpsertNamedQueryCache(c)
 }
 
 // GetRecentRanQueries godoc

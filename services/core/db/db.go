@@ -1,11 +1,9 @@
 package db
 
-
 import (
 	"github.com/opengovern/opensecurity/services/core/db/models"
 	"gorm.io/gorm"
 )
-
 
 type Database struct {
 	orm *gorm.DB
@@ -35,6 +33,7 @@ func (db Database) Initialize() error {
 		&models.QueryView{},
 		&models.QueryViewTag{},
 		&models.PlatformConfiguration{},
+		&models.NamedQueryRunCache{},
 	)
 	if err != nil {
 		return err

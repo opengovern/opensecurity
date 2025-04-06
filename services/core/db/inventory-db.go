@@ -1,20 +1,17 @@
 package db
 
-
 import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/lib/pq"
 	"github.com/opengovern/og-util/pkg/integration"
+	"github.com/opengovern/og-util/pkg/model"
+	"github.com/opengovern/opensecurity/services/core/db/models"
+	"gorm.io/gorm/clause"
 	"strings"
 	"time"
-	"github.com/lib/pq"
-	"github.com/opengovern/og-util/pkg/model"
-	"gorm.io/gorm/clause"
-	"github.com/opengovern/opensecurity/services/core/db/models"
 )
-
-
 
 func (db Database) GetQueriesWithFilters(search *string) ([]models.NamedQuery, error) {
 	var s []models.NamedQuery
@@ -547,4 +544,17 @@ func (db Database) GetQueryParameters() ([]string, error) {
 	}
 
 	return parameters, nil
+}
+
+func (db Database) UpsertNamedQueryCache(cacheEntry models.NamedQueryRunCache) error {
+	tx := db.orm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "query_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"last_run", "result"}),
+	}).Create(&cacheEntry)
+
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	return nil
 }

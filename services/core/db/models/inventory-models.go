@@ -1,7 +1,5 @@
 package models
 
-
-
 import (
 	"time"
 
@@ -14,8 +12,6 @@ import (
 	"github.com/opengovern/opensecurity/services/core/api"
 	"gorm.io/gorm"
 )
-
-
 
 type ResourceTypeTag struct {
 	model.Tag
@@ -32,8 +28,6 @@ type NamedQueryTagsResult struct {
 	UniqueValues pq.StringArray `gorm:"type:text[]"`
 }
 
-
-
 type NamedQuery struct {
 	ID               string         `gorm:"primarykey"`
 	IntegrationTypes pq.StringArray `gorm:"type:text[]"`
@@ -45,14 +39,10 @@ type NamedQuery struct {
 	Tags             []NamedQueryTag `gorm:"foreignKey:NamedQueryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
-
-
 type NamedQueryHistory struct {
 	Query      string `gorm:"type:citext; primaryKey"`
 	ExecutedAt time.Time
 }
-
-
 
 type ResourceType struct {
 	IntegrationType integration.Type `json:"integration_type" gorm:"index"`
@@ -82,8 +72,6 @@ func (r ResourceType) ToApi() api.ResourceType {
 	return apiResourceType
 }
 
-
-
 type ResourceCollectionTag struct {
 	model.Tag
 	ResourceCollectionID string `gorm:"primaryKey"`
@@ -95,8 +83,6 @@ const (
 	ResourceCollectionStatusActive   ResourceCollectionStatus = "active"
 	ResourceCollectionStatusInactive ResourceCollectionStatus = "inactive"
 )
-
-
 
 type ResourceCollection struct {
 	ID          string `gorm:"primarykey"`
@@ -116,9 +102,6 @@ type ResourceCollection struct {
 	Filters []opengovernance.ResourceCollectionFilter `gorm:"-:all"`
 }
 
-
-
-
 type ResourceTypeV2 struct {
 	IntegrationType integration.Type `gorm:"column:integration_type"`
 	ResourceName    string           `gorm:"column:resource_name"`
@@ -127,9 +110,13 @@ type ResourceTypeV2 struct {
 	Category        string           `gorm:"column:category"`
 }
 
-
 type CategoriesTables struct {
 	Category string   `json:"category"`
 	Tables   []string `json:"tables"`
 }
 
+type NamedQueryRunCache struct {
+	QueryID string `gorm:"primaryKey"`
+	LastRun time.Time
+	Result  pgtype.JSONB
+}
