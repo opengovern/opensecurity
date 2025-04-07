@@ -5,6 +5,7 @@ import {
     Box,
     Header,
     KeyValuePairs,
+    Link,
     Modal,
     SpaceBetween,
     Table,
@@ -144,7 +145,18 @@ export default function KeyValueWidget({ kpis }: KPIProps) {
                     label: item.label,
                     count_kpi: item.count_kpi,
                     list_kpi: item.list_kpi,
-                    value: res?.data?.result[0][0],
+
+                    value: (
+                        <Link
+                            // variant="awsui-value-large"
+                            fontSize="display-l"
+                            variant="secondary"
+                            href="#"
+                            ariaLabel="Running instances (14)"
+                        >
+                            {res?.data?.result[0][0]}
+                        </Link>
+                    ),
                 })
             })
         })

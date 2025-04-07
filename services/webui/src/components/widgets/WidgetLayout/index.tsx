@@ -22,9 +22,9 @@ import Integrations from '../../../pages/Overview/Integrations'
 const COMPONENT_MAPPING = {
     table: TableWidget,
     chart: ChartWidget,
-    'kpi': KeyValueWidget,
-    'shortcut': Shortcuts,
-    'integration': Integrations,
+    kpi: KeyValueWidget,
+    shortcut: Shortcuts,
+    integration: Integrations,
 }
 
 export default function WidgetLayout() {
@@ -50,9 +50,7 @@ export default function WidgetLayout() {
                 componentId: 'integration',
                 title: 'Integrations',
                 description: '',
-                props: {
-                 
-                },
+                props: {},
             },
             rowSpan: 8,
             columnSpan: 1,
@@ -66,7 +64,9 @@ export default function WidgetLayout() {
     useEffect(() => {
         if (layout) {
             // add to ietms
-            setItems([...items, ...(layout?.layout_config || [])])
+            if (items.length !== layout?.layout_config.length + 2) {
+                setItems([...items, ...(layout?.layout_config || [])])
+            }
         }
     }, [layout])
     const GetComponent = (name: string, props: any) => {
@@ -174,6 +174,8 @@ export default function WidgetLayout() {
     return (
         <div className="w-full h-full flex flex-col gap-2">
             <Header
+            variant='h1'
+                
                 actions={
                     <div className="flex flex-row gap-2">
                         <Button
