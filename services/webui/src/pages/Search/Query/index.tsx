@@ -394,6 +394,8 @@ export default function Query() {
                             <AllQueries
                                 setTab={setTab}
                                 setOpenLayout={setOpenLayout}
+                                sendNowWithParams={sendNowWithParams}
+                                setCode={setCode}
                             />
                         </>
                     </SplitPanel>
