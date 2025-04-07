@@ -91,7 +91,7 @@ export default function Shortcuts() {
                     <Grid
                         numItems={1}
                         numItemsSm={4}
-                        className="w-full mb-4 2xl:gap-[20px]  sm:gap-8 gap-4"
+                        className="w-full  2xl:gap-[20px]  sm:gap-7 gap-4"
                     >
                         {navList?.slice(number1, number).map((nav, i) => (
                             <>
@@ -104,7 +104,7 @@ export default function Shortcuts() {
                                                 nav.new ? '_blank' : '_self'
                                             }
                                         >
-                                            <Card className=" flex-auto  cursor-pointer  sm:min-h-[140px] h-full pt-3 sm:pb-3 pb-3 hover:bg-gray-50 hover:dark:bg-gray-900">
+                                            <Card className=" flex-auto  cursor-pointer  sm:min-h-[130px] h-full pt-3 sm:pb-3 pb-3 hover:bg-gray-50 hover:dark:bg-gray-900">
                                                 <Flex
                                                     flexDirection="col"
                                                     justifyContent="start"
@@ -136,7 +136,7 @@ export default function Shortcuts() {
                                                     setUserOpen(true)
                                                 }
                                             }}
-                                            className="  cursor-pointer  sm:min-h-[140px] h-full pt-3 sm:pb-3 pb-3 hover:bg-gray-50 hover:dark:bg-gray-900"
+                                            className="  cursor-pointer  sm:min-h-[130px] h-full pt-3 sm:pb-3 pb-3 hover:bg-gray-50 hover:dark:bg-gray-900"
                                         >
                                             <Flex
                                                 flexDirection="col"

@@ -40,7 +40,7 @@ export default function WidgetLayout() {
                 description: '',
                 props: {},
             },
-            rowSpan: 3,
+            rowSpan: 2,
             columnSpan: 3,
             columnOffset: { '4': 0 },
         },
@@ -54,7 +54,7 @@ export default function WidgetLayout() {
                  
                 },
             },
-            rowSpan: 10,
+            rowSpan: 8,
             columnSpan: 1,
             columnOffset: { '4': 3 },
         },
