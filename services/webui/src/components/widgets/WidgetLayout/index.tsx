@@ -16,25 +16,57 @@ import TableWidget from '../table'
 import axios from 'axios'
 import ChartWidget from '../charts'
 import KeyValueWidget from '../KeyValue'
+import Shortcuts from '../../../pages/Overview/Shortcuts'
+import Integrations from '../../../pages/Overview/Integrations'
 
 const COMPONENT_MAPPING = {
     table: TableWidget,
     chart: ChartWidget,
     'kpi': KeyValueWidget,
+    'shortcut': Shortcuts,
+    'integration': Integrations,
 }
 
 export default function WidgetLayout() {
     const [layout, setLayout] = useAtom(LayoutAtom)
     const [me, setMe] = useAtom(meAtom)
 
-    const [items, setItems] = useState([])
+    const [items, setItems] = useState([
+        {
+            id: 'shortcut',
+            data: {
+                componentId: 'shortcut',
+                title: 'Shortcuts',
+                description: '',
+                props: {},
+            },
+            rowSpan: 3,
+            columnSpan: 3,
+            columnOffset: { '4': 0 },
+        },
+        {
+            id: 'integration',
+            data: {
+                componentId: 'integration',
+                title: 'Integrations',
+                description: '',
+                props: {
+                 
+                },
+            },
+            rowSpan: 10,
+            columnSpan: 1,
+            columnOffset: { '4': 3 },
+        },
+    ])
     const [layoutLoading, setLayoutLoading] = useState<boolean>(false)
     const [addModalOpen, setAddModalOpen] = useState(false)
     const [selectedAddItem, setSelectedAddItem] = useState<any>('')
     const [widgetProps, setWidgetProps] = useState<any>({})
     useEffect(() => {
         if (layout) {
-            setItems(layout?.layout_config)
+            // add to ietms
+            setItems([...items, ...(layout?.layout_config || [])])
         }
     }, [layout])
     const GetComponent = (name: string, props: any) => {

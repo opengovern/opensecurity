@@ -11,16 +11,16 @@ import {
 } from '@cloudscape-design/components'
 import { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
+import { Label } from '@headlessui/react/dist/components/label/label'
 
 export interface KPIProps {
     kpis: Kpi[]
 }
 export interface Kpi {
-    info:      string;
-    count_kpi: string;
-    list_kpi:  string;
+    info: string
+    count_kpi: string
+    list_kpi: string
 }
-
 
 export const getTable = (
     headers: string[] | undefined,
@@ -103,63 +103,67 @@ export const getTable = (
 export default function KeyValueWidget({ kpis }: KPIProps) {
     const [items, setItems] = useState<any[]>([])
 
-   const RunQuery = (query_id: string) => {
-       let url = ''
-       if (window.location.origin === 'http://localhost:3000') {
-           url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-       } else {
-           url = window.location.origin
-       }
-       // @ts-ignore
-       const token = JSON.parse(localStorage.getItem('openg_auth')).token
+    const RunQuery = (query_id: string) => {
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-       const config = {
-           headers: {
-               Authorization: `Bearer ${token}`,
-           },
-       }
-       const body = {
-           page: { no: 1, size: 1000 },
-           // @ts-ignore
-           engine: 'cloudql',
-           query_id: query_id,
-           use_cache: true,
-       }
-
-      return  axios
-           .post(`${url}/main/core/api/v1/query/run `, body, config)
-           
-   }
-
-    useEffect(()=>{
-        if(kpis.length >0){
-            const temp_items:any= []
-            kpis?.map((item)=>{
-                RunQuery(item.count_kpi).then((res) => {
-                    const { columns, rows } = getTable(
-                        res.data?.headers,
-                        res.data?.details
-                    )
-                    temp_items.push({
-                        title: item.info,
-                        value: rows[0][columns[0].id],
-                    })
-                })
-            })
-            setItems(temp_items)
-
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+        const body = {
+            page: { no: 1, size: 1000 },
+            // @ts-ignore
+            engine: 'cloudql',
+            query_id: query_id,
+            use_cache: true,
         }
 
+        return axios.post(`${url}/main/core/api/v1/query/run `, body, config)
+    }
+    const handleKPIs = async () => {
+        const temp_items: any = []
+        kpis?.map((item, index) => {
+            temp_items.push({
+                label: item.info,
+                count_kpi: item.count_kpi,
+                list_kpi: item.list_kpi,
+            })
+        })
+        const final_items: any = []
+        temp_items.map(async (item: any, index: number) => {
+            RunQuery(item.count_kpi).then((res) => {
+                final_items.push({
+                    label: item.label,
+                    count_kpi: item.count_kpi,
+                    list_kpi: item.list_kpi,
+                    value: res?.data?.result[0][0],
+                })
+            })
+        })
 
-    },[kpis])
+        while (final_items.length !== temp_items.length) {
+            await new Promise((resolve) => setTimeout(resolve, 10))
+        }
+        setItems(final_items)
+    }
+
+    useEffect(() => {
+        if (kpis.length > 0) {
+            handleKPIs()
+        }
+    }, [kpis])
 
     return (
         <>
-            <KeyValuePairs
-            columns={kpis.length}
-            items={items}
-            />
-        
+            <KeyValuePairs columns={kpis.length} items={items} />
         </>
     )
 }
