@@ -434,9 +434,13 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to calculate params hash: "+err.Error())
 	}
 
+	if req.UseCache == nil {
+		req.UseCache = aws.Bool(true)
+	}
+
 	var namedQuery *models.NamedQuery
 	if req.QueryId != nil && (req.Query == nil || *req.Query == "") {
-		if req.UseCache {
+		if *req.UseCache {
 			runQueryCache, err := h.db.GetRunNamedQueryCache(*req.QueryId, paramsHash)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
