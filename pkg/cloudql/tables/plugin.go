@@ -29,8 +29,8 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			"platform_artifact_vulnerabilities": tablePlatformArtifactVulnerabilities(ctx),
 			"platform_artifact_sbom":            tablePlatformArtifactSboms(ctx),
 			"packages_with_vulnerabilities":     tablePlatformPackageVulnerabilities(ctx),
-			"osv_vulnerability_details":         tablePlatformOsvVulnerabilityDetails(ctx),
-			"artifact_package_list":             tableArtifactPackageList(ctx),
+			"vulnerability_details":             tablePlatformOsvVulnerabilityDetails(ctx),
+			"software_packages":                 tableArtifactPackageList(ctx),
 		},
 	}
 
