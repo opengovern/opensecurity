@@ -476,7 +476,154 @@ export default function Integrations() {
                     </Flex>
                 </div>
             </Modal>
-            <Card className="sm:h-full h-fit  sm:w-full overflow-scroll no-scrollbar sm:inline-block hidden border-solid  border-2 border-b w-full rounded-xl border-tremor-border bg-tremor-background-muted p-4 dark:border-dark-tremor-border dark:bg-gray-950 sm:py-2 px-6">
+            <Cards
+                ariaLabels={{
+                    itemSelectionLabel: (e, t) => `select ${t.name}`,
+                    selectionGroupLabel: 'Item selection',
+                }}
+                onSelectionChange={({ detail }) => {
+                    const connector = detail?.selectedItems[0]
+                    if (
+                        connector.enabled === 'disabled' ||
+                        connector?.installed === 'not_installed'
+                    ) {
+                        setOpen(true)
+                        setSelected(connector)
+                        return
+                    }
+
+                    if (
+                        connector.enabled == 'enabled' &&
+                        connector.installed == 'installed'
+                    ) {
+                        const name = connector?.name
+                        const id = connector?.id
+                        navigate(
+                            `integration/plugins/${connector.platform_name}`,
+                            {
+                                state: {
+                                    name,
+                                    id,
+                                },
+                            }
+                        )
+                        return
+                    }
+                    navigate(
+                        `${connector.platform_name}/../../request-access?connector=${connector.title}`
+                    )
+                }}
+                selectedItems={[]}
+                cardDefinition={{
+                    header: (item) => (
+                        <Link className="w-100">
+                            <div className="w-100 flex flex-row justify-between">
+                                <span>{item.name}</span>
+                            </div>
+                        </Link>
+                    ),
+                    sections: [
+                        {
+                            id: 'logo',
+
+                            content: (item) => (
+                                <div className="w-100 flex flex-row items-center  justify-between  ">
+                                    <img
+                                        className="sm:w-[40px] sm:h-[40px] w-[30px] h-[30px]"
+                                        src={item.logo}
+                                        onError={(e) => {
+                                            e.currentTarget.onerror = null
+                                            e.currentTarget.src =
+                                                'https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/default.svg'
+                                        }}
+                                        alt="placeholder"
+                                    />
+                                    {/* <span>{item.status ? 'Enabled' : 'Disable'}</span> */}
+                                </div>
+                            ),
+                        },
+                        // {
+                        //     id: 'integrattoin',
+                        //     header: 'Description',
+                        //     content: (item) => item?.description,
+                        //     width: 70,
+                        // },
+
+                        // {
+                        //     id: 'integrattoin',
+                        //     header: 'Integrations',
+                        //     content: (item) => (
+                        //         <>
+                        //             <span className='w-full text-end'>
+                        //                 {item?.count ? item.count : '--'}
+                        //             </span>
+                        //         </>
+                        //     ),
+                        //     width: 30,
+                        // },
+                        {
+                            id: 'description',
+                            header: (
+                                <>
+                                    <div className="flex justify-between">
+                                        <span className="sm:inline hidden">
+                                            {'Description'}
+                                        </span>
+                                        <span>{'Integrations'}</span>
+                                    </div>
+                                </>
+                            ),
+                            content: (item) => (
+                                <>
+                                    <div className="flex justify-between gap-4">
+                                        <span className="max-w-44 sm:inline hidden">
+                                            {item.description}
+                                        </span>
+                                        <span>
+                                            {item.count ? item.count : '--'}
+                                        </span>
+                                    </div>
+                                </>
+                            ),
+                        },
+                    ],
+                }}
+                cardsPerRow={[{ cards: 1 }]}
+                // @ts-ignore
+                items={responseConnectors?.items?.map((type) => {
+                    return {
+                        id: type.id,
+                        tier: type.tier,
+                        enabled: type.operational_status,
+                        installed: type.install_state,
+                        platform_name: type.plugin_id,
+                        description: type.description,
+                        title: type.name,
+                        name: type.name,
+                        html_url: type.url,
+                        count: type?.count?.total,
+                        logo: `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${type.icon}`,
+                    }
+                })}
+                loadingText="Loading resources"
+                stickyHeader
+                entireCardClickable
+                variant="full-page"
+                selectionType="single"
+                trackBy="name"
+                empty={
+                    <Box
+                        margin={{ vertical: 'xs' }}
+                        textAlign="center"
+                        color="inherit"
+                    >
+                        <SpaceBetween size="m">
+                            <b>No resources</b>
+                        </SpaceBetween>
+                    </Box>
+                }
+            />
+            {/* <Card className="sm:h-full h-fit  sm:w-full overflow-scroll no-scrollbar sm:inline-block hidden border-solid  border-2 border-b w-full rounded-xl border-tremor-border bg-tremor-background-muted p-4 dark:border-dark-tremor-border dark:bg-gray-950 sm:py-2 px-6">
                 <Flex
                     justifyContent="between"
                     className="sm:flex-row flex-col sm:mb-0 mb-2 sm:items-center items-start"
@@ -505,154 +652,8 @@ export default function Integrations() {
                     </a>
                 </Flex>
 
-                <Cards
-                    ariaLabels={{
-                        itemSelectionLabel: (e, t) => `select ${t.name}`,
-                        selectionGroupLabel: 'Item selection',
-                    }}
-                    onSelectionChange={({ detail }) => {
-                        const connector = detail?.selectedItems[0]
-                        if (
-                            connector.enabled === 'disabled' ||
-                            connector?.installed === 'not_installed'
-                        ) {
-                            setOpen(true)
-                            setSelected(connector)
-                            return
-                        }
-
-                        if (
-                            connector.enabled == 'enabled' &&
-                            connector.installed == 'installed'
-                        ) {
-                            const name = connector?.name
-                            const id = connector?.id
-                            navigate(
-                                `integration/plugins/${connector.platform_name}`,
-                                {
-                                    state: {
-                                        name,
-                                        id,
-                                    },
-                                }
-                            )
-                            return
-                        }
-                        navigate(
-                            `${connector.platform_name}/../../request-access?connector=${connector.title}`
-                        )
-                    }}
-                    selectedItems={[]}
-                    cardDefinition={{
-                        header: (item) => (
-                            <Link className="w-100">
-                                <div className="w-100 flex flex-row justify-between">
-                                    <span>{item.name}</span>
-                                </div>
-                            </Link>
-                        ),
-                        sections: [
-                            {
-                                id: 'logo',
-
-                                content: (item) => (
-                                    <div className="w-100 flex flex-row items-center  justify-between  ">
-                                        <img
-                                            className="sm:w-[50px] sm:h-[50px] w-[30px] h-[30px]"
-                                            src={item.logo}
-                                            onError={(e) => {
-                                                e.currentTarget.onerror = null
-                                                e.currentTarget.src =
-                                                    'https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/default.svg'
-                                            }}
-                                            alt="placeholder"
-                                        />
-                                        {/* <span>{item.status ? 'Enabled' : 'Disable'}</span> */}
-                                    </div>
-                                ),
-                            },
-                            // {
-                            //     id: 'integrattoin',
-                            //     header: 'Description',
-                            //     content: (item) => item?.description,
-                            //     width: 70,
-                            // },
-
-                            // {
-                            //     id: 'integrattoin',
-                            //     header: 'Integrations',
-                            //     content: (item) => (
-                            //         <>
-                            //             <span className='w-full text-end'>
-                            //                 {item?.count ? item.count : '--'}
-                            //             </span>
-                            //         </>
-                            //     ),
-                            //     width: 30,
-                            // },
-                            {
-                                id: 'description',
-                                header: (
-                                    <>
-                                        <div className="flex justify-between">
-                                            <span className="sm:inline hidden">
-                                                {'Description'}
-                                            </span>
-                                            <span>{'Integrations'}</span>
-                                        </div>
-                                    </>
-                                ),
-                                content: (item) => (
-                                    <>
-                                        <div className="flex justify-between gap-4">
-                                            <span className="max-w-44 sm:inline hidden">
-                                                {item.description}
-                                            </span>
-                                            <span>
-                                                {item.count ? item.count : '--'}
-                                            </span>
-                                        </div>
-                                    </>
-                                ),
-                            },
-                        ],
-                    }}
-                    cardsPerRow={[{ cards: 1 }]}
-                    // @ts-ignore
-                    items={responseConnectors?.items?.map((type) => {
-                        return {
-                            id: type.id,
-                            tier: type.tier,
-                            enabled: type.operational_status,
-                            installed: type.install_state,
-                            platform_name: type.plugin_id,
-                            description: type.description,
-                            title: type.name,
-                            name: type.name,
-                            html_url: type.url,
-                            count: type?.count?.total,
-                            logo: `https://raw.githubusercontent.com/opengovern/website/main/connectors/icons/${type.icon}`,
-                        }
-                    })}
-                    loadingText="Loading resources"
-                    stickyHeader
-                    entireCardClickable
-                    variant="full-page"
-                    selectionType="single"
-                    trackBy="name"
-                    empty={
-                        <Box
-                            margin={{ vertical: 'xs' }}
-                            textAlign="center"
-                            color="inherit"
-                        >
-                            <SpaceBetween size="m">
-                                <b>No resources</b>
-                            </SpaceBetween>
-                        </Box>
-                    }
-                />
-            </Card>
+              
+            </Card> */}
         </>
     )
 }

@@ -145,6 +145,7 @@ export interface PlatformEnginePkgAuthApiGetMeResponse {
      */
     status?: 'accepted' | 'pending'
     theme?: PlatformEnginePkgAuthApiTheme
+    id: string
     /**
      * Unique identifier for the user
      * @example "auth|123456789"
@@ -1580,6 +1581,8 @@ export interface PlatformEnginePkgInventoryApiRunQueryRequest {
     engine?: string
     page: PlatformEnginePkgInventoryApiPage
     query?: string
+    query_id?: string
+    use_cache?: boolean
     sorts?: PlatformEnginePkgInventoryApiSmartQuerySortItem[]
     source_id?: string
 }

@@ -1,7 +1,4 @@
-import {
-    Flex,
- 
-} from '@tremor/react'
+import { Flex } from '@tremor/react'
 import {
     ChevronDoubleLeftIcon,
     ChevronDownIcon,
@@ -11,6 +8,7 @@ import {
     FunnelIcon,
     MagnifyingGlassIcon,
     PlayCircleIcon,
+    PlayIcon,
     PlusIcon,
     TagIcon,
 } from '@heroicons/react/24/outline'
@@ -20,10 +18,8 @@ import 'prismjs/components/prism-sql' // eslint-disable-next-line import/no-extr
 import 'prismjs/themes/prism.css'
 import Editor from 'react-simple-code-editor'
 
-
 import { useAtom, useAtomValue } from 'jotai'
 import {
-
     useInventoryApiV3AllQueryCategory,
     useInventoryApiV3QueryFiltersList,
 } from '../../../api/inventory.gen'
@@ -47,9 +43,13 @@ import SpaceBetween from '@cloudscape-design/components/space-between'
 import Badge from '@cloudscape-design/components/badge'
 import {
     BreadcrumbGroup,
+    Button,
+    CopyToClipboard,
     DateRangePicker,
     Header,
+    KeyValuePairs,
     Link,
+    Modal,
     Pagination,
     PropertyFilter,
     Select,
@@ -59,21 +59,29 @@ import { useIntegrationApiV1EnabledConnectorsList } from '../../../api/integrati
 import CustomPagination from '../../../components/Pagination'
 import UseCaseCard from '../../../components/Cards/BookmarkCard'
 import axios from 'axios'
-
+import { RiExternalLinkLine } from '@remixicon/react'
+import { RenderObject } from '../../../components/RenderObject'
 
 export interface Props {
     setTab: Function
-     setOpenLayout : Function
+    setOpenLayout: Function
+    sendNowWithParams: Function
+    setCode: Function
 }
 
-export default function AllQueries({ setTab, setOpenLayout }: Props) {
-     const [filter, setFilter] = useState({
-         label: 'Bookmarked Queries',
-         value: '1',
-     })
-    const [runQuery, setRunQuery] = useAtom(runQueryAtom)
+export default function AllQueries({
+    setTab,
+    setOpenLayout,
+    setCode,
+    sendNowWithParams,
+}: Props) {
+    const [filter, setFilter] = useState({
+        label: 'Bookmarked Queries',
+        value: '1',
+    })
+
     const [loading, setLoading] = useState(false)
-    const [savedQuery, setSavedQuery] = useAtom(queryAtom)
+
     const [query, setQuery] =
         useState<PlatformEnginePkgInventoryApiListQueryRequestV2>()
 
@@ -83,13 +91,15 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
     const [totalCount, setTotalCount] = useState(0)
     const [totalPage, setTotalPage] = useState(0)
     const [rows, setRows] = useState<any[]>()
-   
+
     const [filterQuery, setFilterQuery] = useState({
         tokens: [],
         operation: 'and',
     })
     const [properties, setProperties] = useState<any[]>([])
     const [options, setOptions] = useState<any[]>([])
+    const [open, setOpen] = useState(false)
+    const [selected, setSelected] = useState<any>()
 
     // const {
     //     response: categories,
@@ -109,7 +119,6 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
     //     isExecuted: TypesExec,
     // } = useIntegrationApiV1EnabledConnectorsList(0, 0)
 
-   
     const getIntegrations = () => {
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
@@ -148,19 +157,16 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
         const api = new Api()
         api.instance = AxiosAPI
         let tags = query?.tags
-        if(filter.value === '1'){
-            if(tags ){
+        if (filter.value === '1') {
+            if (tags) {
                 tags['platform_queries_bookmark'] = ['true']
-
-            }
-            else{
+            } else {
                 tags = {
-                    platform_queries_bookmark: ['true']
+                    platform_queries_bookmark: ['true'],
                 }
             }
-        }
-        else{
-            if(tags){
+        } else {
+            if (tags) {
                 delete tags['platform_queries_bookmark']
             }
         }
@@ -203,11 +209,10 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
     useEffect(() => {
         getRows()
     }, [page, query, filter])
-   
+
     useEffect(() => {
         getIntegrations()
     }, [])
-
 
     useEffect(() => {
         if (
@@ -215,7 +220,7 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
             // categoryExec &&
             // TypesExec &&
             // !TypesLoading &&
-            !filtersLoading 
+            !filtersLoading
             // !categoryLoading
         ) {
             const temp_option: any = []
@@ -234,13 +239,12 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
                     groupValuesLabel: 'Plugin values',
                 },
             ]
-             filters?.providers?.map((unique, index) => {
-               
+            filters?.providers?.map((unique, index) => {
                 temp_option.push({
                     propertyKey: 'plugin',
                     value: unique,
                 })
-             })
+            })
             // categories?.categories?.map((item) => {
             //     property.push({
             //         key: `list_of_table${item.category}`,
@@ -353,7 +357,7 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
                         }
                     />
                 </Flex>
-                <Flex className='sm:flex-row flex-col justify-start sm:items-start items-start gap-4'>
+                <Flex className="sm:flex-row flex-col justify-start sm:items-start items-start gap-4">
                     <Select
                         // @ts-ignore
                         selectedOption={filter}
@@ -379,7 +383,7 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
                     <PropertyFilter
                         // @ts-ignore
                         query={filterQuery}
-                        className='w-full sm:w-fit'
+                        className="w-full sm:w-fit"
                         tokenLimit={2}
                         onChange={({ detail }) =>
                             // @ts-ignore
@@ -412,7 +416,7 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
                     className="gap-8 flex-wrap sm:flex-row flex-col justify-start items-start w-full"
                     // style={{flex: "1 1 0"}}
                 >
-                    {  loading ? (
+                    {loading ? (
                         <>
                             <Spinner className="mt-2" />
                         </>
@@ -461,12 +465,23 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
                                                 q?.integration_types
                                             )}
                                             onClick={() => {
+                                                setSelected(q)
+                                                setOpen(true)
+
                                                 // @ts-ignore
-                                                setSavedQuery(
-                                                    q?.query?.query_to_execute
-                                                )
-                                                setTab('3')
-                                                setOpenLayout(false)
+
+                                                // setCode(
+                                                //     q?.query?.query_to_execute
+                                                // )
+                                                // sendNowWithParams({
+                                                //     page: { no: 1, size: 1000 },
+                                                //     // @ts-ignore
+                                                //     engine: 'cloudql',
+                                                //     query_id: q?.query?.id,
+                                                //     use_cache: true,
+                                                // })
+                                                // setTab('3')
+                                                // setOpenLayout(false)
                                             }}
                                             tag="tag1"
                                         />
@@ -476,8 +491,125 @@ export default function AllQueries({ setTab, setOpenLayout }: Props) {
                     )}
                 </Flex>
             </Flex>
+            <Modal
+                visible={open}
+                size="large"
+                onDismiss={() => {
+                    setOpen(false)
+                    // setSelected(undefined);
+                }}
+                // @ts-ignore
+                header={selected?.title}
+            >
+                <div className="flex flex-col gap-2">
+                    <CopyToClipboard
+                        copyButtonText={selected?.query?.id}
+                        textToCopy={selected?.query?.id}
+                        copyErrorText="Id failed to copy"
+                        copySuccessText="Id copied"
+                    />
+                    <KeyValuePairs
+                        columns={1}
+                        items={[
+                          
+                            {
+                                label: 'Description',
+                                // @ts-ignore
+                                value: selected?.description,
+                            },
+                            {
+                                label: 'Integration Plugins',
+                                // @ts-ignore
+                                value: (
+                                    <>
+                                        <div className="flex flex-wrap flex-row gap-2 mt-2">
+                                            {/* @ts-ignore */}
+                                            {selected?.integration_types?.map(
+                                                (plugin: any) => {
+                                                    return (
+                                                        <>
+                                                            <span
+                                                                className={`p-2   px-4 border flex flex-row gap-2 items-center justify-center dark:border-white text-black dark:text-white  rounded-3xl cursor-pointer sm:hover:dark:bg-white sm:hover:bg-blue-950 sm:hover:text-white sm:hover:dark:text-black    `}
+                                                            >
+                                                                {plugin}
+                                                            </span>
+                                                            {/* <a
+                                                                target="__blank"
+                                                                href={plugin}
+                                                                className={`p-2   px-4 border flex flex-row gap-2 items-center justify-center dark:border-white text-black dark:text-white  rounded-3xl cursor-pointer sm:hover:dark:bg-white sm:hover:bg-blue-950 sm:hover:text-white sm:hover:dark:text-black    `}
+                                                            >
+                                                                <RiExternalLinkLine />
+                                                            </a> */}
+                                                        </>
+                                                    )
+                                                }
+                                            )}
+                                        </div>
+                                    </>
+                                ),
+                            },
+                        ]}
+                    />
+                    <RenderObject
+                        // @ts-ignore
+                        obj={selected?.query?.query_to_execute}
+                        language="sql"
+                        height={300}
+                    />
+                    {selected?.tags && (
+                        <>
+                            {' '}
+                            <span className="text-base font-semibold">
+                                Tags
+                            </span>
+                            <Flex
+                                className="gap-2 mt-2 flex-wrap w-full justify-start items-center"
+                                flexDirection="row"
+                            >
+                                <>
+                                    {/* @ts-ignore */}
+                                    {Object.entries(selected?.tags)?.map(
+                                        (key: any, index) => {
+                                            return (
+                                                <>
+                                                    <span className="inline-flex items-center gap-x-2.5 rounded-tremor-full bg-tremor-background py-1 pl-2.5 pr-2.5 text-tremor-label text-tremor-content ring-1 ring-inset ring-tremor-ring dark:bg-dark-tremor-background dark:text-dark-tremor-content dark:ring-dark-tremor-ring">
+                                                        {key[0]}
+                                                        <span className="h-4 w-px bg-tremor-ring dark:bg-dark-tremor-ring" />
+                                                        <span className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-emphasis">
+                                                            {key[1]}
+                                                        </span>
+                                                    </span>
+                                                </>
+                                            )
+                                        }
+                                    )}
+                                </>
+                            </Flex>
+                        </>
+                    )}
+
+                    <div className="w-full flex flex-row justify-end items-center">
+                        {' '}
+                        <Button
+                            onClick={() => {
+                                setOpen(false)
+                                setCode(selected?.query?.query_to_execute)
+                                sendNowWithParams({
+                                    page: { no: 1, size: 1000 },
+                                    // @ts-ignore
+                                    engine: 'cloudql',
+                                    query_id: selected?.query?.id,
+                                    use_cache: true,
+                                })
+                                setTab('3')
+                                setOpenLayout(false)
+                            }}
+                        >
+                            Run
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </>
     )
 }
-
-

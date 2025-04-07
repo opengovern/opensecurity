@@ -20,6 +20,7 @@ import Integrations from './Integrations'
 import { useComplianceApiV1QueriesSyncList } from '../../api/compliance.gen'
 import SRE from './KPI_Cards'
 import { useWorkspaceApiV3LoadSampleData } from '../../api/metadata.gen'
+import WidgetLayout from '../../components/widgets/WidgetLayout'
 
 export default function Overview() {
     
@@ -434,8 +435,8 @@ const {
                     </Alert>
                 )}
             </Modal>
-
-            <Grid
+            <WidgetLayout/>
+            {/* <Grid
                 numItems={11}
                 className="w-full gap-8  h-fit "
                 style={window.innerWidth > 768 ? { gridAutoRows: '1fr' } : {}}
@@ -467,7 +468,7 @@ const {
                 >
                     <Integrations />
                 </Col>
-            </Grid>
+            </Grid> */}
         </>
     )
 }

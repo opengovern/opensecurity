@@ -14,10 +14,16 @@ import { CodeEditor } from '@cloudscape-design/components'
 interface IRenderObjectProps {
     obj: any
     language?: string
-    className? :string
+    className?: string
+    height?: number
 }
 
-export function RenderObject({ obj, language, className }: IRenderObjectProps) {
+export function RenderObject({
+    obj,
+    language,
+    className,
+    height,
+}: IRenderObjectProps) {
     const [ace, setAce] = useState()
     const [preferences, setPreferences] = useState(undefined)
 
@@ -92,13 +98,13 @@ export function RenderObject({ obj, language, className }: IRenderObjectProps) {
             className={className}
             ace={ace}
             language={language ? language : 'json'}
-            value={language? obj:JSON.stringify(obj, null, '\t')}
+            value={language ? obj : JSON.stringify(obj, null, '\t')}
             languageLabel={language ? language.toUpperCase() : 'JSON'}
             onChange={({ detail }) => {
                 // setSavedQuery('')
                 // setCode(detail.value)
             }}
-            editorContentHeight={500}
+            editorContentHeight={height ? height : 500}
             preferences={preferences}
             onPreferencesChange={(e) =>
                 // @ts-ignore

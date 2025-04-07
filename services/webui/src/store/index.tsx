@@ -47,6 +47,8 @@ export const previewAtom = atom(
 )
 export const runQueryAtom = atom('')
 
+export const LayoutAtom = atom<any>(undefined)
+
 export const tokenAtom = atom<string>('')
 export const colorBlindModeAtom = atom<boolean>(false)
 export const meAtom = atom<PlatformEnginePkgAuthApiGetMeResponse>()
