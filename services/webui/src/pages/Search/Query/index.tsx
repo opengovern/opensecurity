@@ -430,7 +430,7 @@ export default function Query() {
                                                 flexDirection="col"
                                                 justifyContent="start"
                                                 alignItems="start"
-                                                className="gap-2 overflow-y-scroll w-full max-h-[500px] "
+                                                className="gap-2 overflow-y-scroll w-full max-h-[300px] "
                                             >
                                                 <Text className="text-base text-black flex flex-row justify-between w-full">
                                                     <span className="w-full">
@@ -669,7 +669,7 @@ export default function Query() {
                                     </Flex>
                                 )}
                                 <Flex
-                                    className={`h-full w-full ${
+                                    className={`h-full max-h-[330px] w-full ${
                                         openSearch && 'max-w-[75%]'
                                     } `}
                                 >
