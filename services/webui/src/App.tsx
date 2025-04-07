@@ -61,8 +61,7 @@ const GetDefaultLayout = () => {
         )
         .then((res) => {
             setLayout(res?.data)
-            SetDefaultLayout(res?.data)
-            
+            SetDefaultLayout(res?.data?.layout_config)
             setLayoutLoading(false)
         })
         .catch((err) => {
@@ -87,7 +86,7 @@ const GetLayout = (meResponse :any) => {
              },
          }
          const body = {
-             user_id: meResponse?.id,
+             user_id: meResponse?.username,
          }
 
          axios
@@ -99,11 +98,10 @@ const GetLayout = (meResponse :any) => {
              .catch((err) => {
                  console.log(err)
                 //  check if error is 404
-                    if (err.response.status === 404) {
-                        GetDefaultLayout()
-                    } else {
-                        setLayoutLoading(false)
-                    }
+                  GetDefaultLayout()
+                    setLayoutLoading(false)
+
+                   
              })
      }
 const SetDefaultLayout = (layout:any) => {
@@ -122,11 +120,12 @@ const SetDefaultLayout = (layout:any) => {
               },
           }
           const body = {
-              user_id: me?.id,
-              layout_config:layout,
+              user_id: me?.username,
+              layout_config: layout,
               name: 'default',
               is_private: true,
           }
+          console.log(body)
 
           axios
               .post(`${url}/main/core/api/v4/layout/set`, body, config)

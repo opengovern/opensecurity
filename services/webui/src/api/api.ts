@@ -116,6 +116,7 @@ export interface PlatformEnginePkgAuthApiGetMeResponse {
      * @example false
      */
     blocked?: boolean
+    username: string
     colorBlindMode?: boolean
     /**
      * Creation timestamp in UTC
