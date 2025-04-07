@@ -591,7 +591,7 @@ func (db Database) ListCacheEnabledNamedQueries() ([]models.NamedQueryWithCacheS
 	tx := db.orm.
 		Model(&models.NamedQuery{}).
 		Select("named_queries.*, nc.last_run").
-		Joins("LEFT JOIN named_query_run_caches AS nc ON named_queries.id = nc.query_id").
+		Joins("LEFT JOIN run_named_query_run_caches AS nc ON named_queries.id = nc.query_id").
 		Where("named_queries.cache_enabled = ?", true).
 		Scan(&results)
 
