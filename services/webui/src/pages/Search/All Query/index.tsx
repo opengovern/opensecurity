@@ -44,6 +44,7 @@ import Badge from '@cloudscape-design/components/badge'
 import {
     BreadcrumbGroup,
     Button,
+    CopyToClipboard,
     DateRangePicker,
     Header,
     KeyValuePairs,
@@ -501,8 +502,16 @@ export default function AllQueries({
                 header={selected?.title}
             >
                 <div className="flex flex-col gap-2">
+                    <CopyToClipboard
+                        copyButtonText={selected?.query?.id}
+                        textToCopy={selected?.query?.id}
+                        copyErrorText="Id failed to copy"
+                        copySuccessText="Id copied"
+                    />
                     <KeyValuePairs
+                        columns={1}
                         items={[
+                          
                             {
                                 label: 'Description',
                                 // @ts-ignore
@@ -519,16 +528,18 @@ export default function AllQueries({
                                                 (plugin: any) => {
                                                     return (
                                                         <>
-                                                            <a
+                                                            <span
+                                                                className={`p-2   px-4 border flex flex-row gap-2 items-center justify-center dark:border-white text-black dark:text-white  rounded-3xl cursor-pointer sm:hover:dark:bg-white sm:hover:bg-blue-950 sm:hover:text-white sm:hover:dark:text-black    `}
+                                                            >
+                                                                {plugin}
+                                                            </span>
+                                                            {/* <a
                                                                 target="__blank"
                                                                 href={plugin}
                                                                 className={`p-2   px-4 border flex flex-row gap-2 items-center justify-center dark:border-white text-black dark:text-white  rounded-3xl cursor-pointer sm:hover:dark:bg-white sm:hover:bg-blue-950 sm:hover:text-white sm:hover:dark:text-black    `}
                                                             >
-                                                                <span>
-                                                                    {plugin}
-                                                                </span>
                                                                 <RiExternalLinkLine />
-                                                            </a>
+                                                            </a> */}
                                                         </>
                                                     )
                                                 }
@@ -543,8 +554,40 @@ export default function AllQueries({
                         // @ts-ignore
                         obj={selected?.query?.query_to_execute}
                         language="sql"
-                        className=""
+                        height={300}
                     />
+                    {selected?.tags && (
+                        <>
+                            {' '}
+                            <span className="text-base font-semibold">
+                                Tags
+                            </span>
+                            <Flex
+                                className="gap-2 mt-2 flex-wrap w-full justify-start items-center"
+                                flexDirection="row"
+                            >
+                                <>
+                                    {/* @ts-ignore */}
+                                    {Object.entries(selected?.tags)?.map(
+                                        (key: any, index) => {
+                                            return (
+                                                <>
+                                                    <span className="inline-flex items-center gap-x-2.5 rounded-tremor-full bg-tremor-background py-1 pl-2.5 pr-2.5 text-tremor-label text-tremor-content ring-1 ring-inset ring-tremor-ring dark:bg-dark-tremor-background dark:text-dark-tremor-content dark:ring-dark-tremor-ring">
+                                                        {key[0]}
+                                                        <span className="h-4 w-px bg-tremor-ring dark:bg-dark-tremor-ring" />
+                                                        <span className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-emphasis">
+                                                            {key[1]}
+                                                        </span>
+                                                    </span>
+                                                </>
+                                            )
+                                        }
+                                    )}
+                                </>
+                            </Flex>
+                        </>
+                    )}
+
                     <div className="w-full flex flex-row justify-end items-center">
                         {' '}
                         <Button

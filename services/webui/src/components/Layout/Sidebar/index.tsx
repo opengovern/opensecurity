@@ -285,20 +285,20 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 icon: RiRefreshLine,
                 isPreview: true,
             },
-            {
-                name: 'Dashboards',
-                page: [
-                    'dashboards',
-                    'dashboards/infrastructure',
-                    'dashboards/spend',
-                    'dashboards/infrastructure-cloud-accounts',
-                    'dashboards/infrastructure-metrics',
-                    'dashboards/spend-accounts',
-                    'dashboards/spend-metrics',
-                ],
-                icon: RiSlideshowLine,
-                isPreview: true,
-            },
+            // {
+            //     name: 'Dashboards',
+            //     page: [
+            //         'dashboards',
+            //         'dashboards/infrastructure',
+            //         'dashboards/spend',
+            //         'dashboards/infrastructure-cloud-accounts',
+            //         'dashboards/infrastructure-metrics',
+            //         'dashboards/spend-accounts',
+            //         'dashboards/spend-metrics',
+            //     ],
+            //     icon: RiSlideshowLine,
+            //     isPreview: true,
+            // },
         ]
     }
     const [showTooltip, setShowTooltip] = useState(false)
