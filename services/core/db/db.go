@@ -34,6 +34,7 @@ func (db Database) Initialize() error {
 		&models.QueryViewTag{},
 		&models.PlatformConfiguration{},
 		&models.RunNamedQueryRunCache{},
+		&models.UserLayout{},
 	)
 	if err != nil {
 		return err
