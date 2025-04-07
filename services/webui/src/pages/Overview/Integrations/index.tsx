@@ -529,7 +529,7 @@ export default function Integrations() {
                             content: (item) => (
                                 <div className="w-100 flex flex-row items-center  justify-between  ">
                                     <img
-                                        className="sm:w-[50px] sm:h-[50px] w-[30px] h-[30px]"
+                                        className="sm:w-[40px] sm:h-[40px] w-[30px] h-[30px]"
                                         src={item.logo}
                                         onError={(e) => {
                                             e.currentTarget.onerror = null
