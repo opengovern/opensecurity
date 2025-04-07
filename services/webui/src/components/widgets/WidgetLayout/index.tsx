@@ -172,7 +172,7 @@ export default function WidgetLayout() {
     }
 
     return (
-        <div className="w-full h-full flex flex-col gap-2">
+        <div className="w-full h-full flex flex-col gap-8">
             <Header
             variant='h1'
                 
