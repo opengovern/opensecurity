@@ -117,9 +117,10 @@ type CategoriesTables struct {
 }
 
 type RunNamedQueryRunCache struct {
-	QueryID string `gorm:"primaryKey"`
-	LastRun time.Time
-	Result  pgtype.JSONB
+	QueryID    string `gorm:"primaryKey"`
+	ParamsHash string `gorm:"primaryKey"`
+	LastRun    time.Time
+	Result     pgtype.JSONB
 }
 
 type NamedQueryWithCacheStatus struct {

@@ -3,11 +3,14 @@ package core
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/jackc/pgtype"
 	"net/http"
+	"net/url"
 	"regexp"
 	"sort"
 	"strings"
@@ -426,11 +429,15 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Policy is required")
 	}
 
+	paramsHash, err := calculateParamsHash(req.Params)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to calculate params hash: "+err.Error())
+	}
+
 	var namedQuery *models.NamedQuery
-	var err error
 	if req.QueryId != nil && (req.Query == nil || *req.Query == "") {
 		if req.UseCache {
-			runQueryCache, err := h.db.GetRunNamedQueryCache(*req.QueryId)
+			runQueryCache, err := h.db.GetRunNamedQueryCache(*req.QueryId, paramsHash)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 			}
@@ -503,7 +510,7 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 	}
 
 	if namedQuery != nil {
-		err = h.CacheQueryResult(*req.QueryId, *resp)
+		err = h.CacheQueryResult(*req.QueryId, paramsHash, *resp)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
@@ -522,10 +529,11 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 	return ctx.JSON(200, resp)
 }
 
-func (h *HttpHandler) CacheQueryResult(queryId string, resp api.RunQueryResponse) error {
+func (h *HttpHandler) CacheQueryResult(queryId string, paramsHash string, resp api.RunQueryResponse) error {
 	c := models.RunNamedQueryRunCache{
-		QueryID: queryId,
-		LastRun: time.Now(),
+		QueryID:    queryId,
+		LastRun:    time.Now(),
+		ParamsHash: paramsHash,
 	}
 
 	respJsonData, err := json.Marshal(resp)
@@ -540,6 +548,38 @@ func (h *HttpHandler) CacheQueryResult(queryId string, resp api.RunQueryResponse
 	c.Result = respJsonb
 
 	return h.db.UpsertRunNamedQueryCache(c)
+}
+
+func calculateParamsHash(params map[string]string) (string, error) {
+	if len(params) == 0 {
+		return "", nil
+	}
+
+	keys := make([]string, 0, len(params))
+	for k := range params {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	var builder strings.Builder
+	for i, k := range keys {
+		if i > 0 {
+			builder.WriteString("&")
+		}
+		encodedKey := url.QueryEscape(k)
+		encodedValue := url.QueryEscape(params[k])
+
+		builder.WriteString(encodedKey)
+		builder.WriteString("=")
+		builder.WriteString(encodedValue)
+	}
+	canonicalString := builder.String()
+
+	hashBytes := sha256.Sum256([]byte(canonicalString))
+
+	hashString := hex.EncodeToString(hashBytes[:])
+
+	return hashString, nil
 }
 
 // GetRecentRanQueries godoc

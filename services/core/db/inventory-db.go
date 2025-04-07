@@ -550,7 +550,7 @@ func (db Database) GetQueryParameters() ([]string, error) {
 
 func (db Database) UpsertRunNamedQueryCache(cacheEntry models.RunNamedQueryRunCache) error {
 	tx := db.orm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "query_id"}},
+		Columns:   []clause.Column{{Name: "query_id"}, {Name: "params_hash"}},
 		DoUpdates: clause.AssignmentColumns([]string{"last_run", "result"}),
 	}).Create(&cacheEntry)
 
@@ -561,9 +561,9 @@ func (db Database) UpsertRunNamedQueryCache(cacheEntry models.RunNamedQueryRunCa
 	return nil
 }
 
-func (db Database) GetRunNamedQueryCache(queryId string) (*models.RunNamedQueryRunCache, error) {
+func (db Database) GetRunNamedQueryCache(queryId string, paramsHash string) (*models.RunNamedQueryRunCache, error) {
 	var queryParam models.RunNamedQueryRunCache
-	err := db.orm.Where("query_id = ?", queryId).First(&queryParam).Error
+	err := db.orm.Where("query_id = ?", queryId).Where("params_hash = ?", paramsHash).First(&queryParam).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -571,18 +571,6 @@ func (db Database) GetRunNamedQueryCache(queryId string) (*models.RunNamedQueryR
 		return nil, err
 	}
 	return &queryParam, nil
-}
-
-func (db Database) ListRunNamedQueryCaches(queryId string) ([]models.RunNamedQueryRunCache, error) {
-	var queryParam []models.RunNamedQueryRunCache
-	err := db.orm.Find(&queryParam).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	return queryParam, nil
 }
 
 func (db Database) ListCacheEnabledNamedQueries() ([]models.NamedQueryWithCacheStatus, error) {
