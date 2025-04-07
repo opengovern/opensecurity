@@ -93,7 +93,7 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	views.GET("", httpserver.AuthorizeHandler(h.GetViews, api3.ViewerRole))
 	// inventory
 	v3.POST("/queries", httpserver.AuthorizeHandler(h.ListQueriesV2, api3.ViewerRole))
-	v3.POST("/queries/cache-enabled", httpserver.AuthorizeHandler(h.ListCacheEnabledQueries, api3.ViewerRole))
+	v3.GET("/queries/cache-enabled", httpserver.AuthorizeHandler(h.ListCacheEnabledQueries, api3.ViewerRole))
 	v3.GET("/queries/filters", httpserver.AuthorizeHandler(h.ListQueriesFilters, api3.ViewerRole))
 	v3.GET("/queries/:query_id", httpserver.AuthorizeHandler(h.GetQuery, api3.ViewerRole))
 	v3.GET("/queries/tags", httpserver.AuthorizeHandler(h.ListQueriesTags, api3.ViewerRole))
