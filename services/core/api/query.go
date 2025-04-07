@@ -91,3 +91,8 @@ type GetAsyncQueryRunResultResponse struct {
 	EvaluatedAt int64            `json:"evaluatedAt"`
 	Result      [][]string       `json:"result"`
 }
+
+type CachedEnabledQuery struct {
+	QueryID string `json:"queryID"`
+	LastRun time.Time
+}

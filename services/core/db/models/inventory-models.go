@@ -121,3 +121,8 @@ type RunNamedQueryRunCache struct {
 	LastRun time.Time
 	Result  pgtype.JSONB
 }
+
+type NamedQueryWithCacheStatus struct {
+	NamedQuery
+	LastRun *time.Time `gorm:"column:last_run"`
+}

@@ -577,6 +577,9 @@ func (s *Scheduler) Run(ctx context.Context) error {
 		s.RunCheckupJobScheduler(ctx)
 	})
 	utils.EnsureRunGoroutine(func() {
+		s.RunNamedQueryCache(ctx)
+	})
+	utils.EnsureRunGoroutine(func() {
 		s.RunDeletedIntegrationsResourcesCleanup(ctx)
 	})
 	utils.EnsureRunGoroutine(func() {

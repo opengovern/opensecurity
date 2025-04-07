@@ -573,16 +573,31 @@ func (db Database) GetRunNamedQueryCache(queryId string) (*models.RunNamedQueryR
 	return &queryParam, nil
 }
 
-func (db Database) ListCacheEnabledNamedQueries() ([]models.NamedQuery, error) {
-	var namedQueries []models.NamedQuery
+func (db Database) ListRunNamedQueryCaches(queryId string) ([]models.RunNamedQueryRunCache, error) {
+	var queryParam []models.RunNamedQueryRunCache
+	err := db.orm.Find(&queryParam).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return queryParam, nil
+}
+
+func (db Database) ListCacheEnabledNamedQueries() ([]models.NamedQueryWithCacheStatus, error) {
+	var results []models.NamedQueryWithCacheStatus
 
 	tx := db.orm.
 		Model(&models.NamedQuery{}).
-		Where("cache_enabled = ?", true).
-		Scan(&namedQueries)
+		Select("named_queries.*, nc.last_run").
+		Joins("LEFT JOIN named_query_run_caches AS nc ON named_queries.id = nc.query_id").
+		Where("named_queries.cache_enabled = ?", true).
+		Scan(&results)
+
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
 
-	return namedQueries, nil
+	return results, nil
 }

@@ -397,17 +397,12 @@ func (h *HttpHandler) ListQueriesTags(ctx echo.Context) error {
 //	@Success		200	{object}	[]api.NamedQueryTagsResult
 //	@Router			/inventory/api/v3/queries/cache-enabled [get]
 func (h *HttpHandler) ListCacheEnabledQueries(ctx echo.Context) error {
-	var queryIds []string
-	queries, err := h.db.ListCacheEnabledNamedQueries()
+	queryRuns, err := h.db.ListCacheEnabledNamedQueries()
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	for _, query := range queries {
-		queryIds = append(queryIds, query.ID)
-	}
-
-	return ctx.JSON(200, queryIds)
+	return ctx.JSON(200, queryRuns)
 }
 
 // RunQuery godoc
@@ -431,7 +426,7 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Policy is required")
 	}
 
-	var query *models.NamedQuery
+	var namedQuery *models.NamedQuery
 	var err error
 	if req.QueryId != nil && (req.Query == nil || *req.Query == "") {
 		if req.UseCache {
@@ -458,11 +453,11 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 			}
 		}
 
-		query, err = h.db.GetQuery(*req.QueryId)
+		namedQuery, err = h.db.GetQuery(*req.QueryId)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
-		req.Query = &query.Query.QueryToExecute
+		req.Query = &namedQuery.Query.QueryToExecute
 	}
 
 	if req.Page.Size == 0 {
@@ -507,7 +502,7 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		return fmt.Errorf("invalid query engine: %s", *req.Engine)
 	}
 
-	if query != nil {
+	if namedQuery != nil {
 		err = h.CacheQueryResult(*req.QueryId, *resp)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
