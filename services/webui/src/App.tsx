@@ -61,6 +61,7 @@ const GetDefaultLayout = () => {
         )
         .then((res) => {
             setLayout(res?.data)
+            SetDefaultLayout(res?.data)
             
             setLayoutLoading(false)
         })
@@ -90,7 +91,7 @@ const GetLayout = (meResponse :any) => {
          }
 
          axios
-             .post(`${url}/main/core/api/v4/layout/get `, body, config)
+             .post(`${url}/main/core/api/v4/layout/get`, body, config)
              .then((res) => {
 
                 setLayoutLoading(false)
@@ -128,7 +129,7 @@ const SetDefaultLayout = (layout:any) => {
           }
 
           axios
-              .post(`${url}/main/core/api/v4/layout/set `, body, config)
+              .post(`${url}/main/core/api/v4/layout/set`, body, config)
               .then((res) => {
               })
               .catch((err) => {

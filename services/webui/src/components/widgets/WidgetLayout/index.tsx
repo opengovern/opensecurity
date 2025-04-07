@@ -5,6 +5,7 @@ import Board from '@cloudscape-design/board-components/board'
 import BoardItem from '@cloudscape-design/board-components/board-item'
 import Header from '@cloudscape-design/components/header'
 import {
+    Alert,
     Button,
     ButtonDropdown,
     Input,
@@ -18,6 +19,7 @@ import ChartWidget from '../charts'
 import KeyValueWidget from '../KeyValue'
 import Shortcuts from '../../../pages/Overview/Shortcuts'
 import Integrations from '../../../pages/Overview/Integrations'
+import { array } from 'prop-types'
 
 const COMPONENT_MAPPING = {
     table: TableWidget,
@@ -25,6 +27,13 @@ const COMPONENT_MAPPING = {
     kpi: KeyValueWidget,
     shortcut: Shortcuts,
     integration: Integrations,
+}
+const NUMBER_MAPPING = {
+    0: 'First',
+    1: 'Second',
+    2: 'Third',
+    3: 'Fourth',
+    4: 'Fifth',
 }
 
 export default function WidgetLayout() {
@@ -100,7 +109,7 @@ export default function WidgetLayout() {
         }
 
         axios
-            .post(`${url}/main/core/api/v4/layout/set `, body, config)
+            .post(`${url}/main/core/api/v4/layout/set`, body, config)
             .then((res) => {})
             .catch((err) => {
                 console.log(err)
@@ -151,8 +160,93 @@ export default function WidgetLayout() {
                 </>
             )
         }
+        if (selectedAddItem == 'kpi') {
+            return (
+                <>
+                    {/* map 4 times and return 3 input count_kpi info list_kpi all of them inside kpies key */}
+                    {[0, 1, 2, 3].map((item, index: number) => {
+                        return (
+                            <div key={index} className="flex flex-col gap-2">
+                                <Input
+                                    placeholder={` ${
+                                        //   @ts-ignore
+                                        NUMBER_MAPPING[index.toString()]
+                                    } KPI Name`}
+                                    value={widgetProps?.kpis?.[index]?.info}
+                                    onChange={(e: any) => {
+                                        setWidgetProps({
+                                            ...widgetProps,
+                                            kpis: [
+                                                ...(widgetProps?.kpis || []),
+                                                {
+                                                    info: e.detail.value,
+                                                    count_kpi: '',
+                                                    list_kpi: '',
+                                                },
+                                            ],
+                                        })
+                                    }}
+                                />
+                                <Input
+                                    placeholder={` ${
+                                        //   @ts-ignore
+                                        NUMBER_MAPPING[index.toString()]
+                                    } Count Query ID`}
+                                    value={
+                                        widgetProps?.kpis?.[index]?.count_kpi
+                                    }
+                                    onChange={(e: any) => {
+                                        setWidgetProps({
+                                            ...widgetProps,
+                                            kpis: [
+                                                ...(widgetProps?.kpis || []),
+                                                {
+                                                    info: widgetProps?.kpis?.[
+                                                        index
+                                                    ]?.info,
+                                                    count_kpi: e.detail.value,
+                                                    list_kpi: '',
+                                                },
+                                            ],
+                                        })
+                                    }}
+                                />
+                                <Input
+                                    placeholder={` ${
+                                        //   @ts-ignore
+                                        NUMBER_MAPPING[index.toString()]
+                                    } List Query ID`}
+                                    value={widgetProps?.kpis?.[index]?.list_kpi}
+                                    onChange={(e: any) => {
+                                        setWidgetProps({
+                                            ...widgetProps,
+                                            kpis: [
+                                                ...(widgetProps?.kpis || []),
+                                                {
+                                                    info: widgetProps?.kpis?.[
+                                                        index
+                                                    ]?.info,
+                                                    count_kpi:
+                                                        widgetProps?.kpis?.[
+                                                            index
+                                                        ]?.count_kpi,
+                                                    list_kpi: e.detail.value,
+                                                },
+                                            ],
+                                        })
+                                    }}
+                                />
+                            </div>
+                        )
+                    })}
+                </>
+            )
+        }
     }
     const HandleAddWidget = () => {
+        if(!widgetProps?.title || !widgetProps?.description) {
+            return
+        }
         const newItem = {
             id: `${selectedAddItem}-${items.length}`,
             data: {
@@ -174,8 +268,7 @@ export default function WidgetLayout() {
     return (
         <div className="w-full h-full flex flex-col gap-8">
             <Header
-            variant='h1'
-                
+                variant="h1"
                 actions={
                     <div className="flex flex-row gap-2">
                         <Button
@@ -365,6 +458,7 @@ export default function WidgetLayout() {
                 <div className="flex flex-col gap-2">
                     <Input
                         placeholder="Widget Name"
+                        ariaRequired={true}
                         value={widgetProps?.title}
                         onChange={(e: any) => {
                             setWidgetProps({
@@ -375,6 +469,7 @@ export default function WidgetLayout() {
                     />
                     <Input
                         placeholder="Widget description"
+                        ariaRequired={true}
                         value={widgetProps?.description}
                         onChange={(e: any) => {
                             setWidgetProps({
@@ -384,6 +479,11 @@ export default function WidgetLayout() {
                         }}
                     />
                     {HandleWidgetProps()}
+                    {(!widgetProps?.title || !widgetProps?.description) && (
+                        <Alert type='error' header="Please fill all the required fields">
+                            Please fill all the required fields
+                        </Alert>
+                    )}
                     <div className="flex w-full justify-end items-center">
                         <Button
                             onClick={() => {
