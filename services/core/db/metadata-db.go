@@ -160,7 +160,7 @@ func (db Database) GetUserLayout(userID string) (*models.UserLayout, error) {
 func (db Database) SetUserLayout( layoutConfig models.UserLayout) error {
 	err := db.orm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"layout_config", "name", "is_private"}),
+		DoUpdates: clause.AssignmentColumns([]string{"layout_config", "name", "is_private","description"}),
 	}).Create(&layoutConfig).Error
 	if err != nil {
 		return err

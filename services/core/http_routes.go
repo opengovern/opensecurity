@@ -1600,7 +1600,19 @@ func (h HttpHandler) GetUserLayout(echoCtx echo.Context) error {
 	if layout == nil {
 		return echo.NewHTTPError(http.StatusNotFound, "user layout not found")
 	}
-	return echoCtx.JSON(http.StatusOK, layout)
+	return echoCtx.JSON(http.StatusOK, api.GetUserLayoutResponse{
+		UserID:       userId,
+		LayoutConfig: func() []map[string]any {
+			var config []map[string]any
+			if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
+				h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+				return nil
+			}
+			return config
+		}(),
+		Name:         layout.Name,
+		Description: layout.Description,
+	})
 
 }
 func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
@@ -1658,5 +1670,25 @@ func (h HttpHandler) GetPublicLayouts(echoCtx echo.Context) error {
 	if layouts == nil {
 		return echo.NewHTTPError(http.StatusNotFound, "public layouts not found")
 	}
-	return echoCtx.JSON(http.StatusOK, layouts)
+	// convert layouts to []api.GetUserLayoutResponse
+	var layoutsResponse []api.GetUserLayoutResponse
+	for _, layout := range layouts {
+		layoutResponse := api.GetUserLayoutResponse{
+			UserID:       layout.UserID,
+			Name:         layout.Name,
+			Description:  layout.Description,
+			UpdatedAt:   layout.UpdatedAt,
+			LayoutConfig: func() []map[string]any {
+			var config []map[string]any
+			if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
+				h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+				return nil
+			}
+			return config
+		}(),
+		}
+		layoutsResponse = append(layoutsResponse, layoutResponse)
+	}
+	
+	return echoCtx.JSON(http.StatusOK, layoutsResponse)
 }
