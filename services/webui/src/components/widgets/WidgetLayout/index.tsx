@@ -1,42 +1,49 @@
-import { useAtom } from "jotai"
-import { LayoutAtom, meAtom } from "../../../store"
+import { useAtom } from 'jotai'
+import { LayoutAtom, meAtom } from '../../../store'
 import * as React from 'react'
 import Board from '@cloudscape-design/board-components/board'
 import BoardItem from '@cloudscape-design/board-components/board-item'
 import Header from '@cloudscape-design/components/header'
-import { Button, ButtonDropdown, Spinner } from "@cloudscape-design/components"
+import {
+    Button,
+    ButtonDropdown,
+    Input,
+    Modal,
+    Spinner,
+} from '@cloudscape-design/components'
 import { useEffect, useState } from 'react'
-import TableWidget from "../table"
-import axios from "axios"
-import ChartWidget from "../charts"
+import TableWidget from '../table'
+import axios from 'axios'
+import ChartWidget from '../charts'
+import KeyValueWidget from '../KeyValue'
 
-const  COMPONENT_MAPPING ={
-    'table': TableWidget,
-    'chart': ChartWidget
-     
+const COMPONENT_MAPPING = {
+    table: TableWidget,
+    chart: ChartWidget,
+    'key-value': KeyValueWidget,
 }
-
 
 export default function WidgetLayout() {
     const [layout, setLayout] = useAtom(LayoutAtom)
-        const [me, setMe] = useAtom(meAtom)
-    
+    const [me, setMe] = useAtom(meAtom)
+
     const [items, setItems] = useState([])
     const [layoutLoading, setLayoutLoading] = useState<boolean>(false)
-    useEffect(()=>{
-        if(layout){
+    const [addModalOpen, setAddModalOpen] = useState(false)
+    const [selectedAddItem, setSelectedAddItem] = useState<any>('')
+    const [widgetProps, setWidgetProps] = useState<any>({})
+    useEffect(() => {
+        if (layout) {
             setItems(layout?.layout_config)
         }
-
-    },[layout])
-    const GetComponent =(name:string,props :any)=>{
+    }, [layout])
+    const GetComponent = (name: string, props: any) => {
         // @ts-ignore
         const Component = COMPONENT_MAPPING[name]
-        if(Component){
+        if (Component) {
             return <Component {...props} />
         }
         return null
-
     }
     const SetDefaultLayout = (layout: any) => {
         let url = ''
@@ -75,22 +82,63 @@ export default function WidgetLayout() {
             )
             .then((res) => {
                 setLayout(res?.data)
-            setLayoutLoading(false)
-
-
+                setLayoutLoading(false)
             })
             .catch((err) => {
-            setLayoutLoading(false)
-
+                setLayoutLoading(false)
             })
     }
     const HandleRemoveItemByID = (id: string) => {
         const newItems = items.filter((item: any) => item.id !== id)
         setItems(newItems)
     }
+    const HandleWidgetProps = () => {
+        if (selectedAddItem == 'table') {
+            return (
+                <>
+                    <Input
+                        placeholder="Query ID"
+                        value={widgetProps?.query_id}
+                        onChange={(e: any) => {
+                            setWidgetProps({
+                                ...widgetProps,
+                                query_id: e.detail.value,
+                            })
+                        }}
+                    />
+                    <Input
+                        placeholder="Rows to display"
+                        value={widgetProps?.display_rows}
+                        onChange={(e: any) => {
+                            setWidgetProps({
+                                ...widgetProps,
+                                display_rows: e.detail.value,
+                            })
+                        }}
+                    />
+                </>
+            )
+        }
+    }
+    const HandleAddWidget = () => {
+        const newItem = {
+            id: `${selectedAddItem}-${items.length}`,
+            data: {
+                componentId: selectedAddItem,
+                props: widgetProps,
+                title: widgetProps?.title,
+                description: widgetProps?.description,
+            },
+            rowSpan: 2,
+            columnSpan: 2,
+            columnOffset: { '4': 0 },
+        }
+        // @ts-ignore
+        setItems([...items, newItem])
+        setAddModalOpen(false)
+        setWidgetProps({})
+    }
 
-
-    
     return (
         <div className="w-full h-full flex flex-col gap-2">
             <Header
@@ -110,11 +158,24 @@ export default function WidgetLayout() {
                         >
                             save
                         </Button>
-                        <Button>Add widget</Button>
+                        <ButtonDropdown
+                            items={[
+                                { id: 'table', text: 'Table Widget' },
+                                { id: 'chart', text: 'Pie Chart Widget' },
+                                { id: 'key-value', text: 'Key Value Pair' },
+                            ]}
+                            onItemClick={(event: any) => {
+                                setSelectedAddItem(event.detail.id)
+                                setAddModalOpen(true)
+                            }}
+                            ariaLabel="Board item settings"
+                        >
+                            Add Widget
+                        </ButtonDropdown>
                     </div>
                 }
             >
-                opensecurity Dashboard
+                Service Dashboard
             </Header>
             {layoutLoading ? (
                 <Spinner />
@@ -129,11 +190,8 @@ export default function WidgetLayout() {
                             }
                             settings={
                                 <ButtonDropdown
-                                    items={[
-                                        
-                                        { id: 'remove', text: 'Remove' },
-                                    ]}
-                                    onItemClick={(event)=>{
+                                    items={[{ id: 'remove', text: 'Remove' }]}
+                                    onItemClick={(event) => {
                                         if (event.detail.id === 'remove') {
                                             HandleRemoveItemByID(item.id)
                                         }
@@ -158,9 +216,6 @@ export default function WidgetLayout() {
                         </BoardItem>
                     )}
                     onItemsChange={(event: any) => {
-                        console.log(event.detail.items)
-                        console.log(event.detail)
-
                         setItems(event.detail.items)
                     }}
                     items={items}
@@ -263,6 +318,49 @@ export default function WidgetLayout() {
                     })()}
                 />
             )}
+            <Modal
+                visible={addModalOpen}
+                onDismiss={() => {
+                    setAddModalOpen(false)
+                }}
+                header={`Add ${
+                    selectedAddItem?.charAt(0).toUpperCase() +
+                    selectedAddItem?.slice(1)
+                } Widget`}
+            >
+                <div className="flex flex-col gap-2">
+                    <Input
+                        placeholder="Widget Name"
+                        value={widgetProps?.title}
+                        onChange={(e: any) => {
+                            setWidgetProps({
+                                ...widgetProps,
+                                title: e.detail.value,
+                            })
+                        }}
+                    />
+                    <Input
+                        placeholder="Widget description"
+                        value={widgetProps?.description}
+                        onChange={(e: any) => {
+                            setWidgetProps({
+                                ...widgetProps,
+                                description: e.detail.value,
+                            })
+                        }}
+                    />
+                    {HandleWidgetProps()}
+                    <div className="flex w-full justify-end items-center">
+                        <Button
+                            onClick={() => {
+                                HandleAddWidget()
+                            }}
+                        >
+                            Submit
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     )
 }

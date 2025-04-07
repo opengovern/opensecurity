@@ -1581,6 +1581,8 @@ export interface PlatformEnginePkgInventoryApiRunQueryRequest {
     engine?: string
     page: PlatformEnginePkgInventoryApiPage
     query?: string
+    query_id?: string
+    use_cache?: boolean
     sorts?: PlatformEnginePkgInventoryApiSmartQuerySortItem[]
     source_id?: string
 }

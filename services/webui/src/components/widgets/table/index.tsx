@@ -7,7 +7,8 @@ import CustomPagination from "../../Pagination"
 import { RenderObject } from "../../RenderObject"
 
 export interface TableProps {
-    query: string
+    query_id: string
+    display_rows: number
 }
 
 export const getTable = (
@@ -89,12 +90,10 @@ export const getTable = (
 }
 
 
-export default function TableWidget({query}: TableProps) {
+export default function TableWidget({ query_id, display_rows }: TableProps) {
     const [page, setPage] = useState(0)
     const [openDrawer, setOpenDrawer] = useState(false)
     const [selectedRow, setSelectedRow] = useState({})
-
-
 
     const {
         response: queryResponse,
@@ -108,12 +107,12 @@ export default function TableWidget({query}: TableProps) {
             page: { no: 1, size: 1000 },
             // @ts-ignore
             engine: 'cloudql',
-            query: query,
+            query_id: query_id,
+            use_cache: true,
         },
         {},
         true
     )
-  
 
     return (
         <>
@@ -171,7 +170,10 @@ export default function TableWidget({query}: TableProps) {
                     items={getTable(
                         queryResponse?.headers,
                         queryResponse?.result
-                    ).rows?.slice(page * 10, (page + 1) * 10)}
+                    ).rows?.slice(
+                        page * display_rows,
+                        (page + 1) * display_rows
+                    )}
                     loading={isLoading}
                     loadingText="Loading resources"
                     // stickyColumns={{ first: 0, last: 1 }}
