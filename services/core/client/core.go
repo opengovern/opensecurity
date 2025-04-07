@@ -571,7 +571,7 @@ func (s *coreClient) ListCacheEnabledQueries(ctx *httpclient.Context) ([]models.
 	url := fmt.Sprintf("%s/api/v3/queries/cache-enabled", s.baseURL)
 
 	var resp []models.NamedQueryWithCacheStatus
-	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodPut, url, ctx.ToHeaders(), nil, &resp); err != nil {
+	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &resp); err != nil {
 		if 400 <= statusCode && statusCode < 500 {
 			return nil, echo.NewHTTPError(statusCode, err.Error())
 		}
