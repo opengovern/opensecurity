@@ -4,17 +4,23 @@ import { snakeCaseToLabel } from '../../../utilities/labelMaker'
 import {
     Box,
     Header,
+    KeyValuePairs,
     Modal,
     SpaceBetween,
     Table,
 } from '@cloudscape-design/components'
-import { useMemo, useState } from 'react'
-import CustomPagination from '../../Pagination'
-import { RenderObject } from '../../RenderObject'
-import PieChart from '@cloudscape-design/components/pie-chart'
-export interface TableProps {
-    query: string
+import { useEffect, useMemo, useState } from 'react'
+import axios from 'axios'
+
+export interface KPIProps {
+    kpis: Kpi[]
 }
+export interface Kpi {
+    info:      string;
+    count_kpi: string;
+    list_kpi:  string;
+}
+
 
 export const getTable = (
     headers: string[] | undefined,
@@ -94,100 +100,66 @@ export const getTable = (
     }
 }
 
-export default function KeyValueWidget({ query }: TableProps) {
-    const [page, setPage] = useState(0)
-    const [openDrawer, setOpenDrawer] = useState(false)
-    const [selectedRow, setSelectedRow] = useState({})
+export default function KeyValueWidget({ kpis }: KPIProps) {
+    const [items, setItems] = useState<any[]>([])
 
-    const {
-        response: queryResponse,
-        isLoading,
-        isExecuted,
-        sendNow,
-        sendNowWithParams,
-        error,
-    } = useInventoryApiV1QueryRunCreate(
-        {
-            page: { no: 1, size: 1000 },
-            // @ts-ignore
-            engine: 'cloudql',
-            query: query,
-        },
-        {},
-        true
-    )
+   const RunQuery = (query_id: string) => {
+       let url = ''
+       if (window.location.origin === 'http://localhost:3000') {
+           url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+       } else {
+           url = window.location.origin
+       }
+       // @ts-ignore
+       const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+       const config = {
+           headers: {
+               Authorization: `Bearer ${token}`,
+           },
+       }
+       const body = {
+           page: { no: 1, size: 1000 },
+           // @ts-ignore
+           engine: 'cloudql',
+           query_id: query_id,
+           use_cache: true,
+       }
+
+      return  axios
+           .post(`${url}/main/core/api/v1/query/run `, body, config)
+           
+   }
+
+    useEffect(()=>{
+        if(kpis.length >0){
+            const temp_items:any= []
+            kpis?.map((item)=>{
+                RunQuery(item.count_kpi).then((res) => {
+                    const { columns, rows } = getTable(
+                        res.data?.headers,
+                        res.data?.details
+                    )
+                    temp_items.push({
+                        title: item.info,
+                        value: rows[0][columns[0].id],
+                    })
+                })
+            })
+            setItems(temp_items)
+
+        }
+
+
+    },[kpis])
 
     return (
         <>
-            {' '}
-            <Modal
-                visible={openDrawer}
-                onDismiss={() => setOpenDrawer(false)}
-                header="Query Result"
-                className="min-w-[500px]"
-                size="large"
-            >
-                <RenderObject obj={selectedRow} />
-            </Modal>
-            <Grid numItems={1} className="w-full">
-                <PieChart
-                    data={[
-                        {
-                            title: 'Running',
-                            value: 60,
-                            lastUpdate: 'Dec 7, 2020',
-                        },
-                        {
-                            title: 'Failed',
-                            value: 30,
-                            lastUpdate: 'Dec 6, 2020',
-                        },
-                        {
-                            title: 'In-progress',
-                            value: 10,
-                            lastUpdate: 'Dec 6, 2020',
-                        },
-                        {
-                            title: 'Pending',
-                            value: 0,
-                            lastUpdate: 'Dec 7, 2020',
-                        },
-                    ]}
-                    detailPopoverContent={(datum, sum) => [
-                        { key: 'Resource count', value: datum.value },
-                        {
-                            key: 'Percentage',
-                            value: `${((datum.value / sum) * 100).toFixed(0)}%`,
-                        },
-                        { key: 'Last update on', value: datum.lastUpdate },
-                    ]}
-                    segmentDescription={(datum, sum) =>
-                        `${datum.value} units, ${(
-                            (datum.value / sum) *
-                            100
-                        ).toFixed(0)}%`
-                    }
-                    ariaDescription="Pie chart showing how many resources are currently in which state."
-                    ariaLabel="Pie chart"
-                    empty={
-                        <Box textAlign="center" color="inherit">
-                            <b>No data available</b>
-                            <Box variant="p" color="inherit">
-                                There is no data available
-                            </Box>
-                        </Box>
-                    }
-                    noMatch={
-                        <Box textAlign="center" color="inherit">
-                            <b>No matching data</b>
-                            <Box variant="p" color="inherit">
-                                There is no matching data to display
-                            </Box>
-                            <Button>Clear filter</Button>
-                        </Box>
-                    }
-                />
-            </Grid>
+            <KeyValuePairs
+            columns={kpis.length}
+            items={items}
+            />
+        
         </>
     )
 }

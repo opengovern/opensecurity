@@ -20,7 +20,7 @@ import KeyValueWidget from '../KeyValue'
 const COMPONENT_MAPPING = {
     table: TableWidget,
     chart: ChartWidget,
-    'key-value': KeyValueWidget,
+    'kpi': KeyValueWidget,
 }
 
 export default function WidgetLayout() {
@@ -162,7 +162,7 @@ export default function WidgetLayout() {
                             items={[
                                 { id: 'table', text: 'Table Widget' },
                                 { id: 'chart', text: 'Pie Chart Widget' },
-                                { id: 'key-value', text: 'Key Value Pair' },
+                                { id: 'kpi', text: 'KPI Widget' },
                             ]}
                             onItemClick={(event: any) => {
                                 setSelectedAddItem(event.detail.id)
