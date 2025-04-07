@@ -60,6 +60,11 @@ func NewCoreClient(c config.ClientConfig, ctx context.Context) (Client, error) {
 	return NewClient(ctx, c)
 }
 
+func NewTaskClient(c config.ClientConfig, ctx context.Context) (Client, error) {
+	c.PgDatabase = aws.String("task")
+	return NewClient(ctx, c)
+}
+
 func NewClient(ctx context.Context, c config.ClientConfig) (Client, error) {
 	if c.PgHost == nil || len(*c.PgHost) == 0 {
 		host := os.Getenv("PG_HOST")

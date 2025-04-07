@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	integration "github.com/opengovern/opensecurity/services/integration/models"
+	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -57,4 +58,37 @@ func (c Client) GetIntegrationGroupByName(ctx context.Context, name string) (*in
 		return nil, err
 	}
 	return &result, nil
+}
+
+func (c Client) ListTasks(ctx context.Context) ([]models.Task, error) {
+	var result []models.Task
+	err := c.db.Model(&models.Task{}).Scan(&result).Error
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (c Client) GetTask(ctx context.Context, taskId string) (*models.Task, error) {
+	var result models.Task
+	err := c.db.Model(&models.Task{}).Where("id = ?", taskId).First(&result).Error
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c Client) GetLastTaskRun(id string) (*models.TaskRun, error) {
+	var task models.TaskRun
+	tx := c.db.Where("task_id = ?", id).
+		Order("created_at desc").
+		First(&task)
+	if tx.Error != nil {
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, tx.Error
+	}
+
+	return &task, nil
 }
