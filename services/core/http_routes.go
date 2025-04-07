@@ -111,10 +111,10 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v4 := r.Group("/api/v4")
 	v4.GET("/about", httpserver.AuthorizeHandler(h.GetAboutShort, api3.ViewerRole))
 	v4.GET("/queries/sync", httpserver.AuthorizeHandler(h.SyncQueries, api3.ViewerRole))
-	v4.POST("layout/get", httpserver.AuthorizeHandler(h.GetUserLayout, api3.ViewerRole))
-	v4.POST("layout/set", httpserver.AuthorizeHandler(h.SetUserLayout, api3.ViewerRole))
-	v4.POST("layout/change-privacy", httpserver.AuthorizeHandler(h.ChangePrivacy, api3.ViewerRole))
-	v4.GET("layout/public", httpserver.AuthorizeHandler(h.GetPublicLayouts, api3.ViewerRole))
+	v4.POST("/layout/get", httpserver.AuthorizeHandler(h.GetUserLayout, api3.ViewerRole))
+	v4.POST("/layout/set", httpserver.AuthorizeHandler(h.SetUserLayout, api3.ViewerRole))
+	v4.POST("/layout/change-privacy", httpserver.AuthorizeHandler(h.ChangePrivacy, api3.ViewerRole))
+	v4.GET("/layout/public", httpserver.AuthorizeHandler(h.GetPublicLayouts, api3.ViewerRole))
 
 }
 
