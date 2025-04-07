@@ -92,7 +92,7 @@ const GetLayout = (meResponse :any) => {
          axios
              .post(`${url}/main/core/api/v4/layout/get`, body, config)
              .then((res) => {
-
+                setLayout(res?.data)
                 setLayoutLoading(false)
              })
              .catch((err) => {

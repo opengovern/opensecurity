@@ -72,6 +72,7 @@ export default function WidgetLayout() {
     const [widgetProps, setWidgetProps] = useState<any>({})
     useEffect(() => {
         if (layout) {
+            console.log(layout)
             // add to ietms
             if (items.length !== layout?.layout_config.length + 2) {
                 setItems([...items, ...(layout?.layout_config || [])])
@@ -271,20 +272,28 @@ export default function WidgetLayout() {
                 variant="h1"
                 actions={
                     <div className="flex flex-row gap-2">
-                        <Button
-                            onClick={() => {
-                                GetDefaultLayout()
+                      
+                        <ButtonDropdown
+                            items={[
+                                {
+                                    id: 'reset',
+                                    text: 'Reset to default layout',
+                                },
+                                { id: 'save', text: 'save' },
+                            ]}
+                            onItemClick={(event: any) => {
+                               if(event.detail.id =='reset'){
+                                    GetDefaultLayout()
+                               }
+                               if (event.detail.id == 'save') {
+                                    SetDefaultLayout(items)
+                               }
+                               
                             }}
+                            ariaLabel="Board item settings"
                         >
-                            Reset to default layout
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                SetDefaultLayout(items)
-                            }}
-                        >
-                            save
-                        </Button>
+                           Dashboard settings
+                        </ButtonDropdown>
                         <ButtonDropdown
                             items={[
                                 { id: 'table', text: 'Table Widget' },
@@ -480,7 +489,10 @@ export default function WidgetLayout() {
                     />
                     {HandleWidgetProps()}
                     {(!widgetProps?.title || !widgetProps?.description) && (
-                        <Alert type='error' header="Please fill all the required fields">
+                        <Alert
+                            type="error"
+                            header="Please fill all the required fields"
+                        >
                             Please fill all the required fields
                         </Alert>
                     )}
