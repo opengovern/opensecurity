@@ -154,7 +154,7 @@ export default function KeyValueWidget({ kpis }: KPIProps) {
                             href="#"
                             ariaLabel="Running instances (14)"
                         >
-                            {res?.data?.result[0][0]}
+                            {res?.data?.result ?res?.data?.result[0][0] : 0}
                         </Link>
                     ),
                 })

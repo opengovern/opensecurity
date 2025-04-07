@@ -102,7 +102,7 @@ export default function WidgetLayout() {
             },
         }
         const body = {
-            user_id: me?.id,
+            user_id: me?.username,
             layout_config: layout,
             name: 'default',
             is_private: true,
