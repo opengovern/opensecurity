@@ -104,6 +104,8 @@ export default function WidgetLayout() {
             },
         }
         const body = {
+            id: layout?.id,
+            is_default: layout.is_default,
             user_id: me?.username,
             layout_config: layout_config,
             name: layout.name,
@@ -368,7 +370,7 @@ export default function WidgetLayout() {
         <div className="w-full h-full flex flex-col gap-8">
             <Header
                 variant="h1"
-                description={layout.description}
+                description={layout?.description}
                 actions={
                     <div className="flex flex-row gap-2">
                         <ButtonDropdown
@@ -424,7 +426,7 @@ export default function WidgetLayout() {
                     </div>
                 }
             >
-                {layout.name}
+                {layout?.name}
             </Header>
             {layoutLoading ? (
                 <Spinner />

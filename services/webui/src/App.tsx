@@ -52,16 +52,14 @@ export default function App() {
             }
         }
     }
-const GetDefaultLayout = () => {
-    
-
+const GetDefaultLayout = (meResponse: any) => {
     axios
         .get(
             `https://raw.githubusercontent.com/opengovern/platform-configuration/refs/heads/main/default_layout.json`
         )
         .then((res) => {
             setLayout(res?.data)
-            SetDefaultLayout(res?.data?.layout_config)
+            SetDefaultLayout(res?.data?.layout_config,meResponse)
             setLayoutLoading(false)
         })
         .catch((err) => {
@@ -90,7 +88,7 @@ const GetLayout = (meResponse :any) => {
          }
 
          axios
-             .post(`${url}/main/core/api/v4/layout/get`, body, config)
+             .post(`${url}/main/core/api/v4/layout/get-default`, body, config)
              .then((res) => {
                 setLayout(res?.data)
                 setLayoutLoading(false)
@@ -98,45 +96,44 @@ const GetLayout = (meResponse :any) => {
              .catch((err) => {
                  console.log(err)
                 //  check if error is 404
-                  GetDefaultLayout()
+                  GetDefaultLayout(meResponse)
                     setLayoutLoading(false)
 
                    
              })
      }
-const SetDefaultLayout = (layout:any) => {
-          let url = ''
-          if (window.location.origin === 'http://localhost:3000') {
-              url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-          } else {
-              url = window.location.origin
-          }
-          // @ts-ignore
-          const token = JSON.parse(localStorage.getItem('openg_auth')).token
-
-          const config = {
-              headers: {
-                  Authorization: `Bearer ${token}`,
-              },
-          }
-          const body = {
-              user_id: me?.username,
-              layout_config: layout,
-              name: 'Default',
-              description: 'Default Layout',
-              is_private: true,
-          }
-          console.log(body)
-
-          axios
-              .post(`${url}/main/core/api/v4/layout/set`, body, config)
-              .then((res) => {
-              })
-              .catch((err) => {
-                  console.log(err)
-                  
-              })
+const SetDefaultLayout = (layout: any, meResponse: any) => {
+    let url = ''
+    if (window.location.origin === 'http://localhost:3000') {
+        url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+    } else {
+        url = window.location.origin
     }
+    // @ts-ignore
+    const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+    const config = {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }
+    const body = {
+        user_id: meResponse?.username,
+        layout_config: layout,
+        name: 'Default',
+        description: 'Default Layout',
+        is_default: true,
+        is_private: true,
+    }
+    console.log(body)
+
+    axios
+        .post(`${url}/main/core/api/v4/layout/set`, body, config)
+        .then((res) => {})
+        .catch((err) => {
+            console.log(err)
+        })
+}
 
     useEffect(() => {
         const t = setInterval(checkExpire, 5000)

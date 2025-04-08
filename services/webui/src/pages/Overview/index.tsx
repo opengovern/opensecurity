@@ -17,7 +17,6 @@ import WidgetLayout from '../../components/widgets/WidgetLayout'
 
 export default function Overview() {
     
-    const element = document.getElementById('myDIV')?.offsetHeight
     const [change, setChange] = useState<boolean>(false)
     const [userModal, setUserModal] = useState<boolean>(false)
     const [userData, setUserData] = useState<any>({
@@ -104,7 +103,7 @@ export default function Overview() {
 
                 console.log(err)
             })
-    }
+    }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
     const ChangePassword = () => {
         if (!password.current || password.current == '') {
             setErrors({ ...errors, current: 'Please enter current password' })
