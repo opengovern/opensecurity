@@ -88,11 +88,7 @@ export default function Shortcuts() {
             {window.innerWidth > 640 ? (
                 <>
                     {' '}
-                    <Grid
-                        numItems={1}
-                        numItemsSm={4}
-                        className="w-full  2xl:gap-[20px]  sm:gap-7 gap-4"
-                    >
+                    <Grid className="w-full grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))]    2xl:gap-[20px]  sm:gap-7 gap-4">
                         {navList?.slice(number1, number).map((nav, i) => (
                             <>
                                 {nav?.title !== 'Audit' &&
