@@ -37,37 +37,34 @@ const NUMBER_MAPPING = {
     3: 'Fourth',
     4: 'Fifth',
 }
+export interface Layout {
+    id:           string;
+    data:         Data;
+    rowSpan:      number;
+    columnSpan:   number;
+    columnOffset: ColumnOffset;
+}
+
+export interface ColumnOffset {
+    "4": number;
+}
+
+export interface Data {
+    componentId: string;
+    title:       string;
+    description: string;
+    props:       Props;
+}
+
+export interface Props {
+}
+
 
 export default function WidgetLayout() {
     const [layout, setLayout] = useAtom(LayoutAtom)
     const [me, setMe] = useAtom(meAtom)
 
-    const [items, setItems] = useState([
-        {
-            id: 'shortcut',
-            data: {
-                componentId: 'shortcut',
-                title: 'Shortcuts',
-                description: '',
-                props: {},
-            },
-            rowSpan: 2,
-            columnSpan: 3,
-            columnOffset: { '4': 0 },
-        },
-        {
-            id: 'integration',
-            data: {
-                componentId: 'integration',
-                title: 'Integrations',
-                description: '',
-                props: {},
-            },
-            rowSpan: 8,
-            columnSpan: 1,
-            columnOffset: { '4': 3 },
-        },
-    ])
+    const [items, setItems] = useState<Layout[]>([])
     const [layoutLoading, setLayoutLoading] = useState<boolean>(false)
     const [addModalOpen, setAddModalOpen] = useState(false)
     const [selectedAddItem, setSelectedAddItem] = useState<any>('')
@@ -75,11 +72,8 @@ export default function WidgetLayout() {
     const setNotification = useSetAtom(notificationAtom)
     useEffect(() => {
         if (layout) {
-            console.log(layout)
             // add to ietms
-            if (items.length !== layout?.layout_config.length + 2) {
-                setItems([...items, ...(layout?.layout_config || [])])
-            }
+            setItems(layout?.layout_config)
         }
     }, [layout])
     const GetComponent = (name: string, props: any) => {
@@ -426,6 +420,7 @@ export default function WidgetLayout() {
                     onItemsChange={(event: any) => {
                         setItems(event.detail.items)
                     }}
+                    // @ts-ignore
                     items={items}
                     empty={
                         <div className="flex flex-col items-center justify-center w-full h-full">
