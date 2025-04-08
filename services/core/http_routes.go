@@ -1612,6 +1612,8 @@ func (h HttpHandler) GetUserLayout(echoCtx echo.Context) error {
 		}(),
 		Name:         layout.Name,
 		Description: layout.Description,
+		IsPrivate: layout.IsPrivate,
+		UpdatedAt: layout.UpdatedAt,
 	})
 
 }

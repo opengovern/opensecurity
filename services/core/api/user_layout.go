@@ -13,6 +13,9 @@ type GetUserLayoutResponse struct {
 	Name string `json:"name"`
 	Description string `json:"description"`
 	UpdatedAt time.Time `json:"updated_at"`
+	IsPrivate bool `json:"is_private"`
+
+
 }
 type ChangePrivacyRequest struct {
 	UserID string `json:"user_id"`
