@@ -63,12 +63,13 @@ export interface Props {
 export default function WidgetLayout() {
     const [layout, setLayout] = useAtom(LayoutAtom)
     const [me, setMe] = useAtom(meAtom)
-
     const [items, setItems] = useState<Layout[]>([])
     const [layoutLoading, setLayoutLoading] = useState<boolean>(false)
     const [addModalOpen, setAddModalOpen] = useState(false)
     const [selectedAddItem, setSelectedAddItem] = useState<any>('')
     const [widgetProps, setWidgetProps] = useState<any>({})
+    const [isEdit, setIsEdit] = useState(false)
+    const [editId, setEditId] = useState('')
     const setNotification = useSetAtom(notificationAtom)
     useEffect(() => {
         if (layout) {
@@ -321,11 +322,49 @@ export default function WidgetLayout() {
         return
 
     }
+    const GetWidgetSettingsItem = (id: string) => {
+        if(id =="sre" || id == "shortcut" || id == "integration"){
+            return [{ id: 'remove', text: 'Remove' }]
+        }
+        else{
+            return [{ id: 'remove', text: 'Remove' },{
+                id: 'edit',
+                text: 'Edit',
+            }]
+
+        }
+    }
+    const HandleEditWidget = () => {
+        const temp_items =items
+        // find item with editId
+        const index = items.findIndex((item: any) => item.id === editId)
+        const newItem = {
+            id: editId,
+            data: {
+                componentId: selectedAddItem,
+                props: widgetProps,
+                title: widgetProps?.title,
+                description: widgetProps?.description,
+            },
+            rowSpan: temp_items[index].rowSpan,
+            columnSpan: temp_items[index].columnSpan,
+            columnOffset: temp_items[index].columnOffset,
+        }
+        temp_items[index] = newItem
+        setItems(temp_items)
+        setAddModalOpen(false)
+        setWidgetProps({})
+        setIsEdit(false)
+        setEditId('')
+        setSelectedAddItem('')
+
+    }
 
     return (
         <div className="w-full h-full flex flex-col gap-8">
             <Header
                 variant="h1"
+                description={layout.description}
                 actions={
                     <div className="flex flex-row gap-2">
                         <ButtonDropdown
@@ -377,7 +416,7 @@ export default function WidgetLayout() {
                     </div>
                 }
             >
-                Service Dashboard
+               {layout.name}
             </Header>
             {layoutLoading ? (
                 <Spinner />
@@ -392,10 +431,21 @@ export default function WidgetLayout() {
                             }
                             settings={
                                 <ButtonDropdown
-                                    items={[{ id: 'remove', text: 'Remove' }]}
+                                    items={GetWidgetSettingsItem(item.id)}
                                     onItemClick={(event) => {
                                         if (event.detail.id === 'remove') {
                                             HandleRemoveItemByID(item.id)
+                                        }
+                                        if(event.detail.id === 'edit') {
+                                            setIsEdit(true)
+                                            setWidgetProps({
+                                                title: item?.data?.title,
+                                                description: item?.data?.description,
+                                                ...item?.data?.props,
+                                            })
+                                            setSelectedAddItem(item?.data?.componentId)
+                                            setEditId(item.id)
+                                            setAddModalOpen(true)
                                         }
                                     }}
                                     ariaLabel="Board item settings"
@@ -526,7 +576,7 @@ export default function WidgetLayout() {
                 onDismiss={() => {
                     setAddModalOpen(false)
                 }}
-                header={`Add ${
+                header={`${isEdit ? 'Edit' : 'Add'} ${
                     selectedAddItem?.charAt(0).toUpperCase() +
                     selectedAddItem?.slice(1)
                 } Widget`}
@@ -566,10 +616,11 @@ export default function WidgetLayout() {
                     <div className="flex w-full justify-end items-center">
                         <Button
                             onClick={() => {
-                                HandleAddWidget()
+
+                               isEdit ? HandleEditWidget(): HandleAddWidget()
                             }}
                         >
-                            Submit
+                           {isEdit? 'Save':'Submit'}
                         </Button>
                     </div>
                 </div>
