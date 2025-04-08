@@ -1624,8 +1624,6 @@ func (h HttpHandler) GetUserLayouts(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, response)
 
 
-	
-
 }
 
 func (h HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
@@ -1676,6 +1674,7 @@ func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	layout_config.Set(layout)
 
 	user_layout := models.UserLayout{
+		ID: req.ID,
 		UserID:       userId,
 		LayoutConfig: layout_config,
 		Name:         req.Name,
