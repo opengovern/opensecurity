@@ -18,10 +18,10 @@ import Terminal from '../../../icons/Terminal.svg'
 
 import { link } from 'fs'
 import { useEffect, useState } from 'react'
-import Evaluate from '../../Governance/Compliance/NewBenchmarkSummary/Evaluate'
 import { title } from 'process'
 import { Modal } from '@cloudscape-design/components'
-import MemberInvite from '../../Settings/Members/MemberInvite'
+import Evaluate from '../../../pages/Governance/Compliance/NewBenchmarkSummary/Evaluate'
+import MemberInvite from '../../../pages/Settings/Members/MemberInvite'
 
 const navList = [
     {

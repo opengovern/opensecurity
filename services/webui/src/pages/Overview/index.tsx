@@ -1,11 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { Col, Flex, Grid } from '@tremor/react'
-import Governance from './Governance'
-import TopHeader from '../../components/Layout/Header'
-import { defaultHomepageTime } from '../../utilities/urlstate'
-import Query from './Query'
-import QuickNav from './QuickNav'
-import Shortcuts from './Shortcuts'
+
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { Alert, Button, Modal } from '@cloudscape-design/components'
@@ -16,9 +11,7 @@ import { useAtom, useSetAtom } from 'jotai'
 import { ForbiddenAtom, meAtom, notificationAtom } from '../../store'
 import { useAuth } from '../../utilities/auth'
 import { useAuthApiV1UserInviteCreate } from '../../api/auth.gen'
-import Integrations from './Integrations'
 import { useComplianceApiV1QueriesSyncList } from '../../api/compliance.gen'
-import SRE from './KPI_Cards'
 import { useWorkspaceApiV3LoadSampleData } from '../../api/metadata.gen'
 import WidgetLayout from '../../components/widgets/WidgetLayout'
 
@@ -436,39 +429,7 @@ const {
                 )}
             </Modal>
             <WidgetLayout/>
-            {/* <Grid
-                numItems={11}
-                className="w-full gap-8  h-fit "
-                style={window.innerWidth > 768 ? { gridAutoRows: '1fr' } : {}}
-            >
-                <Col numColSpan={11} numColSpanSm={8}>
-                    <Flex
-                        flexDirection="col"
-                        alignItems="start"
-                        className="gap-4 h-full"
-                        id="myDIV"
-                    >
-                        <Grid numItems={6} className="w-full gap-6 h-fit ">
-                            <Col numColSpan={6} className="h-fit">
-                                <Shortcuts />
-                            </Col>
-                            <Col numColSpan={6} className="h-fit">
-                                <SRE />
-                            </Col>
-                            <Col numColSpan={6} className="h-full">
-                                <Governance />
-                            </Col>
-                        </Grid>
-                    </Flex>
-                </Col>
-                <Col
-                    numColSpan={11}
-                    numColSpanSm={3}
-                    className="sm:h-full h-fit"
-                >
-                    <Integrations />
-                </Col>
-            </Grid> */}
+         
         </>
     )
 }

@@ -18,10 +18,10 @@ import TableWidget from '../table'
 import axios from 'axios'
 import ChartWidget from '../charts'
 import KeyValueWidget from '../KeyValue'
-import Shortcuts from '../../../pages/Overview/Shortcuts'
-import Integrations from '../../../pages/Overview/Integrations'
 import { array } from 'prop-types'
-import SRE from '../../../pages/Overview/KPI_Cards'
+import Shortcuts from '../Shortcuts'
+import Integrations from '../Integrations'
+import SRE from '../KPI_Cards'
 
 const COMPONENT_MAPPING = {
     table: TableWidget,

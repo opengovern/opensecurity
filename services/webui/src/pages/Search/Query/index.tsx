@@ -67,12 +67,8 @@ import {
 import CodeEditor from '@cloudscape-design/components/code-editor'
 import KButton from '@cloudscape-design/components/button'
 import AllQueries from '../All Query'
-import View from '../View'
-import Bookmarks from '../Bookmarks'
 import axios from 'axios'
 import CustomPagination from '../../../components/Pagination'
-import MonacoEditor from '@monaco-editor/react'
-import * as monaco from 'monaco-editor'
 import SQLEditor from './editor'
 
 export const getTable = (
