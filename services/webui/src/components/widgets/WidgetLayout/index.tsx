@@ -54,14 +54,18 @@ export interface Data {
     componentId: string;
     title:       string;
     description: string;
-    props:       Props;
+    props:       any;
 }
 
-export interface Props {
+export interface WidgetLayoutProps {
+    input_layout:any,
+    is_default:boolean,
+
+
 }
 
 
-export default function WidgetLayout() {
+export default function WidgetLayout({input_layout,is_default} :WidgetLayoutProps) {
     const [layout, setLayout] = useAtom(LayoutAtom)
     const [me, setMe] = useAtom(meAtom)
     const [items, setItems] = useState<Layout[]>([])

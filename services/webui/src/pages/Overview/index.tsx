@@ -3,12 +3,12 @@ import { Col, Flex, Grid } from '@tremor/react'
 
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { Alert, Button, Modal } from '@cloudscape-design/components'
+import { Alert, Button, Modal, Tabs } from '@cloudscape-design/components'
 import FormField from '@cloudscape-design/components/form-field'
 import Input from '@cloudscape-design/components/input'
 import { error } from 'console'
 import { useAtom, useSetAtom } from 'jotai'
-import { ForbiddenAtom, meAtom, notificationAtom } from '../../store'
+import { ForbiddenAtom, LayoutAtom, meAtom, notificationAtom } from '../../store'
 import { useAuth } from '../../utilities/auth'
 import { useAuthApiV1UserInviteCreate } from '../../api/auth.gen'
 import { useComplianceApiV1QueriesSyncList } from '../../api/compliance.gen'
@@ -32,6 +32,8 @@ export default function Overview() {
     })
     const { user, logout } = useAuth()
     const [me, setMe] = useAtom(meAtom)
+    const [layout, setLayout] = useAtom(LayoutAtom)
+    const [layouts, setLayouts] = useState<any>([layout])
 
     const [password, setPassword] = useState<any>({
         current: '',
@@ -234,6 +236,28 @@ const {
             setInterval(logout, 3000)
         }
     }, [isLoading, isExecuted])
+    
+    const getTabItems = ()=>{
+        const temp : any =[]
+        layouts?.map((item: any, index: number) => {
+            temp.push({
+                label: item.name,
+                id: item.id,
+                content: (
+                    <WidgetLayout
+                        input_layout={item}
+                        is_default={item.is_default}
+                    />
+                ),
+                dismissible: !item.is_default,
+                dissmissLabel: 'Delete',
+            })
+        })
+        return temp
+
+
+
+    }
     return (
         <>
             <Modal
@@ -427,7 +451,11 @@ const {
                     </Alert>
                 )}
             </Modal>
-            <WidgetLayout/>
+            <Tabs
+                
+                tabs={getTabItems()}
+                />
+           
          
         </>
     )
