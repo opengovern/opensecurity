@@ -21,15 +21,15 @@ func tableCveDetails(_ context.Context) *plugin.Table {
 		},
 		Columns: []*plugin.Column{
 			{
-				Name:        "cve_id",
+				Name:        "id", // Matches json:"id"
 				Type:        proto.ColumnType_STRING,
-				Description: "The unique identifier for the CVE (e.g., CVE-2023-12345).",
-				Transform:   transform.FromField("Description.CveID"),
+				Description: "The unique identifier for the CVE entry (often the CVE ID itself).",
+				Transform:   transform.FromField("Description.ID"), // Maps to the 'ID' field in the struct
 			},
 			{
 				Name:        "source_identifier",
 				Type:        proto.ColumnType_STRING,
-				Description: "Identifier of the source that reported the CVE.",
+				Description: "The source that reported the CVE.",
 				Transform:   transform.FromField("Description.SourceIdentifier"),
 			},
 			{
@@ -51,104 +51,44 @@ func tableCveDetails(_ context.Context) *plugin.Table {
 				Transform:   transform.FromField("Description.VulnStatus"),
 			},
 			{
-				Name:        "descriptions",
-				Type:        proto.ColumnType_JSON,
-				Description: "A list of descriptions for the CVE, often in different languages.",
-				Transform:   transform.FromField("Description.Descriptions"),
+				Name:        "description",           // Matches json:"description"
+				Type:        proto.ColumnType_STRING, // This is now a simple string
+				Description: "A text description of the vulnerability.",
+				Transform:   transform.FromField("Description.Description"), // Maps to the 'Description' field
 			},
 			{
-				Name:        "cvss_version",
-				Type:        proto.ColumnType_STRING,
-				Description: "The CVSS version used for scoring (e.g., '2.0', '3.0', '3.1').",
-				Transform:   transform.FromField("Description.CvssVersion"),
-			},
-			{
-				Name:        "cvss_score",
-				Type:        proto.ColumnType_DOUBLE,
-				Description: "The base CVSS score.",
-				Transform:   transform.FromField("Description.CvssScore"),
-			},
-			{
-				Name:        "cvss_severity",
-				Type:        proto.ColumnType_STRING,
-				Description: "The severity rating based on the CVSS score (e.g., LOW, MEDIUM, HIGH, CRITICAL).",
-				Transform:   transform.FromField("Description.CvssSeverity"),
-			},
-			{
-				Name:        "cvss_attack_vector",
-				Type:        proto.ColumnType_STRING,
-				Description: "The CVSS attack vector metric.",
-				Transform:   transform.FromField("Description.CvssAttackVector"),
-			},
-			{
-				Name:        "cvss_attack_complexity",
-				Type:        proto.ColumnType_STRING,
-				Description: "The CVSS attack complexity metric.",
-				Transform:   transform.FromField("Description.CvssAttackComplexity"),
-			},
-			{
-				Name:        "cvss_privileges_required",
-				Type:        proto.ColumnType_STRING,
-				Description: "The CVSS privileges required metric.",
-				Transform:   transform.FromField("Description.CvssPrivilegesRequired"),
-			},
-			{
-				Name:        "cvss_user_interaction",
-				Type:        proto.ColumnType_STRING,
-				Description: "The CVSS user interaction metric.",
-				Transform:   transform.FromField("Description.CvssUserInteraction"),
-			},
-			{
-				Name:        "cvss_conf_impact",
-				Type:        proto.ColumnType_STRING,
-				Description: "The CVSS confidentiality impact metric.",
-				Transform:   transform.FromField("Description.CvssConfImpact"),
-			},
-			{
-				Name:        "cvss_integ_impact",
-				Type:        proto.ColumnType_STRING,
-				Description: "The CVSS integrity impact metric.",
-				Transform:   transform.FromField("Description.CvssIntegImpact"),
-			},
-			{
-				Name:        "cvss_avail_impact",
-				Type:        proto.ColumnType_STRING,
-				Description: "The CVSS availability impact metric.",
-				Transform:   transform.FromField("Description.CvssAvailImpact"),
-			},
-			{
-				Name:        "metrics",
-				Type:        proto.ColumnType_JSON,
-				Description: "Detailed CVSS metrics data.",
+				Name:        "metrics",             // Matches json:"metrics"
+				Type:        proto.ColumnType_JSON, // Still complex, best represented as JSON
+				Description: "Vulnerability metrics information (content represented as JSON).",
 				Transform:   transform.FromField("Description.Metrics"),
 			},
 			{
-				Name:        "weaknesses",
-				Type:        proto.ColumnType_JSON,
-				Description: "A list of associated weaknesses (CWEs - Common Weakness Enumeration).",
+				Name:        "weaknesses",          // Matches json:"weaknesses"
+				Type:        proto.ColumnType_JSON, // Slice of structs, best as JSON
+				Description: "A list of associated weaknesses (CWEs), represented as JSON.",
 				Transform:   transform.FromField("Description.Weaknesses"),
 			},
 			{
 				Name:        "cisa_exploit_add",
-				Type:        proto.ColumnType_STRING, // Use TIMESTAMP if you parse the string
+				Type:        proto.ColumnType_STRING, // Handles *string correctly (null if pointer is nil)
 				Description: "Date the vulnerability was added to CISA's Known Exploited Vulnerabilities (KEV) catalog.",
 				Transform:   transform.FromField("Description.CisaExploitAdd"),
 			},
 			{
 				Name:        "cisa_action_due",
-				Type:        proto.ColumnType_STRING, // Use TIMESTAMP if you parse the string
+				Type:        proto.ColumnType_STRING, // Handles *string correctly
 				Description: "The due date for required remediation action according to CISA KEV.",
 				Transform:   transform.FromField("Description.CisaActionDue"),
 			},
 			{
 				Name:        "cisa_required_action",
-				Type:        proto.ColumnType_STRING,
+				Type:        proto.ColumnType_STRING, // Handles *string correctly
 				Description: "The action required by CISA for federal agencies.",
 				Transform:   transform.FromField("Description.CisaRequiredAction"),
 			},
 			{
 				Name:        "cisa_vulnerability_name",
-				Type:        proto.ColumnType_STRING,
+				Type:        proto.ColumnType_STRING, // Handles *string correctly
 				Description: "The name assigned to the vulnerability by CISA.",
 				Transform:   transform.FromField("Description.CisaVulnerabilityName"),
 			},
