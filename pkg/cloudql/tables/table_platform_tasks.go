@@ -2,6 +2,7 @@ package opengovernance
 
 import (
 	"context"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 
 	og_client "github.com/opengovern/opensecurity/pkg/cloudql/client"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
@@ -26,8 +27,12 @@ func tablePlatformTasks(_ context.Context) *plugin.Table {
 			{Name: "id", Type: proto.ColumnType_STRING},
 			{Name: "title", Type: proto.ColumnType_STRING},
 			{Name: "description", Type: proto.ColumnType_STRING},
-			{Name: "image_url", Type: proto.ColumnType_STRING},
-			{Name: "LastRun", Type: proto.ColumnType_TIMESTAMP},
+			{Name: "image_url", Type: proto.ColumnType_STRING,
+				Transform: transform.FromField("ImageUrl"),
+			},
+			{Name: "last_run", Type: proto.ColumnType_TIMESTAMP,
+				Transform: transform.FromField("LastRun"),
+			},
 			{Name: "params", Type: proto.ColumnType_JSON},
 		},
 	}
