@@ -8,6 +8,7 @@ import {
     Alert,
     Button,
     ButtonDropdown,
+    Checkbox,
     Input,
     Modal,
     Spinner,
@@ -70,6 +71,8 @@ export default function WidgetLayout() {
     const [widgetProps, setWidgetProps] = useState<any>({})
     const [isEdit, setIsEdit] = useState(false)
     const [editId, setEditId] = useState('')
+    const [openEditLayout, setOpenEditLayout] = useState(false)
+    const [editLayout, setEditLayout] = useState<any>()
     const setNotification = useSetAtom(notificationAtom)
     useEffect(() => {
         if (layout) {
@@ -85,7 +88,7 @@ export default function WidgetLayout() {
         }
         return null
     }
-    const SetDefaultLayout = (layout: any) => {
+    const SetDefaultLayout = (layout_config: any) => {
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -102,9 +105,10 @@ export default function WidgetLayout() {
         }
         const body = {
             user_id: me?.username,
-            layout_config: layout,
-            name: 'default',
-            is_private: true,
+            layout_config: layout_config,
+            name: layout.name,
+            description: layout.description,
+            is_private: layout.is_private,
         }
 
         axios
@@ -369,11 +373,12 @@ export default function WidgetLayout() {
                     <div className="flex flex-row gap-2">
                         <ButtonDropdown
                             items={[
+                                { id: 'save', text: 'Save' },
+                                { id: 'edit', text: 'Edit' },
                                 {
                                     id: 'reset',
                                     text: 'Reset to default layout',
                                 },
-                                { id: 'save', text: 'save' },
                             ]}
                             onItemClick={(event: any) => {
                                 if (event.detail.id == 'reset') {
@@ -381,6 +386,10 @@ export default function WidgetLayout() {
                                 }
                                 if (event.detail.id == 'save') {
                                     SetDefaultLayout(items)
+                                }
+                                if (event.detail.id == 'edit') {
+                                    setEditLayout(layout)
+                                    setOpenEditLayout(true)
                                 }
                             }}
                             ariaLabel="Board item settings"
@@ -407,7 +416,6 @@ export default function WidgetLayout() {
                                     setSelectedAddItem(event.detail.id)
                                     setAddModalOpen(true)
                                 }
-                               
                             }}
                             ariaLabel="Board item settings"
                         >
@@ -416,7 +424,7 @@ export default function WidgetLayout() {
                     </div>
                 }
             >
-               {layout.name}
+                {layout.name}
             </Header>
             {layoutLoading ? (
                 <Spinner />
@@ -436,14 +444,17 @@ export default function WidgetLayout() {
                                         if (event.detail.id === 'remove') {
                                             HandleRemoveItemByID(item.id)
                                         }
-                                        if(event.detail.id === 'edit') {
+                                        if (event.detail.id === 'edit') {
                                             setIsEdit(true)
                                             setWidgetProps({
                                                 title: item?.data?.title,
-                                                description: item?.data?.description,
+                                                description:
+                                                    item?.data?.description,
                                                 ...item?.data?.props,
                                             })
-                                            setSelectedAddItem(item?.data?.componentId)
+                                            setSelectedAddItem(
+                                                item?.data?.componentId
+                                            )
                                             setEditId(item.id)
                                             setAddModalOpen(true)
                                         }
@@ -616,11 +627,64 @@ export default function WidgetLayout() {
                     <div className="flex w-full justify-end items-center">
                         <Button
                             onClick={() => {
-
-                               isEdit ? HandleEditWidget(): HandleAddWidget()
+                                isEdit ? HandleEditWidget() : HandleAddWidget()
                             }}
                         >
-                           {isEdit? 'Save':'Submit'}
+                            {isEdit ? 'Save' : 'Submit'}
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+            <Modal
+                visible={openEditLayout}
+                onDismiss={() => {
+                    setOpenEditLayout(false)
+                }}
+                header={`Edit Dashboard`}
+            >
+                <div className="flex flex-col gap-2">
+                    <Input
+                        placeholder="Dashboard Name"
+                        ariaRequired={true}
+                        value={editLayout?.name}
+                        onChange={(e: any) => {
+                            setEditLayout({
+                                ...editLayout,
+                                name: e.detail.value,
+                            })
+                        }}
+                    />
+                    <Input
+                        placeholder="Dashboard description"
+                        ariaRequired={true}
+                        value={editLayout?.description}
+                        onChange={(e: any) => {
+                            setEditLayout({
+                                ...editLayout,
+                                description: e.detail.value,
+                            })
+                        }}
+                    />
+                    <Checkbox
+                        checked={editLayout?.is_private}
+                        onChange={(e: any) => {
+                            setEditLayout({
+                                ...editLayout,
+                                is_private: e.detail.checked,
+                            })
+                        }}
+                    >
+                        Private Dashboard
+                    </Checkbox>
+
+                    <div className="flex w-full justify-end items-center">
+                        <Button
+                            onClick={() => {
+                                setLayout(editLayout)
+                                setOpenEditLayout(false)
+                            }}
+                        >
+                            save
                         </Button>
                     </div>
                 </div>

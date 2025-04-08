@@ -122,7 +122,8 @@ const SetDefaultLayout = (layout:any) => {
           const body = {
               user_id: me?.username,
               layout_config: layout,
-              name: 'default',
+              name: 'Default',
+              description: 'Default Layout',
               is_private: true,
           }
           console.log(body)
