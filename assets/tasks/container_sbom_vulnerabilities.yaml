@@ -6,7 +6,7 @@ Command: "/og-task-sbom-vulnerability"
 ResultType: "sbom_vulnerabilities"
 WorkloadType: "deployment"
 EnvVars: {}
-Interval: 0 # Minutes
+Interval: 240
 Timeout: 120 # Minutes
 ScaleConfig:
   LagThreshold: "1"

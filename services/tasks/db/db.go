@@ -95,6 +95,21 @@ func (db Database) FetchCreatedTaskRunsByTaskID(taskID string) ([]models.TaskRun
 	return tasks, nil
 }
 
+// FetchLastCreatedTaskRunsByTaskID retrieves last task runs
+func (db Database) FetchLastCreatedTaskRunsByTaskID(taskID string) (*models.TaskRun, error) {
+	var task models.TaskRun
+	tx := db.Orm.Model(&models.TaskRun{}).
+		Where("task_id = ?", taskID).
+		Where("status = ?", models.TaskRunStatusCreated).
+		Order("id desc").
+		First(&task)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return &task, nil
+}
+
 // TimeoutTaskRunsByTaskID Timeout task runs for given task id by given timeout interval
 func (db Database) TimeoutTaskRunsByTaskID(taskID string, timeoutInterval uint64) error {
 	tx := db.Orm.

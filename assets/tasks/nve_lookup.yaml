@@ -6,7 +6,7 @@ Command: "/og-task-nve-lookup"
 ResultType: "cve_details"
 WorkloadType: "deployment"
 EnvVars: {}
-Interval: 0 # Minutes
+Interval: 300
 Timeout: 120 # Minutes
 ScaleConfig:
   LagThreshold: "1"
