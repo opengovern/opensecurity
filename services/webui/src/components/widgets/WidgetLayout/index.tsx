@@ -1,5 +1,5 @@
-import { useAtom } from 'jotai'
-import { LayoutAtom, meAtom } from '../../../store'
+import { useAtom, useSetAtom } from 'jotai'
+import { LayoutAtom, meAtom, notificationAtom } from '../../../store'
 import * as React from 'react'
 import Board from '@cloudscape-design/board-components/board'
 import BoardItem from '@cloudscape-design/board-components/board-item'
@@ -20,6 +20,7 @@ import KeyValueWidget from '../KeyValue'
 import Shortcuts from '../../../pages/Overview/Shortcuts'
 import Integrations from '../../../pages/Overview/Integrations'
 import { array } from 'prop-types'
+import SRE from '../../../pages/Overview/KPI_Cards'
 
 const COMPONENT_MAPPING = {
     table: TableWidget,
@@ -27,6 +28,7 @@ const COMPONENT_MAPPING = {
     kpi: KeyValueWidget,
     shortcut: Shortcuts,
     integration: Integrations,
+    sre: SRE
 }
 const NUMBER_MAPPING = {
     0: 'First',
@@ -70,6 +72,7 @@ export default function WidgetLayout() {
     const [addModalOpen, setAddModalOpen] = useState(false)
     const [selectedAddItem, setSelectedAddItem] = useState<any>('')
     const [widgetProps, setWidgetProps] = useState<any>({})
+    const setNotification = useSetAtom(notificationAtom)
     useEffect(() => {
         if (layout) {
             console.log(layout)
@@ -265,6 +268,65 @@ export default function WidgetLayout() {
         setAddModalOpen(false)
         setWidgetProps({})
     }
+    const HandleAddProductWidgets =(id: string)=>{
+        // check if id not exist in items
+        const check = items.filter((item: any) => item.id === id)
+        if(check.length > 0){
+              setNotification({
+                  text: `Widget Already exist`,
+                  type: 'error',
+              })
+            return
+        }
+        if(id=='integration'){
+            const new_item = {
+                id: 'integration',
+                data: {
+                    componentId: 'integration',
+                    title: 'Integrations',
+                    description: '',
+                    props: {},
+                },
+                rowSpan: 8,
+                columnSpan: 1,
+                columnOffset: { '4': 3 },
+            }
+            setItems([...items, new_item])
+
+        }
+        if(id=='shortcut'){
+            const new_item = {
+                id: 'shortcut',
+                data: {
+                    componentId: 'shortcut',
+                    title: 'Shortcuts',
+                    description: '',
+                    props: {},
+                },
+                rowSpan: 2,
+                columnSpan: 3,
+                columnOffset: { '4': 0 },
+            }
+            setItems([...items, new_item])
+        }
+        if(id=='sre'){
+            const new_item = {
+                id: 'sre',
+                data: {
+                    componentId: 'sre',
+                    title: 'SRE',
+                    description: '',
+                    props: {},
+                },
+                rowSpan: 2,
+                columnSpan: 3,
+                columnOffset: { '4': 0 },
+            }
+            setItems([...items, new_item])
+        }
+        return
+
+    }
 
     return (
         <div className="w-full h-full flex flex-col gap-8">
@@ -272,7 +334,6 @@ export default function WidgetLayout() {
                 variant="h1"
                 actions={
                     <div className="flex flex-row gap-2">
-                      
                         <ButtonDropdown
                             items={[
                                 {
@@ -282,27 +343,38 @@ export default function WidgetLayout() {
                                 { id: 'save', text: 'save' },
                             ]}
                             onItemClick={(event: any) => {
-                               if(event.detail.id =='reset'){
+                                if (event.detail.id == 'reset') {
                                     GetDefaultLayout()
-                               }
-                               if (event.detail.id == 'save') {
+                                }
+                                if (event.detail.id == 'save') {
                                     SetDefaultLayout(items)
-                               }
-                               
+                                }
                             }}
                             ariaLabel="Board item settings"
                         >
-                           Dashboard settings
+                            Dashboard settings
                         </ButtonDropdown>
                         <ButtonDropdown
                             items={[
                                 { id: 'table', text: 'Table Widget' },
                                 { id: 'chart', text: 'Pie Chart Widget' },
                                 { id: 'kpi', text: 'KPI Widget' },
+                                { id: 'integration', text: 'Integrations' },
+                                { id: 'shortcut', text: 'Shortcuts' },
+                                { id: 'sre', text: 'SRE' },
                             ]}
                             onItemClick={(event: any) => {
-                                setSelectedAddItem(event.detail.id)
-                                setAddModalOpen(true)
+                                if (
+                                    event.detail.id == 'sre' ||
+                                    event.detail.id == 'shortcut' ||
+                                    event.detail.id == 'integration'
+                                ) {
+                                    HandleAddProductWidgets(event.detail.id)
+                                } else {
+                                    setSelectedAddItem(event.detail.id)
+                                    setAddModalOpen(true)
+                                }
+                               
                             }}
                             ariaLabel="Board item settings"
                         >
