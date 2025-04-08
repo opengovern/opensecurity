@@ -111,7 +111,8 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v4 := r.Group("/api/v4")
 	v4.GET("/about", httpserver.AuthorizeHandler(h.GetAboutShort, api3.ViewerRole))
 	v4.GET("/queries/sync", httpserver.AuthorizeHandler(h.SyncQueries, api3.ViewerRole))
-	v4.POST("/layout/get", httpserver.AuthorizeHandler(h.GetUserLayout, api3.ViewerRole))
+	v4.POST("/layout/get", httpserver.AuthorizeHandler(h.GetUserLayouts, api3.ViewerRole))
+	v4.POST("/layout/get-default", httpserver.AuthorizeHandler(h.GetUserDefaultLayout, api3.ViewerRole))
 	v4.POST("/layout/set", httpserver.AuthorizeHandler(h.SetUserLayout, api3.ViewerRole))
 	v4.POST("/layout/change-privacy", httpserver.AuthorizeHandler(h.ChangePrivacy, api3.ViewerRole))
 	v4.GET("/layout/public", httpserver.AuthorizeHandler(h.GetPublicLayouts, api3.ViewerRole))
@@ -1586,13 +1587,54 @@ func (h HttpHandler) SyncQueries(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, struct{}{})
 }
 
-func (h HttpHandler) GetUserLayout(echoCtx echo.Context) error {
+func (h HttpHandler) GetUserLayouts(echoCtx echo.Context) error {
 	var req api.GetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return err
 	}
 	userId := req.UserID
-	layout, err := h.db.GetUserLayout(userId)
+	layouts, err := h.db.GetUserLayouts(userId)
+	if err != nil {
+		h.logger.Error("failed to get user layout", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user layout")
+	}
+	if layouts == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "user layout not found")
+	}
+	var response []api.GetUserLayoutResponse
+	for _, layout := range layouts {
+	response = append(response, api.GetUserLayoutResponse{
+		ID: layout.ID,
+		UserID:       userId,
+	LayoutConfig: func() []map[string]any {
+		var config []map[string]any
+		if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
+			h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+			return nil
+		}
+		return config
+	}(),
+	Name:         layout.Name,
+	Description: layout.Description,
+	IsPrivate: layout.IsPrivate,
+	UpdatedAt: layout.UpdatedAt,
+	})
+}
+
+	return echoCtx.JSON(http.StatusOK, response)
+
+
+	
+
+}
+
+func (h HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
+	var req api.GetUserLayoutRequest
+	if err := bindValidate(echoCtx, &req); err != nil {
+		return err
+	}
+	userId := req.UserID
+	layout, err := h.db.GetUserDefaultLayout(userId)
 	if err != nil {
 		h.logger.Error("failed to get user layout", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user layout")
@@ -1601,6 +1643,7 @@ func (h HttpHandler) GetUserLayout(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "user layout not found")
 	}
 	return echoCtx.JSON(http.StatusOK, api.GetUserLayoutResponse{
+		ID: 		layout.ID,
 		UserID:       userId,
 		LayoutConfig: func() []map[string]any {
 			var config []map[string]any
