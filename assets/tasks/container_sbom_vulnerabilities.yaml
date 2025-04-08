@@ -1,7 +1,7 @@
 ID: "sbom-vulnerability-check"
 Name: "Sbom Vulnerability Check"
 Description: "Check if all container artifacts are free of vulnerabilities using SYFT"
-ImageURL: "ghcr.io/opengovern/og-task-sbom-vulnerability:local-latest"
+ImageURL: "ghcr.io/opengovern/og-task-sbom-vulnerability:v0.0.28"
 Command: "/og-task-sbom-vulnerability"
 ResultType: "sbom_vulnerabilities"
 WorkloadType: "deployment"

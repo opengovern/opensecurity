@@ -1,7 +1,7 @@
 ID: "container-syft"
 Name: "Container SYFT"
 Description: "Check if all container artifacts are free of vulnerabilities using SYFT"
-ImageURL: "ghcr.io/opengovern/og-task-syft:local-latest"
+ImageURL: "ghcr.io/opengovern/og-task-syft:v0.10.24"
 Command: "/og-task-syft"
 ResultType: "artifact_sbom"
 WorkloadType: "deployment"
