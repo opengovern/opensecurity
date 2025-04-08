@@ -21,7 +21,9 @@ type ChangePrivacyRequest struct {
 
 type SetUserLayoutRequest struct {
 	UserID      string `json:"user_id"`
+	Description string `json:"description"`
 	LayoutConfig []map[string]any `json:"layout_config"`
+	UpdatedAt time.Time `json:"updated_at"`
 	Name 	  string `json:"name"`
 	IsPrivate 	  bool `json:"is_private"`
 }

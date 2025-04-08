@@ -1634,7 +1634,9 @@ func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 		UserID:       userId,
 		LayoutConfig: layout_config,
 		Name:         req.Name,
+		Description: req.Description,
 		IsPrivate:    req.IsPrivate,
+		UpdatedAt:  time.Now(),
 	}
 	err = h.db.SetUserLayout(user_layout)
 	if err != nil {
