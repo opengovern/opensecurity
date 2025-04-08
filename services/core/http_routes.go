@@ -1618,6 +1618,7 @@ func (h HttpHandler) GetUserLayouts(echoCtx echo.Context) error {
 	}(),
 	Name:         layout.Name,
 	Description: layout.Description,
+	IsDefault: layout.IsDefault,
 	IsPrivate: layout.IsPrivate,
 	UpdatedAt: layout.UpdatedAt,
 	})
@@ -1656,6 +1657,7 @@ func (h HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 		Name:         layout.Name,
 		Description: layout.Description,
 		IsPrivate: layout.IsPrivate,
+		IsDefault: layout.IsDefault,
 		UpdatedAt: layout.UpdatedAt,
 	})
 
