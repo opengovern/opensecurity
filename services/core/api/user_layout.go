@@ -8,7 +8,7 @@ type GetUserLayoutRequest struct {
 	UserID string `json:"user_id"`
 }
 type GetUserLayoutResponse struct {
-	ID string `json:"id"`
+	ID uint `json:"id"`
 	IsDefault bool `json:"is_default"`
 	UserID string `json:"user_id"`
 	LayoutConfig []map[string]any `json:"layout_config"`
@@ -25,7 +25,7 @@ type ChangePrivacyRequest struct {
 }
 
 type SetUserLayoutRequest struct {
-	ID 	   string `json:"id"`
+	ID 	   uint `json:"id"`
 	UserID      string `json:"user_id"`
 	Description string `json:"description"`
 	LayoutConfig []map[string]any `json:"layout_config"`
