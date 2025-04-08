@@ -167,20 +167,17 @@ func (db Database) GetUserDefaultLayout(userID string) (*models.UserLayout, erro
 }
 // set user layout
 func (db Database) SetUserLayout( layoutConfig models.UserLayout) error {
-	// check if id in request update else create
-	if layoutConfig.ID != 0   {
-		err := db.orm.Model(&models.UserLayout{}).Where("id = ?", layoutConfig.ID).Updates(layoutConfig).Error
-		if err != nil {
-			return err
-		}
-	} else {
-		err := db.orm.Create(&layoutConfig).Error
-		if err != nil {
-			return err
-		}
-
+	// upsert layout
+	err := db.orm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"layout_config", "name", "description", "is_default", "is_private","updated_at"}),
+	}).Create(&layoutConfig).Error
+	if err != nil {
+		return err
 	}
+	// set default layout
 	return nil
+
 	
 }
 // get public layouts 

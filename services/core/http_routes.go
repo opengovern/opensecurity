@@ -5,13 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/opengovern/og-util/pkg/integration"
 	"net/http"
 	"net/url"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/opengovern/og-util/pkg/integration"
 
 	"github.com/opengovern/opensecurity/pkg/utils"
 
@@ -1672,11 +1674,20 @@ func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	}
 	layout_config := pgtype.JSONB{}
 	layout_config.Set(layout)
+	var id string
+	if req.ID != "" {
+		id = req.ID
+	}else{
+		id = uuid.New().String()
+	}
+
+	
 
 	user_layout := models.UserLayout{
-		ID: req.ID,
+		ID: id,
 		UserID:       userId,
 		LayoutConfig: layout_config,
+		IsDefault: req.IsDefault,
 		Name:         req.Name,
 		Description: req.Description,
 		IsPrivate:    req.IsPrivate,
