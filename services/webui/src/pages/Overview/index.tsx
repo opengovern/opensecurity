@@ -265,7 +265,7 @@ const {
                 id: 'new',
                 name: 'Default Dashbord',
                 description: 'This is a default dashboard',
-                is_default: true,
+                is_default: false,
                 is_private: true,
                 layout_config: []
             },
