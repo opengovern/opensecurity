@@ -56,12 +56,7 @@ export default function ControlsWithFailure({ query }: ICount) {
         connectionId: query.connectionID,
         benchmarkId: query.benchmarkID,
     }
-    const [date, setDate] = useState({
-        key: 'previous-3-days',
-        amount: 3,
-        unit: 'day',
-        type: 'relative',
-    })
+    const [date, setDate] = useState()
     const {
         response: controls,
         isLoading,
@@ -135,6 +130,7 @@ export default function ControlsWithFailure({ query }: ICount) {
                     // setSort(event.detail.sortingColumn.sortingField)
                     // setSortOrder(!sortOrder)
                 }}
+                variant='full-page'
                 // sortingColumn={sort}
                 // sortingDescending={sortOrder}
                 // sortingDescending={sortOrder == 'desc' ? true : false}
