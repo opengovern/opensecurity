@@ -247,6 +247,7 @@ const {
                     <WidgetLayout
                         input_layout={item}
                         is_default={item.is_default}
+                        HandleAddItem={HandleAddItem}
                     />
                 ),
                 dismissible: !item.is_default,
@@ -463,25 +464,7 @@ const {
                     </Alert>
                 )}
             </Modal>
-            <Header
-                actions={
-                    <ButtonDropdown
-                        
-
-                        items={[{ id: 'add', text: 'Add new dashboard' }]}
-                        onItemClick={(event)=>{
-                            if (event.detail.id == 'add') {
-                                HandleAddItem()
-                            }
-                        }}
-
-                    >
-                        Add new Dashboard
-                    </ButtonDropdown>
-                }
-            >
-                Dashboards
-            </Header>
+         
             <Tabs tabs={getTabItems()} />
         </>
     )

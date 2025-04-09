@@ -58,14 +58,17 @@ export interface Data {
 }
 
 export interface WidgetLayoutProps {
-    input_layout:any,
-    is_default:boolean,
-
-
+    input_layout: any
+    is_default: boolean
+    HandleAddItem:Function
 }
 
 
-export default function WidgetLayout({input_layout,is_default} :WidgetLayoutProps) {
+export default function WidgetLayout({
+    input_layout,
+    is_default,
+    HandleAddItem,
+}: WidgetLayoutProps) {
     const [layout, setLayout] = useState(input_layout)
     const [me, setMe] = useAtom(meAtom)
     const [items, setItems] = useState<Layout[]>([])
@@ -253,7 +256,7 @@ export default function WidgetLayout({input_layout,is_default} :WidgetLayoutProp
         }
     }
     const HandleAddWidget = () => {
-        if(!widgetProps?.title || !widgetProps?.description) {
+        if (!widgetProps?.title || !widgetProps?.description) {
             return
         }
         const newItem = {
@@ -273,17 +276,17 @@ export default function WidgetLayout({input_layout,is_default} :WidgetLayoutProp
         setAddModalOpen(false)
         setWidgetProps({})
     }
-    const HandleAddProductWidgets =(id: string)=>{
+    const HandleAddProductWidgets = (id: string) => {
         // check if id not exist in items
         const check = items.filter((item: any) => item.id === id)
-        if(check.length > 0){
-              setNotification({
-                  text: `Widget Already exist`,
-                  type: 'error',
-              })
+        if (check.length > 0) {
+            setNotification({
+                text: `Widget Already exist`,
+                type: 'error',
+            })
             return
         }
-        if(id=='integration'){
+        if (id == 'integration') {
             const new_item = {
                 id: 'integration',
                 data: {
@@ -297,9 +300,8 @@ export default function WidgetLayout({input_layout,is_default} :WidgetLayoutProp
                 columnOffset: { '4': 3 },
             }
             setItems([...items, new_item])
-
         }
-        if(id=='shortcut'){
+        if (id == 'shortcut') {
             const new_item = {
                 id: 'shortcut',
                 data: {
@@ -314,7 +316,7 @@ export default function WidgetLayout({input_layout,is_default} :WidgetLayoutProp
             }
             setItems([...items, new_item])
         }
-        if(id=='sre'){
+        if (id == 'sre') {
             const new_item = {
                 id: 'sre',
                 data: {
@@ -330,22 +332,22 @@ export default function WidgetLayout({input_layout,is_default} :WidgetLayoutProp
             setItems([...items, new_item])
         }
         return
-
     }
     const GetWidgetSettingsItem = (id: string) => {
-        if(id =="sre" || id == "shortcut" || id == "integration"){
+        if (id == 'sre' || id == 'shortcut' || id == 'integration') {
             return [{ id: 'remove', text: 'Remove' }]
-        }
-        else{
-            return [{ id: 'remove', text: 'Remove' },{
-                id: 'edit',
-                text: 'Edit',
-            }]
-
+        } else {
+            return [
+                { id: 'remove', text: 'Remove' },
+                {
+                    id: 'edit',
+                    text: 'Edit',
+                },
+            ]
         }
     }
     const HandleEditWidget = () => {
-        const temp_items =items
+        const temp_items = items
         // find item with editId
         const index = items.findIndex((item: any) => item.id === editId)
         const newItem = {
@@ -367,7 +369,6 @@ export default function WidgetLayout({input_layout,is_default} :WidgetLayoutProp
         setIsEdit(false)
         setEditId('')
         setSelectedAddItem('')
-
     }
 
     return (
@@ -379,6 +380,8 @@ export default function WidgetLayout({input_layout,is_default} :WidgetLayoutProp
                     <div className="flex flex-row gap-2">
                         <ButtonDropdown
                             items={[
+                                { id: 'add', text: 'Add new dashboard' },
+
                                 { id: 'save', text: 'Save' },
                                 { id: 'edit', text: 'Edit' },
                                 {
@@ -387,6 +390,9 @@ export default function WidgetLayout({input_layout,is_default} :WidgetLayoutProp
                                 },
                             ]}
                             onItemClick={(event: any) => {
+                                if (event.detail.id == 'add') {
+                                    HandleAddItem()
+                                }
                                 if (event.detail.id == 'reset') {
                                     GetDefaultLayout()
                                 }
