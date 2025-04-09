@@ -262,7 +262,6 @@ const {
         setLayouts([
             ...layouts,
             {
-                id: 'new',
                 name: 'Default Dashbord',
                 description: 'This is a default dashboard',
                 is_default: false,
