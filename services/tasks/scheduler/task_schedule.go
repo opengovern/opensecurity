@@ -3,6 +3,7 @@ package scheduler
 import (
 	"github.com/opengovern/og-util/pkg/jq"
 	"github.com/opengovern/og-util/pkg/ticker"
+	"github.com/opengovern/og-util/pkg/vault"
 	"github.com/opengovern/opensecurity/pkg/utils"
 	"github.com/opengovern/opensecurity/services/tasks/config"
 	"github.com/opengovern/opensecurity/services/tasks/db"
@@ -32,6 +33,7 @@ type TaskScheduler struct {
 	NatsConfig NatsConfig
 	Interval   uint64
 	Timeout    uint64
+	vault      vault.VaultSourceConfig
 }
 
 func NewTaskScheduler(
@@ -41,7 +43,7 @@ func NewTaskScheduler(
 	jq *jq.JobQueue,
 
 	cfg config.Config,
-
+	vault vault.VaultSourceConfig,
 	taskID, ResultType string, natsConfig NatsConfig, interval uint64, timeout uint64) *TaskScheduler {
 	return &TaskScheduler{
 		runSetupNatsStreams: runSetupNatsStreams,
@@ -49,7 +51,8 @@ func NewTaskScheduler(
 		db:                  db,
 		jq:                  jq,
 
-		cfg: cfg,
+		cfg:   cfg,
+		vault: vault,
 
 		TaskID:     taskID,
 		ResultType: ResultType,
