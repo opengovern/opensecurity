@@ -1,0 +1,14 @@
+ID: "nve-lookup"
+Name: "NVE Lookup"
+Description: "Get CVE Details with NVE Lookup"
+ImageURL: "ghcr.io/opengovern/og-task-nve-lookup:v0.0.9"
+Command: "/og-task-nve-lookup"
+ResultType: "cve_details"
+WorkloadType: "deployment"
+EnvVars: {}
+Interval: 300
+Timeout: 120 # Minutes
+ScaleConfig:
+  LagThreshold: "1"
+  MinReplica: 0
+  MaxReplica: 5

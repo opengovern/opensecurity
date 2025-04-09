@@ -338,10 +338,13 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 	}
 
 	isBookmarked := false
+	cacheEnabled := false
 	tags := make([]models.NamedQueryTag, 0, len(item.Tags))
 	for k, v := range item.Tags {
 		if k == "platform_queries_bookmark" {
 			isBookmarked = true
+		} else if k == "platform_cache_enabled" {
+			cacheEnabled = true
 		}
 		tag := models.NamedQueryTag{
 			NamedQueryID: id,
@@ -375,6 +378,7 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 		Title:            item.Title,
 		Description:      item.Description,
 		IsBookmarked:     isBookmarked,
+		CacheEnabled:     cacheEnabled,
 		QueryID:          &id,
 	}
 

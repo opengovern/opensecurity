@@ -51,10 +51,13 @@ type QueryView struct {
 	Tags         []QueryViewTag `gorm:"foreignKey:QueryViewID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 type UserLayout struct{
-	UserID string `gorm:"primaryKey" ,json:"user_id"`
-	LayoutConfig pgtype.JSONB `gorm:"type:jsonb"`
-	Name string `gorm:"type:text"`
+	ID  string  `gorm:"primaryKey" json:"id"`
+	IsDefault bool `json:"is_default"`
+	UserID string `gorm:"type:text" json:"user_id"`
+	LayoutConfig pgtype.JSONB `gorm:"type:jsonb" json:"layout_config"`
+	Name string `gorm:"type:text" json:"name"`
 	CreatedAt time.Time `json:"created_at"`
+	Description string `json:"description"`
 	UpdatedAt time.Time `json:"updated_at"`
 	IsPrivate bool `json:"is_private"`
 }

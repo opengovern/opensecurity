@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	api2 "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpserver"
+	"github.com/opengovern/og-util/pkg/vault"
 	"github.com/opengovern/opensecurity/pkg/utils"
 	"github.com/opengovern/opensecurity/services/tasks/api"
 	"github.com/opengovern/opensecurity/services/tasks/db"
@@ -21,6 +22,7 @@ type httpRoutes struct {
 
 	platformPrivateKey *rsa.PrivateKey
 	db                 db.Database
+	vault              vault.VaultSourceConfig
 }
 
 func (r *httpRoutes) Register(e *echo.Echo) {
@@ -35,7 +37,8 @@ func (r *httpRoutes) Register(e *echo.Echo) {
 	v1.GET("/tasks/run/:id", httpserver.AuthorizeHandler(r.GetTaskRunResult, api2.ViewerRole))
 	// List Tasks Result
 	v1.GET("/tasks/run", httpserver.AuthorizeHandler(r.ListTaskRunResult, api2.ViewerRole))
-
+	// Add Task Configurations
+	v1.POST("/tasks/:id/config", httpserver.AuthorizeHandler(r.AddTaskConfig, api2.EditorRole))
 }
 
 func bindValidate(ctx echo.Context, i interface{}) error {
@@ -334,4 +337,62 @@ func (r *httpRoutes) ListTaskRunResult(ctx echo.Context) error {
 		TotalCount: totalCount,
 		Items:      taskRunResponses,
 	})
+}
+
+// AddTaskConfig godoc
+//
+//	@Summary	Run a new task
+//	@Security	BearerToken
+//	@Tags		scheduler
+//	@Param		request	body	api.RunTaskRequest	true	"Run task request"
+//	@Produce	json
+//	@Success	200	{object}	models.TaskRun
+//	@Router		/tasks/api/v1/tasks/:id/config [post]
+func (r *httpRoutes) AddTaskConfig(ctx echo.Context) error {
+	id := ctx.Param("id")
+	task, err := r.db.GetTask(id)
+	if err != nil {
+		r.logger.Error("failed to get task results", zap.Error(err))
+		return ctx.JSON(http.StatusInternalServerError, "failed to get task results")
+	}
+	if task == nil {
+		return ctx.JSON(http.StatusNotFound, "task not found")
+	}
+
+	var req api.TaskConfigSecret
+	if err := bindValidate(ctx, &req); err != nil {
+		r.logger.Error("failed to bind task", zap.Error(err))
+		return ctx.JSON(http.StatusBadRequest, "failed to bind task")
+	}
+
+	jsonData, err := json.Marshal(req.Credentials)
+	if err != nil {
+		r.logger.Error("failed to marshal json data", zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to marshal json data")
+	}
+	var mapData map[string]any
+	err = json.Unmarshal(jsonData, &mapData)
+	if err != nil {
+		r.logger.Error("failed to unmarshal json data", zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to unmarshal json data")
+	}
+
+	decryptedSecret, err := r.vault.Encrypt(ctx.Request().Context(), mapData)
+	if err != nil {
+		r.logger.Error("failed to decrypt secret", zap.Error(err))
+		return ctx.JSON(http.StatusInternalServerError, "failed to decrypt secret")
+	}
+
+	configSecret := models.TaskConfigSecret{
+		TaskID:       task.ID,
+		Secret:       decryptedSecret,
+		HealthStatus: models.TaskSecretHealthStatusUnknown,
+	}
+	err = r.db.SetTaskConfigSecret(configSecret)
+	if err != nil {
+		r.logger.Error("failed to set task config", zap.Error(err))
+		return ctx.JSON(http.StatusInternalServerError, "failed to set task config")
+	}
+
+	return ctx.NoContent(http.StatusOK)
 }

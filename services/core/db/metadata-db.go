@@ -145,9 +145,18 @@ func (db Database) ListQueryViews() ([]models.QueryView, error) {
 	return queryViews, nil
 }
 // get user layout
-func (db Database) GetUserLayout(userID string) (*models.UserLayout, error) {
+func (db Database) GetUserLayouts(userID string) ([]models.UserLayout, error) {
+	var userLayouts []models.UserLayout
+	err := db.orm.Where("user_id = ?", userID).Find(&userLayouts).Error
+	if err != nil {
+		return nil, err
+	}
+	return userLayouts, nil
+}
+// get user layout
+func (db Database) GetUserDefaultLayout(userID string) (*models.UserLayout, error) {
 	var userLayout models.UserLayout
-	err := db.orm.First(&userLayout, "user_id = ?", userID).Error
+	err := db.orm.First(&userLayout, "user_id = ? AND is_default = ?", userID, true).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -158,15 +167,17 @@ func (db Database) GetUserLayout(userID string) (*models.UserLayout, error) {
 }
 // set user layout
 func (db Database) SetUserLayout( layoutConfig models.UserLayout) error {
-	err:= db.orm.Model(&models.UserLayout{}).
-		Where("user_id = ?", layoutConfig.UserID).Update("layout_config", layoutConfig.LayoutConfig).Error
+	// upsert layout
+	err := db.orm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"layout_config", "name", "description", "is_default", "is_private","updated_at"}),
+	}).Create(&layoutConfig).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
 		return err
 	}
+	// set default layout
 	return nil
+
 	
 }
 // get public layouts 

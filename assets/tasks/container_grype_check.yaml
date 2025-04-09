@@ -1,7 +1,7 @@
 ID: "container-vulnerability-scanner"
 Name: "Container Vulnerability Scanner"
 Description: "Check if all container artifacts are free of vulnerabilities"
-ImageURL: "ghcr.io/opengovern/og-task-container-vulnerability:local-latest"
+ImageURL: "ghcr.io/opengovern/og-task-container-vulnerability:local-v0.0.71"
 Command: "/og-task-container-vulnerability"
 ResultType: "oci_container_vulnerabilities"
 WorkloadType: "deployment"

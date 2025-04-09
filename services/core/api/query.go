@@ -17,9 +17,12 @@ const (
 type RunQueryRequest struct {
 	Page       Page                 `json:"page" validate:"required"`
 	Query      *string              `json:"query"`
+	UseCache   *bool                `json:"use_cache"`
+	QueryId    *string              `json:"query_id"`
 	AccountId  *string              `json:"account_id"`
 	SourceId   *string              `json:"source_id"`
 	ResultType *string              `json:"result_type"`
+	Params     map[string]string    `json:"params"`
 	Engine     *QueryEngine         `json:"engine"`
 	Sorts      []NamedQuerySortItem `json:"sorts"`
 }
@@ -87,4 +90,9 @@ type GetAsyncQueryRunResultResponse struct {
 	TriggeredAt int64            `json:"triggeredAt"`
 	EvaluatedAt int64            `json:"evaluatedAt"`
 	Result      [][]string       `json:"result"`
+}
+
+type CachedEnabledQuery struct {
+	QueryID string `json:"queryID"`
+	LastRun time.Time
 }

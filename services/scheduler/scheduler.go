@@ -577,6 +577,9 @@ func (s *Scheduler) Run(ctx context.Context) error {
 		s.RunCheckupJobScheduler(ctx)
 	})
 	utils.EnsureRunGoroutine(func() {
+		s.RunNamedQueryCache(ctx)
+	})
+	utils.EnsureRunGoroutine(func() {
 		s.RunDeletedIntegrationsResourcesCleanup(ctx)
 	})
 	utils.EnsureRunGoroutine(func() {
@@ -587,6 +590,10 @@ func (s *Scheduler) Run(ctx context.Context) error {
 		s.logger.Fatal("CheckupJobResult consumer exited", zap.Error(s.RunCheckupJobResultsConsumer(ctx)))
 		wg.Done()
 	})
+	utils.EnsureRunGoroutine(func() {
+		s.RunScheduledJobCleanup()
+	})
+
 	utils.EnsureRunGoroutine(func() {
 		s.RunScheduledJobCleanup()
 	})

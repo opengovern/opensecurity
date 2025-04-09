@@ -11,7 +11,7 @@ import (
 
 func tableArtifactPackageList(_ context.Context) *plugin.Table {
 	return &plugin.Table{
-		Name:        "artifact_package_list",
+		Name:        "software_packages",
 		Description: "Platform Artifact SBOMs",
 		Cache: &plugin.TableCacheOptions{
 			Enabled: false,

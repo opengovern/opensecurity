@@ -1,10 +1,12 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Database struct {
@@ -15,6 +17,7 @@ func (db Database) Initialize() error {
 	err := db.Orm.AutoMigrate(
 		&models.Task{},
 		&models.TaskRun{},
+		&models.TaskConfigSecret{},
 	)
 	if err != nil {
 		return err
@@ -49,6 +52,9 @@ func (db Database) GetTask(id string) (*models.Task, error) {
 	tx := db.Orm.Where("id = ?", id).
 		First(&task)
 	if tx.Error != nil {
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, tx.Error
 	}
 
@@ -93,6 +99,24 @@ func (db Database) FetchCreatedTaskRunsByTaskID(taskID string) ([]models.TaskRun
 	}
 
 	return tasks, nil
+}
+
+// FetchLastCreatedTaskRunsByTaskID retrieves last task runs
+func (db Database) FetchLastCreatedTaskRunsByTaskID(taskID string) (*models.TaskRun, error) {
+	var task models.TaskRun
+	tx := db.Orm.Model(&models.TaskRun{}).
+		Where("task_id = ?", taskID).
+		Where("status = ?", models.TaskRunStatusCreated).
+		Order("id desc").
+		First(&task)
+	if tx.Error != nil {
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, tx.Error
+	}
+
+	return &task, nil
 }
 
 // TimeoutTaskRunsByTaskID Timeout task runs for given task id by given timeout interval
@@ -142,4 +166,39 @@ func (db Database) GetTaskList() ([]models.Task, error) {
 	}
 
 	return tasks, nil
+}
+
+func (db Database) SetTaskConfigSecret(configSecret models.TaskConfigSecret) error {
+	tx := db.Orm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "task_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"secret", "health_status"}),
+	}).Create(&configSecret)
+
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	return nil
+}
+
+func (db Database) UpdateTaskConfigSecretHealthStatus(taskId string, healthStatus models.TaskSecretHealthStatus) error {
+	tx := db.Orm.Model(&models.TaskConfigSecret{}).Where("task_id = ?", taskId).Update("health_status", healthStatus)
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	return nil
+}
+
+func (db Database) GetTaskConfigSecret(taskId string) (*models.TaskConfigSecret, error) {
+	var configSecret models.TaskConfigSecret
+	tx := db.Orm.Model(&models.TaskConfigSecret{}).Where("task_id = ?", taskId).First(&configSecret)
+	if tx.Error != nil {
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, tx.Error
+	}
+
+	return &configSecret, nil
 }

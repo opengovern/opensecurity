@@ -3,10 +3,14 @@ package core
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgtype"
 	"net/http"
+	"net/url"
 	"regexp"
 	"sort"
 	"strings"
@@ -386,6 +390,24 @@ func (h *HttpHandler) ListQueriesTags(ctx echo.Context) error {
 	return ctx.JSON(200, res)
 }
 
+// ListCacheEnabledQueries godoc
+//
+//	@Summary		List cache enabled queries
+//	@Description	List cache enabled queries
+//	@Security		BearerToken
+//	@Tags			named_query
+//	@Produce		json
+//	@Success		200	{object}	[]api.NamedQueryTagsResult
+//	@Router			/inventory/api/v3/queries/cache-enabled [get]
+func (h *HttpHandler) ListCacheEnabledQueries(ctx echo.Context) error {
+	queryRuns, err := h.db.ListCacheEnabledNamedQueries()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return ctx.JSON(200, queryRuns)
+}
+
 // RunQuery godoc
 //
 //	@Summary		Run query
@@ -403,8 +425,50 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 	if err := bindValidate(ctx, &req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	if req.Query == nil || *req.Query == "" {
+	if (req.Query == nil || *req.Query == "") && req.QueryId == nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Policy is required")
+	}
+
+	paramsHash, err := calculateParamsHash(req.Params)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to calculate params hash: "+err.Error())
+	}
+
+	if req.UseCache == nil {
+		req.UseCache = aws.Bool(true)
+	}
+
+	var namedQuery *models.NamedQuery
+	if req.QueryId != nil && (req.Query == nil || *req.Query == "") {
+		if *req.UseCache {
+			runQueryCache, err := h.db.GetRunNamedQueryCache(*req.QueryId, paramsHash)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			}
+			if runQueryCache != nil && runQueryCache.Result.Status == pgtype.Present && runQueryCache.LastRun.After(time.Now().Add(-1*time.Hour)) &&
+				runQueryCache.Result.Bytes != nil {
+				var resp api.RunQueryResponse
+				err = json.Unmarshal(runQueryCache.Result.Bytes, &resp)
+
+				if req.ResultType != nil && strings.ToLower(*req.ResultType) == "csv" {
+					csvData, err := resp.ToCSV()
+					if err != nil {
+						return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+					}
+
+					ctx.Response().Header().Set("Content-Type", "text/csv")
+					return ctx.String(http.StatusOK, csvData)
+				}
+
+				return ctx.JSON(200, resp)
+			}
+		}
+
+		namedQuery, err = h.db.GetQuery(*req.QueryId)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+		req.Query = &namedQuery.Query.QueryToExecute
 	}
 
 	if req.Page.Size == 0 {
@@ -420,6 +484,10 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		queryParamMap[qp.Key] = qp.Value
 	}
 	h.queryParamsMu.RUnlock()
+
+	for k, v := range req.Params {
+		queryParamMap[k] = v
+	}
 
 	queryTemplate, err := template.New("query").Parse(*req.Query)
 	if err != nil {
@@ -445,6 +513,13 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		return fmt.Errorf("invalid query engine: %s", *req.Engine)
 	}
 
+	if namedQuery != nil {
+		err = h.CacheQueryResult(*req.QueryId, paramsHash, *resp)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
 	if req.ResultType != nil && strings.ToLower(*req.ResultType) == "csv" {
 		csvData, err := resp.ToCSV()
 		if err != nil {
@@ -454,7 +529,61 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		ctx.Response().Header().Set("Content-Type", "text/csv")
 		return ctx.String(http.StatusOK, csvData)
 	}
+
 	return ctx.JSON(200, resp)
+}
+
+func (h *HttpHandler) CacheQueryResult(queryId string, paramsHash string, resp api.RunQueryResponse) error {
+	c := models.RunNamedQueryRunCache{
+		QueryID:    queryId,
+		LastRun:    time.Now(),
+		ParamsHash: paramsHash,
+	}
+
+	respJsonData, err := json.Marshal(resp)
+	if err != nil {
+		return err
+	}
+	respJsonb := pgtype.JSONB{}
+	err = respJsonb.Set(respJsonData)
+	if err != nil {
+		return err
+	}
+	c.Result = respJsonb
+
+	return h.db.UpsertRunNamedQueryCache(c)
+}
+
+func calculateParamsHash(params map[string]string) (string, error) {
+	if len(params) == 0 {
+		return "", nil
+	}
+
+	keys := make([]string, 0, len(params))
+	for k := range params {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	var builder strings.Builder
+	for i, k := range keys {
+		if i > 0 {
+			builder.WriteString("&")
+		}
+		encodedKey := url.QueryEscape(k)
+		encodedValue := url.QueryEscape(params[k])
+
+		builder.WriteString(encodedKey)
+		builder.WriteString("=")
+		builder.WriteString(encodedValue)
+	}
+	canonicalString := builder.String()
+
+	hashBytes := sha256.Sum256([]byte(canonicalString))
+
+	hashString := hex.EncodeToString(hashBytes[:])
+
+	return hashString, nil
 }
 
 // GetRecentRanQueries godoc

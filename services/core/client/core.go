@@ -40,6 +40,7 @@ type CoreServiceClient interface {
 	GetAbout(ctx *httpclient.Context) (*api.About, error)
 	ReloadPluginSteampipeConfig(ctx *httpclient.Context, pluginId string) error
 	RemovePluginSteampipeConfig(ctx *httpclient.Context, pluginId string) error
+	ListCacheEnabledQueries(ctx *httpclient.Context) ([]models.NamedQueryWithCacheStatus, error)
 }
 
 type coreClient struct {
@@ -564,4 +565,18 @@ func (s *coreClient) RemovePluginSteampipeConfig(ctx *httpclient.Context, plugin
 	}
 
 	return nil
+}
+
+func (s *coreClient) ListCacheEnabledQueries(ctx *httpclient.Context) ([]models.NamedQueryWithCacheStatus, error) {
+	url := fmt.Sprintf("%s/api/v3/queries/cache-enabled", s.baseURL)
+
+	var resp []models.NamedQueryWithCacheStatus
+	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &resp); err != nil {
+		if 400 <= statusCode && statusCode < 500 {
+			return nil, echo.NewHTTPError(statusCode, err.Error())
+		}
+		return nil, err
+	}
+
+	return resp, nil
 }

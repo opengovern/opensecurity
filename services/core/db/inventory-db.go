@@ -1,20 +1,19 @@
 package db
 
-
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/lib/pq"
 	"github.com/opengovern/og-util/pkg/integration"
+	"github.com/opengovern/og-util/pkg/model"
+	"github.com/opengovern/opensecurity/services/core/db/models"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"strings"
 	"time"
-	"github.com/lib/pq"
-	"github.com/opengovern/og-util/pkg/model"
-	"gorm.io/gorm/clause"
-	"github.com/opengovern/opensecurity/services/core/db/models"
 )
-
-
 
 func (db Database) GetQueriesWithFilters(search *string) ([]models.NamedQuery, error) {
 	var s []models.NamedQuery
@@ -547,4 +546,46 @@ func (db Database) GetQueryParameters() ([]string, error) {
 	}
 
 	return parameters, nil
+}
+
+func (db Database) UpsertRunNamedQueryCache(cacheEntry models.RunNamedQueryRunCache) error {
+	tx := db.orm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "query_id"}, {Name: "params_hash"}},
+		DoUpdates: clause.AssignmentColumns([]string{"last_run", "result"}),
+	}).Create(&cacheEntry)
+
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	return nil
+}
+
+func (db Database) GetRunNamedQueryCache(queryId string, paramsHash string) (*models.RunNamedQueryRunCache, error) {
+	var queryParam models.RunNamedQueryRunCache
+	err := db.orm.Where("query_id = ?", queryId).Where("params_hash = ?", paramsHash).First(&queryParam).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &queryParam, nil
+}
+
+func (db Database) ListCacheEnabledNamedQueries() ([]models.NamedQueryWithCacheStatus, error) {
+	var results []models.NamedQueryWithCacheStatus
+
+	tx := db.orm.
+		Model(&models.NamedQuery{}).
+		Select("named_queries.*, nc.last_run").
+		Joins("LEFT JOIN run_named_query_run_caches AS nc ON named_queries.id = nc.query_id").
+		Where("named_queries.cache_enabled = ?", true).
+		Scan(&results)
+
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return results, nil
 }

@@ -19,6 +19,7 @@ const (
 type OsvVulnerabilityDetail struct {
 	SchemaVersion    string          `json:"schema_version,omitempty"`
 	ID               string          `json:"id"`
+	CveID            string          `json:"cve_id"`
 	Modified         string          `json:"modified"`
 	Published        string          `json:"published,omitempty"`
 	Withdrawn        string          `json:"withdrawn,omitempty"`
@@ -115,6 +116,7 @@ func (p OsvVulnerabilityDetailPaginator) NextPage(ctx context.Context) ([]OsvVul
 var osvVulnerabilityDetailMapping = map[string]string{
 	"schema_version": "Description.SchemaVersion",
 	"id":             "Description.ID",
+	"cve_id":         "Description.CveID",
 	"modified":       "Description.Modified",
 	"published":      "Description.Published",
 	"withdrawn":      "Description.Withdrawn",

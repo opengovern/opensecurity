@@ -3,6 +3,7 @@ package scheduler
 import (
 	"github.com/opengovern/og-util/pkg/jq"
 	"github.com/opengovern/og-util/pkg/ticker"
+	"github.com/opengovern/og-util/pkg/vault"
 	"github.com/opengovern/opensecurity/pkg/utils"
 	"github.com/opengovern/opensecurity/services/tasks/config"
 	"github.com/opengovern/opensecurity/services/tasks/db"
@@ -32,6 +33,7 @@ type TaskScheduler struct {
 	NatsConfig NatsConfig
 	Interval   uint64
 	Timeout    uint64
+	vault      vault.VaultSourceConfig
 }
 
 func NewTaskScheduler(
@@ -41,7 +43,7 @@ func NewTaskScheduler(
 	jq *jq.JobQueue,
 
 	cfg config.Config,
-
+	vault vault.VaultSourceConfig,
 	taskID, ResultType string, natsConfig NatsConfig, interval uint64, timeout uint64) *TaskScheduler {
 	return &TaskScheduler{
 		runSetupNatsStreams: runSetupNatsStreams,
@@ -49,7 +51,8 @@ func NewTaskScheduler(
 		db:                  db,
 		jq:                  jq,
 
-		cfg: cfg,
+		cfg:   cfg,
+		vault: vault,
 
 		TaskID:     taskID,
 		ResultType: ResultType,
@@ -65,6 +68,11 @@ func (s *TaskScheduler) Run(ctx context.Context) {
 	utils.EnsureRunGoroutine(func() {
 		s.RunPublisher(ctx)
 	})
+	if s.Interval > 0 {
+		utils.EnsureRunGoroutine(func() {
+			s.CreateTask(ctx)
+		})
+	}
 	utils.EnsureRunGoroutine(func() {
 		s.logger.Fatal("RunTaskResponseConsumer exited", zap.Error(s.RunTaskResponseConsumer(ctx)))
 	})
@@ -78,6 +86,21 @@ func (s *TaskScheduler) RunPublisher(ctx context.Context) {
 
 	for ; ; <-t.C {
 		if err := s.runPublisher(ctx); err != nil {
+			s.logger.Error("failed to run compliance publisher", zap.Error(err))
+			continue
+		}
+	}
+}
+
+func (s *TaskScheduler) CreateTask(ctx context.Context) {
+	s.logger.Info("Scheduling publisher on a timer")
+
+	interval := time.Duration(s.Interval) * time.Minute
+	t := ticker.NewTicker(interval, time.Second*10)
+	defer t.Stop()
+
+	for ; ; <-t.C {
+		if err := s.createTask(ctx); err != nil {
 			s.logger.Error("failed to run compliance publisher", zap.Error(err))
 			continue
 		}

@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jackc/pgtype"
+	"github.com/labstack/echo/v4"
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/tasks"
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
+	"net/http"
 )
 
 func (s *TaskScheduler) runPublisher(ctx context.Context) error {
@@ -39,6 +41,21 @@ func (s *TaskScheduler) runPublisher(ctx context.Context) error {
 			_ = s.db.UpdateTaskRun(run.ID, models.TaskRunStatusFailed, result, "failed to get params")
 			s.logger.Error("failed to get params", zap.Error(err), zap.Uint("runId", run.ID))
 			return err
+		}
+		configSecrets, err := s.db.GetTaskConfigSecret(run.TaskID)
+		if err != nil {
+			s.logger.Error("failed to get task config secrets", zap.Error(err))
+			return err
+		}
+		if configSecrets != nil {
+			mapData, err := s.vault.Decrypt(ctx, configSecrets.Secret)
+			if err != nil {
+				s.logger.Error("failed to decrypt secret", zap.Error(err))
+				return echo.NewHTTPError(http.StatusInternalServerError, "failed to decrypt config")
+			}
+			for k, v := range mapData {
+				params[k] = v
+			}
 		}
 		req := tasks.TaskRequest{
 			EsDeliverEndpoint:         s.cfg.ESSinkEndpoint,

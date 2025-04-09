@@ -3,10 +3,15 @@ package tasks
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/jackc/pgtype"
 	kedav1alpha1 "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
+	api3 "github.com/opengovern/og-util/pkg/api"
+	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/koanf"
+	"github.com/opengovern/og-util/pkg/vault"
+	core "github.com/opengovern/opensecurity/services/core/client"
 	"github.com/opengovern/opensecurity/services/tasks/config"
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	"github.com/opengovern/opensecurity/services/tasks/scheduler"
@@ -58,6 +63,23 @@ func start(ctx context.Context) error {
 
 	logger = logger.Named("tasks")
 
+	coreClient := core.NewCoreServiceClient(cfg.Core.BaseURL)
+
+	_, err = coreClient.VaultConfigured(&httpclient.Context{UserRole: api3.AdminRole})
+	if err != nil && errors.Is(err, core.ErrConfigNotFound) {
+		return err
+	}
+
+	var vaultSc vault.VaultSourceConfig
+	switch cfg.Vault.Provider {
+	case vault.HashiCorpVault:
+		vaultSc, err = vault.NewHashiCorpVaultClient(ctx, logger, cfg.Vault.HashiCorp, cfg.Vault.KeyId)
+		if err != nil {
+			logger.Error("failed to create vault source config", zap.Error(err))
+			return err
+		}
+	}
+
 	// setup postgres connection
 	postgresCfg := postgres.Config{
 		Host:    cfg.Postgres.Host,
@@ -90,7 +112,7 @@ func start(ctx context.Context) error {
 		return err
 	}
 
-	mainScheduler, err := scheduler.NewMainScheduler(cfg, logger, db)
+	mainScheduler, err := scheduler.NewMainScheduler(cfg, logger, db, vaultSc)
 	if err != nil {
 		return err
 	}
@@ -103,6 +125,7 @@ func start(ctx context.Context) error {
 	return httpserver.RegisterAndStart(ctx, logger, cfg.Http.Address, &httpRoutes{
 		logger: logger,
 		db:     db,
+		vault:  vaultSc,
 	})
 }
 

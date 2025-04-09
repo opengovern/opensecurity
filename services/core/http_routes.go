@@ -5,13 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/opengovern/og-util/pkg/integration"
 	"net/http"
 	"net/url"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/opengovern/og-util/pkg/integration"
 
 	"github.com/opengovern/opensecurity/pkg/utils"
 
@@ -93,6 +95,7 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	views.GET("", httpserver.AuthorizeHandler(h.GetViews, api3.ViewerRole))
 	// inventory
 	v3.POST("/queries", httpserver.AuthorizeHandler(h.ListQueriesV2, api3.ViewerRole))
+	v3.GET("/queries/cache-enabled", httpserver.AuthorizeHandler(h.ListCacheEnabledQueries, api3.ViewerRole))
 	v3.GET("/queries/filters", httpserver.AuthorizeHandler(h.ListQueriesFilters, api3.ViewerRole))
 	v3.GET("/queries/:query_id", httpserver.AuthorizeHandler(h.GetQuery, api3.ViewerRole))
 	v3.GET("/queries/tags", httpserver.AuthorizeHandler(h.ListQueriesTags, api3.ViewerRole))
@@ -110,12 +113,11 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v4 := r.Group("/api/v4")
 	v4.GET("/about", httpserver.AuthorizeHandler(h.GetAboutShort, api3.ViewerRole))
 	v4.GET("/queries/sync", httpserver.AuthorizeHandler(h.SyncQueries, api3.ViewerRole))
-	v4.POST("layout/get", httpserver.AuthorizeHandler(h.GetUserLayout, api3.ViewerRole))
-	v4.POST("layout/set", httpserver.AuthorizeHandler(h.SetUserLayout, api3.ViewerRole))
-	v4.POST("layout/change-privacy", httpserver.AuthorizeHandler(h.ChangePrivacy, api3.ViewerRole))
-	v4.GET("layout/public", httpserver.AuthorizeHandler(h.GetPublicLayouts, api3.ViewerRole))
-
-
+	v4.POST("/layout/get", httpserver.AuthorizeHandler(h.GetUserLayouts, api3.ViewerRole))
+	v4.POST("/layout/get-default", httpserver.AuthorizeHandler(h.GetUserDefaultLayout, api3.ViewerRole))
+	v4.POST("/layout/set", httpserver.AuthorizeHandler(h.SetUserLayout, api3.ViewerRole))
+	v4.POST("/layout/change-privacy", httpserver.AuthorizeHandler(h.ChangePrivacy, api3.ViewerRole))
+	v4.GET("/layout/public", httpserver.AuthorizeHandler(h.GetPublicLayouts, api3.ViewerRole))
 
 }
 
@@ -1587,25 +1589,81 @@ func (h HttpHandler) SyncQueries(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, struct{}{})
 }
 
-func (h HttpHandler) GetUserLayout(echoCtx echo.Context) error {
+func (h HttpHandler) GetUserLayouts(echoCtx echo.Context) error {
 	var req api.GetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return err
 	}
 	userId := req.UserID
-	layout,err:= h.db.GetUserLayout(userId)
-	if( err != nil) {
+	layouts, err := h.db.GetUserLayouts(userId)
+	if err != nil {
+		h.logger.Error("failed to get user layout", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user layout")
+	}
+	if layouts == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "user layout not found")
+	}
+	var response []api.GetUserLayoutResponse
+	for _, layout := range layouts {
+	response = append(response, api.GetUserLayoutResponse{
+		ID: layout.ID,
+		UserID:       userId,
+	LayoutConfig: func() []map[string]any {
+		var config []map[string]any
+		if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
+			h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+			return nil
+		}
+		return config
+	}(),
+	Name:         layout.Name,
+	Description: layout.Description,
+	IsDefault: layout.IsDefault,
+	IsPrivate: layout.IsPrivate,
+	UpdatedAt: layout.UpdatedAt,
+	})
+}
+
+	return echoCtx.JSON(http.StatusOK, response)
+
+
+}
+
+func (h HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
+	var req api.GetUserLayoutRequest
+	if err := bindValidate(echoCtx, &req); err != nil {
+		return err
+	}
+	userId := req.UserID
+	layout, err := h.db.GetUserDefaultLayout(userId)
+	if err != nil {
 		h.logger.Error("failed to get user layout", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user layout")
 	}
 	if layout == nil {
 		return echo.NewHTTPError(http.StatusNotFound, "user layout not found")
 	}
-	return echoCtx.JSON(http.StatusOK, layout)
-	
+	return echoCtx.JSON(http.StatusOK, api.GetUserLayoutResponse{
+		ID: 		layout.ID,
+		UserID:       userId,
+		LayoutConfig: func() []map[string]any {
+			var config []map[string]any
+			if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
+				h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+				return nil
+			}
+			return config
+		}(),
+		Name:         layout.Name,
+		Description: layout.Description,
+		IsPrivate: layout.IsPrivate,
+		IsDefault: layout.IsDefault,
+		UpdatedAt: layout.UpdatedAt,
+	})
+
 }
 func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
-	var req api.SetUserLayout
+	var req api.SetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return err
 	}
@@ -1616,12 +1674,26 @@ func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 		h.logger.Error("failed to marshal layout config", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to marshal layout config")
 	}
-	 layout_config := pgtype.JSONB{}
-	 layout_config.Set(layout)
+	layout_config := pgtype.JSONB{}
+	layout_config.Set(layout)
+	var id string
+	if req.ID != "" {
+		id = req.ID
+	}else{
+		id = uuid.New().String()
+	}
+
+	
 
 	user_layout := models.UserLayout{
-		UserID: userId,
+		ID: id,
+		UserID:       userId,
 		LayoutConfig: layout_config,
+		IsDefault: req.IsDefault,
+		Name:         req.Name,
+		Description: req.Description,
+		IsPrivate:    req.IsPrivate,
+		UpdatedAt:  time.Now(),
 	}
 	err = h.db.SetUserLayout(user_layout)
 	if err != nil {
@@ -1631,7 +1703,7 @@ func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	return echoCtx.NoContent(http.StatusOK)
 }
 
-func (h HttpHandler) ChangePrivacy (echoCtx echo.Context) error{
+func (h HttpHandler) ChangePrivacy(echoCtx echo.Context) error {
 	var req api.ChangePrivacyRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return err
@@ -1657,5 +1729,25 @@ func (h HttpHandler) GetPublicLayouts(echoCtx echo.Context) error {
 	if layouts == nil {
 		return echo.NewHTTPError(http.StatusNotFound, "public layouts not found")
 	}
-	return echoCtx.JSON(http.StatusOK, layouts)
+	// convert layouts to []api.GetUserLayoutResponse
+	var layoutsResponse []api.GetUserLayoutResponse
+	for _, layout := range layouts {
+		layoutResponse := api.GetUserLayoutResponse{
+			UserID:       layout.UserID,
+			Name:         layout.Name,
+			Description:  layout.Description,
+			UpdatedAt:   layout.UpdatedAt,
+			LayoutConfig: func() []map[string]any {
+			var config []map[string]any
+			if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
+				h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+				return nil
+			}
+			return config
+		}(),
+		}
+		layoutsResponse = append(layoutsResponse, layoutResponse)
+	}
+	
+	return echoCtx.JSON(http.StatusOK, layoutsResponse)
 }
