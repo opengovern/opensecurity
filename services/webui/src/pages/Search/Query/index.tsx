@@ -158,10 +158,10 @@ export default function Query() {
     const [searchCategory, setSearchCategory] = useState('')
     const [selectedRow, setSelectedRow] = useState({})
     const [openDrawer, setOpenDrawer] = useState(false)
-    const [openSearch, setOpenSearch] = useState(true)
     const [showEditor, setShowEditor] = useState(true)
     const [pageSize, setPageSize] = useState(1000)
     const [autoRun, setAutoRun] = useState(false)
+    const [navigationOpen, setNavigationOpen] = useState(true)
 
     const [page, setPage] = useState(0)
 
@@ -334,23 +334,31 @@ export default function Query() {
     useEffect(() => {
         getIntegrations()
     }, [])
-    const RunCode =(query: string)=>{
-          setLoaded(true)
-          setPage(0)
-          sendNowWithParams(
-              {
-                  page: { no: 1, size: pageSize },
-                  // @ts-ignore
-                  engine: 'cloudql',
-                  query: query,
-              },
-              {}
-          )
-
+    const RunCode = (query: string) => {
+        setLoaded(true)
+        setPage(0)
+        sendNowWithParams(
+            {
+                page: { no: 1, size: pageSize },
+                // @ts-ignore
+                engine: 'cloudql',
+                query: query,
+            },
+            {}
+        )
     }
 
     return (
         <>
+            <Modal
+                visible={openDrawer}
+                onDismiss={() => setOpenDrawer(false)}
+                header="Query Result"
+                className="min-w-[500px]"
+                size="large"
+            >
+                <RenderObject obj={selectedRow} />
+            </Modal>
             <Header
                 className={`   rounded-xl mb-4    ${
                     false ? 'rounded-b-none' : ''
@@ -367,105 +375,36 @@ export default function Query() {
             </Header>
             <AppLayout
                 toolsOpen={false}
-                navigationOpen={false}
-                contentType="table"
-                className="w-full"
-                toolsHide={true}
-                navigationHide={true}
-                splitPanelOpen={openLayout}
-                onSplitPanelToggle={() => {
-                    setOpenLayout(!openLayout)
+                navigationOpen={navigationOpen}
+                onNavigationChange={(event) => {
+                    setNavigationOpen(event.detail.open)
                 }}
-                splitPanelSize={splitSize}
-                onSplitPanelResize={({ detail }) => {
-                    setSplitSize(detail.size)
-                }}
-                splitPanel={
-                    // @ts-ignore
-                    <SplitPanel
-                        // @ts-ignore
-                        header={<>Saved Queries</>}
-                    >
-                        <>
-                            <AllQueries
-                                setTab={setTab}
-                                setOpenLayout={setOpenLayout}
-                                sendNowWithParams={sendNowWithParams}
-                                setCode={setCode}
-                            />
-                        </>
-                    </SplitPanel>
-                }
-                content={
+                navigation={
                     <>
                         <Flex
-                            className="w-full"
-                            alignItems="start"
                             flexDirection="col"
+                            justifyContent="start"
+                            alignItems="start"
+                            className="gap-2 overflow-y-scroll w-full mt-2 "
                         >
-                            <Flex
-                                flexDirection="row"
-                                className="gap-5 "
-                                justifyContent="start"
-                                alignItems="start"
-                                style={{ flex: '1 1 0' }}
-                            >
-                                <Modal
-                                    visible={openDrawer}
-                                    onDismiss={() => setOpenDrawer(false)}
-                                    header="Query Result"
-                                    className="min-w-[500px]"
-                                    size="large"
-                                >
-                                    <RenderObject obj={selectedRow} />
-                                </Modal>
-                                {openSearch ? (
+                            <Text className="text-base text-black flex flex-row justify-between w-full">
+                                <span className="w-full">Plugin schema</span>
+                            </Text>
+                            <>
+                                {schemaLoading ? (
                                     <>
-                                        <Card className="p-3 rounded-xl w-1/4 h-full sm:flex hidden  ">
-                                            <Flex
-                                                flexDirection="col"
-                                                justifyContent="start"
-                                                alignItems="start"
-                                                className="gap-2 overflow-y-scroll w-full max-h-[300px] "
-                                            >
-                                                <Text className="text-base text-black flex flex-row justify-between w-full">
-                                                    <span className="w-full">
-                                                        Plugin schema
-                                                    </span>
-                                                    <Flex
-                                                        justifyContent="end"
-                                                        // className="mt-12"
-                                                    >
-                                                        <Button
-                                                            variant="light"
-                                                            onClick={() =>
-                                                                setOpenSearch(
-                                                                    false
-                                                                )
-                                                            }
-                                                        >
-                                                            <ChevronDoubleLeftIcon className="h-4" />
-                                                        </Button>
-                                                    </Flex>
-                                                </Text>
-                                                <>
-                                                    {schemaLoading ? (
-                                                        <>
-                                                            <Spinner />
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            {integrations?.map(
-                                                                (
-                                                                    integration: any,
-                                                                    index
-                                                                ) => {
-                                                                    return (
-                                                                        <>
-                                                                            {/*   prettier-ignore */}
-                                                                            {
-                                                                                //  prettier-ignore
-                                                                                (integration.install_state ==
+                                        <Spinner />
+                                    </>
+                                ) : (
+                                    <>
+                                        {integrations?.map(
+                                            (integration: any, index) => {
+                                                return (
+                                                    <>
+                                                        {/*   prettier-ignore */}
+                                                        {
+                                                            //  prettier-ignore
+                                                            (integration.install_state ==
                                                                     'installed' &&
                                                                 integration.operational_status ==
                                                                     'enabled') ? (
@@ -631,68 +570,73 @@ export default function Query() {
                                                                                 </span>
                                                                     </>
                                                                 )
-                                                                            }
-                                                                        </>
-                                                                    )
-                                                                }
-                                                            )}
-                                                        </>
-                                                    )}
-                                                </>
-                                            </Flex>
-                                        </Card>
-                                    </>
-                                ) : (
-                                    <Flex
-                                        flexDirection="col"
-                                        justifyContent="center"
-                                        className="min-h-full w-fit"
-                                    >
-                                        <Button
-                                            variant="light"
-                                            onClick={() => setOpenSearch(true)}
-                                        >
-                                            <Flex
-                                                flexDirection="col"
-                                                className="gap-4 w-4 h-full min-h-20"
-                                            >
-                                                <TableCellsIcon />
-                                                <Text className="rotate-90">
-                                                    Plugin schema
-                                                </Text>
-                                            </Flex>
-                                        </Button>
-                                    </Flex>
-                                )}
-                                <Flex
-                                    className={`h-full max-h-[330px] w-full ${
-                                        openSearch && 'max-w-[75%]'
-                                    } `}
-                                >
-                                    <SQLEditor
-                                        value={code}
-                                        onChange={(value: any, event: any) => {
-                                            setSavedQuery('')
-                                            setCode(value)
-                                            setOpenLayout(false)
-
-                                            if (tab !== '3') {
-                                                setTab('3')
+                                                        }
+                                                    </>
+                                                )
                                             }
-                                        }}
-                                        tables={suggestTables}
-                                        tableFetch={(name: string) => {
-                                            getMasterSchema(name)
-                                        }}
-                                        run={RunCode}
-                                    />
-                                </Flex>
+                                        )}
+                                    </>
+                                )}
+                            </>
+                        </Flex>
+                    </>
+                }
+                contentType="table"
+                className="w-full"
+                toolsHide={true}
+                navigationHide={false}
+                splitPanelOpen={openLayout}
+                onSplitPanelToggle={() => {
+                    setOpenLayout(!openLayout)
+                }}
+                splitPanelSize={splitSize}
+                onSplitPanelResize={({ detail }) => {
+                    setSplitSize(detail.size)
+                }}
+                splitPanel={
+                    // @ts-ignore
+                    <SplitPanel
+                        // @ts-ignore
+                        header={<>Saved Queries</>}
+                    >
+                        <>
+                            <AllQueries
+                                setTab={setTab}
+                                setOpenLayout={setOpenLayout}
+                                sendNowWithParams={sendNowWithParams}
+                                setCode={setCode}
+                            />
+                        </>
+                    </SplitPanel>
+                }
+                content={
+                    <>
+                        <Flex className="flex-col gap-2 h-full">
+                            <Flex
+                                className={`h-full  w-full  `}
+                            >
+                                <SQLEditor
+                                    value={code}
+                                    onChange={(value: any, event: any) => {
+                                        setSavedQuery('')
+                                        setCode(value)
+                                        setOpenLayout(false)
+
+                                        if (tab !== '3') {
+                                            setTab('3')
+                                        }
+                                    }}
+                                    tables={suggestTables}
+                                    tableFetch={(name: string) => {
+                                        getMasterSchema(name)
+                                    }}
+                                    run={RunCode}
+                                />
                             </Flex>
                             <Flex flexDirection="col" className="w-full ">
                                 <Flex flexDirection="col" className="mb-4">
-                                    =
                                     <Flex className="w-full mt-4">
-                                        <Flex
+                                        {/* <Flex
                                             justifyContent="start"
                                             className="gap-1"
                                         >
@@ -737,8 +681,8 @@ export default function Query() {
                                                     10,000
                                                 </SelectItem>
                                             </Select>
-                                        </Flex>
-                                        <Flex className="w-max gap-x-3">
+                                        </Flex> */}
+                                        <Flex className="w-full gap-x-3 justify-end">
                                             {!!code.length && (
                                                 <KButton
                                                     className="  w-max min-w-max  "
@@ -839,7 +783,7 @@ export default function Query() {
                                     <KTable
                                         className="   min-h-[450px]   "
                                         // resizableColumns
-                                        // variant="full-page"
+                                        variant="full-page"
                                         renderAriaLive={({
                                             firstIndex,
                                             lastIndex,
