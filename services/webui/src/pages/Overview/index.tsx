@@ -3,7 +3,7 @@ import { Col, Flex, Grid } from '@tremor/react'
 
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { Alert, Button, Modal, Tabs } from '@cloudscape-design/components'
+import { Alert, Button, ButtonDropdown, Header, Modal, Tabs } from '@cloudscape-design/components'
 import FormField from '@cloudscape-design/components/form-field'
 import Input from '@cloudscape-design/components/input'
 import { error } from 'console'
@@ -258,6 +258,19 @@ const {
 
 
     }
+    const HandleAddItem = ()=>{
+        setLayouts([
+            ...layouts,
+            {
+                id: 'new',
+                name: 'Default Dashbord',
+                description: 'This is a default dashboard',
+                is_default: true,
+                is_private: true,
+                layout_config: []
+            },
+        ])
+    }
     return (
         <>
             <Modal
@@ -451,12 +464,26 @@ const {
                     </Alert>
                 )}
             </Modal>
-            <Tabs
-                
-                tabs={getTabItems()}
-                />
-           
-         
+            <Header
+                actions={
+                    <ButtonDropdown
+                        
+
+                        items={[{ id: 'add', text: 'Add new dashboard' }]}
+                        onItemClick={(event)=>{
+                            if (event.detail.id == 'add') {
+                                HandleAddItem()
+                            }
+                        }}
+
+                    >
+                        Add new Dashboard
+                    </ButtonDropdown>
+                }
+            >
+                Dashboards
+            </Header>
+            <Tabs tabs={getTabItems()} />
         </>
     )
 }

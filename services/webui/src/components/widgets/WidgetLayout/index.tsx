@@ -66,7 +66,7 @@ export interface WidgetLayoutProps {
 
 
 export default function WidgetLayout({input_layout,is_default} :WidgetLayoutProps) {
-    const [layout, setLayout] = useAtom(LayoutAtom)
+    const [layout, setLayout] = useState(input_layout)
     const [me, setMe] = useAtom(meAtom)
     const [items, setItems] = useState<Layout[]>([])
     const [layoutLoading, setLayoutLoading] = useState<boolean>(false)
