@@ -7,6 +7,16 @@ import { useNavigate } from 'react-router-dom'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { sampleAtom } from '../../store'
 import TopHeader from './Header'
+import {
+    AppLayoutToolbar,
+    BreadcrumbGroup,
+    Container,
+    Flashbar,
+    Header,
+    HelpPanel,
+    SideNavigation,
+    SplitPanel,
+} from '@cloudscape-design/components'
 type IProps = {
     children: ReactNode
     onScroll?: (e: UIEvent) => void
@@ -30,60 +40,118 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
     const showSidebar = url[1] == "callback" ? false : true
    
     return (
-        <Flex
-            flexDirection="row"
-            className="h-screen overflow-hidden"
-            justifyContent="start"
-        >
-            {showSidebar && show_compliance != 'false' && (
-                <Sidebar currentPage={current} />
-            )}
-            <div className="z-10 w-full h-full relative">
-                <Flex
-                    flexDirection="col"
-                    alignItems="center"
-                    justifyContent="between"
-                    className={`bg-gray-100 dark:bg-gray-900 h-screen ${
-                        current === 'assistant' ? '' : 'overflow-y-scroll'
-                    } overflow-x-hidden`}
-                    id="platform-container"
-                    onScroll={(e) => {
-                        if (onScroll) {
-                            onScroll(e)
+        // <Flex
+        //     flexDirection="row"
+        //     className="h-screen overflow-hidden"
+        //     justifyContent="start"
+        // >
+        //     {showSidebar && show_compliance != 'false' && (
+        //         <Sidebar currentPage={current} />
+        //     )}
+        //     <div className="z-10 w-full h-full relative">
+        //         <Flex
+        //             flexDirection="col"
+        //             alignItems="center"
+        //             justifyContent="between"
+        //             className={`bg-gray-100 dark:bg-gray-900 h-screen ${
+        //                 current === 'assistant' ? '' : 'overflow-y-scroll'
+        //             } overflow-x-hidden`}
+        //             id="platform-container"
+        //             onScroll={(e) => {
+        //                 if (onScroll) {
+        //                     onScroll(e)
+        //                 }
+        //             }}
+        //             ref={scrollRef}
+        //         >
+        //             {show_compliance == 'false' && (
+        //                 <>
+        //                     <TopHeader />
+        //                 </>
+        //             )}
+        //             <Flex
+        //                 justifyContent="center"
+        //                 className={`${
+        //                     current === 'assistant'
+        //                         ? 'h-fit'
+        //                         : 'sm:px-6 px-2  sm:mt-16 mt-4 h-fit '
+        //                 } ${showSidebar && ' 2xl:px-24'} ${ show_compliance =='false' ? 'sm:mt-16':'sm:mt-6'} `}
+        //                 // pl-44
+        //             >
+        //                 <div
+        //                     className={`w-full  ${
+        //                         current === 'dashboard' ? '' : ''
+        //                     } ${
+        //                         current === 'assistant'
+        //                             ? 'w-full max-w-full'
+        //                             : 'py-6'
+        //                     }`}
+        //                 >
+        //                     <>{children}</>
+        //                 </div>
+        //             </Flex>
+        //             <Footer />
+        //         </Flex>
+        //     </div>
+        //     <Notification />
+        // </Flex>
+        <>
+            <AppLayoutToolbar
+                breadcrumbs={
+                    <BreadcrumbGroup
+                        items={[
+                            { text: 'Home', href: '#' },
+                            { text: 'Service', href: '#' },
+                        ]}
+                    />
+                }
+                navigationOpen={true}
+                navigation={
+                    <SideNavigation
+                        header={{
+                            href: '#',
+                            text: 'Service name',
+                        }}
+                        items={[{ type: 'link', text: `Page #1`, href: `#` }]}
+                    />
+                }
+                notifications={
+                    <Flashbar
+                        items={[
+                            {
+                                type: 'info',
+                                content: 'This is an info flash message.',
+                                id: 'message_1',
+                            },
+                        ]}
+                    />
+                }
+                toolsOpen={true}
+                tools={
+                    <HelpPanel header={<h2>Overview</h2>}>
+                        Help content
+                    </HelpPanel>
+                }
+                content={
+                    <Container
+                        header={
+                            <Header
+                                variant="h2"
+                                description="Container description"
+                            >
+                                Container header
+                            </Header>
                         }
-                    }}
-                    ref={scrollRef}
-                >
-                    {show_compliance == 'false' && (
-                        <>
-                            <TopHeader />
-                        </>
-                    )}
-                    <Flex
-                        justifyContent="center"
-                        className={`${
-                            current === 'assistant'
-                                ? 'h-fit'
-                                : 'sm:px-6 px-2  sm:mt-16 mt-4 h-fit '
-                        } ${showSidebar && ' 2xl:px-24'} ${ show_compliance =='false' ? 'sm:mt-16':'sm:mt-6'} `}
-                        // pl-44
                     >
-                        <div
-                            className={`w-full  ${
-                                current === 'dashboard' ? '' : ''
-                            } ${
-                                current === 'assistant'
-                                    ? 'w-full max-w-full'
-                                    : 'py-6'
-                            }`}
-                        >
-                            <>{children}</>
-                        </div>
-                    </Flex>
-                    <Footer />
-                </Flex>
-            </div>
-            <Notification />
-        </Flex>
+                        <div className="contentPlaceholder" />
+                    </Container>
+                }
+                splitPanel={
+                    <SplitPanel header="Split panel header">
+                        Split panel content
+                    </SplitPanel>
+                }
+            />
+        </>
     )
 }
