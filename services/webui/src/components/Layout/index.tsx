@@ -104,6 +104,91 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                 })
             }
         }
+        if (path.includes('cloudql')) {
+            temp.push({
+                text: 'CloudQL',
+                href: '/cloudql',
+            })
+        }
+        if (path.includes('jobs')) {
+            temp.push({
+                text: 'Jobs',
+                href: '/jobs',
+            })
+        }
+        if (path.includes('administration')) {
+            temp.push({
+                text: 'Administration',
+                href: '/administration',
+            })
+        }
+        if (path.includes('ai')) {
+            temp.push({
+                text: 'AI Preview',
+                href: '/ai',
+            })
+        }
+        if (
+            path.includes('automation') ||
+            path.includes('dashboards') ||
+            path.includes('request-access') ||
+            path.includes('stacks') ||
+            path.includes('/workload-optimizer')
+        ) {
+            temp.push({
+                text: 'Request Access',
+                href: '/request-access',
+            })
+        }
+        if (path.includes('compliance')) {
+            if (url.length > 2) {
+                if (path.includes('report')) {
+                    temp.push({
+                        text: 'Compliance',
+                        href: '/compliance',
+                    })
+                    temp.push({
+                        text: 'Frameworks',
+                        href: url[0] + '/' + url[1] + '/' + url[2],
+                    })
+                    temp.push({
+                        text: 'Job Reports',
+                        href: path,
+                    })
+                } else {
+                    temp.push({
+                        text: 'Compliance',
+                        href: '/compliance',
+                    })
+                    temp.push({
+                        text: 'Frameworks',
+                        href: path,
+                    })
+                }
+            } else {
+                temp.push({
+                    text: 'Compliance',
+                    href: '/compliance',
+                })
+            }
+        }
+        if (path.includes('incidents')) {
+            if (url.length > 2) {
+                temp.push({
+                    text: 'All Incidents',
+                    href: '/incidents',
+                })
+                temp.push({
+                    text: 'Control Detail',
+                    href: path,
+                })
+            } else {
+                temp.push({
+                    text: 'All Incidents',
+                    href: '/incidents',
+                })
+            }
+        }
 
         return setBreadCrumbItems(temp)
     }
