@@ -204,3 +204,13 @@ table{
 .markdown-body menu {
   all: revert!important; /* Reverts styles to browser defaults */
 }
+
+.custom-nav{
+    li{
+        display: flex!important;
+        flex-direction: row!important;
+        justify-content: start;
+        align-items: center;
+        
+    }
+}

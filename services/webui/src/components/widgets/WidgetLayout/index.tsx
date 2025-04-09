@@ -1,5 +1,5 @@
-import { useAtom } from 'jotai'
-import { LayoutAtom, meAtom } from '../../../store'
+import { useAtom, useSetAtom } from 'jotai'
+import { LayoutAtom, meAtom, notificationAtom } from '../../../store'
 import * as React from 'react'
 import Board from '@cloudscape-design/board-components/board'
 import BoardItem from '@cloudscape-design/board-components/board-item'
@@ -8,6 +8,7 @@ import {
     Alert,
     Button,
     ButtonDropdown,
+    Checkbox,
     Input,
     Modal,
     Spinner,
@@ -17,9 +18,10 @@ import TableWidget from '../table'
 import axios from 'axios'
 import ChartWidget from '../charts'
 import KeyValueWidget from '../KeyValue'
-import Shortcuts from '../../../pages/Overview/Shortcuts'
-import Integrations from '../../../pages/Overview/Integrations'
 import { array } from 'prop-types'
+import Shortcuts from '../Shortcuts'
+import Integrations from '../Integrations'
+import SRE from '../KPI_Cards'
 
 const COMPONENT_MAPPING = {
     table: TableWidget,
@@ -27,6 +29,7 @@ const COMPONENT_MAPPING = {
     kpi: KeyValueWidget,
     shortcut: Shortcuts,
     integration: Integrations,
+    sre: SRE
 }
 const NUMBER_MAPPING = {
     0: 'First',
@@ -35,48 +38,53 @@ const NUMBER_MAPPING = {
     3: 'Fourth',
     4: 'Fifth',
 }
+export interface Layout {
+    id:           string;
+    data:         Data;
+    rowSpan:      number;
+    columnSpan:   number;
+    columnOffset: ColumnOffset;
+}
 
-export default function WidgetLayout() {
-    const [layout, setLayout] = useAtom(LayoutAtom)
+export interface ColumnOffset {
+    "4": number;
+}
+
+export interface Data {
+    componentId: string;
+    title:       string;
+    description: string;
+    props:       any;
+}
+
+export interface WidgetLayoutProps {
+    input_layout: any
+    is_default: boolean
+    HandleAddItem:Function
+}
+
+
+export default function WidgetLayout({
+    input_layout,
+    is_default,
+    HandleAddItem,
+}: WidgetLayoutProps) {
+    const [layout, setLayout] = useState(input_layout)
     const [me, setMe] = useAtom(meAtom)
-
-    const [items, setItems] = useState([
-        {
-            id: 'shortcut',
-            data: {
-                componentId: 'shortcut',
-                title: 'Shortcuts',
-                description: '',
-                props: {},
-            },
-            rowSpan: 2,
-            columnSpan: 3,
-            columnOffset: { '4': 0 },
-        },
-        {
-            id: 'integration',
-            data: {
-                componentId: 'integration',
-                title: 'Integrations',
-                description: '',
-                props: {},
-            },
-            rowSpan: 8,
-            columnSpan: 1,
-            columnOffset: { '4': 3 },
-        },
-    ])
+    const [items, setItems] = useState<Layout[]>([])
     const [layoutLoading, setLayoutLoading] = useState<boolean>(false)
     const [addModalOpen, setAddModalOpen] = useState(false)
     const [selectedAddItem, setSelectedAddItem] = useState<any>('')
     const [widgetProps, setWidgetProps] = useState<any>({})
+    const [isEdit, setIsEdit] = useState(false)
+    const [editId, setEditId] = useState('')
+    const [openEditLayout, setOpenEditLayout] = useState(false)
+    const [editLayout, setEditLayout] = useState<any>()
+    const setNotification = useSetAtom(notificationAtom)
     useEffect(() => {
         if (layout) {
-            console.log(layout)
             // add to ietms
-            if (items.length !== layout?.layout_config.length + 2) {
-                setItems([...items, ...(layout?.layout_config || [])])
-            }
+            setItems(layout?.layout_config)
         }
     }, [layout])
     const GetComponent = (name: string, props: any) => {
@@ -87,7 +95,7 @@ export default function WidgetLayout() {
         }
         return null
     }
-    const SetDefaultLayout = (layout: any) => {
+    const SetDefaultLayout = (layout_config: any) => {
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -103,10 +111,13 @@ export default function WidgetLayout() {
             },
         }
         const body = {
+            id: layout?.id,
+            is_default: layout.is_default,
             user_id: me?.username,
-            layout_config: layout,
-            name: 'default',
-            is_private: true,
+            layout_config: layout_config,
+            name: layout.name,
+            description: layout.description,
+            is_private: layout.is_private,
         }
 
         axios
@@ -245,7 +256,7 @@ export default function WidgetLayout() {
         }
     }
     const HandleAddWidget = () => {
-        if(!widgetProps?.title || !widgetProps?.description) {
+        if (!widgetProps?.title || !widgetProps?.description) {
             return
         }
         const newItem = {
@@ -265,44 +276,158 @@ export default function WidgetLayout() {
         setAddModalOpen(false)
         setWidgetProps({})
     }
+    const HandleAddProductWidgets = (id: string) => {
+        // check if id not exist in items
+        const check = items.filter((item: any) => item.id === id)
+        if (check.length > 0) {
+            setNotification({
+                text: `Widget Already exist`,
+                type: 'error',
+            })
+            return
+        }
+        if (id == 'integration') {
+            const new_item = {
+                id: 'integration',
+                data: {
+                    componentId: 'integration',
+                    title: 'Integrations',
+                    description: '',
+                    props: {},
+                },
+                rowSpan: 8,
+                columnSpan: 1,
+                columnOffset: { '4': 3 },
+            }
+            setItems([...items, new_item])
+        }
+        if (id == 'shortcut') {
+            const new_item = {
+                id: 'shortcut',
+                data: {
+                    componentId: 'shortcut',
+                    title: 'Shortcuts',
+                    description: '',
+                    props: {},
+                },
+                rowSpan: 2,
+                columnSpan: 3,
+                columnOffset: { '4': 0 },
+            }
+            setItems([...items, new_item])
+        }
+        if (id == 'sre') {
+            const new_item = {
+                id: 'sre',
+                data: {
+                    componentId: 'sre',
+                    title: 'SRE',
+                    description: '',
+                    props: {},
+                },
+                rowSpan: 2,
+                columnSpan: 3,
+                columnOffset: { '4': 0 },
+            }
+            setItems([...items, new_item])
+        }
+        return
+    }
+    const GetWidgetSettingsItem = (id: string) => {
+        if (id == 'sre' || id == 'shortcut' || id == 'integration') {
+            return [{ id: 'remove', text: 'Remove' }]
+        } else {
+            return [
+                { id: 'remove', text: 'Remove' },
+                {
+                    id: 'edit',
+                    text: 'Edit',
+                },
+            ]
+        }
+    }
+    const HandleEditWidget = () => {
+        const temp_items = items
+        // find item with editId
+        const index = items.findIndex((item: any) => item.id === editId)
+        const newItem = {
+            id: editId,
+            data: {
+                componentId: selectedAddItem,
+                props: widgetProps,
+                title: widgetProps?.title,
+                description: widgetProps?.description,
+            },
+            rowSpan: temp_items[index].rowSpan,
+            columnSpan: temp_items[index].columnSpan,
+            columnOffset: temp_items[index].columnOffset,
+        }
+        temp_items[index] = newItem
+        setItems(temp_items)
+        setAddModalOpen(false)
+        setWidgetProps({})
+        setIsEdit(false)
+        setEditId('')
+        setSelectedAddItem('')
+    }
 
     return (
         <div className="w-full h-full flex flex-col gap-8">
             <Header
                 variant="h1"
+                description={layout?.description}
                 actions={
                     <div className="flex flex-row gap-2">
-                      
                         <ButtonDropdown
                             items={[
+                                { id: 'add', text: 'Add new dashboard' },
+
+                                { id: 'save', text: 'Save' },
+                                { id: 'edit', text: 'Edit' },
                                 {
                                     id: 'reset',
                                     text: 'Reset to default layout',
                                 },
-                                { id: 'save', text: 'save' },
                             ]}
                             onItemClick={(event: any) => {
-                               if(event.detail.id =='reset'){
+                                if (event.detail.id == 'add') {
+                                    HandleAddItem()
+                                }
+                                if (event.detail.id == 'reset') {
                                     GetDefaultLayout()
-                               }
-                               if (event.detail.id == 'save') {
+                                }
+                                if (event.detail.id == 'save') {
                                     SetDefaultLayout(items)
-                               }
-                               
+                                }
+                                if (event.detail.id == 'edit') {
+                                    setEditLayout(layout)
+                                    setOpenEditLayout(true)
+                                }
                             }}
                             ariaLabel="Board item settings"
                         >
-                           Dashboard settings
+                            Dashboard settings
                         </ButtonDropdown>
                         <ButtonDropdown
                             items={[
                                 { id: 'table', text: 'Table Widget' },
                                 { id: 'chart', text: 'Pie Chart Widget' },
                                 { id: 'kpi', text: 'KPI Widget' },
+                                { id: 'integration', text: 'Integrations' },
+                                { id: 'shortcut', text: 'Shortcuts' },
+                                { id: 'sre', text: 'SRE' },
                             ]}
                             onItemClick={(event: any) => {
-                                setSelectedAddItem(event.detail.id)
-                                setAddModalOpen(true)
+                                if (
+                                    event.detail.id == 'sre' ||
+                                    event.detail.id == 'shortcut' ||
+                                    event.detail.id == 'integration'
+                                ) {
+                                    HandleAddProductWidgets(event.detail.id)
+                                } else {
+                                    setSelectedAddItem(event.detail.id)
+                                    setAddModalOpen(true)
+                                }
                             }}
                             ariaLabel="Board item settings"
                         >
@@ -311,7 +436,7 @@ export default function WidgetLayout() {
                     </div>
                 }
             >
-                Service Dashboard
+                {layout?.name}
             </Header>
             {layoutLoading ? (
                 <Spinner />
@@ -326,10 +451,24 @@ export default function WidgetLayout() {
                             }
                             settings={
                                 <ButtonDropdown
-                                    items={[{ id: 'remove', text: 'Remove' }]}
+                                    items={GetWidgetSettingsItem(item.id)}
                                     onItemClick={(event) => {
                                         if (event.detail.id === 'remove') {
                                             HandleRemoveItemByID(item.id)
+                                        }
+                                        if (event.detail.id === 'edit') {
+                                            setIsEdit(true)
+                                            setWidgetProps({
+                                                title: item?.data?.title,
+                                                description:
+                                                    item?.data?.description,
+                                                ...item?.data?.props,
+                                            })
+                                            setSelectedAddItem(
+                                                item?.data?.componentId
+                                            )
+                                            setEditId(item.id)
+                                            setAddModalOpen(true)
                                         }
                                     }}
                                     ariaLabel="Board item settings"
@@ -354,6 +493,7 @@ export default function WidgetLayout() {
                     onItemsChange={(event: any) => {
                         setItems(event.detail.items)
                     }}
+                    // @ts-ignore
                     items={items}
                     empty={
                         <div className="flex flex-col items-center justify-center w-full h-full">
@@ -459,7 +599,7 @@ export default function WidgetLayout() {
                 onDismiss={() => {
                     setAddModalOpen(false)
                 }}
-                header={`Add ${
+                header={`${isEdit ? 'Edit' : 'Add'} ${
                     selectedAddItem?.charAt(0).toUpperCase() +
                     selectedAddItem?.slice(1)
                 } Widget`}
@@ -499,10 +639,64 @@ export default function WidgetLayout() {
                     <div className="flex w-full justify-end items-center">
                         <Button
                             onClick={() => {
-                                HandleAddWidget()
+                                isEdit ? HandleEditWidget() : HandleAddWidget()
                             }}
                         >
-                            Submit
+                            {isEdit ? 'Save' : 'Submit'}
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+            <Modal
+                visible={openEditLayout}
+                onDismiss={() => {
+                    setOpenEditLayout(false)
+                }}
+                header={`Edit Dashboard`}
+            >
+                <div className="flex flex-col gap-2">
+                    <Input
+                        placeholder="Dashboard Name"
+                        ariaRequired={true}
+                        value={editLayout?.name}
+                        onChange={(e: any) => {
+                            setEditLayout({
+                                ...editLayout,
+                                name: e.detail.value,
+                            })
+                        }}
+                    />
+                    <Input
+                        placeholder="Dashboard description"
+                        ariaRequired={true}
+                        value={editLayout?.description}
+                        onChange={(e: any) => {
+                            setEditLayout({
+                                ...editLayout,
+                                description: e.detail.value,
+                            })
+                        }}
+                    />
+                    <Checkbox
+                        checked={editLayout?.is_private}
+                        onChange={(e: any) => {
+                            setEditLayout({
+                                ...editLayout,
+                                is_private: e.detail.checked,
+                            })
+                        }}
+                    >
+                        Private Dashboard
+                    </Checkbox>
+
+                    <div className="flex w-full justify-end items-center">
+                        <Button
+                            onClick={() => {
+                                setLayout(editLayout)
+                                setOpenEditLayout(false)
+                            }}
+                        >
+                            save
                         </Button>
                     </div>
                 </div>

@@ -289,7 +289,7 @@ export default function NewBenchmarkSummary() {
                 <Spinner className="mt-56" />
             ) : (
                 <>
-                    <BreadcrumbGroup
+                    {/* <BreadcrumbGroup
                         onClick={(event) => {
                             // event.preventDefault()
                         }}
@@ -301,7 +301,7 @@ export default function NewBenchmarkSummary() {
                             { text: 'Frameworks', href: '#' },
                         ]}
                         ariaLabel="Breadcrumbs"
-                    />
+                    /> */}
                     <Header
                         className={`   rounded-xl mt-6   ${
                             false ? 'rounded-b-none' : ''

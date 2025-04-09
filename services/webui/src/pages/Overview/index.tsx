@@ -1,30 +1,22 @@
 import { useParams } from 'react-router-dom'
 import { Col, Flex, Grid } from '@tremor/react'
-import Governance from './Governance'
-import TopHeader from '../../components/Layout/Header'
-import { defaultHomepageTime } from '../../utilities/urlstate'
-import Query from './Query'
-import QuickNav from './QuickNav'
-import Shortcuts from './Shortcuts'
+
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { Alert, Button, Modal } from '@cloudscape-design/components'
+import { Alert, Button, ButtonDropdown, Header, Modal, Tabs } from '@cloudscape-design/components'
 import FormField from '@cloudscape-design/components/form-field'
 import Input from '@cloudscape-design/components/input'
 import { error } from 'console'
 import { useAtom, useSetAtom } from 'jotai'
-import { ForbiddenAtom, meAtom, notificationAtom } from '../../store'
+import { ForbiddenAtom, LayoutAtom, meAtom, notificationAtom } from '../../store'
 import { useAuth } from '../../utilities/auth'
 import { useAuthApiV1UserInviteCreate } from '../../api/auth.gen'
-import Integrations from './Integrations'
 import { useComplianceApiV1QueriesSyncList } from '../../api/compliance.gen'
-import SRE from './KPI_Cards'
 import { useWorkspaceApiV3LoadSampleData } from '../../api/metadata.gen'
 import WidgetLayout from '../../components/widgets/WidgetLayout'
 
 export default function Overview() {
     
-    const element = document.getElementById('myDIV')?.offsetHeight
     const [change, setChange] = useState<boolean>(false)
     const [userModal, setUserModal] = useState<boolean>(false)
     const [userData, setUserData] = useState<any>({
@@ -40,6 +32,8 @@ export default function Overview() {
     })
     const { user, logout } = useAuth()
     const [me, setMe] = useAtom(meAtom)
+    const [layout, setLayout] = useAtom(LayoutAtom)
+    const [layouts, setLayouts] = useState<any>([layout])
 
     const [password, setPassword] = useState<any>({
         current: '',
@@ -111,7 +105,7 @@ export default function Overview() {
 
                 console.log(err)
             })
-    }
+    }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
     const ChangePassword = () => {
         if (!password.current || password.current == '') {
             setErrors({ ...errors, current: 'Please enter current password' })
@@ -242,6 +236,41 @@ const {
             setInterval(logout, 3000)
         }
     }, [isLoading, isExecuted])
+    
+    const getTabItems = ()=>{
+        const temp : any =[]
+        layouts?.map((item: any, index: number) => {
+            temp.push({
+                label: item.name,
+                id: item.id,
+                content: (
+                    <WidgetLayout
+                        input_layout={item}
+                        is_default={item.is_default}
+                        HandleAddItem={HandleAddItem}
+                    />
+                ),
+                dismissible: !item.is_default,
+                dissmissLabel: 'Delete',
+            })
+        })
+        return temp
+
+
+
+    }
+    const HandleAddItem = ()=>{
+        setLayouts([
+            ...layouts,
+            {
+                name: 'Default Dashbord',
+                description: 'This is a default dashboard',
+                is_default: false,
+                is_private: true,
+                layout_config: []
+            },
+        ])
+    }
     return (
         <>
             <Modal
@@ -435,40 +464,8 @@ const {
                     </Alert>
                 )}
             </Modal>
-            <WidgetLayout/>
-            {/* <Grid
-                numItems={11}
-                className="w-full gap-8  h-fit "
-                style={window.innerWidth > 768 ? { gridAutoRows: '1fr' } : {}}
-            >
-                <Col numColSpan={11} numColSpanSm={8}>
-                    <Flex
-                        flexDirection="col"
-                        alignItems="start"
-                        className="gap-4 h-full"
-                        id="myDIV"
-                    >
-                        <Grid numItems={6} className="w-full gap-6 h-fit ">
-                            <Col numColSpan={6} className="h-fit">
-                                <Shortcuts />
-                            </Col>
-                            <Col numColSpan={6} className="h-fit">
-                                <SRE />
-                            </Col>
-                            <Col numColSpan={6} className="h-full">
-                                <Governance />
-                            </Col>
-                        </Grid>
-                    </Flex>
-                </Col>
-                <Col
-                    numColSpan={11}
-                    numColSpanSm={3}
-                    className="sm:h-full h-fit"
-                >
-                    <Integrations />
-                </Col>
-            </Grid> */}
+         
+            <Tabs tabs={getTabItems()} />
         </>
     )
 }

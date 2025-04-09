@@ -1,89 +1,247 @@
 import { Flex } from '@tremor/react'
-import { ReactNode, UIEvent } from 'react'
+import { ReactNode, UIEvent, useEffect, useState } from 'react'
 import Footer from './Footer'
 import Sidebar from './Sidebar'
 import Notification from '../Notification'
 import { useNavigate } from 'react-router-dom'
-import { useAtomValue, useSetAtom } from 'jotai'
+import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { sampleAtom } from '../../store'
 import TopHeader from './Header'
+import {
+    AppLayoutToolbar,
+    BreadcrumbGroup,
+    Container,
+    Flashbar,
+    Header,
+    HelpPanel,
+    SideNavigation,
+    SplitPanel,
+} from '@cloudscape-design/components'
+import NewSidebar from './NewSidebar'
 type IProps = {
     children: ReactNode
     onScroll?: (e: UIEvent) => void
     scrollRef?: any
 }
-const show_compliance =
-    window.__RUNTIME_CONFIG__.REACT_APP_SHOW_COMPLIANCE
+const show_compliance = window.__RUNTIME_CONFIG__.REACT_APP_SHOW_COMPLIANCE
+
+const Mapping = {
+    cloudql: 'CloudQL',
+    integration: 'Integration',
+    compliance: 'Compliance',
+    overview: 'Overview',
+    settings: 'Settings',
+    tasks: 'Tasks',
+    ai: 'AI',
+}
+const INTEGRATION_MAPPING = {
+    azure_subscription: 'Microsoft Azure Subscription',
+    jira_cloud: 'Atlassian JIRA Cloud',
+    aws_cloud_account: 'Amazon Web Services (AWS)',
+    entraid_directory: 'Microsoft EntraID Directory',
+    github_account: 'GitHub',
+    digitalocean_team: 'DigitalOcean',
+    cloudflare_account: 'Cloudflare',
+    linode_account: 'Linode (Akamai)',
+    render_account: 'Render',
+    fly_account: 'Fly.io',
+    semgrep_account: 'Semgrep',
+    kubernetes: 'Kubernetes',
+    openai_integration: 'OpenAI',
+    cohereai_project: 'CohereAI',
+    google_workspace_account: 'Google Workspace',
+    doppler_account: 'Doppler',
+    tailscale_account: 'Tailscale',
+    heroku_account: 'Heroku',
+    oci_repository: 'OCI Repository',
+    slack_account: 'Slack',
+    chainguard_dev_account: 'Chainguard.dev',
+    godaddy_account: 'GoDaddy',
+    servicenow_account: 'ServiceNow',
+    okta_account: 'Okta',
+    aws_costs: 'Amazon Web Services (AWS) Costs',
+    azure_costs: 'Microsoft Azure Costs',
+    huggingface_account: 'HuggingFace',
+    jamf_account: 'Jamf',
+    jumpcloud_account: 'JumpCloud',
+    gitlab_account: 'GitLab',
+}
 export default function Layout({ children, onScroll, scrollRef }: IProps) {
     const url = window.location.pathname.split('/')
-    const smaple = useAtomValue(sampleAtom)
-    const navigate = useNavigate()
-    
-    let current = url[1]
-    let sub_page= false
-    if (url.length > 2) {
-        for (let i = 2; i < url.length; i += 1) {
-            current += `/${url[i]}`
+
+    const showSidebarCallback = url[1] == 'callback' ? false : true
+    const [showSidebar, setShowSidebar] = useState(true)
+    const [breadCrumbItems, setBreadCrumbItems] = useState<any>([])
+    const GetBreadCrumItems = () => {
+        const temp = [
+            {
+                text: 'Home',
+                href: '/',
+            },
+        ]
+        const path = window.location.pathname
+        console.log(path)
+        if (path.includes('integration')) {
+            console.log(url)
+            if (url.length > 3) {
+                const integration = url[3]
+                // @ts-ignore
+                const integrationName = INTEGRATION_MAPPING[integration]
+                if (integrationName) {
+                    temp.push({
+                        text: 'Plugins',
+                        href: '/integration/plugins',
+                    })
+                    temp.push({
+                        text: integrationName,
+                        href: path,
+                    })
+                }
+            } else {
+                temp.push({
+                    text: 'Plugins',
+                    href: '/integration/plugins',
+                })
+            }
         }
-        sub_page= true
+        if (path.includes('cloudql')) {
+            temp.push({
+                text: 'CloudQL',
+                href: '/cloudql',
+            })
+        }
+        if (path.includes('jobs')) {
+            temp.push({
+                text: 'Jobs',
+                href: '/jobs',
+            })
+        }
+        if (path.includes('administration')) {
+            temp.push({
+                text: 'Administration',
+                href: '/administration',
+            })
+        }
+        if (path.includes('ai')) {
+            temp.push({
+                text: 'AI Preview',
+                href: '/ai',
+            })
+        }
+        if (
+            path.includes('automation') ||
+            path.includes('dashboards') ||
+            path.includes('request-access') ||
+            path.includes('stacks') ||
+            path.includes('/workload-optimizer')
+        ) {
+            temp.push({
+                text: 'Request Access',
+                href: '/request-access',
+            })
+        }
+        if (path.includes('compliance')) {
+            if (url.length > 2) {
+                if (path.includes('report')) {
+                    temp.push({
+                        text: 'Compliance',
+                        href: '/compliance',
+                    })
+                    temp.push({
+                        text: 'Frameworks',
+                        href: url[0] + '/' + url[1] + '/' + url[2],
+                    })
+                    temp.push({
+                        text: 'Job Reports',
+                        href: path,
+                    })
+                } else {
+                    temp.push({
+                        text: 'Compliance',
+                        href: '/compliance',
+                    })
+                    temp.push({
+                        text: 'Frameworks',
+                        href: path,
+                    })
+                }
+            } else {
+                temp.push({
+                    text: 'Compliance',
+                    href: '/compliance',
+                })
+            }
+        }
+        if (path.includes('incidents')) {
+            if (url.length > 2) {
+                temp.push({
+                    text: 'All Incidents',
+                    href: '/incidents',
+                })
+                temp.push({
+                    text: 'Control Detail',
+                    href: path,
+                })
+            } else {
+                temp.push({
+                    text: 'All Incidents',
+                    href: '/incidents',
+                })
+            }
+        }
+
+        return setBreadCrumbItems(temp)
     }
-    const showSidebar = url[1] == "callback" ? false : true
-   
+    const GetCurrentPage = () => {
+        const path = window.location.pathname
+        if (path.includes('cloudql')) {
+            return '/cloudql'
+        } else if (path.includes('integration')) {
+            return '/integration/plugins'
+        } else if (path.includes('compliance')) {
+            return '/compliance'
+        } else if (path.includes('jobs')) {
+            return '/jobs'
+        } else if (path.includes('administration')) {
+            return '/administration'
+        } else if (path.includes('ai')) {
+            return '/ai'
+        } else if (
+            path.includes('automation') ||
+            path.includes('dashboards') ||
+            path.includes('request-access') ||
+            path.includes('stacks') ||
+            path.includes('/workload-optimizer')
+        ) {
+            return '/automation'
+        }
+
+        return ''
+    }
+    useEffect(() => {
+        GetBreadCrumItems()
+    }, [window.location.pathname])
+
     return (
-        <Flex
-            flexDirection="row"
-            className="h-screen overflow-hidden"
-            justifyContent="start"
-        >
-            {showSidebar && show_compliance != 'false' && (
-                <Sidebar currentPage={current} />
-            )}
-            <div className="z-10 w-full h-full relative">
-                <Flex
-                    flexDirection="col"
-                    alignItems="center"
-                    justifyContent="between"
-                    className={`bg-gray-100 dark:bg-gray-900 h-screen ${
-                        current === 'assistant' ? '' : 'overflow-y-scroll'
-                    } overflow-x-hidden`}
-                    id="platform-container"
-                    onScroll={(e) => {
-                        if (onScroll) {
-                            onScroll(e)
-                        }
-                    }}
-                    ref={scrollRef}
-                >
-                    {show_compliance == 'false' && (
-                        <>
-                            <TopHeader />
-                        </>
-                    )}
-                    <Flex
-                        justifyContent="center"
-                        className={`${
-                            current === 'assistant'
-                                ? 'h-fit'
-                                : 'sm:px-6 px-2  sm:mt-16 mt-4 h-fit '
-                        } ${showSidebar && ' 2xl:px-24'} ${ show_compliance =='false' ? 'sm:mt-16':'sm:mt-6'} `}
-                        // pl-44
-                    >
-                        <div
-                            className={`w-full  ${
-                                current === 'dashboard' ? '' : ''
-                            } ${
-                                current === 'assistant'
-                                    ? 'w-full max-w-full'
-                                    : 'py-6'
-                            }`}
-                        >
-                            <>{children}</>
-                        </div>
-                    </Flex>
-                    <Footer />
-                </Flex>
-            </div>
-            <Notification />
-        </Flex>
+        <>
+            <AppLayoutToolbar
+                breadcrumbs={<BreadcrumbGroup items={breadCrumbItems} />}
+                navigationOpen={showSidebar}
+                onNavigationChange={({ detail }) => setShowSidebar(detail.open)}
+                toolsHide={true}
+                navigation={
+                    <>
+                        {showSidebarCallback ? (
+                            <NewSidebar currentPage={GetCurrentPage()} />
+                        ) : (
+                            ''
+                        )}
+                    </>
+                }
+                notifications={<Notification />}
+                content={children}
+            />
+            <Footer />
+        </>
     )
 }

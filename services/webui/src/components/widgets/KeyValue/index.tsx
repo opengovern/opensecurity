@@ -158,6 +158,8 @@ export default function KeyValueWidget({ kpis }: KPIProps) {
                         </Link>
                     ),
                 })
+            }).catch((err)=>{
+                console.log("err",err)
             })
         })
 
@@ -175,7 +177,11 @@ export default function KeyValueWidget({ kpis }: KPIProps) {
 
     return (
         <>
-            <KeyValuePairs columns={kpis.length} items={items} />
+                <KeyValuePairs
+                    columns={kpis.length}
+                    minColumnWidth={250}
+                    items={items}
+                />
         </>
     )
 }
