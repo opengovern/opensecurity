@@ -106,6 +106,7 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                     />
                 }
                 navigationOpen={true}
+                tools={undefined}
                 navigation={
                     <SideNavigation
                         header={{
@@ -115,43 +116,10 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                         items={[{ type: 'link', text: `Page #1`, href: `#` }]}
                     />
                 }
-                notifications={
-                    <Flashbar
-                        items={[
-                            {
-                                type: 'info',
-                                content: 'This is an info flash message.',
-                                id: 'message_1',
-                            },
-                        ]}
-                    />
-                }
-                toolsOpen={true}
-                tools={
-                    <HelpPanel header={<h2>Overview</h2>}>
-                        Help content
-                    </HelpPanel>
-                }
-                content={
-                    <Container
-                        header={
-                            <Header
-                                variant="h2"
-                                description="Container description"
-                            >
-                                Container header
-                            </Header>
-                        }
-                    >
-                        <div className="contentPlaceholder" />
-                    </Container>
-                }
-                splitPanel={
-                    <SplitPanel header="Split panel header">
-                        Split panel content
-                    </SplitPanel>
-                }
+                notifications={<Notification />}
+                content={children}
             />
+            <Footer />
         </>
     )
 }
