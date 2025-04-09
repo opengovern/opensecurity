@@ -21,5 +21,5 @@ type RunTaskRequest struct {
 }
 
 type TaskConfigSecret struct {
-	Credentials map[string]any
+	Credentials map[string]any `json:"credentials"`
 }

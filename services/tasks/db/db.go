@@ -110,6 +110,9 @@ func (db Database) FetchLastCreatedTaskRunsByTaskID(taskID string) (*models.Task
 		Order("id desc").
 		First(&task)
 	if tx.Error != nil {
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, tx.Error
 	}
 
@@ -171,6 +174,15 @@ func (db Database) SetTaskConfigSecret(configSecret models.TaskConfigSecret) err
 		DoUpdates: clause.AssignmentColumns([]string{"secret", "health_status"}),
 	}).Create(&configSecret)
 
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	return nil
+}
+
+func (db Database) UpdateTaskConfigSecretHealthStatus(taskId string, healthStatus models.TaskSecretHealthStatus) error {
+	tx := db.Orm.Model(&models.TaskConfigSecret{}).Where("task_id = ?", taskId).Update("health_status", healthStatus)
 	if tx.Error != nil {
 		return tx.Error
 	}

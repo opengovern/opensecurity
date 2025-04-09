@@ -10,10 +10,11 @@ import (
 )
 
 type TaskResponse struct {
-	RunID          uint                 `json:"run_id"`
-	Status         models.TaskRunStatus `json:"status"`
-	FailureMessage string               `json:"failure_message"`
-	Result         []byte               `json:"result"`
+	RunID                   uint                           `json:"run_id"`
+	Status                  models.TaskRunStatus           `json:"status"`
+	CredentialsHealthStatus *models.TaskSecretHealthStatus `json:"credentials_health_status"`
+	FailureMessage          string                         `json:"failure_message"`
+	Result                  []byte                         `json:"result"`
 }
 
 func (s *TaskScheduler) RunTaskResponseConsumer(ctx context.Context) error {
@@ -27,6 +28,14 @@ func (s *TaskScheduler) RunTaskResponseConsumer(ctx context.Context) error {
 			if err := json.Unmarshal(msg.Data(), &response); err != nil {
 				s.logger.Error("Failed to unmarshal ComplianceReportJob results", zap.Error(err))
 				return
+			}
+
+			if response.CredentialsHealthStatus != nil {
+				err := s.db.UpdateTaskConfigSecretHealthStatus(s.TaskID, *response.CredentialsHealthStatus)
+				if err != nil {
+					s.logger.Error("Failed to update task config secret health status", zap.Error(err))
+					return
+				}
 			}
 
 			taskRunUpdate := models.TaskRun{

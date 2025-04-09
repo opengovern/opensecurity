@@ -19,6 +19,9 @@ func (s *TaskScheduler) createTask(ctx context.Context) error {
 		s.logger.Error("failed to get task runs", zap.Error(err))
 		return err
 	}
+	if run == nil {
+		return nil
+	}
 
 	newRun := models.TaskRun{
 		TaskID: s.TaskID,
