@@ -320,7 +320,7 @@ export default function Integrations() {
             ) : (
                 <>
                     <Flex
-                        className="bg-white w-full rounded-xl border-solid  border-2 border-gray-200    "
+                        className="bg-white w-full     "
                         flexDirection="col"
                         justifyContent="center"
                         alignItems="center"

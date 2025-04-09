@@ -558,7 +558,7 @@ export default function TypeDetail() {
                         }
                     >
                         <Flex className="flex-col w-full justify-start items-start gap-4">
-                            <BreadcrumbGroup
+                            {/* <BreadcrumbGroup
                                 className="w-full"
                                 items={[
                                     {
@@ -571,7 +571,7 @@ export default function TypeDetail() {
                                         href: `/integration/plugins/${type}`,
                                     },
                                 ]}
-                            />
+                            /> */}
                             <Flex className="flex-col gap-3 justify-start items-start w-full">
                                 <Flex className="sm:flex-row flex-col sm:justify-between justify-start sm:items-center items-start w-full sm:gap-8 gap-2">
                                     <h1 className=" font-bold text-2xl mb-2  text-left ml-1">
