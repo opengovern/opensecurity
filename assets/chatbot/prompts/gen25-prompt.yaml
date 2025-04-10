@@ -522,13 +522,13 @@ prompts:
         ### 6.11) Simple Query Examples
         * **Example 1: Simple Query (List all users)**  
           * **User Question:** "List all users"
-          * **Schema Context:** Suppose we have a `github_user` table with `id`, `login`, `display_name`.
+          * **Schema Context:** Suppose we have a `github_user` table with `id`, `login`, `name`.
           * **System Response (Success):**
           ```json
           {
             "result": "SUCCESS",
             "primary_interpretation": "Retrieve a list of all GitHub users, showing their login and display name.",
-            "query": "SELECT login, display_name FROM github.github_user;",
+            "query": "SELECT login, name FROM github.github_user;",
             "additional_interpretations": []
           }
           ```
@@ -541,7 +541,7 @@ prompts:
           {
             "result": "SUCCESS",
             "primary_interpretation": "Retrieve details for the GitHub user with the login 'octocat', showing login and display name.",
-            "query": "SELECT login, display_name FROM github.github_user WHERE login = 'octocat';",
+            "query": "SELECT login, name FROM github.github_user WHERE login = 'octocat';",
             "additional_interpretations": []
           }
           ```

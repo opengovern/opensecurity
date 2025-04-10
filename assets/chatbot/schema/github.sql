@@ -95,10 +95,6 @@ CREATE TABLE github_user (
     url TEXT,                                          -- The URL of the user's GitHub profile page.
     created_at TIMESTAMP WITH TIME ZONE,                -- The timestamp when the user account was created (UTC).
     updated_at TIMESTAMP WITH TIME ZONE,                -- The timestamp when the user's profile was last updated (UTC).
-    has_sponsors_listing BOOLEAN,                       -- Indicates whether the user has a GitHub Sponsors listing enabled.
-    interaction_ability JSON,                          -- Contains settings related to the user's interaction abilities (e.g., if they have limited interactions).
-    sponsors_listing JSON,                             -- Contains details about the user's GitHub Sponsors listing (if enabled).
-    status JSON,                                       -- Contains information about the user's current status (e.g., emoji, message).
 );
 
 
