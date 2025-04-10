@@ -9,9 +9,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.42.3
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.167.1
 	github.com/axiomhq/hyperloglog v0.0.0-20230201085229-3ddf4bad03dc
+	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/coreos/go-oidc/v3 v3.10.0
 	github.com/dexidp/dex/api/v2 v2.2.0
 	github.com/envoyproxy/go-control-plane v0.13.0
+	github.com/flosch/pongo2/v6 v6.0.0
 	github.com/fluxcd/helm-controller/api v1.0.1
 	github.com/go-errors/errors v1.5.1
 	github.com/go-git/go-git/v5 v5.13.1
@@ -106,7 +108,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/btubbs/datetime v0.1.1 // indirect
-	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.3.8 // indirect
 	github.com/cncf/xds/go v0.0.0-20240723142845-024c85f92f20 // indirect

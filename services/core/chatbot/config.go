@@ -9,11 +9,8 @@ import (
 
 // AppConfig holds application configuration loaded from various sources.
 type AppConfig struct {
-	MappingData       MappingData
-	HfToken           string
-	Auth0Domain       string
-	Auth0ClientID     string
-	Auth0ClientSecret string
+	MappingData MappingData
+	HfToken     string
 }
 
 type AgentSubConfig struct {
@@ -66,10 +63,6 @@ func NewAppConfig() (*AppConfig, error) {
 		// Consider returning error instead of panic/fatal for library code
 		return nil, fmt.Errorf("please set HF_API_TOKEN environment variable")
 	}
-
-	cfg.Auth0Domain = os.Getenv("AUTH0_DOMAIN")
-	cfg.Auth0ClientID = os.Getenv("AUTH0_CLIENT_ID")
-	cfg.Auth0ClientSecret = os.Getenv("AUTH0_CLIENT_SECRET")
 
 	// Optionally set BaseDir based on mappingFilePath or another env var
 	// cfg.BaseDir = filepath.Dir(mappingFilePath) // Example

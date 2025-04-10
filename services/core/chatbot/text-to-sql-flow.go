@@ -1,16 +1,15 @@
 package chatbot
 
 import (
-	"bytes"
 	"context"
 	"fmt"
+	"github.com/flosch/pongo2/v6"
 	"github.com/opengovern/opensecurity/services/core/db/models"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
-	"text/template"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -185,7 +184,7 @@ func (f *TextToSQLFlow) RunInference(ctx context.Context, chat *models.Chat, dat
 	}
 
 	// --- 5. Build Template Data ---
-	templateRenderData := make(map[string]any)
+	templateRenderData := pongo2.Context{}
 
 	templateRenderData["question"] = data.Question
 
@@ -225,18 +224,19 @@ func (f *TextToSQLFlow) RunInference(ctx context.Context, chat *models.Chat, dat
 			}
 		}
 
-		tmpl, err := template.New("prompt").Parse(templateContent)
+		// Compile the template string using pongo2
+		tmpl, err := pongo2.FromString(templateContent)
 		if err != nil {
-			return "", "", fmt.Errorf("failed to parse prompt template for role %s: %w", role, err)
+			return "", "", fmt.Errorf("failed to compile pongo2 template for role %s: %w", role, err)
 		}
 
-		var renderedContent bytes.Buffer
-		err = tmpl.Execute(&renderedContent, templateRenderData)
+		// Execute the template with the context data
+		renderedContent, err := tmpl.Execute(templateRenderData)
 		if err != nil {
-			return "", "", fmt.Errorf("failed to render prompt template for role %s: %w", role, err)
+			return "", "", fmt.Errorf("failed to render pongo2 template for role %s: %w", role, err)
 		}
 
-		messages = append(messages, ChatMessage{Role: role, Content: renderedContent.String()})
+		messages = append(messages, ChatMessage{Role: role, Content: renderedContent})
 	}
 
 	responseText, err := f.llmClient.ChatCompletion(ctx, modelName, messages, 800, 0.0) // Use defaults or get from config
