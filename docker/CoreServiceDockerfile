@@ -3,6 +3,7 @@ FROM ${PLUGIN_REGISTRY}/cloudql-plugin-base:0.0.1 as base
 
 
 COPY ./build/core-service /
+COPY ./assets/chatbot /chatbot
 
 ENTRYPOINT [ "/core-service" ]
 CMD [ "/core-service" ]

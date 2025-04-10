@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/opengovern/opensecurity/services/core/chatbot"
 	"net/http"
 	"net/url"
 	"sort"
@@ -119,6 +120,7 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v4.POST("/layout/change-privacy", httpserver.AuthorizeHandler(h.ChangePrivacy, api3.ViewerRole))
 	v4.GET("/layout/public", httpserver.AuthorizeHandler(h.GetPublicLayouts, api3.ViewerRole))
 
+	v4.POST("/chatbot/generate-query", httpserver.AuthorizeHandler(h.GenerateQuery, api3.ViewerRole))
 }
 
 var tracer = otel.Tracer("core")
@@ -1605,27 +1607,26 @@ func (h HttpHandler) GetUserLayouts(echoCtx echo.Context) error {
 	}
 	var response []api.GetUserLayoutResponse
 	for _, layout := range layouts {
-	response = append(response, api.GetUserLayoutResponse{
-		ID: layout.ID,
-		UserID:       userId,
-	LayoutConfig: func() []map[string]any {
-		var config []map[string]any
-		if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
-			h.logger.Error("failed to unmarshal layout config", zap.Error(err))
-			return nil
-		}
-		return config
-	}(),
-	Name:         layout.Name,
-	Description: layout.Description,
-	IsDefault: layout.IsDefault,
-	IsPrivate: layout.IsPrivate,
-	UpdatedAt: layout.UpdatedAt,
-	})
-}
+		response = append(response, api.GetUserLayoutResponse{
+			ID:     layout.ID,
+			UserID: userId,
+			LayoutConfig: func() []map[string]any {
+				var config []map[string]any
+				if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
+					h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+					return nil
+				}
+				return config
+			}(),
+			Name:        layout.Name,
+			Description: layout.Description,
+			IsDefault:   layout.IsDefault,
+			IsPrivate:   layout.IsPrivate,
+			UpdatedAt:   layout.UpdatedAt,
+		})
+	}
 
 	return echoCtx.JSON(http.StatusOK, response)
-
 
 }
 
@@ -1644,8 +1645,8 @@ func (h HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "user layout not found")
 	}
 	return echoCtx.JSON(http.StatusOK, api.GetUserLayoutResponse{
-		ID: 		layout.ID,
-		UserID:       userId,
+		ID:     layout.ID,
+		UserID: userId,
 		LayoutConfig: func() []map[string]any {
 			var config []map[string]any
 			if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
@@ -1654,11 +1655,11 @@ func (h HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 			}
 			return config
 		}(),
-		Name:         layout.Name,
+		Name:        layout.Name,
 		Description: layout.Description,
-		IsPrivate: layout.IsPrivate,
-		IsDefault: layout.IsDefault,
-		UpdatedAt: layout.UpdatedAt,
+		IsPrivate:   layout.IsPrivate,
+		IsDefault:   layout.IsDefault,
+		UpdatedAt:   layout.UpdatedAt,
 	})
 
 }
@@ -1679,21 +1680,19 @@ func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	var id string
 	if req.ID != "" {
 		id = req.ID
-	}else{
+	} else {
 		id = uuid.New().String()
 	}
 
-	
-
 	user_layout := models.UserLayout{
-		ID: id,
+		ID:           id,
 		UserID:       userId,
 		LayoutConfig: layout_config,
-		IsDefault: req.IsDefault,
+		IsDefault:    req.IsDefault,
 		Name:         req.Name,
-		Description: req.Description,
+		Description:  req.Description,
 		IsPrivate:    req.IsPrivate,
-		UpdatedAt:  time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 	err = h.db.SetUserLayout(user_layout)
 	if err != nil {
@@ -1733,21 +1732,71 @@ func (h HttpHandler) GetPublicLayouts(echoCtx echo.Context) error {
 	var layoutsResponse []api.GetUserLayoutResponse
 	for _, layout := range layouts {
 		layoutResponse := api.GetUserLayoutResponse{
-			UserID:       layout.UserID,
-			Name:         layout.Name,
-			Description:  layout.Description,
+			UserID:      layout.UserID,
+			Name:        layout.Name,
+			Description: layout.Description,
 			UpdatedAt:   layout.UpdatedAt,
 			LayoutConfig: func() []map[string]any {
-			var config []map[string]any
-			if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
-				h.logger.Error("failed to unmarshal layout config", zap.Error(err))
-				return nil
-			}
-			return config
-		}(),
+				var config []map[string]any
+				if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
+					h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+					return nil
+				}
+				return config
+			}(),
 		}
 		layoutsResponse = append(layoutsResponse, layoutResponse)
 	}
-	
+
 	return echoCtx.JSON(http.StatusOK, layoutsResponse)
+}
+
+// GenerateQuery godoc
+//
+//	@Summary		Generate query by the given question
+//	@Description	Generate query by the given question
+//	@Security		BearerToken
+//	@Tags			metadata
+//	@Produce		json
+//	@Param			req	body	api.GenerateQueryRequest	true	"Request Body"
+//	@Success		200
+//	@Router			/core/api/v4/chatbot/generate-query [post]
+func (h HttpHandler) GenerateQuery(ctx echo.Context) error {
+	var req api.GenerateQueryRequest
+	if err := bindValidate(ctx, &req); err != nil {
+		return err
+	}
+
+	if req.Question == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "no question provided")
+	}
+
+	flow, err := chatbot.NewTextToSQLFlow()
+	if err != nil {
+		h.logger.Error("failed to build sql flow", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to build sql flow")
+	}
+
+	var previousAttempts []chatbot.QueryAttempt
+	for _, pa := range req.PreviousAttempts {
+		previousAttempts = append(previousAttempts, chatbot.QueryAttempt{
+			Query: pa.Query,
+			Error: pa.Error,
+		})
+	}
+	reqData := chatbot.RequestData{
+		Question:         req.Question,
+		PreviousAttempts: previousAttempts,
+	}
+
+	agent, finalQuery, err := flow.RunInference(ctx.Request().Context(), nil, reqData, req.Agent)
+	if err != nil {
+		h.logger.Error("failed to generate query", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate query")
+	}
+
+	return ctx.JSON(http.StatusOK, api.GenerateQueryResponse{
+		Query: finalQuery,
+		Agent: agent,
+	})
 }
