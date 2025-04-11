@@ -1,7 +1,6 @@
 import { Flex } from '@tremor/react'
 import { ReactNode, UIEvent, useEffect, useState } from 'react'
 import Footer from './Footer'
-import Sidebar from './Sidebar'
 import Notification from '../Notification'
 import { useNavigate } from 'react-router-dom'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
@@ -17,7 +16,7 @@ import {
     SideNavigation,
     SplitPanel,
 } from '@cloudscape-design/components'
-import NewSidebar from './NewSidebar'
+import Sidebar from './Sidebar'
 type IProps = {
     children: ReactNode
     onScroll?: (e: UIEvent) => void
@@ -232,7 +231,7 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                 navigation={
                     <>
                         {showSidebarCallback ? (
-                            <NewSidebar currentPage={GetCurrentPage()} />
+                            <Sidebar currentPage={GetCurrentPage()} />
                         ) : (
                             ''
                         )}

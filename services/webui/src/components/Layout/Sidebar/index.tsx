@@ -80,7 +80,7 @@ interface ISidebarItem {
     selected?: string
 }
 
-export default function NewSidebar({ currentPage }: ISidebar) {
+export default function Sidebar({ currentPage }: ISidebar) {
     const { isAuthenticated, getAccessTokenSilently } = useAuth()
     console.log(currentPage)
     useEffect(() => {
