@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/opensecurity/services/core/chatbot"
 	"net/http"
@@ -2095,10 +2096,58 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "please configure HF_API_TOKEN")
 	}
 
-	flow, err := chatbot.NewTextToSQLFlow(hfToken)
+	flow, err := chatbot.NewTextToSQLFlow(h.db, hfToken)
 	if err != nil {
 		h.logger.Error("failed to build sql flow", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to build sql flow")
+	}
+
+	var session *models.Session
+	if req.SessionId != nil {
+		sessionId, err := uuid.Parse(*req.SessionId)
+		if err != nil {
+			h.logger.Error("failed to parse session id", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to parse session id")
+		}
+		session, err = h.db.GetSession(sessionId)
+		if err != nil {
+			h.logger.Error("failed to get session", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get session")
+		}
+	} else {
+		session = &models.Session{
+			ID: uuid.New(),
+		}
+		err = h.db.CreateSession(session)
+		if err != nil {
+			h.logger.Error("failed to create session", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create session")
+		}
+	}
+
+	var chat *models.Chat
+	if req.ChatId != nil {
+		chatId, err := uuid.Parse(*req.ChatId)
+		if err != nil {
+			h.logger.Error("failed to parse chat id", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to parse chat id")
+		}
+		chat, err = h.db.GetChat(chatId)
+		if err != nil {
+			h.logger.Error("failed to get chat", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get chat")
+		}
+	} else {
+		chat = &models.Chat{
+			ID:        uuid.New(),
+			SessionID: session.ID,
+			Question:  req.Question,
+		}
+		err = h.db.CreateChat(chat)
+		if err != nil {
+			h.logger.Error("failed to create chat", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create chat")
+		}
 	}
 
 	var previousAttempts []chatbot.QueryAttempt
@@ -2109,22 +2158,98 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 		})
 	}
 	reqData := chatbot.RequestData{
-		Question:                  req.Question,
+		Question:                  chat.Question,
 		PreviousAttempts:          previousAttempts,
-		InClarificationState:      req.InClarificationState,
+		InClarificationState:      chat.NeedClarification,
 		ClarificationQuestions:    req.ClarificationQuestions,
 		UserClarificationResponse: req.UserClarificationResponse,
 	}
 
+	startTime := time.Now()
 	agent, finalResult, err := flow.RunInference(ctx.Request().Context(), reqData, req.Agent)
 	if err != nil {
 		h.logger.Error("failed to generate query", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate query")
 	}
 
+	chat.AgentID = &agent
+	timeTaken := float64(time.Since(startTime).Microseconds())
+	chat.TimeTaken = &timeTaken
+	var clarifyingQuestions []api.ClarificationQuestion
+	if finalResult.Type == chatbot.ResultTypeSuccess {
+		chat.Query = &finalResult.Query
+	} else if finalResult.Type == chatbot.ResultTypeClarificationNeeded {
+		for _, q := range finalResult.ClarifyingQuestions {
+			chat.NeedClarification = true
+			chatClarification := &models.ChatClarification{
+				ChatID:    chat.ID,
+				ID:        uuid.New(),
+				Questions: q,
+			}
+			err = h.db.CreateChatClarification(chatClarification)
+			if err != nil {
+				h.logger.Error("failed to create chatClarification", zap.Error(err))
+				return echo.NewHTTPError(http.StatusInternalServerError, "failed to create chatClarification")
+			}
+			clarifyingQuestions = append(clarifyingQuestions,
+				api.ClarificationQuestion{
+					ClarificationId: chatClarification.ID.String(),
+					Question:        q,
+				})
+		}
+	}
+
+	var primaryInterpretation api.Suggestion
+	if finalResult.PrimaryInterpretation != "" {
+		primaryInterpretationDb := models.ChatSuggestion{
+			ID:         uuid.New(),
+			ChatID:     chat.ID,
+			Suggestion: finalResult.PrimaryInterpretation,
+		}
+		err = h.db.CreateChatSuggestion(&primaryInterpretationDb)
+		if err != nil {
+			h.logger.Error("failed to create chatSuggestion", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create chatSuggestion")
+		}
+		primaryInterpretation = api.Suggestion{
+			SuggestionId: primaryInterpretationDb.ID.String(),
+			Suggestion:   finalResult.PrimaryInterpretation,
+		}
+	}
+
+	var additionalInterpretations []api.Suggestion
+	for _, ai := range finalResult.AdditionalInterpretations {
+		additionalInterpretationDb := models.ChatSuggestion{
+			ID:         uuid.New(),
+			ChatID:     chat.ID,
+			Suggestion: ai,
+		}
+		err = h.db.CreateChatSuggestion(&additionalInterpretationDb)
+		if err != nil {
+			h.logger.Error("failed to create chatSuggestion", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create chatSuggestion")
+		}
+		additionalInterpretations = append(additionalInterpretations, api.Suggestion{
+			SuggestionId: additionalInterpretationDb.ID.String(),
+			Suggestion:   ai,
+		})
+	}
+
+	inferenceResult := api.InferenceResult{
+		Type:                      finalResult.Type,
+		Query:                     finalResult.Query,
+		PrimaryInterpretation:     primaryInterpretation,
+		AdditionalInterpretations: additionalInterpretations,
+		ClarifyingQuestions:       clarifyingQuestions,
+		Reason:                    finalResult.Reason,
+		RawResponse:               finalResult.RawResponse,
+	}
+
 	return ctx.JSON(http.StatusOK, api.GenerateQueryResponse{
-		Result: *finalResult,
-		Agent:  agent,
+		SessionId: session.ID.String(),
+		ChatId:    chat.ID.String(),
+		Result:    inferenceResult,
+		Agent:     agent,
 	})
 }
 
@@ -2177,7 +2302,7 @@ func (h *HttpHandler) GenerateQueryAndRun(ctx echo.Context) error {
 	}
 	response := &api.GenerateQueryAndRunResponse{}
 	for i := retryCount; i > 0; i-- {
-		flow, err := chatbot.NewTextToSQLFlow(hfToken)
+		flow, err := chatbot.NewTextToSQLFlow(h.db, hfToken)
 		if err != nil {
 			h.logger.Error("failed to build sql flow", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to build sql flow")
@@ -2276,4 +2401,62 @@ func (h *HttpHandler) ConfigureChatbotSecret(ctx echo.Context) error {
 	}
 
 	return ctx.NoContent(http.StatusCreated)
+}
+
+// GetChatbotSession godoc
+//
+//	@Summary		Get session by session-id
+//	@Description	Get session by session-id
+//	@Security		BearerToken
+//	@Tags			metadata
+//	@Produce		json
+//	@Param			req	body	models.Session	true	"Request Body"
+//	@Success		200
+//	@Router			/core/api/v4/chatbot/session/{session_id} [get]
+func (h *HttpHandler) GetChatbotSession(ctx echo.Context) error {
+	sessionId := ctx.Param("session_id")
+	if sessionId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "no session_id provided")
+	}
+	sessionIdUuid, err := uuid.Parse(sessionId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid session_id")
+	}
+
+	session, err := h.db.GetSession(sessionIdUuid)
+	if err != nil {
+		h.logger.Error("failed to get session", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get session")
+	}
+
+	return ctx.JSON(http.StatusOK, session)
+}
+
+// GetChatbotChat godoc
+//
+//	@Summary		Get chat by chat-id
+//	@Description	Get chat by chat-id
+//	@Security		BearerToken
+//	@Tags			metadata
+//	@Produce		json
+//	@Param			req	body	models.Chat	true	"Request Body"
+//	@Success		200
+//	@Router			/core/api/v4/chatbot/chat/{chat_id} [get]
+func (h *HttpHandler) GetChatbotChat(ctx echo.Context) error {
+	chatId := ctx.Param("chat_id")
+	if chatId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "no chat_id provided")
+	}
+	chatIdUuid, err := uuid.Parse(chatId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid chat_id")
+	}
+
+	chat, err := h.db.GetChat(chatIdUuid)
+	if err != nil {
+		h.logger.Error("failed to get session", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get session")
+	}
+
+	return ctx.JSON(http.StatusOK, chat)
 }

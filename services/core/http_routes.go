@@ -120,6 +120,8 @@ func (h *HttpHandler) Register(r *echo.Echo) {
 	v4.GET("/layout/public", httpserver.AuthorizeHandler(h.GetPublicLayouts, api3.ViewerRole))
 
 	v4.POST("/chatbot/generate-query", httpserver.AuthorizeHandler(h.GenerateQuery, api3.ViewerRole))
+	v4.GET("/chatbot/session/:session_id", httpserver.AuthorizeHandler(h.GetChatbotSession, api3.ViewerRole))
+	v4.GET("/chatbot/chat/:chat_id", httpserver.AuthorizeHandler(h.GetChatbotChat, api3.ViewerRole))
 	v4.POST("/chatbot/generate-query/run", httpserver.AuthorizeHandler(h.GenerateQueryAndRun, api3.ViewerRole))
 	v4.POST("/chatbot/secret", httpserver.AuthorizeHandler(h.ConfigureChatbotSecret, api3.AdminRole))
 }

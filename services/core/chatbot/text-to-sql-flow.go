@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/flosch/pongo2/v6"
+	"github.com/opengovern/opensecurity/services/core/db"
 	"log"
 	"os"
 	"path/filepath"
@@ -35,6 +36,7 @@ type TextToSQLFlow struct {
 	mappingData   MappingData
 	queryAttempts []*QueryAttempt
 	mu            sync.RWMutex
+	db            db.Database
 }
 
 type PromptData struct {
@@ -46,7 +48,7 @@ type PromptData struct {
 
 // NewTextToSQLFlow creates a new TextToSQLFlow instance.
 // baseDir is the root directory for resolving relative paths in mapping_data.
-func NewTextToSQLFlow(hfToken string) (*TextToSQLFlow, error) {
+func NewTextToSQLFlow(db db.Database, hfToken string) (*TextToSQLFlow, error) {
 	appConfig, err := NewAppConfig(hfToken)
 	if err != nil {
 		return nil, err
@@ -59,6 +61,7 @@ func NewTextToSQLFlow(hfToken string) (*TextToSQLFlow, error) {
 		mappingData:   appConfig.MappingData,
 		queryAttempts: make([]*QueryAttempt, 0),
 		mu:            sync.RWMutex{},
+		db:            db,
 	}, nil
 }
 

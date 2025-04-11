@@ -8,12 +8,14 @@ import (
 
 type Session struct {
 	gorm.Model
-	AgentID string `gorm:"type:varchar(100);not null"`
-	Chats   []Chat `gorm:"foreignKey:SessionID"`
+	ID      uuid.UUID `gorm:"primary_key;type:uuid;default:uuid_generate_v4();"`
+	AgentID string    `gorm:"type:varchar(100);not null"`
+	Chats   []Chat    `gorm:"foreignKey:SessionID"`
 }
 
 type Chat struct {
 	gorm.Model
+	ID                  uuid.UUID `gorm:"primary_key;type:uuid;default:uuid_generate_v4();"`
 	Question            string
 	Query               *string
 	QueryError          *string
@@ -37,6 +39,7 @@ type ChatSuggestion struct {
 
 type ChatClarification struct {
 	gorm.Model
+	ID        uuid.UUID `gorm:"primary_key;type:uuid;default:uuid_generate_v4();"`
 	Questions string
 	Answer    *string
 	ChatID    uuid.UUID `gorm:"type:uuid;not null"`
