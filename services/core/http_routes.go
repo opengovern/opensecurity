@@ -118,7 +118,8 @@ func (h *HttpHandler) Register(r *echo.Echo) {
 	v4.POST("/layout/set", httpserver.AuthorizeHandler(h.SetUserLayout, api3.ViewerRole))
 	v4.POST("/layout/change-privacy", httpserver.AuthorizeHandler(h.ChangePrivacy, api3.ViewerRole))
 	v4.GET("/layout/public", httpserver.AuthorizeHandler(h.GetPublicLayouts, api3.ViewerRole))
-
+	// Chatbot
+	v4.GET("/chatbot/agents", httpserver.AuthorizeHandler(h.GenerateQuery, api3.ViewerRole))
 	v4.POST("/chatbot/generate-query", httpserver.AuthorizeHandler(h.GenerateQuery, api3.ViewerRole))
 	v4.GET("/chatbot/sessions/:session_id", httpserver.AuthorizeHandler(h.GetChatbotSession, api3.ViewerRole))
 	v4.GET("/chatbot/chats/:chat_id", httpserver.AuthorizeHandler(h.GetChatbotChat, api3.ViewerRole))

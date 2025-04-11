@@ -99,3 +99,40 @@ type ChatClarification struct {
 	Questions string  `json:"questions"`
 	Answer    *string `json:"answer,omitempty"`
 }
+
+type Agents struct {
+	Agents []Agent `json:"agents"`
+}
+
+type Agent struct {
+	Name                    string   `yaml:"name"`
+	Description             string   `yaml:"description"`
+	WelcomeMessage          string   `yaml:"welcome_message"`
+	SampleQuestions         []string `yaml:"sample_questions"`
+	Availability            string   `yaml:"availability"`
+	PromptTemplateFile      string   `yaml:"prompt_template_file"`
+	QueryVerificationRetries int      `yaml:"query_verification_retries"`
+	SeekClarification       bool     `yaml:"seek_clarification"`
+	Domains                 []string `yaml:"domains"`
+	SQLSchemaFiles          []string `yaml:"sql_schema_files"`
+	AgentConfig             AgentConfig `yaml:"agent_config"`
+}
+type GetAgentResponse struct {
+	ID string `json:"id"`
+	Name                    string   `yaml:"name"`
+	Description             string   `yaml:"description"`
+	WelcomeMessage          string   `yaml:"welcome_message"`
+	SampleQuestions         []string `yaml:"sample_questions"`
+	Availability            string   `yaml:"availability"`
+	PromptTemplateFile      string   `yaml:"prompt_template_file"`
+	QueryVerificationRetries int      `yaml:"query_verification_retries"`
+	SeekClarification       bool     `yaml:"seek_clarification"`
+	Domains                 []string `yaml:"domains"`
+	SQLSchemaFiles          []string `yaml:"sql_schema_files"`
+	AgentConfig             AgentConfig `yaml:"agent_config"`
+}
+type AgentConfig struct {
+	PrimaryModel  string `yaml:"primary_model"`
+	PrimaryProvider string `yaml:"primary_provider"`
+}
+type Config map[string]Agent

@@ -8,16 +8,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/jackc/pgtype"
-	"github.com/opengovern/opensecurity/services/core/chatbot"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"sort"
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgtype"
+	"github.com/opengovern/opensecurity/services/core/chatbot"
+	"gopkg.in/yaml.v3"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 
@@ -2052,6 +2055,55 @@ func (h *HttpHandler) RunQueryInternal(ctx echo.Context, req api.RunQueryRequest
 	span.End()
 	return resp, nil
 }
+
+// GetAgents godoc
+//
+//	@Summary		Get AI Agents
+//	@Description	GetAi Agents
+//	@Security		BearerToken
+//	@Tags			metadata
+//	@Produce		json
+//	@Param			
+//	@Success		200
+//	@Router			/core/api/v4/chatbot/agents [GET]
+func (h *HttpHandler) GetAgents(ctx echo.Context) error {
+	// read mapping.yaml from file 
+	yamlFile := "mapping.yaml"
+	yamlData, err := os.ReadFile(yamlFile)
+	if err != nil {
+		h.logger.Error("failed to read YAML file", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to read YAML file")
+	}
+
+	var config api.Config
+	err = yaml.Unmarshal(yamlData, &config)
+	if err != nil {
+		h.logger.Error("failed to unmarshal YAML file", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to unmarshal YAML file")
+		
+	}
+	// make empty array of agents
+	var response []api.GetAgentResponse
+	// check all key values
+	for key, value := range config {
+		response = append(response, api.GetAgentResponse{
+			ID: key,                      
+			Name           : value.Name,
+			WelcomeMessage          :  value.WelcomeMessage,
+			SampleQuestions         : value.SampleQuestions,
+			Availability            : value.Availability,
+		})
+		
+		
+	}
+
+
+	return ctx.JSON(http.StatusOK, response)
+
+
+}
+
+
 
 // GenerateQuery godoc
 //
