@@ -19,6 +19,17 @@ type GenerateQueryResponse struct {
 	Agent  string                  `json:"agent"`
 }
 
+type AttemptResult struct {
+	Result   chatbot.InferenceResult `json:"result"`
+	Agent    string                  `json:"agent"`
+	RunError *string                 `json:"run_error,omitempty"`
+}
+
+type GenerateQueryAndRunResponse struct {
+	RunResult       RunQueryResponse `json:"result"`
+	AttemptsResults []AttemptResult  `json:"attempts_results"`
+}
+
 type ConfigureChatbotSecretRequest struct {
 	Key    string `json:"key"`
 	Secret string `json:"secret"`

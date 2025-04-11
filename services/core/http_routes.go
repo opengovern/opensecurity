@@ -1873,6 +1873,7 @@ func (h *HttpHandler) GenerateQueryAndRun(ctx echo.Context) error {
 	if req.RetryCount != nil {
 		retryCount = *req.RetryCount
 	}
+	response := &api.GenerateQueryAndRunResponse{}
 	for i := retryCount; i > 0; i-- {
 		flow, err := chatbot.NewTextToSQLFlow(hfToken)
 		if err != nil {
@@ -1887,6 +1888,12 @@ func (h *HttpHandler) GenerateQueryAndRun(ctx echo.Context) error {
 				Error: pa.Error,
 			})
 		}
+		for _, pa := range response.AttemptsResults {
+			previousAttempts = append(previousAttempts, chatbot.QueryAttempt{
+				Query: pa.Result.Query,
+				Error: *pa.RunError,
+			})
+		}
 		reqData := chatbot.RequestData{
 			Question:         req.Question,
 			PreviousAttempts: previousAttempts,
@@ -1898,13 +1905,28 @@ func (h *HttpHandler) GenerateQueryAndRun(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate query")
 		}
 
-		return ctx.JSON(http.StatusOK, api.GenerateQueryResponse{
-			Result: *finalResult,
-			Agent:  agent,
-		})
+		if finalResult.Query != "" {
+			resp, err := h.RunSQLNamedQuery(ctx.Request().Context(), finalResult.Query, finalResult.Query, &api.RunQueryRequest{
+				Page: api.Page{
+					No:   1,
+					Size: 1000,
+				},
+			})
+			if err != nil {
+				errMsg := err.Error()
+				response.AttemptsResults = append(response.AttemptsResults, api.AttemptResult{
+					Result:   *finalResult,
+					Agent:    agent,
+					RunError: &errMsg,
+				})
+				continue
+			}
+			response.RunResult = *resp
+			break
+		}
 	}
 
-	return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate query")
+	return ctx.JSON(http.StatusOK, response)
 }
 
 // ConfigureChatbotSecret godoc
