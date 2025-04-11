@@ -12,7 +12,7 @@ type GenerateQueryRequest struct {
 	PreviousAttempts          []QueryAttempt `json:"previous_attempts"`
 	Agent                     *string        `json:"agent,omitempty"`
 	RetryCount                *int           `json:"retry_count,omitempty"`
-	InClarificationState      string         `json:"in_clarification_state"`
+	InClarificationState      bool           `json:"in_clarification_state"`
 	ClarificationQuestions    []string       `json:"clarification_questions"`
 	UserClarificationResponse string         `json:"user_clarification_response"`
 }

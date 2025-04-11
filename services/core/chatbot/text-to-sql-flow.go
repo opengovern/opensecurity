@@ -24,7 +24,7 @@ type QueryAttempt struct {
 type RequestData struct {
 	Question                  string         `json:"question"`
 	PreviousAttempts          []QueryAttempt `json:"previous_attempts"`
-	InClarificationState      string         `json:"in_clarification_state"`
+	InClarificationState      bool           `json:"in_clarification_state"`
 	ClarificationQuestions    []string       `json:"clarification_questions"`
 	UserClarificationResponse string         `json:"user_clarification_response"`
 }

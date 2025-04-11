@@ -288,10 +288,6 @@ func (h *HttpHandler) SetQueryParameter(ctx echo.Context) error {
 
 	dbQueryParams := make([]*models.PolicyParameterValues, 0, len(req.QueryParameters))
 	for _, apiParam := range req.QueryParameters {
-		//key, err := models.ParseQueryParameterKey(apiParam.Key)
-		//if err != nil {
-		//	return err
-		//}
 		dbParam := models.PolicyParameterValues{
 			Key:       apiParam.Key,
 			Value:     apiParam.Value,
