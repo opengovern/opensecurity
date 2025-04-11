@@ -1,8 +1,8 @@
 package api
 
 import (
-	"github.com/google/uuid"
 	"github.com/opengovern/opensecurity/services/core/chatbot"
+	"time"
 )
 
 // QueryAttempt represents an attempt to generate and validate an SQL query.
@@ -70,7 +70,32 @@ type ConfigureChatbotSecretRequest struct {
 }
 
 type Session struct {
-	ID      uuid.UUID     `json:"id"`
-	AgentId string        `json:"agent_id"`
-	Chats   []interface{} `json:"chats"`
+	ID      string `json:"id"`
+	AgentId string `json:"agent_id"`
+	Chats   []Chat `json:"chats"`
+}
+
+type Chat struct {
+	ID                string         `json:"id"`
+	CreatedAt         time.Time      `json:"created_at"`
+	UpdatedAt         time.Time      `json:"updated_at"`
+	Question          string         `json:"question"`
+	Query             *string        `json:"query,omitempty"`
+	QueryError        *string        `json:"query_error,omitempty"`
+	NeedClarification bool           `json:"need_clarification"`
+	AssistantText     *string        `json:"assistant_text,omitempty"`
+	TimeTaken         *time.Duration `json:"time_taken,omitempty"`
+	AgentId           *string        `json:"agent_id,omitempty"`
+	SessionId         string         `json:"session_id"`
+}
+
+type ChatSuggestion struct {
+	ID         string `json:"id"`
+	Suggestion string `json:"suggestion"`
+}
+
+type ChatClarification struct {
+	ID        string  `json:"id"`
+	Questions string  `json:"questions"`
+	Answer    *string `json:"answer,omitempty"`
 }

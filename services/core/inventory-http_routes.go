@@ -2119,6 +2119,9 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 		session = &models.Session{
 			ID: uuid.New(),
 		}
+		if req.Agent != nil {
+			session.AgentID = *req.Agent
+		}
 		err = h.db.CreateSession(session)
 		if err != nil {
 			h.logger.Error("failed to create session", zap.Error(err))
@@ -2449,7 +2452,17 @@ func (h *HttpHandler) GetChatbotSession(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get session")
 	}
 
-	return ctx.JSON(http.StatusOK, session)
+	var chats []api.Chat
+	for _, chat := range session.Chats {
+		chats = append(chats, convertChatToApi(chat))
+	}
+	sessionApi := api.Session{
+		ID:      session.ID.String(),
+		AgentId: session.AgentID,
+		Chats:   chats,
+	}
+
+	return ctx.JSON(http.StatusOK, sessionApi)
 }
 
 // GetChatbotChat godoc
@@ -2478,5 +2491,28 @@ func (h *HttpHandler) GetChatbotChat(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get session")
 	}
 
-	return ctx.JSON(http.StatusOK, chat)
+	chatApi := convertChatToApi(*chat)
+
+	return ctx.JSON(http.StatusOK, chatApi)
+}
+
+func convertChatToApi(chat models.Chat) api.Chat {
+	var timeTaken *time.Duration
+	if chat.TimeTaken != nil {
+		duration := time.Duration(*chat.TimeTaken) * time.Microsecond
+		timeTaken = &duration
+	}
+	return api.Chat{
+		ID:                chat.ID.String(),
+		CreatedAt:         chat.CreatedAt,
+		UpdatedAt:         chat.UpdatedAt,
+		Question:          chat.Question,
+		Query:             chat.Query,
+		QueryError:        chat.QueryError,
+		NeedClarification: chat.NeedClarification,
+		AssistantText:     chat.AssistantText,
+		TimeTaken:         timeTaken,
+		AgentId:           chat.AgentID,
+		SessionId:         chat.SessionID.String(),
+	}
 }
