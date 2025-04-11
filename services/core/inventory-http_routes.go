@@ -198,7 +198,13 @@ func (h *HttpHandler) ListQueriesV2(ctx echo.Context) error {
 			}
 			var resourceTypesApi []api.ResourceTypeV2
 			for _, r := range resourceTypes {
-				resourceTypesApi = append(resourceTypesApi, r.ToApi())
+				resourceTypesApi = append(resourceTypesApi, api.ResourceTypeV2{
+					IntegrationType: r.IntegrationType,
+					ResourceName:    r.ResourceName,
+					ResourceID:      r.ResourceID,
+					SteampipeTable:  r.SteampipeTable,
+					Category:        r.Category,
+				})
 			}
 			categoriesApi = append(categoriesApi, api.ResourceCategory{
 				Category:  c.Category,
@@ -267,12 +273,29 @@ func (h *HttpHandler) ListQueriesV2(ctx echo.Context) error {
 		for _, integrationType := range item.IntegrationTypes {
 			integrationTypes = append(integrationTypes, integration.Type(integrationType))
 		}
+		query := api.Query{
+			ID:             item.Query.ID,
+			QueryToExecute: item.Query.QueryToExecute,
+			ListOfTables:   item.Query.ListOfTables,
+			PrimaryTable:   item.Query.PrimaryTable,
+			Engine:         item.Query.Engine,
+			Parameters:     make([]api.QueryParameter, 0, len(item.Query.Parameters)),
+			Global:         item.Query.Global,
+			CreatedAt:      item.Query.CreatedAt,
+			UpdatedAt:      item.Query.UpdatedAt,
+		}
+		for _, p := range item.Query.Parameters {
+			query.Parameters = append(query.Parameters, api.QueryParameter{
+				Key:      p.Key,
+				Required: p.Required,
+			})
+		}
 		items = append(items, api.NamedQueryItemV2{
 			ID:               item.ID,
 			Title:            item.Title,
 			Description:      item.Description,
 			IntegrationTypes: integrationTypes,
-			Query:            item.Query.ToApi(),
+			Query:            query,
 			Tags:             filterTagsByRegex(req.TagsRegex, tags),
 		})
 	}
@@ -333,12 +356,29 @@ func (h *HttpHandler) GetQuery(ctx echo.Context) error {
 	for _, integrationType := range query.IntegrationTypes {
 		integrationTypes = append(integrationTypes, integration.Type(integrationType))
 	}
+	queryToExecute := api.Query{
+		ID:             query.Query.ID,
+		QueryToExecute: query.Query.QueryToExecute,
+		ListOfTables:   query.Query.ListOfTables,
+		PrimaryTable:   query.Query.PrimaryTable,
+		Engine:         query.Query.Engine,
+		Parameters:     make([]api.QueryParameter, 0, len(query.Query.Parameters)),
+		Global:         query.Query.Global,
+		CreatedAt:      query.Query.CreatedAt,
+		UpdatedAt:      query.Query.UpdatedAt,
+	}
+	for _, p := range query.Query.Parameters {
+		queryToExecute.Parameters = append(queryToExecute.Parameters, api.QueryParameter{
+			Key:      p.Key,
+			Required: p.Required,
+		})
+	}
 	result := api.NamedQueryItemV2{
 		ID:               query.ID,
 		Title:            query.Title,
 		Description:      query.Description,
 		IntegrationTypes: integrationTypes,
-		Query:            query.Query.ToApi(),
+		Query:            queryToExecute,
 		Tags:             tags,
 	}
 
@@ -383,7 +423,10 @@ func (h *HttpHandler) ListQueriesTags(ctx echo.Context) error {
 
 	res := make([]api.NamedQueryTagsResult, 0, len(namedQueriesTags))
 	for _, history := range namedQueriesTags {
-		res = append(res, history.ToApi())
+		res = append(res, api.NamedQueryTagsResult{
+			Key:          history.Key,
+			UniqueValues: history.UniqueValues,
+		})
 	}
 
 	span.End()
@@ -613,7 +656,10 @@ func (h *HttpHandler) GetRecentRanQueries(ctx echo.Context) error {
 
 	res := make([]api.NamedQueryHistory, 0, len(namedQueryHistories))
 	for _, history := range namedQueryHistories {
-		res = append(res, history.ToApi())
+		res = append(res, api.NamedQueryHistory{
+			Query:      history.Query,
+			ExecutedAt: history.ExecutedAt,
+		})
 	}
 
 	return ctx.JSON(200, res)
@@ -888,7 +934,14 @@ func (h *HttpHandler) ListResourceTypeMetadata(ctx echo.Context) error {
 	var resourceTypeMetadata []api.ResourceType
 
 	for _, resourceType := range resourceTypes {
-		apiResourceType := resourceType.ToApi()
+		apiResourceType := api.ResourceType{
+			IntegrationType: resourceType.IntegrationType,
+			ResourceType:    resourceType.ResourceType,
+			ResourceLabel:   resourceType.ResourceLabel,
+			ServiceName:     resourceType.ServiceName,
+			Tags:            model.TrimPrivateTags(resourceType.GetTagsMap()),
+			LogoURI:         resourceType.LogoURI,
+		}
 		resourceTypeMetadata = append(resourceTypeMetadata, apiResourceType)
 	}
 
@@ -930,8 +983,25 @@ func (h *HttpHandler) ListResourceCollectionsMetadata(ctx echo.Context) error {
 	}
 
 	res := make([]api.ResourceCollection, 0, len(resourceCollections))
-	for _, collection := range resourceCollections {
-		res = append(res, collection.ToApi())
+	for _, r := range resourceCollections {
+		var status api.ResourceCollectionStatus
+		switch r.Status {
+		case models.ResourceCollectionStatusActive:
+			status = api.ResourceCollectionStatusActive
+		case models.ResourceCollectionStatusInactive:
+			status = api.ResourceCollectionStatusInactive
+		default:
+			status = api.ResourceCollectionStatusUnknown
+		}
+		res = append(res, api.ResourceCollection{
+			ID:          r.ID,
+			Name:        r.Name,
+			Tags:        model.TrimPrivateTags(r.GetTagsMap()),
+			Description: r.Description,
+			CreatedAt:   r.Created,
+			Status:      status,
+			Filters:     r.Filters,
+		})
 	}
 
 	return ctx.JSON(http.StatusOK, res)
@@ -949,14 +1019,31 @@ func (h *HttpHandler) ListResourceCollectionsMetadata(ctx echo.Context) error {
 //	@Router			/inventory/api/v2/metadata/resource-collection/{resourceCollectionId} [get]
 func (h *HttpHandler) GetResourceCollectionMetadata(ctx echo.Context) error {
 	collectionID := ctx.Param("resourceCollectionId")
-	resourceCollection, err := h.db.GetResourceCollection(collectionID)
+	r, err := h.db.GetResourceCollection(collectionID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return echo.NewHTTPError(http.StatusNotFound, "resource collection not found")
 		}
 		return err
 	}
-	return ctx.JSON(http.StatusOK, resourceCollection.ToApi())
+	var status api.ResourceCollectionStatus
+	switch r.Status {
+	case models.ResourceCollectionStatusActive:
+		status = api.ResourceCollectionStatusActive
+	case models.ResourceCollectionStatusInactive:
+		status = api.ResourceCollectionStatusInactive
+	default:
+		status = api.ResourceCollectionStatusUnknown
+	}
+	return ctx.JSON(http.StatusOK, api.ResourceCollection{
+		ID:          r.ID,
+		Name:        r.Name,
+		Tags:        model.TrimPrivateTags(r.GetTagsMap()),
+		Description: r.Description,
+		CreatedAt:   r.Created,
+		Status:      status,
+		Filters:     r.Filters,
+	})
 }
 
 func (h *HttpHandler) connectionsFilter(filter map[string]interface{}) ([]string, error) {
@@ -1310,7 +1397,10 @@ func (h *HttpHandler) ListQueriesFilters(echoCtx echo.Context) error {
 
 	tags := make([]api.NamedQueryTagsResult, 0, len(namedQueriesTags))
 	for _, history := range namedQueriesTags {
-		tags = append(tags, history.ToApi())
+		tags = append(tags, api.NamedQueryTagsResult{
+			Key:          history.Key,
+			UniqueValues: history.UniqueValues,
+		})
 	}
 
 	response := api.ListQueriesFiltersResponse{
@@ -1561,7 +1651,13 @@ func (h *HttpHandler) GetCategoriesQueries(ctx echo.Context) error {
 		}
 		var resourceTypesApi []api.ResourceTypeV2
 		for _, r := range resourceTypes {
-			resourceTypesApi = append(resourceTypesApi, r.ToApi())
+			resourceTypesApi = append(resourceTypesApi, api.ResourceTypeV2{
+				IntegrationType: r.IntegrationType,
+				ResourceName:    r.ResourceName,
+				ResourceID:      r.ResourceID,
+				SteampipeTable:  r.SteampipeTable,
+				Category:        r.Category,
+			})
 		}
 		categoriesApi = append(categoriesApi, api.ResourceCategory{
 			Category:  c.Category,
@@ -1595,12 +1691,29 @@ func (h *HttpHandler) GetCategoriesQueries(ctx echo.Context) error {
 			for _, integrationType := range query.IntegrationTypes {
 				integrationTypes = append(integrationTypes, integration.Type(integrationType))
 			}
+			queryToExecute := api.Query{
+				ID:             query.Query.ID,
+				QueryToExecute: query.Query.QueryToExecute,
+				ListOfTables:   query.Query.ListOfTables,
+				PrimaryTable:   query.Query.PrimaryTable,
+				Engine:         query.Query.Engine,
+				Parameters:     make([]api.QueryParameter, 0, len(query.Query.Parameters)),
+				Global:         query.Query.Global,
+				CreatedAt:      query.Query.CreatedAt,
+				UpdatedAt:      query.Query.UpdatedAt,
+			}
+			for _, p := range query.Query.Parameters {
+				queryToExecute.Parameters = append(queryToExecute.Parameters, api.QueryParameter{
+					Key:      p.Key,
+					Required: p.Required,
+				})
+			}
 			result := api.NamedQueryItemV2{
 				ID:               query.ID,
 				Title:            query.Title,
 				Description:      query.Description,
 				IntegrationTypes: integrationTypes,
-				Query:            query.Query.ToApi(),
+				Query:            queryToExecute,
 				Tags:             tags,
 			}
 			for _, t := range query.Query.ListOfTables {
@@ -1681,12 +1794,29 @@ func (h *HttpHandler) GetParametersQueries(ctx echo.Context) error {
 			for _, integrationType := range item.IntegrationTypes {
 				integrationTypes = append(integrationTypes, integration.Type(integrationType))
 			}
+			queryToExecute := api.Query{
+				ID:             item.Query.ID,
+				QueryToExecute: item.Query.QueryToExecute,
+				ListOfTables:   item.Query.ListOfTables,
+				PrimaryTable:   item.Query.PrimaryTable,
+				Engine:         item.Query.Engine,
+				Parameters:     make([]api.QueryParameter, 0, len(item.Query.Parameters)),
+				Global:         item.Query.Global,
+				CreatedAt:      item.Query.CreatedAt,
+				UpdatedAt:      item.Query.UpdatedAt,
+			}
+			for _, p := range item.Query.Parameters {
+				queryToExecute.Parameters = append(queryToExecute.Parameters, api.QueryParameter{
+					Key:      p.Key,
+					Required: p.Required,
+				})
+			}
 			items = append(items, api.NamedQueryItemV2{
 				ID:               item.ID,
 				Title:            item.Title,
 				Description:      item.Description,
 				IntegrationTypes: integrationTypes,
-				Query:            item.Query.ToApi(),
+				Query:            queryToExecute,
 				Tags:             tags,
 			})
 		}
@@ -1748,7 +1878,13 @@ func (h *HttpHandler) ListQueriesV2Internal(req api.ListQueryV2Request) (*api.Li
 			}
 			var resourceTypesApi []api.ResourceTypeV2
 			for _, r := range resourceTypes {
-				resourceTypesApi = append(resourceTypesApi, r.ToApi())
+				resourceTypesApi = append(resourceTypesApi, api.ResourceTypeV2{
+					IntegrationType: r.IntegrationType,
+					ResourceName:    r.ResourceName,
+					ResourceID:      r.ResourceID,
+					SteampipeTable:  r.SteampipeTable,
+					Category:        r.Category,
+				})
 			}
 			categoriesApi = append(categoriesApi, api.ResourceCategory{
 				Category:  c.Category,
@@ -1814,12 +1950,29 @@ func (h *HttpHandler) ListQueriesV2Internal(req api.ListQueryV2Request) (*api.Li
 		for _, integrationType := range item.IntegrationTypes {
 			integrationTypes = append(integrationTypes, integration.Type(integrationType))
 		}
+		queryToExecute := api.Query{
+			ID:             item.Query.ID,
+			QueryToExecute: item.Query.QueryToExecute,
+			ListOfTables:   item.Query.ListOfTables,
+			PrimaryTable:   item.Query.PrimaryTable,
+			Engine:         item.Query.Engine,
+			Parameters:     make([]api.QueryParameter, 0, len(item.Query.Parameters)),
+			Global:         item.Query.Global,
+			CreatedAt:      item.Query.CreatedAt,
+			UpdatedAt:      item.Query.UpdatedAt,
+		}
+		for _, p := range item.Query.Parameters {
+			queryToExecute.Parameters = append(queryToExecute.Parameters, api.QueryParameter{
+				Key:      p.Key,
+				Required: p.Required,
+			})
+		}
 		items = append(items, api.NamedQueryItemV2{
 			ID:               item.ID,
 			Title:            item.Title,
 			Description:      item.Description,
 			IntegrationTypes: integrationTypes,
-			Query:            item.Query.ToApi(),
+			Query:            queryToExecute,
 			Tags:             filterTagsByRegex(req.TagsRegex, tags),
 		})
 	}

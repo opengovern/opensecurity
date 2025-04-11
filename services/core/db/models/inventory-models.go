@@ -9,7 +9,6 @@ import (
 	"github.com/lib/pq"
 	"github.com/opengovern/og-util/pkg/model"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
-	"github.com/opengovern/opensecurity/services/core/api"
 	"gorm.io/gorm"
 )
 
@@ -59,18 +58,6 @@ type ResourceType struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
-}
-
-func (r ResourceType) ToApi() api.ResourceType {
-	apiResourceType := api.ResourceType{
-		IntegrationType: r.IntegrationType,
-		ResourceType:    r.ResourceType,
-		ResourceLabel:   r.ResourceLabel,
-		ServiceName:     r.ServiceName,
-		Tags:            model.TrimPrivateTags(r.GetTagsMap()),
-		LogoURI:         r.LogoURI,
-	}
-	return apiResourceType
 }
 
 type ResourceCollectionTag struct {

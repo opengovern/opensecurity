@@ -292,7 +292,11 @@ func (h *HttpHandler) SetQueryParameter(ctx echo.Context) error {
 		//if err != nil {
 		//	return err
 		//}
-		dbParam := models.QueryParameterFromAPI(apiParam)
+		dbParam := models.PolicyParameterValues{
+			Key:       apiParam.Key,
+			Value:     apiParam.Value,
+			ControlID: apiParam.ControlID,
+		}
 		dbParam.Key = apiParam.Key
 		dbQueryParams = append(dbQueryParams, &dbParam)
 	}
@@ -391,7 +395,11 @@ func (h *HttpHandler) ListQueryParameters(ctx echo.Context) error {
 
 	parametersMap := make(map[string]*api.QueryParameter)
 	for _, dbParam := range queryParams {
-		apiParam := dbParam.ToAPI()
+		apiParam := api.QueryParameter{
+			Key:       dbParam.Key,
+			ControlID: dbParam.ControlID,
+			Value:     dbParam.Value,
+		}
 		parametersMap[apiParam.Key+apiParam.ControlID] = &apiParam
 	}
 

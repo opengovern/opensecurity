@@ -333,7 +333,11 @@ func (h *HttpHandler) listQueryParametersInternal() (coreApi.ListQueryParameters
 
 	parametersMap := make(map[string]*coreApi.QueryParameter)
 	for _, dbParam := range queryParams {
-		apiParam := dbParam.ToAPI()
+		apiParam := coreApi.QueryParameter{
+			Key:       dbParam.Key,
+			ControlID: dbParam.ControlID,
+			Value:     dbParam.Value,
+		}
 		parametersMap[apiParam.Key] = &apiParam
 	}
 
