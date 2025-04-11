@@ -1,7 +1,10 @@
 package chatbot
 
 import (
+	"context"
 	"fmt"
+	"github.com/opengovern/og-util/pkg/vault"
+	"github.com/opengovern/opensecurity/services/core/db"
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
@@ -36,7 +39,7 @@ type MappingData map[string]AgentConfig
 
 // NewAppConfig parses args, loads env vars and mapping file.
 // mappingFilePath is the path to mapping.yaml.
-func NewAppConfig() (*AppConfig, error) {
+func NewAppConfig(ctx context.Context, vaultSrc vault.VaultSourceConfig, database db.Database) (*AppConfig, error) {
 	cfg := &AppConfig{}
 
 	mappingFilePath := MappingPath
@@ -57,11 +60,24 @@ func NewAppConfig() (*AppConfig, error) {
 		return nil, fmt.Errorf("failed to parse YAML mapping file '%s': %w", mappingFilePath, err)
 	}
 
-	// --- Load Environment Variables ---
-	cfg.HfToken = os.Getenv("HF_API_TOKEN")
+	hfApiTokenSecret, err := database.GetChatbotSecret("HF_API_TOKEN")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get HF_API_TOKEN secret: %w", err)
+	}
+	if hfApiTokenSecret == nil {
+		return nil, fmt.Errorf("HF_API_TOKEN secret not configured")
+	}
+	hfApiTokenDecrypted, err := vaultSrc.Decrypt(ctx, hfApiTokenSecret.Secret)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decrypt HF_API_TOKEN secret: %w", err)
+	}
+	if hfApiToken, ok := hfApiTokenDecrypted["HF_API_TOKEN"]; ok {
+		if hfApiTokenString, ok := hfApiToken.(string); ok && hfApiTokenString != "" {
+			cfg.HfToken = hfApiTokenString
+		}
+	}
 	if cfg.HfToken == "" {
-		// Consider returning error instead of panic/fatal for library code
-		return nil, fmt.Errorf("please set HF_API_TOKEN environment variable")
+		return nil, fmt.Errorf("please configure HF_API_TOKEN")
 	}
 
 	// Optionally set BaseDir based on mappingFilePath or another env var

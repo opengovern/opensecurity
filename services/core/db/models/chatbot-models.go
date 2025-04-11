@@ -42,3 +42,8 @@ type ChatClarification struct {
 	ChatID    uuid.UUID `gorm:"type:uuid;not null"`
 	Chat      Chat      `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE"`
 }
+
+type ChatbotSecret struct {
+	Key    string `gorm:"primaryKey"`
+	Secret string
+}

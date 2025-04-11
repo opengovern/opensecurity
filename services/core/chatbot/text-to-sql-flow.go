@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/flosch/pongo2/v6"
+	"github.com/opengovern/og-util/pkg/vault"
+	"github.com/opengovern/opensecurity/services/core/db"
 	"github.com/opengovern/opensecurity/services/core/db/models"
 	"log"
 	"os"
@@ -32,6 +34,7 @@ type TextToSQLFlow struct {
 	mappingData   MappingData
 	queryAttempts []*QueryAttempt
 	mu            sync.RWMutex
+	db            db.Database
 }
 
 type PromptData struct {
@@ -43,8 +46,8 @@ type PromptData struct {
 
 // NewTextToSQLFlow creates a new TextToSQLFlow instance.
 // baseDir is the root directory for resolving relative paths in mapping_data.
-func NewTextToSQLFlow() (*TextToSQLFlow, error) {
-	appConfig, err := NewAppConfig()
+func NewTextToSQLFlow(ctx context.Context, vaultSrc vault.VaultSourceConfig, database db.Database) (*TextToSQLFlow, error) {
+	appConfig, err := NewAppConfig(ctx, vaultSrc, database)
 	if err != nil {
 		return nil, err
 	}
@@ -56,6 +59,7 @@ func NewTextToSQLFlow() (*TextToSQLFlow, error) {
 		mappingData:   appConfig.MappingData,
 		queryAttempts: make([]*QueryAttempt, 0),
 		mu:            sync.RWMutex{},
+		db:            database,
 	}, nil
 }
 

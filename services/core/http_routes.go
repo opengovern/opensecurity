@@ -48,7 +48,7 @@ import (
 	coreUtils "github.com/opengovern/opensecurity/services/core/utils"
 )
 
-func (h HttpHandler) Register(r *echo.Echo) {
+func (h *HttpHandler) Register(r *echo.Echo) {
 	v1 := r.Group("/api/v1")
 	// metadata
 	filter := v1.Group("/filter")
@@ -121,6 +121,7 @@ func (h HttpHandler) Register(r *echo.Echo) {
 	v4.GET("/layout/public", httpserver.AuthorizeHandler(h.GetPublicLayouts, api3.ViewerRole))
 
 	v4.POST("/chatbot/generate-query", httpserver.AuthorizeHandler(h.GenerateQuery, api3.ViewerRole))
+	v4.POST("/chatbot/secret", httpserver.AuthorizeHandler(h.ConfigureChatbotSecret, api3.AdminRole))
 }
 
 var tracer = otel.Tracer("core")
@@ -147,7 +148,7 @@ func bindValidate(ctx echo.Context, i interface{}) error {
 //	@Param			key	path		string	true	"Key"
 //	@Success		200	{object}	models.ConfigMetadata
 //	@Router			/metadata/api/v1/metadata/{key} [get]
-func (h HttpHandler) GetConfigMetadata(ctx echo.Context) error {
+func (h *HttpHandler) GetConfigMetadata(ctx echo.Context) error {
 	key := ctx.Param("key")
 	_, span := tracer.Start(ctx.Request().Context(), "new_GetConfigMetadata", trace.WithSpanKind(trace.SpanKindServer))
 	span.SetName("new_GetConfigMetadata")
@@ -179,7 +180,7 @@ func (h HttpHandler) GetConfigMetadata(ctx echo.Context) error {
 //	@Param			req	body	api.SetConfigMetadataRequest	true	"Request Body"
 //	@Success		200
 //	@Router			/metadata/api/v1/metadata [post]
-func (h HttpHandler) SetConfigMetadata(ctx echo.Context) error {
+func (h *HttpHandler) SetConfigMetadata(ctx echo.Context) error {
 	var req api.SetConfigMetadataRequest
 	if err := bindValidate(ctx, &req); err != nil {
 		return err
@@ -220,7 +221,7 @@ func (h HttpHandler) SetConfigMetadata(ctx echo.Context) error {
 //	@Param		req	body	models.Filter	true	"Request Body"
 //	@Success	200
 //	@Router		/metadata/api/v1/filter [post]
-func (h HttpHandler) AddFilter(ctx echo.Context) error {
+func (h *HttpHandler) AddFilter(ctx echo.Context) error {
 	var req models.Filter
 	if err := bindValidate(ctx, &req); err != nil {
 		return err
@@ -250,7 +251,7 @@ func (h HttpHandler) AddFilter(ctx echo.Context) error {
 //	@Produce	json
 //	@Success	200	{object}	[]models.Filter
 //	@Router		/metadata/api/v1/filter [get]
-func (h HttpHandler) GetFilters(ctx echo.Context) error {
+func (h *HttpHandler) GetFilters(ctx echo.Context) error {
 	// trace :
 	_, span := tracer.Start(ctx.Request().Context(), "new_ListFilters", trace.WithSpanKind(trace.SpanKindServer))
 	span.SetName("new_ListFilters")
@@ -275,7 +276,7 @@ func (h HttpHandler) GetFilters(ctx echo.Context) error {
 //	@Param			req	body	api.SetQueryParameterRequest	true	"Request Body"
 //	@Success		200
 //	@Router			/metadata/api/v1/query_parameter [post]
-func (h HttpHandler) SetQueryParameter(ctx echo.Context) error {
+func (h *HttpHandler) SetQueryParameter(ctx echo.Context) error {
 	var req api.SetQueryParameterRequest
 	if err := bindValidate(ctx, &req); err != nil {
 		return err
@@ -318,7 +319,7 @@ func (h HttpHandler) SetQueryParameter(ctx echo.Context) error {
 //	@Param			per_page	query		int		false	"Per Page"
 //	@Success		200			{object}	api.ListQueryParametersResponse
 //	@Router			/metadata/api/v1/query_parameter [post]
-func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
+func (h *HttpHandler) ListQueryParameters(ctx echo.Context) error {
 	clientCtx := &httpclient.Context{UserRole: api3.AdminRole}
 
 	var cursor, perPage int64
@@ -553,7 +554,7 @@ func (h HttpHandler) ListQueryParameters(ctx echo.Context) error {
 //	@Param			id	path		string	true	"ID"
 //	@Success		200	{object}	models.PolicyParameterValues
 //	@Router			/metadata/api/v1/query_parameter/{id} [get]
-func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
+func (h *HttpHandler) GetQueryParameter(ctx echo.Context) error {
 	key := ctx.Param("key")
 	clientCtx := &httpclient.Context{UserRole: api3.AdminRole}
 
@@ -662,7 +663,7 @@ func (h HttpHandler) GetQueryParameter(ctx echo.Context) error {
 //	@Produce		json
 //	@Success		200
 //	@Router			/workspace/api/v3/sample/purge [put]
-func (h HttpHandler) PurgeSampleData(c echo.Context) error {
+func (h *HttpHandler) PurgeSampleData(c echo.Context) error {
 	ctx := &httpclient.Context{UserRole: api3.AdminRole}
 
 	loaded, err := h.SampleDataLoaded(c)
@@ -706,7 +707,7 @@ func (h HttpHandler) PurgeSampleData(c echo.Context) error {
 //	@Produce		json
 //	@Success		200
 //	@Router			/metadata/api/v3/sample/sync [put]
-func (h HttpHandler) SyncDemo(echoCtx echo.Context) error {
+func (h *HttpHandler) SyncDemo(echoCtx echo.Context) error {
 	ctx := echoCtx.Request().Context()
 
 	var mig *model.Migration
@@ -903,7 +904,7 @@ func (h HttpHandler) SyncDemo(echoCtx echo.Context) error {
 //	@Produce		json
 //	@Success		200
 //	@Router			/workspace/api/v3/sample/loaded [put]
-func (h HttpHandler) WorkspaceLoadedSampleData(echoCtx echo.Context) error {
+func (h *HttpHandler) WorkspaceLoadedSampleData(echoCtx echo.Context) error {
 	loaded, err := h.SampleDataLoaded(echoCtx)
 	if err != nil {
 		return err
@@ -928,7 +929,7 @@ func (h HttpHandler) WorkspaceLoadedSampleData(echoCtx echo.Context) error {
 //	@Produce		json
 //	@Success		200	{object}	api.GetMigrationStatusResponse
 //	@Router			/metadata/api/v3/migration/status [get]
-func (h HttpHandler) GetMigrationStatus(echoCtx echo.Context) error {
+func (h *HttpHandler) GetMigrationStatus(echoCtx echo.Context) error {
 	var mig *model.Migration
 	tx := h.migratorDb.ORM.Model(&model.Migration{}).Where("id = ?", "main").First(&mig)
 	if tx.Error != nil && !errors.Is(tx.Error, gorm.ErrRecordNotFound) {
@@ -988,7 +989,7 @@ func (h HttpHandler) GetMigrationStatus(echoCtx echo.Context) error {
 //	@Produce		json
 //	@Success		200	{object}	api.GetSampleSyncStatusResponse
 //	@Router			/workspace/api/v3/sample/sync/status [get]
-func (h HttpHandler) GetSampleSyncStatus(echoCtx echo.Context) error {
+func (h *HttpHandler) GetSampleSyncStatus(echoCtx echo.Context) error {
 	var mig *model.Migration
 	tx := h.migratorDb.ORM.Model(&model.Migration{}).Where("id = ?", model2.MigrationJobName).First(&mig)
 	if tx.Error != nil && !errors.Is(tx.Error, gorm.ErrRecordNotFound) {
@@ -1022,7 +1023,7 @@ func (h HttpHandler) GetSampleSyncStatus(echoCtx echo.Context) error {
 //	@Produce		json
 //	@Success		200
 //	@Router			/workspace/api/v3/configured/status [get]
-func (h HttpHandler) GetConfiguredStatus(echoCtx echo.Context) error {
+func (h *HttpHandler) GetConfiguredStatus(echoCtx echo.Context) error {
 	appConfiguration, err := h.db.GetAppConfiguration()
 	if err != nil {
 		h.logger.Error("failed to get workspace", zap.Error(err))
@@ -1049,7 +1050,7 @@ func (h HttpHandler) GetConfiguredStatus(echoCtx echo.Context) error {
 //	@Produce		json
 //	@Success		200
 //	@Router			/workspace/api/v3/configured/set [put]
-func (h HttpHandler) SetConfiguredStatus(echoCtx echo.Context) error {
+func (h *HttpHandler) SetConfiguredStatus(echoCtx echo.Context) error {
 	err := h.db.AppConfigured(true)
 	if err != nil {
 		h.logger.Error("failed to set workspace configured", zap.Error(err))
@@ -1071,7 +1072,7 @@ func (h HttpHandler) SetConfiguredStatus(echoCtx echo.Context) error {
 //	@Produce		json
 //	@Success		200
 //	@Router			/workspace/api/v3/configured/unset [put]
-func (h HttpHandler) UnsetConfiguredStatus(echoCtx echo.Context) error {
+func (h *HttpHandler) UnsetConfiguredStatus(echoCtx echo.Context) error {
 	err := h.db.AppConfigured(false)
 	if err != nil {
 		h.logger.Error("failed to unset workspace configured", zap.Error(err))
@@ -1092,7 +1093,7 @@ func (h HttpHandler) UnsetConfiguredStatus(echoCtx echo.Context) error {
 //	@Produce		json
 //	@Success		200	{object}	api.About
 //	@Router			/workspace/api/v3/about [put]
-func (h HttpHandler) GetAbout(echoCtx echo.Context) error {
+func (h *HttpHandler) GetAbout(echoCtx echo.Context) error {
 	ctx := &httpclient.Context{UserRole: api3.AdminRole}
 
 	version := ""
@@ -1213,7 +1214,7 @@ func (h HttpHandler) GetAbout(echoCtx echo.Context) error {
 //	@Produce		json
 //	@Success		200	{object}	api.About
 //	@Router			/workspace/api/v3/about [put]
-func (h HttpHandler) GetAboutShort(echoCtx echo.Context) error {
+func (h *HttpHandler) GetAboutShort(echoCtx echo.Context) error {
 
 	version := ""
 	var opengovernanceVersionConfig corev1.ConfigMap
@@ -1255,7 +1256,7 @@ func newDexClient(hostAndPort string) (dexApi.DexClient, error) {
 	return dexApi.NewDexClient(conn), nil
 }
 
-func (h HttpHandler) SampleDataLoaded(echoCtx echo.Context) (bool, error) {
+func (h *HttpHandler) SampleDataLoaded(echoCtx echo.Context) (bool, error) {
 	ctx := &httpclient.Context{UserRole: api3.AdminRole}
 
 	integrationURL := strings.ReplaceAll(h.cfg.Integration.BaseURL, "%NAMESPACE%", h.cfg.OpengovernanceNamespace)
@@ -1289,7 +1290,7 @@ func (h HttpHandler) SampleDataLoaded(echoCtx echo.Context) (bool, error) {
 //	@Produce		json
 //	@Success		200	{object}	api.About
 //	@Router			/workspace/api/v3/vault/configured [get]
-func (h HttpHandler) VaultConfigured(echoCtx echo.Context) error {
+func (h *HttpHandler) VaultConfigured(echoCtx echo.Context) error {
 
 	return echoCtx.String(http.StatusOK, "True")
 }
@@ -1306,7 +1307,7 @@ func (h HttpHandler) VaultConfigured(echoCtx echo.Context) error {
 //	@Produce		json
 //	@Success		200
 //	@Router			/metadata/api/v3/views/reload [put]
-func (h HttpHandler) ReloadViews(echoCtx echo.Context) error {
+func (h *HttpHandler) ReloadViews(echoCtx echo.Context) error {
 	h.viewCheckpoint = time.Now()
 	return echoCtx.NoContent(http.StatusOK)
 }
@@ -1323,7 +1324,7 @@ func (h HttpHandler) ReloadViews(echoCtx echo.Context) error {
 //	@Produce		json
 //	@Success		200	{object}	api.GetViewsCheckpointResponse
 //	@Router			/core/api/v3/views/checkpoint [get]
-func (h HttpHandler) GetViewsCheckpoint(echoCtx echo.Context) error {
+func (h *HttpHandler) GetViewsCheckpoint(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, api.GetViewsCheckpointResponse{
 		Checkpoint: h.viewCheckpoint,
 	})
@@ -1343,7 +1344,7 @@ func (h HttpHandler) GetViewsCheckpoint(echoCtx echo.Context) error {
 //	@Param			per_page	query		int	false	"Per Page"
 //	@Success		200			{object}	api.GetViewsResponse
 //	@Router			/core/api/v3/views [get]
-func (h HttpHandler) GetViews(echoCtx echo.Context) error {
+func (h *HttpHandler) GetViews(echoCtx echo.Context) error {
 	views, err := h.db.ListQueryViews()
 	if err != nil {
 		h.logger.Error("failed to list views", zap.Error(err))
@@ -1432,7 +1433,7 @@ func (h HttpHandler) GetViews(echoCtx echo.Context) error {
 //	@Produce		json
 //	@Success		200	{object}
 //	@Router			/core/api/v3/plugins/{plugin_id}/reload [put]
-func (h HttpHandler) ReloadPluginSteampipeConfig(echoCtx echo.Context) error {
+func (h *HttpHandler) ReloadPluginSteampipeConfig(echoCtx echo.Context) error {
 	pluginId := echoCtx.Param("plugin_id")
 	go func() {
 		err := h.PluginJob.ReloadSinglePlugin(context.Background(), pluginId)
@@ -1453,7 +1454,7 @@ func (h HttpHandler) ReloadPluginSteampipeConfig(echoCtx echo.Context) error {
 //	@Produce		json
 //	@Success		200	{object}
 //	@Router			/core/api/v3/plugins/{plugin_id}/remove [put]
-func (h HttpHandler) RemovePluginSteampipeConfig(echoCtx echo.Context) error {
+func (h *HttpHandler) RemovePluginSteampipeConfig(echoCtx echo.Context) error {
 	pluginId := echoCtx.Param("plugin_id")
 	go func() {
 		err := h.PluginJob.RemoveSinglePlugin(context.Background(), pluginId)
@@ -1477,7 +1478,7 @@ func (h HttpHandler) RemovePluginSteampipeConfig(echoCtx echo.Context) error {
 //	@Produce		json
 //	@Success		200
 //	@Router			/core/api/v4/queries/sync [get]
-func (h HttpHandler) SyncQueries(echoCtx echo.Context) error {
+func (h *HttpHandler) SyncQueries(echoCtx echo.Context) error {
 	ctx := echoCtx.Request().Context()
 
 	var mig *model2.Migration
@@ -1591,7 +1592,7 @@ func (h HttpHandler) SyncQueries(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, struct{}{})
 }
 
-func (h HttpHandler) GetUserLayouts(echoCtx echo.Context) error {
+func (h *HttpHandler) GetUserLayouts(echoCtx echo.Context) error {
 	var req api.GetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return err
@@ -1630,7 +1631,7 @@ func (h HttpHandler) GetUserLayouts(echoCtx echo.Context) error {
 
 }
 
-func (h HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
+func (h *HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 	var req api.GetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return err
@@ -1663,7 +1664,7 @@ func (h HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 	})
 
 }
-func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
+func (h *HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	var req api.SetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return err
@@ -1702,7 +1703,7 @@ func (h HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	return echoCtx.NoContent(http.StatusOK)
 }
 
-func (h HttpHandler) ChangePrivacy(echoCtx echo.Context) error {
+func (h *HttpHandler) ChangePrivacy(echoCtx echo.Context) error {
 	var req api.ChangePrivacyRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return err
@@ -1718,7 +1719,7 @@ func (h HttpHandler) ChangePrivacy(echoCtx echo.Context) error {
 }
 
 // get public layouts
-func (h HttpHandler) GetPublicLayouts(echoCtx echo.Context) error {
+func (h *HttpHandler) GetPublicLayouts(echoCtx echo.Context) error {
 
 	layouts, err := h.db.GetPublicLayouts()
 	if err != nil {
@@ -1761,7 +1762,7 @@ func (h HttpHandler) GetPublicLayouts(echoCtx echo.Context) error {
 //	@Param			req	body	api.GenerateQueryRequest	true	"Request Body"
 //	@Success		200
 //	@Router			/core/api/v4/chatbot/generate-query [post]
-func (h HttpHandler) GenerateQuery(ctx echo.Context) error {
+func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 	var req api.GenerateQueryRequest
 	if err := bindValidate(ctx, &req); err != nil {
 		return err
@@ -1771,7 +1772,7 @@ func (h HttpHandler) GenerateQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "no question provided")
 	}
 
-	flow, err := chatbot.NewTextToSQLFlow()
+	flow, err := chatbot.NewTextToSQLFlow(ctx.Request().Context(), h.vault, h.db)
 	if err != nil {
 		h.logger.Error("failed to build sql flow", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to build sql flow")
@@ -1799,4 +1800,48 @@ func (h HttpHandler) GenerateQuery(ctx echo.Context) error {
 		Query: finalQuery,
 		Agent: agent,
 	})
+}
+
+// ConfigureChatbotSecret godoc
+//
+//	@Summary		Generate query by the given question
+//	@Description	Generate query by the given question
+//	@Security		BearerToken
+//	@Tags			metadata
+//	@Produce		json
+//	@Param			req	body	api.GenerateQueryRequest	true	"Request Body"
+//	@Success		200
+//	@Router			/core/api/v4/chatbot/secret [post]
+func (h *HttpHandler) ConfigureChatbotSecret(ctx echo.Context) error {
+	var req api.ConfigureChatbotSecretRequest
+	if err := bindValidate(ctx, &req); err != nil {
+		return err
+	}
+
+	if req.Key == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "no key provided")
+	}
+	if req.Secret == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "no secret provided")
+	}
+
+	config := map[string]any{
+		req.Key: req.Secret,
+	}
+	secret, err := h.vault.Encrypt(ctx.Request().Context(), config)
+	if err != nil {
+		h.logger.Error("failed to encrypt secret", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to encrypt secret")
+	}
+
+	err = h.db.UpsertChatbotSecret(models.ChatbotSecret{
+		Key:    req.Key,
+		Secret: secret,
+	})
+	if err != nil {
+		h.logger.Error("failed to update chatbot secret", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update chatbot secret")
+	}
+
+	return ctx.NoContent(http.StatusCreated)
 }

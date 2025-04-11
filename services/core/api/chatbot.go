@@ -15,3 +15,8 @@ type GenerateQueryResponse struct {
 	Query string `json:"query"`
 	Agent string `json:"agent"`
 }
+
+type ConfigureChatbotSecretRequest struct {
+	Key    string `json:"key"`
+	Secret string `json:"secret"`
+}

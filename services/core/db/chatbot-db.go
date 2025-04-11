@@ -3,6 +3,7 @@ package db
 import (
 	"errors"
 	"github.com/opengovern/opensecurity/services/core/db/models"
+	"gorm.io/gorm/clause"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -130,4 +131,29 @@ func (db *Database) ListChatClarifications(chatID *uuid.UUID) ([]models.ChatClar
 		return nil, tx.Error
 	}
 	return clarifications, nil
+}
+
+func (db Database) UpsertChatbotSecret(secret models.ChatbotSecret) error {
+	tx := db.orm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "key"}},
+		DoUpdates: clause.AssignmentColumns([]string{"secret"}),
+	}).Create(&secret)
+
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	return nil
+}
+
+func (db Database) GetChatbotSecret(key string) (*models.ChatbotSecret, error) {
+	var secret models.ChatbotSecret
+	tx := db.orm.Model(&models.ChatbotSecret{}).Where("key = ?", key).First(&secret)
+	if tx.Error != nil {
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, tx.Error
+	}
+	return &secret, nil
 }
