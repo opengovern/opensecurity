@@ -2138,10 +2138,16 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get chat")
 		}
 	} else {
+		resultJsonb := pgtype.JSONB{}
+		err = resultJsonb.Set("{}")
+		if err != nil {
+			return err
+		}
 		chat = &models.Chat{
 			ID:        uuid.New(),
 			SessionID: session.ID,
 			Question:  req.Question,
+			Result:    resultJsonb,
 		}
 		err = h.db.CreateChat(chat)
 		if err != nil {
