@@ -1773,7 +1773,30 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "no question provided")
 	}
 
-	flow, err := chatbot.NewTextToSQLFlow(ctx.Request().Context(), h.vault, h.db)
+	hfApiTokenSecret, err := h.db.GetChatbotSecret("HF_API_TOKEN")
+	if err != nil {
+		h.logger.Error("failed to get HF_API_TOKEN", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get HF_API_TOKEN")
+	}
+	if hfApiTokenSecret == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "HF_API_TOKEN not found")
+	}
+	hfApiTokenDecrypted, err := h.vault.Decrypt(ctx.Request().Context(), hfApiTokenSecret.Secret)
+	if err != nil {
+		h.logger.Error("failed to decrypt HF_API_TOKEN", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to decrypt HF_API_TOKEN")
+	}
+	var hfToken string
+	if hfApiToken, ok := hfApiTokenDecrypted["HF_API_TOKEN"]; ok {
+		if hfApiTokenString, ok := hfApiToken.(string); ok && hfApiTokenString != "" {
+			hfToken = hfApiTokenString
+		}
+	}
+	if hfToken == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "please configure HF_API_TOKEN")
+	}
+
+	flow, err := chatbot.NewTextToSQLFlow(hfToken)
 	if err != nil {
 		h.logger.Error("failed to build sql flow", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to build sql flow")
@@ -1791,7 +1814,7 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 		PreviousAttempts: previousAttempts,
 	}
 
-	agent, finalResult, err := flow.RunInference(ctx.Request().Context(), nil, reqData, req.Agent)
+	agent, finalResult, err := flow.RunInference(ctx.Request().Context(), reqData, req.Agent)
 	if err != nil {
 		h.logger.Error("failed to generate query", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate query")
@@ -1823,12 +1846,35 @@ func (h *HttpHandler) GenerateQueryAndRun(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "no question provided")
 	}
 
+	hfApiTokenSecret, err := h.db.GetChatbotSecret("HF_API_TOKEN")
+	if err != nil {
+		h.logger.Error("failed to get HF_API_TOKEN", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get HF_API_TOKEN")
+	}
+	if hfApiTokenSecret == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "HF_API_TOKEN not found")
+	}
+	hfApiTokenDecrypted, err := h.vault.Decrypt(ctx.Request().Context(), hfApiTokenSecret.Secret)
+	if err != nil {
+		h.logger.Error("failed to decrypt HF_API_TOKEN", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to decrypt HF_API_TOKEN")
+	}
+	var hfToken string
+	if hfApiToken, ok := hfApiTokenDecrypted["HF_API_TOKEN"]; ok {
+		if hfApiTokenString, ok := hfApiToken.(string); ok && hfApiTokenString != "" {
+			hfToken = hfApiTokenString
+		}
+	}
+	if hfToken == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "please configure HF_API_TOKEN")
+	}
+
 	retryCount := 5
 	if req.RetryCount != nil {
 		retryCount = *req.RetryCount
 	}
 	for i := retryCount; i > 0; i-- {
-		flow, err := chatbot.NewTextToSQLFlow(ctx.Request().Context(), h.vault, h.db)
+		flow, err := chatbot.NewTextToSQLFlow(hfToken)
 		if err != nil {
 			h.logger.Error("failed to build sql flow", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to build sql flow")
@@ -1846,7 +1892,7 @@ func (h *HttpHandler) GenerateQueryAndRun(ctx echo.Context) error {
 			PreviousAttempts: previousAttempts,
 		}
 
-		agent, finalResult, err := flow.RunInference(ctx.Request().Context(), nil, reqData, req.Agent)
+		agent, finalResult, err := flow.RunInference(ctx.Request().Context(), reqData, req.Agent)
 		if err != nil {
 			h.logger.Error("failed to generate query", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate query")

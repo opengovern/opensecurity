@@ -5,9 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/flosch/pongo2/v6"
-	"github.com/opengovern/og-util/pkg/vault"
-	"github.com/opengovern/opensecurity/services/core/db"
-	"github.com/opengovern/opensecurity/services/core/db/models"
 	"log"
 	"os"
 	"path/filepath"
@@ -35,7 +32,6 @@ type TextToSQLFlow struct {
 	mappingData   MappingData
 	queryAttempts []*QueryAttempt
 	mu            sync.RWMutex
-	db            db.Database
 }
 
 type PromptData struct {
@@ -47,8 +43,8 @@ type PromptData struct {
 
 // NewTextToSQLFlow creates a new TextToSQLFlow instance.
 // baseDir is the root directory for resolving relative paths in mapping_data.
-func NewTextToSQLFlow(ctx context.Context, vaultSrc vault.VaultSourceConfig, database db.Database) (*TextToSQLFlow, error) {
-	appConfig, err := NewAppConfig(ctx, vaultSrc, database)
+func NewTextToSQLFlow(hfToken string) (*TextToSQLFlow, error) {
+	appConfig, err := NewAppConfig(hfToken)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +56,6 @@ func NewTextToSQLFlow(ctx context.Context, vaultSrc vault.VaultSourceConfig, dat
 		mappingData:   appConfig.MappingData,
 		queryAttempts: make([]*QueryAttempt, 0),
 		mu:            sync.RWMutex{},
-		db:            database,
 	}, nil
 }
 
@@ -213,7 +208,7 @@ func extractSQLFallback(responseText string) string {
 	return "" // Return empty if no SQL found via fallback
 }
 
-func (f *TextToSQLFlow) RunInference(ctx context.Context, chat *models.Chat, data RequestData, agentInput *string) (agent string, finalResponse *InferenceResult, err error) {
+func (f *TextToSQLFlow) RunInference(ctx context.Context, data RequestData, agentInput *string) (agent string, finalResponse *InferenceResult, err error) {
 	question := strings.TrimSpace(data.Question)
 
 	log.Println("Debug: === run_inference called ===")
