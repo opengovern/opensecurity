@@ -35,6 +35,7 @@ func (db Database) Initialize() error {
 		&models.PlatformConfiguration{},
 		&models.RunNamedQueryRunCache{},
 		&models.UserLayout{},
+		&models.ChatbotSecret{},
 	)
 	if err != nil {
 		return err
