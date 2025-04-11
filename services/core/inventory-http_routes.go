@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jackc/pgtype"
+	"github.com/opengovern/opensecurity/services/core/chatbot"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -1896,4 +1897,224 @@ func (h *HttpHandler) RunQueryInternal(ctx echo.Context, req api.RunQueryRequest
 	))
 	span.End()
 	return resp, nil
+}
+
+// GenerateQuery godoc
+//
+//	@Summary		Generate query by the given question
+//	@Description	Generate query by the given question
+//	@Security		BearerToken
+//	@Tags			metadata
+//	@Produce		json
+//	@Param			req	body	api.GenerateQueryRequest	true	"Request Body"
+//	@Success		200
+//	@Router			/core/api/v4/chatbot/generate-query [post]
+func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
+	var req api.GenerateQueryRequest
+	if err := bindValidate(ctx, &req); err != nil {
+		return err
+	}
+
+	if req.Question == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "no question provided")
+	}
+
+	hfApiTokenSecret, err := h.db.GetChatbotSecret("HF_API_TOKEN")
+	if err != nil {
+		h.logger.Error("failed to get HF_API_TOKEN", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get HF_API_TOKEN")
+	}
+	if hfApiTokenSecret == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "HF_API_TOKEN not found")
+	}
+	hfApiTokenDecrypted, err := h.vault.Decrypt(ctx.Request().Context(), hfApiTokenSecret.Secret)
+	if err != nil {
+		h.logger.Error("failed to decrypt HF_API_TOKEN", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to decrypt HF_API_TOKEN")
+	}
+	var hfToken string
+	if hfApiToken, ok := hfApiTokenDecrypted["HF_API_TOKEN"]; ok {
+		if hfApiTokenString, ok := hfApiToken.(string); ok && hfApiTokenString != "" {
+			hfToken = hfApiTokenString
+		}
+	}
+	if hfToken == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "please configure HF_API_TOKEN")
+	}
+
+	flow, err := chatbot.NewTextToSQLFlow(hfToken)
+	if err != nil {
+		h.logger.Error("failed to build sql flow", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to build sql flow")
+	}
+
+	var previousAttempts []chatbot.QueryAttempt
+	for _, pa := range req.PreviousAttempts {
+		previousAttempts = append(previousAttempts, chatbot.QueryAttempt{
+			Query: pa.Query,
+			Error: pa.Error,
+		})
+	}
+	reqData := chatbot.RequestData{
+		Question:         req.Question,
+		PreviousAttempts: previousAttempts,
+	}
+
+	agent, finalResult, err := flow.RunInference(ctx.Request().Context(), reqData, req.Agent)
+	if err != nil {
+		h.logger.Error("failed to generate query", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate query")
+	}
+
+	return ctx.JSON(http.StatusOK, api.GenerateQueryResponse{
+		Result: *finalResult,
+		Agent:  agent,
+	})
+}
+
+// GenerateQueryAndRun godoc
+//
+//	@Summary		Generate query by the given question and run and retry
+//	@Description	Generate query by the given question and run and retry
+//	@Security		BearerToken
+//	@Tags			metadata
+//	@Produce		json
+//	@Param			req	body	api.GenerateQueryRequest	true	"Request Body"
+//	@Success		200
+//	@Router			/core/api/v4/chatbot/generate-query/run [post]
+func (h *HttpHandler) GenerateQueryAndRun(ctx echo.Context) error {
+	var req api.GenerateQueryRequest
+	if err := bindValidate(ctx, &req); err != nil {
+		return err
+	}
+
+	if req.Question == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "no question provided")
+	}
+
+	hfApiTokenSecret, err := h.db.GetChatbotSecret("HF_API_TOKEN")
+	if err != nil {
+		h.logger.Error("failed to get HF_API_TOKEN", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get HF_API_TOKEN")
+	}
+	if hfApiTokenSecret == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "HF_API_TOKEN not found")
+	}
+	hfApiTokenDecrypted, err := h.vault.Decrypt(ctx.Request().Context(), hfApiTokenSecret.Secret)
+	if err != nil {
+		h.logger.Error("failed to decrypt HF_API_TOKEN", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to decrypt HF_API_TOKEN")
+	}
+	var hfToken string
+	if hfApiToken, ok := hfApiTokenDecrypted["HF_API_TOKEN"]; ok {
+		if hfApiTokenString, ok := hfApiToken.(string); ok && hfApiTokenString != "" {
+			hfToken = hfApiTokenString
+		}
+	}
+	if hfToken == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "please configure HF_API_TOKEN")
+	}
+
+	retryCount := 5
+	if req.RetryCount != nil {
+		retryCount = *req.RetryCount
+	}
+	response := &api.GenerateQueryAndRunResponse{}
+	for i := retryCount; i > 0; i-- {
+		flow, err := chatbot.NewTextToSQLFlow(hfToken)
+		if err != nil {
+			h.logger.Error("failed to build sql flow", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to build sql flow")
+		}
+
+		var previousAttempts []chatbot.QueryAttempt
+		for _, pa := range req.PreviousAttempts {
+			previousAttempts = append(previousAttempts, chatbot.QueryAttempt{
+				Query: pa.Query,
+				Error: pa.Error,
+			})
+		}
+		for _, pa := range response.AttemptsResults {
+			previousAttempts = append(previousAttempts, chatbot.QueryAttempt{
+				Query: pa.Result.Query,
+				Error: *pa.RunError,
+			})
+		}
+		reqData := chatbot.RequestData{
+			Question:         req.Question,
+			PreviousAttempts: previousAttempts,
+		}
+
+		agent, finalResult, err := flow.RunInference(ctx.Request().Context(), reqData, req.Agent)
+		if err != nil {
+			h.logger.Error("failed to generate query", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate query")
+		}
+
+		if finalResult.Query != "" {
+			resp, err := h.RunSQLNamedQuery(ctx.Request().Context(), finalResult.Query, finalResult.Query, &api.RunQueryRequest{
+				Page: api.Page{
+					No:   1,
+					Size: 1000,
+				},
+			})
+			if err != nil {
+				errMsg := err.Error()
+				response.AttemptsResults = append(response.AttemptsResults, api.AttemptResult{
+					Result:   *finalResult,
+					Agent:    agent,
+					RunError: &errMsg,
+				})
+				continue
+			}
+			response.RunResult = *resp
+			break
+		}
+	}
+
+	return ctx.JSON(http.StatusOK, response)
+}
+
+// ConfigureChatbotSecret godoc
+//
+//	@Summary		Generate query by the given question
+//	@Description	Generate query by the given question
+//	@Security		BearerToken
+//	@Tags			metadata
+//	@Produce		json
+//	@Param			req	body	api.GenerateQueryRequest	true	"Request Body"
+//	@Success		200
+//	@Router			/core/api/v4/chatbot/secret [post]
+func (h *HttpHandler) ConfigureChatbotSecret(ctx echo.Context) error {
+	var req api.ConfigureChatbotSecretRequest
+	if err := bindValidate(ctx, &req); err != nil {
+		return err
+	}
+
+	if req.Key == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "no key provided")
+	}
+	if req.Secret == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "no secret provided")
+	}
+
+	config := map[string]any{
+		req.Key: req.Secret,
+	}
+	secret, err := h.vault.Encrypt(ctx.Request().Context(), config)
+	if err != nil {
+		h.logger.Error("failed to encrypt secret", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to encrypt secret")
+	}
+
+	err = h.db.UpsertChatbotSecret(models.ChatbotSecret{
+		Key:    req.Key,
+		Secret: secret,
+	})
+	if err != nil {
+		h.logger.Error("failed to update chatbot secret", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update chatbot secret")
+	}
+
+	return ctx.NoContent(http.StatusCreated)
 }
