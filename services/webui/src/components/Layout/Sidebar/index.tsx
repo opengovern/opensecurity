@@ -207,24 +207,24 @@ export default function Sidebar({ currentPage }: ISidebar) {
         <>
             <div className="flex flex-col gap-2 p-2 mt-3 w-full">
                 {/* logo */}
-                <Flex className="ml-6">
+                <Flex className="">
                     <img
                         src={require('../../../icons/logo-light.png')}
-                        className=""
+                        className="ml-4"
                     />
                 </Flex>
             </div>
             <SideNavigation
-                    className='w-full custom-nav'
+                className="w-full custom-nav"
                 // @ts-ignore
                 items={navigation()?.map((item) => {
                     return {
                         href: `/${item.page}`,
                         type: 'link',
                         text: item.name,
-                        
+
                         info: item?.isPreview ? (
-                            <RiLockStarFill className='w-3'  />
+                            <RiLockStarFill className="w-3" />
                         ) : (
                             ''
                         ),
