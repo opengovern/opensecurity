@@ -107,32 +107,24 @@ export default function Sidebar({ currentPage }: ISidebar) {
             return [
                 {
                     name: 'CloudQL',
-                    page: ['cloudql', 'cloudql'],
-                    icon: MagnifyingGlassIcon,
+                    page: 'cloudql',
+                    icon: RiTerminalBoxLine,
                     isPreview: false,
                 },
 
                 {
                     name: 'Integration',
-                    page: [
-                        'integration/plugins',
-                        'plugins/AWS',
-                        'plugins/Azure',
-                        'plugins/EntraID',
-                    ],
-                    icon: PuzzlePieceIcon,
+                    page: 'integration/plugins',
+                    icon: RiPuzzleLine,
                     isLoading: false,
-                    // count: 0,
-
-                    // count: numericDisplay(connectionCount?.count) || 0,
                     error: undefined,
                     isPreview: false,
                 },
 
                 {
                     name: 'Administration',
-                    page: ['administration'],
-                    icon: Cog6ToothIcon,
+                    page: 'administration',
+                    icon: RiAdminLine,
                     isPreview: false,
                 },
             ]
@@ -149,6 +141,12 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 name: 'CloudQL',
                 page: 'cloudql',
                 icon: RiTerminalBoxLine,
+                isPreview: false,
+            },
+            {
+                name: 'Agent AI',
+                page: 'ai',
+                icon: RiRobot2Line,
                 isPreview: false,
             },
             {
@@ -195,12 +193,6 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 icon: RiAdminLine,
                 isPreview: false,
             },
-            {
-                name: 'Agent AI',
-                page: 'ai',
-                icon: RiRobot2Line,
-                isPreview: true,
-            },
 
             {
                 name: 'Automation',
@@ -208,20 +200,6 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 icon: RiRefreshLine,
                 isPreview: true,
             },
-            // {
-            //     name: 'Dashboards',
-            //     page: [
-            //         'dashboards',
-            //         'dashboards/infrastructure',
-            //         'dashboards/spend',
-            //         'dashboards/infrastructure-cloud-accounts',
-            //         'dashboards/infrastructure-metrics',
-            //         'dashboards/spend-accounts',
-            //         'dashboards/spend-metrics',
-            //     ],
-            //     icon: RiSlideshowLine,
-            //     isPreview: true,
-            // },
         ]
     }
 

@@ -22,7 +22,6 @@ type IProps = {
     onScroll?: (e: UIEvent) => void
     scrollRef?: any
 }
-const show_compliance = window.__RUNTIME_CONFIG__.REACT_APP_SHOW_COMPLIANCE
 
 const Mapping = {
     cloudql: 'CloudQL',
