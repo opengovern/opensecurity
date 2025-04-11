@@ -2,6 +2,7 @@ package chatbot
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/flosch/pongo2/v6"
 	"github.com/opengovern/og-util/pkg/vault"
@@ -80,7 +81,109 @@ func (f *TextToSQLFlow) ClearQueryAttempts() {
 	log.Println("Debug: Cleared all query attempts.")
 }
 
-func extractSQLFromResponse(responseText string) string {
+// parseLLMResponse attempts to parse the LLM's text response into a structured InferenceResult.
+// It handles different JSON formats (SUCCESS, CLARIFICATION_NEEDED, ERROR)
+// and falls back to checking for raw SQL if JSON parsing fails initially.
+func parseLLMResponse(responseText string) *InferenceResult {
+	// Clean up potential markdown fences and whitespace
+	trimmedResponse := strings.TrimSpace(responseText)
+	trimmedResponse = strings.TrimPrefix(trimmedResponse, "```json")
+	trimmedResponse = strings.TrimPrefix(trimmedResponse, "```")
+	trimmedResponse = strings.TrimSuffix(trimmedResponse, "```")
+	trimmedResponse = strings.TrimSpace(trimmedResponse) // Trim again after removing fences
+
+	if trimmedResponse == "" {
+		return &InferenceResult{
+			Type:        ResultTypeMalformed,
+			Reason:      "LLM returned an empty response.",
+			RawResponse: responseText,
+		}
+	}
+
+	// Attempt to parse as JSON to determine the result type
+	var base BaseResponse
+	err := json.Unmarshal([]byte(trimmedResponse), &base)
+
+	if err != nil {
+		// JSON parsing failed initially. Check if it's just raw SQL.
+		log.Printf("Debug: Initial JSON parse failed: %v. Checking for raw SQL fallback.", err)
+		potentialSQL := extractSQLFallback(trimmedResponse) // Use a helper for old logic
+		if potentialSQL != "" {
+			log.Printf("Debug: Found raw SQL using fallback logic.")
+			return &InferenceResult{
+				Type:                  ResultTypeRawSQL, // Indicate it was found via fallback
+				Query:                 potentialSQL,
+				RawResponse:           responseText,                       // Store original response
+				PrimaryInterpretation: "Raw SQL extracted from response.", // Add default interpretation
+			}
+		}
+		// If not valid JSON and not raw SQL, consider it malformed.
+		log.Printf("ERROR: Response is not valid JSON and does not appear to contain raw SQL.")
+		return &InferenceResult{
+			Type:        ResultTypeMalformed,
+			Reason:      fmt.Sprintf("Response is not valid JSON and does not contain detectable SQL: %v", err),
+			RawResponse: responseText,
+		}
+	}
+
+	// JSON parsing succeeded, now parse into the specific structure based on 'result' field
+	switch base.Result {
+	case ResultTypeSuccess:
+		var successResp SuccessResponse
+		if err := json.Unmarshal([]byte(trimmedResponse), &successResp); err != nil {
+			return &InferenceResult{Type: ResultTypeMalformed, Reason: fmt.Sprintf("failed to parse SUCCESS response: %v", err), RawResponse: responseText}
+		}
+		// Validate essential fields
+		if successResp.Query == "" {
+			return &InferenceResult{Type: ResultTypeMalformed, Reason: "SUCCESS response missing 'query' field", RawResponse: responseText}
+		}
+		return &InferenceResult{
+			Type:                      ResultTypeSuccess,
+			Query:                     successResp.Query,
+			PrimaryInterpretation:     successResp.PrimaryInterpretation,
+			AdditionalInterpretations: successResp.AdditionalInterpretations,
+		}
+
+	case ResultTypeClarificationNeeded:
+		var clarResp ClarificationResponse
+		if err := json.Unmarshal([]byte(trimmedResponse), &clarResp); err != nil {
+			return &InferenceResult{Type: ResultTypeMalformed, Reason: fmt.Sprintf("failed to parse CLARIFICATION_NEEDED response: %v", err), RawResponse: responseText}
+		}
+		// Validate essential fields
+		if len(clarResp.ClarifyingQuestions) == 0 {
+			return &InferenceResult{Type: ResultTypeMalformed, Reason: "CLARIFICATION_NEEDED response missing 'clarifying_questions'", RawResponse: responseText}
+		}
+		return &InferenceResult{
+			Type:                ResultTypeClarificationNeeded,
+			ClarifyingQuestions: clarResp.ClarifyingQuestions,
+		}
+
+	case ResultTypeError:
+		var errResp ErrorResponse
+		if err := json.Unmarshal([]byte(trimmedResponse), &errResp); err != nil {
+			return &InferenceResult{Type: ResultTypeMalformed, Reason: fmt.Sprintf("failed to parse ERROR response: %v", err), RawResponse: responseText}
+		}
+		// Validate essential fields
+		if errResp.Reason == "" {
+			return &InferenceResult{Type: ResultTypeMalformed, Reason: "ERROR response missing 'reason' field", RawResponse: responseText}
+		}
+		return &InferenceResult{
+			Type:   ResultTypeError,
+			Reason: errResp.Reason,
+		}
+
+	default:
+		// Unknown 'result' value
+		return &InferenceResult{
+			Type:        ResultTypeMalformed,
+			Reason:      fmt.Sprintf("LLM response contained unknown result type: '%s'", base.Result),
+			RawResponse: responseText,
+		}
+	}
+}
+
+// extractSQLFallback contains the previous logic for finding SQL in non-JSON responses.
+func extractSQLFallback(responseText string) string {
 	// Example 1: Look for ```sql ... ``` block
 	sqlBlockStart := "```sql"
 	sqlBlockEnd := "```"
@@ -90,24 +193,27 @@ func extractSQLFromResponse(responseText string) string {
 		if endIdx != -1 {
 			return strings.TrimSpace(responseText[startIdx+len(sqlBlockStart) : startIdx+len(sqlBlockStart)+endIdx])
 		}
+		// Handle case where closing fence is missing but opening exists
+		return strings.TrimSpace(responseText[startIdx+len(sqlBlockStart):])
 	}
 
 	// Example 2: Look for first SELECT statement (very basic)
-	upperResponse := strings.ToUpper(responseText)
-	selectIdx := strings.Index(upperResponse, "SELECT")
-	if selectIdx != -1 {
+	// Only consider SELECT if it appears early in the string, otherwise might be part of explanation
+	upperResponse := strings.ToUpper(strings.TrimSpace(responseText))
+	if strings.HasPrefix(upperResponse, "SELECT") {
+		// Heuristic: If it starts with SELECT, assume it's SQL. This is fragile.
 		// Find the end (e.g., semicolon or end of string) - this is naive
-		endIdx := strings.Index(responseText[selectIdx:], ";")
+		endIdx := strings.Index(responseText, ";")
 		if endIdx != -1 {
-			return strings.TrimSpace(responseText[selectIdx : selectIdx+endIdx+1])
+			return strings.TrimSpace(responseText[:endIdx+1])
 		}
-		return strings.TrimSpace(responseText[selectIdx:]) // Return rest of string if no semicolon
+		return strings.TrimSpace(responseText) // Return whole string if no semicolon
 	}
 
-	return strings.TrimSpace(responseText)
+	return "" // Return empty if no SQL found via fallback
 }
 
-func (f *TextToSQLFlow) RunInference(ctx context.Context, chat *models.Chat, data RequestData, agentInput *string) (agent string, finalQuery string, err error) {
+func (f *TextToSQLFlow) RunInference(ctx context.Context, chat *models.Chat, data RequestData, agentInput *string) (agent string, finalResponse *InferenceResult, err error) {
 	question := strings.TrimSpace(data.Question)
 
 	log.Println("Debug: === run_inference called ===")
@@ -125,7 +231,7 @@ func (f *TextToSQLFlow) RunInference(ctx context.Context, chat *models.Chat, dat
 		verifierResult, err = f.llmClient.Verify(ctx, question, verifierPromptFile, defaultModelName)
 		if err != nil {
 			// Decide if this error should halt execution or just default agent
-			return "", "", fmt.Errorf("failed during IAM verification: %w", err)
+			return "", nil, fmt.Errorf("failed during IAM verification: %w", err)
 		}
 
 		// Normalize: strip whitespace, remove asterisks, trailing colons, and convert to lowercase.
@@ -133,7 +239,7 @@ func (f *TextToSQLFlow) RunInference(ctx context.Context, chat *models.Chat, dat
 
 		if _, exists := f.mappingData[verifierResultClean]; !exists {
 			// Explicitly check if the detected key exists in the map
-			return "", "", fmt.Errorf("request is not supported. Detected agent '%s' (from '%s') is not configured in mapping", verifierResultClean, verifierResult)
+			return "", nil, fmt.Errorf("request is not supported. Detected agent '%s' (from '%s') is not configured in mapping", verifierResultClean, verifierResult)
 		}
 		agent = verifierResultClean
 		log.Printf("Debug: Determined agent from classification: %s", agent)
@@ -142,7 +248,7 @@ func (f *TextToSQLFlow) RunInference(ctx context.Context, chat *models.Chat, dat
 	// --- 2. Retrieve Agent Configuration ---
 	agentConfigData, ok := f.mappingData[agent]
 	if !ok {
-		return "", "", fmt.Errorf("configuration for agent '%s' not found or not a map in mapping data", agent)
+		return "", nil, fmt.Errorf("configuration for agent '%s' not found or not a map in mapping data", agent)
 	}
 
 	// Safely get config values with type assertions and defaults
@@ -161,11 +267,11 @@ func (f *TextToSQLFlow) RunInference(ctx context.Context, chat *models.Chat, dat
 	for _, schemaFileRel := range agentConfigData.SQLSchemaFiles {
 		schemaFilePath := filepath.Join(SchemasPath, schemaFileRel)
 		if _, err := os.Stat(schemaFilePath); os.IsNotExist(err) {
-			return "", "", fmt.Errorf("schema file '%s' not found: %w", schemaFilePath, err)
+			return "", nil, fmt.Errorf("schema file '%s' not found: %w", schemaFilePath, err)
 		}
 		schemaBytes, err := os.ReadFile(schemaFilePath)
 		if err != nil {
-			return "", "", fmt.Errorf("failed to read schema file '%s': %w", schemaFilePath, err)
+			return "", nil, fmt.Errorf("failed to read schema file '%s': %w", schemaFilePath, err)
 		}
 		schemaBuilder.Write(schemaBytes)
 		schemaBuilder.WriteString("\n") // Add newline between files
@@ -174,17 +280,17 @@ func (f *TextToSQLFlow) RunInference(ctx context.Context, chat *models.Chat, dat
 
 	// --- 4. Load and Prepare Prompt Template ---
 	if _, err := os.Stat(promptFile); os.IsNotExist(err) {
-		return "", "", fmt.Errorf("prompt file '%s' not found: %w", promptFile, err)
+		return "", nil, fmt.Errorf("prompt file '%s' not found: %w", promptFile, err)
 	}
 	promptYamlBytes, err := os.ReadFile(promptFile)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to read prompt file '%s': %w", promptFile, err)
+		return "", nil, fmt.Errorf("failed to read prompt file '%s': %w", promptFile, err)
 	}
 
 	var promptData PromptData
 	err = yaml.Unmarshal(promptYamlBytes, &promptData)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to parse prompt YAML '%s': %w", promptFile, err)
+		return "", nil, fmt.Errorf("failed to parse prompt YAML '%s': %w", promptFile, err)
 	}
 
 	// --- 5. Build Template Data ---
@@ -231,13 +337,13 @@ func (f *TextToSQLFlow) RunInference(ctx context.Context, chat *models.Chat, dat
 		// Compile the template string using pongo2
 		tmpl, err := pongo2.FromString(templateContent)
 		if err != nil {
-			return "", "", fmt.Errorf("failed to compile pongo2 template for role %s: %w", role, err)
+			return "", nil, fmt.Errorf("failed to compile pongo2 template for role %s: %w", role, err)
 		}
 
 		// Execute the template with the context data
 		renderedContent, err := tmpl.Execute(templateRenderData)
 		if err != nil {
-			return "", "", fmt.Errorf("failed to render pongo2 template for role %s: %w", role, err)
+			return "", nil, fmt.Errorf("failed to render pongo2 template for role %s: %w", role, err)
 		}
 
 		messages = append(messages, ChatMessage{Role: role, Content: renderedContent})
@@ -245,22 +351,22 @@ func (f *TextToSQLFlow) RunInference(ctx context.Context, chat *models.Chat, dat
 
 	responseText, err := f.llmClient.ChatCompletion(ctx, modelName, messages, 800, 0.0) // Use defaults or get from config
 	if err != nil {
-		return agent, "", fmt.Errorf("text-to-SQL LLM call failed: %w", err)
+		return agent, nil, fmt.Errorf("text-to-SQL LLM call failed: %w", err)
 	}
 	log.Printf("Debug: LLM raw response:\n%s", responseText)
 
 	if responseText == "" {
-		return agent, "", fmt.Errorf("no response from text-to-SQL model")
+		return agent, nil, fmt.Errorf("no response from text-to-SQL model")
 	}
 	if strings.Contains(strings.ToUpper(responseText), "ERROR") {
-		return agent, "", fmt.Errorf("model returned 'ERROR': %s", responseText)
+		return agent, nil, fmt.Errorf("model returned 'ERROR': %s", responseText)
 	}
 
-	finalQuery = extractSQLFromResponse(responseText)
-	if finalQuery == "" {
-		return agent, "", fmt.Errorf("no valid SQL found in model response")
+	finalResponse = parseLLMResponse(responseText)
+	if finalResponse == nil {
+		return agent, nil, fmt.Errorf("no valid response found")
 	}
 
-	log.Printf("Info: Final SQL:\n%s", finalQuery)
-	return agent, finalQuery, nil
+	log.Printf("Info: Final SQL:\n%s", *finalResponse)
+	return agent, finalResponse, nil
 }

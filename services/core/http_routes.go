@@ -121,6 +121,7 @@ func (h *HttpHandler) Register(r *echo.Echo) {
 	v4.GET("/layout/public", httpserver.AuthorizeHandler(h.GetPublicLayouts, api3.ViewerRole))
 
 	v4.POST("/chatbot/generate-query", httpserver.AuthorizeHandler(h.GenerateQuery, api3.ViewerRole))
+	v4.POST("/chatbot/generate-query/run", httpserver.AuthorizeHandler(h.GenerateQuery, api3.ViewerRole))
 	v4.POST("/chatbot/secret", httpserver.AuthorizeHandler(h.ConfigureChatbotSecret, api3.AdminRole))
 }
 
@@ -1790,16 +1791,74 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 		PreviousAttempts: previousAttempts,
 	}
 
-	agent, finalQuery, err := flow.RunInference(ctx.Request().Context(), nil, reqData, req.Agent)
+	agent, finalResult, err := flow.RunInference(ctx.Request().Context(), nil, reqData, req.Agent)
 	if err != nil {
 		h.logger.Error("failed to generate query", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate query")
 	}
 
 	return ctx.JSON(http.StatusOK, api.GenerateQueryResponse{
-		Query: finalQuery,
-		Agent: agent,
+		Result: *finalResult,
+		Agent:  agent,
 	})
+}
+
+// GenerateQueryAndRun godoc
+//
+//	@Summary		Generate query by the given question and run and retry
+//	@Description	Generate query by the given question and run and retry
+//	@Security		BearerToken
+//	@Tags			metadata
+//	@Produce		json
+//	@Param			req	body	api.GenerateQueryRequest	true	"Request Body"
+//	@Success		200
+//	@Router			/core/api/v4/chatbot/generate-query/run [post]
+func (h *HttpHandler) GenerateQueryAndRun(ctx echo.Context) error {
+	var req api.GenerateQueryRequest
+	if err := bindValidate(ctx, &req); err != nil {
+		return err
+	}
+
+	if req.Question == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "no question provided")
+	}
+
+	retryCount := 5
+	if req.RetryCount != nil {
+		retryCount = *req.RetryCount
+	}
+	for i := retryCount; i > 0; i-- {
+		flow, err := chatbot.NewTextToSQLFlow(ctx.Request().Context(), h.vault, h.db)
+		if err != nil {
+			h.logger.Error("failed to build sql flow", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to build sql flow")
+		}
+
+		var previousAttempts []chatbot.QueryAttempt
+		for _, pa := range req.PreviousAttempts {
+			previousAttempts = append(previousAttempts, chatbot.QueryAttempt{
+				Query: pa.Query,
+				Error: pa.Error,
+			})
+		}
+		reqData := chatbot.RequestData{
+			Question:         req.Question,
+			PreviousAttempts: previousAttempts,
+		}
+
+		agent, finalResult, err := flow.RunInference(ctx.Request().Context(), nil, reqData, req.Agent)
+		if err != nil {
+			h.logger.Error("failed to generate query", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate query")
+		}
+
+		return ctx.JSON(http.StatusOK, api.GenerateQueryResponse{
+			Result: *finalResult,
+			Agent:  agent,
+		})
+	}
+
+	return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate query")
 }
 
 // ConfigureChatbotSecret godoc
