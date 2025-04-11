@@ -8,10 +8,13 @@ type QueryAttempt struct {
 	Error string `json:"error"`
 }
 type GenerateQueryRequest struct {
-	Question         string         `json:"question"`
-	PreviousAttempts []QueryAttempt `json:"previous_attempts"`
-	Agent            *string        `json:"agent,omitempty"`
-	RetryCount       *int           `json:"retry_count,omitempty"`
+	Question                  string         `json:"question"`
+	PreviousAttempts          []QueryAttempt `json:"previous_attempts"`
+	Agent                     *string        `json:"agent,omitempty"`
+	RetryCount                *int           `json:"retry_count,omitempty"`
+	InClarificationState      string         `json:"in_clarification_state"`
+	ClarificationQuestions    []string       `json:"clarification_questions"`
+	UserClarificationResponse string         `json:"user_clarification_response"`
 }
 
 type GenerateQueryResponse struct {

@@ -1956,8 +1956,11 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 		})
 	}
 	reqData := chatbot.RequestData{
-		Question:         req.Question,
-		PreviousAttempts: previousAttempts,
+		Question:                  req.Question,
+		PreviousAttempts:          previousAttempts,
+		InClarificationState:      req.InClarificationState,
+		ClarificationQuestions:    req.ClarificationQuestions,
+		UserClarificationResponse: req.UserClarificationResponse,
 	}
 
 	agent, finalResult, err := flow.RunInference(ctx.Request().Context(), reqData, req.Agent)
@@ -2041,8 +2044,11 @@ func (h *HttpHandler) GenerateQueryAndRun(ctx echo.Context) error {
 			})
 		}
 		reqData := chatbot.RequestData{
-			Question:         req.Question,
-			PreviousAttempts: previousAttempts,
+			Question:                  req.Question,
+			PreviousAttempts:          previousAttempts,
+			InClarificationState:      req.InClarificationState,
+			ClarificationQuestions:    req.ClarificationQuestions,
+			UserClarificationResponse: req.UserClarificationResponse,
 		}
 
 		agent, finalResult, err := flow.RunInference(ctx.Request().Context(), reqData, req.Agent)

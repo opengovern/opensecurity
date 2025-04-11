@@ -22,8 +22,11 @@ type QueryAttempt struct {
 }
 
 type RequestData struct {
-	Question         string         `json:"question"`
-	PreviousAttempts []QueryAttempt `json:"previous_attempts"`
+	Question                  string         `json:"question"`
+	PreviousAttempts          []QueryAttempt `json:"previous_attempts"`
+	InClarificationState      string         `json:"in_clarification_state"`
+	ClarificationQuestions    []string       `json:"clarification_questions"`
+	UserClarificationResponse string         `json:"user_clarification_response"`
 }
 
 // TextToSQLFlow converts natural language questions to SQL queries.
@@ -291,8 +294,6 @@ func (f *TextToSQLFlow) RunInference(ctx context.Context, data RequestData, agen
 	// --- 5. Build Template Data ---
 	templateRenderData := pongo2.Context{}
 
-	templateRenderData["question"] = data.Question
-
 	if data.PreviousAttempts == nil || len(data.PreviousAttempts) == 0 {
 		f.mu.RLock()
 		for _, qa := range f.queryAttempts {
@@ -305,6 +306,9 @@ func (f *TextToSQLFlow) RunInference(ctx context.Context, data RequestData, agen
 		templateRenderData["previous_attempts"] = data.PreviousAttempts
 	}
 
+	templateRenderData["user_clarification_response"] = data.UserClarificationResponse
+	templateRenderData["clarifying_questions"] = data.ClarificationQuestions
+	templateRenderData["in_clarification_state"] = data.InClarificationState
 	templateRenderData["domain_topic"] = agent
 	templateRenderData["original_question"] = question
 	templateRenderData["schema_text"] = schemaText
