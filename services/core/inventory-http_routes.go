@@ -2114,6 +2114,7 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 			h.logger.Error("failed to get session", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get session")
 		}
+		req.Agent = &session.AgentID
 	} else {
 		session = &models.Session{
 			ID: uuid.New(),
@@ -2239,6 +2240,19 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 			SuggestionId: additionalInterpretationDb.ID.String(),
 			Suggestion:   ai,
 		})
+	}
+
+	session.AgentID = agent
+	err = h.db.UpdateSession(session)
+	if err != nil {
+		h.logger.Error("failed to update session", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update session")
+	}
+
+	err = h.db.UpdateChat(chat)
+	if err != nil {
+		h.logger.Error("failed to update chat", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update chat")
 	}
 
 	inferenceResult := api.InferenceResult{

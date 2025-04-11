@@ -16,6 +16,11 @@ func (db *Database) CreateSession(session *models.Session) error {
 	return tx.Error
 }
 
+func (db *Database) UpdateSession(session *models.Session) error {
+	tx := db.orm.Model(&models.Session{}).Where("id = ?", session.ID).Updates(session)
+	return tx.Error
+}
+
 func (db *Database) GetSession(id uuid.UUID) (*models.Session, error) {
 	var session models.Session
 	tx := db.orm.Preload("Chats").First(&session, "id = ?", id)
@@ -41,6 +46,11 @@ func (db *Database) ListSessions() ([]models.Session, error) {
 
 func (db *Database) CreateChat(chat *models.Chat) error {
 	tx := db.orm.Create(chat)
+	return tx.Error
+}
+
+func (db *Database) UpdateChat(chat *models.Chat) error {
+	tx := db.orm.Model(&models.Chat{}).Where("id = ?", chat.ID).Updates(chat)
 	return tx.Error
 }
 
