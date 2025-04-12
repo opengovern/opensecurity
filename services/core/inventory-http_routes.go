@@ -2477,7 +2477,7 @@ func (h *HttpHandler) GetChatbotSession(ctx echo.Context) error {
 		session, err = h.db.GetSession(sessionIdUuid)
 		if err != nil {
 			h.logger.Error("failed to get session", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get session")
+			session = nil
 		}
 	}
 
