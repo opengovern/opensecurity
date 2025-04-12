@@ -2068,7 +2068,7 @@ func (h *HttpHandler) RunQueryInternal(ctx echo.Context, req api.RunQueryRequest
 //	@Router			/core/api/v4/chatbot/agents [GET]
 func (h *HttpHandler) GetAgents(ctx echo.Context) error {
 	// read mapping.yaml from file
-	yamlFile := "mapping.yaml"
+	yamlFile := chatbot.MappingPath
 	yamlData, err := os.ReadFile(yamlFile)
 	if err != nil {
 		h.logger.Error("failed to read YAML file", zap.Error(err))
