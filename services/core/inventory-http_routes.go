@@ -2063,11 +2063,11 @@ func (h *HttpHandler) RunQueryInternal(ctx echo.Context, req api.RunQueryRequest
 //	@Security		BearerToken
 //	@Tags			metadata
 //	@Produce		json
-//	@Param			
+//	@Param
 //	@Success		200
 //	@Router			/core/api/v4/chatbot/agents [GET]
 func (h *HttpHandler) GetAgents(ctx echo.Context) error {
-	// read mapping.yaml from file 
+	// read mapping.yaml from file
 	yamlFile := "mapping.yaml"
 	yamlData, err := os.ReadFile(yamlFile)
 	if err != nil {
@@ -2080,30 +2080,25 @@ func (h *HttpHandler) GetAgents(ctx echo.Context) error {
 	if err != nil {
 		h.logger.Error("failed to unmarshal YAML file", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to unmarshal YAML file")
-		
+
 	}
 	// make empty array of agents
 	var response []api.GetAgentResponse
 	// check all key values
 	for key, value := range config {
 		response = append(response, api.GetAgentResponse{
-			ID: key,                      
-			Name           : value.Name,
-			WelcomeMessage          :  value.WelcomeMessage,
-			SampleQuestions         : value.SampleQuestions,
-			Availability            : value.Availability,
+			ID:              key,
+			Name:            value.Name,
+			WelcomeMessage:  value.WelcomeMessage,
+			SampleQuestions: value.SampleQuestions,
+			Availability:    value.Availability,
 		})
-		
-		
-	}
 
+	}
 
 	return ctx.JSON(http.StatusOK, response)
 
-
 }
-
-
 
 // GenerateQuery godoc
 //
@@ -2285,13 +2280,6 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 			SuggestionId: additionalInterpretationDb.ID.String(),
 			Suggestion:   ai,
 		})
-	}
-
-	session.AgentID = agent
-	err = h.db.UpdateSession(session)
-	if err != nil {
-		h.logger.Error("failed to update session", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update session")
 	}
 
 	err = h.db.UpdateChat(chat)
@@ -2480,18 +2468,17 @@ func (h *HttpHandler) ConfigureChatbotSecret(ctx echo.Context) error {
 //	@Router			/core/api/v4/chatbot/session/{session_id} [get]
 func (h *HttpHandler) GetChatbotSession(ctx echo.Context) error {
 	sessionId := ctx.Param("session_id")
-	if sessionId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "no session_id provided")
-	}
-	sessionIdUuid, err := uuid.Parse(sessionId)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid session_id")
-	}
-
-	session, err := h.db.GetSession(sessionIdUuid)
-	if err != nil {
-		h.logger.Error("failed to get session", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get session")
+	var session *models.Session
+	if sessionId != "" {
+		sessionIdUuid, err := uuid.Parse(sessionId)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid session_id")
+		}
+		session, err = h.db.GetSession(sessionIdUuid)
+		if err != nil {
+			h.logger.Error("failed to get session", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get session")
+		}
 	}
 
 	if session == nil {
@@ -2500,7 +2487,7 @@ func (h *HttpHandler) GetChatbotSession(ctx echo.Context) error {
 		}
 		agent := ctx.QueryParam("agent")
 		session.AgentID = agent
-		err = h.db.CreateSession(session)
+		err := h.db.CreateSession(session)
 		if err != nil {
 			h.logger.Error("failed to create session", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create session")
