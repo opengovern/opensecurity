@@ -7,565 +7,572 @@ import KResponseCard from '../../../components/AIComponents/ResponseCard'
 import KInput from '../../../components/AIComponents/Input'
 import { DEVOPS, IDENTITY } from './responses'
 
-function AIChat({ setOpen, }: any) {
-     const [message, setMessage] = useState('')
-     const agent = JSON.parse(localStorage.getItem('agent') || '{}')
+function AIChat({ setOpen }: any) {
+    const [message, setMessage] = useState('')
+    const agent = JSON.parse(localStorage.getItem('agent') || '{}')
 
-     const [chats, setChats] = useState<ChatList>()
-     const [loading, setLoading] = useState(false)
-     const [id, setId] = useState<string | undefined>(undefined)
-     const [clarifying, setClarifying] = useState<boolean>(false)
+    const [chats, setChats] = useState<ChatList>()
+    const [loading, setLoading] = useState(false)
+    const [id, setId] = useState<string | undefined>(undefined)
+    const [clarifying, setClarifying] = useState<boolean>(false)
+
+    const lastMessageRef = useRef(null)
+    const scroll = () => {
+        const layout = document.getElementById('layout')
+        if (layout) {
+            const start = layout.scrollTop
+            const end = layout.scrollHeight
+            const duration = 1500 // Adjust duration in milliseconds
+            let startTime: any = null
+            const animateScroll = (timestamp: any) => {
+                if (!startTime) startTime = timestamp
+                const progress = Math.min((timestamp - startTime) / duration, 1)
+                layout.scrollTop = start + (end - start) * progress
+                if (progress < 1) {
+                    requestAnimationFrame(animateScroll)
+                }
+            }
+            requestAnimationFrame(animateScroll)
+            // layout.scrollTop = layout?.scrollHeight+400;
+        }
+        //  if (lastMessageRef.current) {
+        //   // @ts-ignore
+        //    lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
+        //  }
+    }
+    const RunQuery = (id: string, len: number) => {
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+        const body = {
+            chat_id: id,
+            auth0_token: localStorage.getItem('auth|token'),
+            agent: agent.id,
+        }
+
+        axios
+            .post(`${url}`, body, config)
+            .then((res) => {
+                if (res.data) {
+                    const output = res?.data
+                    if (output) {
+                        setChats((prevChats) => {
+                            const newChats = { ...prevChats }
+                            newChats[`${len}`] = {
+                                ...newChats[`${len}`],
+                                response: output.result,
+                                time: output.time_taken,
+                                suggestions: output.suggestions,
+                                clarify_needed: false,
+                                text: output.primary_interpretation,
+                                responseTime: `${
+                                    new Date().getHours() > 12
+                                        ? new Date().getHours() - 12
+                                        : new Date().getHours()
+                                }:${new Date().getMinutes()}${
+                                    new Date().getHours() > 12 ? 'PM' : 'AM'
+                                }`,
+                                loading: false, // Ensure loading is set to false
+                            }
+                            return newChats
+                        })
+                        setLoading(false)
+                        scroll()
+                    } else {
+                        setChats((prevChats) => {
+                            const newChats = { ...prevChats }
+                            newChats[`${len}`] = {
+                                ...newChats[`${len}`],
+
+                                loading: false, // Ensure loading is set to false
+                                responseTime: `${
+                                    new Date().getHours() > 12
+                                        ? new Date().getHours() - 12
+                                        : new Date().getHours()
+                                }:${new Date().getMinutes()}${
+                                    new Date().getHours() > 12 ? 'PM' : 'AM'
+                                }`,
+                            }
+                            return newChats
+                        })
+                        setLoading(false)
+                        scroll()
+                    }
+                } else {
+                    setChats((prevChats) => {
+                        const newChats = { ...prevChats }
+                        newChats[`${len}`] = {
+                            ...newChats[`${len}`],
+
+                            loading: false, // Ensure loading is set to false
+                            responseTime: `${
+                                new Date().getHours() > 12
+                                    ? new Date().getHours() - 12
+                                    : new Date().getHours()
+                            }:${new Date().getMinutes()}${
+                                new Date().getHours() > 12 ? 'PM' : 'AM'
+                            }`,
+                        }
+                        return newChats
+                    })
+                    setLoading(false)
+                    scroll()
+                }
+            })
+            .catch((err) => {
+                console.log(err)
+                if (err.response.data.error) {
+                    setChats((prevChats) => {
+                        const newChats = { ...prevChats }
+                        newChats[`${len}`] = {
+                            ...newChats[`${len}`],
+
+                            loading: false, // Ensure loading is set to false
+                            error: err?.response?.data?.error,
+                            responseTime: `${
+                                new Date().getHours() > 12
+                                    ? new Date().getHours() - 12
+                                    : new Date().getHours()
+                            }:${new Date().getMinutes()}${
+                                new Date().getHours() > 12 ? 'PM' : 'AM'
+                            }`,
+                        }
+                        return newChats
+                    })
+                } else {
+                    setChats((prevChats) => {
+                        const newChats = { ...prevChats }
+                        newChats[`${len}`] = {
+                            ...newChats[`${len}`],
+
+                            loading: false, // Ensure loading is set to false
+                            error: 'Error in fetching data',
+                            responseTime: `${
+                                new Date().getHours() > 12
+                                    ? new Date().getHours() - 12
+                                    : new Date().getHours()
+                            }:${new Date().getMinutes()}${
+                                new Date().getHours() > 12 ? 'PM' : 'AM'
+                            }`,
+                        }
+                        return newChats
+                    })
+                }
+
+                setLoading(false)
+                scroll()
+            })
+    }
+    const GenerateQuery = (message: string, len: number) => {
+        const body = {
+            question: message,
+            agent: agent.id,
+            session_id: localStorage.getItem(`${agent.id}_session_id`),
+            in_clarification_state:false
+        }
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+        axios
+            .post(
+                `${url}/main/core/api/v4/chatbot/generate-query`,
+                body,
+                config
+            )
+            .then((res) => {
+                if (res?.data) {
+                    const output = res?.data
+                    if (output) {
+                        setId(output.id)
+
+                        if (output?.result?.result == 'CLARIFICATION_NEEDED') {
+                            setClarifying(true)
+                            setChats((prevChats) => {
+                                const newChats = { ...prevChats }
+                                newChats[`${len}`] = {
+                                    ...newChats[`${len}`],
+                                    clarify_needed: true,
+                                    id: output.id,
+                                    clarify_questions:
+                                        output?.result?.clarifying_questions,
+                                    loading: false, // Ensure loading is set to false
+                                }
+                                return newChats
+                            })
+                        } else {
+                            setClarifying(false)
+
+                            RunQuery(output.id, len)
+                        }
+                        setLoading(false)
+
+                        scroll()
+                    } else {
+                        setChats((prevChats) => {
+                            const newChats = { ...prevChats }
+                            newChats[`${len}`] = {
+                                ...newChats[`${len}`],
+
+                                loading: false, // Ensure loading is set to false
+                                responseTime: `${
+                                    new Date().getHours() > 12
+                                        ? new Date().getHours() - 12
+                                        : new Date().getHours()
+                                }:${new Date().getMinutes()}${
+                                    new Date().getHours() > 12 ? 'PM' : 'AM'
+                                }`,
+                            }
+                            return newChats
+                        })
+                        setLoading(false)
+                        scroll()
+                    }
+                } else {
+                    setChats((prevChats) => {
+                        const newChats = { ...prevChats }
+                        newChats[`${len}`] = {
+                            ...newChats[`${len}`],
+
+                            loading: false, // Ensure loading is set to false
+                            responseTime: `${
+                                new Date().getHours() > 12
+                                    ? new Date().getHours() - 12
+                                    : new Date().getHours()
+                            }:${new Date().getMinutes()}${
+                                new Date().getHours() > 12 ? 'PM' : 'AM'
+                            }`,
+                        }
+                        return newChats
+                    })
+                    setLoading(false)
+                    scroll()
+                }
+            })
+            .catch((err) => {
+                console.log(err)
+                if (err.response.data.error) {
+                    setChats((prevChats) => {
+                        const newChats = { ...prevChats }
+                        newChats[`${len}`] = {
+                            ...newChats[`${len}`],
+
+                            loading: false, // Ensure loading is set to false
+                            error: err.response.data.error,
+                            responseTime: `${
+                                new Date().getHours() > 12
+                                    ? new Date().getHours() - 12
+                                    : new Date().getHours()
+                            }:${new Date().getMinutes()}${
+                                new Date().getHours() > 12 ? 'PM' : 'AM'
+                            }`,
+                        }
+                        return newChats
+                    })
+                } else {
+                    setChats((prevChats) => {
+                        const newChats = { ...prevChats }
+                        newChats[`${len}`] = {
+                            ...newChats[`${len}`],
+
+                            loading: false, // Ensure loading is set to false
+                            error: 'Error in fetching data',
+                            responseTime: `${
+                                new Date().getHours() > 12
+                                    ? new Date().getHours() - 12
+                                    : new Date().getHours()
+                            }:${new Date().getMinutes()}${
+                                new Date().getHours() > 12 ? 'PM' : 'AM'
+                            }`,
+                        }
+                        return newChats
+                    })
+                }
+
+                setLoading(false)
+                scroll()
+            })
+    }
+    const ClarifyQuery = (answer: string, len: number) => {
+        const body = {
+            answer: answer,
+            chat_id: id,
+        }
+
+        axios
+            .post(
+                `https://slay-router-latest.onrender.com/generate/clarify/`,
+                body
+            )
+            .then((res) => {
+                if (res?.data) {
+                    const output = res?.data
+                    if (output) {
+                        setId(output.id)
+                        if (output?.result?.result == 'CLARIFICATION_NEEDED') {
+                            setClarifying(true)
+                            setChats((prevChats) => {
+                                const newChats = { ...prevChats }
+                                newChats[`${len}`] = {
+                                    ...newChats[`${len}`],
+                                    clarify_needed: true,
+                                    clarify_questions:
+                                        output?.result?.clarifying_questions,
+                                    loading: false, // Ensure loading is set to false
+                                }
+                                return newChats
+                            })
+                        } else {
+                            setClarifying(false)
+
+                            RunQuery(output.id, len)
+                        }
+                        setLoading(false)
+                        scroll()
+                    } else {
+                        setChats((prevChats) => {
+                            const newChats = { ...prevChats }
+                            newChats[`${len}`] = {
+                                ...newChats[`${len}`],
+
+                                loading: false, // Ensure loading is set to false
+                                responseTime: `${
+                                    new Date().getHours() > 12
+                                        ? new Date().getHours() - 12
+                                        : new Date().getHours()
+                                }:${new Date().getMinutes()}${
+                                    new Date().getHours() > 12 ? 'PM' : 'AM'
+                                }`,
+                            }
+                            return newChats
+                        })
+                        setLoading(false)
+                        scroll()
+                    }
+                } else {
+                    setChats((prevChats) => {
+                        const newChats = { ...prevChats }
+                        newChats[`${len}`] = {
+                            ...newChats[`${len}`],
+
+                            loading: false, // Ensure loading is set to false
+                            responseTime: `${
+                                new Date().getHours() > 12
+                                    ? new Date().getHours() - 12
+                                    : new Date().getHours()
+                            }:${new Date().getMinutes()}${
+                                new Date().getHours() > 12 ? 'PM' : 'AM'
+                            }`,
+                        }
+                        return newChats
+                    })
+                    setLoading(false)
+                    scroll()
+                }
+            })
+            .catch((err) => {
+                console.log(err)
+                if (err.response.data.error) {
+                    setChats((prevChats) => {
+                        const newChats = { ...prevChats }
+                        newChats[`${len}`] = {
+                            ...newChats[`${len}`],
+
+                            loading: false, // Ensure loading is set to false
+                            error: err.response.data.error,
+                            responseTime: `${
+                                new Date().getHours() > 12
+                                    ? new Date().getHours() - 12
+                                    : new Date().getHours()
+                            }:${new Date().getMinutes()}${
+                                new Date().getHours() > 12 ? 'PM' : 'AM'
+                            }`,
+                        }
+                        return newChats
+                    })
+                } else {
+                    setChats((prevChats) => {
+                        const newChats = { ...prevChats }
+                        newChats[`${len}`] = {
+                            ...newChats[`${len}`],
+
+                            loading: false, // Ensure loading is set to false
+                            error: 'Error in fetching data',
+                            responseTime: `${
+                                new Date().getHours() > 12
+                                    ? new Date().getHours() - 12
+                                    : new Date().getHours()
+                            }:${new Date().getMinutes()}${
+                                new Date().getHours() > 12 ? 'PM' : 'AM'
+                            }`,
+                        }
+                        return newChats
+                    })
+                }
+
+                setLoading(false)
+                scroll()
+            })
+    }
+    const GetChats = () => {
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+        url+= `/main/core/api/v4/chatbot/session/`
+        const session = localStorage.getItem(`${agent.id}_session_id`)
+        if(session && session !== 'undefined'){
+            url+=session
+
+        }
+        else{
+            url+= `id`
+        }
+      
+        url+= `?agent=${agent.id}`
+        axios
+            .get(`${url}`, config)
+            .then((res) => {
+                if (res?.data) {
+                    const output = res?.data
+                    localStorage.setItem(
+                        `${agent.id}_session_id`,
+                        output.id
+                    )
+                    const temp: ChatList = {
+                        '0': {
+                            message: '',
+                            text: agent.welcome_message,
+                            loading: false,
+                            time: 0,
+                            error: '',
+                            isWelcome: true,
+                            pre_loaded:
+                                output?.chats && output.chats.length > 0
+                                    ? true
+                                    : false,
+                            clarify_needed: false,
+                            messageTime: '',
+                            responseTime: `${
+                                new Date().getHours() > 12
+                                    ? new Date().getHours() - 12
+                                    : new Date().getHours()
+                            }:${new Date().getMinutes()}${
+                                new Date().getHours() > 12 ? 'PM' : 'AM'
+                            }`,
+                            suggestions: agent.sample_questions?.map(
+                                (question: any) => {
+                                    return question
+                                }
+                            ),
+                            response: {},
+                        },
+                    }
+                    if (output?.chats && output.chats.length > 0) {
+                        output.chats.forEach((chat: any) => {
+                            if (chat.need_clarification) {
+                                // for each in chat.clarifying_questions and for each one make new temp object
+                                const clarifying_questions =
+                                    chat.clarifying_questions
+                                clarifying_questions.forEach(
+                                    (question: any) => {
+                                        temp[`${Object.keys(temp).length}`] = {
+                                            id: chat.id,
+                                            message: chat.question,
+                                            messageTime: dateTimeDisplay(
+                                                chat.created_at
+                                            ),
+                                            responseTime: dateTimeDisplay(
+                                                chat.updated_at
+                                            ),
+                                            loading: false,
+                                            time: chat.time_taken,
+                                            error: chat.query_error,
+                                            pre_loaded: true,
+
+                                            isWelcome: false,
+                                            clarify_needed: true,
+                                            clarify_questions:
+                                                question.question,
+                                            clarify_answer: question.answer,
+                                            suggestions: chat.suggestions,
+                                            text: chat.assitant_text,
+                                            response: chat.result,
+                                        }
+                                    }
+                                )
+                            } else {
+                                temp[`${Object.keys(temp).length}`] = {
+                                    id: chat.id,
+                                    message: chat.question,
+                                    messageTime: dateTimeDisplay(
+                                        chat.created_at
+                                    ),
+                                    responseTime: dateTimeDisplay(
+                                        chat.updated_at
+                                    ),
+                                    loading: false,
+                                    time: chat.time_taken,
+                                    error: chat.query_error,
+                                    pre_loaded: true,
+                                    isWelcome: false,
+                                    clarify_needed: false,
+                                    suggestions: chat.suggestions,
+                                    text: chat.assitant_text,
+                                    response: chat.result,
+                                }
+                            }
+                        })
+                        console.log('temp', temp)
+                    }
+                    setChats(temp)
+                }
+            })
+            .catch((err) => {
+                setLoading(false)
+                scroll()
+            })
+    }
    
-     const lastMessageRef = useRef(null)
-     const scroll = () => {
-         const layout = document.getElementById('layout')
-         if (layout) {
-             const start = layout.scrollTop
-             const end = layout.scrollHeight
-             const duration = 1500 // Adjust duration in milliseconds
-             let startTime: any = null
-             const animateScroll = (timestamp: any) => {
-                 if (!startTime) startTime = timestamp
-                 const progress = Math.min(
-                     (timestamp - startTime) / duration,
-                     1
-                 )
-                 layout.scrollTop = start + (end - start) * progress
-                 if (progress < 1) {
-                     requestAnimationFrame(animateScroll)
-                 }
-             }
-             requestAnimationFrame(animateScroll)
-             // layout.scrollTop = layout?.scrollHeight+400;
-         }
-         //  if (lastMessageRef.current) {
-         //   // @ts-ignore
-         //    lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
-         //  }
-     }
-     const RunQuery = (id: string, len: number) => {
-        let url = ''
-        if (window.location.origin === 'http://localhost:3000') {
-            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-        } else {
-            url = window.location.origin
-        }
-        // @ts-ignore
-        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-        const config = {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-         const body = {
-             chat_id: id,
-             auth0_token: localStorage.getItem('auth|token'),
-             agent: agent.id,
-         }
+    useEffect(() => {
+        scroll()
+    }, [chats])
+    useEffect(() => {
+        GetChats()
 
-         axios
-             .post(`${url}`, body,config)
-             .then((res) => {
-                 if (res.data) {
-                     const output = res?.data
-                     if (output) {
-                         setChats((prevChats) => {
-                             const newChats = { ...prevChats }
-                             newChats[`${len}`] = {
-                                 ...newChats[`${len}`],
-                                 response: output.result,
-                                 time: output.time_taken,
-                                 suggestions: output.suggestions,
-                                 clarify_needed: false,
-                                 text: output.primary_interpretation,
-                                 responseTime: `${
-                                     new Date().getHours() > 12
-                                         ? new Date().getHours() - 12
-                                         : new Date().getHours()
-                                 }:${new Date().getMinutes()}${
-                                     new Date().getHours() > 12 ? 'PM' : 'AM'
-                                 }`,
-                                 loading: false, // Ensure loading is set to false
-                             }
-                             return newChats
-                         })
-                         setLoading(false)
-                         scroll()
-                     } else {
-                         setChats((prevChats) => {
-                             const newChats = { ...prevChats }
-                             newChats[`${len}`] = {
-                                 ...newChats[`${len}`],
-
-                                 loading: false, // Ensure loading is set to false
-                                 responseTime: `${
-                                     new Date().getHours() > 12
-                                         ? new Date().getHours() - 12
-                                         : new Date().getHours()
-                                 }:${new Date().getMinutes()}${
-                                     new Date().getHours() > 12 ? 'PM' : 'AM'
-                                 }`,
-                             }
-                             return newChats
-                         })
-                         setLoading(false)
-                         scroll()
-                     }
-                 } else {
-                     setChats((prevChats) => {
-                         const newChats = { ...prevChats }
-                         newChats[`${len}`] = {
-                             ...newChats[`${len}`],
-
-                             loading: false, // Ensure loading is set to false
-                             responseTime: `${
-                                 new Date().getHours() > 12
-                                     ? new Date().getHours() - 12
-                                     : new Date().getHours()
-                             }:${new Date().getMinutes()}${
-                                 new Date().getHours() > 12 ? 'PM' : 'AM'
-                             }`,
-                         }
-                         return newChats
-                     })
-                     setLoading(false)
-                     scroll()
-                 }
-             })
-             .catch((err) => {
-                 console.log(err)
-                 if (err.response.data.error) {
-                     setChats((prevChats) => {
-                         const newChats = { ...prevChats }
-                         newChats[`${len}`] = {
-                             ...newChats[`${len}`],
-
-                             loading: false, // Ensure loading is set to false
-                             error: err?.response?.data?.error,
-                             responseTime: `${
-                                 new Date().getHours() > 12
-                                     ? new Date().getHours() - 12
-                                     : new Date().getHours()
-                             }:${new Date().getMinutes()}${
-                                 new Date().getHours() > 12 ? 'PM' : 'AM'
-                             }`,
-                         }
-                         return newChats
-                     })
-                 } else {
-                     setChats((prevChats) => {
-                         const newChats = { ...prevChats }
-                         newChats[`${len}`] = {
-                             ...newChats[`${len}`],
-
-                             loading: false, // Ensure loading is set to false
-                             error: 'Error in fetching data',
-                             responseTime: `${
-                                 new Date().getHours() > 12
-                                     ? new Date().getHours() - 12
-                                     : new Date().getHours()
-                             }:${new Date().getMinutes()}${
-                                 new Date().getHours() > 12 ? 'PM' : 'AM'
-                             }`,
-                         }
-                         return newChats
-                     })
-                 }
-
-                 setLoading(false)
-                 scroll()
-             })
-     }
-     const GenerateQuery = (message: string, len: number) => {
-         const body = {
-             question: message,
-             agent: agent.id,
-             session_id: localStorage.getItem(`${agent.id}_session_id`),
-         }
-         let url = ''
-         if (window.location.origin === 'http://localhost:3000') {
-             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-         } else {
-             url = window.location.origin
-         }
-         // @ts-ignore
-         const token = JSON.parse(localStorage.getItem('openg_auth')).token
-
-         const config = {
-             headers: {
-                 Authorization: `Bearer ${token}`,
-             },
-         }
-         axios
-             .post(`${url}`, body,config)
-             .then((res) => {
-                 if (res?.data) {
-                     const output = res?.data
-                     if (output) {
-                         setId(output.id)
-
-                         if (output?.result?.result == 'CLARIFICATION_NEEDED') {
-                             setClarifying(true)
-                             setChats((prevChats) => {
-                                 const newChats = { ...prevChats }
-                                 newChats[`${len}`] = {
-                                     ...newChats[`${len}`],
-                                     clarify_needed: true,
-                                     id: output.id,
-                                     clarify_questions:
-                                         output?.result?.clarifying_questions,
-                                     loading: false, // Ensure loading is set to false
-                                 }
-                                 return newChats
-                             })
-                         } else {
-                             setClarifying(false)
-
-                             RunQuery(output.id, len)
-                         }
-                         setLoading(false)
-
-                         scroll()
-                     } else {
-                         setChats((prevChats) => {
-                             const newChats = { ...prevChats }
-                             newChats[`${len}`] = {
-                                 ...newChats[`${len}`],
-
-                                 loading: false, // Ensure loading is set to false
-                                 responseTime: `${
-                                     new Date().getHours() > 12
-                                         ? new Date().getHours() - 12
-                                         : new Date().getHours()
-                                 }:${new Date().getMinutes()}${
-                                     new Date().getHours() > 12 ? 'PM' : 'AM'
-                                 }`,
-                             }
-                             return newChats
-                         })
-                         setLoading(false)
-                         scroll()
-                     }
-                 } else {
-                     setChats((prevChats) => {
-                         const newChats = { ...prevChats }
-                         newChats[`${len}`] = {
-                             ...newChats[`${len}`],
-
-                             loading: false, // Ensure loading is set to false
-                             responseTime: `${
-                                 new Date().getHours() > 12
-                                     ? new Date().getHours() - 12
-                                     : new Date().getHours()
-                             }:${new Date().getMinutes()}${
-                                 new Date().getHours() > 12 ? 'PM' : 'AM'
-                             }`,
-                         }
-                         return newChats
-                     })
-                     setLoading(false)
-                     scroll()
-                 }
-             })
-             .catch((err) => {
-                 console.log(err)
-                 if (err.response.data.error) {
-                     setChats((prevChats) => {
-                         const newChats = { ...prevChats }
-                         newChats[`${len}`] = {
-                             ...newChats[`${len}`],
-
-                             loading: false, // Ensure loading is set to false
-                             error: err.response.data.error,
-                             responseTime: `${
-                                 new Date().getHours() > 12
-                                     ? new Date().getHours() - 12
-                                     : new Date().getHours()
-                             }:${new Date().getMinutes()}${
-                                 new Date().getHours() > 12 ? 'PM' : 'AM'
-                             }`,
-                         }
-                         return newChats
-                     })
-                 } else {
-                     setChats((prevChats) => {
-                         const newChats = { ...prevChats }
-                         newChats[`${len}`] = {
-                             ...newChats[`${len}`],
-
-                             loading: false, // Ensure loading is set to false
-                             error: 'Error in fetching data',
-                             responseTime: `${
-                                 new Date().getHours() > 12
-                                     ? new Date().getHours() - 12
-                                     : new Date().getHours()
-                             }:${new Date().getMinutes()}${
-                                 new Date().getHours() > 12 ? 'PM' : 'AM'
-                             }`,
-                         }
-                         return newChats
-                     })
-                 }
-
-                 setLoading(false)
-                 scroll()
-             })
-     }
-     const ClarifyQuery = (answer: string, len: number) => {
-         const body = {
-             answer: answer,
-             chat_id: id,
-         }
-
-         axios
-             .post(
-                 `https://slay-router-latest.onrender.com/generate/clarify/`,
-                 body
-             )
-             .then((res) => {
-                 if (res?.data) {
-                     const output = res?.data
-                     if (output) {
-                         setId(output.id)
-                         if (output?.result?.result == 'CLARIFICATION_NEEDED') {
-                             setClarifying(true)
-                             setChats((prevChats) => {
-                                 const newChats = { ...prevChats }
-                                 newChats[`${len}`] = {
-                                     ...newChats[`${len}`],
-                                     clarify_needed: true,
-                                     clarify_questions:
-                                         output?.result?.clarifying_questions,
-                                     loading: false, // Ensure loading is set to false
-                                 }
-                                 return newChats
-                             })
-                         } else {
-                             setClarifying(false)
-
-                             RunQuery(output.id, len)
-                         }
-                         setLoading(false)
-                         scroll()
-                     } else {
-                         setChats((prevChats) => {
-                             const newChats = { ...prevChats }
-                             newChats[`${len}`] = {
-                                 ...newChats[`${len}`],
-
-                                 loading: false, // Ensure loading is set to false
-                                 responseTime: `${
-                                     new Date().getHours() > 12
-                                         ? new Date().getHours() - 12
-                                         : new Date().getHours()
-                                 }:${new Date().getMinutes()}${
-                                     new Date().getHours() > 12 ? 'PM' : 'AM'
-                                 }`,
-                             }
-                             return newChats
-                         })
-                         setLoading(false)
-                         scroll()
-                     }
-                 } else {
-                     setChats((prevChats) => {
-                         const newChats = { ...prevChats }
-                         newChats[`${len}`] = {
-                             ...newChats[`${len}`],
-
-                             loading: false, // Ensure loading is set to false
-                             responseTime: `${
-                                 new Date().getHours() > 12
-                                     ? new Date().getHours() - 12
-                                     : new Date().getHours()
-                             }:${new Date().getMinutes()}${
-                                 new Date().getHours() > 12 ? 'PM' : 'AM'
-                             }`,
-                         }
-                         return newChats
-                     })
-                     setLoading(false)
-                     scroll()
-                 }
-             })
-             .catch((err) => {
-                 console.log(err)
-                 if (err.response.data.error) {
-                     setChats((prevChats) => {
-                         const newChats = { ...prevChats }
-                         newChats[`${len}`] = {
-                             ...newChats[`${len}`],
-
-                             loading: false, // Ensure loading is set to false
-                             error: err.response.data.error,
-                             responseTime: `${
-                                 new Date().getHours() > 12
-                                     ? new Date().getHours() - 12
-                                     : new Date().getHours()
-                             }:${new Date().getMinutes()}${
-                                 new Date().getHours() > 12 ? 'PM' : 'AM'
-                             }`,
-                         }
-                         return newChats
-                     })
-                 } else {
-                     setChats((prevChats) => {
-                         const newChats = { ...prevChats }
-                         newChats[`${len}`] = {
-                             ...newChats[`${len}`],
-
-                             loading: false, // Ensure loading is set to false
-                             error: 'Error in fetching data',
-                             responseTime: `${
-                                 new Date().getHours() > 12
-                                     ? new Date().getHours() - 12
-                                     : new Date().getHours()
-                             }:${new Date().getMinutes()}${
-                                 new Date().getHours() > 12 ? 'PM' : 'AM'
-                             }`,
-                         }
-                         return newChats
-                     })
-                 }
-
-                 setLoading(false)
-                 scroll()
-             })
-     }
-     const GetChats = () => {
-        let url = ''
-        if (window.location.origin === 'http://localhost:3000') {
-            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-        } else {
-            url = window.location.origin
-        }
-        // @ts-ignore
-        const token = JSON.parse(localStorage.getItem('openg_auth')).token
-
-        const config = {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-         var body: any = {
-             agent: agent.id,
-         }
-         const session_id = localStorage.getItem(`${agent.id}_session_id`)
-         if (session_id) {
-             body['session_id'] = session_id
-         }
-
-         axios
-             .post(`${url}`, body,config)
-             .then((res) => {
-                 if (res?.data) {
-                     const output = res?.data
-                     localStorage.setItem(
-                         `${agent.id}_session_id`,
-                         output.session_id
-                     )
-                     const temp: ChatList = {
-                         '0': {
-                             message: '',
-                             text: agent.welcome_message,
-                             loading: false,
-                             time: 0,
-                             error: '',
-                             isWelcome: true,
-                             pre_loaded:
-                                 output?.chats && output.chats.length > 0
-                                     ? true
-                                     : false,
-                             clarify_needed: false,
-                             messageTime: '',
-                             responseTime: `${
-                                 new Date().getHours() > 12
-                                     ? new Date().getHours() - 12
-                                     : new Date().getHours()
-                             }:${new Date().getMinutes()}${
-                                 new Date().getHours() > 12 ? 'PM' : 'AM'
-                             }`,
-                             suggestions: agent.sample_questions?.map(
-                                 (question: any) => {
-                                     return question
-                                 }
-                             ),
-                             response: {},
-                         },
-                     }
-                     if (output?.chats && output.chats.length > 0) {
-                         output.chats.forEach((chat: any) => {
-                             if (chat.need_clarification) {
-                                 // for each in chat.clarifying_questions and for each one make new temp object
-                                 const clarifying_questions =
-                                     chat.clarifying_questions
-                                 clarifying_questions.forEach(
-                                     (question: any) => {
-                                         temp[`${Object.keys(temp).length}`] = {
-                                             id: chat.id,
-                                             message: chat.question,
-                                             messageTime: dateTimeDisplay(
-                                                 chat.created_at
-                                             ),
-                                             responseTime: dateTimeDisplay(
-                                                 chat.updated_at
-                                             ),
-                                             loading: false,
-                                             time: chat.time_taken,
-                                             error: chat.query_error,
-                                             pre_loaded: true,
-
-                                             isWelcome: false,
-                                             clarify_needed: true,
-                                             clarify_questions:
-                                                 question.question,
-                                             clarify_answer: question.answer,
-                                             suggestions: chat.suggestions,
-                                             text: chat.assitant_text,
-                                             response: chat.result,
-                                         }
-                                     }
-                                 )
-                             } else {
-                                 temp[`${Object.keys(temp).length}`] = {
-                                     id: chat.id,
-                                     message: chat.question,
-                                     messageTime: dateTimeDisplay(
-                                         chat.created_at
-                                     ),
-                                     responseTime: dateTimeDisplay(
-                                         chat.updated_at
-                                     ),
-                                     loading: false,
-                                     time: chat.time_taken,
-                                     error: chat.query_error,
-                                     pre_loaded: true,
-                                     isWelcome: false,
-                                     clarify_needed: false,
-                                     suggestions: chat.suggestions,
-                                     text: chat.assitant_text,
-                                     response: chat.result,
-                                 }
-                             }
-                         })
-                         console.log('temp', temp)
-                     }
-                     setChats(temp)
-                 }
-             })
-             .catch((err) => {
-                 setLoading(false)
-                 scroll()
-             })
-     }
-
-     useEffect(() => {
-         scroll()
-     }, [chats])
-     useEffect(() => {
-         GetChats()
-     }, [])
+    }, [])
 
     return (
         <>

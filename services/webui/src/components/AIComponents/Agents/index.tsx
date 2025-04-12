@@ -49,6 +49,7 @@ function Agents() {
       useEffect(() => {
           GetAgents()
       }, [])
+      console.log(agents)
       
       return (
         <>
@@ -68,7 +69,7 @@ function Agents() {
                                     )
                                     window.location.reload()
                                 }}
-                                className={`rounded-sm flex flex-col justify-start items-start gap-2 hover:dark:bg-gray-700 hover:bg-gray-400 cursor-pointer p-2 ${
+                                className={`rounded-sm flex flex-col w-full justify-start items-start gap-2 hover:dark:bg-gray-700 hover:bg-gray-400 cursor-pointer p-2 ${
                                     selected_agent?.id == Fagent.id &&
                                     ' bg-slate-400 dark:bg-slate-800'
                                 }`}
@@ -76,7 +77,7 @@ function Agents() {
                                 <span className="text-base text-slate-950 dark:text-slate-200">
                                     {Fagent.name}
                                 </span>
-                                <span className="text-sm text-slate-500 dark:text-slate-400">
+                                <span className="text-sm text-slate-800 dark:text-slate-400">
                                     {Fagent.description}
                                 </span>
                             </div>
