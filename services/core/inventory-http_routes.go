@@ -2507,6 +2507,41 @@ func (h *HttpHandler) GetChatbotSession(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, sessionApi)
 }
 
+// ListChatbotSessions godoc
+//
+//	@Summary		Get session by session-id
+//	@Description	Get session by session-id
+//	@Security		BearerToken
+//	@Tags			metadata
+//	@Produce		json
+//	@Param			req	body	models.Session	true	"Request Body"
+//	@Success		200
+//	@Router			/core/api/v4/chatbot/session [get]
+func (h *HttpHandler) ListChatbotSessions(ctx echo.Context) error {
+
+	sessions, err := h.db.ListSessions()
+	if err != nil {
+		h.logger.Error("failed to get session", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get session")
+	}
+
+	var sessionsApi []api.Session
+	for _, session := range sessions {
+		var chats []api.Chat
+		for _, chat := range session.Chats {
+			chats = append(chats, convertChatToApi(chat))
+		}
+		sessionApi := api.Session{
+			ID:      session.ID.String(),
+			AgentId: session.AgentID,
+			Chats:   chats,
+		}
+		sessionsApi = append(sessionsApi, sessionApi)
+	}
+
+	return ctx.JSON(http.StatusOK, sessionsApi)
+}
+
 // GetChatbotChat godoc
 //
 //	@Summary		Get chat by chat-id
