@@ -2469,6 +2469,10 @@ func (h *HttpHandler) ConfigureChatbotSecret(ctx echo.Context) error {
 func (h *HttpHandler) GetChatbotSession(ctx echo.Context) error {
 	sessionId := ctx.Param("session_id")
 	var session *models.Session
+	agent := ctx.QueryParam("agent")
+	if agent == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "missing agent")
+	}
 	if sessionId != "" {
 		sessionIdUuid, err := uuid.Parse(sessionId)
 		if err != nil {
@@ -2479,6 +2483,16 @@ func (h *HttpHandler) GetChatbotSession(ctx echo.Context) error {
 				h.logger.Error("failed to get session", zap.Error(err))
 				session = nil
 			}
+			if session != nil {
+				if agent != session.AgentID {
+					session.AgentID = agent
+					err = h.db.UpdateSession(session)
+					if err != nil {
+						h.logger.Error("failed to update session", zap.Error(err))
+						return echo.NewHTTPError(http.StatusInternalServerError, "failed to update session")
+					}
+				}
+			}
 		}
 	}
 
@@ -2486,7 +2500,6 @@ func (h *HttpHandler) GetChatbotSession(ctx echo.Context) error {
 		session = &models.Session{
 			ID: uuid.New(),
 		}
-		agent := ctx.QueryParam("agent")
 		session.AgentID = agent
 		err := h.db.CreateSession(session)
 		if err != nil {
