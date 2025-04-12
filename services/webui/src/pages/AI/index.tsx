@@ -10,8 +10,6 @@ import { Flex } from '@tremor/react';
 export default function AI() {
     const [isOpen, setIsOpen] = useState(true)
     const is_ai_page = true
-        const [open, setOpen] = useState(false)
-        const [openCal, setOpenCal] = useState(false)
       
 
 
@@ -70,49 +68,12 @@ export default function AI() {
                         } `}
                     >
                         <AIChat
-                            setOpen={setOpen}
                         />
                     </div>
                 </div>
             </div>
 
-            <Modal
-                size="medium"
-                visible={open}
-                onDismiss={() => setOpen(false)}
-                header="Not available"
-            >
-                <Flex className="flex-col gap-2">
-                    <span>
-                        {' '}
-                        This feature is only available on commercial version.
-                    </span>
-                    <Button
-                        onClick={() => {
-                            setOpenCal(true)
-                        }}
-                    >
-                        Contact us
-                    </Button>
-                </Flex>
-            </Modal>
-            <Modal
-                size="large"
-                visible={openCal}
-                onDismiss={() => setOpenCal(false)}
-                header="Not available"
-            >
-                <Cal
-                    namespace="try-enterprise"
-                    calLink="team/clearcompass/try-enterprise"
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        overflow: 'scroll',
-                    }}
-                    config={{ layout: 'month_view' }}
-                />
-            </Modal>
+         
         </>
     )
 }
