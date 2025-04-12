@@ -2472,12 +2472,13 @@ func (h *HttpHandler) GetChatbotSession(ctx echo.Context) error {
 	if sessionId != "" {
 		sessionIdUuid, err := uuid.Parse(sessionId)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid session_id")
-		}
-		session, err = h.db.GetSession(sessionIdUuid)
-		if err != nil {
-			h.logger.Error("failed to get session", zap.Error(err))
-			session = nil
+			h.logger.Error("invalid session_id")
+		} else {
+			session, err = h.db.GetSession(sessionIdUuid)
+			if err != nil {
+				h.logger.Error("failed to get session", zap.Error(err))
+				session = nil
+			}
 		}
 	}
 
