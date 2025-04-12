@@ -2092,6 +2092,7 @@ func (h *HttpHandler) GetAgents(ctx echo.Context) error {
 			WelcomeMessage:  value.WelcomeMessage,
 			SampleQuestions: value.SampleQuestions,
 			Availability:    value.Availability,
+			Description: value.Description,
 		})
 
 	}
