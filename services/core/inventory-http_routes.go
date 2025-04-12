@@ -2168,17 +2168,7 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 		}
 		req.Agent = &session.AgentID
 	} else {
-		session = &models.Session{
-			ID: uuid.New(),
-		}
-		if req.Agent != nil {
-			session.AgentID = *req.Agent
-		}
-		err = h.db.CreateSession(session)
-		if err != nil {
-			h.logger.Error("failed to create session", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create session")
-		}
+		return echo.NewHTTPError(http.StatusBadRequest, "session id not provided")
 	}
 
 	var chat *models.Chat
@@ -2502,6 +2492,19 @@ func (h *HttpHandler) GetChatbotSession(ctx echo.Context) error {
 	if err != nil {
 		h.logger.Error("failed to get session", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get session")
+	}
+
+	if session == nil {
+		session = &models.Session{
+			ID: uuid.New(),
+		}
+		agent := ctx.QueryParam("agent")
+		session.AgentID = agent
+		err = h.db.CreateSession(session)
+		if err != nil {
+			h.logger.Error("failed to create session", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create session")
+		}
 	}
 
 	var chats []api.Chat
