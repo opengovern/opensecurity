@@ -119,17 +119,12 @@ type Agent struct {
 }
 type GetAgentResponse struct {
 	ID string `json:"id"`
-	Name                    string   `yaml:"name"`
-	Description             string   `yaml:"description"`
-	WelcomeMessage          string   `yaml:"welcome_message"`
-	SampleQuestions         []string `yaml:"sample_questions"`
-	Availability            string   `yaml:"availability"`
-	PromptTemplateFile      string   `yaml:"prompt_template_file"`
-	QueryVerificationRetries int      `yaml:"query_verification_retries"`
-	SeekClarification       bool     `yaml:"seek_clarification"`
-	Domains                 []string `yaml:"domains"`
-	SQLSchemaFiles          []string `yaml:"sql_schema_files"`
-	AgentConfig             AgentConfig `yaml:"agent_config"`
+	Name                    string   `json:"name"`
+	Description             string   `json:"description"`
+	WelcomeMessage          string   `json:"welcome_message"`
+	SampleQuestions         []string `json:"sample_questions"`
+	Availability            string   `json:"availability"`
+
 }
 type AgentConfig struct {
 	PrimaryModel  string `yaml:"primary_model"`
