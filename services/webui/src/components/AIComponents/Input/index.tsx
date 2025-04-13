@@ -65,7 +65,7 @@ const KInput: FunctionComponent<any> = ({
   return (
     <>
       <div
-        className={` dark:bg-gray-950 bg-slate-200 w-full px-1 sm:px-0 flex justify-center items-center flex-row max-w-[98%]   absolute  bottom-2 ${window.innerWidth<640 && 'left-0'}  `}
+        className={` #dark:bg-gray-950 #bg-slate-200 w-full px-1 sm:px-0 flex justify-center items-center flex-row relative max-w-[95%]    ${window.innerWidth<640 && 'left-0'}  `}
       >
         <div className="   sm:w-full w-[98%] h-12 flex flex-row sm:justify-start justify-center items-center bg-gray-300 dark:bg-gray-950  rounded-full  dark:border-slate-600 border-slate-200 border ">
           <input

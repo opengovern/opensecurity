@@ -23,15 +23,7 @@ type IProps = {
     scrollRef?: any
 }
 
-const Mapping = {
-    cloudql: 'CloudQL',
-    integration: 'Integration',
-    compliance: 'Compliance',
-    overview: 'Overview',
-    settings: 'Settings',
-    tasks: 'Tasks',
-    ai: 'AI',
-}
+
 const INTEGRATION_MAPPING = {
     azure_subscription: 'Microsoft Azure Subscription',
     jira_cloud: 'Atlassian JIRA Cloud',
@@ -122,7 +114,7 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
         }
         if (path.includes('ai')) {
             temp.push({
-                text: 'AI Preview',
+                text: 'AI ',
                 href: '/ai',
             })
         }

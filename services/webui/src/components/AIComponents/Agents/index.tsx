@@ -53,7 +53,7 @@ function Agents() {
       
       return (
         <>
-            <div className="  bg-slate-200 dark:bg-gray-950      h-full w-full max-w-sm  justify-start items-start  max-h-[90vh]  flex flex-col gap-2 ">
+            <div className="  #bg-slate-200 #dark:bg-gray-950      h-full w-full max-w-sm  justify-start items-start  max-h-[90vh]  flex flex-col gap-2 ">
                 <div
                     id="k-agent-bar"
                     className="flex flex-col gap-2 max-h-[90vh] overflow-y-scroll mt-2 "

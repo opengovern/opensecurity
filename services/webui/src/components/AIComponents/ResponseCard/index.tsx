@@ -66,10 +66,10 @@ const KResponseCard: FunctionComponent<any> = ({
           <span className="text-base">Assistant</span>
           <span className=" text-sm text-slate-800 dark:text-slate-300">{date}</span>
         </div>
-        {loading ? (
+        {(loading) || (!response && !text) ? (
           <>
             <div className="flex flex-row gap-2 justify-start items-center w-full">
-              <span className=" text-slate-800 dark:text-slate-200 w-full max-w-[95%]">
+              <span className=" text-slate-800 dark:text-slate-200 w-fit max-w-[95%]">
                 {pre_loaded ? loadingText : useAnimatedText(loadingText, 1).text}
               </span>
               <LoadingDots />

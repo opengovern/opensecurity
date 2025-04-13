@@ -57,12 +57,10 @@ function AIChat({ setOpen }: any) {
         }
         const body = {
             chat_id: id,
-            auth0_token: localStorage.getItem('auth|token'),
-            agent: agent.id,
         }
 
         axios
-            .post(`${url}`, body, config)
+            .post(`${url}/main/core/api/v4/chatbot/run-query`, body, config)
             .then((res) => {
                 if (res.data) {
                     const output = res?.data
@@ -73,9 +71,9 @@ function AIChat({ setOpen }: any) {
                                 ...newChats[`${len}`],
                                 response: output.result,
                                 time: output.time_taken,
-                                suggestions: output.suggestions,
+                                suggestions: output.suggestions?.suggestion,
+                                text: output?.primary_interpration,
                                 clarify_needed: false,
-                                text: output.primary_interpretation,
                                 responseTime: `${
                                     new Date().getHours() > 12
                                         ? new Date().getHours() - 12
@@ -179,7 +177,7 @@ function AIChat({ setOpen }: any) {
             question: message,
             agent: agent.id,
             session_id: localStorage.getItem(`${agent.id}_session_id`),
-            in_clarification_state:false
+            in_clarification_state: false,
         }
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
@@ -205,16 +203,16 @@ function AIChat({ setOpen }: any) {
                 if (res?.data) {
                     const output = res?.data
                     if (output) {
-                        setId(output.id)
+                        setId(output.chat_id)
 
-                        if (output?.result?.result == 'CLARIFICATION_NEEDED') {
+                        if (output?.result?.type == 'CLARIFICATION_NEEDED') {
                             setClarifying(true)
                             setChats((prevChats) => {
                                 const newChats = { ...prevChats }
                                 newChats[`${len}`] = {
                                     ...newChats[`${len}`],
                                     clarify_needed: true,
-                                    id: output.id,
+                                    id: output.chat_id,
                                     clarify_questions:
                                         output?.result?.clarifying_questions,
                                     loading: false, // Ensure loading is set to false
@@ -223,8 +221,8 @@ function AIChat({ setOpen }: any) {
                             })
                         } else {
                             setClarifying(false)
-
-                            RunQuery(output.id, len)
+                           
+                            RunQuery(output?.chat_id, len)
                         }
                         setLoading(false)
 
@@ -450,26 +448,21 @@ function AIChat({ setOpen }: any) {
                 Authorization: `Bearer ${token}`,
             },
         }
-        url+= `/main/core/api/v4/chatbot/session/`
+        url += `/main/core/api/v4/chatbot/session/`
         const session = localStorage.getItem(`${agent.id}_session_id`)
-        if(session && session !== 'undefined'){
-            url+=session
+        if (session && session !== 'undefined') {
+            url += session
+        } else {
+            url += `id`
+        }
 
-        }
-        else{
-            url+= `id`
-        }
-      
-        url+= `?agent=${agent.id}`
+        url += `?agent=${agent.id}`
         axios
             .get(`${url}`, config)
             .then((res) => {
                 if (res?.data) {
                     const output = res?.data
-                    localStorage.setItem(
-                        `${agent.id}_session_id`,
-                        output.id
-                    )
+                    localStorage.setItem(`${agent.id}_session_id`, output.id)
                     const temp: ChatList = {
                         '0': {
                             message: '',
@@ -527,7 +520,7 @@ function AIChat({ setOpen }: any) {
                                                 question.question,
                                             clarify_answer: question.answer,
                                             suggestions: chat.suggestions,
-                                            text: chat.assitant_text,
+                                            text: chat.primary_interpretation,
                                             response: chat.result,
                                         }
                                     }
@@ -549,7 +542,7 @@ function AIChat({ setOpen }: any) {
                                     isWelcome: false,
                                     clarify_needed: false,
                                     suggestions: chat.suggestions,
-                                    text: chat.assitant_text,
+                                    text: chat.primary_interpretation,
                                     response: chat.result,
                                 }
                             }
@@ -564,22 +557,20 @@ function AIChat({ setOpen }: any) {
                 scroll()
             })
     }
-   
 
     useEffect(() => {
         scroll()
     }, [chats])
     useEffect(() => {
         GetChats()
-
     }, [])
 
     return (
         <>
-            <div className=" bg-slate-200 dark:bg-gray-950 flex max-h-[65vh] flex-col  justify-start   items-start w-full ">
+            <div className=" #bg-slate-200 #dark:bg-gray-950 flex max-h-[90vh] flex-col  justify-start gap-4   items-start w-full ">
                 <div
                     id="layout"
-                    className=" flex justify-start  items-start overflow-y-auto  w-full  bg-slate-200 dark:bg-gray-950 pt-2  "
+                    className=" flex justify-start  items-start overflow-y-auto  w-full  #bg-slate-200 #dark:bg-gray-950 pt-2  "
                 >
                     <div className="  w-full relative ">
                         <section className="chat-section h-full     flex flex-col relative gap-8 w-full max-w-[95%]   ">

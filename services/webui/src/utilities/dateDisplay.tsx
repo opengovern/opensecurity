@@ -54,7 +54,6 @@ export const dateTimeDisplay = (
         return dayjs.unix(value).utc().format('MMM DD, YYYY kk:mm:ss UTC')
     }
     if (date) {
-      
         return dayjs.utc(date).format('MMM DD, YYYY kk:mm:ss UTC')
     }
     return 'Not available'
@@ -97,8 +96,7 @@ export const dateTimeDisplayAgo = (
     if (days > 0) result += `${days} day${days !== 1 ? 's' : ''} `
     if (hours > 0) result += `${hours} h `
     if (minutes > 0) result += `${minutes} m `
-    if (seconds > 0 && result === '')
-        result += `${seconds} s ` // Show seconds only if no larger unit
+    if (seconds > 0 && result === '') result += `${seconds} s ` // Show seconds only if no larger unit
 
     return result.trim() + ' ago'
 }
@@ -116,12 +114,10 @@ export const shortDateTimeDisplay = (
     return 'Not available'
 }
 
-
 export const shortDateTimeDisplayDelta = (
-    date: Dayjs | Date | number | string | undefined,date2: Dayjs | Date | number | string | undefined
+    date: Dayjs | Date | number | string | undefined,
+    date2: Dayjs | Date | number | string | undefined
 ) => {
-    
-    
     if (date && date2) {
         const d1 = dayjs.utc(date)
         const d2 = dayjs.utc(date2)
@@ -133,10 +129,14 @@ export const shortDateTimeDisplayDelta = (
         if (minutes > 0) {
             return `${minutes} min ${seconds} sec`
         }
-        if(seconds > 0){
+        if (seconds > 0) {
             return `${seconds} sec`
         }
         return `${milliseconds} ms`
     }
     return 'Not available'
+}
+
+export const EpochtoSecond = (epoch:   number) => {
+    return `${epoch / 1000}`
 }
