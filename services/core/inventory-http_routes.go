@@ -2646,8 +2646,11 @@ func (h *HttpHandler) RunChatQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "chat query not found")
 	}
 	startTime := time.Now()
-	result, err := h.RunQueryInternal(ctx.Request().Context(), api.RunQueryRequest{
-		Query: chat.Query,
+	result, err := h.RunSQLNamedQuery(ctx.Request().Context(), *chat.Query, *chat.Query, &api.RunQueryRequest{
+		Page: api.Page{
+			No:   1,
+			Size: 1000,
+		},
 	})
 	if err != nil {
 		errMsg := err.Error()
@@ -2660,6 +2663,8 @@ func (h *HttpHandler) RunChatQuery(ctx echo.Context) error {
 		h.logger.Error("failed to run query", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to run query")
 	}
+
+	h.logger.Info("result", zap.Any("result", result))
 
 	runTime := time.Since(startTime)
 
