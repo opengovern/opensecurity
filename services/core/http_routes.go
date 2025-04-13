@@ -1148,7 +1148,7 @@ func (h *HttpHandler) GetAbout(echoCtx echo.Context) error {
 		Sorts:  nil,
 	}
 
-	results, err := h.RunQueryInternal(echoCtx, query_req)
+	results, err := h.RunQueryInternal(echoCtx.Request().Context(), query_req)
 	if err != nil {
 		h.logger.Error("failed to run query", zap.Error(err))
 	}

@@ -1991,18 +1991,12 @@ func (h *HttpHandler) ListQueriesV2Internal(req api.ListQueryV2Request) (*api.Li
 	return &result, nil
 }
 
-func (h *HttpHandler) RunQueryInternal(ctx echo.Context, req api.RunQueryRequest) (*api.RunQueryResponse, error) {
+func (h *HttpHandler) RunQueryInternal(ctx context.Context, req api.RunQueryRequest) (*api.RunQueryResponse, error) {
 	var resp *api.RunQueryResponse
 
-	if err := bindValidate(ctx, &req); err != nil {
-		return resp, echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
 	if req.Query == nil || *req.Query == "" {
 		return resp, echo.NewHTTPError(http.StatusBadRequest, "Query is required")
 	}
-	// tracer :
-	outputS, span := tracer.Start(ctx.Request().Context(), "new_RunQuery", trace.WithSpanKind(trace.SpanKindServer))
-	span.SetName("new_RunQuery")
 
 	queryParamMap := make(map[string]string)
 	h.queryParamsMu.RLock()
@@ -2021,27 +2015,19 @@ func (h *HttpHandler) RunQueryInternal(ctx echo.Context, req api.RunQueryRequest
 	}
 
 	if req.Engine == nil || *req.Engine == api.QueryEngineCloudQL {
-		resp, err = h.RunSQLNamedQuery(outputS, *req.Query, queryOutput.String(), &req)
+		resp, err = h.RunSQLNamedQuery(ctx, *req.Query, queryOutput.String(), &req)
 		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
 			return resp, err
 		}
 	} else if *req.Engine == api.QueryEngineCloudQLRego {
-		resp, err = h.RunRegoNamedQuery(outputS, *req.Query, queryOutput.String(), &req)
+		resp, err = h.RunRegoNamedQuery(ctx, *req.Query, queryOutput.String(), &req)
 		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
 			return resp, err
 		}
 	} else {
 		return resp, fmt.Errorf("invalid query engine: %s", *req.Engine)
 	}
 
-	span.AddEvent("information", trace.WithAttributes(
-		attribute.String("query title ", resp.Title),
-	))
-	span.End()
 	return resp, nil
 }
 
@@ -2660,7 +2646,7 @@ func (h *HttpHandler) RunChatQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "chat query not found")
 	}
 	startTime := time.Now()
-	result, err := h.RunQueryInternal(ctx, api.RunQueryRequest{
+	result, err := h.RunQueryInternal(ctx.Request().Context(), api.RunQueryRequest{
 		Query: chat.Query,
 	})
 	if err != nil {
