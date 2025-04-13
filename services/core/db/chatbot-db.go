@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/opengovern/opensecurity/services/core/db/models"
 	"gorm.io/gorm/clause"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -166,4 +167,28 @@ func (db Database) GetChatbotSecret(key string) (*models.ChatbotSecret, error) {
 		return nil, tx.Error
 	}
 	return &secret, nil
+}
+
+func (db *Database) CreateCachedQuery(clarification *models.CachedQuery) error {
+	tx := db.orm.Create(clarification)
+	return tx.Error
+}
+
+func (db *Database) GetCachedQuery(id uuid.UUID) (*models.CachedQuery, error) {
+	var cachedQuery models.CachedQuery
+	tx := db.orm.Model(&models.CachedQuery{}).Where("id = ?", id).First(&cachedQuery)
+	if tx.Error != nil {
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, tx.Error
+	}
+	return &cachedQuery, nil
+}
+
+func (db *Database) DeleteOldCachedQueries() error {
+	oneHourAgo := time.Now().Add(-1 * time.Hour)
+	tx := db.orm.Model(&models.CachedQuery{}).Where("created_at < ?", oneHourAgo).Delete(&models.CachedQuery{})
+
+	return tx.Error
 }

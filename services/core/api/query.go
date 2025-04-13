@@ -15,16 +15,17 @@ const (
 )
 
 type RunQueryRequest struct {
-	Page       Page                 `json:"page" validate:"required"`
-	Query      *string              `json:"query"`
-	UseCache   *bool                `json:"use_cache"`
-	QueryId    *string              `json:"query_id"`
-	AccountId  *string              `json:"account_id"`
-	SourceId   *string              `json:"source_id"`
-	ResultType *string              `json:"result_type"`
-	Params     map[string]string    `json:"params"`
-	Engine     *QueryEngine         `json:"engine"`
-	Sorts      []NamedQuerySortItem `json:"sorts"`
+	Page          Page                 `json:"page" validate:"required"`
+	Query         *string              `json:"query"`
+	CachedQueryID *string              `json:"cached_query_id"`
+	UseCache      *bool                `json:"use_cache"`
+	QueryId       *string              `json:"query_id"`
+	AccountId     *string              `json:"account_id"`
+	SourceId      *string              `json:"source_id"`
+	ResultType    *string              `json:"result_type"`
+	Params        map[string]string    `json:"params"`
+	Engine        *QueryEngine         `json:"engine"`
+	Sorts         []NamedQuerySortItem `json:"sorts"`
 }
 
 type RunQueryResponse struct {

@@ -50,17 +50,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	EsFetchPageSize = 10000
-	MaxConns        = 100
-	KafkaPageSize   = 5000
-)
-
-const (
-	IntegrationIdParam    = "integrationId"
-	IntegrationGroupParam = "integrationGroup"
-)
-
 func (h *HttpHandler) getIntegrationTypesFromIntegrationIDs(ctx echo.Context, integrationTypes []integration.Type, integrationIDs []string) ([]integration.Type, error) {
 	if len(integrationIDs) == 0 {
 		return integrationTypes, nil
@@ -517,6 +506,18 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 		req.Query = &namedQuery.Query.QueryToExecute
+	} else if req.CachedQueryID != nil && (req.Query == nil || *req.Query == "") {
+		id, err := uuid.Parse(*req.CachedQueryID)
+		if err != nil {
+			h.logger.Error("failed to parse cached query id", zap.Error(err))
+			return echo.NewHTTPError(http.StatusBadRequest, "failed to parse cached query id")
+		}
+		cachedQuery, err := h.db.GetCachedQuery(id)
+		if err != nil {
+			h.logger.Error("failed to fetch cached query", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to fetch cached query")
+		}
+		req.Query = &cachedQuery.Query
 	}
 
 	if req.Page.Size == 0 {
@@ -2092,7 +2093,7 @@ func (h *HttpHandler) GetAgents(ctx echo.Context) error {
 			WelcomeMessage:  value.WelcomeMessage,
 			SampleQuestions: value.SampleQuestions,
 			Availability:    value.Availability,
-			Description: value.Description,
+			Description:     value.Description,
 		})
 
 	}
@@ -2205,6 +2206,9 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 			Error: pa.Error,
 		})
 	}
+	if req.InClarificationState {
+		chat.NeedClarification = true
+	}
 	reqData := chatbot.RequestData{
 		Question:                  chat.Question,
 		PreviousAttempts:          previousAttempts,
@@ -2289,9 +2293,19 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update chat")
 	}
 
+	cachedQueryId := uuid.New()
+	err = h.db.CreateCachedQuery(&models.CachedQuery{
+		ID:    cachedQueryId,
+		Query: finalResult.Query,
+	})
+	if err != nil {
+		h.logger.Error("failed to create cached query", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create cached query")
+	}
+
 	inferenceResult := api.InferenceResult{
 		Type:                      finalResult.Type,
-		Query:                     finalResult.Query,
+		QueryID:                   cachedQueryId.String(),
 		PrimaryInterpretation:     primaryInterpretation,
 		AdditionalInterpretations: additionalInterpretations,
 		ClarifyingQuestions:       clarifyingQuestions,

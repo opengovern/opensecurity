@@ -50,3 +50,9 @@ type ChatbotSecret struct {
 	Key    string `gorm:"primaryKey"`
 	Secret string
 }
+
+type CachedQuery struct {
+	gorm.Model
+	ID    uuid.UUID `gorm:"primary_key;type:uuid;default:uuid_generate_v4();"`
+	Query string
+}
