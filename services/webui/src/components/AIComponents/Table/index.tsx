@@ -183,16 +183,27 @@ const KTable: FunctionComponent<any> = ({
   const [open, setOpen] = useState(false);
 
 const Downloadchats = () => {
-  var body: any = {
-    chat_id: chat_id,
-  };
-  
+ 
+   let url = ''
+   if (window.location.origin === 'http://localhost:3000') {
+       url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+   } else {
+       url = window.location.origin
+   }
+   // @ts-ignore
+   const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+   const config = {
+       headers: {
+           Authorization: `Bearer ${token}`,
+       },
+       responseType: "blob", // Ensure we get a file
+   }
   
 
   axios
-    .post(`https://slay-router-latest.onrender.com/chat/download/`, body, {
-      responseType: 'blob', // Ensure we get a file
-    })
+//   @ts-ignore
+    .get(`${url}/main/core/api/v4/chatbot/chat/${chat_id}/download` , config)
     .then((res) => {
       // @ts-ignore
        let fileName = `export_${chat_id}.csv`; // Default filename
@@ -404,7 +415,7 @@ const Downloadchats = () => {
           <Modal
               visible={open}
               onDismiss={() => {
-                  setOpen
+                  setOpen(false)
               }}
           >
               <div>
