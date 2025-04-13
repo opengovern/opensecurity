@@ -49,7 +49,6 @@ function Agents() {
       useEffect(() => {
           GetAgents()
       }, [])
-      console.log(agents)
       
       return (
         <>

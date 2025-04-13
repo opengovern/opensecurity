@@ -64,6 +64,8 @@ function AIChat({ setOpen }: any) {
             .then((res) => {
                 if (res.data) {
                     const output = res?.data
+                            debugger
+
                     if (output) {
                         setChats((prevChats) => {
                             const newChats = { ...prevChats }
@@ -72,7 +74,7 @@ function AIChat({ setOpen }: any) {
                                 response: output.result,
                                 time: output.time_taken,
                                 suggestions: output.suggestions?.suggestion,
-                                text: output?.primary_interpration,
+                                text: output?.primary_interpretation,
                                 clarify_needed: false,
                                 responseTime: `${
                                     new Date().getHours() > 12
@@ -204,7 +206,7 @@ function AIChat({ setOpen }: any) {
                     const output = res?.data
                     if (output) {
                         setId(output.chat_id)
-
+                        
                         if (output?.result?.type == 'CLARIFICATION_NEEDED') {
                             setClarifying(true)
                             setChats((prevChats) => {
@@ -219,9 +221,28 @@ function AIChat({ setOpen }: any) {
                                 }
                                 return newChats
                             })
-                        } else {
+                        } 
+                        else if (output?.result?.type == 'MALFORMED_RESPONSE') {
+                            setChats((prevChats) => {
+                                const newChats = { ...prevChats }
+                                newChats[`${len}`] = {
+                                    ...newChats[`${len}`],
+
+                                    loading: false, // Ensure loading is set to false
+                                    error: 'Error commnicute with server',
+                                    responseTime: `${
+                                        new Date().getHours() > 12
+                                            ? new Date().getHours() - 12
+                                            : new Date().getHours()
+                                    }:${new Date().getMinutes()}${
+                                        new Date().getHours() > 12 ? 'PM' : 'AM'
+                                    }`,
+                                }
+                                return newChats
+                            })
+                        }
+                        else {
                             setClarifying(false)
-                           
                             RunQuery(output?.chat_id, len)
                         }
                         setLoading(false)
@@ -564,13 +585,13 @@ function AIChat({ setOpen }: any) {
     useEffect(() => {
         GetChats()
     }, [])
-
+    console.log(chats)
     return (
         <>
-            <div className=" #bg-slate-200 #dark:bg-gray-950 flex max-h-[90vh] flex-col  justify-start gap-4   items-start w-full ">
+            <div className=" relative sm:h-[90vh] #bg-slate-200 #dark:bg-gray-950 flex  flex-col  justify-start    items-start w-full ">
                 <div
                     id="layout"
-                    className=" flex justify-start  items-start overflow-y-auto  w-full  #bg-slate-200 #dark:bg-gray-950 pt-2  "
+                    className=" flex justify-start max-h-[90%]  items-start overflow-y-auto  w-full  #bg-slate-200 #dark:bg-gray-950 pt-2  "
                 >
                     <div className="  w-full relative ">
                         <section className="chat-section h-full     flex flex-col relative gap-8 w-full max-w-[95%]   ">
