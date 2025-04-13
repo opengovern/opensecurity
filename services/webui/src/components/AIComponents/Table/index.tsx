@@ -16,6 +16,7 @@ import axios from "axios";
 import Tooltip from "../Tooltip";
 import CustomPagination from "../../Pagination";
 import { useAnimatedText } from "../../../utilities/useAnimate";
+import { EpochtoSecond } from "../../../utilities/dateDisplay";
 
 export const capitalizeFirstLetters = (string: string) => {
   
@@ -186,6 +187,7 @@ const Downloadchats = () => {
     chat_id: chat_id,
   };
   
+  
 
   axios
     .post(`https://slay-router-latest.onrender.com/chat/download/`, body, {
@@ -213,204 +215,304 @@ const Downloadchats = () => {
 
   useEffect(() => {
     scroll();
+    console.log(result)
   }, [result]);
   return (
-    <div className={`flex flex-col ${!isWelcome && 'gap-4'} h-full w-full  justify-between items-start`}>
-      {!isWelcome && (
-        <>
-          {getTable(result.headers, result?.result).count !== 0 ? (
-            <>
-              <div key={key} ref={ref} className="   flex justify-start items-start max-h-[50vh]  w-full">
-                <span className="       my-2 text-slate-200 text-center w-full    overflow-x-auto">
-                  <table className="table-auto w-full border-slate-500 p-4  rounded-t-2xl bg-gray-700    border-collapse   ">
-                    <thead className="mb-2 rounded-xl w-full ">
-                      <tr className="     ">
-                        {/* @ts-ignore */}
-
-                        {getTable(result.headers, result?.result).columns?.map((col: any) => {
-                          return (
-                            <>
-                              <th className="text-white text-left truncate      p-2 sm:p-4">{col}</th>
-                            </>
-                          );
-                        })}
-                      </tr>
-                    </thead>
-                    <tbody className="w-full">
-                      {/* @ts-ignore */}
-                      {getTable(result.headers, result?.result)
-                        .rows.slice(0 * 5, (0 + 1) * 5)
-                        ?.map((item: any, index: any) => {
-                          return (
-                            <tr
-                              className={` text-left  ${
-                                index <
-                                // @ts-ignore
-                                getTable(result.headers, result?.result)?.rows.slice(0 * 5, (0 + 1) * 5).length - 1
-                                  ? ' border-b border-slate-400 '
-                                  : ''
-                              }  bg-gray-950`}
-                            >
-                              {Object.keys(item).map((key) => {
-                                return <td className="text-white max-w-28 truncate    p-2 sm:p-4">{item[key]}</td>;
-                              })}
-                            </tr>
-                          );
-                        })}
-                    </tbody>
-                  </table>
-                  <div className="w-full flex flex-row justify-end gap-4 items-center  bg-gray-700 p-2 rounded-b-2xl ">
-                    {result?.result && getTable(result.headers, result?.result)?.count > 5 && (
-                      <>
-                        <div
-                          className="flex flex-row gap-2  text-slate-200 hover:bg-slate-500 px-2   justify-end items-end w-fit cursor-pointer"
-                          onClick={(e) => {
-                            setOpen(true);
-                          }}
-                        >
-                          <span className=" text-center min-w-max">
-                            See all {getTable(result.headers, result?.result)?.count} results
-                          </span>
-                          {/* <RiDropdownList /> */}
-                        </div>
-                        <div
-                          className="flex flex-row gap-2  text-slate-200 rounded-xl hover:bg-slate-500 px-2    justify-end items-end w-fit cursor-pointer"
-                          onClick={(e) => {
-                            Downloadchats();
-                          }}
-                        >
-                          <span className=" text-center min-w-max">
-                            Download {getTable(result.headers, result?.result)?.count} results
-                          </span>
-                          {/* <RiDownloadLine /> */}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </span>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="rounded-3xl dark:bg-gray-800   p-2 px-4 my-2  dark:text-yellow-400 text-yellow-800 text-center w-fit flex flex-row gap-2">
-                {/* <RiErrorWarningLine /> */}
-                No results.
-              </div>
-            </>
-          )}
-        </>
-      )}
-      <div className="  sm:grid sm:grid-cols-12 sm:max-w-[98%]  flex flex-col gap-2 justify-start items-center w-full    ">
-        {suggestions &&
-          suggestions.length > 0 &&
-          suggestions?.map((suggestion: string) => {
-            return (
-              <>
-                <Tooltip text={suggestion} className=" col-span-4">
-                  <div
-                    onClick={() => {
-                      onClickSuggestion(suggestion);
-                    }}
-                    className=" rounded-3xl bg-slate-400 hover:bg-slate-600 flex flex-row gap-2  cursor-pointer   p-2 px-4 my-2 text-slate-800 text-center "
-                  >
-                    <span className={`truncate ${isWelcome ? 'w-full' : 'w-full'} `}>
-                      {' '}
-                      {pre_loaded ? suggestion : useAnimatedText(suggestion, 4).text}
-                    </span>
-                    {/* <RiSparklingLine /> */}
-                  </div>
-                </Tooltip>
-              </>
-            );
-          })}
-      </div>
-      {result?.result && !isWelcome && (
-        <>
-          <div
-            className="flex flex-row gap-2 text-sm text-slate-200 w-fit  justify-end items-center "
-            onClick={(e) => {
-              // setOpen(true);
-            }}
-          >
-            <span>Took {time.toFixed(3)}s</span>
-            {/* <RiTable2 /> */}
-          </div>
-        </>
-      )}
-      <Modal
-        visible={open}
-        onDismiss={()=>{setOpen}}
-        
+      <div
+          className={`flex flex-col ${
+              !isWelcome && 'gap-4'
+          } h-full w-full  justify-between items-start`}
       >
-         <div>
-              <div key={key} className="   flex justify-start items-start flex-col max-w-[40dvw] my-2 ">
-                <Table
-                  className="     p-4 dark:bg-gray-700 custom-table   "
-                  // resizableColumns
-                  variant="full-page"
-                  renderAriaLive={({ firstIndex, lastIndex, totalItemsCount }) =>
-                    `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
-                  }
-                  onSortingChange={(event) => {
-                    // setSort(event.detail.sortingColumn.sortingField)
-                    // setSortOrder(!sortOrder)
-                  }}
-                  // sortingColumn={sort}
-                  // sortingDescending={sortOrder}
-                  // sortingDescending={sortOrder == 'desc' ? true : false}
-                  // @ts-ignore
-                  // stickyHeader={true}
-                  resizableColumns={true}
-                  // stickyColumns={
-                  //  {   first:1,
-                  //     last: 1}
-                  // }
-                  onRowClick={(event) => {}}
-                  columnDefinitions={getTableCloudScape(result?.headers, result?.result).columns}
-                  columnDisplay={getTableCloudScape(result?.headers, result?.result).column_def}
-                  enableKeyboardNavigation
-                  // @ts-ignore
-                  items={getTableCloudScape(result?.headers, result?.result).rows?.slice(page * 10, (page + 1) * 10)}
-                  loading={false}
-                  loadingText="Loading resources"
-                  // stickyColumns={{ first: 0, last: 1 }}
-                  // stripedRows
-                  trackBy="id"
-                  empty={
-                    <Box
-                      margin={{
-                        vertical: 'xs',
+          {!isWelcome && (
+              <>
+                  {getTable(result.headers, result?.result).count !== 0 ? (
+                      <>
+                          <div
+                              key={key}
+                              ref={ref}
+                              className="   flex justify-start items-start max-h-[50vh]  w-full"
+                          >
+                              <span className="       my-2 text-slate-200 text-center w-full    overflow-x-auto">
+                                  <table className="table-auto w-full border-slate-500 p-4  rounded-t-2xl bg-gray-700    border-collapse   ">
+                                      <thead className="mb-2 rounded-xl w-full ">
+                                          <tr className="     ">
+                                              {/* @ts-ignore */}
+
+                                              {getTable(
+                                                  result.headers,
+                                                  result?.result
+                                              ).columns?.map((col: any) => {
+                                                  return (
+                                                      <>
+                                                          <th className="text-white text-left truncate      p-2 sm:p-4">
+                                                              {col}
+                                                          </th>
+                                                      </>
+                                                  )
+                                              })}
+                                          </tr>
+                                      </thead>
+                                      <tbody className="w-full">
+                                          {/* @ts-ignore */}
+                                          {getTable(
+                                              result.headers,
+                                              result?.result
+                                          )
+                                              .rows.slice(0 * 5, (0 + 1) * 5)
+                                              ?.map((item: any, index: any) => {
+                                                  return (
+                                                      <tr
+                                                          className={` text-left  ${
+                                                              index <
+                                                              // @ts-ignore
+                                                              getTable(
+                                                                  result.headers,
+                                                                  result?.result
+                                                              )?.rows.slice(
+                                                                  0 * 5,
+                                                                  (0 + 1) * 5
+                                                              ).length -
+                                                                  1
+                                                                  ? ' border-b border-slate-400 '
+                                                                  : ''
+                                                          }  bg-gray-950`}
+                                                      >
+                                                          {Object.keys(
+                                                              item
+                                                          ).map((key) => {
+                                                              return (
+                                                                  <td className="text-white max-w-28 truncate    p-2 sm:p-4">
+                                                                      {
+                                                                          item[
+                                                                              key
+                                                                          ]
+                                                                      }
+                                                                  </td>
+                                                              )
+                                                          })}
+                                                      </tr>
+                                                  )
+                                              })}
+                                      </tbody>
+                                  </table>
+                                  <div className="w-full flex flex-row justify-end gap-4 items-center  bg-gray-700 p-2 rounded-b-2xl ">
+                                      {result?.result &&
+                                          getTable(
+                                              result.headers,
+                                              result?.result
+                                          )?.count > 5 && (
+                                              <>
+                                                  <div
+                                                      className="flex flex-row gap-2  text-slate-200 hover:bg-slate-500 px-2   justify-end items-end w-fit cursor-pointer"
+                                                      onClick={(e) => {
+                                                          setOpen(true)
+                                                      }}
+                                                  >
+                                                      <span className=" text-center min-w-max">
+                                                          See all{' '}
+                                                          {
+                                                              getTable(
+                                                                  result.headers,
+                                                                  result?.result
+                                                              )?.count
+                                                          }{' '}
+                                                          results
+                                                      </span>
+                                                      {/* <RiDropdownList /> */}
+                                                  </div>
+                                                  <div
+                                                      className="flex flex-row gap-2  text-slate-200 rounded-xl hover:bg-slate-500 px-2    justify-end items-end w-fit cursor-pointer"
+                                                      onClick={(e) => {
+                                                          Downloadchats()
+                                                      }}
+                                                  >
+                                                      <span className=" text-center min-w-max">
+                                                          Download{' '}
+                                                          {
+                                                              getTable(
+                                                                  result.headers,
+                                                                  result?.result
+                                                              )?.count
+                                                          }{' '}
+                                                          results
+                                                      </span>
+                                                      {/* <RiDownloadLine /> */}
+                                                  </div>
+                                              </>
+                                          )}
+                                  </div>
+                              </span>
+                          </div>
+                      </>
+                  ) : (
+                      <>
+                          <div className="rounded-3xl dark:bg-gray-800   p-2 px-4 my-2  dark:text-yellow-400 text-yellow-800 text-center w-fit flex flex-row gap-2">
+                              {/* <RiErrorWarningLine /> */}
+                              No results.
+                          </div>
+                      </>
+                  )}
+              </>
+          )}
+          <div className="  sm:grid sm:grid-cols-12 sm:max-w-[98%]  flex flex-col gap-2 justify-start items-center w-full    ">
+              {suggestions &&
+                  suggestions.length > 0 &&
+                  suggestions?.map((suggestion: string) => {
+                      return (
+                          <>
+                              <Tooltip
+                                  text={suggestion}
+                                  className=" col-span-4"
+                              >
+                                  <div
+                                      onClick={() => {
+                                          onClickSuggestion(suggestion)
+                                      }}
+                                      className=" rounded-3xl bg-slate-400 hover:bg-slate-600 flex flex-row gap-2  cursor-pointer   p-2 px-4 my-2 text-slate-800 text-center "
+                                  >
+                                      <span
+                                          className={`truncate ${
+                                              isWelcome ? 'w-full' : 'w-full'
+                                          } `}
+                                      >
+                                          {' '}
+                                          {pre_loaded
+                                              ? suggestion
+                                              : useAnimatedText(suggestion, 4)
+                                                    .text}
+                                      </span>
+                                      {/* <RiSparklingLine /> */}
+                                  </div>
+                              </Tooltip>
+                          </>
+                      )
+                  })}
+          </div>
+          {result?.result && !isWelcome && (
+              <>
+                  <div
+                      className="flex flex-row gap-2 text-sm dark:text-slate-200 w-fit  justify-end items-center "
+                      onClick={(e) => {
+                          // setOpen(true);
                       }}
-                      textAlign="center"
-                      color="inherit"
-                    >
-                      <SpaceBetween size="m">
-                        <b>No Results</b>
-                      </SpaceBetween>
-                    </Box>
-                  }
-                  header={
-                    <Header
-                      className="w-full"
-                      actions={
-                        <CustomPagination
-                          currentPageIndex={page + 1}
-                          onChange={({ detail }: any) => {
-                            setPage(detail.currentPageIndex - 1);
+                  >
+                      <span>Took {EpochtoSecond(time)}s</span>
+                      {/* <RiTable2 /> */}
+                  </div>
+              </>
+          )}
+          <Modal
+              visible={open}
+              onDismiss={() => {
+                  setOpen
+              }}
+          >
+              <div>
+                  <div
+                      key={key}
+                      className="   flex justify-start items-start flex-col max-w-[40dvw] my-2 "
+                  >
+                      <Table
+                          className="     p-4 dark:bg-gray-700 custom-table   "
+                          // resizableColumns
+                          variant="full-page"
+                          renderAriaLive={({
+                              firstIndex,
+                              lastIndex,
+                              totalItemsCount,
+                          }) =>
+                              `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
+                          }
+                          onSortingChange={(event) => {
+                              // setSort(event.detail.sortingColumn.sortingField)
+                              // setSortOrder(!sortOrder)
                           }}
-                          pagesCount={Math.ceil(getTableCloudScape(result.headers, result?.result).count / 10)}
-                        />
-                      }
-                    >
-                      Results <span className=" font-medium">({getTableCloudScape(result?.headers, result?.result).count})</span>
-                    </Header>
-                  }
-                />
+                          // sortingColumn={sort}
+                          // sortingDescending={sortOrder}
+                          // sortingDescending={sortOrder == 'desc' ? true : false}
+                          // @ts-ignore
+                          // stickyHeader={true}
+                          resizableColumns={true}
+                          // stickyColumns={
+                          //  {   first:1,
+                          //     last: 1}
+                          // }
+                          onRowClick={(event) => {}}
+                          columnDefinitions={
+                              getTableCloudScape(
+                                  result?.headers,
+                                  result?.result
+                              ).columns
+                          }
+                          columnDisplay={
+                              getTableCloudScape(
+                                  result?.headers,
+                                  result?.result
+                              ).column_def
+                          }
+                          enableKeyboardNavigation
+                          // @ts-ignore
+                          items={getTableCloudScape(
+                              result?.headers,
+                              result?.result
+                          ).rows?.slice(page * 10, (page + 1) * 10)}
+                          loading={false}
+                          loadingText="Loading resources"
+                          // stickyColumns={{ first: 0, last: 1 }}
+                          // stripedRows
+                          trackBy="id"
+                          empty={
+                              <Box
+                                  margin={{
+                                      vertical: 'xs',
+                                  }}
+                                  textAlign="center"
+                                  color="inherit"
+                              >
+                                  <SpaceBetween size="m">
+                                      <b>No Results</b>
+                                  </SpaceBetween>
+                              </Box>
+                          }
+                          header={
+                              <Header
+                                  className="w-full"
+                                  actions={
+                                      <CustomPagination
+                                          currentPageIndex={page + 1}
+                                          onChange={({ detail }: any) => {
+                                              setPage(
+                                                  detail.currentPageIndex - 1
+                                              )
+                                          }}
+                                          pagesCount={Math.ceil(
+                                              getTableCloudScape(
+                                                  result.headers,
+                                                  result?.result
+                                              ).count / 10
+                                          )}
+                                      />
+                                  }
+                              >
+                                  Results{' '}
+                                  <span className=" font-medium">
+                                      (
+                                      {
+                                          getTableCloudScape(
+                                              result?.headers,
+                                              result?.result
+                                          ).count
+                                      }
+                                      )
+                                  </span>
+                              </Header>
+                          }
+                      />
+                  </div>
               </div>
-            </div>
-            </Modal>
-    </div>
-  );
+          </Modal>
+      </div>
+  )
 };
 
 export default KTable;

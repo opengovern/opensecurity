@@ -1,7 +1,6 @@
 import { Flex } from '@tremor/react'
 import { ReactNode, UIEvent, useEffect, useState } from 'react'
 import Footer from './Footer'
-import Sidebar from './Sidebar'
 import Notification from '../Notification'
 import { useNavigate } from 'react-router-dom'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
@@ -17,23 +16,14 @@ import {
     SideNavigation,
     SplitPanel,
 } from '@cloudscape-design/components'
-import NewSidebar from './NewSidebar'
+import Sidebar from './Sidebar'
 type IProps = {
     children: ReactNode
     onScroll?: (e: UIEvent) => void
     scrollRef?: any
 }
-const show_compliance = window.__RUNTIME_CONFIG__.REACT_APP_SHOW_COMPLIANCE
 
-const Mapping = {
-    cloudql: 'CloudQL',
-    integration: 'Integration',
-    compliance: 'Compliance',
-    overview: 'Overview',
-    settings: 'Settings',
-    tasks: 'Tasks',
-    ai: 'AI',
-}
+
 const INTEGRATION_MAPPING = {
     azure_subscription: 'Microsoft Azure Subscription',
     jira_cloud: 'Atlassian JIRA Cloud',
@@ -124,7 +114,7 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
         }
         if (path.includes('ai')) {
             temp.push({
-                text: 'AI Preview',
+                text: 'AI ',
                 href: '/ai',
             })
         }
@@ -232,7 +222,7 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                 navigation={
                     <>
                         {showSidebarCallback ? (
-                            <NewSidebar currentPage={GetCurrentPage()} />
+                            <Sidebar currentPage={GetCurrentPage()} />
                         ) : (
                             ''
                         )}
