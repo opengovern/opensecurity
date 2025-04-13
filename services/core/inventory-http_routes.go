@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/csv"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -2561,6 +2562,80 @@ func (h *HttpHandler) GetChatbotChat(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, apiChat)
+}
+
+func (h *HttpHandler) DownloadChatbotChat(ctx echo.Context) error {
+	chatId := ctx.Param("chat_id")
+	if chatId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "no chat_id provided")
+	}
+	chatIdUuid, err := uuid.Parse(chatId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid chat_id")
+	}
+
+	chat, err := h.db.GetChat(chatIdUuid)
+	if err != nil {
+		h.logger.Error("failed to get session", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get session")
+	}
+
+	var result api.ChatResult
+	if chat.Result.Status == pgtype.Present {
+		if err := json.Unmarshal(chat.Result.Bytes, &result); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to unmarshal chat result")
+		}
+		
+	}
+	if (result.Result == nil || len(result.Result) == 0) && chat.QueryError != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "no result found")
+	}
+
+	var buf bytes.Buffer
+	writer := csv.NewWriter(&buf)
+
+	// Extract headers from first row
+	
+	if err := writer.Write(result.Headers); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to write csv headers")
+	}
+
+	// Write rows
+	for _, row := range result.Result {
+		values := []string{}
+		for _, x := range row {
+			value := fmt.Sprintf("%v", x)
+			values = append(values, value)
+		}
+		if err := writer.Write(values); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to write csv row")
+		}
+	}
+
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to write csv data")
+	}
+
+	// convert results to csv
+	csvData := buf.Bytes()
+	
+	// create a new file
+	fileName := fmt.Sprintf("chat_%s.csv", chat.ID.String())
+	// set the content type and disposition
+	ctx.Response().Header().Set(echo.HeaderContentType, "text/csv")
+	ctx.Response().Header().Set(echo.HeaderContentDisposition, fmt.Sprintf("attachment; filename=%s", fileName))
+	ctx.Response().Header().Set(echo.HeaderContentLength, fmt.Sprintf("%d", len(csvData)))
+	// write the file to the response
+	ctx.Response().WriteHeader(http.StatusOK)
+	_, err = ctx.Response().Write(csvData)
+	if err != nil {
+		h.logger.Error("failed to write file to response", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to write file to response")
+	}
+	// return response
+	return nil
+	
 }
 
 func convertChatToApi(chat models.Chat) (*api.Chat, error) {
