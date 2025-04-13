@@ -2225,22 +2225,8 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 		}
 	}
 
-	var primaryInterpretation api.Suggestion
 	if finalResult.PrimaryInterpretation != "" {
-		primaryInterpretationDb := models.ChatSuggestion{
-			ID:         uuid.New(),
-			ChatID:     chat.ID,
-			Suggestion: finalResult.PrimaryInterpretation,
-		}
-		err = h.db.CreateChatSuggestion(&primaryInterpretationDb)
-		if err != nil {
-			h.logger.Error("failed to create chatSuggestion", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create chatSuggestion")
-		}
-		primaryInterpretation = api.Suggestion{
-			SuggestionId: primaryInterpretationDb.ID.String(),
-			Suggestion:   finalResult.PrimaryInterpretation,
-		}
+		chat.AssistantText = &finalResult.PrimaryInterpretation
 	}
 
 	var additionalInterpretations []api.Suggestion
@@ -2267,19 +2253,11 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update chat")
 	}
 
-	inferenceResult := api.InferenceResult{
-		Type:                      finalResult.Type,
-		PrimaryInterpretation:     primaryInterpretation,
-		AdditionalInterpretations: additionalInterpretations,
-		ClarifyingQuestions:       clarifyingQuestions,
-		Reason:                    finalResult.Reason,
-		RawResponse:               finalResult.RawResponse,
-	}
+	
 
 	return ctx.JSON(http.StatusOK, api.GenerateQueryResponse{
 		SessionId: session.ID.String(),
 		ChatId:    chat.ID.String(),
-		Result:    inferenceResult,
 		Agent:     agent,
 	})
 }
