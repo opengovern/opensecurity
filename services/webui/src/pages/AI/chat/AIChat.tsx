@@ -333,17 +333,20 @@ function AIChat({ setOpen }: any) {
                 scroll()
             })
     }
-    const ClarifyQuery = (answer: string, len: number) => {
+    const ClarifyQuery = (answer: string, len: number,chat: Chat) => {
         const body = {
-            answer: answer,
+            question: chat.message,
             chat_id: id,
+            agent: agent.id,
+            session_id: localStorage.getItem(`${agent.id}_session_id`),
+            in_clarification_state: true,
+            clarification_questions: chat.clarify_questions?.map((question)=>{return question.question}),
+            user_clarification_response:answer
+            
         }
 
         axios
-            .post(
-                `https://slay-router-latest.onrender.com/generate/clarify/`,
-                body
-            )
+            .post(`/main/core/api/v4/chatbot/generate-query`, body)
             .then((res) => {
                 if (res?.data) {
                     const output = res?.data
@@ -726,7 +729,7 @@ function AIChat({ setOpen }: any) {
                             }
                             setChats(temp)
 
-                            ClarifyQuery(message, len)
+                            ClarifyQuery(message, len,temp[`${len-1}`])
                         } else {
                             temp[`${len}`] = {
                                 message: message,
