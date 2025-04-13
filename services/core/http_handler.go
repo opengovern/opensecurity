@@ -7,9 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	"github.com/opengovern/og-util/pkg/ticker"
 	cloudql_init_job "github.com/opengovern/opensecurity/jobs/cloudql-init-job"
-	"github.com/opengovern/opensecurity/pkg/utils"
 	complianceapi "github.com/opengovern/opensecurity/services/compliance/api"
 	coreApi "github.com/opengovern/opensecurity/services/core/api"
 	"net/http"
@@ -246,10 +244,6 @@ func InitializeHttpHandler(
 
 	go h.fetchParameters()
 
-	utils.EnsureRunGoroutine(func() {
-		h.RunDeleteOldCacheQueries()
-	})
-
 	return h, nil
 }
 
@@ -269,20 +263,6 @@ func NewKubeClient() (client.Client, error) {
 		return nil, err
 	}
 	return kubeClient, nil
-}
-
-func (h *HttpHandler) RunDeleteOldCacheQueries() {
-	h.logger.Info("Scheduling delete old cache queries started")
-
-	t := ticker.NewTicker(60*time.Second, time.Second*10)
-	defer t.Stop()
-
-	for ; ; <-t.C {
-		err := h.db.DeleteOldCachedQueries()
-		if err != nil {
-			h.logger.Error("failed to delete old cache queries", zap.Error(err))
-		}
-	}
 }
 
 func (h *HttpHandler) fetchParameters() {

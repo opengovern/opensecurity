@@ -121,6 +121,7 @@ func (h *HttpHandler) Register(r *echo.Echo) {
 	// Chatbot
 	v4.GET("/chatbot/agents", httpserver.AuthorizeHandler(h.GetAgents, api3.ViewerRole))
 	v4.POST("/chatbot/generate-query", httpserver.AuthorizeHandler(h.GenerateQuery, api3.ViewerRole))
+	v4.POST("/chatbot/run-query", httpserver.AuthorizeHandler(h.RunChatQuery, api3.ViewerRole))
 	v4.GET("/chatbot/session/:session_id", httpserver.AuthorizeHandler(h.GetChatbotSession, api3.ViewerRole))
 	v4.GET("/chatbot/sessions", httpserver.AuthorizeHandler(h.ListChatbotSessions, api3.ViewerRole))
 	v4.GET("/chatbot/chats/:chat_id", httpserver.AuthorizeHandler(h.GetChatbotChat, api3.ViewerRole))

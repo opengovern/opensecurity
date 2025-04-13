@@ -35,7 +35,6 @@ type Suggestion struct {
 type InferenceResult struct {
 	Type chatbot.ResultType `json:"type"`
 
-	QueryID                   string       `json:"query_id,omitempty"`
 	PrimaryInterpretation     Suggestion   `json:"primary_interpretation,omitempty"`
 	AdditionalInterpretations []Suggestion `json:"additional_interpretations,omitempty"`
 
@@ -76,22 +75,21 @@ type Session struct {
 }
 
 type Chat struct {
-	ID                string         `json:"id"`
-	CreatedAt         time.Time      `json:"created_at"`
-	UpdatedAt         time.Time      `json:"updated_at"`
-	Question          string         `json:"question"`
-	Query             *string        `json:"query,omitempty"`
-	QueryError        *string        `json:"query_error,omitempty"`
-	NeedClarification bool           `json:"need_clarification"`
-	AssistantText     *string        `json:"assistant_text,omitempty"`
-	TimeTaken         *time.Duration `json:"time_taken,omitempty"`
-	AgentId           *string        `json:"agent_id,omitempty"`
-	SessionId         string         `json:"session_id"`
+	ID                    string         `json:"id"`
+	CreatedAt             time.Time      `json:"created_at"`
+	UpdatedAt             time.Time      `json:"updated_at"`
+	Question              string         `json:"question"`
+	QueryError            *string        `json:"query_error,omitempty"`
+	NeedClarification     bool           `json:"need_clarification"`
+	PrimaryInterpretation *string        `json:"primary_interpretation,omitempty"`
+	Suggestions           []Suggestion   `json:"suggestions"`
+	TimeTaken             *time.Duration `json:"time_taken,omitempty"`
+	Result                *ChatResult    `json:"result"`
 }
 
-type ChatSuggestion struct {
-	ID         string `json:"id"`
-	Suggestion string `json:"suggestion"`
+type ChatResult struct {
+	Headers []string `json:"headers"`
+	Result  [][]any  `json:"result"`
 }
 
 type ChatClarification struct {

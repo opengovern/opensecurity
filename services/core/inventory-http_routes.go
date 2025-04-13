@@ -462,7 +462,7 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 	if err := bindValidate(ctx, &req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	if (req.Query == nil || *req.Query == "") && req.QueryId == nil && req.CachedQueryID == nil {
+	if (req.Query == nil || *req.Query == "") && req.QueryId == nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Policy is required")
 	}
 
@@ -506,18 +506,6 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 		req.Query = &namedQuery.Query.QueryToExecute
-	} else if req.CachedQueryID != nil && (req.Query == nil || *req.Query == "") {
-		id, err := uuid.Parse(*req.CachedQueryID)
-		if err != nil {
-			h.logger.Error("failed to parse cached query id", zap.Error(err))
-			return echo.NewHTTPError(http.StatusBadRequest, "failed to parse cached query id")
-		}
-		cachedQuery, err := h.db.GetCachedQuery(id)
-		if err != nil {
-			h.logger.Error("failed to fetch cached query", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to fetch cached query")
-		}
-		req.Query = &cachedQuery.Query
 	}
 
 	if req.Page.Size == 0 {
@@ -2293,19 +2281,8 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update chat")
 	}
 
-	cachedQueryId := uuid.New()
-	err = h.db.CreateCachedQuery(&models.CachedQuery{
-		ID:    cachedQueryId,
-		Query: finalResult.Query,
-	})
-	if err != nil {
-		h.logger.Error("failed to create cached query", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create cached query")
-	}
-
 	inferenceResult := api.InferenceResult{
 		Type:                      finalResult.Type,
-		QueryID:                   cachedQueryId.String(),
 		PrimaryInterpretation:     primaryInterpretation,
 		AdditionalInterpretations: additionalInterpretations,
 		ClarifyingQuestions:       clarifyingQuestions,
@@ -2525,7 +2502,12 @@ func (h *HttpHandler) GetChatbotSession(ctx echo.Context) error {
 
 	var chats []api.Chat
 	for _, chat := range session.Chats {
-		chats = append(chats, convertChatToApi(chat))
+		apiChat, err := convertChatToApi(chat)
+		if err != nil {
+			h.logger.Error("failed to convert chat", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to convert chat")
+		}
+		chats = append(chats, *apiChat)
 	}
 	sessionApi := api.Session{
 		ID:      session.ID.String(),
@@ -2558,7 +2540,12 @@ func (h *HttpHandler) ListChatbotSessions(ctx echo.Context) error {
 	for _, session := range sessions {
 		var chats []api.Chat
 		for _, chat := range session.Chats {
-			chats = append(chats, convertChatToApi(chat))
+			apiChat, err := convertChatToApi(chat)
+			if err != nil {
+				h.logger.Error("failed to convert chat", zap.Error(err))
+				return echo.NewHTTPError(http.StatusInternalServerError, "failed to convert chat")
+			}
+			chats = append(chats, *apiChat)
 		}
 		sessionApi := api.Session{
 			ID:      session.ID.String(),
@@ -2597,28 +2584,132 @@ func (h *HttpHandler) GetChatbotChat(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get session")
 	}
 
-	chatApi := convertChatToApi(*chat)
+	apiChat, err := convertChatToApi(*chat)
+	if err != nil {
+		h.logger.Error("failed to convert chat", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to convert chat")
+	}
 
-	return ctx.JSON(http.StatusOK, chatApi)
+	return ctx.JSON(http.StatusOK, apiChat)
 }
 
-func convertChatToApi(chat models.Chat) api.Chat {
+func convertChatToApi(chat models.Chat) (*api.Chat, error) {
 	var timeTaken *time.Duration
 	if chat.TimeTaken != nil {
 		duration := time.Duration(*chat.TimeTaken) * time.Microsecond
 		timeTaken = &duration
 	}
-	return api.Chat{
-		ID:                chat.ID.String(),
-		CreatedAt:         chat.CreatedAt,
-		UpdatedAt:         chat.UpdatedAt,
-		Question:          chat.Question,
-		Query:             chat.Query,
-		QueryError:        chat.QueryError,
-		NeedClarification: chat.NeedClarification,
-		AssistantText:     chat.AssistantText,
-		TimeTaken:         timeTaken,
-		AgentId:           chat.AgentID,
-		SessionId:         chat.SessionID.String(),
+
+	var suggestions []api.Suggestion
+	for _, suggestion := range chat.Suggestions {
+		suggestions = append(suggestions, api.Suggestion{
+			SuggestionId: suggestion.ID.String(),
+			Suggestion:   suggestion.Suggestion,
+		})
 	}
+
+	apiChat := &api.Chat{
+		ID:                    chat.ID.String(),
+		CreatedAt:             chat.CreatedAt,
+		UpdatedAt:             chat.UpdatedAt,
+		Question:              chat.Question,
+		QueryError:            chat.QueryError,
+		PrimaryInterpretation: chat.AssistantText,
+		Suggestions:           suggestions,
+		NeedClarification:     chat.NeedClarification,
+		TimeTaken:             timeTaken,
+	}
+	var result api.ChatResult
+	if chat.Result.Status == pgtype.Present {
+		if err := json.Unmarshal(chat.Result.Bytes, &result); err != nil {
+			return nil, err
+		}
+		apiChat.Result = &result
+	}
+
+	return apiChat, nil
+}
+
+// RunChatQuery godoc
+//
+//	@Summary		Run query
+//	@Description	Run provided named query and returns the result.
+//	@Security		BearerToken
+//	@Tags			named_query
+//	@Accepts		json
+//	@Produce		json
+//	@Param			request	body		api.RunQueryRequest	true	"Request Body"
+//	@Param			accept	header		string				true	"Accept header"	Enums(application/json,text/csv)
+//	@Success		200		{object}	api.RunQueryResponse
+//	@Router			/inventory/api/v1/query/run [post]
+func (h *HttpHandler) RunChatQuery(ctx echo.Context) error {
+	var req api.RunChatQueryRequest
+	if err := bindValidate(ctx, &req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	id, err := uuid.Parse(req.ChatId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid chat id")
+	}
+	chat, err := h.db.GetChat(id)
+	if err != nil {
+		h.logger.Error("failed to get session", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get session")
+	}
+	if chat.Query == nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "chat query not found")
+	}
+	startTime := time.Now()
+	result, err := h.RunQueryInternal(ctx, api.RunQueryRequest{
+		Query: chat.Query,
+	})
+	if err != nil {
+		errMsg := err.Error()
+		chat.QueryError = &errMsg
+		err = h.db.UpdateChat(chat)
+		if err != nil {
+			h.logger.Error("failed to update chat", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to update chat")
+		}
+		h.logger.Error("failed to run query", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to run query")
+	}
+
+	runTime := time.Since(startTime)
+
+	chatResult := api.ChatResult{
+		Headers: result.Headers,
+		Result:  result.Result,
+	}
+	chatResultJson, err := json.Marshal(chatResult)
+	if err != nil {
+		h.logger.Error("failed to marshal result", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to marshal result")
+	}
+
+	jsonb := pgtype.JSONB{}
+	err = jsonb.Set(chatResultJson)
+	if err != nil {
+		h.logger.Error("failed to set jsonb", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to marshal result")
+	}
+	chat.Result = jsonb
+	if chat.TimeTaken != nil {
+		timeTaken := *chat.TimeTaken + float64(runTime.Microseconds())
+		chat.TimeTaken = &timeTaken
+	}
+
+	err = h.db.UpdateChat(chat)
+	if err != nil {
+		h.logger.Error("failed to update chat", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update chat")
+	}
+
+	apiChat, err := convertChatToApi(*chat)
+	if err != nil {
+		h.logger.Error("failed to convert chat", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to convert chat")
+	}
+
+	return ctx.JSON(200, apiChat)
 }

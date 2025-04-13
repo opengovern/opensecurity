@@ -40,7 +40,6 @@ func (db Database) Initialize() error {
 		&models.Chat{},
 		&models.ChatSuggestion{},
 		&models.ChatClarification{},
-		&models.CachedQuery{},
 	)
 	if err != nil {
 		return err
