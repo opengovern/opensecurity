@@ -462,7 +462,7 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 	if err := bindValidate(ctx, &req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	if (req.Query == nil || *req.Query == "") && req.QueryId == nil {
+	if (req.Query == nil || *req.Query == "") && req.QueryId == nil && req.CachedQueryID == nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Policy is required")
 	}
 

@@ -35,7 +35,7 @@ type Suggestion struct {
 type InferenceResult struct {
 	Type chatbot.ResultType `json:"type"`
 
-	QueryID                   string       `json:"query,omitempty"`
+	QueryID                   string       `json:"query_id,omitempty"`
 	PrimaryInterpretation     Suggestion   `json:"primary_interpretation,omitempty"`
 	AdditionalInterpretations []Suggestion `json:"additional_interpretations,omitempty"`
 
