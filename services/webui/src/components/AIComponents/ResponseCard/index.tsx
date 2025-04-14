@@ -60,8 +60,6 @@ const KResponseCard: FunctionComponent<any> = ({
   const animatedtText = useAnimatedText(showText, 1);
   useEffect(() => {
     setShowText(text);
-    console.log("response,", response);
-    console.log("text",text)
   }, [text]);
 
   return (

@@ -226,7 +226,6 @@ const Downloadchats = () => {
 
   useEffect(() => {
     scroll();
-    console.log(result)
   }, [result]);
   return (
       <div
