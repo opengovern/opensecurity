@@ -5,9 +5,8 @@ import { dateTimeDisplay } from '../../../utilities/dateDisplay'
 import KChatCard from '../../../components/AIComponents/ChatCard'
 import KResponseCard from '../../../components/AIComponents/ResponseCard'
 import KInput from '../../../components/AIComponents/Input'
-import { DEVOPS, IDENTITY } from './responses'
 
-function AIChat({ setOpen }: any) {
+function AIChat() {
     const [message, setMessage] = useState('')
     const agent = JSON.parse(localStorage.getItem('agent') || '{}')
 
@@ -529,8 +528,8 @@ function AIChat({ setOpen }: any) {
                             if (chat.need_clarification) {
                                 // for each in chat.clarifying_questions and for each one make new temp object
                                 const clarifying_questions =
-                                    chat.clarifying_questions
-                                clarifying_questions.forEach(
+                                    chat?.clarifying_questions
+                                clarifying_questions?.forEach(
                                     (question: any) => {
                                         temp[`${Object.keys(temp).length}`] = {
                                             id: chat.id,
@@ -595,6 +594,7 @@ function AIChat({ setOpen }: any) {
     useEffect(() => {
         GetChats()
     }, [])
+    console.log(chats)
     return (
         <>
             <div className=" relative sm:h-[90vh] #bg-slate-200 #dark:bg-gray-950 flex  flex-col  justify-start    items-start w-full ">
@@ -708,7 +708,7 @@ function AIChat({ setOpen }: any) {
                     onSend={() => {
                         const temp: any = chats
                         // @ts-ignore
-                        const len = Object.keys(chats).length
+                        const len = Object.keys(chats)?.length 
 
                         setLoading(true)
                         if (clarifying) {
