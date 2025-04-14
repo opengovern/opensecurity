@@ -28,6 +28,7 @@ import TaskDetail from '../pages/Tasks/TaskDetail'
 import AI from '../pages/AI'
 import AllPolicy from '../pages/Governance/Compliance/All Policy'
 import Framework from '../pages/Governance/Compliance/FrameWorks'
+import ComplianceJobs from '../pages/Settings/Jobs/Compliance'
 
 const show_compliance = window.__RUNTIME_CONFIG__.REACT_APP_SHOW_COMPLIANCE
 console.log(show_compliance)
@@ -102,7 +103,7 @@ const authRoutes = [
     },
     {
         key: 'settings Jobs',
-        path: '/jobs',
+        path: 'integration/jobs',
         element: <SettingsJobs />,
     },
     {
@@ -120,6 +121,11 @@ const authRoutes = [
         key: 'Compliance',
         path: '/compliance',
         element: <Compliance />,
+    },
+    {
+        key: 'Compliance',
+        path: '/compliance/jobs',
+        element: <ComplianceJobs />,
     },
     {
         key: 'Compliance',

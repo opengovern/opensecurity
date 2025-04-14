@@ -71,8 +71,17 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
         const path = window.location.pathname
         console.log(path)
         if (path.includes('integration')) {
-            console.log(url)
-            if (url.length > 3) {
+            if(path.includes('jobs')){
+                temp.push({
+                    text: 'Plugins',
+                    href: '/integration/plugins',
+                })
+                temp.push({
+                    text: 'Discovery Jobs',
+                    href: path,
+                })
+            }
+            else if (url.length > 3) {
                 const integration = url[3]
                 // @ts-ignore
                 const integrationName = INTEGRATION_MAPPING[integration]
@@ -99,12 +108,7 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                 href: '/cloudql',
             })
         }
-        if (path.includes('jobs')) {
-            temp.push({
-                text: 'Jobs',
-                href: '/jobs',
-            })
-        }
+        
         if (path.includes('administration')) {
             temp.push({
                 text: 'Administration',
@@ -213,6 +217,16 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                     })
                 }
             }
+            if (path.includes('jobs')) {
+                   temp.push({
+                       text: 'Frameworks',
+                       href: '/compliance/frameworks',
+                   })
+               temp.push({
+                   text: 'Compliance Checks',
+                   href: '/compliance/jobs',
+               })
+            }
         }
         if (path.includes('incidents')) {
             if(path.includes('controls')){
@@ -255,6 +269,10 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
         if (path.includes('cloudql')) {
             return '/cloudql'
         } else if (path.includes('integration')) {
+             if (path.includes('jobs')) {
+                 return '/integration/jobs'
+             }
+
             return '/integration/plugins'
         } else if (path.includes('compliance')) {
             if (path.includes('frameworks')) {
@@ -269,9 +287,10 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
             if (path.includes('parameters')) {
                 return '/compliance/parameters'
             }
-        } else if (path.includes('jobs')) {
-            return '/jobs'
-        } else if (path.includes('administration')) {
+            if(path.includes('jobs')){
+                return '/compliance/jobs'
+            }
+        }  else if (path.includes('administration')) {
             return '/administration'
         } else if (path.includes('ai')) {
             return '/ai'

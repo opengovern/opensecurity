@@ -136,19 +136,27 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 icon: RiHome2Line,
                 isPreview: false,
             },
-
             {
-                name: 'CloudQL',
+                name: 'Find',
                 page: 'cloudql',
                 icon: RiTerminalBoxLine,
                 isPreview: false,
+                children: [
+                    {
+                        name: 'CloudQL',
+                        page: 'cloudql',
+                        icon: RiTerminalBoxLine,
+                        isPreview: false,
+                    },
+                    {
+                        name: 'OPS Agents',
+                        page: 'ai',
+                        icon: RiRobot2Line,
+                        isPreview: false,
+                    },
+                ],
             },
-            {
-                name: 'Agent AI',
-                page: 'ai',
-                icon: RiRobot2Line,
-                isPreview: false,
-            },
+
             {
                 name: 'Compliance',
                 icon: RiShieldCheckLine,
@@ -176,6 +184,12 @@ export default function Sidebar({ currentPage }: ISidebar) {
                         name: 'Parameters',
                         page: 'compliance/parameters',
                         icon: RiShieldCheckLine,
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Compliance Checks',
+                        page: 'compliance/jobs',
+                        icon: RiTaskLine,
                         isPreview: false,
                     },
                 ],
@@ -224,14 +238,35 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 // count: numericDisplay(connectionCount?.count) || 0,
                 error: undefined,
                 isPreview: false,
+                children: [
+                    {
+                        name: 'Plugins',
+                        page: 'integration/plugins',
+
+                        icon: RiPuzzleLine,
+                        isLoading: false,
+                        // count: 0,
+
+                        // count: numericDisplay(connectionCount?.count) || 0,
+                        error: undefined,
+                        isPreview: false,
+                    },
+
+                    {
+                        name: 'Discovery Jobs',
+                        page: 'integration/jobs',
+                        icon: RiTaskLine,
+                        isPreview: false,
+                    },
+                ],
             },
 
-            {
-                name: 'Jobs',
-                page: 'jobs',
-                icon: RiTaskLine,
-                isPreview: false,
-            },
+            // {
+            //     name: 'Jobs',
+            //     page: 'jobs',
+            //     icon: RiTaskLine,
+            //     isPreview: false,
+            // },
             {
                 name: 'Administration',
                 page: 'administration',
@@ -280,11 +315,11 @@ export default function Sidebar({ currentPage }: ISidebar) {
                                       type: 'link',
                                       text: child.name,
 
-                                      info: child?.isPreview ? (
-                                          <RiLockStarFill className="w-3" />
-                                      ) : (
-                                          ''
-                                      )
+                                    //   info: child?.isPreview ? (
+                                    //       <RiLockStarFill className="w-3" />
+                                    //   ) : (
+                                    //       ''
+                                    //   )
                                       
                                   }
                               })

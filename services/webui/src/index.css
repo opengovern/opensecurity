@@ -206,11 +206,11 @@ table{
 }
 
 .custom-nav{
-    li{
+    /* li{
         display: flex!important;
         flex-direction: row!important;
         justify-content: start;
         align-items: center;
         
-    }
+    } */
 }
