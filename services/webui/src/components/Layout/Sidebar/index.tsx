@@ -272,6 +272,20 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 page: 'administration',
                 icon: RiAdminLine,
                 isPreview: false,
+                children: [
+                    {
+                        name: 'Settings',
+                        page: 'administration/settings',
+                        icon: RiAdminLine,
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Access',
+                        page: 'administration/access',
+                        icon: RiAdminLine,
+                        isPreview: false,
+                    },
+                ],
             },
 
             {

@@ -11,7 +11,6 @@ export default function Settings() {
 
     return (
         <>
-            
             <div
                 className="w-full"
                 style={
@@ -20,7 +19,7 @@ export default function Settings() {
                         : {}
                 }
             >
-                <Tabs
+                {/* <Tabs
                     tabs={[
                         {
                             label: 'Settings',
@@ -41,26 +40,27 @@ export default function Settings() {
                             ),
                             id: '1',
                         },
-                        {
-                            label: 'SSO Configuration',
-                            content: (
-                                <>
-                                    <SettingsConnectors />
-                                </>
-                            ),
-                            id: '2',
-                        },
-                        {
-                            label: 'API',
-                            content: (
-                                <>
-                                    <SettingsWorkspaceAPIKeys />
-                                </>
-                            ),
-                            id: '3',
-                        },
+                        // {
+                        //     label: 'SSO Configuration',
+                        //     content: (
+                        //         <>
+                        //             <SettingsConnectors />
+                        //         </>
+                        //     ),
+                        //     id: '2',
+                        // },
+                        // {
+                        //     label: 'API',
+                        //     content: (
+                        //         <>
+                        //             <SettingsWorkspaceAPIKeys />
+                        //         </>
+                        //     ),
+                        //     id: '3',
+                        // },
                     ]}
-                />
+                /> */}
+                <SettingsEntitlement />
             </div>
         </>
     )

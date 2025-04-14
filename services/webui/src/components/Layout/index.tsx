@@ -110,10 +110,18 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
         }
         
         if (path.includes('administration')) {
-            temp.push({
-                text: 'Administration',
-                href: '/administration',
-            })
+            if(path.includes('access')){
+                temp.push({
+                    text: 'Access',
+                    href: '/administration/access',
+                })
+            }
+            else{
+                temp.push({
+                    text: 'Settings',
+                    href: '/administration/settings',
+                })
+            }
         }
         if (path.includes('ai')) {
             temp.push({
@@ -291,7 +299,12 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                 return '/compliance/jobs'
             }
         }  else if (path.includes('administration')) {
-            return '/administration'
+            if(path.includes('access')){
+                return '/administration/access'
+            }
+            if(path.includes('settings')){
+                return '/administration/settings'
+            }
         } else if (path.includes('ai')) {
             return '/ai'
         } else if (

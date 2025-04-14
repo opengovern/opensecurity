@@ -93,8 +93,13 @@ const authRoutes = [
 
     {
         key: 'settings page',
-        path: '/administration',
+        path: '/administration/settings',
         element: <Settings />,
+    },
+    {
+        key: 'settings page',
+        path: '/administration/access',
+        element: <SettingsMembers />,
     },
     {
         key: 'Profile',

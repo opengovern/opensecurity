@@ -213,8 +213,6 @@ export default function SettingsConnectors() {
 
     return (
         <>
-            
-
             <Modal
                 visible={drawerOpen}
                 header="Create new OIDC Connector"
@@ -372,8 +370,6 @@ export default function SettingsConnectors() {
                                     />
                                 </>
                             )}
-
-                           
                         </Flex>
                         {editError && (
                             <Alert className="w-full mb-3" type="error">
@@ -445,6 +441,7 @@ export default function SettingsConnectors() {
             </Modal>
             <Table
                 className="mt-2"
+                variant="full-page"
                 onRowClick={(event) => {
                     const row = event.detail.item
                     if (row && row.connector_id != 'local') {
@@ -508,7 +505,6 @@ export default function SettingsConnectors() {
                         header: 'Updated At',
                         cell: (item: any) => checkDate(item?.last_update),
                     },
-                   
                 ]}
                 columnDisplay={[
                     { id: 'id', visible: false },
@@ -538,6 +534,12 @@ export default function SettingsConnectors() {
                 }
                 header={
                     <Header
+                        description={
+                            <>
+                                Opensecurity supports any OIDC-compatible
+                                Identity Provider
+                            </>
+                        }
                         actions={
                             <>
                                 <KButton
@@ -547,13 +549,13 @@ export default function SettingsConnectors() {
                                         openCreateMenu()
                                     }}
                                 >
-                                   Add SSO Provider
+                                    Add SSO Provider
                                 </KButton>
                             </>
                         }
                         className="w-full"
                     >
-                        SSO Providers{' '}
+                        SSO Configuration{' '}
                     </Header>
                 }
             />

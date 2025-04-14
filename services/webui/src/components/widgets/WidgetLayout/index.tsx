@@ -9,6 +9,7 @@ import {
     Button,
     ButtonDropdown,
     Checkbox,
+    FormField,
     Input,
     Modal,
     Spinner,
@@ -149,26 +150,30 @@ export default function WidgetLayout({
         if (selectedAddItem == 'table') {
             return (
                 <>
-                    <Input
-                        placeholder="Query ID"
-                        value={widgetProps?.query_id}
-                        onChange={(e: any) => {
-                            setWidgetProps({
-                                ...widgetProps,
-                                query_id: e.detail.value,
-                            })
-                        }}
-                    />
-                    <Input
-                        placeholder="Rows to display"
-                        value={widgetProps?.display_rows}
-                        onChange={(e: any) => {
-                            setWidgetProps({
-                                ...widgetProps,
-                                display_rows: e.detail.value,
-                            })
-                        }}
-                    />
+                    <FormField label="Table query ID">
+                        <Input
+                            placeholder="Table query ID"
+                            value={widgetProps?.query_id}
+                            onChange={(e: any) => {
+                                setWidgetProps({
+                                    ...widgetProps,
+                                    query_id: e.detail.value,
+                                })
+                            }}
+                        />
+                    </FormField>
+                    <FormField label="Page size">
+                        <Input
+                            placeholder="Page size"
+                            value={widgetProps?.display_rows}
+                            onChange={(e: any) => {
+                                setWidgetProps({
+                                    ...widgetProps,
+                                    display_rows: e.detail.value,
+                                })
+                            }}
+                        />
+                    </FormField>
                 </>
             )
         }
@@ -176,78 +181,134 @@ export default function WidgetLayout({
             return (
                 <>
                     {/* map 4 times and return 3 input count_kpi info list_kpi all of them inside kpies key */}
-                    {[0, 1, 2, 3].map((item, index: number) => {
+                    {[0, 1, 2, 3,4,5].map((item, index: number) => {
                         return (
-                            <div key={index} className="flex flex-col gap-2">
-                                <Input
-                                    placeholder={` ${
-                                        //   @ts-ignore
-                                        NUMBER_MAPPING[index.toString()]
-                                    } KPI Name`}
-                                    value={widgetProps?.kpis?.[index]?.info}
-                                    onChange={(e: any) => {
-                                        setWidgetProps({
-                                            ...widgetProps,
-                                            kpis: [
-                                                ...(widgetProps?.kpis || []),
-                                                {
-                                                    info: e.detail.value,
-                                                    count_kpi: '',
-                                                    list_kpi: '',
-                                                },
-                                            ],
-                                        })
-                                    }}
-                                />
-                                <Input
-                                    placeholder={` ${
-                                        //   @ts-ignore
-                                        NUMBER_MAPPING[index.toString()]
-                                    } Count Query ID`}
-                                    value={
-                                        widgetProps?.kpis?.[index]?.count_kpi
-                                    }
-                                    onChange={(e: any) => {
-                                        setWidgetProps({
-                                            ...widgetProps,
-                                            kpis: [
-                                                ...(widgetProps?.kpis || []),
-                                                {
-                                                    info: widgetProps?.kpis?.[
-                                                        index
-                                                    ]?.info,
-                                                    count_kpi: e.detail.value,
-                                                    list_kpi: '',
-                                                },
-                                            ],
-                                        })
-                                    }}
-                                />
-                                <Input
-                                    placeholder={` ${
-                                        //   @ts-ignore
-                                        NUMBER_MAPPING[index.toString()]
-                                    } List Query ID`}
-                                    value={widgetProps?.kpis?.[index]?.list_kpi}
-                                    onChange={(e: any) => {
-                                        setWidgetProps({
-                                            ...widgetProps,
-                                            kpis: [
-                                                ...(widgetProps?.kpis || []),
-                                                {
-                                                    info: widgetProps?.kpis?.[
-                                                        index
-                                                    ]?.info,
-                                                    count_kpi:
-                                                        widgetProps?.kpis?.[
-                                                            index
-                                                        ]?.count_kpi,
-                                                    list_kpi: e.detail.value,
-                                                },
-                                            ],
-                                        })
-                                    }}
-                                />
+                            <div key={index} className="flex flex-row gap-6">
+                                {index == 0 ? (
+                                    <>
+                                        {' '}
+                                        <FormField label={` KPI Name`}>
+                                            <Input
+                                                placeholder={`   KPI Name`}
+                                                value={
+                                                    widgetProps?.kpis?.[index]
+                                                        ?.info
+                                                }
+                                                onChange={(e: any) => {
+                                                    HandleKPIPropChange(index,e.detail.value,'info')
+
+                                                }}
+                                            />
+                                        </FormField>
+                                        <FormField label={`  Count Query ID`}>
+                                            <Input
+                                                placeholder={`   Count Query ID`}
+                                                value={
+                                                    widgetProps?.kpis?.[index]
+                                                        ?.count_kpi
+                                                }
+                                                onChange={(e: any) => {
+                                                    HandleKPIPropChange(index,e.detail.value,'count_kpi')
+                                                }}
+                                            />
+                                        </FormField>
+                                        <FormField label={`  List Query ID`}>
+                                            <Input
+                                                placeholder={`   List Query ID`}
+                                                value={
+                                                    widgetProps?.kpis?.[index]
+                                                        ?.list_kpi
+                                                }
+                                                onChange={(e: any) => {
+                                                    HandleKPIPropChange(index,e.detail.value,'list_kpi')
+                                                }}
+                                            />
+                                        </FormField>
+                                    </>
+                                ) : (
+                                    <>
+                                        {' '}
+                                            <Input
+                                                placeholder={`   KPI Name`}
+                                                value={
+                                                    widgetProps?.kpis?.[index]
+                                                        ?.info
+                                                }
+                                                onChange={(e: any) => {
+                                                    setWidgetProps({
+                                                        ...widgetProps,
+                                                        kpis: [
+                                                            ...(widgetProps?.kpis ||
+                                                                []),
+                                                            {
+                                                                info: e.detail
+                                                                    .value,
+                                                                count_kpi: '',
+                                                                list_kpi: '',
+                                                            },
+                                                        ],
+                                                    })
+                                                }}
+                                            />
+                                            <Input
+                                                placeholder={`   Count Query ID`}
+                                                value={
+                                                    widgetProps?.kpis?.[index]
+                                                        ?.count_kpi
+                                                }
+                                                onChange={(e: any) => {
+                                                    setWidgetProps({
+                                                        ...widgetProps,
+                                                        kpis: [
+                                                            ...(widgetProps?.kpis ||
+                                                                []),
+                                                            {
+                                                                info: widgetProps
+                                                                    ?.kpis?.[
+                                                                    index
+                                                                ]?.info,
+                                                                count_kpi:
+                                                                    e.detail
+                                                                        .value,
+                                                                list_kpi: '',
+                                                            },
+                                                        ],
+                                                    })
+                                                }}
+                                            />
+                                            <Input
+                                                placeholder={`   List Query ID`}
+                                                value={
+                                                    widgetProps?.kpis?.[index]
+                                                        ?.list_kpi
+                                                }
+                                                onChange={(e: any) => {
+                                                    setWidgetProps({
+                                                        ...widgetProps,
+                                                        kpis: [
+                                                            ...(widgetProps?.kpis ||
+                                                                []),
+                                                            {
+                                                                info: widgetProps
+                                                                    ?.kpis?.[
+                                                                    index
+                                                                ]?.info,
+                                                                count_kpi:
+                                                                    widgetProps
+                                                                        ?.kpis?.[
+                                                                        index
+                                                                    ]
+                                                                        ?.count_kpi,
+                                                                list_kpi:
+                                                                    e.detail
+                                                                        .value,
+                                                            },
+                                                        ],
+                                                    })
+                                                }}
+                                            />
+                                    </>
+                                )}
                             </div>
                         )
                     })}
@@ -370,12 +431,36 @@ export default function WidgetLayout({
         setEditId('')
         setSelectedAddItem('')
     }
+    const HandleKPIPropChange = (index: number, value: string, key: string) => {
+        console.log(index,value,key)
+        const currentKPIs = widgetProps?.kpis ?? []
+
+        // Clone the KPI list or extend it to the required length
+        const updatedKPIs = [...currentKPIs]
+
+        // If the item at index doesn't exist, initialize it as an object
+        if (!updatedKPIs[index]) {
+            updatedKPIs[index] = {}
+        }
+
+        // Set or update the specific key-value pair
+        updatedKPIs[index] = {
+            ...updatedKPIs[index],
+            [key]: value,
+        }
+        console.log(updatedKPIs)
+        // Update widgetProps safely
+        setWidgetProps({
+            ...(widgetProps ?? {}),
+            kpis: updatedKPIs,
+        })
+    }
 
     return (
         <div className="w-full h-full flex flex-col gap-8">
             <Header
-                variant="h1"
-                description={layout?.description}
+                variant="h3"
+                // description={}
                 actions={
                     <div className="flex flex-row gap-2">
                         <ButtonDropdown
@@ -436,7 +521,7 @@ export default function WidgetLayout({
                     </div>
                 }
             >
-                {layout?.name}
+                <span className=" font-normal "> {layout?.description}</span>
             </Header>
             {layoutLoading ? (
                 <Spinner />
@@ -605,28 +690,34 @@ export default function WidgetLayout({
                 } Widget`}
             >
                 <div className="flex flex-col gap-2">
-                    <Input
-                        placeholder="Widget Name"
-                        ariaRequired={true}
-                        value={widgetProps?.title}
-                        onChange={(e: any) => {
-                            setWidgetProps({
-                                ...widgetProps,
-                                title: e.detail.value,
-                            })
-                        }}
-                    />
-                    <Input
-                        placeholder="Widget description"
-                        ariaRequired={true}
-                        value={widgetProps?.description}
-                        onChange={(e: any) => {
-                            setWidgetProps({
-                                ...widgetProps,
-                                description: e.detail.value,
-                            })
-                        }}
-                    />
+                    <FormField label="Widget Name">
+                        <Input
+                            placeholder="Widget Name"
+                            ariaRequired={true}
+                            value={widgetProps?.title}
+                            onChange={(e: any) => {
+                                setWidgetProps({
+                                    ...widgetProps,
+                                    title: e.detail.value,
+                                })
+                            }}
+                        />
+                    </FormField>
+
+                    <FormField label="Widget  description">
+                        <Input
+                            placeholder="Widget description"
+                            ariaRequired={true}
+                            value={widgetProps?.description}
+                            onChange={(e: any) => {
+                                setWidgetProps({
+                                    ...widgetProps,
+                                    description: e.detail.value,
+                                })
+                            }}
+                        />
+                    </FormField>
+
                     {HandleWidgetProps()}
                     {(!widgetProps?.title || !widgetProps?.description) && (
                         <Alert
@@ -655,28 +746,36 @@ export default function WidgetLayout({
                 header={`Edit Dashboard`}
             >
                 <div className="flex flex-col gap-2">
-                    <Input
-                        placeholder="Dashboard Name"
-                        ariaRequired={true}
-                        value={editLayout?.name}
-                        onChange={(e: any) => {
-                            setEditLayout({
-                                ...editLayout,
-                                name: e.detail.value,
-                            })
-                        }}
-                    />
-                    <Input
-                        placeholder="Dashboard description"
-                        ariaRequired={true}
-                        value={editLayout?.description}
-                        onChange={(e: any) => {
-                            setEditLayout({
-                                ...editLayout,
-                                description: e.detail.value,
-                            })
-                        }}
-                    />
+                    <FormField
+                        // description="This is a description."
+                        label="Dashboard Name"
+                    >
+                        <Input
+                            placeholder="Dashboard Name"
+                            ariaRequired={true}
+                            value={editLayout?.name}
+                            onChange={(e: any) => {
+                                setEditLayout({
+                                    ...editLayout,
+                                    name: e.detail.value,
+                                })
+                            }}
+                        />
+                    </FormField>
+                    <FormField label="Dashboard description">
+                        <Input
+                            placeholder="Dashboard description"
+                            ariaRequired={true}
+                            value={editLayout?.description}
+                            onChange={(e: any) => {
+                                setEditLayout({
+                                    ...editLayout,
+                                    description: e.detail.value,
+                                })
+                            }}
+                        />
+                    </FormField>
+
                     <Checkbox
                         checked={editLayout?.is_private}
                         onChange={(e: any) => {

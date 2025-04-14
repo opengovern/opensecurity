@@ -295,6 +295,7 @@ const fixRole = (role: string) => {
             </Modal>
             <Table
                 className="mt-2"
+                variant='full-page'
                 onRowClick={(event) => {
                     const row = event.detail.item
                     if (row) {

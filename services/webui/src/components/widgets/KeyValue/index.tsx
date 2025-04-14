@@ -187,7 +187,7 @@ export default function KeyValueWidget({ kpis }: KPIProps) {
             ) : (
                 <>
                     <KeyValuePairs
-                        columns={kpis.length}
+                        columns={kpis.length >4 ? 4 : kpis.length}
                         minColumnWidth={250}
                         items={items}
                     />
