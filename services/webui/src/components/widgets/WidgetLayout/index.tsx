@@ -463,7 +463,7 @@ export default function WidgetLayout({
                 // description={}
                 actions={
                     <div className="flex flex-row gap-2">
-                        <ButtonDropdown
+                        {/* <ButtonDropdown
                             items={[
                                 { id: 'add', text: 'Add new dashboard' },
 
@@ -517,7 +517,7 @@ export default function WidgetLayout({
                             ariaLabel="Board item settings"
                         >
                             Add Widget
-                        </ButtonDropdown>
+                        </ButtonDropdown> */}
                     </div>
                 }
             >
