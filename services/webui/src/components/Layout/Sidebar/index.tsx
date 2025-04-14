@@ -153,6 +153,32 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 name: 'Compliance',
                 icon: RiShieldCheckLine,
                 page: 'compliance',
+                children: [
+                    {
+                        name: 'Frameworks',
+                        page: 'compliance/frameworks',
+                        icon: RiShieldCheckLine,
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Controls',
+                        page: 'compliance/controls',
+                        icon: RiShieldCheckLine,
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Policies',
+                        page: 'compliance/policies',
+                        icon: RiShieldCheckLine,
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Parameters',
+                        page: 'compliance/parameters',
+                        icon: RiShieldCheckLine,
+                        isPreview: false,
+                    },
+                ],
 
                 isPreview: false,
                 isLoading: false,
@@ -220,7 +246,7 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 items={navigation()?.map((item) => {
                     return {
                         href: `/${item.page}`,
-                        type: 'link',
+                        type: item?.children ? 'section' : 'link',
                         text: item.name,
 
                         info: item?.isPreview ? (
@@ -228,6 +254,22 @@ export default function Sidebar({ currentPage }: ISidebar) {
                         ) : (
                             ''
                         ),
+                        items: item?.children
+                            ? item?.children.map((child) => {
+                                  return {
+                                      href: `/${child.page}`,
+                                      type: 'link',
+                                      text: child.name,
+
+                                      info: child?.isPreview ? (
+                                          <RiLockStarFill className="w-3" />
+                                      ) : (
+                                          ''
+                                      )
+                                      
+                                  }
+                              })
+                            : [],
                     }
                 })}
                 activeHref={`${currentPage}`}

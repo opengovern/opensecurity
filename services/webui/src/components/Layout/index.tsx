@@ -23,7 +23,6 @@ type IProps = {
     scrollRef?: any
 }
 
-
 const INTEGRATION_MAPPING = {
     azure_subscription: 'Microsoft Azure Subscription',
     jira_cloud: 'Atlassian JIRA Cloud',
@@ -131,35 +130,88 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
             })
         }
         if (path.includes('compliance')) {
-            if (url.length > 2) {
-                if (path.includes('report')) {
-                    temp.push({
-                        text: 'Compliance',
-                        href: '/compliance',
-                    })
+            if (path.includes('frameworks')) {
+                if (url.length > 3) {
+                    if (path.includes('report')) {
+                        temp.push({
+                            text: 'Frameworks',
+                            href: '/compliance/frameworks',
+                        })
+                        temp.push({
+                            text: 'Frameworks',
+                            href: url[0] + '/' + url[1] + '/' + url[2],
+                        })
+                        temp.push({
+                            text: 'Job Reports',
+                            href: path,
+                        })
+                    } else {
+                        temp.push({
+                            text: 'Compliance',
+                            href: '/compliance',
+                        })
+                        temp.push({
+                            text: 'Frameworks',
+                            href: path,
+                        })
+                    }
+                } else {
                     temp.push({
                         text: 'Frameworks',
-                        href: url[0] + '/' + url[1] + '/' + url[2],
+                        href: '/compliance/frameworks',
+                    })
+                }
+            }
+            if (path.includes('controls')) {
+                if (url.length > 3) {
+                    temp.push({
+                        text: 'Compliance',
+                        href: '/compliance/controls',
                     })
                     temp.push({
-                        text: 'Job Reports',
+                        text: 'Controls',
                         href: path,
                     })
                 } else {
                     temp.push({
-                        text: 'Compliance',
-                        href: '/compliance',
-                    })
-                    temp.push({
-                        text: 'Frameworks',
-                        href: path,
+                        text: 'Controls',
+                        href: '/compliance/controls',
                     })
                 }
-            } else {
-                temp.push({
-                    text: 'Compliance',
-                    href: '/compliance',
-                })
+            }
+            if (path.includes('policies')) {
+                if (url.length > 3) {
+                    temp.push({
+                        text: 'Compliance',
+                        href: '/compliance/policies',
+                    })
+                    temp.push({
+                        text: 'Policies',
+                        href: path,
+                    })
+                } else {
+                    temp.push({
+                        text: 'Polices',
+                        href: '/compliance/policies',
+                    })
+                }
+            }
+            if (path.includes('parameters')) {
+                if (url.length > 3) {
+                    temp.push({
+                        text: 'Compliance',
+                        href: '/compliance/parameters',
+                    })
+                    temp.push({
+                        text: 'Parameters',
+                        href: path,
+                    })
+                } else {
+                    temp.push({
+                        text: 'Parameters',
+                        href: '/compliance/parameters',
+                    })
+                }
             }
         }
         if (path.includes('incidents')) {
@@ -189,7 +241,18 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
         } else if (path.includes('integration')) {
             return '/integration/plugins'
         } else if (path.includes('compliance')) {
-            return '/compliance'
+            if (path.includes('frameworks')) {
+                return '/compliance/frameworks'
+            }
+            if (path.includes('controls')) {
+                return '/compliance/controls'
+            }
+            if (path.includes('policies')) {
+                return '/compliance/policies'
+            }
+            if (path.includes('parameters')) {
+                return '/compliance/parameters'
+            }
         } else if (path.includes('jobs')) {
             return '/jobs'
         } else if (path.includes('administration')) {
@@ -229,7 +292,6 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                     </>
                 }
                 notifications={<Notification />}
-                
                 content={children}
             />
             <Footer />

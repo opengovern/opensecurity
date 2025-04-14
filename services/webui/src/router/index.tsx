@@ -26,6 +26,8 @@ import EvaluateDetail from '../pages/Governance/Compliance/NewBenchmarkSummary/E
 import Tasks from '../pages/Tasks'
 import TaskDetail from '../pages/Tasks/TaskDetail'
 import AI from '../pages/AI'
+import AllPolicy from '../pages/Governance/Compliance/All Policy'
+import Framework from '../pages/Governance/Compliance/FrameWorks'
 
 const show_compliance = window.__RUNTIME_CONFIG__.REACT_APP_SHOW_COMPLIANCE
 console.log(show_compliance)
@@ -114,16 +116,35 @@ const authRoutes = [
         path: '/settings/authentication',
         element: <SettingsMembers />,
     },
-
     {
         key: 'Compliance',
         path: '/compliance',
         element: <Compliance />,
     },
+    {
+        key: 'Compliance',
+        path: '/compliance/frameworks',
+        element: <Framework />,
+    },
+    {
+        key: 'Compliance',
+        path: '/compliance/controls',
+        element: <AllControls />,
+    },
+    {
+        key: 'Compliance',
+        path: '/compliance/policies',
+        element: <AllPolicy />,
+    },
+    {
+        key: 'Compliance',
+        path: '/compliance/parameters',
+        element: <SettingsParameters />,
+    },
 
     {
         key: 'benchmark summary 2',
-        path: '/compliance/:benchmarkId',
+        path: '/compliance/frameworks/:benchmarkId',
         element: <NewBenchmarkSummary />,
     },
 
@@ -135,13 +156,13 @@ const authRoutes = [
 
     {
         key: 'benchmark summary',
-        path: '/compliance/:benchmarkId/:controlId',
+        path: '/compliance/frameworks/:benchmarkId/:controlId',
         element: <ControlDetail />,
     },
 
     {
         key: 'benchmark single connection',
-        path: '/compliance/:benchmarkId/report/:id',
+        path: '/compliance/frameworks/:benchmarkId/report/:id',
         element: <EvaluateDetail />,
     },
     {
