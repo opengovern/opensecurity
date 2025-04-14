@@ -16,12 +16,11 @@ const (
 type Task struct {
 	gorm.Model
 	ID          string `gorm:"primarykey"`
-	Name        string `gorm:"unique;not null"` // Enforces uniqueness and non-null constraint
-	ResultType  string
+	Name        string `gorm:"unique;not null"`
+	Enabled     bool   `gorm:"not null"`
 	Description string
 	ImageUrl    string
-	Interval    uint64
-	Timeout     uint64
+	Command     string
 	NatsConfig  pgtype.JSONB
 	ScaleConfig pgtype.JSONB
 }
@@ -30,4 +29,11 @@ type TaskConfigSecret struct {
 	TaskID       string `gorm:"primarykey"`
 	Secret       string
 	HealthStatus TaskSecretHealthStatus
+}
+
+type TaskRunSchedule struct {
+	TaskID    string
+	Params    pgtype.JSONB
+	Frequency float64
+	Timeout   float64
 }

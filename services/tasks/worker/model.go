@@ -2,40 +2,48 @@ package worker
 
 type WorkloadType string
 
-const (
-	WorkloadTypeDeployment WorkloadType = "deployment"
-)
-
 type NatsConfig struct {
-	Stream         string `yaml:"Stream"`
-	Topic          string `yaml:"Topic"`
-	Consumer       string `yaml:"Consumer"`
-	ResultTopic    string `yaml:"ResultTopic"`
-	ResultConsumer string `yaml:"ResultConsumer"`
+	Stream         string `yaml:"stream"`
+	Topic          string `yaml:"topic"`
+	Consumer       string `yaml:"consumer"`
+	ResultTopic    string `yaml:"result_topic"`
+	ResultConsumer string `yaml:"result_consumer"`
 }
 
 type ScaleConfig struct {
-	Stream       string `yaml:"Stream"`
-	Consumer     string `yaml:"Consumer"`
-	LagThreshold string `yaml:"LagThreshold"`
-	MinReplica   int32  `yaml:"MinReplica"`
-	MaxReplica   int32  `yaml:"MaxReplica"`
+	Stream       string `yaml:"stream"`
+	Consumer     string `yaml:"consumer"`
+	LagThreshold string `yaml:"lag_threshold"`
+	MinReplica   int32  `yaml:"min_replica"`
+	MaxReplica   int32  `yaml:"max_replica"`
 
-	PollingInterval int32 `yaml:"PollingInterval"`
-	CooldownPeriod  int32 `yaml:"CooldownPeriod"`
+	PollingInterval int32 `yaml:"polling_interval"`
+	CooldownPeriod  int32 `yaml:"cooldown_period"`
+}
+
+type Interval struct {
+	Months  int32 `yaml:"months,omitempty"`
+	Days    int32 `yaml:"days,omitempty"`
+	Hours   int32 `yaml:"hours,omitempty"`
+	Minutes int32 `yaml:"minutes,omitempty"`
+}
+
+type TaskRunSchedule struct {
+	Params    map[string]any `yaml:"params"`
+	Frequency string         `yaml:"frequency"`
+	Timeout   string         `yaml:"timeout"`
 }
 
 type Task struct {
-	ID           string            `yaml:"ID"`
-	Name         string            `yaml:"Name"`
-	Description  string            `yaml:"Description"`
-	ImageURL     string            `yaml:"ImageURL"`
-	Command      string            `yaml:"Command"`
-	ResultType   string            `yaml:"ResultType"`
-	WorkloadType WorkloadType      `yaml:"WorkloadType"`
-	EnvVars      map[string]string `yaml:"EnvVars"`
-	Interval     uint64            `yaml:"Interval"`
-	Timeout      uint64            `yaml:"Timeout"`
-	NatsConfig   NatsConfig        `yaml:"NatsConfig"`
-	ScaleConfig  ScaleConfig       `yaml:"ScaleConfig"`
+	ID           string            `yaml:"id"`
+	Name         string            `yaml:"name"`
+	Description  string            `yaml:"description"`
+	IsEnabled    bool              `yaml:"is_enabled"`
+	ImageURL     string            `yaml:"image_url"`
+	Command      string            `yaml:"command"`
+	WorkloadType WorkloadType      `yaml:"workload_type"`
+	EnvVars      map[string]string `yaml:"env_vars"`
+	NatsConfig   NatsConfig        `yaml:"nats_config"`
+	ScaleConfig  ScaleConfig       `yaml:"scale_config"`
+	RunSchedule  []TaskRunSchedule `yaml:"run_schedule"`
 }

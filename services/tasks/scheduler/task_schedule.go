@@ -29,10 +29,7 @@ type TaskScheduler struct {
 	cfg config.Config
 
 	TaskID     string
-	ResultType string
 	NatsConfig NatsConfig
-	Interval   uint64
-	Timeout    uint64
 	vault      vault.VaultSourceConfig
 }
 
@@ -44,7 +41,7 @@ func NewTaskScheduler(
 
 	cfg config.Config,
 	vault vault.VaultSourceConfig,
-	taskID, ResultType string, natsConfig NatsConfig, interval uint64, timeout uint64) *TaskScheduler {
+	taskID string, natsConfig NatsConfig) *TaskScheduler {
 	return &TaskScheduler{
 		runSetupNatsStreams: runSetupNatsStreams,
 		logger:              logger,
@@ -55,24 +52,16 @@ func NewTaskScheduler(
 		vault: vault,
 
 		TaskID:     taskID,
-		ResultType: ResultType,
 		NatsConfig: natsConfig,
-		Interval:   interval,
-		Timeout:    timeout,
 	}
 }
 
 func (s *TaskScheduler) Run(ctx context.Context) {
 	s.logger.Info("Run task scheduler started", zap.String("task", s.TaskID),
-		zap.Any("nats config", s.NatsConfig), zap.Uint64("interval", s.Interval))
+		zap.Any("nats config", s.NatsConfig))
 	utils.EnsureRunGoroutine(func() {
 		s.RunPublisher(ctx)
 	})
-	if s.Interval > 0 {
-		utils.EnsureRunGoroutine(func() {
-			s.CreateTask(ctx)
-		})
-	}
 	utils.EnsureRunGoroutine(func() {
 		s.logger.Fatal("RunTaskResponseConsumer exited", zap.Error(s.RunTaskResponseConsumer(ctx)))
 	})
@@ -95,14 +84,14 @@ func (s *TaskScheduler) RunPublisher(ctx context.Context) {
 func (s *TaskScheduler) CreateTask(ctx context.Context) {
 	s.logger.Info("Scheduling publisher on a timer")
 
-	interval := time.Duration(s.Interval) * time.Minute
-	t := ticker.NewTicker(interval, time.Second*10)
-	defer t.Stop()
-
-	for ; ; <-t.C {
-		if err := s.createTask(ctx); err != nil {
-			s.logger.Error("failed to run compliance publisher", zap.Error(err))
-			continue
-		}
-	}
+	//interval := time.Duration(s.Interval) * time.Minute
+	//t := ticker.NewTicker(interval, time.Second*10)
+	//defer t.Stop()
+	//
+	//for ; ; <-t.C {
+	//	if err := s.createTask(ctx); err != nil {
+	//		s.logger.Error("failed to run compliance publisher", zap.Error(err))
+	//		continue
+	//	}
+	//}
 }

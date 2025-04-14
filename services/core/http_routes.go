@@ -1213,7 +1213,7 @@ func (h *HttpHandler) GetAbout(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, response)
 }
 
-// GetAbout godoc
+// GetAboutShort godoc
 //
 //	@Summary		Get About info
 //

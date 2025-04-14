@@ -46,6 +46,7 @@ require (
 	github.com/swaggo/echo-swagger v1.3.0
 	github.com/swaggo/swag v1.16.1
 	github.com/turbot/steampipe-plugin-sdk/v5 v5.10.1
+	github.com/xhit/go-str2duration/v2 v2.1.0
 	github.com/zaffka/zap-to-hclog v0.10.6
 	go.opentelemetry.io/otel v1.31.0
 	go.opentelemetry.io/otel/trace v1.31.0
