@@ -152,7 +152,8 @@ export default function KeyValueWidget({ kpis }: KPIProps) {
                             variant="awsui-value-large"
                             fontSize="display-l"
                             // variant="secondary"
-                            href="#"
+                            href={`/cloudql?query_id=${item.list_kpi}`}
+                            target='_blank'
                             ariaLabel="Running instances (14)"
                         >
                             {res?.data?.result ?res?.data?.result[0][0] : 0}
