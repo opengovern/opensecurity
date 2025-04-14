@@ -215,18 +215,34 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
             }
         }
         if (path.includes('incidents')) {
-            if (url.length > 2) {
-                temp.push({
-                    text: 'All Incidents',
-                    href: '/incidents',
-                })
+            if(path.includes('controls')){
+            if (url.length > 3) {
+              
+                 temp.push({
+                     text: 'Control summary',
+                     href: '/incidents/controls',
+                 })
                 temp.push({
                     text: 'Control Detail',
                     href: path,
                 })
             } else {
                 temp.push({
-                    text: 'All Incidents',
+                    text: 'Control summary',
+                    href: '/incidents/controls',
+                })
+            }
+        }
+            if(path.includes('resources')){
+            return temp.push({
+                text: 'Resource Incident',
+                href: '/incidents/resources',
+            })
+            
+            }
+            else{
+                temp.push({
+                    text: 'Incidents',
                     href: '/incidents',
                 })
             }
@@ -267,6 +283,15 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
             path.includes('/workload-optimizer')
         ) {
             return '/automation'
+        }
+        else if(path.includes('incidents')){
+            if(path.includes('controls')){
+                return '/incidents/controls'
+            }
+            if(path.includes('resources')){
+                return '/incidents/resources'
+            }
+            return '/incidents'
         }
 
         return ''

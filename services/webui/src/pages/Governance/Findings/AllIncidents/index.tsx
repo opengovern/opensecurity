@@ -46,7 +46,7 @@ const GROUPS ={0:'findings' ,1:'events'}
 export default function AllIncidents({ query, setSelectedGroup ,tab,setTab}: Props) {
     return (
         <>
-            <Tabs
+            {/* <Tabs
                 onChange={({ detail }) => {
                     setTab(parseInt(detail.activeTabId))
                     // @ts-ignore
@@ -94,7 +94,22 @@ export default function AllIncidents({ query, setSelectedGroup ,tab,setTab}: Pro
                         ),
                     },
                 ]}
-            />
+            /> */}
+            {tab == 0 && (
+                <>
+                    <FindingsWithFailure query={query} />
+                </>
+            )}
+            {tab == 1 && (
+                <>
+                    <ControlsWithFailure query={query} />
+                </>
+            )}
+            {tab == 2 && (
+                <>
+                    <ResourcesWithFailure query={query} />
+                </>
+            )}
         </>
     )
 }

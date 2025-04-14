@@ -170,6 +170,17 @@ const authRoutes = [
         path: '/incidents',
         element: <Findings />,
     },
+    {
+        key: 'Incidents control',
+        path: '/incidents/controls',
+        element: <Findings />,
+    },
+
+    {
+        key: 'Incidents control',
+        path: '/incidents/resources',
+        element: <Findings />,
+    },
 
     {
         key: ' summary',
@@ -185,7 +196,7 @@ const authRoutes = [
 
     {
         key: 'incidents',
-        path: '/incidents/:controlId',
+        path: '/incidents/controls/:controlId',
         element: <ControlDetail />,
     },
 

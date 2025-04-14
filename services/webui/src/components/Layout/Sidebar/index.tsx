@@ -190,8 +190,27 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 name: 'All Incidents',
                 icon: RiFileWarningFill,
                 page: 'incidents',
-
                 isPreview: false,
+                children: [
+                    {
+                        name: 'All Incidents',
+                        icon: RiFileWarningFill,
+                        page: 'incidents',
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Control Summary',
+                        icon: RiFileWarningFill,
+                        page: 'incidents/controls',
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Resource Incident',
+                        icon: RiFileWarningFill,
+                        page: 'incidents/resources',
+                        isPreview: false,
+                    },
+                ],
             },
 
             {
