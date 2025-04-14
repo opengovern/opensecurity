@@ -12,9 +12,7 @@ function Agents() {
       const [loading, setLoading] = useState(true)
       const selected_agent = JSON.parse(localStorage.getItem('agent') || '{}')
       const navigate = useNavigate()
-      const [defaultInstance, setDefaultInstance] = useState<any>(
-          JSON.parse(localStorage.getItem('defaultInstance') || '{}')
-      )
+   
        const GetAgents = () => {
            setLoading(true)
            let url = ''

@@ -571,7 +571,6 @@ function AIChat({ setOpen }: any) {
                                 }
                             }
                         })
-                        console.log('temp', temp)
                     }
                     setChats(temp)
                 }
@@ -588,7 +587,6 @@ function AIChat({ setOpen }: any) {
     useEffect(() => {
         GetChats()
     }, [])
-    console.log(chats)
     return (
         <>
             <div className=" relative sm:h-[90vh] #bg-slate-200 #dark:bg-gray-950 flex  flex-col  justify-start    items-start w-full ">
