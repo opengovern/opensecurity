@@ -344,9 +344,17 @@ function AIChat({ setOpen }: any) {
             user_clarification_response:answer
             
         }
+        // @ts-ignore
+         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+         const config = {
+             headers: {
+                 Authorization: `Bearer ${token}`,
+             },
+         }
 
         axios
-            .post(`/main/core/api/v4/chatbot/generate-query`, body)
+            .post(`/main/core/api/v4/chatbot/generate-query`,body,config)
             .then((res) => {
                 if (res?.data) {
                     const output = res?.data

@@ -235,19 +235,11 @@ export default function WidgetLayout({
                                                         ?.info
                                                 }
                                                 onChange={(e: any) => {
-                                                    setWidgetProps({
-                                                        ...widgetProps,
-                                                        kpis: [
-                                                            ...(widgetProps?.kpis ||
-                                                                []),
-                                                            {
-                                                                info: e.detail
-                                                                    .value,
-                                                                count_kpi: '',
-                                                                list_kpi: '',
-                                                            },
-                                                        ],
-                                                    })
+                                                    HandleKPIPropChange(
+                                                        index,
+                                                        e.detail.value,
+                                                        'info'
+                                                    )
                                                 }}
                                             />
                                             <Input
@@ -257,23 +249,11 @@ export default function WidgetLayout({
                                                         ?.count_kpi
                                                 }
                                                 onChange={(e: any) => {
-                                                    setWidgetProps({
-                                                        ...widgetProps,
-                                                        kpis: [
-                                                            ...(widgetProps?.kpis ||
-                                                                []),
-                                                            {
-                                                                info: widgetProps
-                                                                    ?.kpis?.[
-                                                                    index
-                                                                ]?.info,
-                                                                count_kpi:
-                                                                    e.detail
-                                                                        .value,
-                                                                list_kpi: '',
-                                                            },
-                                                        ],
-                                                    })
+                                                    HandleKPIPropChange(
+                                                        index,
+                                                        e.detail.value,
+                                                        'count_kpi'
+                                                    )
                                                 }}
                                             />
                                             <Input
@@ -283,28 +263,11 @@ export default function WidgetLayout({
                                                         ?.list_kpi
                                                 }
                                                 onChange={(e: any) => {
-                                                    setWidgetProps({
-                                                        ...widgetProps,
-                                                        kpis: [
-                                                            ...(widgetProps?.kpis ||
-                                                                []),
-                                                            {
-                                                                info: widgetProps
-                                                                    ?.kpis?.[
-                                                                    index
-                                                                ]?.info,
-                                                                count_kpi:
-                                                                    widgetProps
-                                                                        ?.kpis?.[
-                                                                        index
-                                                                    ]
-                                                                        ?.count_kpi,
-                                                                list_kpi:
-                                                                    e.detail
-                                                                        .value,
-                                                            },
-                                                        ],
-                                                    })
+                                                    HandleKPIPropChange(
+                                                        index,
+                                                        e.detail.value,
+                                                        'list_kpi'
+                                                    )
                                                 }}
                                             />
                                     </>
