@@ -2,6 +2,7 @@ import { Button, Grid } from '@tremor/react'
 import { useInventoryApiV1QueryRunCreate } from '../../../api/inventory.gen'
 import { snakeCaseToLabel } from '../../../utilities/labelMaker'
 import {
+    Alert,
     Box,
     Header,
     KeyValuePairs,
@@ -148,9 +149,9 @@ export default function KeyValueWidget({ kpis }: KPIProps) {
 
                     value: (
                         <Link
-                            // variant="awsui-value-large"
+                            variant="awsui-value-large"
                             fontSize="display-l"
-                            variant="secondary"
+                            // variant="secondary"
                             href="#"
                             ariaLabel="Running instances (14)"
                         >
@@ -174,14 +175,23 @@ export default function KeyValueWidget({ kpis }: KPIProps) {
             handleKPIs()
         }
     }, [kpis])
-
     return (
         <>
-                <KeyValuePairs
-                    columns={kpis.length}
-                    minColumnWidth={250}
-                    items={items}
-                />
+            {items.length == 0 || items.length != kpis.length ? (
+                <>
+                    <Alert header="Error" type="error">
+                        Error fetching fata
+                    </Alert>
+                </>
+            ) : (
+                <>
+                    <KeyValuePairs
+                        columns={kpis.length}
+                        minColumnWidth={250}
+                        items={items}
+                    />
+                </>
+            )}
         </>
     )
 }
