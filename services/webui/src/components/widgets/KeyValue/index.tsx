@@ -104,6 +104,7 @@ export const getTable = (
 
 export default function KeyValueWidget({ kpis }: KPIProps) {
     const [items, setItems] = useState<any[]>([])
+    const [showError, setShowError] = useState(false)
 
     const RunQuery = (query_id: string) => {
         let url = ''
@@ -162,6 +163,7 @@ export default function KeyValueWidget({ kpis }: KPIProps) {
                 })
             }).catch((err)=>{
                 console.log("err",err)
+                setShowError(true)
             })
         })
 
@@ -173,12 +175,16 @@ export default function KeyValueWidget({ kpis }: KPIProps) {
 
     useEffect(() => {
         if (kpis.length > 0) {
+            setShowError(false)
             handleKPIs()
         }
     }, [kpis])
+    const GetItems = () => {
+        return items
+    }
     return (
         <>
-            {items.length == 0 || items.length != kpis.length ? (
+            {(items.length == 0 || items.length != kpis.length || showError) ? (
                 <>
                     <Alert header="Error" type="error">
                         Error fetching fata
@@ -187,9 +193,11 @@ export default function KeyValueWidget({ kpis }: KPIProps) {
             ) : (
                 <>
                     <KeyValuePairs
-                        columns={kpis.length >4 ? 4 : kpis.length}
+                        columns={kpis.length > 4 ? 4 : kpis.length}
                         minColumnWidth={250}
-                        items={items}
+                        // @ts-ignore
+
+                        items={GetItems()}
                     />
                 </>
             )}
