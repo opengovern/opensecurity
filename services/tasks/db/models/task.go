@@ -17,10 +17,11 @@ type Task struct {
 	gorm.Model
 	ID          string `gorm:"primarykey"`
 	Name        string `gorm:"unique;not null"`
-	Enabled     bool   `gorm:"not null"`
+	IsEnabled   bool   `gorm:"not null"`
 	Description string
 	ImageUrl    string
 	Command     string
+	Timeout     float64
 	NatsConfig  pgtype.JSONB
 	ScaleConfig pgtype.JSONB
 }
@@ -35,5 +36,4 @@ type TaskRunSchedule struct {
 	TaskID    string
 	Params    pgtype.JSONB
 	Frequency float64
-	Timeout   float64
 }

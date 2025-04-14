@@ -23,7 +23,7 @@ func (s *TaskScheduler) runPublisher(ctx context.Context) error {
 	err := s.db.TimeoutTaskRunsByTaskID(s.TaskID, s.Timeout)
 	if err != nil {
 		s.logger.Error("failed to timeout task runs", zap.String("task_id", s.TaskID),
-			zap.Uint64("timeout", s.Timeout), zap.Error(err))
+			zap.Float64("timeout", s.Timeout), zap.Error(err))
 		return err
 	}
 
@@ -62,10 +62,9 @@ func (s *TaskScheduler) runPublisher(ctx context.Context) error {
 			IngestionPipelineEndpoint: s.cfg.ElasticSearch.IngestionEndpoint,
 			UseOpenSearch:             s.cfg.ElasticSearch.IsOpenSearch,
 			TaskDefinition: tasks.TaskDefinition{
-				RunID:      run.ID,
-				TaskType:   s.TaskID,
-				ResultType: s.ResultType,
-				Params:     params,
+				RunID:    run.ID,
+				TaskType: s.TaskID,
+				Params:   params,
 			},
 			ExtraInputs: nil,
 		}

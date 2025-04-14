@@ -88,15 +88,22 @@ func (m Migration) Run(_ context.Context, conf config.MigratorConfig, logger *za
 			return err
 		}
 
+		timeoutFloat, err := parseToTotalSeconds(task.Timeout)
+		if err != nil {
+			return err
+		}
+
 		if err = dbm.ORM.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "id"}},
 			DoNothing: true,
 		}).Create(&models.Task{
 			ID:          task.ID,
 			Name:        task.Name,
+			IsEnabled:   task.IsEnabled,
 			Description: task.Description,
 			ImageUrl:    task.ImageURL,
 			Command:     task.Command,
+			Timeout:     timeoutFloat,
 			NatsConfig:  natsJsonb,
 			ScaleConfig: scaleJsonb,
 		}).Error; err != nil {
@@ -119,16 +126,11 @@ func (m Migration) Run(_ context.Context, conf config.MigratorConfig, logger *za
 			if err != nil {
 				return err
 			}
-			timeoutFloat, err := parseToTotalSeconds(runSchedule.Timeout)
-			if err != nil {
-				return err
-			}
 
 			if err = dbm.ORM.Create(&models.TaskRunSchedule{
 				TaskID:    task.ID,
 				Params:    paramsJsonb,
 				Frequency: frequencyFloat,
-				Timeout:   timeoutFloat,
 			}).Error; err != nil {
 				return err
 			}

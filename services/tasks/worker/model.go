@@ -31,19 +31,17 @@ type Interval struct {
 type TaskRunSchedule struct {
 	Params    map[string]any `yaml:"params"`
 	Frequency string         `yaml:"frequency"`
-	Timeout   string         `yaml:"timeout"`
 }
 
 type Task struct {
-	ID           string            `yaml:"id"`
-	Name         string            `yaml:"name"`
-	Description  string            `yaml:"description"`
-	IsEnabled    bool              `yaml:"is_enabled"`
-	ImageURL     string            `yaml:"image_url"`
-	Command      string            `yaml:"command"`
-	WorkloadType WorkloadType      `yaml:"workload_type"`
-	EnvVars      map[string]string `yaml:"env_vars"`
-	NatsConfig   NatsConfig        `yaml:"nats_config"`
-	ScaleConfig  ScaleConfig       `yaml:"scale_config"`
-	RunSchedule  []TaskRunSchedule `yaml:"run_schedule"`
+	ID          string            `yaml:"id"`
+	Name        string            `yaml:"name"`
+	Description string            `yaml:"description"`
+	IsEnabled   bool              `yaml:"is_enabled"`
+	ImageURL    string            `yaml:"image_url"`
+	Command     string            `yaml:"command"`
+	Timeout     string            `yaml:"timeout"`
+	NatsConfig  NatsConfig        `yaml:"nats_config"`
+	ScaleConfig ScaleConfig       `yaml:"scale_config"`
+	RunSchedule []TaskRunSchedule `yaml:"run_schedule"`
 }
