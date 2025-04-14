@@ -139,7 +139,7 @@ func NewKubeClient() (client.Client, error) {
 }
 
 func setupTasks(ctx context.Context, cfg config.Config, db db.Database, kubeClient client.Client) error {
-	tasks, err := db.GetTaskList()
+	tasks, err := db.GetEnabledTaskList()
 	if err != nil {
 		return err
 	}

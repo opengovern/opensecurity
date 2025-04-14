@@ -120,7 +120,7 @@ func (db Database) FetchLastCreatedTaskRunsByTaskID(taskID string) (*models.Task
 }
 
 // TimeoutTaskRunsByTaskID Timeout task runs for given task id by given timeout interval
-func (db Database) TimeoutTaskRunsByTaskID(taskID string, timeoutInterval uint64) error {
+func (db Database) TimeoutTaskRunsByTaskID(taskID string, timeoutInterval float64) error {
 	tx := db.Orm.
 		Model(&models.TaskRun{}).
 		Where(fmt.Sprintf("created_at < NOW() - INTERVAL '%d MINUTES'", timeoutInterval)).
@@ -166,6 +166,28 @@ func (db Database) GetTaskList() ([]models.Task, error) {
 	}
 
 	return tasks, nil
+}
+
+// GetEnabledTaskList retrieves a list of tasks
+func (db Database) GetEnabledTaskList() ([]models.Task, error) {
+	var tasks []models.Task
+	tx := db.Orm.Model(models.Task{}).Where("is_enabled = ?", true).Find(&tasks)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return tasks, nil
+}
+
+// GetTaskRunSchedules retrieves a list of task run schedules
+func (db Database) GetTaskRunSchedules(taskId string) ([]models.TaskRunSchedule, error) {
+	var runSchedules []models.TaskRunSchedule
+	tx := db.Orm.Model(models.TaskRunSchedule{}).Where("task_id = ?", taskId).Find(&runSchedules)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return runSchedules, nil
 }
 
 func (db Database) SetTaskConfigSecret(configSecret models.TaskConfigSecret) error {

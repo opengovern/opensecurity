@@ -7,6 +7,7 @@ import (
 	"github.com/opengovern/opensecurity/pkg/utils"
 	"github.com/opengovern/opensecurity/services/tasks/config"
 	"github.com/opengovern/opensecurity/services/tasks/db"
+	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"time"
@@ -28,9 +29,11 @@ type TaskScheduler struct {
 
 	cfg config.Config
 
-	TaskID     string
-	NatsConfig NatsConfig
-	vault      vault.VaultSourceConfig
+	TaskID           string
+	Timeout          float64
+	NatsConfig       NatsConfig
+	vault            vault.VaultSourceConfig
+	TaskRunSchedules []models.TaskRunSchedule
 }
 
 func NewTaskScheduler(
@@ -41,7 +44,8 @@ func NewTaskScheduler(
 
 	cfg config.Config,
 	vault vault.VaultSourceConfig,
-	taskID string, natsConfig NatsConfig) *TaskScheduler {
+	taskID string, natsConfig NatsConfig,
+	taskRunSchedules []models.TaskRunSchedule) *TaskScheduler {
 	return &TaskScheduler{
 		runSetupNatsStreams: runSetupNatsStreams,
 		logger:              logger,
@@ -51,8 +55,9 @@ func NewTaskScheduler(
 		cfg:   cfg,
 		vault: vault,
 
-		TaskID:     taskID,
-		NatsConfig: natsConfig,
+		TaskID:           taskID,
+		NatsConfig:       natsConfig,
+		TaskRunSchedules: taskRunSchedules,
 	}
 }
 
@@ -62,6 +67,13 @@ func (s *TaskScheduler) Run(ctx context.Context) {
 	utils.EnsureRunGoroutine(func() {
 		s.RunPublisher(ctx)
 	})
+
+	for _, taskRunSchedule := range s.TaskRunSchedules {
+		utils.EnsureRunGoroutine(func() {
+			s.CreateTask(ctx, taskRunSchedule)
+		})
+	}
+
 	utils.EnsureRunGoroutine(func() {
 		s.logger.Fatal("RunTaskResponseConsumer exited", zap.Error(s.RunTaskResponseConsumer(ctx)))
 	})
@@ -81,17 +93,17 @@ func (s *TaskScheduler) RunPublisher(ctx context.Context) {
 	}
 }
 
-func (s *TaskScheduler) CreateTask(ctx context.Context) {
+func (s *TaskScheduler) CreateTask(ctx context.Context, runSchedule models.TaskRunSchedule) {
 	s.logger.Info("Scheduling publisher on a timer")
 
-	//interval := time.Duration(s.Interval) * time.Minute
-	//t := ticker.NewTicker(interval, time.Second*10)
-	//defer t.Stop()
-	//
-	//for ; ; <-t.C {
-	//	if err := s.createTask(ctx); err != nil {
-	//		s.logger.Error("failed to run compliance publisher", zap.Error(err))
-	//		continue
-	//	}
-	//}
+	interval := time.Duration(runSchedule.Frequency) * time.Minute
+	t := ticker.NewTicker(interval, time.Second*10)
+	defer t.Stop()
+
+	for ; ; <-t.C {
+		if err := s.createTask(ctx, runSchedule); err != nil {
+			s.logger.Error("failed to run compliance publisher", zap.Error(err))
+			continue
+		}
+	}
 }

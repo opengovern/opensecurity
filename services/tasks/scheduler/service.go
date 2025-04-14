@@ -44,7 +44,7 @@ func NewMainScheduler(cfg config.Config, logger *zap.Logger, db db.Database, vau
 }
 
 func (s *MainScheduler) Start(ctx context.Context) error {
-	tasks, err := s.db.GetTaskList()
+	tasks, err := s.db.GetEnabledTaskList()
 	if err != nil {
 		s.logger.Error("failed to get task list", zap.Error(err))
 		return err
@@ -68,6 +68,12 @@ func (s *MainScheduler) Start(ctx context.Context) error {
 			return err
 		}
 
+		runSchedules, err := s.db.GetTaskRunSchedules(task.ID)
+		if err != nil {
+			s.logger.Error("failed to get task run schedules", zap.Error(err))
+			return err
+		}
+
 		taskScheduler := NewTaskScheduler(
 			func(ctx context.Context) error {
 				return s.SetupNats(ctx, task.ID, natsConfig)
@@ -78,7 +84,8 @@ func (s *MainScheduler) Start(ctx context.Context) error {
 			s.cfg,
 			s.vault,
 			task.ID,
-			natsConfig)
+			natsConfig,
+			runSchedules)
 		taskScheduler.Run(ctx)
 		RunningTasks[task.ID] = true
 	}
