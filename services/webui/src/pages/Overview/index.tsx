@@ -241,16 +241,16 @@ const {
         const temp : any =[]
         layouts?.map((item: any, index: number) => {
             temp.push({
-                label: item.name,
-                id: item.id,
+                label: item?.name,
+                id: item?.id,
                 content: (
                     <WidgetLayout
                         input_layout={item}
-                        is_default={item.is_default}
+                        is_default={item?.is_default}
                         HandleAddItem={HandleAddItem}
                     />
                 ),
-                dismissible: !item.is_default,
+                dismissible: !item?.is_default,
                 dissmissLabel: 'Delete',
             })
         })

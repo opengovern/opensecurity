@@ -9,6 +9,7 @@ import {
     CheckCircleIcon,
 } from '@heroicons/react/24/outline'
 import { notificationAtom } from '../../store'
+import { Alert } from '@cloudscape-design/components'
 
 export default function Notification() {
     const [notif, setNotif] = useAtom(notificationAtom)
@@ -47,34 +48,45 @@ export default function Notification() {
     }
 
     return (
-        <Transition
-            show={!!notif.text && !!notif.type}
-            as={Fragment}
-            enter="transform ease-out duration-300 transition"
-            enterFrom="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
-            enterTo="translate-y-0 opacity-100 sm:translate-x-0"
-            leave="transition ease-in duration-100"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-        >
-            <Flex
-                onClick={() => setNotif({ text: undefined, type: undefined })}
-                justifyContent="start"
-                className={`gap-2 z-50 fixed ${
-                    notif.position === 'topRight' ||
-                    notif.position === 'bottomRight'
-                        ? 'right-12'
-                        : 'left-12'
-                } ${
-                    notif.position === 'topRight' ||
-                    notif.position === 'topLeft'
-                        ? 'top-24'
-                        : 'bottom-24'
-                } w-full max-w-sm p-4 rounded-md shadow-md ring-1 ${color()}`}
+        // <Transition
+        //     show={!!notif.text && !!notif.type}
+        //     as={Fragment}
+        //     enter="transform ease-out duration-300 transition"
+        //     enterFrom="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
+        //     enterTo="translate-y-0 opacity-100 sm:translate-x-0"
+        //     leave="transition ease-in duration-100"
+        //     leaveFrom="opacity-100"
+        //     leaveTo="opacity-0"
+        // >
+
+        // </Transition>
+        // <Flex
+        //     onClick={() => setNotif({ text: undefined, type: undefined })}
+        //     justifyContent="start"
+        //     className={`gap-2 z-50 fixed ${
+        //         notif.position === 'topRight' ||
+        //         notif.position === 'bottomRight'
+        //             ? 'right-12'
+        //             : 'left-12'
+        //     } ${
+        //         notif.position === 'topRight' || notif.position === 'topLeft'
+        //             ? 'top-24'
+        //             : 'bottom-24'
+        //     } w-full max-w-sm p-4 rounded-md shadow-md ring-1 ${color()}`}
+        // >
+        //     {icon()}
+        //     <span></span>
+        // </Flex>
+        <div className={`${!!notif.text && !!notif.type ? 'block' : 'hidden'}`}>
+            <Alert
+                dismissible
+                onDismiss={() => {
+                    setNotif({ text: undefined, type: undefined })
+                }}
+                type={notif.type}
             >
-                {icon()}
-                <span>{notif.text}</span>
-            </Flex>
-        </Transition>
+                {notif.text}
+            </Alert>
+        </div>
     )
 }

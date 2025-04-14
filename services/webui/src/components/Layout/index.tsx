@@ -229,6 +229,7 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                     </>
                 }
                 notifications={<Notification />}
+                
                 content={children}
             />
             <Footer />
