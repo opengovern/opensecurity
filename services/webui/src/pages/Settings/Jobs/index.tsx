@@ -233,8 +233,7 @@ export default function SettingsJobs() {
 
     return (
         <>
-            
-            <Tabs
+            {/* <Tabs
                 tabs={[
                     // {
                     //     label: 'All Jobs',
@@ -258,21 +257,8 @@ export default function SettingsJobs() {
                     //     id: '2',
                     // },
                 ]}
-            />
-            {/* <TabGroup>
-                <TabList>
-                    <Tab>All Jobs</Tab>
-                    <Tab>Customization</Tab>
-                </TabList>
-                <TabPanels>
-                    <TabPanel>
-                        <SettingsALLJobs />
-                    </TabPanel>
-                    <TabPanel>
-                        <SettingsCustomization />
-                    </TabPanel>
-                </TabPanels>
-            </TabGroup> */}
+            /> */}
+            <DiscoveryJobs />
         </>
     )
 }

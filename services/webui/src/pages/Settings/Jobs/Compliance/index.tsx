@@ -500,7 +500,9 @@ const setNotification = useSetAtom(notificationAtom)
                             {
                                 id: 'title',
                                 header: 'Title',
-                                cell: (item) => <>{item?.frameworks[0]?.framework_name}</>,
+                                cell: (item) => (
+                                    <>{item?.frameworks[0]?.framework_name}</>
+                                ),
                                 sortingField: 'title',
                                 isRowHeader: true,
                                 maxWidth: 150,
@@ -802,7 +804,7 @@ const setNotification = useSetAtom(notificationAtom)
                                 }
                                 className="w-full"
                             >
-                                Jobs{' '}
+                                Compliance Checks{' '}
                             </Header>
                         }
                         pagination={

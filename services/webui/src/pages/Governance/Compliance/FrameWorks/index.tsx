@@ -284,8 +284,31 @@ export default function Framework() {
                             Frameworks
                         </h1>
                         <p className="text-tremor-default w-full sm:inline-block hidden text-tremor-content dark:text-dark-tremor-content">
-                            Assign, Audit, and govern your tech stack with
-                            Compliance Frameworks.
+                            Frameworks are structured guides, like practical
+                            blueprints, that provide proven methods for handling
+                            important areas like security or reliable
+                            operations.
+                            <br />
+                            <br />
+                            They help you:
+                            <br />
+                            <br />
+                            <ol className=" list-decimal list-inside">
+                                <li>
+                                    Decide which specific checks (Controls) are
+                                    necessary.
+                                </li>
+                                <br />
+
+                                <li>
+                                    {' '}
+                                    Organize those related checks into logical
+                                    Control Groups (e.g., 'Password Rules,'
+                                    'Data Backup Procedures,' or 'Cloud
+                                    Settings') to keep things neat and
+                                    manageable as you grow.
+                                </li>
+                            </ol>
                         </p>
                         <Grid
                             numItems={1}
@@ -501,7 +524,7 @@ export default function Framework() {
                                                                 }
                                                                 onChange={({
                                                                     detail,
-                                                                }:any) =>
+                                                                }: any) =>
                                                                     setPage(
                                                                         detail.currentPageIndex
                                                                     )
@@ -511,7 +534,6 @@ export default function Framework() {
                                                     </Col>
                                                 </Grid>
                                                 <BenchmarkCards
-                                                  
                                                     // @ts-ignore
                                                     all={AllBenchmarks}
                                                     loading={loading}

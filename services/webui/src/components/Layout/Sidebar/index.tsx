@@ -136,23 +136,63 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 icon: RiHome2Line,
                 isPreview: false,
             },
-
             {
-                name: 'CloudQL',
+                name: 'Find',
                 page: 'cloudql',
                 icon: RiTerminalBoxLine,
                 isPreview: false,
+                children: [
+                    {
+                        name: 'CloudQL',
+                        page: 'cloudql',
+                        icon: RiTerminalBoxLine,
+                        isPreview: false,
+                    },
+                    {
+                        name: 'OPS Agents',
+                        page: 'ai',
+                        icon: RiRobot2Line,
+                        isPreview: false,
+                    },
+                ],
             },
-            {
-                name: 'Agent AI',
-                page: 'ai',
-                icon: RiRobot2Line,
-                isPreview: false,
-            },
+
             {
                 name: 'Compliance',
                 icon: RiShieldCheckLine,
                 page: 'compliance',
+                children: [
+                    {
+                        name: 'Frameworks',
+                        page: 'compliance/frameworks',
+                        icon: RiShieldCheckLine,
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Controls',
+                        page: 'compliance/controls',
+                        icon: RiShieldCheckLine,
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Policies',
+                        page: 'compliance/policies',
+                        icon: RiShieldCheckLine,
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Parameters',
+                        page: 'compliance/parameters',
+                        icon: RiShieldCheckLine,
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Compliance Checks',
+                        page: 'compliance/jobs',
+                        icon: RiTaskLine,
+                        isPreview: false,
+                    },
+                ],
 
                 isPreview: false,
                 isLoading: false,
@@ -164,8 +204,27 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 name: 'All Incidents',
                 icon: RiFileWarningFill,
                 page: 'incidents',
-
                 isPreview: false,
+                children: [
+                    {
+                        name: 'All Incidents',
+                        icon: RiFileWarningFill,
+                        page: 'incidents',
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Control Summary',
+                        icon: RiFileWarningFill,
+                        page: 'incidents/controls',
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Resource Incident',
+                        icon: RiFileWarningFill,
+                        page: 'incidents/resources',
+                        isPreview: false,
+                    },
+                ],
             },
 
             {
@@ -179,19 +238,54 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 // count: numericDisplay(connectionCount?.count) || 0,
                 error: undefined,
                 isPreview: false,
+                children: [
+                    {
+                        name: 'Plugins',
+                        page: 'integration/plugins',
+
+                        icon: RiPuzzleLine,
+                        isLoading: false,
+                        // count: 0,
+
+                        // count: numericDisplay(connectionCount?.count) || 0,
+                        error: undefined,
+                        isPreview: false,
+                    },
+
+                    {
+                        name: 'Discovery Jobs',
+                        page: 'integration/jobs',
+                        icon: RiTaskLine,
+                        isPreview: false,
+                    },
+                ],
             },
 
-            {
-                name: 'Jobs',
-                page: 'jobs',
-                icon: RiTaskLine,
-                isPreview: false,
-            },
+            // {
+            //     name: 'Jobs',
+            //     page: 'jobs',
+            //     icon: RiTaskLine,
+            //     isPreview: false,
+            // },
             {
                 name: 'Administration',
                 page: 'administration',
                 icon: RiAdminLine,
                 isPreview: false,
+                children: [
+                    {
+                        name: 'Settings',
+                        page: 'administration/settings',
+                        icon: RiAdminLine,
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Access',
+                        page: 'administration/access',
+                        icon: RiAdminLine,
+                        isPreview: false,
+                    },
+                ],
             },
 
             {
@@ -220,7 +314,7 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 items={navigation()?.map((item) => {
                     return {
                         href: `/${item.page}`,
-                        type: 'link',
+                        type: item?.children ? 'section' : 'link',
                         text: item.name,
 
                         info: item?.isPreview ? (
@@ -228,6 +322,22 @@ export default function Sidebar({ currentPage }: ISidebar) {
                         ) : (
                             ''
                         ),
+                        items: item?.children
+                            ? item?.children.map((child) => {
+                                  return {
+                                      href: `/${child.page}`,
+                                      type: 'link',
+                                      text: child.name,
+
+                                    //   info: child?.isPreview ? (
+                                    //       <RiLockStarFill className="w-3" />
+                                    //   ) : (
+                                    //       ''
+                                    //   )
+                                      
+                                  }
+                              })
+                            : [],
                     }
                 })}
                 activeHref={`${currentPage}`}

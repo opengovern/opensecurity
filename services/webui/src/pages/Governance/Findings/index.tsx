@@ -19,7 +19,6 @@ import { ChevronRightIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
 
 export default function Findings() {
     const [tab, setTab] = useState<number>(0);
-    const [secondTab, setSecondTab] = useState<number>(0)
     const [selectedGroup, setSelectedGroup] = useState<
         'findings' | 'resources' | 'controls' | 'accounts' | 'events'
     >('findings')
@@ -37,12 +36,18 @@ export default function Findings() {
         }
     }, [tab])
     useEffect(() => {
-        const url = window.location.pathname.split('/')[4]
+        const url = window.location.pathname.split('/')[2]
         // setShow(false);
         
         switch (url) {
             case 'summary':
                 setTab(1)
+                break
+            case 'controls':
+                setTab(1)
+                break
+            case 'resources':
+                setTab(2)
                 break
 
             default:
@@ -95,8 +100,8 @@ export default function Findings() {
             <AllIncidents
                 query={query}
                 setSelectedGroup={setSelectedGroup}
-                tab={secondTab}
-                setTab={setSecondTab}
+                tab={tab}
+                setTab={setTab}
             />
         </>
     )

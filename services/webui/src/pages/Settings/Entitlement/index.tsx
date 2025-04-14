@@ -28,7 +28,7 @@ import { numericDisplay } from '../../../utilities/numericDisplay'
 import { useAuthApiV1UserDetail } from '../../../api/auth.gen'
 import { dateDisplay, dateTimeDisplay } from '../../../utilities/dateDisplay'
 import { PlatformEnginePkgWorkspaceApiTier } from '../../../api/api'
-import { isDemoAtom, previewAtom, sampleAtom } from '../../../store'
+import { isDemoAtom, notificationAtom, previewAtom, sampleAtom } from '../../../store'
 import {
     useMetadataApiV1MetadataCreate,
     useMetadataApiV1MetadataDetail,
@@ -40,6 +40,7 @@ import { ConvertToBoolean } from '../../../utilities/bool'
 import axios from 'axios'
 import {
     Alert,
+    Input,
     KeyValuePairs,
     Modal,
     ProgressBar,
@@ -221,6 +222,11 @@ export default function SettingsEntitlement() {
     const [percentage, setPercentage] = useState()
     const [intervalId, setIntervalId] = useState()
     const [loaded, setLoaded] = useState()
+    const [apiKey, setApiKey] = useState('')
+    const [apiLoading, setApiLoading] = useState(false)
+    const [apiModalOpen, setApiModalOpen] = useState(false)
+    const setNotification = useSetAtom(notificationAtom)
+    
 
     const GetStatus = () => {
         let url = ''
@@ -384,6 +390,53 @@ export default function SettingsEntitlement() {
             // window.location.reload()
         }
     }, [syncLoading, syncExecuted])
+
+     const AddKey = () => {
+         setApiLoading(true)
+         let url = ''
+         if (window.location.origin === 'http://localhost:3000') {
+             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+         } else {
+             url = window.location.origin
+         }
+         // @ts-ignore
+         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+         const config = {
+             headers: {
+                 Authorization: `Bearer ${token}`,
+             },
+         }
+         const body = {
+             key: 'HF_API_TOKEN',
+             secret: apiKey,
+         }
+         axios
+             .post(
+                 `${url}/main/core/api/v4/chatbot/secret`,
+                 body,
+                 config
+             )
+             .then((res) => {
+                 setApiLoading(false)
+                 setApiModalOpen(false)
+                 setApiKey('')
+                 setNotification({
+                        type: 'success',
+                        text: 'API Key updated successfully',
+                 })
+
+             })
+             .catch((err) => {
+                 console.log(err)
+                 setApiLoading(false)
+                    setApiModalOpen(false)
+                    setNotification({
+                        type: 'error',
+                        text: getErrorMessage(err),
+                    })
+             })
+     }
     return loadingCurrentWS ? (
         <Flex justifyContent="center" className="mt-56">
             <Spinner />
@@ -398,7 +451,7 @@ export default function SettingsEntitlement() {
             }
         >
             <Flex flexDirection="col" className="w-full">
-                <Card key="summary" className=" w-full">
+                <div key="summary" className=" w-full">
                     <Title className="font-semibold mb-2">Settings</Title>
                     <KeyValuePairs
                         columns={5}
@@ -412,8 +465,8 @@ export default function SettingsEntitlement() {
                     />
 
                     <Divider />
-                    <Flex className="flex-row gap-8 w-full justify-start items-start">
-                        <Flex className="flex-col w-full justify-start items-start gap-4 max-w-[50%] border-r pr-8">
+                    <Flex className="2xl:flex-row md:flex-col gap-8 w-full justify-start items-start">
+                        <Flex className="flex-col w-full justify-start items-start gap-4  2xl:border-r 2xl:pr-8">
                             <Title className="font-semibold ">
                                 Platform Configuration
                             </Title>
@@ -520,6 +573,38 @@ export default function SettingsEntitlement() {
                     </Flex>
 
                     <Divider />
+                    <Title className="font-semibold mt-8">
+                        Hugging face API
+                    </Title>
+                    <Flex
+                        justifyContent="between"
+                        alignItems="center"
+                        className="sm:flex-row flex-col"
+                    >
+                        <Text className="font-normal w-full">
+                            {' '}
+                            The Hugging Face API key is used to access the
+                            Hugging face API's.
+                        </Text>
+                        <Flex
+                            className="gap-2 sm:mt-0 mt-2"
+                            justifyContent="end"
+                            alignItems="center"
+                        >
+                            <Button
+                                variant="secondary"
+                                className="ml-2"
+                                loading={isLoadingLoad && isExecuted}
+                                onClick={() => {
+                                    setApiModalOpen(true)
+                                }}
+                            >
+                                Configure API Key
+                            </Button>
+                        </Flex>
+                    </Flex>
+
+                    <Divider />
 
                     <Title className="font-semibold mt-8">Sample Data</Title>
                     <Flex
@@ -590,7 +675,7 @@ export default function SettingsEntitlement() {
                             </Alert>
                         </>
                     )}
-                </Card>
+                </div>
             </Flex>
             <Modal
                 visible={open}
@@ -633,6 +718,30 @@ If you have any concerns or questions reach out to us at [support@opensecurity.i
                         className={'markdown-body'}
                         rehypePlugins={[rehypeRaw]}
                     />
+                </div>
+            </Modal>
+            <Modal
+                visible={apiModalOpen}
+                onDismiss={() => setApiModalOpen(false)}
+                header="Change secret"
+            >
+                <div className='flex flex-col gap-4'>
+                    <Input
+                        value={apiKey}
+                        placeholder="API key"
+                        type="password"
+                        onChange={(e) => setApiKey(e.detail.value)}
+                    />
+                    <div className='flex flex-row justify-end items-end w-full'>
+                        <Button
+                            loading={apiLoading}
+                            onClick={() => {
+                                AddKey()
+                            }}
+                        >
+                            Save
+                        </Button>
+                    </div>
                 </div>
             </Modal>
         </div>

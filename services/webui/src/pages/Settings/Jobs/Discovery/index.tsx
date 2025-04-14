@@ -653,7 +653,7 @@ export default function DiscoveryJobs({
                                 }
                                 className="w-full"
                             >
-                                Jobs{' '}
+                                Discovery Jobs{' '}
                             </Header>
                         }
                         pagination={

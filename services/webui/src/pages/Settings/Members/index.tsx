@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button, Card, Flex, List, ListItem, Text, Title } from '@tremor/react'
+import { Button, Card, Divider, Flex, List, ListItem, Text, Title } from '@tremor/react'
 import { ChevronRightIcon } from '@heroicons/react/24/outline'
 import { useAuthApiV1WorkspaceRoleBindingsList } from '../../../api/auth.gen'
 import Spinner from '../../../components/Spinner'
@@ -15,6 +15,7 @@ import { useSearchParams } from 'react-router-dom'
 import { Alert, Box, Header, Link, Modal, SpaceBetween, Table, Toggle } from '@cloudscape-design/components'
 import KButton from '@cloudscape-design/components/button'
 import SettingsConnectors from '../Connectors'
+import SettingsWorkspaceAPIKeys from '../APIKeys'
 const fixRole = (role: string) => {
     switch (role) {
         case 'admin':
@@ -68,7 +69,6 @@ export default function SettingsMembers() {
         </Flex>
     ) : (
         <>
-            
             <Modal
                 visible={drawerOpen}
                 header={
@@ -102,6 +102,7 @@ export default function SettingsMembers() {
             </Modal>
             <Table
                 className="mt-2 mb-5"
+                variant='full-page'
                 onRowClick={(event) => {
                     const row = event.detail.item
                     if (row.id) {
@@ -209,6 +210,11 @@ export default function SettingsMembers() {
                     </Header>
                 }
             />
+            <Divider />
+
+            <SettingsConnectors />
+            <Divider/>
+            <SettingsWorkspaceAPIKeys/>
         </>
     )
 }

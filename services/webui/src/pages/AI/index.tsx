@@ -13,15 +13,15 @@ export default function AI() {
     const [isSideBarOpen, setIsSidebarOpen] = useState(true)
     const [showAgentSelection, setShowAgentSelection] = useState(false)
     const [toolsHide, setToolsHide] = useState(false)
-    const selected_agent = JSON.parse(localStorage.getItem('agent') || '{}')
-    useEffect(()=>{
-        if (selected_agent?.id) {
-            setShowAgentSelection(false)
-        } else {
-            setShowAgentSelection(true)
-        }
+    // const selected_agent = JSON.parse(localStorage.getItem('agent') || '{}')
+    // useEffect(()=>{
+    //     if (selected_agent?.id) {
+    //         setShowAgentSelection(false)
+    //     } else {
+    //         setShowAgentSelection(true)
+    //     }
 
-    },[selected_agent])
+    // },[selected_agent])
 
 
     return (
@@ -35,10 +35,11 @@ export default function AI() {
                 toolsHide={true}
                 navigation={<Agents />}
                 content={
-                    <>{showAgentSelection ? <AgentSelection onClick={(agent :any)=>{
-                        localStorage.setItem('agent', JSON.stringify(agent))
-                        setShowAgentSelection(false)
-                    }}   /> : <AIChat />}</>
+                    // <>{showAgentSelection ? <AgentSelection onClick={(agent :any)=>{
+                    //     localStorage.setItem('agent', JSON.stringify(agent))
+                    //     setShowAgentSelection(false)
+                    // }}   /> : <></>}</>
+                    <AIChat />
                 }
             />
         </>

@@ -14,6 +14,7 @@ import { useAuthApiV1UserInviteCreate } from '../../api/auth.gen'
 import { useComplianceApiV1QueriesSyncList } from '../../api/compliance.gen'
 import { useWorkspaceApiV3LoadSampleData } from '../../api/metadata.gen'
 import WidgetLayout from '../../components/widgets/WidgetLayout'
+import { on } from 'events'
 
 export default function Overview() {
     
@@ -241,17 +242,20 @@ const {
         const temp : any =[]
         layouts?.map((item: any, index: number) => {
             temp.push({
-                label: item.name,
-                id: item.id,
+                label: item?.name,
+                id: item?.id,
                 content: (
                     <WidgetLayout
                         input_layout={item}
-                        is_default={item.is_default}
+                        is_default={item?.is_default}
                         HandleAddItem={HandleAddItem}
                     />
                 ),
-                dismissible: !item.is_default,
+                dismissible: !item?.is_default,
                 dissmissLabel: 'Delete',
+                onDismiss: () => {
+                    HandleRemoveItem(item?.id)
+                }
             })
         })
         return temp
@@ -270,6 +274,11 @@ const {
                 layout_config: []
             },
         ])
+    }
+    const HandleRemoveItem = (id: string) => {
+        const temp = layouts?.filter((item: any) => item?.id !== id)
+        setLayouts(temp)
+        setLayout(temp)
     }
     return (
         <>

@@ -70,6 +70,7 @@ import AllQueries from '../All Query'
 import axios from 'axios'
 import CustomPagination from '../../../components/Pagination'
 import SQLEditor from './editor'
+import { useParams, useSearchParams } from 'react-router-dom'
 
 export const getTable = (
     headers: string[] | undefined,
@@ -164,7 +165,7 @@ export default function Query() {
     const [navigationOpen, setNavigationOpen] = useState(true)
 
     const [page, setPage] = useState(0)
-
+    const [searchParams, setSearchParams] = useSearchParams()
     const [tab, setTab] = useState('0')
     const [preferences, setPreferences] = useState(undefined)
     const [integrations, setIntegrations] = useState([])
@@ -242,8 +243,26 @@ export default function Query() {
         if (savedQuery.length > 0 && savedQuery !== '') {
             setCode(savedQuery)
             setAutoRun(true)
+            setOpenLayout(false)
         }
     }, [savedQuery])
+    useEffect(() => {
+        const id = searchParams.get('query_id')
+
+        if (id) {
+            sendNowWithParams(
+                {
+                    page: { no: 1, size: 1000 },
+                    // @ts-ignore
+                    engine: 'cloudql',
+                    query_id: id,
+                    use_cache: true,
+                },
+                {}
+            )
+            setOpenLayout(false)
+        }
+    }, [])
 
     const getIntegrations = () => {
         setSchemaLoading(true)
@@ -612,9 +631,7 @@ export default function Query() {
                 content={
                     <>
                         <Flex className="flex-col gap-2 h-full">
-                            <Flex
-                                className={`h-full  w-full  `}
-                            >
+                            <Flex className={`h-full  w-full  `}>
                                 <SQLEditor
                                     value={code}
                                     onChange={(value: any, event: any) => {

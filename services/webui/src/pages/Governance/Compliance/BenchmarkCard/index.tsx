@@ -136,7 +136,7 @@ export default function BenchmarkCards({
                                         // console.log(item.id)
                                         // navigate(`${item.id}`)
                                     }}
-                                    href={`./compliance/${item.id}`}
+                                    href={`/compliance/frameworks/${item.id}`}
                                     fontSize="heading-m"
                                 >
                                     <Flex

@@ -608,7 +608,35 @@ export default function AllControls() {
                                         />
                                     }
                                     header={
-                                        <Header className="w-full">
+                                        <Header
+                                            className="w-full"
+                                            description={
+                                                <>
+                                                    <span className="">
+                                                        A Control
+                                                        programmatically defines
+                                                        a check for a specific
+                                                        rule, standard,
+                                                        safeguard, or
+                                                        requirement.
+                                                        <br />
+                                                        Aimed at managing risk,
+                                                        achieving compliance, or
+                                                        ensuring operational
+                                                        integrity, it precisely
+                                                        specifies <br />
+                                                        <b>
+                                                            what to verify
+                                                        </b>{' '}
+                                                        (e.g., maximum key age,
+                                                        S3 bucket public access
+                                                        status) and the exact
+                                                        criteria determining its
+                                                        pass or fail status.
+                                                    </span>
+                                                </>
+                                            }
+                                        >
                                             Controls{' '}
                                             <span className=" font-medium">
                                                 ({totalCount})

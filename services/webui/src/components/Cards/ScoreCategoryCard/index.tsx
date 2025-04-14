@@ -61,7 +61,7 @@ export default function ScoreCategoryCard({
     return (
         <div className="w-full   sm:max-w-full">
             <Card
-                onClick={() => navigate(`/compliance/${category}`)}
+                onClick={() => navigate(`/compliance/frameworks/${category}`)}
                 className={` ${
                     varient === 'default'
                         ? 'gap-6 2xl:px-8 sm:px-4 py-8 rounded-xl'
