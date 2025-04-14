@@ -398,7 +398,7 @@ export default function SettingsEntitlement() {
             }
         >
             <Flex flexDirection="col" className="w-full">
-                <Card key="summary" className=" w-full">
+                <div key="summary" className=" w-full">
                     <Title className="font-semibold mb-2">Settings</Title>
                     <KeyValuePairs
                         columns={5}
@@ -412,8 +412,8 @@ export default function SettingsEntitlement() {
                     />
 
                     <Divider />
-                    <Flex className="flex-row gap-8 w-full justify-start items-start">
-                        <Flex className="flex-col w-full justify-start items-start gap-4 max-w-[50%] border-r pr-8">
+                    <Flex className="2xl:flex-row md:flex-col gap-8 w-full justify-start items-start">
+                        <Flex className="flex-col w-full justify-start items-start gap-4  2xl:border-r 2xl:pr-8">
                             <Title className="font-semibold ">
                                 Platform Configuration
                             </Title>
@@ -590,7 +590,7 @@ export default function SettingsEntitlement() {
                             </Alert>
                         </>
                     )}
-                </Card>
+                </div>
             </Flex>
             <Modal
                 visible={open}
