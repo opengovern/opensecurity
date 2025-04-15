@@ -6,13 +6,11 @@ type TaskListResponse struct {
 }
 
 type TaskResponse struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	ResultType  string `json:"result_type"`
-	Description string `json:"description"`
-	ImageUrl    string `json:"image_url"`
-	Interval    uint64 `json:"interval"`
-	Timeout     uint64 `json:"timeout"`
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	ImageUrl    string  `json:"image_url"`
+	Timeout     float64 `json:"timeout"`
 }
 
 type RunTaskRequest struct {
