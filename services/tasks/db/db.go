@@ -7,6 +7,7 @@ import (
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"time"
 )
 
 type Database struct {
@@ -108,7 +109,7 @@ func (db Database) FetchLastCreatedTaskRunsByTaskID(taskID string) (*models.Task
 	tx := db.Orm.Model(&models.TaskRun{}).
 		Where("task_id = ?", taskID).
 		Where("status = ?", models.TaskRunStatusCreated).
-		Order("id desc").
+		Order("created_at desc").
 		First(&task)
 	if tx.Error != nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
@@ -224,4 +225,12 @@ func (db Database) GetTaskConfigSecret(taskId string) (*models.TaskConfigSecret,
 	}
 
 	return &configSecret, nil
+}
+
+func (db Database) UpdateTaskRunScheduleLastRun(id uint) error {
+	tx := db.Orm.Model(&models.TaskRunSchedule{}).Where("id = ?", id).Update("last_run", time.Now())
+	if tx.Error != nil {
+		return tx.Error
+	}
+	return nil
 }

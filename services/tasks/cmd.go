@@ -11,6 +11,7 @@ import (
 	"github.com/opengovern/og-util/pkg/koanf"
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/og-util/pkg/vault"
+	"github.com/opengovern/opensecurity/pkg/utils"
 	core "github.com/opengovern/opensecurity/services/core/client"
 	"github.com/opengovern/opensecurity/services/tasks/config"
 	"github.com/opengovern/opensecurity/services/tasks/db"
@@ -101,6 +102,10 @@ func start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	utils.EnsureRunGoroutine(func() {
+		mainScheduler.CreateTaskScheduler(ctx)
+	})
 
 	return httpserver.RegisterAndStart(ctx, logger, cfg.Http.Address, &httpRoutes{
 		logger: logger,
