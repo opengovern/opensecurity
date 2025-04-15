@@ -132,7 +132,14 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			return err
 		}
 
+		logger.Info("task added", zap.String("id", task.ID))
+
 		err = loadCloudqlBinary(itDbm, logger, task)
+		if err != nil {
+			return err
+		}
+
+		logger.Info("cloudql binary loaded", zap.String("id", task.ID))
 
 		for _, runSchedule := range task.RunSchedule {
 			paramsJsonData, err := json.Marshal(runSchedule.Params)
@@ -159,6 +166,8 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 				return err
 			}
 		}
+
+		logger.Info("run schedules", zap.String("id", task.ID), zap.Int("count", len(task.RunSchedule)))
 
 		return nil
 	})
@@ -283,14 +292,14 @@ func loadCloudqlBinary(itDbm db.Database, logger *zap.Logger, task worker.Task) 
 	}
 	url := task.ArtifactsURL
 	// remove existing files
-	if err = os.RemoveAll(baseDir + "/" + task.ID); err != nil {
-		logger.Error("failed to remove existing files", zap.Error(err), zap.String("id", task.ID), zap.String("path", baseDir+"/integration_type"))
+	if err = os.RemoveAll(baseDir + "/" + task.SteampipePluginName); err != nil {
+		logger.Error("failed to remove existing files", zap.Error(err), zap.String("id", task.ID), zap.String("path", baseDir+"/"+task.SteampipePluginName))
 		return err
 	}
 
 	downloader := getter.Client{
 		Src:  url,
-		Dst:  baseDir + "/" + task.ID,
+		Dst:  baseDir + "/" + task.SteampipePluginName,
 		Mode: getter.ClientModeDir,
 	}
 	err = downloader.Get()
@@ -299,7 +308,7 @@ func loadCloudqlBinary(itDbm db.Database, logger *zap.Logger, task worker.Task) 
 		return err
 	}
 
-	cloudqlPlugin, err := os.ReadFile(baseDir + "/" + task.ID + "/cloudql-plugin")
+	cloudqlPlugin, err := os.ReadFile(baseDir + "/" + task.SteampipePluginName + "/cloudql-plugin")
 	if err != nil {
 		logger.Error("failed to open cloudql-plugin file", zap.Error(err), zap.String("id", task.ID))
 		return err
@@ -312,6 +321,7 @@ func loadCloudqlBinary(itDbm db.Database, logger *zap.Logger, task worker.Task) 
 		TaskID:        task.ID,
 		CloudQlPlugin: cloudqlPlugin,
 	}).Error; err != nil {
+		logger.Error("failed to create task binary", zap.Error(err), zap.String("id", task.ID))
 		return err
 	}
 
