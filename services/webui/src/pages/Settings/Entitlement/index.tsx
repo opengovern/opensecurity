@@ -605,7 +605,7 @@ export default function SettingsEntitlement() {
                     </Flex>
 
                     <Divider />
-
+{/* 
                     <Title className="font-semibold mt-8">Sample Data</Title>
                     <Flex
                         justifyContent="between"
@@ -663,7 +663,7 @@ export default function SettingsEntitlement() {
                                 </>
                             )}
                         </Flex>
-                    </Flex>
+                    </Flex> */}
                     {((error && error !== '') ||
                         (errorPurge && errorPurge !== '')) && (
                         <>
