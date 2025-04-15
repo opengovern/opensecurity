@@ -9,15 +9,19 @@ import (
 	"github.com/opengovern/og-util/pkg/vault"
 	"github.com/opengovern/opensecurity/services/tasks/config"
 	"github.com/opengovern/opensecurity/services/tasks/db"
+	"github.com/opengovern/opensecurity/services/tasks/worker"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
+	"os"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 )
 
 type MainScheduler struct {
-	jq     *jq.JobQueue
-	db     db.Database
-	logger *zap.Logger
+	jq         *jq.JobQueue
+	db         db.Database
+	kubeClient client.Client
+	logger     *zap.Logger
 
 	cfg   config.Config
 	vault vault.VaultSourceConfig
@@ -27,7 +31,7 @@ type MainScheduler struct {
 
 var RunningTasks = make(map[string]bool)
 
-func NewMainScheduler(cfg config.Config, logger *zap.Logger, db db.Database, vault vault.VaultSourceConfig) (*MainScheduler, error) {
+func NewMainScheduler(cfg config.Config, logger *zap.Logger, db db.Database, kubeClient client.Client, vault vault.VaultSourceConfig) (*MainScheduler, error) {
 	jq, err := jq.New(cfg.NATS.URL, logger)
 	if err != nil {
 		logger.Error("Failed to create job queue", zap.Error(err))
@@ -35,11 +39,12 @@ func NewMainScheduler(cfg config.Config, logger *zap.Logger, db db.Database, vau
 	}
 
 	return &MainScheduler{
-		jq:     jq,
-		db:     db,
-		logger: logger,
-		cfg:    cfg,
-		vault:  vault,
+		jq:         jq,
+		db:         db,
+		kubeClient: kubeClient,
+		logger:     logger,
+		cfg:        cfg,
+		vault:      vault,
 	}, nil
 }
 
@@ -53,6 +58,14 @@ func (s *MainScheduler) Start(ctx context.Context) error {
 	for _, task := range tasks {
 		if _, ok := RunningTasks[task.ID]; ok {
 			continue
+		}
+		currentNamespace, ok := os.LookupEnv("CURRENT_NAMESPACE")
+		if !ok {
+			return fmt.Errorf("current namespace lookup failed")
+		}
+		err = worker.CreateWorker(ctx, s.cfg, s.kubeClient, &task, currentNamespace)
+		if err != nil {
+			return err
 		}
 		var natsConfig NatsConfig
 		if task.NatsConfig.Status != pgtype.Present {

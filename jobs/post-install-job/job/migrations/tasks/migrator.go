@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/config"
@@ -14,6 +15,10 @@ import (
 	"gorm.io/gorm/clause"
 	"io/fs"
 	"io/ioutil"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -31,7 +36,7 @@ func (m Migration) AttachmentFolderPath() string {
 	return config.TasksGitPath
 }
 
-func (m Migration) Run(_ context.Context, conf config.MigratorConfig, logger *zap.Logger) error {
+func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *zap.Logger) error {
 	orm, err := postgres.NewClient(&postgres.Config{
 		Host:    conf.PostgreSQL.Host,
 		Port:    conf.PostgreSQL.Port,
@@ -142,6 +147,30 @@ func (m Migration) Run(_ context.Context, conf config.MigratorConfig, logger *za
 		return err
 	}
 
+	inClusterConfig, err := rest.InClusterConfig()
+	if err != nil {
+		logger.Error("failed to get in cluster config", zap.Error(err))
+		return err
+	}
+	// creates the clientset
+	clientset, err := kubernetes.NewForConfig(inClusterConfig)
+	if err != nil {
+		logger.Error("failed to create clientset", zap.Error(err))
+		return err
+	}
+
+	err = RestartCloudQLEnabledServices(ctx, logger, clientset)
+	if err != nil {
+		logger.Error("failed to restart cloudQL enabled services", zap.Error(err))
+		return err
+	}
+
+	err = RestartTaskService(ctx, logger, clientset)
+	if err != nil {
+		logger.Error("failed to restart service", zap.Error(err))
+		return err
+	}
+
 	return nil
 }
 
@@ -183,4 +212,36 @@ func parseToTotalSeconds(input string) (float64, error) {
 		return 0, err
 	}
 	return duration.Seconds(), nil
+}
+
+func RestartCloudQLEnabledServices(ctx context.Context, logger *zap.Logger, clientset *kubernetes.Clientset) error {
+	currentNamespace, ok := os.LookupEnv("CURRENT_NAMESPACE")
+	if !ok {
+		logger.Error("current namespace lookup failed")
+		return errors.New("current namespace lookup failed")
+	}
+
+	err := clientset.CoreV1().Pods(currentNamespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "cloudql-enabled=true"})
+	if err != nil {
+		logger.Error("failed to delete pods", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+func RestartTaskService(ctx context.Context, logger *zap.Logger, clientset *kubernetes.Clientset) error {
+	currentNamespace, ok := os.LookupEnv("CURRENT_NAMESPACE")
+	if !ok {
+		logger.Error("current namespace lookup failed")
+		return errors.New("current namespace lookup failed")
+	}
+
+	err := clientset.CoreV1().Pods(currentNamespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "app=task-service"})
+	if err != nil {
+		logger.Error("failed to delete pods", zap.Error(err))
+		return err
+	}
+
+	return nil
 }
