@@ -3,22 +3,22 @@ package worker
 type WorkloadType string
 
 type NatsConfig struct {
-	Stream         string `yaml:"stream"`
-	Topic          string `yaml:"topic"`
-	Consumer       string `yaml:"consumer"`
-	ResultTopic    string `yaml:"result_topic"`
-	ResultConsumer string `yaml:"result_consumer"`
+	Stream         string `json:"stream" yaml:"stream"`
+	Topic          string `json:"topic" yaml:"topic"`
+	Consumer       string `json:"consumer" yaml:"consumer"`
+	ResultTopic    string `json:"result_topic" yaml:"result_topic"`
+	ResultConsumer string `json:"result_consumer" yaml:"result_consumer"`
 }
 
 type ScaleConfig struct {
-	Stream       string `yaml:"stream"`
-	Consumer     string `yaml:"consumer"`
-	LagThreshold string `yaml:"lag_threshold"`
-	MinReplica   int32  `yaml:"min_replica"`
-	MaxReplica   int32  `yaml:"max_replica"`
+	Stream       string `json:"stream" yaml:"stream"`
+	Consumer     string `json:"consumer" yaml:"consumer"`
+	LagThreshold string `json:"lag_threshold" yaml:"lag_threshold"`
+	MinReplica   int32  `json:"min_replica" yaml:"min_replica"`
+	MaxReplica   int32  `json:"max_replica" yaml:"max_replica"`
 
-	PollingInterval int32 `yaml:"polling_interval"`
-	CooldownPeriod  int32 `yaml:"cooldown_period"`
+	PollingInterval int32 `json:"polling_interval" yaml:"polling_interval"`
+	CooldownPeriod  int32 `json:"cooldown_period" yaml:"cooldown_period"`
 }
 
 type Interval struct {

@@ -84,7 +84,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			return err
 		}
 
-		fillMissedConfigs(task)
+		fillMissedConfigs(&task)
 
 		natsJsonData, err := json.Marshal(task.NatsConfig)
 		if err != nil {
@@ -193,7 +193,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	return nil
 }
 
-func fillMissedConfigs(taskConfig worker.Task) {
+func fillMissedConfigs(taskConfig *worker.Task) {
 	if taskConfig.NatsConfig.Stream == "" {
 		taskConfig.NatsConfig.Stream = taskConfig.ID
 	}
