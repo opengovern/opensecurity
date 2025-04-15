@@ -2661,6 +2661,8 @@ func convertChatToApi(chat models.Chat) (*api.Chat, error) {
 		clarifyingQuestions = append(clarifyingQuestions, api.ClarificationQuestion{
 			ClarificationId: chatClarification.ID.String(),
 			Question:        chatClarification.Questions,
+			Answer: *chatClarification.Answer,
+			
 		})
 	}
 

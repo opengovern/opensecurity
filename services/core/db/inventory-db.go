@@ -162,7 +162,7 @@ func (db Database) ListQueriesByFilters(queryIds []string, search *string, tagFi
 	}
 
 	if search != nil {
-		m = m.Where("title LIKE ?", "%"+*search+"%")
+		m = m.Where("title ILIKE ?", "%"+*search+"%")
 	}
 
 	for i, c := range integrationTypes {

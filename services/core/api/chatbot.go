@@ -25,6 +25,7 @@ type GenerateQueryRequest struct {
 type ClarificationQuestion struct {
 	ClarificationId string `json:"clarification_id"`
 	Question        string `json:"question"`
+	Answer 		string `json:"answer"`
 }
 
 type Suggestion struct {
