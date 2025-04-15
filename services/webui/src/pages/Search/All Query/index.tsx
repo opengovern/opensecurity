@@ -172,13 +172,14 @@ export default function AllQueries({
         }
 
         let body = {
-            //  title_filter: '',
+             title_filter: query?.title_filter,
             tags: tags,
             integration_types: query?.providers,
             list_of_tables: query?.list_of_tables,
             cursor: page,
             per_page: 12,
         }
+
         // if (!body.integration_types) {
         //     delete body['integration_types']
         // } else {
@@ -238,6 +239,12 @@ export default function AllQueries({
                     propertyLabel: 'Plugin',
                     groupValuesLabel: 'Plugin values',
                 },
+                {
+                    key: 'title',
+                    operators: ['='],
+                    propertyLabel: 'Title',
+                    groupValuesLabel: 'Title',
+                },
             ]
             filters?.providers?.map((unique, index) => {
                 temp_option.push({
@@ -293,6 +300,7 @@ export default function AllQueries({
             const temp_provider: any = []
             const temp_tables: any = []
             const temp_tags = {}
+            let title_filter = undefined
             filterQuery?.tokens?.map((item, index) => {
                 // @ts-ignore
                 if (item?.propertyKey === 'plugin') {
@@ -305,7 +313,15 @@ export default function AllQueries({
                     // @ts-ignore
 
                     temp_tables.push(item.value)
-                } else {
+                // @ts-ignore
+
+                }else if (item?.propertyKey?.includes('title')) {
+                    // @ts-ignore
+
+                    title_filter = item.value
+
+                }
+                 else {
                     // @ts-ignore
 
                     if (temp_tags[item.propertyKey]) {
@@ -326,6 +342,7 @@ export default function AllQueries({
                     temp_tables.length > 0 ? temp_tables : undefined,
                 // @ts-ignore
                 tags: temp_tags,
+                title_filter:title_filter
             })
         }
     }, [filterQuery])
@@ -400,6 +417,7 @@ export default function AllQueries({
                                 values: 'Category values',
                                 group: 'category',
                             },
+                         
                         ]}
                         // countText="5 matches"
                         expandToViewport
@@ -511,7 +529,6 @@ export default function AllQueries({
                     <KeyValuePairs
                         columns={1}
                         items={[
-                          
                             {
                                 label: 'Description',
                                 // @ts-ignore

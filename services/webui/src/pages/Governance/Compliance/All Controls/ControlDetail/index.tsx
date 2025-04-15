@@ -198,8 +198,9 @@ export default function ControlDetail({
                                                     label: 'Parameters',
                                                     value: (
                                                         <>
-                                                            {params?.length >
-                                                            0 ? (
+                                                            {selectedItem
+                                                                ?.parameter_values
+                                                                ?.length > 0 ? (
                                                                 <>
                                                                     <Flex
                                                                         flexDirection="col"
@@ -213,7 +214,7 @@ export default function ControlDetail({
                                                                             flexDirection="row"
                                                                         >
                                                                             <>
-                                                                                {params?.map(
+                                                                                {selectedItem?.parameter_values?.map(
                                                                                     (
                                                                                         item,
                                                                                         index
@@ -229,14 +230,16 @@ export default function ControlDetail({
                                                                                                 <span className="font-medium text-tremor-content dark:text-dark-tremor-content-emphasis">
                                                                                                     {
                                                                                                         // @ts-ignore
-                                                                                                        item?.value
+                                                                                                        item?.effective_value == '' ? 'no value' : item?.effective_value
                                                                                                     }
                                                                                                 </span>
                                                                                             </span>
                                                                                         )
                                                                                     }
                                                                                 )}
-                                                                                {params?.length ==
+                                                                                {selectedItem
+                                                                                    ?.parameter_values
+                                                                                    ?.length ==
                                                                                     0 &&
                                                                                     'No Parameters'}
                                                                             </>

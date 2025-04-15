@@ -2851,6 +2851,7 @@ export interface PlatformEnginePkgControlDetailV3 {
     frameworks: PlatformEnginePkgComplianceApiBenchmark[]
     has_inline_policy: boolean
     integrationType: string[]
+    parameter_values: ControlParams[]
     description: string
     id: string
     policy: PlatformEnginePkgControlDetailV3Query
@@ -2859,6 +2860,11 @@ export interface PlatformEnginePkgControlDetailV3 {
     title: string
     updated_at: string
 }
+export interface ControlParams {
+    key: string
+    effective_value: string
+}
+
 
 export interface PlatformEnginePkgControlDetailV3Benchmarks {
     fullPath: string[]
