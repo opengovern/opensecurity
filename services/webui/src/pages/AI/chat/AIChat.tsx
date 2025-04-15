@@ -63,7 +63,7 @@ function AIChat() {
             .then((res) => {
                 if (res.data) {
                     const output = res?.data
-                            debugger
+                    debugger
 
                     if (output) {
                         setChats((prevChats) => {
@@ -205,7 +205,7 @@ function AIChat() {
                     const output = res?.data
                     if (output) {
                         setId(output.chat_id)
-                        
+
                         if (output?.result?.type == 'CLARIFICATION_NEEDED') {
                             setClarifying(true)
                             setChats((prevChats) => {
@@ -220,8 +220,9 @@ function AIChat() {
                                 }
                                 return newChats
                             })
-                        } 
-                        else if (output?.result?.type == 'MALFORMED_RESPONSE') {
+                        } else if (
+                            output?.result?.type == 'MALFORMED_RESPONSE'
+                        ) {
                             setChats((prevChats) => {
                                 const newChats = { ...prevChats }
                                 newChats[`${len}`] = {
@@ -239,8 +240,7 @@ function AIChat() {
                                 }
                                 return newChats
                             })
-                        }
-                        else {
+                        } else {
                             setClarifying(false)
                             RunQuery(output?.chat_id, len)
                         }
@@ -332,52 +332,84 @@ function AIChat() {
                 scroll()
             })
     }
-    const ClarifyQuery = (answer: string, len: number,chat: Chat) => {
+    const ClarifyQuery = (answer: string, len: number, chat: Chat) => {
         const body = {
             question: chat.message,
             chat_id: id,
             agent: agent.id,
             session_id: localStorage.getItem(`${agent.id}_session_id`),
             in_clarification_state: true,
-            clarification_questions: chat.clarify_questions?.map((question)=>{return question.question}),
-            user_clarification_response:answer
-            
+            clarification_questions: chat.clarify_questions?.map((question) => {
+                return question.question
+            }),
+            user_clarification_response: answer,
         }
         // @ts-ignore
-         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-         const config = {
-             headers: {
-                 Authorization: `Bearer ${token}`,
-             },
-         }
-
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
         axios
-            .post(`/main/core/api/v4/chatbot/generate-query`,body,config)
+            .post(
+                `${url}/main/core/api/v4/chatbot/generate-query`,
+                body,
+                config
+            )
             .then((res) => {
                 if (res?.data) {
                     const output = res?.data
                     if (output) {
-                        setId(output.id)
-                        if (output?.result?.result == 'CLARIFICATION_NEEDED') {
+                        setId(output.chat_id)
+
+                        if (output?.result?.type == 'CLARIFICATION_NEEDED') {
                             setClarifying(true)
                             setChats((prevChats) => {
                                 const newChats = { ...prevChats }
                                 newChats[`${len}`] = {
                                     ...newChats[`${len}`],
                                     clarify_needed: true,
+                                    id: output.chat_id,
                                     clarify_questions:
                                         output?.result?.clarifying_questions,
                                     loading: false, // Ensure loading is set to false
                                 }
                                 return newChats
                             })
+                        } else if (
+                            output?.result?.type == 'MALFORMED_RESPONSE'
+                        ) {
+                            setChats((prevChats) => {
+                                const newChats = { ...prevChats }
+                                newChats[`${len}`] = {
+                                    ...newChats[`${len}`],
+
+                                    loading: false, // Ensure loading is set to false
+                                    error: 'Error commnicute with server',
+                                    responseTime: `${
+                                        new Date().getHours() > 12
+                                            ? new Date().getHours() - 12
+                                            : new Date().getHours()
+                                    }:${new Date().getMinutes()}${
+                                        new Date().getHours() > 12 ? 'PM' : 'AM'
+                                    }`,
+                                }
+                                return newChats
+                            })
                         } else {
                             setClarifying(false)
-
-                            RunQuery(output.id, len)
+                            RunQuery(output?.chat_id, len)
                         }
                         setLoading(false)
+
                         scroll()
                     } else {
                         setChats((prevChats) => {
@@ -525,10 +557,14 @@ function AIChat() {
                     }
                     if (output?.chats && output.chats.length > 0) {
                         output.chats.forEach((chat: any) => {
-                            if (chat.need_clarification) {
+                            if (
+                                chat.need_clarification &&
+                                chat?.clarifying_questions.length > 0
+                            ) {
                                 // for each in chat.clarifying_questions and for each one make new temp object
                                 const clarifying_questions =
                                     chat?.clarifying_questions
+                                console.log(clarifying_questions)
                                 clarifying_questions?.forEach(
                                     (question: any) => {
                                         temp[`${Object.keys(temp).length}`] = {
@@ -547,8 +583,7 @@ function AIChat() {
 
                                             isWelcome: false,
                                             clarify_needed: true,
-                                            clarify_questions:
-                                                question.question,
+                                            clarify_questions: [question],
                                             clarify_answer: question.answer,
                                             suggestions: chat.suggestions,
                                             text: chat.primary_interpretation,
@@ -708,7 +743,7 @@ function AIChat() {
                     onSend={() => {
                         const temp: any = chats
                         // @ts-ignore
-                        const len = Object.keys(chats)?.length 
+                        const len = Object.keys(chats)?.length
 
                         setLoading(true)
                         if (clarifying) {
@@ -735,7 +770,7 @@ function AIChat() {
                             }
                             setChats(temp)
 
-                            ClarifyQuery(message, len,temp[`${len-1}`])
+                            ClarifyQuery(message, len, temp[`${len - 1}`])
                         } else {
                             temp[`${len}`] = {
                                 message: message,

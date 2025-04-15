@@ -61,7 +61,6 @@ const KResponseCard: FunctionComponent<any> = ({
   useEffect(() => {
     setShowText(text);
   }, [text]);
-
   return (
       <>
           <div
