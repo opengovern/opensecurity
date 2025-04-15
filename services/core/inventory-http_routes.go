@@ -2473,7 +2473,11 @@ func (h *HttpHandler) GetChatbotSession(ctx echo.Context) error {
 
 	var chats []api.Chat
 	for _, chat := range session.Chats {
-		apiChat, err := convertChatToApi(chat)
+		complete_chat,err := h.db.GetChat(chat.ID)
+		if err != nil {
+			h.logger.Error("failed to get chat", zap.Error(err))
+		}
+		apiChat, err := convertChatToApi(*complete_chat)
 		if err != nil {
 			h.logger.Error("failed to convert chat", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to convert chat")
