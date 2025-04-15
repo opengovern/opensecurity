@@ -125,6 +125,21 @@ func (j *Job) Run(ctx context.Context) (*steampipe.Database, error) {
 		return nil, err
 	}
 	for _, task := range tasks {
+		if task.SteampipePluginName == "" {
+			j.logger.Debug("steampipe plugin name not found - skipping task", zap.String("id", task.ID))
+			continue
+		}
+		var cloudqlBinary string
+		err = db.Raw("SELECT cloud_ql_plugin FROM task_binaries WHERE task_id = ?", task.ID).Scan(&cloudqlBinary).Error
+		if err != nil {
+			j.logger.Error("failed to get plugin binary", zap.Error(err), zap.String("task_id", task.ID))
+			return nil, err
+		}
+
+		if cloudqlBinary == "" {
+			j.logger.Debug("steampipe plugin binary not found - skipping task", zap.String("id", task.ID))
+			continue
+		}
 		err = steampipe.PopulateSteampipeConfig(j.cfg.ElasticSearch, task.SteampipePluginName)
 		if err != nil {
 			return nil, err
@@ -138,13 +153,6 @@ func (j *Job) Run(ctx context.Context) (*steampipe.Database, error) {
 				j.logger.Error("failed to create directory", zap.Error(err), zap.String("path", dirPath))
 				return nil, err
 			}
-		}
-
-		var cloudqlBinary string
-		err = db.Raw("SELECT cloud_ql_plugin FROM task_binaries WHERE task_id = ?", task.ID).Scan(&cloudqlBinary).Error
-		if err != nil {
-			j.logger.Error("failed to get plugin binary", zap.Error(err), zap.String("task_id", task.ID))
-			return nil, err
 		}
 
 		// write the plugin to the file system
