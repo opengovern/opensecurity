@@ -2,6 +2,7 @@ package db
 
 import (
 	"github.com/opengovern/opensecurity/services/integration/models"
+	taskModels "github.com/opengovern/opensecurity/services/tasks/db/models"
 	"gorm.io/gorm"
 )
 
@@ -31,6 +32,7 @@ func (db Database) Initialize() error {
 	err = db.IntegrationTypeOrm.AutoMigrate(
 		&models.IntegrationPlugin{},
 		&models.IntegrationPluginBinary{},
+		&taskModels.TaskBinary{},
 	)
 	if err != nil {
 		return err
