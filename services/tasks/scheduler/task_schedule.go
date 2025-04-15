@@ -14,11 +14,11 @@ import (
 )
 
 type NatsConfig struct {
-	Stream         string
-	Topic          string
-	ResultTopic    string
-	Consumer       string
-	ResultConsumer string
+	Stream         string `json:"stream"`
+	Topic          string `json:"topic"`
+	ResultTopic    string `json:"result_topic"`
+	Consumer       string `json:"consumer"`
+	ResultConsumer string `json:"result_consumer"`
 }
 
 type TaskScheduler struct {
