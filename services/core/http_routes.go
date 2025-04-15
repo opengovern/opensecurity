@@ -121,6 +121,15 @@ func (h *HttpHandler) Register(r *echo.Echo) {
 	v4.POST("/layout/set", httpserver.AuthorizeHandler(h.SetUserLayout, api3.ViewerRole))
 	v4.POST("/layout/change-privacy", httpserver.AuthorizeHandler(h.ChangePrivacy, api3.ViewerRole))
 	v4.GET("/layout/public", httpserver.AuthorizeHandler(h.GetPublicLayouts, api3.ViewerRole))
+	v4.POST("/layout/widget/get", httpserver.AuthorizeHandler(h.GetUserWidgets, api3.ViewerRole))
+	v4.POST("/layout/widget/get/public", httpserver.AuthorizeHandler(h.GetAllPublicWidgets, api3.ViewerRole))
+	v4.GET("/layout/widget/get/:id", httpserver.AuthorizeHandler(h.GetWidget, api3.ViewerRole))
+	v4.DELETE("/layout/widget/delete/:id", httpserver.AuthorizeHandler(h.DeleteUserWidget, api3.ViewerRole))
+	v4.POST("/layout/update/widget", httpserver.AuthorizeHandler(h.UpdateDashboardWidgets, api3.ViewerRole))
+	v4.POST("/layout/widget/update", httpserver.AuthorizeHandler(h.UpdateWidgetDashboards, api3.ViewerRole))
+
+
+	v4.POST("/layout/widget/set", httpserver.AuthorizeHandler(h.SetUserWidget, api3.ViewerRole))
 	// Chatbot
 	v4.GET("/chatbot/agents", httpserver.AuthorizeHandler(h.GetAgents, api3.ViewerRole))
 	v4.POST("/chatbot/generate-query", httpserver.AuthorizeHandler(h.GenerateQuery, api3.ViewerRole))
@@ -1856,4 +1865,15 @@ func (h *HttpHandler) UpdateWidgetDashboards(echoCtx echo.Context) error {
 	}
 
 	return echoCtx.NoContent(http.StatusOK)
+}
+
+// GetAllPublicWidgets returns all public widgets
+func (h *HttpHandler) GetAllPublicWidgets(echoCtx echo.Context) error {
+	widgets, err := h.db.GetAllPublicWidgets()
+	if err != nil {
+		h.logger.Error("failed to fetch public widgets", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to fetch public widgets")
+	}
+
+	return echoCtx.JSON(http.StatusOK, widgets)
 }

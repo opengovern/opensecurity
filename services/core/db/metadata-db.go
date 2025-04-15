@@ -290,3 +290,15 @@ func (db Database) UpdateWidgetDashboards(widgetID string, dashboardIDs []string
     // Replace the dashboards associated with the widget
     return db.orm.Model(&widget).Association("Dashboards").Replace(dashboards)
 }
+
+// get all public widgets
+func (db Database) GetAllPublicWidgets() ([]models.Widget, error) {
+	var widgets []models.Widget
+	err := db.orm.
+		Where("is_public = ?", true).
+		Find(&widgets).Error
+	if err != nil {
+		return nil, err
+	}
+	return widgets, nil
+}
