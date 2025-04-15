@@ -98,7 +98,8 @@ func (s *MainScheduler) Start(ctx context.Context) error {
 			s.vault,
 			task.ID,
 			natsConfig,
-			runSchedules)
+			runSchedules,
+			task.Timeout)
 		taskScheduler.Run(ctx)
 		RunningTasks[task.ID] = true
 	}

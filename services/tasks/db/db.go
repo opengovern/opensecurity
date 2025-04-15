@@ -121,7 +121,7 @@ func (db Database) FetchLastCreatedTaskRunsByTaskID(taskID string) (*models.Task
 }
 
 // TimeoutTaskRunsByTaskID Timeout task runs for given task id by given timeout interval
-func (db Database) TimeoutTaskRunsByTaskID(taskID string, timeoutInterval float64) error {
+func (db Database) TimeoutTaskRunsByTaskID(taskID string, timeoutInterval uint64) error {
 	tx := db.Orm.
 		Model(&models.TaskRun{}).
 		Where(fmt.Sprintf("created_at < NOW() - INTERVAL '%d MINUTES'", timeoutInterval)).

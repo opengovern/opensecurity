@@ -45,7 +45,8 @@ func NewTaskScheduler(
 	cfg config.Config,
 	vault vault.VaultSourceConfig,
 	taskID string, natsConfig NatsConfig,
-	taskRunSchedules []models.TaskRunSchedule) *TaskScheduler {
+	taskRunSchedules []models.TaskRunSchedule,
+	timeout float64) *TaskScheduler {
 	return &TaskScheduler{
 		runSetupNatsStreams: runSetupNatsStreams,
 		logger:              logger,
@@ -56,6 +57,7 @@ func NewTaskScheduler(
 		vault: vault,
 
 		TaskID:           taskID,
+		Timeout:          timeout,
 		NatsConfig:       natsConfig,
 		TaskRunSchedules: taskRunSchedules,
 	}
