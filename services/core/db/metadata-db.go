@@ -144,66 +144,44 @@ func (db Database) ListQueryViews() ([]models.QueryView, error) {
 	}
 	return queryViews, nil
 }
-// get user layout
-// GetUserLayouts returns all dashboards for the specified user,
-// preloading their widgets.
+// get user layout// Get user layouts (with widgets)
 func (db Database) GetUserLayouts(userID string) ([]models.Dashboard, error) {
-	var dashboards []models.Dashboard
-	err := db.orm.
-		Where("user_id = ?", userID).
-		Preload("Widgets").
-		Find(&dashboards).Error
+	var userLayouts []models.Dashboard
+	err := db.orm.Preload("Widgets").Where("user_id = ?", userID).Find(&userLayouts).Error
 	if err != nil {
 		return nil, err
 	}
-	return dashboards, nil
+	return userLayouts, nil
 }
 
-// GetUserDefaultLayout returns the dashboard that is marked as default for the user.
-// If no default is found, it returns nil.
+// Get the default layout for a user
 func (db Database) GetUserDefaultLayout(userID string) (*models.Dashboard, error) {
-	var dashboard models.Dashboard
-	err := db.orm.
-		Where("user_id = ? AND is_default = ?", userID, true).
-		Preload("Widgets").
-		First(&dashboard).Error
+	var userLayout models.Dashboard
+	err := db.orm.Preload("Widgets").Where("user_id = ? AND is_default = ?", userID, true).First(&userLayout).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	return &dashboard, nil
+	return &userLayout, nil
 }
 
-// SetUserLayout upserts a dashboard (excluding its widgets), and then
-// replaces the associated widgets. This function runs in a transaction.
-func (db Database) SetUserLayout(layout models.Dashboard) error {
+// Upsert dashboard and update associated widgets
+func (db Database) SetUserLayout(layoutConfig models.Dashboard) error {
 	return db.orm.Transaction(func(tx *gorm.DB) error {
-		// Upsert the dashboard (excluding Widgets)
 		err := tx.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "id"}},
-			DoUpdates: clause.AssignmentColumns([]string{"name", "description", "is_default", "is_private", "updated_at", "user_id"}),
-		}).Omit("Widgets").Create(&layout).Error
+			DoUpdates: clause.AssignmentColumns([]string{
+				"name", "description", "is_default", "is_private", "updated_at", "user_id",
+			}),
+		}).Omit("Widgets").Create(&layoutConfig).Error
 		if err != nil {
 			return err
 		}
 
-		// Delete previous widgets for this dashboard
-		err = tx.Where("user_id = ? AND dashboard_id = ?", layout.UserID, layout.ID).
-			Delete(&models.Widget{}).Error
-		if err != nil {
-			return err
-		}
-
-		// Ensure each widget has the correct DashboardID and UserID
-		for i := range layout.Widgets {
-			layout.Widgets[i].DashboardID = layout.ID
-			layout.Widgets[i].UserID = layout.UserID
-		}
-
-		// Insert the new widgets
-		err = tx.Create(&layout.Widgets).Error
+		// Replace dashboard-widgets association
+		err = tx.Model(&layoutConfig).Association("Widgets").Replace(layoutConfig.Widgets)
 		if err != nil {
 			return err
 		}
@@ -212,46 +190,35 @@ func (db Database) SetUserLayout(layout models.Dashboard) error {
 	})
 }
 
-// GetPublicLayouts returns dashboards that are not private (public dashboards).
+// Get all public dashboards
 func (db Database) GetPublicLayouts() ([]models.Dashboard, error) {
-	var dashboards []models.Dashboard
-	err := db.orm.
-		Where("is_private = ?", false).
-		Preload("Widgets").
-		Find(&dashboards).Error
+	var publicLayouts []models.Dashboard
+	err := db.orm.Preload("Widgets").Where("is_private = ?", false).Find(&publicLayouts).Error
 	if err != nil {
 		return nil, err
 	}
-	return dashboards, nil
+	return publicLayouts, nil
 }
 
-// ChangeLayoutPrivacy updates the privacy status for all dashboards of a user.
+// Change privacy status of all layouts for a user
 func (db Database) ChangeLayoutPrivacy(userID string, isPrivate bool) error {
-	err := db.orm.
-		Model(&models.Dashboard{}).
-		Where("user_id = ?", userID).
-		Update("is_private", isPrivate).Error
-	return err
+	return db.orm.Model(&models.Dashboard{}).Where("user_id = ?", userID).Update("is_private", isPrivate).Error
 }
 
-// GetUserWidgets returns all widgets for the specified user.
+// Get all widgets for a user
 func (db Database) GetUserWidgets(userID string) ([]models.Widget, error) {
 	var widgets []models.Widget
-	err := db.orm.
-		Where("user_id = ?", userID).
-		Find(&widgets).Error
+	err := db.orm.Where("user_id = ?", userID).Find(&widgets).Error
 	if err != nil {
 		return nil, err
 	}
 	return widgets, nil
 }
 
-// GetWidget returns a single widget by its ID.
+// Get a single widget by ID
 func (db Database) GetWidget(widgetID string) (*models.Widget, error) {
 	var widget models.Widget
-	err := db.orm.
-		Where("id = ?", widgetID).
-		First(&widget).Error
+	err := db.orm.Where("id = ?", widgetID).First(&widget).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -261,38 +228,65 @@ func (db Database) GetWidget(widgetID string) (*models.Widget, error) {
 	return &widget, nil
 }
 
-// SetUserWidget upserts a widget using its ID as the conflict key.
+// Add widgets in bulk
+func (db Database) AddWidgets(widgets []models.Widget) error {
+	return db.orm.Create(&widgets).Error
+}
+
+// Upsert a widget
 func (db Database) SetUserWidget(widget models.Widget) error {
 	return db.orm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"title", "description", "widget_type", "widget_props", "row_span", "column_span", "column_offset", "is_public", "user_id", "dashboard_id", "updated_at"}),
+		DoUpdates: clause.AssignmentColumns([]string{
+			"title", "description", "widget_type", "widget_props",
+			"row_span", "column_span", "column_offset", "is_public",
+			"user_id", "updated_at",
+		}),
 	}).Create(&widget).Error
 }
 
-// DeleteUserWidget deletes a widget by its ID.
+// Delete widgets by IDs
+func (db Database) DeleteWidgets(widgetIDs []string) error {
+	return db.orm.Where("id IN ?", widgetIDs).Delete(&models.Widget{}).Error
+}
+
+// Update widget content (single widget)
+func (db Database) UpdateWidget(widget models.Widget) error {
+	return db.orm.Model(&widget).Where("id = ?", widget.ID).Updates(&widget).Error
+}
+
+// Update widget-dashboard relationship (associate widgets to dashboard)
+func (db Database) UpdateDashboardWidgets(dashboardID string, widgetIDs []string) error {
+	var dashboard models.Dashboard
+	dashboard.ID = dashboardID
+
+	var widgets []models.Widget
+	err := db.orm.Where("id IN ?", widgetIDs).Find(&widgets).Error
+	if err != nil {
+		return err
+	}
+
+	return db.orm.Model(&dashboard).Association("Widgets").Replace(widgets)
+}
+
+// DeleteUserWidget
 func (db Database) DeleteUserWidget(widgetID string) error {
-	return db.orm.Delete(&models.Widget{}, "id = ?", widgetID).Error
+	return db.orm.Where("id = ?", widgetID).Delete(&models.Widget{}).Error
 }
 
-func (db Database) AddWidgetsToDashboard(dashboardID string, widgets []models.Widget) error {
-	return db.orm.Transaction(func(tx *gorm.DB) error {
-		// Set the DashboardID for each widget
-		for i := range widgets {
-			widgets[i].DashboardID = dashboardID
-		}
-		// Bulk insert all widgets
-		if err := tx.Create(&widgets).Error; err != nil {
-			return err
-		}
-		return nil
-	})
-}
+func (db Database) UpdateWidgetDashboards(widgetID string, dashboardIDs []string) error {
+    var widget models.Widget
+    // Fetch the widget by ID
+    if err := db.orm.First(&widget, "id = ?", widgetID).Error; err != nil {
+        return err
+    }
 
-func (db Database) AddWidgets(widgets []models.Widget) error {
-    return db.orm.Transaction(func(tx *gorm.DB) error {
-        if err := tx.Create(&widgets).Error; err != nil {
-            return err
-        }
-        return nil
-    })
+    var dashboards []models.Dashboard
+    // Fetch the dashboards by the provided dashboardIDs
+    if err := db.orm.Where("id IN ?", dashboardIDs).Find(&dashboards).Error; err != nil {
+        return err
+    }
+
+    // Replace the dashboards associated with the widget
+    return db.orm.Model(&widget).Association("Dashboards").Replace(dashboards)
 }

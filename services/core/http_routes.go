@@ -1606,33 +1606,27 @@ func (h *HttpHandler) SyncQueries(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, struct{}{})
 }
 
+// Get user layouts (with widgets)
 func (h *HttpHandler) GetUserLayouts(echoCtx echo.Context) error {
 	var req api.GetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return err
 	}
-	userId := req.UserID
-	layouts, err := h.db.GetUserLayouts(userId)
+
+	layouts, err := h.db.GetUserLayouts(req.UserID)
 	if err != nil {
 		h.logger.Error("failed to get user layout", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user layout")
 	}
-	if layouts == nil {
+	if len(layouts) == 0 {
 		return echo.NewHTTPError(http.StatusNotFound, "user layout not found")
 	}
+
 	var response []api.GetUserLayoutResponse
 	for _, layout := range layouts {
 		response = append(response, api.GetUserLayoutResponse{
-			ID:     layout.ID,
-			UserID: userId,
-			// LayoutConfig: func() []map[string]any {
-			// 	var config []map[string]any
-			// 	if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
-			// 		h.logger.Error("failed to unmarshal layout config", zap.Error(err))
-			// 		return nil
-			// 	}
-			// 	return config
-			// }(),
+			ID:          layout.ID,
+			UserID:      layout.UserID,
 			Name:        layout.Name,
 			Description: layout.Description,
 			IsDefault:   layout.IsDefault,
@@ -1642,126 +1636,224 @@ func (h *HttpHandler) GetUserLayouts(echoCtx echo.Context) error {
 	}
 
 	return echoCtx.JSON(http.StatusOK, response)
-
 }
 
+// Get the default layout for a user
 func (h *HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 	var req api.GetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return err
 	}
-	userId := req.UserID
-	layout, err := h.db.GetUserDefaultLayout(userId)
+
+	layout, err := h.db.GetUserDefaultLayout(req.UserID)
 	if err != nil {
-		h.logger.Error("failed to get user layout", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user layout")
+		h.logger.Error("failed to get default layout", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get default layout")
 	}
 	if layout == nil {
-		return echo.NewHTTPError(http.StatusNotFound, "user layout not found")
+		return echo.NewHTTPError(http.StatusNotFound, "default layout not found")
 	}
-	return echoCtx.JSON(http.StatusOK, api.GetUserLayoutResponse{
-		ID:     layout.ID,
-		UserID: userId,
-		// LayoutConfig: func() []map[string]any {
-		// 	var config []map[string]any
-		// 	if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
-		// 		h.logger.Error("failed to unmarshal layout config", zap.Error(err))
-		// 		return nil
-		// 	}
-		// 	return config
-		// }(),
+
+	response := api.GetUserLayoutResponse{
+		ID:          layout.ID,
+		UserID:      layout.UserID,
 		Name:        layout.Name,
 		Description: layout.Description,
 		IsPrivate:   layout.IsPrivate,
 		IsDefault:   layout.IsDefault,
 		UpdatedAt:   layout.UpdatedAt,
-	})
+	}
 
+	return echoCtx.JSON(http.StatusOK, response)
 }
+
+// Upsert a dashboard with widget associations
 func (h *HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	var req api.SetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return err
 	}
-	userId := req.UserID
-	// convert req.layoutconfig to jsonb
-	layout, err := json.Marshal(req.LayoutConfig)
-	if err != nil {
-		h.logger.Error("failed to marshal layout config", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to marshal layout config")
-	}
-	layout_config := pgtype.JSONB{}
-	layout_config.Set(layout)
-	var id string
-	if req.ID != "" {
-		id = req.ID
-	} else {
+
+	id := req.ID
+	if id == "" {
 		id = uuid.New().String()
 	}
 
-	user_layout := models.Dashboard{
-		ID:           id,
-		UserID:       userId,
-		// LayoutConfig: layout_config,
-		IsDefault:    req.IsDefault,
-		Name:         req.Name,
-		Description:  req.Description,
-		IsPrivate:    req.IsPrivate,
-		UpdatedAt:    time.Now(),
+	dashboard := models.Dashboard{
+		ID:          id,
+		UserID:      req.UserID,
+		Name:        req.Name,
+		Description: req.Description,
+		IsDefault:   req.IsDefault,
+		IsPrivate:   req.IsPrivate,
+		UpdatedAt:   time.Now(),
 	}
-	err = h.db.SetUserLayout(user_layout)
-	if err != nil {
+
+	for _, widgetID := range req.WidgetIDs {
+		dashboard.Widgets = append(dashboard.Widgets, models.Widget{ID: widgetID})
+	}
+
+	if err := h.db.SetUserLayout(dashboard); err != nil {
 		h.logger.Error("failed to set user layout", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to set user layout")
 	}
+
 	return echoCtx.NoContent(http.StatusOK)
 }
 
+// Change privacy status of user's dashboards
 func (h *HttpHandler) ChangePrivacy(echoCtx echo.Context) error {
 	var req api.ChangePrivacyRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return err
 	}
-	userId := req.UserID
-	privacy := req.IsPrivate
-	err := h.db.ChangeLayoutPrivacy(userId, privacy)
-	if err != nil {
-		h.logger.Error("failed to change privacy", zap.Error(err))
+
+	if err := h.db.ChangeLayoutPrivacy(req.UserID, req.IsPrivate); err != nil {
+		h.logger.Error("failed to change layout privacy", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to change privacy")
 	}
+
 	return echoCtx.NoContent(http.StatusOK)
 }
 
-// get public layouts
+// Get all public layouts
 func (h *HttpHandler) GetPublicLayouts(echoCtx echo.Context) error {
-
 	layouts, err := h.db.GetPublicLayouts()
 	if err != nil {
 		h.logger.Error("failed to get public layouts", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get public layouts")
 	}
-	if layouts == nil {
+	if len(layouts) == 0 {
 		return echo.NewHTTPError(http.StatusNotFound, "public layouts not found")
 	}
-	// convert layouts to []api.GetUserLayoutResponse
-	var layoutsResponse []api.GetUserLayoutResponse
+
+	var response []api.GetUserLayoutResponse
 	for _, layout := range layouts {
-		layoutResponse := api.GetUserLayoutResponse{
+		response = append(response, api.GetUserLayoutResponse{
+			ID:          layout.ID,
 			UserID:      layout.UserID,
 			Name:        layout.Name,
 			Description: layout.Description,
+			IsPrivate:   layout.IsPrivate,
+			IsDefault:   layout.IsDefault,
 			UpdatedAt:   layout.UpdatedAt,
-			// LayoutConfig: func() []map[string]any {
-			// 	var config []map[string]any
-			// 	if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
-			// 		h.logger.Error("failed to unmarshal layout config", zap.Error(err))
-			// 		return nil
-			// 	}
-			// 	return config
-			// }(),
-		}
-		layoutsResponse = append(layoutsResponse, layoutResponse)
+		})
 	}
 
-	return echoCtx.JSON(http.StatusOK, layoutsResponse)
+	return echoCtx.JSON(http.StatusOK, response)
+}
+
+// ===================== WIDGET HANDLERS =====================
+
+// Get all widgets for a user
+func (h *HttpHandler) GetUserWidgets(echoCtx echo.Context) error {
+	var req api.GetUserWidgetRequest
+	if err := bindValidate(echoCtx, &req); err != nil {
+		return err
+	}
+
+	widgets, err := h.db.GetUserWidgets(req.UserID)
+	if err != nil {
+		h.logger.Error("failed to get user widgets", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user widgets")
+	}
+
+	return echoCtx.JSON(http.StatusOK, widgets)
+}
+
+// Get a single widget by ID
+func (h *HttpHandler) GetWidget(echoCtx echo.Context) error {
+	widgetID := echoCtx.Param("id")
+	widget, err := h.db.GetWidget(widgetID)
+	if err != nil {
+		h.logger.Error("failed to get widget", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get widget")
+	}
+	if widget == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "widget not found")
+	}
+	return echoCtx.JSON(http.StatusOK, widget)
+}
+
+// Upsert a widget (no DashboardID; many-to-many handled separately)
+func (h *HttpHandler) SetUserWidget(echoCtx echo.Context) error {
+	var req api.SetUserWidgetRequest
+	if err := bindValidate(echoCtx, &req); err != nil {
+		return err
+	}
+
+	if req.ID == "" {
+		req.ID = uuid.New().String()
+	}
+
+	widget := models.Widget{
+		ID:           req.ID,
+		UserID:       req.UserID,
+		Title:        req.Title,
+		Description:  req.Description,
+		WidgetType:   req.WidgetType,
+		WidgetProps: func() pgtype.JSONB {
+			var jsonb pgtype.JSONB
+			if err := jsonb.Set(req.WidgetProps); err != nil {
+				h.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
+			}
+			return jsonb
+		}(),
+		RowSpan:      req.RowSpan,
+		ColumnSpan:   req.ColumnSpan,
+		ColumnOffset: req.ColumnOffset,
+		UpdatedAt:    time.Now(),
+		IsPublic:     req.IsPublic,
+	}
+
+	if err := h.db.SetUserWidget(widget); err != nil {
+		h.logger.Error("failed to set user widget", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to set user widget")
+	}
+
+	return echoCtx.NoContent(http.StatusOK)
+}
+
+// Delete a widget by ID
+func (h *HttpHandler) DeleteUserWidget(echoCtx echo.Context) error {
+	widgetID := echoCtx.Param("id")
+	if err := h.db.DeleteUserWidget(widgetID); err != nil {
+		h.logger.Error("failed to delete widget", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete widget")
+	}
+	return echoCtx.NoContent(http.StatusOK)
+}
+
+
+// Update widgets associated with a dashboard
+func (h *HttpHandler) UpdateDashboardWidgets(echoCtx echo.Context) error {
+	var req api.UpdateDashboardWidgetsRequest
+	if err := bindValidate(echoCtx, &req); err != nil {
+		return err
+	}
+
+	
+
+	if err := h.db.UpdateDashboardWidgets(req.DashboardID, req.Widgets); err != nil {
+		h.logger.Error("failed to update dashboard widgets", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update dashboard widgets")
+	}
+
+	return echoCtx.NoContent(http.StatusOK)
+}
+
+// Update dashboards associated with a widget
+func (h *HttpHandler) UpdateWidgetDashboards(echoCtx echo.Context) error {
+	var req api.UpdateWidgetDashboardsRequest
+	if err := bindValidate(echoCtx, &req); err != nil {
+		return err
+	}
+
+
+	if err := h.db.UpdateWidgetDashboards(req.WidgetID, req.Dashboards); err != nil {
+		h.logger.Error("failed to update widget dashboards", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update widget dashboards")
+	}
+
+	return echoCtx.NoContent(http.StatusOK)
 }
