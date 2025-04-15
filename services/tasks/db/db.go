@@ -18,6 +18,7 @@ func (db Database) Initialize() error {
 		&models.Task{},
 		&models.TaskRun{},
 		&models.TaskConfigSecret{},
+		&models.TaskRunSchedule{},
 	)
 	if err != nil {
 		return err
