@@ -101,10 +101,8 @@ func (r *httpRoutes) ListTasks(ctx echo.Context) error {
 		taskResponses = append(taskResponses, api.TaskResponse{
 			ID:          task.ID,
 			Name:        task.Name,
-			ResultType:  task.ResultType,
 			Description: task.Description,
 			ImageUrl:    task.ImageUrl,
-			Interval:    task.Interval,
 			Timeout:     task.Timeout,
 		})
 	}
@@ -135,10 +133,8 @@ func (r *httpRoutes) GetTask(ctx echo.Context) error {
 	taskResponse = api.TaskResponse{
 		ID:          task.ID,
 		Name:        task.Name,
-		ResultType:  task.ResultType,
 		Description: task.Description,
 		ImageUrl:    task.ImageUrl,
-		Interval:    task.Interval,
 		Timeout:     task.Timeout,
 	}
 
