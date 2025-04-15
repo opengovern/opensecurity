@@ -13,7 +13,7 @@ spec:
   pollingInterval: 5
   cooldownPeriod:  300
   minReplicaCount: 0
-  maxReplicaCount: 20
+  maxReplicaCount: 10
   fallback:
     failureThreshold: 1
     replicas: 1
@@ -23,5 +23,5 @@ spec:
         account: "$G"
         stream: "og_describer_template"
         consumer: "describer-template-manuals-service"
-        lagThreshold: "20"
+        lagThreshold: "150"
         useHttps: "false"
