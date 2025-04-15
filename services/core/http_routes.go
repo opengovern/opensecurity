@@ -1625,14 +1625,14 @@ func (h *HttpHandler) GetUserLayouts(echoCtx echo.Context) error {
 		response = append(response, api.GetUserLayoutResponse{
 			ID:     layout.ID,
 			UserID: userId,
-			LayoutConfig: func() []map[string]any {
-				var config []map[string]any
-				if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
-					h.logger.Error("failed to unmarshal layout config", zap.Error(err))
-					return nil
-				}
-				return config
-			}(),
+			// LayoutConfig: func() []map[string]any {
+			// 	var config []map[string]any
+			// 	if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
+			// 		h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+			// 		return nil
+			// 	}
+			// 	return config
+			// }(),
 			Name:        layout.Name,
 			Description: layout.Description,
 			IsDefault:   layout.IsDefault,
@@ -1662,14 +1662,14 @@ func (h *HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, api.GetUserLayoutResponse{
 		ID:     layout.ID,
 		UserID: userId,
-		LayoutConfig: func() []map[string]any {
-			var config []map[string]any
-			if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
-				h.logger.Error("failed to unmarshal layout config", zap.Error(err))
-				return nil
-			}
-			return config
-		}(),
+		// LayoutConfig: func() []map[string]any {
+		// 	var config []map[string]any
+		// 	if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
+		// 		h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+		// 		return nil
+		// 	}
+		// 	return config
+		// }(),
 		Name:        layout.Name,
 		Description: layout.Description,
 		IsPrivate:   layout.IsPrivate,
@@ -1699,10 +1699,10 @@ func (h *HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 		id = uuid.New().String()
 	}
 
-	user_layout := models.UserLayout{
+	user_layout := models.Dashboard{
 		ID:           id,
 		UserID:       userId,
-		LayoutConfig: layout_config,
+		// LayoutConfig: layout_config,
 		IsDefault:    req.IsDefault,
 		Name:         req.Name,
 		Description:  req.Description,
@@ -1751,14 +1751,14 @@ func (h *HttpHandler) GetPublicLayouts(echoCtx echo.Context) error {
 			Name:        layout.Name,
 			Description: layout.Description,
 			UpdatedAt:   layout.UpdatedAt,
-			LayoutConfig: func() []map[string]any {
-				var config []map[string]any
-				if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
-					h.logger.Error("failed to unmarshal layout config", zap.Error(err))
-					return nil
-				}
-				return config
-			}(),
+			// LayoutConfig: func() []map[string]any {
+			// 	var config []map[string]any
+			// 	if err := json.Unmarshal(layout.LayoutConfig.Bytes, &config); err != nil {
+			// 		h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+			// 		return nil
+			// 	}
+			// 	return config
+			// }(),
 		}
 		layoutsResponse = append(layoutsResponse, layoutResponse)
 	}

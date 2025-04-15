@@ -50,21 +50,36 @@ type QueryView struct {
 	Dependencies pq.StringArray `gorm:"type:text[]"`
 	Tags         []QueryViewTag `gorm:"foreignKey:QueryViewID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
-type UserLayout struct{
-	ID  string  `gorm:"primaryKey" json:"id"`
-	IsDefault bool `json:"is_default"`
-	UserID string `gorm:"type:text" json:"user_id"`
-	LayoutConfig pgtype.JSONB `gorm:"type:jsonb" json:"layout_config"`
-	Name string `gorm:"type:text" json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	Description string `json:"description"`
-	UpdatedAt time.Time `json:"updated_at"`
-	IsPrivate bool `json:"is_private"`
+type Dashboard struct {
+	ID          string    `gorm:"primaryKey" json:"id"`
+	IsDefault   bool      `json:"is_default"`
+	UserID      string    `gorm:"type:text" json:"user_id"`
+	Widgets     []Widget  `gorm:"foreignKey:DashboardID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"` // One-to-many
+	Name        string    `gorm:"type:text" json:"name"`
+	CreatedAt   time.Time `json:"created_at"`
+	Description string    `json:"description"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	IsPrivate   bool      `json:"is_private"`
 }
-// Array of widgets 
-// example: 
-// [{"id":"table1","type":"table","title":"Table 1","query_id":"query1","layout":{"x":0,"y":0,"w":6,"h":4}},{"id":"table2","type":"table","title":"Table 2","query_id":"query2","layout":{"x":6,"y":0,"w":6,"h":4}}]}]
-// 
+
+type Widget struct {
+	ID            string         `gorm:"primaryKey" json:"id"`
+	Title         string         `gorm:"type:text" json:"title"`
+	Description   string         `gorm:"type:text" json:"description"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+	WidgetType    string         `gorm:"type:text" json:"widget_type"`
+	WidgetProps   pgtype.JSONB   `json:"widget_props" gorm:"type:jsonb"`
+	RowSpan       int            `json:"row_span"`
+	ColumnSpan    int            `json:"column_span"`
+	ColumnOffset  int            `json:"column_offset"`
+	IsPublic      bool           `json:"is_public"`
+	UserID        string         `gorm:"type:text" json:"user_id"`
+	DashboardID   string         `gorm:"type:text" json:"dashboard_id"` // Correct: this links to Dashboard.ID
+}
+
+	
+
 
 
 type MetadataKey string
