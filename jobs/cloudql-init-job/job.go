@@ -11,6 +11,7 @@ import (
 	taskModels "github.com/opengovern/opensecurity/services/tasks/db/models"
 	"go.uber.org/zap"
 	"os"
+	"strings"
 )
 
 type Job struct {
@@ -129,6 +130,8 @@ func (j *Job) Run(ctx context.Context) (*steampipe.Database, error) {
 			j.logger.Debug("steampipe plugin name not found - skipping task", zap.String("id", task.ID))
 			continue
 		}
+
+		steampipePluginName := strings.ReplaceAll(task.SteampipePluginName, "steampipe-plugin-", "")
 		var cloudqlBinary string
 		err = db.Raw("SELECT cloud_ql_plugin FROM task_binaries WHERE task_id = ?", task.ID).Scan(&cloudqlBinary).Error
 		if err != nil {
@@ -140,12 +143,12 @@ func (j *Job) Run(ctx context.Context) (*steampipe.Database, error) {
 			j.logger.Debug("steampipe plugin binary not found - skipping task", zap.String("id", task.ID))
 			continue
 		}
-		err = steampipe.PopulateSteampipeConfig(j.cfg.ElasticSearch, task.SteampipePluginName)
+		err = steampipe.PopulateSteampipeConfig(j.cfg.ElasticSearch, steampipePluginName)
 		if err != nil {
 			return nil, err
 		}
 
-		dirPath := basePath + "/" + task.ID + "@latest"
+		dirPath := basePath + "/" + steampipePluginName + "@latest"
 		// create directory if not exists
 		if _, err := os.Stat(dirPath); os.IsNotExist(err) {
 			err := os.MkdirAll(dirPath, os.ModePerm)
@@ -159,7 +162,7 @@ func (j *Job) Run(ctx context.Context) (*steampipe.Database, error) {
 		pluginPath := dirPath + "/" + task.SteampipePluginName + ".plugin"
 		err := os.WriteFile(pluginPath, []byte(cloudqlBinary), 0777)
 		if err != nil {
-			j.logger.Error("failed to write plugin to file system", zap.Error(err), zap.String("plugin", task.SteampipePluginName))
+			j.logger.Error("failed to write plugin to file system", zap.Error(err), zap.String("plugin", steampipePluginName))
 			return nil, err
 		}
 
