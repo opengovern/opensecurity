@@ -85,6 +85,7 @@ type Chat struct {
 	Suggestions           []Suggestion   `json:"suggestions"`
 	TimeTaken             *time.Duration `json:"time_taken,omitempty"`
 	Result                *ChatResult    `json:"result"`
+	ClarifyingQuestions   []ClarificationQuestion `json:"clarifying_questions"`
 }
 
 type ChatResult struct {

@@ -2652,6 +2652,13 @@ func convertChatToApi(chat models.Chat) (*api.Chat, error) {
 			Suggestion:   suggestion.Suggestion,
 		})
 	}
+	var clarifyingQuestions []api.ClarificationQuestion
+	for _, chatClarification := range chat.ClarifyingQuestions {
+		clarifyingQuestions = append(clarifyingQuestions, api.ClarificationQuestion{
+			ClarificationId: chatClarification.ID.String(),
+			Question:        chatClarification.Questions,
+		})
+	}
 
 	apiChat := &api.Chat{
 		ID:                    chat.ID.String(),
@@ -2663,6 +2670,7 @@ func convertChatToApi(chat models.Chat) (*api.Chat, error) {
 		Suggestions:           suggestions,
 		NeedClarification:     chat.NeedClarification,
 		TimeTaken:             timeTaken,
+		ClarifyingQuestions:   clarifyingQuestions,
 	}
 	var result api.ChatResult
 	if chat.Result.Status == pgtype.Present {

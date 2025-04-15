@@ -981,10 +981,6 @@ github.com/opencontainers/image-spec v1.1.0 h1:8SG7/vwALn54lVB/0yZ/MMwhFrPYtpEHQ
 github.com/opencontainers/image-spec v1.1.0/go.mod h1:W4s4sFTMaBeK1BQLXbG4AdM2szdn85PY75RI83NrTrM=
 github.com/opencontainers/runc v1.2.6 h1:P7Hqg40bsMvQGCS4S7DJYhUZOISMLJOB2iGX5COWiPk=
 github.com/opencontainers/runc v1.2.6/go.mod h1:dOQeFo29xZKBNeRBI0B19mJtfHv68YgCTh1X+YphA+4=
-github.com/opengovern/og-util v1.14.2 h1:BJyZy5Gw39qhpAQRfnheJo3lbBENicwjQSliVgAywgE=
-github.com/opengovern/og-util v1.14.2/go.mod h1:9uNpGalixRoQkUzPPBdT+JG1epg8FTRx/qmkfTyUZHE=
-github.com/opengovern/og-util v1.15.0 h1:5QgZFYl0tQrt5BQ7/SgleAXaD0oGJXIawMD7aA88hfI=
-github.com/opengovern/og-util v1.15.0/go.mod h1:Uel/Gln5+a7L43XQISp1gLRR0nJYKbnsgRmitPMwFLk=
 github.com/opengovern/og-util v1.15.1 h1:k1pYQmmp3e/O/uMZwg2IRm6kB6uOUrPjsHcsZi7SMUA=
 github.com/opengovern/og-util v1.15.1/go.mod h1:Uel/Gln5+a7L43XQISp1gLRR0nJYKbnsgRmitPMwFLk=
 github.com/opensearch-project/opensearch-go/v2 v2.3.0 h1:nQIEMr+A92CkhHrZgUhcfsrZjibvB3APXf2a1VwCmMQ=
