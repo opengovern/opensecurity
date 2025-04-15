@@ -145,7 +145,7 @@ func (j *Job) Run(ctx context.Context) (*steampipe.Database, error) {
 			return nil, err
 		}
 
-		dirPath := basePath + "/" + task.SteampipePluginName + "@latest"
+		dirPath := basePath + "/" + task.ID + "@latest"
 		// create directory if not exists
 		if _, err := os.Stat(dirPath); os.IsNotExist(err) {
 			err := os.MkdirAll(dirPath, os.ModePerm)
@@ -156,7 +156,7 @@ func (j *Job) Run(ctx context.Context) (*steampipe.Database, error) {
 		}
 
 		// write the plugin to the file system
-		pluginPath := dirPath + "/steampipe-plugin-" + task.SteampipePluginName + ".plugin"
+		pluginPath := dirPath + "/" + task.SteampipePluginName + ".plugin"
 		err := os.WriteFile(pluginPath, []byte(cloudqlBinary), 0777)
 		if err != nil {
 			j.logger.Error("failed to write plugin to file system", zap.Error(err), zap.String("plugin", task.SteampipePluginName))
