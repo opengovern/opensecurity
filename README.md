@@ -58,7 +58,7 @@
 Install opensecurity on any Kubernetes cluster with at least 3 nodes (4 vCPUs x 16GB RAM each).
 
 ```bash
-helm repo add opensecurity https://charts.opensecurity.sh --force-update
+helm repo add opensecurity https://charts.clearcompass.so --force-update
 helm install -n opensecurity opensecurity opensecurity/opensecurity --create-namespace
 kubectl port-forward -n opensecurity svc/nginx-proxy 8080:80
 ```
