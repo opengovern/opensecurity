@@ -70,12 +70,6 @@ func (s *TaskScheduler) Run(ctx context.Context) {
 		s.RunPublisher(ctx)
 	})
 
-	for _, taskRunSchedule := range s.TaskRunSchedules {
-		utils.EnsureRunGoroutine(func() {
-			s.CreateTask(ctx, taskRunSchedule)
-		})
-	}
-
 	utils.EnsureRunGoroutine(func() {
 		s.logger.Fatal("RunTaskResponseConsumer exited", zap.Error(s.RunTaskResponseConsumer(ctx)))
 	})
@@ -89,21 +83,6 @@ func (s *TaskScheduler) RunPublisher(ctx context.Context) {
 
 	for ; ; <-t.C {
 		if err := s.runPublisher(ctx); err != nil {
-			s.logger.Error("failed to run compliance publisher", zap.Error(err))
-			continue
-		}
-	}
-}
-
-func (s *TaskScheduler) CreateTask(ctx context.Context, runSchedule models.TaskRunSchedule) {
-	s.logger.Info("Scheduling publisher on a timer")
-
-	interval := time.Duration(runSchedule.Frequency) * time.Minute
-	t := ticker.NewTicker(interval, time.Second*10)
-	defer t.Stop()
-
-	for ; ; <-t.C {
-		if err := s.createTask(ctx, runSchedule); err != nil {
 			s.logger.Error("failed to run compliance publisher", zap.Error(err))
 			continue
 		}

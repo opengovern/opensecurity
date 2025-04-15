@@ -3,6 +3,7 @@ package models
 import (
 	"github.com/jackc/pgtype"
 	"gorm.io/gorm"
+	"time"
 )
 
 type TaskSecretHealthStatus string
@@ -41,7 +42,9 @@ type TaskConfigSecret struct {
 }
 
 type TaskRunSchedule struct {
+	ID        uint `gorm:"primarykey"`
 	TaskID    string
+	LastRun   *time.Time
 	Params    pgtype.JSONB
 	Frequency float64
 }
