@@ -15,15 +15,23 @@ const (
 
 type Task struct {
 	gorm.Model
-	ID          string `gorm:"primarykey"`
-	Name        string `gorm:"unique;not null"`
-	IsEnabled   bool   `gorm:"not null"`
-	Description string
-	ImageUrl    string
-	Command     string
-	Timeout     float64
-	NatsConfig  pgtype.JSONB
-	ScaleConfig pgtype.JSONB
+	ID                  string `gorm:"primarykey"`
+	Name                string `gorm:"unique;not null"`
+	IsEnabled           bool   `gorm:"not null"`
+	Description         string
+	ImageUrl            string
+	SteampipePluginName string
+	ArtifactsUrl        string
+	Command             string
+	Timeout             float64
+	NatsConfig          pgtype.JSONB
+	ScaleConfig         pgtype.JSONB
+}
+
+type TaskBinary struct {
+	TaskID string `gorm:"primaryKey"`
+
+	CloudQlPlugin []byte `gorm:"type:bytea"`
 }
 
 type TaskConfigSecret struct {

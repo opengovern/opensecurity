@@ -8,6 +8,7 @@ import (
 	"github.com/opengovern/og-util/pkg/steampipe"
 	"github.com/opengovern/opensecurity/services/integration/client"
 	"github.com/opengovern/opensecurity/services/integration/models"
+	taskModels "github.com/opengovern/opensecurity/services/tasks/db/models"
 	"go.uber.org/zap"
 	"os"
 )
@@ -40,6 +41,19 @@ func (j *Job) Run(ctx context.Context) (*steampipe.Database, error) {
 		return nil, err
 	}
 
+	tasksDb, err := postgres.NewClient(&postgres.Config{
+		Host:    j.cfg.Postgres.Host,
+		Port:    j.cfg.Postgres.Port,
+		User:    j.cfg.Postgres.Username,
+		Passwd:  j.cfg.Postgres.Password,
+		DB:      "task",
+		SSLMode: j.cfg.Postgres.SSLMode,
+	}, j.logger.Named("postgres"))
+	if err != nil {
+		j.logger.Error("failed to create postgres client", zap.Error(err))
+		return nil, err
+	}
+
 	var integrations []models.IntegrationPlugin
 	err = db.Find(&integrations).Error
 	if err != nil {
@@ -61,6 +75,8 @@ func (j *Job) Run(ctx context.Context) (*steampipe.Database, error) {
 	}
 
 	basePath := "/home/steampipe/.steampipe/plugins/hub.steampipe.io/plugins/turbot"
+
+	// Integrations
 	for _, integrationType := range integrationTypes {
 		describerConfig, err := j.integrationClient.GetIntegrationConfiguration(&httpCtx, integrationType)
 		if err != nil {
@@ -101,6 +117,47 @@ func (j *Job) Run(ctx context.Context) (*steampipe.Database, error) {
 			cloudqlBinary = ""
 		}
 	}
+
+	// Tasks
+	var tasks []taskModels.Task
+	if err := tasksDb.Model(&taskModels.Task{}).Where("is_enabled = ?", true).Find(&tasks).Error; err != nil {
+		j.logger.Error("failed to get tasks", zap.Error(err))
+		return nil, err
+	}
+	for _, task := range tasks {
+		err = steampipe.PopulateSteampipeConfig(j.cfg.ElasticSearch, task.SteampipePluginName)
+		if err != nil {
+			return nil, err
+		}
+
+		dirPath := basePath + "/" + task.SteampipePluginName + "@latest"
+		// create directory if not exists
+		if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+			err := os.MkdirAll(dirPath, os.ModePerm)
+			if err != nil {
+				j.logger.Error("failed to create directory", zap.Error(err), zap.String("path", dirPath))
+				return nil, err
+			}
+		}
+
+		var cloudqlBinary string
+		err = db.Raw("SELECT cloud_ql_plugin FROM task_binaries WHERE task_id = ?", task.ID).Scan(&cloudqlBinary).Error
+		if err != nil {
+			j.logger.Error("failed to get plugin binary", zap.Error(err), zap.String("task_id", task.ID))
+			return nil, err
+		}
+
+		// write the plugin to the file system
+		pluginPath := dirPath + "/steampipe-plugin-" + task.SteampipePluginName + ".plugin"
+		err := os.WriteFile(pluginPath, []byte(cloudqlBinary), 0777)
+		if err != nil {
+			j.logger.Error("failed to write plugin to file system", zap.Error(err), zap.String("plugin", task.SteampipePluginName))
+			return nil, err
+		}
+
+		cloudqlBinary = ""
+	}
+
 	if j.cfg.Postgres.DB == "" {
 		j.cfg.Postgres.DB = "integration"
 	}

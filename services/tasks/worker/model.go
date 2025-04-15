@@ -34,14 +34,16 @@ type TaskRunSchedule struct {
 }
 
 type Task struct {
-	ID          string            `yaml:"id"`
-	Name        string            `yaml:"name"`
-	Description string            `yaml:"description"`
-	IsEnabled   bool              `yaml:"is_enabled"`
-	ImageURL    string            `yaml:"image_url"`
-	Command     string            `yaml:"command"`
-	Timeout     string            `yaml:"timeout"`
-	NatsConfig  NatsConfig        `yaml:"nats_config"`
-	ScaleConfig ScaleConfig       `yaml:"scale_config"`
-	RunSchedule []TaskRunSchedule `yaml:"run_schedule"`
+	ID                  string            `yaml:"id"`
+	Name                string            `yaml:"name"`
+	Description         string            `yaml:"description"`
+	IsEnabled           bool              `yaml:"is_enabled"`
+	ImageURL            string            `yaml:"image_url"`
+	ArtifactsURL        string            `yaml:"artifacts_url"`
+	SteampipePluginName string            `yaml:"steampipe_plugin_name"`
+	Command             string            `yaml:"command"`
+	Timeout             string            `yaml:"timeout"`
+	NatsConfig          NatsConfig        `yaml:"nats_config"`
+	ScaleConfig         ScaleConfig       `yaml:"scale_config"`
+	RunSchedule         []TaskRunSchedule `yaml:"run_schedule"`
 }
