@@ -143,7 +143,7 @@ func CreateWorker(ctx context.Context, cfg config.Config, kubeClient client.Clie
 func defaultEnvs(cfg config.Config, taskConfig *models.Task) ([]corev1.EnvVar, error) {
 	var natsConfig NatsConfig
 	if taskConfig.NatsConfig.Status == pgtype.Present {
-		if err := json.Unmarshal(taskConfig.ScaleConfig.Bytes, &natsConfig); err != nil {
+		if err := json.Unmarshal(taskConfig.NatsConfig.Bytes, &natsConfig); err != nil {
 			return nil, err
 		}
 	}
