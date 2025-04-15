@@ -100,6 +100,9 @@ func (h *HttpHandler) Register(r *echo.Echo) {
 	v3.GET("/queries/:query_id", httpserver.AuthorizeHandler(h.GetQuery, api3.ViewerRole))
 	v3.GET("/queries/tags", httpserver.AuthorizeHandler(h.ListQueriesTags, api3.ViewerRole))
 	v3.POST("/query/run", httpserver.AuthorizeHandler(h.RunQueryByID, api3.ViewerRole))
+	v3.POST("/query/add", httpserver.AuthorizeHandler(h.AddQuery, api3.ViewerRole))
+	v3.POST("/query/update", httpserver.AuthorizeHandler(h.UpdateQuery, api3.ViewerRole))
+
 	v3.GET("/query/async/run/:run_id/result", httpserver.AuthorizeHandler(h.GetAsyncQueryRunResult, api3.ViewerRole))
 	v3.GET("/resources/categories", httpserver.AuthorizeHandler(h.GetResourceCategories, api3.ViewerRole))
 	v3.GET("/queries/categories", httpserver.AuthorizeHandler(h.GetQueriesResourceCategories, api3.ViewerRole))

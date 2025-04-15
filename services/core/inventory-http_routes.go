@@ -229,7 +229,7 @@ func (h *HttpHandler) ListQueriesV2(ctx echo.Context) error {
 	}
 
 	queries, err := h.db.ListQueriesByFilters(req.QueryIDs, search, req.Tags, req.IntegrationTypes, req.HasParameters, req.PrimaryTable,
-		tablesFilter, nil)
+		tablesFilter, nil,req.Owner,req.Visibility)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
@@ -1367,6 +1367,94 @@ func (h *HttpHandler) RunQueryByID(ctx echo.Context) error {
 	}
 }
 
+// add query
+
+func (h *HttpHandler)AddQuery(ctx echo.Context) error {
+	var req api.AddQueryRequest
+	// valideate request
+	if err := bindValidate(ctx, &req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	query := models.Query{
+		QueryToExecute: req.Query,
+		ID: req.QueryID,
+		Engine: "sql",
+		Global: false,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	err:= h.db.CreateQuery(&query)
+	if err != nil {
+		h.logger.Error("failed to create query", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create query")
+	}
+	// add query to cache
+	named_query := models.NamedQuery{
+		ID: req.QueryID,
+		IntegrationTypes: req.IntegrationTypes,
+		CacheEnabled: true,
+		Owner: req.Owner,
+		Query: &query,
+		QueryID: &req.QueryID,
+		Visibility: req.Visibility,
+		IsBookmarked: req.IsBookmarked,
+		Title: req.QueryName,
+		Description: req.Description,
+	
+	}
+	err = h.db.CreateNamedQuery(&named_query)
+	if err != nil {
+		h.logger.Error("failed to create named query", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create named query")
+	}
+	return ctx.JSON(http.StatusCreated, nil)
+	
+}
+
+func (h *HttpHandler)UpdateQuery(ctx echo.Context) error {
+	var req api.AddQueryRequest
+	// valideate request
+	if err := bindValidate(ctx, &req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	query := models.Query{
+		QueryToExecute: req.Query,
+		ID: req.QueryID,
+		Engine: "sql",
+		
+	}
+	err:= h.db.UpdateQuery(&query)
+	if err != nil {
+		h.logger.Error("failed to create query", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create query")
+	}
+	// add query to cache
+	named_query := models.NamedQuery{
+		ID: req.QueryID,
+		IntegrationTypes: req.IntegrationTypes,
+		CacheEnabled: true,
+		Owner: req.Owner,
+		Query: &query,
+		QueryID: &req.QueryID,
+		Visibility: req.Visibility,
+		IsBookmarked: req.IsBookmarked,
+		Title: req.QueryName,
+		Description: req.Description,
+	
+	}
+	err = h.db.UpdateNamedQuery(&named_query)
+	if err != nil {
+		h.logger.Error("failed to create named query", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create named query")
+	}
+	return ctx.JSON(http.StatusAccepted, nil)
+	
+}
+
+
+
 // ListQueriesFilters godoc
 //
 //	@Summary	List possible values for each filter in List Controls
@@ -1909,7 +1997,7 @@ func (h *HttpHandler) ListQueriesV2Internal(req api.ListQueryV2Request) (*api.Li
 	}
 
 	queries, err := h.db.ListQueriesByFilters(req.QueryIDs, search, req.Tags, req.IntegrationTypes, req.HasParameters, req.PrimaryTable,
-		tablesFilter, nil)
+		tablesFilter, nil,"","")
 	if err != nil {
 		return &namedQuery, err
 	}

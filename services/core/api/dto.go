@@ -83,6 +83,8 @@ type ListQueryV2Request struct {
 	TagsRegex         *string             `json:"tags_regex"`
 	Cursor            *int64              `json:"cursor"`
 	PerPage           *int64              `json:"per_page"`
+	Owner 		  string              `json:"owner"`
+	Visibility 	  string              `json:"visibility"`
 }
 
 type ListQueryRequest struct {

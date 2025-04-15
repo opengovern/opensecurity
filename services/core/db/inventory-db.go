@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/lib/pq"
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/og-util/pkg/model"
 	"github.com/opengovern/opensecurity/services/core/db/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"strings"
-	"time"
 )
 
 func (db Database) GetQueriesWithFilters(search *string) ([]models.NamedQuery, error) {
@@ -58,7 +59,6 @@ func (db Database) ListQueries(queryIdsFilter []string, primaryTable []string, l
 	var s []models.NamedQuery
 
 	m := db.orm.Model(&models.NamedQuery{}).Distinct("named_queries.*")
-
 	if len(queryIdsFilter) > 0 {
 		m = m.Where("id in ?", queryIdsFilter)
 	}
@@ -152,10 +152,11 @@ func (db Database) GetQuery(id string) (*models.NamedQuery, error) {
 }
 
 func (db Database) ListQueriesByFilters(queryIds []string, search *string, tagFilters map[string][]string, integrationTypes []string,
-	hasParameters *bool, primaryTable []string, listOfTables []string, params []string) ([]models.NamedQuery, error) {
+	hasParameters *bool, primaryTable []string, listOfTables []string, params []string,owner string , visibility string) ([]models.NamedQuery, error) {
 	var s []models.NamedQuery
 
-	m := db.orm.Model(&models.NamedQuery{}).Distinct("named_queries.*").Preload(clause.Associations).Preload("Query.Parameters").Preload("Tags")
+	m := db.orm.Model(&models.NamedQuery{}).Distinct("named_queries.*").
+	Preload(clause.Associations).Preload("Query.Parameters").Preload("Tags")
 
 	if len(queryIds) > 0 {
 		m = m.Where("id IN ?", queryIds)
@@ -183,6 +184,14 @@ func (db Database) ListQueriesByFilters(queryIds []string, search *string, tagFi
 
 			i++
 		}
+	}
+	if owner != "" {
+		m = m.Where("owner = ?", owner)
+		if(visibility != "") {
+			m = m.Where("visibility = ?", visibility)
+		}
+	}else{
+		m=m.Where("visibility = ?", "public")
 	}
 
 	if hasParameters != nil || len(params) > 0 || len(primaryTable) > 0 || len(listOfTables) > 0 {
@@ -588,4 +597,68 @@ func (db Database) ListCacheEnabledNamedQueries() ([]models.NamedQueryWithCacheS
 	}
 
 	return results, nil
+}
+
+// create query
+func (db Database) CreateQuery(query *models.Query) error {
+	tx := db.orm.Create(query)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if query.ID == "" {
+		return fmt.Errorf("failed to create query")
+	}
+	return nil
+}
+func (db Database) UpdateQuery(query *models.Query) error {
+	tx := db.orm.Save(query)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if query.ID == "" {
+		return fmt.Errorf("failed to update query")
+	}
+	return nil
+}
+func (db Database) DeleteQuery(query *models.Query) error {
+	tx := db.orm.Delete(query)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return fmt.Errorf("failed to delete query")
+	}
+	return nil
+}
+
+// create named query
+func (db Database) CreateNamedQuery(namedQuery *models.NamedQuery) error {
+	tx := db.orm.Create(namedQuery)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if namedQuery.ID == "" {
+		return fmt.Errorf("failed to create named query")
+	}
+	return nil
+}
+func (db Database) UpdateNamedQuery(namedQuery *models.NamedQuery) error {
+	tx := db.orm.Save(namedQuery)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if namedQuery.ID == "" {
+		return fmt.Errorf("failed to update named query")
+	}
+	return nil
+}
+func (db Database) DeleteNamedQuery(namedQuery *models.NamedQuery) error {
+	tx := db.orm.Delete(namedQuery)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return fmt.Errorf("failed to delete named query")
+	}
+	return nil
 }

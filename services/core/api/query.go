@@ -100,3 +100,16 @@ type CachedEnabledQuery struct {
 	QueryID string `json:"queryID"`
 	LastRun time.Time
 }
+
+type AddQueryRequest struct {
+	QueryID      string               `json:"query_id"`
+	QueryName    string               `json:"query_name"`
+	Query 	  string               `json:"query"`
+	Description string               `json:"description"`
+	Tags         []string             `json:"tags"`
+	IntegrationTypes []string         `json:"integration_types"`
+	Visibility   string               `json:"visibility"`
+	Owner 	 string               `json:"owner"`
+	IsBookmarked bool                 `json:"is_bookmarked"`
+
+}

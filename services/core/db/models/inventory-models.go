@@ -37,6 +37,9 @@ type NamedQuery struct {
 	IsBookmarked     bool
 	Tags             []NamedQueryTag `gorm:"foreignKey:NamedQueryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	CacheEnabled     bool
+	// default is system
+	Owner 		 string		`gorm:"type:text:default:system"`
+	Visibility	 string         `gorm:"type:text:default:public"`
 }
 
 type NamedQueryHistory struct {
