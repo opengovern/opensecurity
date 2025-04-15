@@ -15,14 +15,12 @@ import (
 	"github.com/opengovern/opensecurity/services/tasks/config"
 	"github.com/opengovern/opensecurity/services/tasks/db"
 	"github.com/opengovern/opensecurity/services/tasks/scheduler"
-	"github.com/opengovern/opensecurity/services/tasks/worker"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -94,12 +92,7 @@ func start(ctx context.Context) error {
 		return err
 	}
 
-	err = setupTasks(ctx, cfg, db, kubeClient)
-	if err != nil {
-		return err
-	}
-
-	mainScheduler, err := scheduler.NewMainScheduler(cfg, logger, db, vaultSc)
+	mainScheduler, err := scheduler.NewMainScheduler(cfg, logger, db, kubeClient, vaultSc)
 	if err != nil {
 		return err
 	}
@@ -136,22 +129,4 @@ func NewKubeClient() (client.Client, error) {
 		return nil, err
 	}
 	return kubeClient, nil
-}
-
-func setupTasks(ctx context.Context, cfg config.Config, db db.Database, kubeClient client.Client) error {
-	tasks, err := db.GetEnabledTaskList()
-	if err != nil {
-		return err
-	}
-	for _, task := range tasks {
-		currentNamespace, ok := os.LookupEnv("CURRENT_NAMESPACE")
-		if !ok {
-			return fmt.Errorf("current namespace lookup failed")
-		}
-		err = worker.CreateWorker(ctx, cfg, kubeClient, &task, currentNamespace)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
