@@ -97,7 +97,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			return err
 		}
 
-		scaleJsonData, err := json.Marshal(task.NatsConfig)
+		scaleJsonData, err := json.Marshal(task.ScaleConfig)
 		if err != nil {
 			return err
 		}
