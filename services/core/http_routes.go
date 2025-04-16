@@ -119,6 +119,7 @@ func (h *HttpHandler) Register(r *echo.Echo) {
 	v4.POST("/layout/get", httpserver.AuthorizeHandler(h.GetUserLayouts, api3.ViewerRole))
 	v4.POST("/layout/get-default", httpserver.AuthorizeHandler(h.GetUserDefaultLayout, api3.ViewerRole))
 	v4.POST("/layout/set", httpserver.AuthorizeHandler(h.SetUserLayout, api3.ViewerRole))
+	
 	v4.POST("/layout/change-privacy", httpserver.AuthorizeHandler(h.ChangePrivacy, api3.ViewerRole))
 	v4.GET("/layout/public", httpserver.AuthorizeHandler(h.GetPublicLayouts, api3.ViewerRole))
 	v4.POST("/layout/widget/get", httpserver.AuthorizeHandler(h.GetUserWidgets, api3.ViewerRole))
@@ -127,9 +128,11 @@ func (h *HttpHandler) Register(r *echo.Echo) {
 	v4.DELETE("/layout/widget/delete/:id", httpserver.AuthorizeHandler(h.DeleteUserWidget, api3.ViewerRole))
 	v4.POST("/layout/update/widget", httpserver.AuthorizeHandler(h.UpdateDashboardWidgets, api3.ViewerRole))
 	v4.POST("/layout/widget/update", httpserver.AuthorizeHandler(h.UpdateWidgetDashboards, api3.ViewerRole))
-
-
 	v4.POST("/layout/widget/set", httpserver.AuthorizeHandler(h.SetUserWidget, api3.ViewerRole))
+	v4.POST("/layout/set/widgets", httpserver.AuthorizeHandler(h.SetDashboardWithWidgets, api3.ViewerRole))
+
+
+
 	// Chatbot
 	v4.GET("/chatbot/agents", httpserver.AuthorizeHandler(h.GetAgents, api3.ViewerRole))
 	v4.POST("/chatbot/generate-query", httpserver.AuthorizeHandler(h.GenerateQuery, api3.ViewerRole))
@@ -1619,7 +1622,8 @@ func (h *HttpHandler) SyncQueries(echoCtx echo.Context) error {
 func (h *HttpHandler) GetUserLayouts(echoCtx echo.Context) error {
 	var req api.GetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-		return err
+				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+
 	}
 
 	layouts, err := h.db.GetUserLayouts(req.UserID)
@@ -1651,7 +1655,8 @@ func (h *HttpHandler) GetUserLayouts(echoCtx echo.Context) error {
 func (h *HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 	var req api.GetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-		return err
+				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+
 	}
 
 	layout, err := h.db.GetUserDefaultLayout(req.UserID)
@@ -1703,7 +1708,8 @@ func (h *HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 func (h *HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	var req api.SetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-		return err
+				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+
 	}
 
 	id := req.ID
@@ -1738,7 +1744,8 @@ func (h *HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 func (h *HttpHandler) ChangePrivacy(echoCtx echo.Context) error {
 	var req api.ChangePrivacyRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-		return err
+				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+
 	}
 
 	if err := h.db.ChangeLayoutPrivacy(req.UserID, req.IsPrivate); err != nil {
@@ -1806,7 +1813,8 @@ func (h *HttpHandler) GetPublicLayouts(echoCtx echo.Context) error {
 func (h *HttpHandler) GetUserWidgets(echoCtx echo.Context) error {
 	var req api.GetUserWidgetRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-		return err
+				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+
 	}
 
 	widgets, err := h.db.GetUserWidgets(req.UserID)
@@ -1836,7 +1844,8 @@ func (h *HttpHandler) GetWidget(echoCtx echo.Context) error {
 func (h *HttpHandler) SetUserWidget(echoCtx echo.Context) error {
 	var req api.SetUserWidgetRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-		return err
+				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+
 	}
 
 	if req.ID == "" {
@@ -1886,7 +1895,8 @@ func (h *HttpHandler) DeleteUserWidget(echoCtx echo.Context) error {
 func (h *HttpHandler) UpdateDashboardWidgets(echoCtx echo.Context) error {
 	var req api.UpdateDashboardWidgetsRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-		return err
+				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+
 	}
 
 	
@@ -1903,7 +1913,8 @@ func (h *HttpHandler) UpdateDashboardWidgets(echoCtx echo.Context) error {
 func (h *HttpHandler) UpdateWidgetDashboards(echoCtx echo.Context) error {
 	var req api.UpdateWidgetDashboardsRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-		return err
+				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+
 	}
 
 
@@ -1924,4 +1935,24 @@ func (h *HttpHandler) GetAllPublicWidgets(echoCtx echo.Context) error {
 	}
 
 	return echoCtx.JSON(http.StatusOK, widgets)
+}
+
+
+// setDahboardWithWidgets
+func (h *HttpHandler) SetDashboardWithWidgets(echoCtx echo.Context) error {
+	var req api.SetDashboardWithWidgetsRequest
+	if err := bindValidate(echoCtx, &req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+	}
+
+
+
+
+
+
+
+
+
+
+	return echoCtx.JSON(http.StatusAccepted,nil)
 }

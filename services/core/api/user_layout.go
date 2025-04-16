@@ -33,6 +33,17 @@ type Widget struct {
 	UpdatedAt    time.Time    `json:"updated_at"`
 
 }
+type SetDashboardWithWidgetsRequest struct {
+	ID string `json:"id"`
+	IsDefault bool `json:"is_default"`
+	UserID string `json:"user_id"`
+	Widgets []Widget `json:"widgets"`  
+	Name string `json:"name"`
+	Description string `json:"description"`
+	UpdatedAt time.Time `json:"updated_at"`
+	IsPrivate bool `json:"is_private"`
+
+}
 type ChangePrivacyRequest struct {
 	UserID string `json:"user_id"`
 	IsPrivate bool `json:"is_private"`
