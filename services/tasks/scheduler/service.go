@@ -63,7 +63,7 @@ func (s *MainScheduler) Start(ctx context.Context) error {
 		if !ok {
 			return fmt.Errorf("current namespace lookup failed")
 		}
-		err = worker.CreateWorker(ctx, s.cfg, s.kubeClient, &task, currentNamespace)
+		err = worker.CreateWorker(ctx, s.kubeClient, &task, currentNamespace)
 		if err != nil {
 			return err
 		}

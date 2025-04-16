@@ -3,6 +3,8 @@ package tasks
 import (
 	"crypto/rsa"
 	"encoding/json"
+	"fmt"
+	"github.com/jackc/pgtype"
 	api2 "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpserver"
 	"github.com/opengovern/og-util/pkg/vault"
@@ -98,12 +100,17 @@ func (r *httpRoutes) ListTasks(ctx echo.Context) error {
 	}
 	var taskResponses []api.TaskResponse
 	for _, task := range items {
+		runSchedules, err := r.db.GetTaskRunSchedules(task.ID)
+		if err != nil {
+			r.logger.Error("failed to get task run schedules", zap.Error(err))
+			return ctx.JSON(http.StatusInternalServerError, "failed to get task run schedules")
+		}
 		taskResponses = append(taskResponses, api.TaskResponse{
-			ID:          task.ID,
-			Name:        task.Name,
-			Description: task.Description,
-			ImageUrl:    task.ImageUrl,
-			Timeout:     task.Timeout,
+			ID:              task.ID,
+			Name:            task.Name,
+			Description:     task.Description,
+			ImageUrl:        task.ImageUrl,
+			SchedulesNumber: len(runSchedules),
 		})
 	}
 
@@ -129,16 +136,66 @@ func (r *httpRoutes) GetTask(ctx echo.Context) error {
 		r.logger.Error("failed to get task results", zap.Error(err))
 		return ctx.JSON(http.StatusInternalServerError, "failed to get task results")
 	}
-	var taskResponse api.TaskResponse
-	taskResponse = api.TaskResponse{
-		ID:          task.ID,
-		Name:        task.Name,
-		Description: task.Description,
-		ImageUrl:    task.ImageUrl,
-		Timeout:     task.Timeout,
+	runSchedules, err := r.db.GetTaskRunSchedules(task.ID)
+	if err != nil {
+		r.logger.Error("failed to get task run schedules", zap.Error(err))
+		return ctx.JSON(http.StatusInternalServerError, "failed to get task run schedules")
+	}
+
+	var runSchedulesObjects []api.RunScheduleObject
+	for _, runSchedule := range runSchedules {
+		params, err := JSONBToMap(runSchedule.Params)
+		if err != nil {
+			r.logger.Error("failed to get task run params", zap.Error(err))
+			return ctx.JSON(http.StatusInternalServerError, "failed to get task run params")
+		}
+		runSchedulesObjects = append(runSchedulesObjects, api.RunScheduleObject{
+			LastRun:   runSchedule.LastRun,
+			Params:    params,
+			Frequency: runSchedule.Frequency,
+		})
+	}
+
+	var credentials []string
+	configSecrets, err := r.db.GetTaskConfigSecret(task.ID)
+	if err != nil {
+		r.logger.Error("failed to get task config secret", zap.Error(err))
+		return ctx.JSON(http.StatusInternalServerError, "failed to get task config secret")
+	}
+	if configSecrets != nil {
+		mapData, err := r.vault.Decrypt(ctx.Request().Context(), configSecrets.Secret)
+		if err != nil {
+			r.logger.Error("failed to decrypt secret", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to decrypt config")
+		}
+		for k := range mapData {
+			credentials = append(credentials, k)
+		}
+	}
+
+	taskResponse := api.TaskDetailsResponse{
+		ID:           task.ID,
+		Name:         task.Name,
+		Description:  task.Description,
+		ImageUrl:     task.ImageUrl,
+		RunSchedules: runSchedulesObjects,
+		Credentials:  credentials,
 	}
 
 	return ctx.JSON(http.StatusOK, taskResponse)
+}
+
+func JSONBToMap(jsonb pgtype.JSONB) (map[string]any, error) {
+	if jsonb.Status != pgtype.Present {
+		return nil, fmt.Errorf("JSONB data is not present")
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(jsonb.Bytes, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSONB: %w", err)
+	}
+
+	return result, nil
 }
 
 // RunTask godoc

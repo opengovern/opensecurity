@@ -11,6 +11,7 @@ import (
 	"github.com/opengovern/opensecurity/jobs/post-install-job/db"
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	"github.com/opengovern/opensecurity/services/tasks/worker"
+	"github.com/opengovern/opensecurity/services/tasks/worker/consts"
 	"github.com/xhit/go-str2duration/v2"
 	"gopkg.in/yaml.v3"
 	"gorm.io/gorm/clause"
@@ -25,6 +26,16 @@ import (
 
 	"github.com/opengovern/og-util/pkg/postgres"
 	"go.uber.org/zap"
+)
+
+var (
+	ESAddress  = os.Getenv("ELASTICSEARCH_ADDRESS")
+	ESUsername = os.Getenv("ELASTICSEARCH_USERNAME")
+	ESPassword = os.Getenv("ELASTICSEARCH_PASSWORD")
+	ESIsOnAks  = os.Getenv("ELASTICSEARCH_ISONAKS")
+
+	InventoryBaseURL = os.Getenv("CORE_BASEURL")
+	NatsURL          = os.Getenv("NATS_URL")
 )
 
 type Migration struct {
@@ -108,6 +119,18 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			return err
 		}
 
+		defaultEnvVars := defaultEnvs(&task)
+		envVarsJsonData, err := json.Marshal(defaultEnvVars)
+		if err != nil {
+			return err
+		}
+
+		var envVarsJsonb pgtype.JSONB
+		err = envVarsJsonb.Set(envVarsJsonData)
+		if err != nil {
+			return err
+		}
+
 		timeoutFloat, err := parseToTotalSeconds(task.Timeout)
 		if err != nil {
 			return err
@@ -128,6 +151,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			Timeout:             timeoutFloat,
 			NatsConfig:          natsJsonb,
 			ScaleConfig:         scaleJsonb,
+			EnvVars:             envVarsJsonb,
 		}).Error; err != nil {
 			return err
 		}
@@ -326,4 +350,22 @@ func loadCloudqlBinary(itDbm db.Database, logger *zap.Logger, task worker.Task) 
 	}
 
 	return nil
+}
+
+func defaultEnvs(taskConfig *worker.Task) map[string]string {
+	return map[string]string{
+		consts.NatsURLEnv:                    NatsURL,
+		consts.NatsConsumerEnv:               taskConfig.NatsConfig.Consumer,
+		consts.NatsStreamNameEnv:             taskConfig.NatsConfig.Stream,
+		consts.NatsTopicNameEnv:              taskConfig.NatsConfig.Topic,
+		consts.NatsResultTopicNameEnv:        taskConfig.NatsConfig.ResultTopic,
+		consts.ElasticSearchAddressEnv:       ESAddress,
+		consts.ElasticSearchUsernameEnv:      ESUsername,
+		consts.ElasticSearchPasswordEnv:      ESPassword,
+		consts.ElasticSearchIsOnAksNameEnv:   ESIsOnAks,
+		consts.ElasticSearchIsOpenSearch:     "false",
+		consts.ElasticSearchAwsRegionEnv:     "",
+		consts.ElasticSearchAssumeRoleArnEnv: "",
+		consts.InventoryBaseURL:              InventoryBaseURL,
+	}
 }
