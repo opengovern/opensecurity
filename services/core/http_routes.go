@@ -1675,8 +1675,8 @@ func (h *HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 			Title:        widget.Title,
 			Description:  widget.Description,
 			WidgetType:   widget.WidgetType,
-			WidgetProps:  func() []map[string]any {
-			var config []map[string]any
+			WidgetProps:  func() map[string]any {
+			var config map[string]any
 			if err := json.Unmarshal(widget.WidgetProps.Bytes, &config); err != nil {
 				h.logger.Error("failed to unmarshal layout config", zap.Error(err))
 				return nil
@@ -1777,8 +1777,8 @@ func (h *HttpHandler) GetPublicLayouts(echoCtx echo.Context) error {
 				Title:        widget.Title,
 				Description:  widget.Description,
 				WidgetType:   widget.WidgetType,
-				WidgetProps:  func() []map[string]any {
-				var config []map[string]any
+				WidgetProps:  func() map[string]any {
+				var config map[string]any
 				if err := json.Unmarshal(widget.WidgetProps.Bytes, &config); err != nil {
 					h.logger.Error("failed to unmarshal layout config", zap.Error(err))
 					return nil

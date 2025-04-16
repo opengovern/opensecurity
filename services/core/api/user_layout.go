@@ -23,7 +23,7 @@ type Widget struct {
 	Title string `json:"title"`
 	Description string `json:"description"`
 	WidgetType   string       `json:"widget_type"`
-	WidgetProps  []map[string]any `json:"widget_props"`
+	WidgetProps  map[string]any `json:"widget_props"`
 	RowSpan      int          `json:"row_span"`
 	ColumnSpan   int          `json:"column_span"`
 	ColumnOffset int          `json:"column_offset"`
@@ -36,7 +36,7 @@ type WidgetResponse struct {
 	Title string `json:"title"`
 	Description string `json:"description"`
 	WidgetType   string       `json:"widget_type"`
-	WidgetProps  []map[string]any `json:"widget_props"`
+	WidgetProps map[string]any `json:"widget_props"`
 	RowSpan      int          `json:"row_span"`
 	ColumnSpan   int          `json:"column_span"`
 	ColumnOffset int          `json:"column_offset"`
