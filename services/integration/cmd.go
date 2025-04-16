@@ -5,6 +5,7 @@ import (
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kedav1alpha1 "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
 	api3 "github.com/opengovern/og-util/pkg/api"
+	config2 "github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/httpserver"
 	"github.com/opengovern/og-util/pkg/koanf"
@@ -161,11 +162,21 @@ func Command() *cobra.Command {
 				Db:   cnf.Steampipe.DB,
 			}
 
+			elasticConfig := config2.ElasticSearch{
+				Address:       os.Getenv("ELASTICSEARCH_ADDRESS"),
+				Username:      os.Getenv("ELASTICSEARCH_USERNAME"),
+				Password:      os.Getenv("ELASTICSEARCH_PASSWORD"),
+				IsOpenSearch:  *isOpenSearchPtr,
+				IsOnAks:       *isAKSPtr,
+				AwsRegion:     os.Getenv("ELASTICSEARCH_AWS_REGION"),
+				AssumeRoleArn: os.Getenv("ELASTICSEARCH_ASSUME_ROLE_ARN"),
+			}
+
 			return httpserver.RegisterAndStart(
 				cmd.Context(),
 				logger,
 				cnf.Http.Address,
-				api.New(logger, db, vaultSc, &steampipeOption, kubeClient, typeManager, elastic, coreClient),
+				api.New(logger, db, vaultSc, &steampipeOption, kubeClient, typeManager, elastic, coreClient, elasticConfig),
 			)
 		},
 	}

@@ -10,6 +10,7 @@ import (
 type Manifest struct {
 	IntegrationType          integration.Type `json:"IntegrationType" yaml:"IntegrationType"`
 	DescriberURL             string           `json:"DescriberURL" yaml:"DescriberURL"`
+	DemoDataURL              string           `json:"DemoDataURL" yaml:"DemoDataURL"`
 	DescriberTag             string           `json:"DescriberTag" yaml:"DescriberTag"`
 	Publisher                string           `json:"Publisher" yaml:"Publisher"`
 	Author                   string           `json:"Author" yaml:"Author"`

@@ -38,7 +38,7 @@ func (r *httpRoutes) Register(e *echo.Echo) {
 	// Get Task Result
 	v1.GET("/tasks/run/:id", httpserver.AuthorizeHandler(r.GetTaskRunResult, api2.ViewerRole))
 	// List Tasks Result
-	v1.GET("/tasks/run", httpserver.AuthorizeHandler(r.ListTaskRunResult, api2.ViewerRole))
+	v1.GET("/tasks/:id/runs", httpserver.AuthorizeHandler(r.ListTaskRunResults, api2.ViewerRole))
 	// Add Task Configurations
 	v1.POST("/tasks/:id/config", httpserver.AuthorizeHandler(r.AddTaskConfig, api2.EditorRole))
 }
@@ -307,7 +307,7 @@ func (r *httpRoutes) GetTaskRunResult(ctx echo.Context) error {
 
 }
 
-// ListTaskRunResult godoc
+// ListTaskRunResults godoc
 //
 //	@Summary	List task runs
 //	@Security	BearerToken
@@ -316,8 +316,12 @@ func (r *httpRoutes) GetTaskRunResult(ctx echo.Context) error {
 //	@Param		per_page	query	int	false	"per page"
 //	@Produce	json
 //	@Success	200	{object}	api.ListTaskRunsResponse
-//	@Router		/tasks/api/v1/tasks/run [get]
-func (r *httpRoutes) ListTaskRunResult(ctx echo.Context) error {
+//	@Router		/tasks/api/v1/tasks/:id/runs [get]
+func (r *httpRoutes) ListTaskRunResults(ctx echo.Context) error {
+	id := ctx.Param("id")
+	if id == "" {
+		return ctx.JSON(http.StatusBadRequest, "task id should be provided")
+	}
 	var cursor, perPage int64
 	var err error
 	cursorStr := ctx.QueryParam("cursor")
@@ -335,7 +339,7 @@ func (r *httpRoutes) ListTaskRunResult(ctx echo.Context) error {
 		}
 	}
 
-	items, err := r.db.ListTaskRunResult()
+	items, err := r.db.ListTaskRunResult(id)
 	if err != nil {
 		r.logger.Error("failed to get task results", zap.Error(err))
 		return ctx.JSON(http.StatusInternalServerError, "failed to get task results")

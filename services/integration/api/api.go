@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/steampipe"
 	"github.com/opengovern/og-util/pkg/ticker"
@@ -23,6 +24,7 @@ type API struct {
 	logger          *zap.Logger
 	database        db.Database
 	elastic         opengovernance.Client
+	elasticConfig   config.ElasticSearch
 	kubeClient      client.Client
 	typeManager     *integration_type.IntegrationTypeManager
 	vaultKeyId      string
@@ -44,6 +46,7 @@ func New(
 	typeManager *integration_type.IntegrationTypeManager,
 	elastic opengovernance.Client,
 	coreClient coreClient.CoreServiceClient,
+	elasticConfig config.ElasticSearch,
 ) *API {
 	return &API{
 		logger:          logger.Named("api"),
@@ -53,6 +56,7 @@ func New(
 		kubeClient:      kubeClient,
 		typeManager:     typeManager,
 		elastic:         elastic,
+		elasticConfig:   elasticConfig,
 		coreClient:      coreClient,
 	}
 }
@@ -60,7 +64,7 @@ func New(
 func (api *API) Register(e *echo.Echo) {
 	integrationsApi := integrations.New(api.vault, api.database, api.logger, api.steampipeOption, api.kubeClient, api.typeManager)
 	cred := credentials.New(api.vault, api.database, api.logger)
-	integrationType := integration_type2.New(api.typeManager, api.database, api.logger, api.elastic, api.coreClient)
+	integrationType := integration_type2.New(api.typeManager, api.database, api.logger, api.elastic, api.coreClient, api.elasticConfig)
 
 	integrationsApi.Register(e.Group("/api/v1/integrations"))
 	cred.Register(e.Group("/api/v1/credentials"))

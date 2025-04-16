@@ -44,7 +44,6 @@ type IntegrationPlugin struct {
 	ArtifactDetails struct {
 		PackageURL string `json:"package_url" yaml:"package_url"`
 	} `json:"artifact_details" yaml:"artifact_details"`
-	DemoDataURL string `json:"demo_data_url" yaml:"demo_data_url"`
 }
 
 type Schedules struct {
@@ -100,7 +99,7 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 	var url string
 	var integrationPlugin []byte
 	var cloudqlPlugin []byte
-	var describerURL, describerTags string
+	var describerURL, describerTags, demoDataUrl string
 	installState := models.IntegrationTypeInstallStateNotInstalled
 	operationalStatus := models.IntegrationPluginOperationalStatusDisabled
 
@@ -139,6 +138,7 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 			}
 			describerURL = m.DescriberURL
 			describerTags = m.DescriberTag
+			demoDataUrl = m.DemoDataURL
 
 			// read integration-plugin file
 			integrationPlugin, err = os.ReadFile(baseDir + "/integarion_type/integration-plugin")
@@ -193,7 +193,7 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 			OperationalStatusUpdates: operationalStatusUpdates,
 			URL:                      url,
 			DescriberURL:             describerURL,
-			DemoDataURL:              iPlugin.DemoDataURL,
+			DemoDataURL:              demoDataUrl,
 			DescriberTag:             describerTags,
 			Tags:                     tagsJsonb,
 		}, &models.IntegrationPluginBinary{

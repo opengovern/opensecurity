@@ -3,15 +3,18 @@ package integration_types
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/elasticsearch"
 	coreClient "github.com/opengovern/opensecurity/services/core/client"
+	demo_import "github.com/opengovern/opensecurity/services/integration/demo-import"
 	hczap "github.com/zaffka/zap-to-hclog"
 	"golang.org/x/net/context"
 	"io/fs"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/env"
 	"math/big"
 	"net/http"
 	"os"
@@ -41,20 +44,22 @@ import (
 const OneGB = 1024 * 1024 * 1024
 
 type API struct {
-	logger      *zap.Logger
-	typeManager *integration_type.IntegrationTypeManager
-	database    db.Database
-	elastic     opengovernance.Client
-	coreClient  coreClient.CoreServiceClient
+	logger        *zap.Logger
+	typeManager   *integration_type.IntegrationTypeManager
+	database      db.Database
+	elastic       opengovernance.Client
+	coreClient    coreClient.CoreServiceClient
+	elasticConfig config.ElasticSearch
 }
 
-func New(typeManager *integration_type.IntegrationTypeManager, database db.Database, logger *zap.Logger, elastic opengovernance.Client, coreClient coreClient.CoreServiceClient) *API {
+func New(typeManager *integration_type.IntegrationTypeManager, database db.Database, logger *zap.Logger, elastic opengovernance.Client, coreClient coreClient.CoreServiceClient, elasticConfig config.ElasticSearch) *API {
 	return &API{
-		logger:      logger.Named("integration_types"),
-		typeManager: typeManager,
-		database:    database,
-		elastic:     elastic,
-		coreClient:  coreClient,
+		logger:        logger.Named("integration_types"),
+		typeManager:   typeManager,
+		database:      database,
+		elastic:       elastic,
+		coreClient:    coreClient,
+		elasticConfig: elasticConfig,
 	}
 }
 
@@ -1338,11 +1343,18 @@ func (a *API) LoadPluginDemoData(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
 	}
 
-	credentials, err := a.database.ListCredentialsFiltered(nil, []string{plugin.IntegrationType.String()})
-	if err != nil {
-		a.logger.Error("failed to list credentials", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list credentials")
+	if plugin.DemoDataURL == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "plugin does not contain demo data")
 	}
 
-	return c.JSON(http.StatusOK, credentials)
+	demoImportConfig := demo_import.Config{
+		DemoDataURL:       plugin.DemoDataURL,
+		OpenSSLPassword:   env.GetString("OPENSSL_PASSWORD", ""),
+		ElasticsearchUser: a.elasticConfig.Username,
+		ElasticsearchPass: a.elasticConfig.Password,
+		ElasticsearchAddr: a.elasticConfig.Address,
+	}
+	err = demo_import.LoadDemoData(demoImportConfig, a.logger)
+
+	return c.NoContent(http.StatusOK)
 }
