@@ -294,7 +294,7 @@ export default function TaskDetail() {
                                                             {typeof selected
                                                                 ?.params[
                                                                 key
-                                                            ] === 'string' ? (
+                                                            ] != 'object' ? (
                                                                 <Text>
                                                                     {
                                                                         selected
