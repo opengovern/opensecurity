@@ -237,35 +237,50 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
             }
         }
         if (path.includes('incidents')) {
-            if(path.includes('controls')){
-            if (url.length > 3) {
-              
-                 temp.push({
-                     text: 'Control summary',
-                     href: '/incidents/controls',
-                 })
-                temp.push({
-                    text: 'Control Detail',
-                    href: path,
+            if (path.includes('controls')) {
+                if (url.length > 3) {
+                    temp.push({
+                        text: 'Control summary',
+                        href: '/incidents/controls',
+                    })
+                    temp.push({
+                        text: 'Control Detail',
+                        href: path,
+                    })
+                } else {
+                    temp.push({
+                        text: 'Control summary',
+                        href: '/incidents/controls',
+                    })
+                }
+            }
+            if (path.includes('resources')) {
+                return temp.push({
+                    text: 'Resource Incident',
+                    href: '/incidents/resources',
                 })
             } else {
                 temp.push({
-                    text: 'Control summary',
-                    href: '/incidents/controls',
+                    text: 'Incidents',
+                    href: '/incidents',
                 })
             }
-        }
-            if(path.includes('resources')){
-            return temp.push({
-                text: 'Resource Incident',
-                href: '/incidents/resources',
-            })
-            
+        } 
+         if (path.includes('tasks')) {
+            if (url.length > 2) {
+                temp.push({
+                    text: 'Tasks',
+                    href: '/tasks',
+                })
+                temp.push({
+                    text: 'Task Detail',
+                    href: path,
+                })
             }
             else{
                 temp.push({
-                    text: 'Incidents',
-                    href: '/incidents',
+                    text: 'Tasks',
+                    href: '/tasks',
                 })
             }
         }
@@ -324,6 +339,9 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                 return '/incidents/resources'
             }
             return '/incidents'
+        }
+        else if (path.includes('tasks')){
+            return '/tasks'
         }
 
         return ''

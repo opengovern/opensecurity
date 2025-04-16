@@ -85,7 +85,13 @@ export default function WidgetLayout({
     useEffect(() => {
         if (layout) {
             // add to ietms
-            setItems(layout?.layout_config)
+            console.log(layout,"layout")
+            if (layout?.widgets){
+            setItems(layout?.widgets)
+
+            } else{
+                setItems([])
+            }
         }
     }, [layout])
     const GetComponent = (name: string, props: any) => {
@@ -284,7 +290,7 @@ export default function WidgetLayout({
             return
         }
         const newItem = {
-            id: `${selectedAddItem}-${items.length}`,
+            id: `${selectedAddItem}-${items?.length}`,
             data: {
                 componentId: selectedAddItem,
                 props: widgetProps,

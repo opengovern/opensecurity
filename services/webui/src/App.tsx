@@ -59,7 +59,7 @@ const GetDefaultLayout = (meResponse: any) => {
         )
         .then((res) => {
             setLayout(res?.data)
-            SetDefaultLayout(res?.data?.layout_config,meResponse)
+            // SetDefaultLayout(res?.data?.layout_config,meResponse)
             setLayoutLoading(false)
         })
         .catch((err) => {

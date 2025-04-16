@@ -35,15 +35,64 @@ import {
     Switch,
 } from '@tremor/react'
 import CustomPagination from '../../../components/Pagination'
+import { dateTimeDisplay } from '../../../utilities/dateDisplay'
+export interface Task {
+    id:            string;
+    name:          string;
+    description:   string;
+    image_url:     string;
+    run_schedules: RunSchedule[];
+    credentials:   string[];
+    env_vars:      EnvVars;
+    scale_config:  ScaleConfig;
+}
+
+export interface EnvVars {
+    CORE_BASEURL:                  string;
+    ELASTICSEARCH_ADDRESS:         string;
+    ELASTICSEARCH_ASSUME_ROLE_ARN: string;
+    ELASTICSEARCH_AWS_REGION:      string;
+    ELASTICSEARCH_IS_ON_AKS:       string;
+    ELASTICSEARCH_IS_OPENSEARCH:   string;
+    ELASTICSEARCH_PASSWORD:        string;
+    ELASTICSEARCH_USERNAME:        string;
+    NATS_CONSUMER:                 string;
+    NATS_RESULT_TOPIC_NAME:        string;
+    NATS_STREAM_NAME:              string;
+    NATS_TOPIC_NAME:               string;
+    NATS_URL:                      string;
+}
+
+export interface RunSchedule {
+    last_run:  Date;
+    params:    Params;
+    frequency: number;
+}
+
+export interface Params {
+    query_to_execute: string;
+}
+
+export interface ScaleConfig {
+    stream:           string;
+    consumer:         string;
+    lag_threshold:    string;
+    min_replica:      number;
+    max_replica:      number;
+    polling_interval: number;
+    cooldown_period:  number;
+}
+
 export default function TaskDetail() {
     const { id } = useParams()
     const [loading, setLoading] = useState(false)
-    const [task, setTask] = useState<any>()
+    const [task, setTask] = useState<Task>()
     const [page, setPage] = useState(1)
     const [total, setTotal] = useState(0)
     const [selected, setSelected] = useState<any>()
     const [results, setResults] = useState<any>([])
     const [detailOpen, setDetailOpen] = useState(false)
+    const [scaleOpen, setScaleOpen] = useState(false)
     const getDetail = () => {
         setLoading(true)
         let url = ''
@@ -89,10 +138,13 @@ export default function TaskDetail() {
         }
 
         axios
-            .get(`${url}/main/tasks/api/v1/tasks/run/${id}?cursor=${page}&per_page=10`, config)
+            .get(
+                `${url}/main/tasks/api/v1/tasks/${id}/runs?cursor=${page}&per_page=10`,
+                config
+            )
             .then((res) => {
                 setLoading(false)
-                if(res.data.items){
+                if (res.data.items) {
                     setResults(res.data.items)
                 }
                 setTotal(res.data.total_count)
@@ -102,6 +154,40 @@ export default function TaskDetail() {
                 setLoading(false)
             })
     }
+     const getRunDetail = (id: string) => {
+         setLoading(true)
+         let url = ''
+         if (window.location.origin === 'http://localhost:3000') {
+             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+         } else {
+             url = window.location.origin
+         }
+         // @ts-ignore
+         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+         const config = {
+             headers: {
+                 Authorization: `Bearer ${token}`,
+             },
+         }
+
+         axios
+             .get(
+                 `${url}/main/tasks/api/v1/tasks/run/${id}`,
+                 config
+             )
+             .then((res) => {
+                 setLoading(false)
+                 if (res.data.items) {
+                     setResults(res.data.items)
+                 }
+                 setTotal(res.data.total_count)
+                 //  setTask(res.data)
+             })
+             .catch((err) => {
+                 setLoading(false)
+             })
+     }
 
     const RunTask = () => {
         setLoading(true)
@@ -274,19 +360,83 @@ export default function TaskDetail() {
                             </>
                         </Flex>
                     </Modal>
-                    <BreadcrumbGroup
-                        onClick={(event) => {
-                            // event.preventDefault()
-                        }}
-                        items={[
-                            {
-                                text: 'Tasks',
-                                href: `/tasks`,
-                            },
-                            { text: task?.name, href: '#' },
-                        ]}
-                        ariaLabel="Breadcrumbs"
-                    />
+                    <Modal
+                        visible={scaleOpen}
+                        onDismiss={() => setScaleOpen(false)}
+                        header="Task Detail"
+                    >
+                        <Flex className="flex-col justify-start items-start gap-2">
+                            <KeyValuePairs
+                                columns={4}
+                                items={[
+                                    { label: 'ID', value: task?.id },
+                                    {
+                                        label: 'Image Url',
+                                        value: task?.image_url,
+                                    },
+                                ]}
+                            />
+                            <span className="text-base font-semibold">
+                                Scale Config
+                            </span>
+
+                            <KeyValuePairs
+                                columns={3}
+                                items={[
+                                    {
+                                        label: 'Stream',
+                                        value: task?.scale_config?.stream,
+                                    },
+                                    {
+                                        label: 'Consumer',
+                                        value: task?.scale_config?.consumer,
+                                    },
+                                    {
+                                        label: 'Lag Threshold',
+                                        value: task?.scale_config
+                                            ?.lag_threshold,
+                                    },
+                                    {
+                                        label: 'Min Replica',
+                                        value: task?.scale_config?.min_replica,
+                                    },
+                                    {
+                                        label: 'Max Replica',
+                                        value: task?.scale_config?.max_replica,
+                                    },
+                                    {
+                                        label: 'Polling Interval',
+                                        value: task?.scale_config
+                                            ?.polling_interval,
+                                    },
+                                    {
+                                        label: 'Cooldown Period',
+                                        value: task?.scale_config
+                                            ?.cooldown_period,
+                                    },
+                                ]}
+                            />
+                            <span className="text-base font-semibold">
+                                Run Schedules
+                            </span>
+                            <KeyValuePairs
+                                columns={4}
+                                items={[
+                                    {
+                                        label: 'Last Run',
+                                        value: dateTimeDisplay(
+                                            task?.run_schedules[0]?.last_run
+                                        ),
+                                    },
+                                    {
+                                        label: 'Frequency',
+                                        value: task?.run_schedules[0]
+                                            ?.frequency,
+                                    },
+                                ]}
+                            />
+                        </Flex>
+                    </Modal>
 
                     <Container
                         disableHeaderPaddings
@@ -355,7 +505,7 @@ export default function TaskDetail() {
                                             </div>
                                         </Grid>
                                     </Box>
-                                    <Flex className="w-max pl-3">
+                                    <Flex className="w-max gap-2 pl-3">
                                         <Button
                                             variant="primary"
                                             onClick={() => {
@@ -363,6 +513,14 @@ export default function TaskDetail() {
                                             }}
                                         >
                                             Run
+                                        </Button>
+                                        <Button
+                                            variant="primary"
+                                            onClick={() => {
+                                                setScaleOpen(true)
+                                            }}
+                                        >
+                                            Detail
                                         </Button>
                                     </Flex>
                                 </SpaceBetween>
@@ -376,6 +534,7 @@ export default function TaskDetail() {
                             const row = event.detail.item
                             setSelected(row)
                             setDetailOpen(true)
+                            getRunDetail(row.id)
                         }}
                         columnDefinitions={[
                             {
@@ -513,7 +672,7 @@ export default function TaskDetail() {
                                 }
                                 className="w-full"
                             >
-                                Results {total != 0 ? `(${total})` : ''}
+                                Results {total ??0}
                             </Header>
                         }
                         pagination={
