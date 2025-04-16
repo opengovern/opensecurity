@@ -15,6 +15,7 @@ import { useAuthApiV1MeList, useAuthApiV1UserDetail } from './api/auth.gen'
 import { PlatformEnginePkgAuthApiTheme } from './api/api'
 import { Modal } from '@cloudscape-design/components'
 import axios from 'axios'
+import { Widget, WidgetToAPI } from './utilities/widget'
 
 
 export default function App() {
@@ -119,9 +120,11 @@ const SetDefaultLayout = (layout: any, meResponse: any) => {
     }
     const body = {
         user_id: meResponse?.username,
-        layout_config: layout,
-        name: 'Default',
-        description: 'Default Layout',
+        widgets: layout?.widgets?.map(((widget : Widget) => {
+            return WidgetToAPI(widget, meResponse?.username, true)
+        })),
+        name: layout?.name,
+        description: layout?.description,
         is_default: true,
         is_private: true,
     }
