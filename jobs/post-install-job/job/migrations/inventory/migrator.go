@@ -423,7 +423,7 @@ func populateFinderItem(logger *zap.Logger, tx *gorm.DB, path string, info fs.Fi
 	err = tx.Model(&models.NamedQuery{}).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}}, // key column
 		DoNothing: true,                          // column needed to be updated
-	}).Create(namedQuery).Error
+	}).Create(&namedQuery).Error
 	if err != nil {
 		logger.Error("failure in insert query", zap.Error(err))
 		return err
