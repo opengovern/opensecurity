@@ -11,7 +11,7 @@ import CustomPagination from "../../components/Pagination"
 
 
 export default function Tasks() {
-   const [pageNo, setPageNo] = useState<number>(0)
+   const [pageNo, setPageNo] = useState<number>(1)
   
    const [open, setOpen] = useState(false)
    const navigate = useNavigate()
@@ -40,13 +40,13 @@ export default function Tasks() {
 
        axios
            .get(
-               `${url}/main/tasks/api/v1/tasks?per_page=${10}&cursor=${pageNo}`,
+               `${url}/main/tasks/api/v1/tasks?per_page=${9}&cursor=${pageNo}`,
                config
            )
            .then((res) => {
                setLoading(false)
                setTasks(res.data?.items)
-               setTotalCount(res.data?.total_count)
+               setTotalCount(Math.ceil(res.data?.total_count/9))
            })
            .catch((err) => {
                setLoading(false)
@@ -57,7 +57,6 @@ export default function Tasks() {
    },[pageNo])
    return (
        <>
-           
            {/* <Grid numItems={3} className="gap-4 mb-10">
                 <OnboardCard
                     title="Active Accounts"
@@ -132,7 +131,14 @@ export default function Tasks() {
                                    <div className="flex items-center justify-between">
                                        <div className="flex items-center space-x-2"></div>
                                    </div>
-                                   <div className="flex items-center w-full">
+                                   <CustomPagination
+                                       currentPageIndex={pageNo}
+                                       pagesCount={total_count}
+                                       onChange={({ detail }: any) => {
+                                           setPageNo(detail.currentPageIndex)
+                                       }}
+                                   />
+                                   <div className="flex items-center mt-2 w-full">
                                        <Cards
                                            className="w-full"
                                            ariaLabels={{
@@ -234,13 +240,6 @@ export default function Tasks() {
                                </main>
                            </div>
                        </div>
-                       <CustomPagination
-                           currentPageIndex={pageNo}
-                           pagesCount={total_count}
-                           onChange={({ detail }: any) => {
-                               setPageNo(detail.currentPageIndex)
-                           }}
-                       />
                    </Flex>
                </>
            )}

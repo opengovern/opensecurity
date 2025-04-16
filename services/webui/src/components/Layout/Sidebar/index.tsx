@@ -199,6 +199,25 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 count: undefined,
                 error: false,
             },
+            {
+                name: 'Tasks',
+                icon: RiShieldCheckLine,
+                page: 'task',
+                children: [
+                    {
+                        name: 'Task',
+                        page: 'tasks',
+                        icon: RiShieldCheckLine,
+                        isPreview: false,
+                    },
+                    
+                ],
+
+                isPreview: false,
+                isLoading: false,
+                count: undefined,
+                error: false,
+            },
 
             {
                 name: 'All Incidents',

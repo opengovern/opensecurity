@@ -35,6 +35,7 @@ export default function Overview() {
     const [me, setMe] = useAtom(meAtom)
     const [layout, setLayout] = useAtom(LayoutAtom)
     const [layouts, setLayouts] = useState<any>([layout])
+    const [tabId,setTabId] = useState<any>(layout?.id)
 
     const [password, setPassword] = useState<any>({
         current: '',
@@ -280,6 +281,11 @@ const {
         setLayouts(temp)
         setLayout(temp)
     }
+    useEffect(()=>{
+        setLayouts([layout])
+        setTabId(layout?.id)
+    },[layout])
+    console.log(tabId)
     return (
         <>
             <Modal
@@ -474,7 +480,9 @@ const {
                 )}
             </Modal>
          
-            <Tabs tabs={getTabItems()} />
+            <Tabs
+                activeTabId={tabId}
+            tabs={getTabItems()} />
         </>
     )
 }
