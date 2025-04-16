@@ -173,6 +173,20 @@ func (r *httpRoutes) GetTask(ctx echo.Context) error {
 		}
 	}
 
+	var envVars map[string]string
+	if task.EnvVars.Status == pgtype.Present {
+		if err := json.Unmarshal(task.EnvVars.Bytes, &envVars); err != nil {
+			return err
+		}
+	}
+
+	var scaleConfig api.ScaleConfig
+	if task.ScaleConfig.Status == pgtype.Present {
+		if err = json.Unmarshal(task.ScaleConfig.Bytes, &scaleConfig); err != nil {
+			return err
+		}
+	}
+
 	taskResponse := api.TaskDetailsResponse{
 		ID:           task.ID,
 		Name:         task.Name,
@@ -180,6 +194,8 @@ func (r *httpRoutes) GetTask(ctx echo.Context) error {
 		ImageUrl:     task.ImageUrl,
 		RunSchedules: runSchedulesObjects,
 		Credentials:  credentials,
+		EnvVars:      envVars,
+		ScaleConfig:  scaleConfig,
 	}
 
 	return ctx.JSON(http.StatusOK, taskResponse)
