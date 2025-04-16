@@ -1858,13 +1858,19 @@ func (h *HttpHandler) SetUserWidget(echoCtx echo.Context) error {
 		Title:        req.Title,
 		Description:  req.Description,
 		WidgetType:   req.WidgetType,
-		WidgetProps: func() pgtype.JSONB {
-			var jsonb pgtype.JSONB
+			WidgetProps: func() pgtype.JSONB {
+		var jsonb pgtype.JSONB
+		// Ensure WidgetProps is never undefined
+		if req.WidgetProps != nil {
 			if err := jsonb.Set(req.WidgetProps); err != nil {
 				h.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
 			}
-			return jsonb
-		}(),
+		} else {
+			// Set an empty object instead of undefined
+			_ = jsonb.Set(map[string]interface{}{})
+		}
+		return jsonb
+	}(),
 		RowSpan:      req.RowSpan,
 		ColumnSpan:   req.ColumnSpan,
 		ColumnOffset: req.ColumnOffset,
@@ -1954,12 +1960,18 @@ func (h *HttpHandler) SetDashboardWithWidgets(echoCtx echo.Context) error {
 			Description:  widget.Description,
 			WidgetType:   widget.WidgetType,
 			WidgetProps: func() pgtype.JSONB {
-				var jsonb pgtype.JSONB
-				if err := jsonb.Set(widget.WidgetProps); err != nil {
-					h.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
-				}
-				return jsonb
-			}(),
+					var jsonb pgtype.JSONB
+					// Ensure WidgetProps is never undefined
+					if widget.WidgetProps != nil {
+						if err := jsonb.Set(widget.WidgetProps); err != nil {
+							h.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
+						}
+					} else {
+						// Set an empty object instead of undefined
+						_ = jsonb.Set(map[string]interface{}{})
+					}
+					return jsonb
+				}(),
 			RowSpan:      widget.RowSpan,
 			ColumnSpan:   widget.ColumnSpan,
 			ColumnOffset: widget.ColumnOffset,
