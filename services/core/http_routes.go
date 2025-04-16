@@ -1944,15 +1944,56 @@ func (h *HttpHandler) SetDashboardWithWidgets(echoCtx echo.Context) error {
 	if err := bindValidate(echoCtx, &req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
 	}
+	var widgets []models.Widget
+	for _, widget := range req.Widgets {
+		widgets = append(widgets, models.Widget{
+			ID:           uuid.New().String(),
+			UserID:       widget.UserID,
+			Title:        widget.Title,
+			Description:  widget.Description,
+			WidgetType:   widget.WidgetType,
+			WidgetProps: func() pgtype.JSONB {
+				var jsonb pgtype.JSONB
+				if err := jsonb.Set(widget.WidgetProps); err != nil {
+					h.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
+				}
+				return jsonb
+			}(),
+			RowSpan:      widget.RowSpan,
+			ColumnSpan:   widget.ColumnSpan,
+			ColumnOffset: widget.ColumnOffset,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			IsPublic:     widget.IsPublic,
+		})
+	}
+	// add widgets
+	err:= h.db.AddWidgets(widgets)
+	if err != nil {
+		h.logger.Error("failed to add widgets", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to add widgets")
+	}
+	// add dashboard
+	dashboard := models.Dashboard{
+		ID:          uuid.New().String(),
+		UserID:      req.UserID,
+		Name:        req.Name,
+		Description: req.Description,
+		IsDefault:   req.IsDefault,
+		IsPrivate:   req.IsPrivate,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}
+	dashboard.Widgets = make([]models.Widget, 0)
+	for _, widget := range widgets {
 
-
-
-
-
-
-
-
-
+		dashboard.Widgets = append(dashboard.Widgets, models.Widget{ID: widget.ID})
+	}
+	err = h.db.SetUserLayout(dashboard)
+	if err != nil {
+		h.logger.Error("failed to set user layout", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to set user layout")
+	}
 
 	return echoCtx.JSON(http.StatusAccepted,nil)
 }
