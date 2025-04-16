@@ -42,7 +42,7 @@ func LoadDemoData(cfg Config, logger *zap.Logger) error {
 	decryptedFilePath := filepath.Join(workDir, "demo_data.tar.gz")
 	// Assuming tar extracts relative paths inside the archive into the current dir (workDir).
 	inputPathForDump := filepath.Join(workDir, "/demo-data/es-demo/")
-	integrationsJsonFilePath := filepath.Join(workDir, "/demo-data/integrations.json")
+	//:= filepath.Join(workDir, "/demo-data/integrations.json")
 
 	// --- Ensure cleanup of intermediate files ---
 	defer func() {
