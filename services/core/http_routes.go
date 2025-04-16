@@ -1667,9 +1667,9 @@ func (h *HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 	if layout == nil {
 		return echo.NewHTTPError(http.StatusNotFound, "default layout not found")
 	}
-	var widgets []api.Widget
+	var widgets []api.WidgetResponse
 	for _, widget := range layout.Widgets {
-		widgets = append(widgets, api.Widget{
+		widgets = append(widgets, api.WidgetResponse{
 			ID:           widget.ID,
 			UserID:       widget.UserID,
 			Title:        widget.Title,
@@ -1769,9 +1769,9 @@ func (h *HttpHandler) GetPublicLayouts(echoCtx echo.Context) error {
 
 	var response []api.GetUserLayoutResponse
 	for _, layout := range layouts {
-		var widgets []api.Widget
+		var widgets []api.WidgetResponse
 		for _, widget := range layout.Widgets {
-			widgets = append(widgets, api.Widget{
+			widgets = append(widgets, api.WidgetResponse{
 				ID:           widget.ID,
 				UserID:       widget.UserID,
 				Title:        widget.Title,

@@ -11,7 +11,7 @@ type GetUserLayoutResponse struct {
 	ID string `json:"id"`
 	IsDefault bool `json:"is_default"`
 	UserID string `json:"user_id"`
-	Widgets []Widget `json:"widgets"`  
+	Widgets []WidgetResponse `json:"widgets"`  
 	Name string `json:"name"`
 	Description string `json:"description"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -19,6 +19,19 @@ type GetUserLayoutResponse struct {
 
 }
 type Widget struct {
+	ID string `json:"id"`
+	Title string `json:"title"`
+	Description string `json:"description"`
+	WidgetType   string       `json:"widget_type"`
+	WidgetProps  []map[string]any `json:"widget_props"`
+	RowSpan      int          `json:"row_span"`
+	ColumnSpan   int          `json:"column_span"`
+	ColumnOffset int          `json:"column_offset"`
+	IsPublic     bool         `json:"is_public"`
+	UserID       string       `json:"user_id"`
+
+}
+type WidgetResponse struct {
 	ID string `json:"id"`
 	Title string `json:"title"`
 	Description string `json:"description"`
@@ -40,7 +53,6 @@ type SetDashboardWithWidgetsRequest struct {
 	Widgets []Widget `json:"widgets"`  
 	Name string `json:"name"`
 	Description string `json:"description"`
-	UpdatedAt time.Time `json:"updated_at"`
 	IsPrivate bool `json:"is_private"`
 
 }
