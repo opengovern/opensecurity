@@ -162,12 +162,16 @@ func Command() *cobra.Command {
 				Db:   cnf.Steampipe.DB,
 			}
 
+			isOnAks := false
+			if isAKSPtr != nil {
+				isOnAks = *isAKSPtr
+			}
 			elasticConfig := config2.ElasticSearch{
 				Address:       os.Getenv("ELASTICSEARCH_ADDRESS"),
 				Username:      os.Getenv("ELASTICSEARCH_USERNAME"),
 				Password:      os.Getenv("ELASTICSEARCH_PASSWORD"),
-				IsOpenSearch:  *isOpenSearchPtr,
-				IsOnAks:       *isAKSPtr,
+				IsOpenSearch:  false,
+				IsOnAks:       isOnAks,
 				AwsRegion:     os.Getenv("ELASTICSEARCH_AWS_REGION"),
 				AssumeRoleArn: os.Getenv("ELASTICSEARCH_ASSUME_ROLE_ARN"),
 			}
