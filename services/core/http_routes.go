@@ -1662,13 +1662,36 @@ func (h *HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 	if layout == nil {
 		return echo.NewHTTPError(http.StatusNotFound, "default layout not found")
 	}
-
+	var widgets []api.Widget
+	for _, widget := range layout.Widgets {
+		widgets = append(widgets, api.Widget{
+			ID:           widget.ID,
+			UserID:       widget.UserID,
+			Title:        widget.Title,
+			Description:  widget.Description,
+			WidgetType:   widget.WidgetType,
+			WidgetProps:  func() []map[string]any {
+			var config []map[string]any
+			if err := json.Unmarshal(widget.WidgetProps.Bytes, &config); err != nil {
+				h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+				return nil
+			}
+			return config
+		}(),
+			RowSpan:      widget.RowSpan,
+			ColumnSpan:   widget.ColumnSpan,
+			ColumnOffset: widget.ColumnOffset,
+			UpdatedAt:    widget.UpdatedAt,
+			IsPublic:     widget.IsPublic,
+		})
+	}
 	response := api.GetUserLayoutResponse{
 		ID:          layout.ID,
 		UserID:      layout.UserID,
 		Name:        layout.Name,
 		Description: layout.Description,
 		IsPrivate:   layout.IsPrivate,
+		Widgets: widgets,
 		IsDefault:   layout.IsDefault,
 		UpdatedAt:   layout.UpdatedAt,
 	}
@@ -1687,6 +1710,7 @@ func (h *HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	if id == "" {
 		id = uuid.New().String()
 	}
+
 
 	dashboard := models.Dashboard{
 		ID:          id,
@@ -1738,12 +1762,36 @@ func (h *HttpHandler) GetPublicLayouts(echoCtx echo.Context) error {
 
 	var response []api.GetUserLayoutResponse
 	for _, layout := range layouts {
+		var widgets []api.Widget
+		for _, widget := range layout.Widgets {
+			widgets = append(widgets, api.Widget{
+				ID:           widget.ID,
+				UserID:       widget.UserID,
+				Title:        widget.Title,
+				Description:  widget.Description,
+				WidgetType:   widget.WidgetType,
+				WidgetProps:  func() []map[string]any {
+				var config []map[string]any
+				if err := json.Unmarshal(widget.WidgetProps.Bytes, &config); err != nil {
+					h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+					return nil
+				}
+				return config
+			}(),
+				RowSpan:      widget.RowSpan,
+				ColumnSpan:   widget.ColumnSpan,
+				ColumnOffset: widget.ColumnOffset,
+				UpdatedAt:    widget.UpdatedAt,
+				IsPublic:     widget.IsPublic,
+			})
+		}	
 		response = append(response, api.GetUserLayoutResponse{
 			ID:          layout.ID,
 			UserID:      layout.UserID,
 			Name:        layout.Name,
 			Description: layout.Description,
 			IsPrivate:   layout.IsPrivate,
+			Widgets: 	widgets,
 			IsDefault:   layout.IsDefault,
 			UpdatedAt:   layout.UpdatedAt,
 		})

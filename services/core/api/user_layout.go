@@ -11,12 +11,26 @@ type GetUserLayoutResponse struct {
 	ID string `json:"id"`
 	IsDefault bool `json:"is_default"`
 	UserID string `json:"user_id"`
-	LayoutConfig []map[string]any `json:"layout_config"`
+	Widgets []Widget `json:"widgets"`  
 	Name string `json:"name"`
 	Description string `json:"description"`
 	UpdatedAt time.Time `json:"updated_at"`
 	IsPrivate bool `json:"is_private"`
 
+}
+type Widget struct {
+	ID string `json:"id"`
+	Title string `json:"title"`
+	Description string `json:"description"`
+	WidgetType   string       `json:"widget_type"`
+	WidgetProps  []map[string]any `json:"widget_props"`
+	RowSpan      int          `json:"row_span"`
+	ColumnSpan   int          `json:"column_span"`
+	ColumnOffset int          `json:"column_offset"`
+	IsPublic     bool         `json:"is_public"`
+	UserID       string       `json:"user_id"`
+	CreatedAt    time.Time    `json:"created_at"`
+	UpdatedAt    time.Time    `json:"updated_at"`
 
 }
 type ChangePrivacyRequest struct {
