@@ -2,6 +2,8 @@ package db
 
 import (
 	"errors"
+
+	"github.com/jackc/pgtype"
 	"github.com/opengovern/opensecurity/services/core/db/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -182,6 +184,11 @@ func (db Database) SetUserLayout(layoutConfig models.Dashboard) error {
 		}
 
 		// Replace dashboard-widgets association
+				for i := range layoutConfig.Widgets {
+			if layoutConfig.Widgets[i].WidgetProps.Status == pgtype.Undefined {
+				_ = layoutConfig.Widgets[i].WidgetProps.Set(map[string]interface{}{})
+			}
+}
 		err = tx.Model(&layoutConfig).Association("Widgets").Replace(layoutConfig.Widgets)
 		if err != nil {
 			return err
