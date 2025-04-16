@@ -1942,6 +1942,7 @@ func (h *HttpHandler) GetAllPublicWidgets(echoCtx echo.Context) error {
 func (h *HttpHandler) SetDashboardWithWidgets(echoCtx echo.Context) error {
 	var req api.SetDashboardWithWidgetsRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
+		h.logger.Error("failed to bind request", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
 	}
 	var widgets []models.Widget

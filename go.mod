@@ -4,7 +4,6 @@ go 1.23.3
 
 require (
 	github.com/Azure/go-workflow v0.1.6
-	github.com/Luzifer/go-openssl/v4 v4.2.4
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/aws/aws-sdk-go-v2 v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.42.3
@@ -37,7 +36,6 @@ require (
 	github.com/open-policy-agent/opa v0.69.0
 	github.com/opengovern/og-util v1.15.1
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
-	github.com/opensearch-project/opensearch-go/v4 v4.4.0
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/pganalyze/pg_query_go/v4 v4.2.3
 	github.com/prometheus/client_golang v1.20.5
@@ -64,6 +62,7 @@ require (
 	k8s.io/apimachinery v0.31.2
 	k8s.io/client-go v0.31.2
 	k8s.io/metrics v0.31.2
+	k8s.io/utils v0.0.0-20240921022957-49e7df575cb6
 	sigs.k8s.io/controller-runtime v0.19.1
 )
 
@@ -307,7 +306,6 @@ require (
 	k8s.io/apiextensions-apiserver v0.31.2 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20241009091222-67ed5848f094 // indirect
-	k8s.io/utils v0.0.0-20240921022957-49e7df575cb6 // indirect
 	knative.dev/pkg v0.0.0-20241026180704-25f6002b00f3 // indirect
 	moul.io/zapgorm2 v1.3.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
