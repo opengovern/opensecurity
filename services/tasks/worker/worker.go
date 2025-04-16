@@ -5,37 +5,35 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/jackc/pgtype"
 	kedav1alpha1 "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
-	"github.com/opengovern/opensecurity/services/tasks/config"
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
-	"github.com/opengovern/opensecurity/services/tasks/worker/consts"
 	"golang.org/x/net/context"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strconv"
 )
 
-var (
-	ESAddress  = os.Getenv("ELASTICSEARCH_ADDRESS")
-	ESUsername = os.Getenv("ELASTICSEARCH_USERNAME")
-	ESPassword = os.Getenv("ELASTICSEARCH_PASSWORD")
-	ESIsOnAks  = os.Getenv("ELASTICSEARCH_ISONAKS")
-
-	InventoryBaseURL = os.Getenv("CORE_BASEURL")
-)
-
-func CreateWorker(ctx context.Context, cfg config.Config, kubeClient client.Client, taskConfig *models.Task, namespace string) error {
+func CreateWorker(ctx context.Context, kubeClient client.Client, taskConfig *models.Task, namespace string) error {
 	soNatsUrl, _ := os.LookupEnv("SCALED_OBJECT_NATS_URL")
 
-	env, err := defaultEnvs(cfg, taskConfig)
-	if err != nil {
-		return err
+	var envVars map[string]string
+	if taskConfig.EnvVars.Status == pgtype.Present {
+		if err := json.Unmarshal(taskConfig.EnvVars.Bytes, &envVars); err != nil {
+			return err
+		}
+	}
+
+	var env []corev1.EnvVar
+	for k, v := range envVars {
+		env = append(env, corev1.EnvVar{
+			Name:  k,
+			Value: v,
+		})
 	}
 
 	var deployment appsv1.Deployment
-	err = kubeClient.Get(ctx, client.ObjectKey{
+	err := kubeClient.Get(ctx, client.ObjectKey{
 		Namespace: namespace,
 		Name:      taskConfig.ID,
 	}, &deployment)
@@ -77,7 +75,7 @@ func CreateWorker(ctx context.Context, cfg config.Config, kubeClient client.Clie
 				},
 			},
 		}
-		err := kubeClient.Create(ctx, &deployment)
+		err = kubeClient.Create(ctx, &deployment)
 		if err != nil {
 			return err
 		}
@@ -85,7 +83,7 @@ func CreateWorker(ctx context.Context, cfg config.Config, kubeClient client.Clie
 
 	var scaleConfig ScaleConfig
 	if taskConfig.ScaleConfig.Status == pgtype.Present {
-		if err := json.Unmarshal(taskConfig.ScaleConfig.Bytes, &scaleConfig); err != nil {
+		if err = json.Unmarshal(taskConfig.ScaleConfig.Bytes, &scaleConfig); err != nil {
 			return err
 		}
 	}
@@ -138,68 +136,4 @@ func CreateWorker(ctx context.Context, cfg config.Config, kubeClient client.Clie
 	}
 
 	return nil
-}
-
-func defaultEnvs(cfg config.Config, taskConfig *models.Task) ([]corev1.EnvVar, error) {
-	var natsConfig NatsConfig
-	if taskConfig.NatsConfig.Status == pgtype.Present {
-		if err := json.Unmarshal(taskConfig.NatsConfig.Bytes, &natsConfig); err != nil {
-			return nil, err
-		}
-	}
-
-	return []corev1.EnvVar{
-		{
-			Name:  consts.NatsURLEnv,
-			Value: cfg.NATS.URL,
-		},
-		{
-			Name:  consts.NatsConsumerEnv,
-			Value: natsConfig.Consumer,
-		},
-		{
-			Name:  consts.NatsStreamNameEnv,
-			Value: natsConfig.Stream,
-		},
-		{
-			Name:  consts.NatsTopicNameEnv,
-			Value: natsConfig.Topic,
-		},
-		{
-			Name:  consts.NatsResultTopicNameEnv,
-			Value: natsConfig.ResultTopic,
-		},
-		{
-			Name:  consts.ElasticSearchAddressEnv,
-			Value: ESAddress,
-		},
-		{
-			Name:  consts.ElasticSearchUsernameEnv,
-			Value: ESUsername,
-		},
-		{
-			Name:  consts.ElasticSearchPasswordEnv,
-			Value: ESPassword,
-		},
-		{
-			Name:  consts.ElasticSearchIsOnAksNameEnv,
-			Value: ESIsOnAks,
-		},
-		{
-			Name:  consts.ElasticSearchIsOpenSearch,
-			Value: strconv.FormatBool(cfg.ElasticSearch.IsOpenSearch),
-		},
-		{
-			Name:  consts.ElasticSearchAwsRegionEnv,
-			Value: "",
-		},
-		{
-			Name:  consts.ElasticSearchAssumeRoleArnEnv,
-			Value: "",
-		},
-		{
-			Name:  consts.InventoryBaseURL,
-			Value: InventoryBaseURL,
-		},
-	}, nil
 }

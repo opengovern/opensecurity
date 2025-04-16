@@ -27,6 +27,7 @@ type Task struct {
 	Timeout             float64
 	NatsConfig          pgtype.JSONB
 	ScaleConfig         pgtype.JSONB
+	EnvVars             pgtype.JSONB
 }
 
 type TaskBinary struct {
