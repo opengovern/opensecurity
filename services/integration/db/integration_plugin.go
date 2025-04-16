@@ -32,6 +32,30 @@ func (db Database) GetPluginByID(pluginID string) (*models.IntegrationPlugin, er
 	return &plugin, nil
 }
 
+func (db Database) PluginDemoDataLoad(pluginID string) error {
+	err := db.IntegrationTypeOrm.Model(models.IntegrationPlugin{}).Where("plugin_id = ?", pluginID).
+		Update("demo_data_loaded = ?", true).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return err
+	}
+	return nil
+}
+
+func (db Database) PluginDemoDataUnLoad(pluginID string) error {
+	err := db.IntegrationTypeOrm.Model(models.IntegrationPlugin{}).Where("plugin_id = ?", pluginID).
+		Update("demo_data_loaded = ?", false).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return err
+	}
+	return nil
+}
+
 func (db Database) UpdatePluginInstallTimedOut(pluginInstallTime int64) error {
 	tx := db.IntegrationTypeOrm.
 		Model(&models.IntegrationPlugin{}).

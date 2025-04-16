@@ -39,6 +39,20 @@ func (db Database) DeleteIntegration(IntegrationID uuid.UUID) error {
 	return nil
 }
 
+// DeletePluginSampleIntegrations deletes sample integrations for a plugin
+func (db Database) DeletePluginSampleIntegrations(integrationType integration.Type) error {
+	tx := db.Orm.
+		Where("state = ?", integration.IntegrationStateSample).
+		Where("integration_type = ?", integrationType).
+		Unscoped().
+		Delete(&models.Integration{})
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	return nil
+}
+
 // DeleteSampleIntegrations deletes sample integrations
 func (db Database) DeleteSampleIntegrations() error {
 	tx := db.Orm.

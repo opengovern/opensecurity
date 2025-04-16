@@ -3,6 +3,8 @@ package integration_types
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
@@ -85,6 +87,7 @@ func (a *API) Register(e *echo.Group) {
 	plugin.POST("/:id/healthcheck", httpserver.AuthorizeHandler(a.HealthCheck, api.ViewerRole))
 	plugin.GET("/tables", httpserver.AuthorizeHandler(a.GetPluginsTables, api.ViewerRole))
 	plugin.PUT("/:id/demo/load", httpserver.AuthorizeHandler(a.LoadPluginDemoData, api.EditorRole))
+	plugin.PUT("/:id/demo/remove", httpserver.AuthorizeHandler(a.RemovePluginDemoData, api.EditorRole))
 }
 
 // List godoc
@@ -1343,6 +1346,10 @@ func (a *API) LoadPluginDemoData(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
 	}
 
+	if plugin.DemoDataLoaded {
+		return echo.NewHTTPError(http.StatusConflict, "plugin demo data already loaded")
+	}
+
 	if plugin.DemoDataURL == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "plugin does not contain demo data")
 	}
@@ -1354,7 +1361,111 @@ func (a *API) LoadPluginDemoData(c echo.Context) error {
 		ElasticsearchPass: a.elasticConfig.Password,
 		ElasticsearchAddr: a.elasticConfig.Address,
 	}
-	err = demo_import.LoadDemoData(demoImportConfig, a.logger)
+	integrations, err := demo_import.LoadDemoData(demoImportConfig, a.logger)
+	if err != nil {
+		a.logger.Error("failed to load demo data", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to load demo data")
+	}
+
+	dummyCredentialID := uuid.New()
+	dummyCredential := models2.Credential{
+		ID:              dummyCredentialID,
+		IntegrationType: plugin.IntegrationType,
+		CredentialType:  "",
+		Secret:          "",
+		Metadata: func() pgtype.JSONB {
+			var jsonb pgtype.JSONB
+			if err := jsonb.Set([]byte("{}")); err != nil {
+				a.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
+			}
+			return jsonb
+		}(),
+		MaskedSecret: func() pgtype.JSONB {
+			var jsonb pgtype.JSONB
+			if err := jsonb.Set([]byte("{}")); err != nil {
+				a.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
+			}
+			return jsonb
+		}(),
+		Description: "dummy credential for demo integrations",
+	}
+
+	err = a.database.CreateCredential(&dummyCredential)
+	if err != nil {
+		a.logger.Error("failed to create credential", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create credential")
+	}
+
+	for _, i := range integrations {
+		integrationId, err := uuid.Parse(i.IntegrationID)
+		if err != nil {
+			a.logger.Error("failed to parse integration id", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to parse integration id")
+		}
+		dbIntegration := models2.Integration{
+			Integration: integration.Integration{
+				IntegrationID:   integrationId,
+				ProviderID:      i.ProviderID,
+				Name:            i.Name,
+				IntegrationType: plugin.IntegrationType,
+				Annotations: func() pgtype.JSONB {
+					var jsonb pgtype.JSONB
+					if err := jsonb.Set(i.Annotations); err != nil {
+						a.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
+					}
+					return jsonb
+				}(),
+				Labels: func() pgtype.JSONB {
+					var jsonb pgtype.JSONB
+					if err := jsonb.Set(i.Labels); err != nil {
+						a.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
+					}
+					return jsonb
+				}(),
+				CredentialID: dummyCredentialID,
+				State:        integration.IntegrationStateSample,
+			},
+		}
+		err = a.database.CreateIntegration(&dbIntegration)
+		if err != nil {
+			a.logger.Error("failed to create integration", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create integration")
+		}
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+// RemovePluginDemoData godoc
+//
+// @Summary			Remove demo data for plugin
+// @Description		Remove demo data for plugin by the given url
+// @Security		BearerToken
+// @Tags			integration_types
+// @Produce			json
+// @Param			id	path	string	true	"plugin id"
+// @Success			200
+// @Router			/integration/api/v1/plugin/{id}/demo/remove [put]
+func (a *API) RemovePluginDemoData(c echo.Context) error {
+	id := c.Param("id")
+
+	plugin, err := a.database.GetPluginByID(id)
+	if err != nil {
+		a.logger.Error("failed to get plugin", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get plugin")
+	}
+	if plugin == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
+	}
+
+	if !plugin.DemoDataLoaded {
+		return echo.NewHTTPError(http.StatusConflict, "plugin demo data not loaded")
+	}
+
+	if err = a.database.DeletePluginSampleIntegrations(plugin.IntegrationType); err != nil {
+		a.logger.Error("failed to delete plugin sample integration", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete plugin sample integration")
+	}
 
 	return c.NoContent(http.StatusOK)
 }

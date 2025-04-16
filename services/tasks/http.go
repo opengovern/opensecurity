@@ -364,7 +364,7 @@ func (r *httpRoutes) ListTaskRunResults(ctx echo.Context) error {
 		var result map[string]interface{}
 		err = json.Unmarshal(task.Result.Bytes, &result)
 		if err != nil {
-			r.logger.Error("failed to unmarshal result", zap.Error(err))
+			r.logger.Error("failed to unmarshal result json", zap.Error(err))
 			return ctx.JSON(http.StatusInternalServerError, "failed to unmarshal result")
 		}
 		taskRunResponses = append(taskRunResponses, api.TaskRun{

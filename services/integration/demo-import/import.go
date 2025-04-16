@@ -1,7 +1,9 @@
 package demo_import
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/opengovern/og-util/pkg/integration"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
@@ -25,14 +27,23 @@ type Config struct {
 	ElasticsearchAddr string
 }
 
-func LoadDemoData(cfg Config, logger *zap.Logger) error {
+type Integration struct {
+	IntegrationID   string
+	ProviderID      string
+	Name            string
+	IntegrationType integration.Type
+	Annotations     map[string]string
+	Labels          map[string]string
+}
+
+func LoadDemoData(cfg Config, logger *zap.Logger) ([]Integration, error) {
 	logger.Info("Starting data loading process with provided config...")
 
 	wd, err := os.Getwd()
 	if err != nil {
 		// Log error before returning
 		logger.Error("Failed to get current working directory", zap.Error(err))
-		return fmt.Errorf("failed to get current working directory: %w", err)
+		return nil, fmt.Errorf("failed to get current working directory: %w", err)
 	}
 	workDir := wd
 
@@ -42,7 +53,13 @@ func LoadDemoData(cfg Config, logger *zap.Logger) error {
 	decryptedFilePath := filepath.Join(workDir, "demo_data.tar.gz")
 	// Assuming tar extracts relative paths inside the archive into the current dir (workDir).
 	inputPathForDump := filepath.Join(workDir, "/demo-data/es-demo/")
-	//:= filepath.Join(workDir, "/demo-data/integrations.json")
+	integrationsJsonFilePath := filepath.Join(workDir, "/demo-data/integrations.json")
+
+	integrations, err := loadIntegrationsFromJSON(integrationsJsonFilePath)
+	if err != nil {
+		logger.Error("Failed to load integrations.", zap.Error(err))
+		return nil, fmt.Errorf("failed to load integrations.: %w", err)
+	}
 
 	// --- Ensure cleanup of intermediate files ---
 	defer func() {
@@ -67,7 +84,7 @@ func LoadDemoData(cfg Config, logger *zap.Logger) error {
 		zap.String("destination", encryptedFilePath))
 	err = downloadFile(encryptedFilePath, cfg.DemoDataURL, logger)
 	if err != nil {
-		return fmt.Errorf("failed to download file: %w", err)
+		return nil, fmt.Errorf("failed to download file: %w", err)
 	}
 	logger.Info("Successfully downloaded file", zap.String("path", encryptedFilePath))
 
@@ -84,7 +101,7 @@ func LoadDemoData(cfg Config, logger *zap.Logger) error {
 	}
 	err = runCommand(workDir, "openssl", logger, opensslArgs...) // Pass logger
 	if err != nil {
-		return fmt.Errorf("failed to run openssl command: %w", err)
+		return nil, fmt.Errorf("failed to run openssl command: %w", err)
 	}
 	logger.Info("Successfully decrypted file", zap.String("path", decryptedFilePath))
 
@@ -95,7 +112,7 @@ func LoadDemoData(cfg Config, logger *zap.Logger) error {
 	tarArgs := []string{"-xvf", decryptedFilePath}
 	err = runCommand(workDir, "tar", logger, tarArgs...) // Pass logger
 	if err != nil {
-		return fmt.Errorf("failed to run tar command: %w", err)
+		return nil, fmt.Errorf("failed to run tar command: %w", err)
 	}
 	logger.Info("Successfully extracted tarball", zap.String("path", decryptedFilePath))
 
@@ -140,12 +157,12 @@ func LoadDemoData(cfg Config, logger *zap.Logger) error {
 	err = cmd.Run()
 	if err != nil {
 		logger.Error("multielasticdump command failed", zap.Error(err))
-		return fmt.Errorf("failed to run multielasticdump command: %w", err)
+		return nil, fmt.Errorf("failed to run multielasticdump command: %w", err)
 	}
 	logger.Info("Successfully ran multielasticdump.")
 
 	logger.Info("Data loading process completed successfully.")
-	return nil // Success
+	return integrations, nil
 }
 
 // downloadFile downloads a file from a URL and saves it locally, using zap for logging.
@@ -218,4 +235,24 @@ func runCommand(workDir string, name string, logger *zap.Logger, args ...string)
 	}
 	logger.Debug("Command executed successfully", zap.String("command", name))
 	return nil
+}
+
+func loadIntegrationsFromJSON(filePath string) ([]Integration, error) {
+	jsonData, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file %s: %w", filePath, err)
+	}
+
+	if len(jsonData) == 0 {
+		return []Integration{}, nil
+	}
+
+	var integrations []Integration
+
+	err = json.Unmarshal(jsonData, &integrations)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON from %s: %w", filePath, err)
+	}
+
+	return integrations, nil
 }
