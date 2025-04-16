@@ -64,16 +64,15 @@ func (db Database) GetTask(id string) (*models.Task, error) {
 }
 
 // GetTaskRunResult retrieves a task result by Task ID
-func (db Database) GetTaskRunResult(id string) ([]models.TaskRun, error) {
-	var task []models.TaskRun
-	tx := db.Orm.Where("id = ?", id).
-		Order("created_at desc").
-		Find(&task)
+func (db Database) GetTaskRunResult(id string) (*models.TaskRun, error) {
+	var task models.TaskRun
+	tx := db.Orm.Model(&models.TaskRun{}).Where("id = ?", id).
+		First(&task)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
 
-	return task, nil
+	return &task, nil
 }
 
 // ListTaskRunResult retrieves a task result by Task ID

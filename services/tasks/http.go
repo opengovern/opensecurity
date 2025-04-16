@@ -274,64 +274,36 @@ func (r *httpRoutes) RunTask(ctx echo.Context) error {
 //	@Router		/tasks/api/v1/tasks/run/:id [get]
 func (r *httpRoutes) GetTaskRunResult(ctx echo.Context) error {
 	id := ctx.Param("id")
-	var cursor, perPage int64
-	taskResults, err := r.db.GetTaskRunResult(id)
+	task, err := r.db.GetTaskRunResult(id)
 	if err != nil {
 		r.logger.Error("failed to get task results", zap.Error(err))
 		return ctx.JSON(http.StatusInternalServerError, "failed to get task results")
 	}
-	cursorStr := ctx.QueryParam("cursor")
-	if cursorStr != "" {
-		cursor, err = strconv.ParseInt(cursorStr, 10, 64)
-		if err != nil {
-			return err
-		}
+
+	var params map[string]interface{}
+	err = json.Unmarshal(task.Params.Bytes, &params)
+	if err != nil {
+		r.logger.Error("failed to unmarshal params", zap.Error(err))
+		return ctx.JSON(http.StatusInternalServerError, "failed to unmarshal params")
 	}
-	perPageStr := ctx.QueryParam("per_page")
-	if perPageStr != "" {
-		perPage, err = strconv.ParseInt(perPageStr, 10, 64)
-		if err != nil {
-			return err
-		}
+	var result map[string]interface{}
+	err = json.Unmarshal(task.Result.Bytes, &result)
+	if err != nil {
+		r.logger.Error("failed to unmarshal result", zap.Error(err))
+		return ctx.JSON(http.StatusInternalServerError, "failed to unmarshal result")
 	}
-	totalCount := len(taskResults)
-	if perPage != 0 {
-		if cursor == 0 {
-			taskResults = utils.Paginate(1, perPage, taskResults)
-		} else {
-			taskResults = utils.Paginate(cursor, perPage, taskResults)
-		}
-	}
-	var taskRunResponses []api.TaskRun
-	for _, task := range taskResults {
-		var params map[string]interface{}
-		err := json.Unmarshal(task.Params.Bytes, &params)
-		if err != nil {
-			r.logger.Error("failed to unmarshal params", zap.Error(err))
-			return ctx.JSON(http.StatusInternalServerError, "failed to unmarshal params")
-		}
-		var result map[string]interface{}
-		err = json.Unmarshal(task.Result.Bytes, &result)
-		if err != nil {
-			r.logger.Error("failed to unmarshal result", zap.Error(err))
-			return ctx.JSON(http.StatusInternalServerError, "failed to unmarshal result")
-		}
-		taskRunResponses = append(taskRunResponses, api.TaskRun{
-			ID:             task.ID,
-			CreatedAt:      task.CreatedAt,
-			UpdatedAt:      task.UpdatedAt,
-			TaskID:         task.TaskID,
-			Status:         string(task.Status),
-			Result:         result,
-			Params:         params,
-			FailureMessage: task.FailureMessage,
-		})
+	taskRun := api.TaskRun{
+		ID:             task.ID,
+		CreatedAt:      task.CreatedAt,
+		UpdatedAt:      task.UpdatedAt,
+		TaskID:         task.TaskID,
+		Status:         string(task.Status),
+		Result:         result,
+		Params:         params,
+		FailureMessage: task.FailureMessage,
 	}
 
-	return ctx.JSON(http.StatusOK, api.ListTaskRunsResponse{
-		TotalCount: totalCount,
-		Items:      taskRunResponses,
-	})
+	return ctx.JSON(http.StatusOK, taskRun)
 
 }
 
