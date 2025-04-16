@@ -15,7 +15,7 @@ import { useAuthApiV1MeList, useAuthApiV1UserDetail } from './api/auth.gen'
 import { PlatformEnginePkgAuthApiTheme } from './api/api'
 import { Modal } from '@cloudscape-design/components'
 import axios from 'axios'
-import { Widget, WidgetToAPI } from './utilities/widget'
+import { APIToWidget, Widget, WidgetAPI, WidgetToAPI } from './utilities/widget'
 
 
 export default function App() {
@@ -60,7 +60,7 @@ const GetDefaultLayout = (meResponse: any) => {
         )
         .then((res) => {
             setLayout(res?.data)
-            // SetDefaultLayout(res?.data?.layout_config,meResponse)
+            SetDefaultLayout(res?.data,meResponse)
             setLayoutLoading(false)
         })
         .catch((err) => {
@@ -91,19 +91,22 @@ const GetLayout = (meResponse :any) => {
          axios
              .post(`${url}/main/core/api/v4/layout/get-default`, body, config)
              .then((res) => {
-                setLayout(res?.data)
-                setLayoutLoading(false)
+                const layout = res?.data
+                layout.widgets = layout?.widgets?.map((widget: WidgetAPI) => {
+                    return APIToWidget(widget)
+                })
+                 setLayout(res?.data)
+                 setLayoutLoading(false)
              })
              .catch((err) => {
                  console.log(err)
-                //  check if error is 404
-                  GetDefaultLayout(meResponse)
-                    setLayoutLoading(false)
-
-                   
+                 //  check if error is 404
+                 GetDefaultLayout(meResponse)
+                 setLayoutLoading(false)
              })
      }
 const SetDefaultLayout = (layout: any, meResponse: any) => {
+    console.log(layout)
     let url = ''
     if (window.location.origin === 'http://localhost:3000') {
         url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -121,7 +124,7 @@ const SetDefaultLayout = (layout: any, meResponse: any) => {
     const body = {
         user_id: meResponse?.username,
         widgets: layout?.widgets?.map(((widget : Widget) => {
-            return WidgetToAPI(widget, meResponse?.username, true)
+            return WidgetToAPI(widget, meResponse?.username, true,true)
         })),
         name: layout?.name,
         description: layout?.description,
@@ -131,7 +134,7 @@ const SetDefaultLayout = (layout: any, meResponse: any) => {
     console.log(body)
 
     axios
-        .post(`${url}/main/core/api/v4/layout/set`, body, config)
+        .post(`${url}/main/core/api/v4/layout/set/widgets`, body, config)
         .then((res) => {})
         .catch((err) => {
             console.log(err)

@@ -9,6 +9,7 @@ import {
     Button,
     ButtonDropdown,
     Checkbox,
+    CopyToClipboard,
     FormField,
     Input,
     Modal,
@@ -23,6 +24,7 @@ import { array } from 'prop-types'
 import Shortcuts from '../Shortcuts'
 import Integrations from '../Integrations'
 import SRE from '../KPI_Cards'
+import { APIToWidget, WidgetAPI, WidgetToAPI } from '../../../utilities/widget'
 
 const COMPONENT_MAPPING = {
     table: TableWidget,
@@ -30,7 +32,7 @@ const COMPONENT_MAPPING = {
     kpi: KeyValueWidget,
     shortcut: Shortcuts,
     integration: Integrations,
-    sre: SRE
+    sre: SRE,
 }
 const NUMBER_MAPPING = {
     0: 'First',
@@ -40,30 +42,29 @@ const NUMBER_MAPPING = {
     4: 'Fifth',
 }
 export interface Layout {
-    id:           string;
-    data:         Data;
-    rowSpan:      number;
-    columnSpan:   number;
-    columnOffset: ColumnOffset;
+    id: string
+    data: Data
+    rowSpan: number
+    columnSpan: number
+    columnOffset: ColumnOffset
 }
 
 export interface ColumnOffset {
-    "4": number;
+    '4': number
 }
 
 export interface Data {
-    componentId: string;
-    title:       string;
-    description: string;
-    props:       any;
+    componentId: string
+    title: string
+    description: string
+    props: any
 }
 
 export interface WidgetLayoutProps {
     input_layout: any
     is_default: boolean
-    HandleAddItem:Function
+    HandleAddItem: Function
 }
-
 
 export default function WidgetLayout({
     input_layout,
@@ -85,11 +86,10 @@ export default function WidgetLayout({
     useEffect(() => {
         if (layout) {
             // add to ietms
-            console.log(layout,"layout")
-            if (layout?.widgets){
-            setItems(layout?.widgets)
-
-            } else{
+            console.log(layout, 'layout')
+            if (layout?.widgets) {
+                setItems(layout?.widgets)
+            } else {
                 setItems([])
             }
         }
@@ -134,20 +134,43 @@ export default function WidgetLayout({
                 console.log(err)
             })
     }
-    const GetDefaultLayout = () => {
-        setLayoutLoading(true)
-        axios
-            .get(
-                `https://raw.githubusercontent.com/opengovern/platform-configuration/refs/heads/main/default_layout.json`
-            )
-            .then((res) => {
-                setLayout(res?.data)
-                setLayoutLoading(false)
-            })
-            .catch((err) => {
-                setLayoutLoading(false)
-            })
-    }
+ const GetDefaultLayout = () => {
+     setLayoutLoading(true)
+     let url = ''
+     if (window.location.origin === 'http://localhost:3000') {
+         url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+     } else {
+         url = window.location.origin
+     }
+     // @ts-ignore
+     const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+     const config = {
+         headers: {
+             Authorization: `Bearer ${token}`,
+         },
+     }
+     const body = {
+         user_id: me?.username,
+     }
+
+     axios
+         .post(`${url}/main/core/api/v4/layout/get-default`, body, config)
+         .then((res) => {
+             const layout = res?.data
+             layout.widgets = layout?.widgets?.map((widget: WidgetAPI) => {
+                 return APIToWidget(widget)
+             })
+             setLayout(res?.data)
+             setLayoutLoading(false)
+         })
+         .catch((err) => {
+             console.log(err)
+             //  check if error is 404
+             GetDefaultLayout()
+             setLayoutLoading(false)
+         })
+ }
     const HandleRemoveItemByID = (id: string) => {
         const newItems = items.filter((item: any) => item.id !== id)
         setItems(newItems)
@@ -187,53 +210,13 @@ export default function WidgetLayout({
             return (
                 <>
                     {/* map 4 times and return 3 input count_kpi info list_kpi all of them inside kpies key */}
-                    {[0, 1, 2, 3,4,5].map((item, index: number) => {
+                    {[0, 1, 2, 3, 4, 5].map((item, index: number) => {
                         return (
                             <div key={index} className="flex flex-row gap-6">
                                 {index == 0 ? (
                                     <>
                                         {' '}
                                         <FormField label={` KPI Name`}>
-                                            <Input
-                                                placeholder={`   KPI Name`}
-                                                value={
-                                                    widgetProps?.kpis?.[index]
-                                                        ?.info
-                                                }
-                                                onChange={(e: any) => {
-                                                    HandleKPIPropChange(index,e.detail.value,'info')
-
-                                                }}
-                                            />
-                                        </FormField>
-                                        <FormField label={`  Count Query ID`}>
-                                            <Input
-                                                placeholder={`   Count Query ID`}
-                                                value={
-                                                    widgetProps?.kpis?.[index]
-                                                        ?.count_kpi
-                                                }
-                                                onChange={(e: any) => {
-                                                    HandleKPIPropChange(index,e.detail.value,'count_kpi')
-                                                }}
-                                            />
-                                        </FormField>
-                                        <FormField label={`  List Query ID`}>
-                                            <Input
-                                                placeholder={`   List Query ID`}
-                                                value={
-                                                    widgetProps?.kpis?.[index]
-                                                        ?.list_kpi
-                                                }
-                                                onChange={(e: any) => {
-                                                    HandleKPIPropChange(index,e.detail.value,'list_kpi')
-                                                }}
-                                            />
-                                        </FormField>
-                                    </>
-                                ) : (
-                                    <>
-                                        {' '}
                                             <Input
                                                 placeholder={`   KPI Name`}
                                                 value={
@@ -248,6 +231,8 @@ export default function WidgetLayout({
                                                     )
                                                 }}
                                             />
+                                        </FormField>
+                                        <FormField label={`  Count Query ID`}>
                                             <Input
                                                 placeholder={`   Count Query ID`}
                                                 value={
@@ -262,6 +247,8 @@ export default function WidgetLayout({
                                                     )
                                                 }}
                                             />
+                                        </FormField>
+                                        <FormField label={`  List Query ID`}>
                                             <Input
                                                 placeholder={`   List Query ID`}
                                                 value={
@@ -276,6 +263,52 @@ export default function WidgetLayout({
                                                     )
                                                 }}
                                             />
+                                        </FormField>
+                                    </>
+                                ) : (
+                                    <>
+                                        {' '}
+                                        <Input
+                                            placeholder={`   KPI Name`}
+                                            value={
+                                                widgetProps?.kpis?.[index]?.info
+                                            }
+                                            onChange={(e: any) => {
+                                                HandleKPIPropChange(
+                                                    index,
+                                                    e.detail.value,
+                                                    'info'
+                                                )
+                                            }}
+                                        />
+                                        <Input
+                                            placeholder={`   Count Query ID`}
+                                            value={
+                                                widgetProps?.kpis?.[index]
+                                                    ?.count_kpi
+                                            }
+                                            onChange={(e: any) => {
+                                                HandleKPIPropChange(
+                                                    index,
+                                                    e.detail.value,
+                                                    'count_kpi'
+                                                )
+                                            }}
+                                        />
+                                        <Input
+                                            placeholder={`   List Query ID`}
+                                            value={
+                                                widgetProps?.kpis?.[index]
+                                                    ?.list_kpi
+                                            }
+                                            onChange={(e: any) => {
+                                                HandleKPIPropChange(
+                                                    index,
+                                                    e.detail.value,
+                                                    'list_kpi'
+                                                )
+                                            }}
+                                        />
                                     </>
                                 )}
                             </div>
@@ -373,6 +406,10 @@ export default function WidgetLayout({
                     id: 'edit',
                     text: 'Edit',
                 },
+                {
+                    id: 'save',
+                    text: 'Save',
+                },
             ]
         }
     }
@@ -401,7 +438,6 @@ export default function WidgetLayout({
         setSelectedAddItem('')
     }
     const HandleKPIPropChange = (index: number, value: string, key: string) => {
-        console.log(index,value,key)
         const currentKPIs = widgetProps?.kpis ?? []
 
         // Clone the KPI list or extend it to the required length
@@ -424,6 +460,31 @@ export default function WidgetLayout({
             kpis: updatedKPIs,
         })
     }
+    const SaveWidget = (widget: any) => {
+           let url = ''
+           if (window.location.origin === 'http://localhost:3000') {
+               url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+           } else {
+               url = window.location.origin
+           }
+           // @ts-ignore
+           const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+           const config = {
+               headers: {
+                   Authorization: `Bearer ${token}`,
+               },
+           }
+           const body = WidgetToAPI(widget, me?.username, false, false)
+           
+
+           axios
+               .post(`${url}/main/core/api/v4/layout/widget/set`, body, config)
+               .then((res) => {})
+               .catch((err) => {
+                   console.log(err)
+               })
+       }
 
     return (
         <div className="w-full h-full flex flex-col gap-8">
@@ -505,7 +566,9 @@ export default function WidgetLayout({
                             }
                             settings={
                                 <ButtonDropdown
-                                    items={GetWidgetSettingsItem(item.id)}
+                                    items={GetWidgetSettingsItem(
+                                        item.data?.componentId
+                                    )}
                                     onItemClick={(event) => {
                                         if (event.detail.id === 'remove') {
                                             HandleRemoveItemByID(item.id)
@@ -523,6 +586,9 @@ export default function WidgetLayout({
                                             )
                                             setEditId(item.id)
                                             setAddModalOpen(true)
+                                        }
+                                        if(event.detail.id === 'save') {
+                                            SaveWidget(item)
                                         }
                                     }}
                                     ariaLabel="Board item settings"
@@ -659,6 +725,14 @@ export default function WidgetLayout({
                 } Widget`}
             >
                 <div className="flex flex-col gap-2">
+                    {isEdit && (
+                        <CopyToClipboard
+                            copyButtonText={editId}
+                            textToCopy={editId}
+                            copyErrorText="Id failed to copy"
+                            copySuccessText="Id copied"
+                        />
+                    )}
                     <FormField label="Widget Name">
                         <Input
                             placeholder="Widget Name"
