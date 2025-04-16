@@ -24,7 +24,7 @@ type TaskDetailsResponse struct {
 	ImageUrl     string              `json:"image_url"`
 	RunSchedules []RunScheduleObject `json:"run_schedules"`
 	Credentials  []string            `json:"credentials"`
-	EnvVars      []string            `json:"env_vars"`
+	EnvVars      map[string]string   `json:"env_vars"`
 	ScaleConfig  ScaleConfig         `json:"scale_config"`
 }
 
