@@ -1727,9 +1727,10 @@ func (h *HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 		IsPrivate:   req.IsPrivate,
 		UpdatedAt:   time.Now(),
 	}
-
+	var jsonb pgtype.JSONB
+	jsonb.Set(map[string]interface{}{})
 	for _, widgetID := range req.WidgetIDs {
-		dashboard.Widgets = append(dashboard.Widgets, models.Widget{ID: widgetID})
+		dashboard.Widgets = append(dashboard.Widgets, models.Widget{ID: widgetID,WidgetProps: jsonb})
 	}
 
 	if err := h.db.SetUserLayout(dashboard); err != nil {
@@ -2000,7 +2001,10 @@ func (h *HttpHandler) SetDashboardWithWidgets(echoCtx echo.Context) error {
 	dashboard.Widgets = make([]models.Widget, 0)
 	for _, widget := range widgets {
 
-		dashboard.Widgets = append(dashboard.Widgets, models.Widget{ID: widget.ID})
+		dashboard.Widgets = append(dashboard.Widgets, models.Widget{
+		ID: widget.ID,
+		WidgetProps: widget.WidgetProps,
+	})
 	}
 	err = h.db.SetUserLayout(dashboard)
 	if err != nil {
