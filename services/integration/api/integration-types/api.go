@@ -79,6 +79,7 @@ func (a *API) Register(e *echo.Group) {
 	plugin.GET("/:id/credentials", httpserver.AuthorizeHandler(a.ListPluginCredentials, api.ViewerRole))
 	plugin.POST("/:id/healthcheck", httpserver.AuthorizeHandler(a.HealthCheck, api.ViewerRole))
 	plugin.GET("/tables", httpserver.AuthorizeHandler(a.GetPluginsTables, api.ViewerRole))
+	plugin.PUT("/:id/demo/load", httpserver.AuthorizeHandler(a.LoadPluginDemoData, api.EditorRole))
 }
 
 // List godoc
@@ -1313,4 +1314,35 @@ func (a *API) CheckEnoughMemory() error {
 	}
 
 	return nil
+}
+
+// LoadPluginDemoData godoc
+//
+// @Summary			Load demo data for plugin
+// @Description		Load demo data for plugin by the given url
+// @Security		BearerToken
+// @Tags			integration_types
+// @Produce			json
+// @Param			id	path	string	true	"plugin id"
+// @Success			200
+// @Router			/integration/api/v1/plugin/{id}/demo/load [put]
+func (a *API) LoadPluginDemoData(c echo.Context) error {
+	id := c.Param("id")
+
+	plugin, err := a.database.GetPluginByID(id)
+	if err != nil {
+		a.logger.Error("failed to get plugin", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get plugin")
+	}
+	if plugin == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "plugin not found")
+	}
+
+	credentials, err := a.database.ListCredentialsFiltered(nil, []string{plugin.IntegrationType.String()})
+	if err != nil {
+		a.logger.Error("failed to list credentials", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list credentials")
+	}
+
+	return c.JSON(http.StatusOK, credentials)
 }

@@ -44,6 +44,7 @@ type IntegrationPlugin struct {
 	ArtifactDetails struct {
 		PackageURL string `json:"package_url" yaml:"package_url"`
 	} `json:"artifact_details" yaml:"artifact_details"`
+	DemoDataURL string `json:"demo_data_url" yaml:"demo_data_url"`
 }
 
 type Schedules struct {
@@ -192,6 +193,7 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 			OperationalStatusUpdates: operationalStatusUpdates,
 			URL:                      url,
 			DescriberURL:             describerURL,
+			DemoDataURL:              iPlugin.DemoDataURL,
 			DescriberTag:             describerTags,
 			Tags:                     tagsJsonb,
 		}, &models.IntegrationPluginBinary{
