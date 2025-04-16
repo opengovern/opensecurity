@@ -1,7 +1,9 @@
-echo "NEEDED ENV Variables are: [PLUGIN_ID, ES_INDEX_PREFIX, DB_PASSWORD, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ENDPOINT_URL, ELASTICSEARCH_PASSWORD, OPENSSL_PASSWORD, DEMO_DATA_S3_PATH]"
+echo "NEEDED ENV Variables are: [INTEGRATION_TYPE, ES_INDEX_PREFIX, DB_PASSWORD, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ENDPOINT_URL, ELASTICSEARCH_PASSWORD, OPENSSL_PASSWORD, DEMO_DATA_S3_PATH]"
+
+rm -rf /tmp/demo-data
 
 mkdir -p /tmp/demo-data
-
+echo "$DB_PASSWORD"
 
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
@@ -15,8 +17,8 @@ if [ -z "$DB_PASSWORD" ]; then
     exit 1
 fi
 
-if [ -z "$PLUGIN_ID" ]; then
-    echo "Error: PLUGIN_ID environment variable is not set." >&2
+if [ -z "$INTEGRATION_TYPE" ]; then
+    echo "Error: INTEGRATION_TYPE environment variable is not set." >&2
     exit 1
 fi
 
@@ -27,25 +29,25 @@ fi
 
 export PGPASSWORD="$DB_PASSWORD"
 
-SQL_QUERY=$(cat <<-EOF
+SQL_QUERY=$(cat <<EOF
 SELECT
     json_build_object(
-        'integrationId', integration_id::text, -- Cast UUID to text if needed
+        'integrationId', integration_id::text,
         'providerId', provider_id,
         'name', name,
-        'integrationType', integration_type, -- Assuming it's stored as text compatible with your Go type
-        'annotations', annotations,       -- Assuming annotations is a JSONB column
-        'labels', labels              -- Assuming labels is a JSONB column
+        'integrationType', integration_type,
+        'annotations', annotations,
+        'labels', labels
     )
 FROM
     integrations
 WHERE
-    integration_type = '${PLUGIN_ID}';
+    integration_type = '${INTEGRATION_TYPE}';
 EOF
 )
 
-echo "Connecting to database '$DB_NAME' on '$DB_HOST:$DB_PORT' as user '$DB_USER'..."
-echo "Executing query and exporting to '$OUTPUT_FILE'..."
+echo "Connecting to database $DB_NAME on $DB_HOST:$DB_PORT as user $DB_USER..."
+echo "Executing query and exporting to $OUTPUT_FILE..."
 
 psql -X -A -t -q -v ON_ERROR_STOP=1 \
     -h "$DB_HOST" \
@@ -53,10 +55,10 @@ psql -X -A -t -q -v ON_ERROR_STOP=1 \
     -U "$DB_USER" \
     -d "$DB_NAME" \
     -c "$SQL_QUERY" | \
-jq -s '.' > "$OUTPUT_FILE"
+jq -s "." > "$OUTPUT_FILE"
 
 if [ -s "$OUTPUT_FILE" ]; then
-    echo "Successfully exported integrations to '$OUTPUT_FILE'."
+    echo "Successfully exported integrations to $OUTPUT_FILE."
 else
     echo "Error: Failed to export data or the table is empty. Output file is empty or not created." >&2
     exit 1
@@ -92,20 +94,16 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0
 multielasticdump \
   --direction=dump \
   --input="$NEW_ELASTICSEARCH_ADDRESS" \
-  --output="/tmp/demo-data/es-demo/" \
+  --output="/tmp/demo-data/es-demo" \
   --parallel=20 \
-  --match='^'${ES_INDEX_PREFIX}'.*$' \
+  --match="^${ES_INDEX_PREFIX}.*$" \
   --matchType=alias \
   --limit=10000 \
   --scrollTime=10m \
-  --searchBody='{"query": {"bool": {"must_not": {"term": {"deleted": true}}}}}' \
+  --searchBody="{\"query\": {\"bool\": {\"must_not\": {\"term\": {\"deleted\": true}}}}}" \
   --ignoreTemplate=true
 
 cd /tmp
-tar -cO demo-data | openssl enc -aes-256-cbc -md md5 -pass pass:"$OPENSSL_PASSWORD" -base64 > demo_data.tar.gz.enc
-
-FILE_SIZE_BYTES=$(stat -c %s /tmp/demo_data.tar.gz.enc)
-FILE_SIZE_MB=$(echo "scale=2; $FILE_SIZE_BYTES / 1048576" | bc)
-echo "File size: ${FILE_SIZE_MB} MB"
+tar -cf - demo-data | openssl enc -aes-256-cbc -md md5 -pass pass:"$OPENSSL_PASSWORD" -base64 > demo_data.tar.gz.enc
 
 rclone copy /tmp/demo_data.tar.gz.enc "$DEMO_DATA_S3_PATH"
