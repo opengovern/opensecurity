@@ -144,7 +144,8 @@ func (db Database) ListQueryViews() ([]models.QueryView, error) {
 	}
 	return queryViews, nil
 }
-// get user layout// Get user layouts (with widgets)
+
+// GetUserLayouts get user layout// Get user layouts (with widgets)
 func (db Database) GetUserLayouts(userID string) ([]models.Dashboard, error) {
 	var userLayouts []models.Dashboard
 	err := db.orm.Preload("Widgets").Where("user_id = ?", userID).Find(&userLayouts).Error
@@ -154,7 +155,7 @@ func (db Database) GetUserLayouts(userID string) ([]models.Dashboard, error) {
 	return userLayouts, nil
 }
 
-// Get the default layout for a user
+// GetUserDefaultLayout Get the default layout for a user
 func (db Database) GetUserDefaultLayout(userID string) (*models.Dashboard, error) {
 	var userLayout models.Dashboard
 	err := db.orm.Preload("Widgets").Where("user_id = ? AND is_default = ?", userID, true).First(&userLayout).Error
@@ -167,11 +168,11 @@ func (db Database) GetUserDefaultLayout(userID string) (*models.Dashboard, error
 	return &userLayout, nil
 }
 
-// Upsert dashboard and update associated widgets
+// SetUserLayout Upsert dashboard and update associated widgets
 func (db Database) SetUserLayout(layoutConfig models.Dashboard) error {
 	return db.orm.Transaction(func(tx *gorm.DB) error {
 		err := tx.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "id"}},
+			Columns: []clause.Column{{Name: "id"}},
 			DoUpdates: clause.AssignmentColumns([]string{
 				"name", "description", "is_default", "is_private", "updated_at", "user_id",
 			}),
@@ -190,7 +191,7 @@ func (db Database) SetUserLayout(layoutConfig models.Dashboard) error {
 	})
 }
 
-// Get all public dashboards
+// GetPublicLayouts Get all public dashboards
 func (db Database) GetPublicLayouts() ([]models.Dashboard, error) {
 	var publicLayouts []models.Dashboard
 	err := db.orm.Preload("Widgets").Where("is_private = ?", false).Find(&publicLayouts).Error
@@ -200,12 +201,12 @@ func (db Database) GetPublicLayouts() ([]models.Dashboard, error) {
 	return publicLayouts, nil
 }
 
-// Change privacy status of all layouts for a user
+// ChangeLayoutPrivacy Change privacy status of all layouts for a user
 func (db Database) ChangeLayoutPrivacy(userID string, isPrivate bool) error {
 	return db.orm.Model(&models.Dashboard{}).Where("user_id = ?", userID).Update("is_private", isPrivate).Error
 }
 
-// Get all widgets for a user
+// GetUserWidgets Get all widgets for a user
 func (db Database) GetUserWidgets(userID string) ([]models.Widget, error) {
 	var widgets []models.Widget
 	err := db.orm.Where("user_id = ?", userID).Find(&widgets).Error
@@ -215,7 +216,7 @@ func (db Database) GetUserWidgets(userID string) ([]models.Widget, error) {
 	return widgets, nil
 }
 
-// Get a single widget by ID
+// GetWidget Get a single widget by ID
 func (db Database) GetWidget(widgetID string) (*models.Widget, error) {
 	var widget models.Widget
 	err := db.orm.Where("id = ?", widgetID).First(&widget).Error
@@ -228,15 +229,15 @@ func (db Database) GetWidget(widgetID string) (*models.Widget, error) {
 	return &widget, nil
 }
 
-// Add widgets in bulk
+// AddWidgets Add widgets in bulk
 func (db Database) AddWidgets(widgets []models.Widget) error {
 	return db.orm.Create(&widgets).Error
 }
 
-// Upsert a widget
+// SetUserWidget Upsert a widget
 func (db Database) SetUserWidget(widget models.Widget) error {
 	return db.orm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "id"}},
+		Columns: []clause.Column{{Name: "id"}},
 		DoUpdates: clause.AssignmentColumns([]string{
 			"title", "description", "widget_type", "widget_props",
 			"row_span", "column_span", "column_offset", "is_public",
@@ -245,17 +246,17 @@ func (db Database) SetUserWidget(widget models.Widget) error {
 	}).Create(&widget).Error
 }
 
-// Delete widgets by IDs
+// DeleteWidgets Delete widgets by IDs
 func (db Database) DeleteWidgets(widgetIDs []string) error {
 	return db.orm.Where("id IN ?", widgetIDs).Delete(&models.Widget{}).Error
 }
 
-// Update widget content (single widget)
+// UpdateWidget Update widget content (single widget)
 func (db Database) UpdateWidget(widget models.Widget) error {
-	return db.orm.Model(&widget).Where("id = ?", widget.ID).Updates(&widget).Error
+	return db.orm.Model(&models.Widget{}).Where("id = ?", widget.ID).Updates(&widget).Error
 }
 
-// Update widget-dashboard relationship (associate widgets to dashboard)
+// UpdateDashboardWidgets Update widget-dashboard relationship (associate widgets to dashboard)
 func (db Database) UpdateDashboardWidgets(dashboardID string, widgetIDs []string) error {
 	var dashboard models.Dashboard
 	dashboard.ID = dashboardID
@@ -275,23 +276,23 @@ func (db Database) DeleteUserWidget(widgetID string) error {
 }
 
 func (db Database) UpdateWidgetDashboards(widgetID string, dashboardIDs []string) error {
-    var widget models.Widget
-    // Fetch the widget by ID
-    if err := db.orm.First(&widget, "id = ?", widgetID).Error; err != nil {
-        return err
-    }
+	var widget models.Widget
+	// Fetch the widget by ID
+	if err := db.orm.First(&widget, "id = ?", widgetID).Error; err != nil {
+		return err
+	}
 
-    var dashboards []models.Dashboard
-    // Fetch the dashboards by the provided dashboardIDs
-    if err := db.orm.Where("id IN ?", dashboardIDs).Find(&dashboards).Error; err != nil {
-        return err
-    }
+	var dashboards []models.Dashboard
+	// Fetch the dashboards by the provided dashboardIDs
+	if err := db.orm.Where("id IN ?", dashboardIDs).Find(&dashboards).Error; err != nil {
+		return err
+	}
 
-    // Replace the dashboards associated with the widget
-    return db.orm.Model(&widget).Association("Dashboards").Replace(dashboards)
+	// Replace the dashboards associated with the widget
+	return db.orm.Model(&models.Widget{}).Association("Dashboards").Replace(dashboards)
 }
 
-// get all public widgets
+// GetAllPublicWidgets get all public widgets
 func (db Database) GetAllPublicWidgets() ([]models.Widget, error) {
 	var widgets []models.Widget
 	err := db.orm.
