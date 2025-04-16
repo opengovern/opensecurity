@@ -1,10 +1,10 @@
 
 export interface Widget {
-    id:           string;
-    data:         Data;
-    rowSpan:      number;
-    columnSpan:   number;
-    columnOffset: number;
+    id: string
+    data: Data
+    rowSpan: number
+    columnSpan: number
+    columnOffset: ColumnOffset
 }
 
 export interface ColumnOffset {
@@ -15,7 +15,7 @@ export interface Data {
     componentId: string
     title: string
     description: string
-    user_id: string
+    user_id?: string
     is_public: boolean
     props: any
 }
@@ -34,16 +34,19 @@ export interface WidgetAPI {
     description: string;
     widget_type: string;
     widget_props: any;
-    user_id:   string;
+    user_id?:   string;
     is_public: boolean;
     row_span:      number;
     column_span:   number;
     column_offset: number;
 }
 
-export const  WidgetToAPI = (widget: Widget,user_id : string,is_public: boolean) => {
+export const  WidgetToAPI = (widget: Widget,user_id : string | undefined,is_public: boolean, is_new: boolean) => {
     const widgetAPI  = {} as WidgetAPI
+    if(!is_new){
     widgetAPI.id = widget.id
+
+    }
     widgetAPI.title = widget.data.title
     widgetAPI.description = widget.data.description
     widgetAPI.widget_type = widget.data.componentId
@@ -52,7 +55,7 @@ export const  WidgetToAPI = (widget: Widget,user_id : string,is_public: boolean)
     widgetAPI.is_public = is_public
     widgetAPI.row_span = widget.rowSpan
     widgetAPI.column_span = widget.columnSpan
-    widgetAPI.column_offset = widget.columnOffset
+    widgetAPI.column_offset = widget.columnOffset["4"]
     return widgetAPI
 
 }
@@ -69,6 +72,8 @@ export const APIToWidget = (widget: WidgetAPI) => {
     }
     widgetData.rowSpan = widget.row_span
     widgetData.columnSpan = widget.column_span
-    widgetData.columnOffset = widget.column_offset
+    widgetData.columnOffset = {
+        '4': widget.column_offset,
+    }
     return widgetData
 }
