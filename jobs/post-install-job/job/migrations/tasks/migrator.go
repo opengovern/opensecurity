@@ -120,6 +120,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		}
 
 		defaultEnvVars := defaultEnvs(&task)
+		logger.Info("env variables", zap.Any("variables", defaultEnvVars))
 		envVarsJsonData, err := json.Marshal(defaultEnvVars)
 		if err != nil {
 			return err

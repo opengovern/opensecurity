@@ -16,7 +16,6 @@ type Filter struct {
 	KeyValue map[string]string `json:"kayValue" gorm:"key_values"`
 }
 
-
 type ConfigMetadata struct {
 	Key   MetadataKey        `json:"key" gorm:"primary_key"`
 	Type  ConfigMetadataType `json:"type" gorm:"default:'string'"`
@@ -35,7 +34,6 @@ type PolicyParameterValues struct {
 	Value     string `gorm:"type:text;not null"`
 }
 
-
 type QueryViewTag struct {
 	model.Tag
 	QueryViewID string `gorm:"primaryKey"`
@@ -51,15 +49,15 @@ type QueryView struct {
 	Tags         []QueryViewTag `gorm:"foreignKey:QueryViewID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 type Dashboard struct {
-	ID          string     `gorm:"primaryKey" json:"id"`
-	IsDefault   bool       `json:"is_default"`
-	UserID      string     `gorm:"type:text" json:"user_id"`
-	Name        string     `gorm:"type:text" json:"name"`
-	Description string     `json:"description"`
-	IsPrivate   bool       `json:"is_private"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
-	Widgets     []Widget   `gorm:"many2many:dashboard_widgets;" json:"widgets"` // M2M link
+	ID          string    `gorm:"primaryKey" json:"id"`
+	IsDefault   bool      `json:"is_default"`
+	UserID      string    `gorm:"type:text" json:"user_id"`
+	Name        string    `gorm:"type:text" json:"name"`
+	Description string    `json:"description"`
+	IsPrivate   bool      `json:"is_private"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	Widgets     []Widget  `gorm:"many2many:dashboard_widgets;" json:"widgets"` // M2M link
 }
 
 type Widget struct {
@@ -78,13 +76,8 @@ type Widget struct {
 	Dashboards   []Dashboard  `gorm:"many2many:dashboard_widgets;" json:"dashboards"` // M2M link
 }
 
-	
-
-
-
 type MetadataKey string
 type ConfigMetadataType string
-
 
 type StringConfigMetadata struct {
 	ConfigMetadata
