@@ -5,19 +5,18 @@ RUN apk --no-cache add ca-certificates
 RUN mkdir -p /tmp
 
 FROM alpine:latest
-RUN apk --no-cache add openssl tar nodejs npm
-RUN apt-get update && \
-    apt-get install -y \
+
+RUN apk --no-cache add \
     curl \
     unzip \
     gnupg \
-    lsb-release && \
-    rm -rf /var/lib/apt/lists/*
+    lsb-release \
+    nodejs \
+    npm \
+    openssl \
+    tar
 
-RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
-    apt-get install -y nodejs
-
-RUN npm install -g elasticdump
+RUN npm install -g github:taskrabbit/elasticsearch-dump
 
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /tmp /tmp
