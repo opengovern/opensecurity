@@ -1,9 +1,9 @@
 package demo_import
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/opengovern/og-util/pkg/integration"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
@@ -27,13 +27,43 @@ type Config struct {
 	ElasticsearchAddr string
 }
 
+type HexEncodedMap map[string]string
+
+func (h *HexEncodedMap) UnmarshalJSON(data []byte) error {
+	var raw string
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return fmt.Errorf("expected hex-encoded string, got: %s", string(data))
+	}
+
+	// Remove the `\\x` prefix if it exists
+	trimmed := raw
+	if len(raw) >= 2 && raw[:2] == "\\x" {
+		trimmed = raw[2:]
+	}
+
+	// Decode hex
+	decoded, err := hex.DecodeString(trimmed)
+	if err != nil {
+		return fmt.Errorf("failed to decode hex: %w", err)
+	}
+
+	// Parse the JSON object
+	var m map[string]string
+	if err := json.Unmarshal(decoded, &m); err != nil {
+		return fmt.Errorf("failed to unmarshal decoded JSON: %w", err)
+	}
+
+	*h = m
+	return nil
+}
+
 type Integration struct {
-	IntegrationID   string
-	ProviderID      string
-	Name            string
-	IntegrationType integration.Type
-	Annotations     map[string]string
-	Labels          map[string]string
+	IntegrationID   string        `json:"integrationId"`
+	ProviderID      string        `json:"providerId"`
+	Name            string        `json:"name"`
+	IntegrationType string        `json:"integrationType"`
+	Annotations     HexEncodedMap `json:"annotations"`
+	Labels          HexEncodedMap `json:"labels"`
 }
 
 func LoadDemoData(cfg Config, logger *zap.Logger) ([]Integration, error) {
