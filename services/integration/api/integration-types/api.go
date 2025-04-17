@@ -1367,6 +1367,12 @@ func (a *API) LoadPluginDemoData(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to load demo data")
 	}
 
+	err = a.database.PluginDemoDataLoad(plugin.PluginID)
+	if err != nil {
+		a.logger.Error("failed to set load plugin demo data flag", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to set load plugin demo data flag")
+	}
+
 	return c.NoContent(http.StatusOK)
 }
 
@@ -1399,6 +1405,12 @@ func (a *API) RemovePluginDemoData(c echo.Context) error {
 	if err = a.database.DeletePluginSampleIntegrations(plugin.IntegrationType); err != nil {
 		a.logger.Error("failed to delete plugin sample integration", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete plugin sample integration")
+	}
+
+	err = a.database.PluginDemoDataUnLoad(plugin.PluginID)
+	if err != nil {
+		a.logger.Error("failed to unset load plugin demo data flag", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to unset load plugin demo data flag")
 	}
 
 	return c.NoContent(http.StatusOK)

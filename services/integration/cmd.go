@@ -213,24 +213,6 @@ func NewKubeClient() (client.Client, error) {
 	return kubeClient, nil
 }
 
-type IntegrationType struct {
-	ID               int64               `json:"id"`
-	Name             string              `json:"name"`
-	IntegrationType  string              `json:"integration_type"`
-	Tier             string              `json:"tier"`
-	Annotations      map[string][]string `json:"annotations"`
-	Labels           map[string][]string `json:"labels"`
-	ShortDescription string              `json:"short_description"`
-	Description      string              `json:"Description"`
-	Icon             string              `json:"Icon"`
-	Availability     string              `json:"Availability"`
-	SourceCode       string              `json:"SourceCode"`
-	PackageURL       string              `json:"PackageURL"`
-	PackageTag       string              `json:"PackageTag"`
-	Enabled          bool                `json:"enabled"`
-	SchemaIDs        []string            `json:"schema_ids"`
-}
-
 func isMetricsAPIAvailable(clientset *kubernetes.Clientset) bool {
 	discoveryClient := clientset.Discovery()
 	apiGroups, err := discoveryClient.ServerGroups()
