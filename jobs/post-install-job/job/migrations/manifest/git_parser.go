@@ -194,6 +194,7 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 			URL:                      url,
 			DescriberURL:             describerURL,
 			DemoDataURL:              demoDataUrl,
+			DemoDataLoaded:           false,
 			DescriberTag:             describerTags,
 			Tags:                     tagsJsonb,
 		}, &models.IntegrationPluginBinary{

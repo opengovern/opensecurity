@@ -83,7 +83,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		err = dbm.ORM.Clauses(clause.OnConflict{
 			Columns: []clause.Column{{Name: "plugin_id"}},
 			DoUpdates: clause.AssignmentColumns([]string{"id", "integration_type", "name", "tier", "description", "icon",
-				"availability", "source_code", "package_type", "url", "tags"}),
+				"availability", "source_code", "package_type", "url", "demo_data_url", "tags"}),
 		}).Create(plugin).Error
 		if err != nil {
 			logger.Error("failed to create integration binary", zap.Error(err))
