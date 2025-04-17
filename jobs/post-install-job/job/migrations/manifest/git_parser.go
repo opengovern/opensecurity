@@ -40,7 +40,10 @@ type IntegrationPlugin struct {
 	Availability    string              `json:"availability" yaml:"availability"`
 	SourceCode      string              `json:"source_code" yaml:"source_code"`
 	PackageType     string              `json:"package_type" yaml:"package_type"`
-	Default         bool                `json:"default" yaml:"default"`
+	Default         struct {
+		Install bool `json:"install" yaml:"install"`
+		Enable  bool `json:"enable" yaml:"enable"`
+	} `json:"defaults" yaml:"default"`
 	ArtifactDetails struct {
 		PackageURL string `json:"package_url" yaml:"package_url"`
 	} `json:"artifact_details" yaml:"artifact_details"`
@@ -105,41 +108,40 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 
 	if iPlugin.SourceCode != "" && iPlugin.ArtifactDetails.PackageURL != "" {
 		url = iPlugin.ArtifactDetails.PackageURL
-		if iPlugin.Default {
-			if err := os.RemoveAll(baseDir + "/integarion_type"); err != nil {
-				logger.Error("failed to remove existing files", zap.Error(err), zap.String("url", url), zap.String("path", baseDir+"/integarion_type"))
-				return nil, nil, fmt.Errorf("remove existing files for url %s: %w", iPlugin, err)
-			}
+		if err := os.RemoveAll(baseDir + "/integarion_type"); err != nil {
+			logger.Error("failed to remove existing files", zap.Error(err), zap.String("url", url), zap.String("path", baseDir+"/integarion_type"))
+			return nil, nil, fmt.Errorf("remove existing files for url %s: %w", iPlugin, err)
+		}
 
-			downloader := getter.Client{
-				Src:  url,
-				Dst:  baseDir + "/integarion_type",
-				Mode: getter.ClientModeDir,
-			}
-			err = downloader.Get()
-			if err != nil {
-				logger.Error("failed to get integration binaries", zap.Error(err), zap.String("url", url))
-				return nil, nil, fmt.Errorf("get integration binaries for url %s: %w", iPlugin, err)
-			}
+		downloader := getter.Client{
+			Src:  url,
+			Dst:  baseDir + "/integarion_type",
+			Mode: getter.ClientModeDir,
+		}
+		err = downloader.Get()
+		if err != nil {
+			logger.Error("failed to get integration binaries", zap.Error(err), zap.String("url", url))
+			return nil, nil, fmt.Errorf("get integration binaries for url %s: %w", iPlugin, err)
+		}
 
-			//// read manifest file
-			manifestFile, err := os.ReadFile(baseDir + "/integarion_type/manifest.yaml")
-			if err != nil {
-				logger.Error("failed to open manifest file", zap.Error(err))
-				return nil, nil, fmt.Errorf("open manifest file: %w", err)
-			}
-			logger.Info("manifestFile", zap.String("file", string(manifestFile)))
+		//// read manifest file
+		manifestFile, err := os.ReadFile(baseDir + "/integarion_type/manifest.yaml")
+		if err != nil {
+			logger.Error("failed to open manifest file", zap.Error(err))
+			return nil, nil, fmt.Errorf("open manifest file: %w", err)
+		}
+		logger.Info("manifestFile", zap.String("file", string(manifestFile)))
 
-			var m models.Manifest
-			// decode yaml
-			if err := yaml.Unmarshal(manifestFile, &m); err != nil {
-				logger.Error("failed to decode manifest", zap.Error(err), zap.String("url", url))
-				return nil, nil, fmt.Errorf("decode manifest for url %s: %w", iPlugin, err)
-			}
-			describerURL = m.DescriberURL
-			describerTags = m.DescriberTag
-			demoDataUrl = m.DemoDataURL
-
+		var m models.Manifest
+		// decode yaml
+		if err := yaml.Unmarshal(manifestFile, &m); err != nil {
+			logger.Error("failed to decode manifest", zap.Error(err), zap.String("url", url))
+			return nil, nil, fmt.Errorf("decode manifest for url %s: %w", iPlugin, err)
+		}
+		describerURL = m.DescriberURL
+		describerTags = m.DescriberTag
+		demoDataUrl = m.DemoDataURL
+		if iPlugin.Default.Enable && iPlugin.Default.Install {
 			// read integration-plugin file
 			integrationPlugin, err = os.ReadFile(baseDir + "/integarion_type/integration-plugin")
 			if err != nil {
