@@ -106,7 +106,6 @@ const GetLayout = (meResponse :any) => {
              })
      }
 const SetDefaultLayout = (layout: any, meResponse: any) => {
-    console.log(layout)
     let url = ''
     if (window.location.origin === 'http://localhost:3000') {
         url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -131,7 +130,6 @@ const SetDefaultLayout = (layout: any, meResponse: any) => {
         is_default: true,
         is_private: true,
     }
-    console.log(body)
 
     axios
         .post(`${url}/main/core/api/v4/layout/set/widgets`, body, config)

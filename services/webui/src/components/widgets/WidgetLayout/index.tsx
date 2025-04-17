@@ -24,8 +24,8 @@ import { array } from 'prop-types'
 import Shortcuts from '../Shortcuts'
 import Integrations from '../Integrations'
 import SRE from '../KPI_Cards'
-import { APIToWidget, WidgetAPI, WidgetToAPI } from '../../../utilities/widget'
-
+import { APIToWidget, Widget, WidgetAPI, WidgetToAPI } from '../../../utilities/widget'
+import { v4 as uuid } from 'uuid'
 const COMPONENT_MAPPING = {
     table: TableWidget,
     chart: ChartWidget,
@@ -121,7 +121,9 @@ export default function WidgetLayout({
             id: layout?.id,
             is_default: layout.is_default,
             user_id: me?.username,
-            layout_config: layout_config,
+            widget_ids: layout_config?.map((widget: any) => {
+                return widget?.id
+            }),
             name: layout.name,
             description: layout.description,
             is_private: layout.is_private,
@@ -134,43 +136,57 @@ export default function WidgetLayout({
                 console.log(err)
             })
     }
- const GetDefaultLayout = () => {
-     setLayoutLoading(true)
-     let url = ''
-     if (window.location.origin === 'http://localhost:3000') {
-         url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-     } else {
-         url = window.location.origin
-     }
-     // @ts-ignore
-     const token = JSON.parse(localStorage.getItem('openg_auth')).token
+const GetDefaultLayout = () => {
+    const id = layout?.id
+    axios
+        .get(
+            `https://raw.githubusercontent.com/opengovern/platform-configuration/refs/heads/main/default_layout.json`
+        )
+        .then((res) => {
+            SetDefaultLayoutWithDashbord(res?.data, me, id)
+            setLayout(res?.data)
 
-     const config = {
-         headers: {
-             Authorization: `Bearer ${token}`,
-         },
-     }
-     const body = {
-         user_id: me?.username,
-     }
+            setLayoutLoading(false)
+        })
+        .catch((err) => {
+            setLayoutLoading(false)
+        })
+}
+const SetDefaultLayoutWithDashbord = (layout: any, meResponse: any,id: string) => {
+    let url = ''
+    if (window.location.origin === 'http://localhost:3000') {
+        url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+    } else {
+        url = window.location.origin
+    }
+    // @ts-ignore
+    const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-     axios
-         .post(`${url}/main/core/api/v4/layout/get-default`, body, config)
-         .then((res) => {
-             const layout = res?.data
-             layout.widgets = layout?.widgets?.map((widget: WidgetAPI) => {
-                 return APIToWidget(widget)
-             })
-             setLayout(res?.data)
-             setLayoutLoading(false)
-         })
-         .catch((err) => {
-             console.log(err)
-             //  check if error is 404
-             GetDefaultLayout()
-             setLayoutLoading(false)
-         })
- }
+    const config = {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }
+    const body = {
+        user_id: meResponse?.username,
+        widgets: layout?.widgets?.map((widget: Widget) => {
+            return WidgetToAPI(widget, meResponse?.username, true, true)
+        }),
+        name: layout?.name,
+        description: layout?.description,
+        is_default: true,
+        is_private: true,
+        id: id,
+    }
+
+    axios
+        .post(`${url}/main/core/api/v4/layout/set/widgets`, body, config)
+        .then((res) => {})
+        .catch((err) => {
+            console.log(err)
+        })
+}
+
     const HandleRemoveItemByID = (id: string) => {
         const newItems = items.filter((item: any) => item.id !== id)
         setItems(newItems)
@@ -323,7 +339,7 @@ export default function WidgetLayout({
             return
         }
         const newItem = {
-            id: `${selectedAddItem}-${items?.length}`,
+            id: uuid(),
             data: {
                 componentId: selectedAddItem,
                 props: widgetProps,
@@ -351,7 +367,7 @@ export default function WidgetLayout({
         }
         if (id == 'integration') {
             const new_item = {
-                id: 'integration',
+                id: uuid(),
                 data: {
                     componentId: 'integration',
                     title: 'Integrations',
@@ -366,7 +382,7 @@ export default function WidgetLayout({
         }
         if (id == 'shortcut') {
             const new_item = {
-                id: 'shortcut',
+                id: uuid(),
                 data: {
                     componentId: 'shortcut',
                     title: 'Shortcuts',
@@ -381,7 +397,7 @@ export default function WidgetLayout({
         }
         if (id == 'sre') {
             const new_item = {
-                id: 'sre',
+                id: uuid(),
                 data: {
                     componentId: 'sre',
                     title: 'SRE',
@@ -493,7 +509,7 @@ export default function WidgetLayout({
                 // description={}
                 actions={
                     <div className="flex flex-row gap-2">
-                        {/* <ButtonDropdown
+                        <ButtonDropdown
                             items={[
                                 { id: 'add', text: 'Add new dashboard' },
 
@@ -547,7 +563,7 @@ export default function WidgetLayout({
                             ariaLabel="Board item settings"
                         >
                             Add Widget
-                        </ButtonDropdown> */}
+                        </ButtonDropdown>
                     </div>
                 }
             >
