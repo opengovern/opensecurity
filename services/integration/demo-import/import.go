@@ -55,12 +55,6 @@ func LoadDemoData(cfg Config, logger *zap.Logger) ([]Integration, error) {
 	inputPathForDump := filepath.Join(workDir, "/demo-data/es-demo/")
 	integrationsJsonFilePath := filepath.Join(workDir, "/demo-data/integrations.json")
 
-	integrations, err := loadIntegrationsFromJSON(integrationsJsonFilePath)
-	if err != nil {
-		logger.Error("Failed to load integrations.", zap.Error(err))
-		return nil, fmt.Errorf("failed to load integrations.: %w", err)
-	}
-
 	// --- Ensure cleanup of intermediate files ---
 	defer func() {
 		logger.Info("Cleaning up intermediate file", zap.String("path", encryptedFilePath))
@@ -115,6 +109,15 @@ func LoadDemoData(cfg Config, logger *zap.Logger) ([]Integration, error) {
 		return nil, fmt.Errorf("failed to run tar command: %w", err)
 	}
 	logger.Info("Successfully extracted tarball", zap.String("path", decryptedFilePath))
+
+	// load integration file
+	integrations, err := loadIntegrationsFromJSON(integrationsJsonFilePath)
+	if err != nil {
+		logger.Error("Failed to load integrations.", zap.Error(err))
+		return nil, fmt.Errorf("failed to load integrations.: %w", err)
+	}
+
+	logger.Info("Successfully loaded integrations.", zap.Int("integrations", len(integrations)))
 
 	// --- 4. Construct the new Elasticsearch address ---
 	cleanAddress := strings.TrimPrefix(cfg.ElasticsearchAddr, "https://")
