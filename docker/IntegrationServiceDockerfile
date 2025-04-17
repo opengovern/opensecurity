@@ -1,11 +1,17 @@
 # syntax=docker/dockerfile:1
-FROM docker.io/golang:alpine as build
+
+FROM golang:alpine AS build
 RUN apk --no-cache add ca-certificates
 RUN mkdir -p /tmp
 
-FROM scratch
+FROM alpine:latest
+RUN apk --no-cache add openssl tar nodejs npm
+
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /tmp /tmp
 COPY ./build/integration-service /
 COPY ./assets/integrations /integrations
+
+RUN npm install -g multielasticdump
+
 CMD [ "/integration-service" ]
