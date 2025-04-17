@@ -472,6 +472,7 @@ func (a *API) LoadPluginWithURL(c echo.Context) error {
 				IntegrationType: m.IntegrationType,
 				DescriberURL:    m.DescriberURL,
 				DescriberTag:    m.DescriberTag,
+				DemoDataURL:     m.DemoDataURL,
 				InstallState:    models2.IntegrationTypeInstallStateInstalling,
 				URL:             url,
 			}
@@ -1123,6 +1124,7 @@ func (a *API) InstallOrUpdatePlugin(ctx context.Context, plugin *models2.Integra
 
 	plugin.DescriberURL = m.DescriberURL
 	plugin.DescriberTag = m.DescriberTag
+	plugin.DemoDataURL = m.DemoDataURL
 
 	pluginBinary := &models2.IntegrationPluginBinary{
 		PluginID: m.IntegrationType.String(),
