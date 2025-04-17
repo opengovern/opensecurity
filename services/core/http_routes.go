@@ -1954,8 +1954,12 @@ func (h *HttpHandler) SetDashboardWithWidgets(echoCtx echo.Context) error {
 	}
 	var widgets []models.Widget
 	for _, widget := range req.Widgets {
+		// Check if widget ID is empty
+		if widget.ID == "" {
+			widget.ID = uuid.New().String()
+		}
 		widgets = append(widgets, models.Widget{
-			ID:           uuid.New().String(),
+			ID:           widget.ID,
 			UserID:       widget.UserID,
 			Title:        widget.Title,
 			Description:  widget.Description,
@@ -1988,8 +1992,11 @@ func (h *HttpHandler) SetDashboardWithWidgets(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to add widgets")
 	}
 	// add dashboard
+	if req.ID == "" {
+		req.ID = uuid.New().String()
+	}
 	dashboard := models.Dashboard{
-		ID:          uuid.New().String(),
+		ID:          req.ID,
 		UserID:      req.UserID,
 		Name:        req.Name,
 		Description: req.Description,
