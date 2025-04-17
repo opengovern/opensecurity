@@ -4,6 +4,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/jackc/pgtype"
+	"github.com/labstack/echo/v4"
+	"github.com/opengovern/og-util/pkg/integration"
+	"github.com/opengovern/opensecurity/services/integration/db"
+	models2 "github.com/opengovern/opensecurity/services/integration/models"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
@@ -66,14 +72,14 @@ type Integration struct {
 	Labels          HexEncodedMap `json:"labels"`
 }
 
-func LoadDemoData(cfg Config, logger *zap.Logger) ([]Integration, error) {
+func LoadDemoData(cfg Config, logger *zap.Logger, database db.Database, plugin *models2.IntegrationPlugin) error {
 	logger.Info("Starting data loading process with provided config...")
 
 	wd, err := os.Getwd()
 	if err != nil {
 		// Log error before returning
 		logger.Error("Failed to get current working directory", zap.Error(err))
-		return nil, fmt.Errorf("failed to get current working directory: %w", err)
+		return fmt.Errorf("failed to get current working directory: %w", err)
 	}
 	workDir := wd
 
@@ -108,7 +114,7 @@ func LoadDemoData(cfg Config, logger *zap.Logger) ([]Integration, error) {
 		zap.String("destination", encryptedFilePath))
 	err = downloadFile(encryptedFilePath, cfg.DemoDataURL, logger)
 	if err != nil {
-		return nil, fmt.Errorf("failed to download file: %w", err)
+		return fmt.Errorf("failed to download file: %w", err)
 	}
 	logger.Info("Successfully downloaded file", zap.String("path", encryptedFilePath))
 
@@ -125,7 +131,7 @@ func LoadDemoData(cfg Config, logger *zap.Logger) ([]Integration, error) {
 	}
 	err = runCommand(workDir, "openssl", logger, opensslArgs...) // Pass logger
 	if err != nil {
-		return nil, fmt.Errorf("failed to run openssl command: %w", err)
+		return fmt.Errorf("failed to run openssl command: %w", err)
 	}
 	logger.Info("Successfully decrypted file", zap.String("path", decryptedFilePath))
 
@@ -136,7 +142,7 @@ func LoadDemoData(cfg Config, logger *zap.Logger) ([]Integration, error) {
 	tarArgs := []string{"-xvf", decryptedFilePath}
 	err = runCommand(workDir, "tar", logger, tarArgs...) // Pass logger
 	if err != nil {
-		return nil, fmt.Errorf("failed to run tar command: %w", err)
+		return fmt.Errorf("failed to run tar command: %w", err)
 	}
 	logger.Info("Successfully extracted tarball", zap.String("path", decryptedFilePath))
 
@@ -144,10 +150,78 @@ func LoadDemoData(cfg Config, logger *zap.Logger) ([]Integration, error) {
 	integrations, err := loadIntegrationsFromJSON(integrationsJsonFilePath)
 	if err != nil {
 		logger.Error("Failed to load integrations.", zap.Error(err))
-		return nil, fmt.Errorf("failed to load integrations.: %w", err)
+		return fmt.Errorf("failed to load integrations.: %w", err)
 	}
 
 	logger.Info("Successfully loaded integrations from json.", zap.Int("integrations", len(integrations)))
+
+	dummyCredentialID := uuid.New()
+	dummyCredential := models2.Credential{
+		ID:              dummyCredentialID,
+		IntegrationType: plugin.IntegrationType,
+		CredentialType:  "",
+		Secret:          "",
+		Metadata: func() pgtype.JSONB {
+			var jsonb pgtype.JSONB
+			if err := jsonb.Set([]byte("{}")); err != nil {
+				logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
+			}
+			return jsonb
+		}(),
+		MaskedSecret: func() pgtype.JSONB {
+			var jsonb pgtype.JSONB
+			if err := jsonb.Set([]byte("{}")); err != nil {
+				logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
+			}
+			return jsonb
+		}(),
+		Description: "dummy credential for demo integrations",
+	}
+
+	err = database.CreateCredential(&dummyCredential)
+	if err != nil {
+		logger.Error("failed to create credential", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create credential")
+	}
+
+	for _, i := range integrations {
+		integrationId, err := uuid.Parse(i.IntegrationID)
+		if err != nil {
+			logger.Error("failed to parse integration id", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to parse integration id")
+		}
+		dbIntegration := models2.Integration{
+			Integration: integration.Integration{
+				IntegrationID:   integrationId,
+				ProviderID:      i.ProviderID,
+				Name:            i.Name,
+				IntegrationType: plugin.IntegrationType,
+				Annotations: func() pgtype.JSONB {
+					var jsonb pgtype.JSONB
+					if err := jsonb.Set(i.Annotations); err != nil {
+						logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
+					}
+					return jsonb
+				}(),
+				Labels: func() pgtype.JSONB {
+					var jsonb pgtype.JSONB
+					if err := jsonb.Set(i.Labels); err != nil {
+						logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
+					}
+					return jsonb
+				}(),
+				CredentialID: dummyCredentialID,
+				State:        integration.IntegrationStateSample,
+			},
+		}
+		err = database.CreateIntegration(&dbIntegration)
+		if err != nil {
+			logger.Error("failed to create integration", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create integration")
+		}
+	}
+
+	logger.Info("Successfully created integrations.", zap.Int("integrations", len(integrations)))
 
 	// --- 4. Construct the new Elasticsearch address ---
 	cleanAddress := strings.TrimPrefix(cfg.ElasticsearchAddr, "https://")
@@ -163,39 +237,40 @@ func LoadDemoData(cfg Config, logger *zap.Logger) ([]Integration, error) {
 		zap.Int("limit", BatchLimit),
 		zap.String("scrollTime", ScrollTime))
 
-	dumpArgs := []string{
-		"--direction=load",
-		"--input=" + inputPathForDump,
-		"--output=" + newElasticsearchAddress, // Use the full address here
-		fmt.Sprintf("--parallel=%d", Parallelism),
-		fmt.Sprintf("--limit=%d", BatchLimit),
-		"--scrollTime=" + ScrollTime,
-	}
-	dumpArgs = append(dumpArgs, "--ignoreTemplate=true")
+	go func() {
+		dumpArgs := []string{
+			"--direction=load",
+			"--input=" + inputPathForDump,
+			"--output=" + newElasticsearchAddress, // Use the full address here
+			fmt.Sprintf("--parallel=%d", Parallelism),
+			fmt.Sprintf("--limit=%d", BatchLimit),
+			"--scrollTime=" + ScrollTime,
+		}
+		dumpArgs = append(dumpArgs, "--ignoreTemplate=true")
 
-	cmd := exec.Command("multielasticdump", dumpArgs...)
-	cmd.Stdout = os.Stdout // Keep piping command output for visibility
-	cmd.Stderr = os.Stderr
-	cmd.Dir = workDir // Run the command from the working directory
+		cmd := exec.Command("multielasticdump", dumpArgs...)
+		cmd.Stdout = os.Stdout // Keep piping command output for visibility
+		cmd.Stderr = os.Stderr
+		cmd.Dir = workDir // Run the command from the working directory
 
-	// Set environment variable specifically for this command
-	cmd.Env = append(os.Environ(), "NODE_TLS_REJECT_UNAUTHORIZED=0")
+		// Set environment variable specifically for this command
+		cmd.Env = append(os.Environ(), "NODE_TLS_REJECT_UNAUTHORIZED=0")
 
-	logger.Info("Executing multielasticdump command",
-		zap.String("command", "multielasticdump"),
-		zap.Strings("args", dumpArgs), // Log arguments separately
-		zap.String("workDir", workDir),
-		zap.Strings("env_override", []string{"NODE_TLS_REJECT_UNAUTHORIZED=0"}))
+		logger.Info("Executing multielasticdump command",
+			zap.String("command", "multielasticdump"),
+			zap.Strings("args", dumpArgs), // Log arguments separately
+			zap.String("workDir", workDir),
+			zap.Strings("env_override", []string{"NODE_TLS_REJECT_UNAUTHORIZED=0"}))
 
-	err = cmd.Run()
-	if err != nil {
-		logger.Error("multielasticdump command failed", zap.Error(err))
-		return nil, fmt.Errorf("failed to run multielasticdump command: %w", err)
-	}
-	logger.Info("Successfully ran multielasticdump.")
+		err = cmd.Run()
+		if err != nil {
+			logger.Error("multielasticdump command failed", zap.Error(err))
+		}
+		logger.Info("Successfully ran multielasticdump.")
 
-	logger.Info("Data loading process completed successfully.")
-	return integrations, nil
+		logger.Info("Data loading process completed successfully.")
+	}()
+	return nil
 }
 
 // downloadFile downloads a file from a URL and saves it locally, using zap for logging.

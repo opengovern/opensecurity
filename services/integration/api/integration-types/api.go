@@ -3,8 +3,6 @@ package integration_types
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
@@ -1363,76 +1361,10 @@ func (a *API) LoadPluginDemoData(c echo.Context) error {
 		ElasticsearchPass: a.elasticConfig.Password,
 		ElasticsearchAddr: a.elasticConfig.Address,
 	}
-	integrations, err := demo_import.LoadDemoData(demoImportConfig, a.logger)
+	err = demo_import.LoadDemoData(demoImportConfig, a.logger, a.database, plugin)
 	if err != nil {
 		a.logger.Error("failed to load demo data", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to load demo data")
-	}
-
-	dummyCredentialID := uuid.New()
-	dummyCredential := models2.Credential{
-		ID:              dummyCredentialID,
-		IntegrationType: plugin.IntegrationType,
-		CredentialType:  "",
-		Secret:          "",
-		Metadata: func() pgtype.JSONB {
-			var jsonb pgtype.JSONB
-			if err := jsonb.Set([]byte("{}")); err != nil {
-				a.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
-			}
-			return jsonb
-		}(),
-		MaskedSecret: func() pgtype.JSONB {
-			var jsonb pgtype.JSONB
-			if err := jsonb.Set([]byte("{}")); err != nil {
-				a.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
-			}
-			return jsonb
-		}(),
-		Description: "dummy credential for demo integrations",
-	}
-
-	err = a.database.CreateCredential(&dummyCredential)
-	if err != nil {
-		a.logger.Error("failed to create credential", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create credential")
-	}
-
-	for _, i := range integrations {
-		integrationId, err := uuid.Parse(i.IntegrationID)
-		if err != nil {
-			a.logger.Error("failed to parse integration id", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to parse integration id")
-		}
-		dbIntegration := models2.Integration{
-			Integration: integration.Integration{
-				IntegrationID:   integrationId,
-				ProviderID:      i.ProviderID,
-				Name:            i.Name,
-				IntegrationType: plugin.IntegrationType,
-				Annotations: func() pgtype.JSONB {
-					var jsonb pgtype.JSONB
-					if err := jsonb.Set(i.Annotations); err != nil {
-						a.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
-					}
-					return jsonb
-				}(),
-				Labels: func() pgtype.JSONB {
-					var jsonb pgtype.JSONB
-					if err := jsonb.Set(i.Labels); err != nil {
-						a.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
-					}
-					return jsonb
-				}(),
-				CredentialID: dummyCredentialID,
-				State:        integration.IntegrationStateSample,
-			},
-		}
-		err = a.database.CreateIntegration(&dbIntegration)
-		if err != nil {
-			a.logger.Error("failed to create integration", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create integration")
-		}
 	}
 
 	return c.NoContent(http.StatusOK)
