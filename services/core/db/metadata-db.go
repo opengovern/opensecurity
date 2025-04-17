@@ -233,7 +233,17 @@ func (db Database) GetWidget(widgetID string) (*models.Widget, error) {
 
 // AddWidgets Add widgets in bulk
 func (db Database) AddWidgets(widgets []models.Widget) error {
-	return db.orm.Create(&widgets).Error
+	// Use the Create method to insert multiple widgets at once or update them
+	// if they already exist (based on the primary key).
+	return db.orm.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns([]string{
+			"title", "description", "widget_type", "widget_props",
+			"row_span", "column_span", "column_offset", "is_public",
+			"user_id", "updated_at",
+		}),
+	}).Create(&widgets).Error
+	
 }
 
 // SetUserWidget Upsert a widget
