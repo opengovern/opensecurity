@@ -14,7 +14,8 @@ RUN apk --no-cache add \
     nodejs \
     npm \
     openssl \
-    tar
+    tar \
+    git
 
 RUN npm install -g github:taskrabbit/elasticsearch-dump
 
