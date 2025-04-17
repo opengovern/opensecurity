@@ -117,7 +117,7 @@ func LoadDemoData(cfg Config, logger *zap.Logger) ([]Integration, error) {
 		return nil, fmt.Errorf("failed to load integrations.: %w", err)
 	}
 
-	logger.Info("Successfully loaded integrations from json file.", zap.Int("integrations", len(integrations)))
+	logger.Info("Successfully loaded integrations from json.", zap.Int("integrations", len(integrations)))
 
 	// --- 4. Construct the new Elasticsearch address ---
 	cleanAddress := strings.TrimPrefix(cfg.ElasticsearchAddr, "https://")
