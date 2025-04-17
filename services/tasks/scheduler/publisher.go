@@ -36,6 +36,9 @@ func (s *TaskScheduler) runPublisher(ctx context.Context) error {
 
 	for _, run := range runs {
 		params, err := JSONBToMap(run.Params)
+		if params == nil {
+			params = make(map[string]any)
+		}
 		if err != nil {
 			result := pgtype.JSONB{}
 			_ = result.Set([]byte("{}"))
