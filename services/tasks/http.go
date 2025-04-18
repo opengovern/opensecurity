@@ -161,23 +161,6 @@ func (r *httpRoutes) GetTask(ctx echo.Context) error {
 		})
 	}
 
-	var credentials []string
-	configSecrets, err := r.db.GetTaskConfigSecret(task.ID)
-	if err != nil {
-		r.logger.Error("failed to get task config secret", zap.Error(err))
-		return ctx.JSON(http.StatusInternalServerError, "failed to get task config secret")
-	}
-	if configSecrets != nil {
-		mapData, err := r.vault.Decrypt(ctx.Request().Context(), configSecrets.Secret)
-		if err != nil {
-			r.logger.Error("failed to decrypt secret", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to decrypt config")
-		}
-		for k := range mapData {
-			credentials = append(credentials, k)
-		}
-	}
-
 	var envVars map[string]string
 	if task.EnvVars.Status == pgtype.Present {
 		if err := json.Unmarshal(task.EnvVars.Bytes, &envVars); err != nil {
@@ -198,11 +181,10 @@ func (r *httpRoutes) GetTask(ctx echo.Context) error {
 		Description:  task.Description,
 		ImageUrl:     task.ImageUrl,
 		RunSchedules: runSchedulesObjects,
-		Credentials:  credentials,
+		Credentials:  task.Configs,
 		EnvVars:      envVars,
 		ScaleConfig:  scaleConfig,
 		Params:       task.Params,
-		Configs:      task.Configs,
 	}
 
 	return ctx.JSON(http.StatusOK, taskResponse)
