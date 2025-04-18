@@ -108,7 +108,7 @@ func (r *httpRoutes) ListTasks(ctx echo.Context) error {
 	}
 
 	sort.Slice(taskResponses, func(i, j int) bool {
-		return taskResponses[i].ID < taskResponses[j].ID
+		return taskResponses[i].ID > taskResponses[j].ID
 	})
 	totalCount := len(taskResponses)
 	if perPage != 0 {
@@ -379,7 +379,7 @@ func (r *httpRoutes) ListTaskRunResults(ctx echo.Context) error {
 	}
 
 	sort.Slice(taskRunResponses, func(i, j int) bool {
-		return taskRunResponses[i].ID < taskRunResponses[j].ID
+		return taskRunResponses[i].ID > taskRunResponses[j].ID
 	})
 	totalCount := len(taskRunResponses)
 	if perPage != 0 {
