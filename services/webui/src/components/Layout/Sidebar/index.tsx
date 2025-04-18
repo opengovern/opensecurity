@@ -174,12 +174,12 @@ export default function Sidebar({ currentPage }: ISidebar) {
                         icon: RiShieldCheckLine,
                         isPreview: false,
                     },
-                    {
-                        name: 'Policies',
-                        page: 'compliance/policies',
-                        icon: RiShieldCheckLine,
-                        isPreview: false,
-                    },
+                    // {
+                    //     name: 'Policies',
+                    //     page: 'compliance/policies',
+                    //     icon: RiShieldCheckLine,
+                    //     isPreview: false,
+                    // },
                     {
                         name: 'Parameters',
                         page: 'compliance/parameters',
@@ -187,7 +187,7 @@ export default function Sidebar({ currentPage }: ISidebar) {
                         isPreview: false,
                     },
                     {
-                        name: 'Compliance Checks',
+                        name: 'Compliance Jobs',
                         page: 'compliance/jobs',
                         icon: RiTaskLine,
                         isPreview: false,
@@ -199,25 +199,19 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 count: undefined,
                 error: false,
             },
-            {
-                name: 'Tasks',
-                icon: RiShieldCheckLine,
-                page: 'task',
-                children: [
-                    {
-                        name: 'Task',
-                        page: 'tasks',
-                        icon: RiShieldCheckLine,
-                        isPreview: false,
-                    },
-                    
-                ],
+            // {
+            //     name: 'Tasks',
+            //     icon: RiShieldCheckLine,
+            //     page: 'task',
+            //     children: [
 
-                isPreview: false,
-                isLoading: false,
-                count: undefined,
-                error: false,
-            },
+            //     ],
+
+            //     isPreview: false,
+            //     isLoading: false,
+            //     count: undefined,
+            //     error: false,
+            // },
 
             {
                 name: 'All Incidents',
@@ -268,6 +262,12 @@ export default function Sidebar({ currentPage }: ISidebar) {
 
                         // count: numericDisplay(connectionCount?.count) || 0,
                         error: undefined,
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Task',
+                        page: 'tasks',
+                        icon: RiShieldCheckLine,
                         isPreview: false,
                     },
 

@@ -36,6 +36,7 @@ import {
 } from '@tremor/react'
 import CustomPagination from '../../../components/Pagination'
 import { dateTimeDisplay } from '../../../utilities/dateDisplay'
+import { notificationAtom } from '../../../store'
 export interface Task {
     id:            string;
     name:          string;
@@ -94,6 +95,11 @@ export default function TaskDetail() {
     const [results, setResults] = useState<any>([])
     const [detailOpen, setDetailOpen] = useState(false)
     const [scaleOpen, setScaleOpen] = useState(false)
+    const [runOpen, setRunOpen] = useState(false)
+    const [runParams, setRunParams] = useState<any>({})
+    const setNotification = useSetAtom(notificationAtom)
+    
+    
     const getDetail = () => {
         setLoading(true)
         let url = ''
@@ -515,7 +521,7 @@ export default function TaskDetail() {
                                         <Button
                                             variant="primary"
                                             onClick={() => {
-                                                RunTask()
+                                                setRunOpen(true)
                                             }}
                                         >
                                             Run
