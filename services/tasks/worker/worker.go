@@ -12,6 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 )
 
 func CreateWorker(ctx context.Context, kubeClient client.Client, taskConfig *models.Task, namespace string) error {
@@ -33,51 +34,66 @@ func CreateWorker(ctx context.Context, kubeClient client.Client, taskConfig *mod
 	}
 
 	var deployment appsv1.Deployment
-	err := kubeClient.Get(ctx, client.ObjectKey{
-		Namespace: namespace,
-		Name:      taskConfig.ID,
-	}, &deployment)
-	if err != nil {
-		deployment = appsv1.Deployment{
+	deploymentSpec := appsv1.DeploymentSpec{
+		Replicas: aws.Int32(0),
+		Selector: &metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"app": taskConfig.ID,
+			},
+		},
+		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      taskConfig.ID,
-				Namespace: namespace,
 				Labels: map[string]string{
 					"app": taskConfig.ID,
 				},
 			},
-			Spec: appsv1.DeploymentSpec{
-				Replicas: aws.Int32(0),
-				Selector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"app": taskConfig.ID,
-					},
-				},
-				Template: corev1.PodTemplateSpec{
-					ObjectMeta: metav1.ObjectMeta{
-						Labels: map[string]string{
-							"app": taskConfig.ID,
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name:  taskConfig.ID,
+						Image: taskConfig.ImageUrl,
+						Command: []string{
+							taskConfig.Command,
 						},
-					},
-					Spec: corev1.PodSpec{
-						Containers: []corev1.Container{
-							{
-								Name:  taskConfig.ID,
-								Image: taskConfig.ImageUrl,
-								Command: []string{
-									taskConfig.Command,
-								},
-								ImagePullPolicy: corev1.PullAlways,
-								Env:             env,
-							},
-						},
+						ImagePullPolicy: corev1.PullAlways,
+						Env:             env,
 					},
 				},
 			},
-		}
-		err = kubeClient.Create(ctx, &deployment)
-		if err != nil {
+		},
+	}
+	deployment = appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      taskConfig.ID,
+			Namespace: namespace,
+			Labels: map[string]string{
+				"app": taskConfig.ID,
+			},
+		},
+		Spec: deploymentSpec,
+	}
+	err := kubeClient.Create(ctx, &deployment)
+	if err != nil {
+		if !strings.Contains(err.Error(), "already exists") {
 			return err
+		} else {
+			existingDeployment := &appsv1.Deployment{}
+			err = kubeClient.Get(ctx, client.ObjectKey{
+				Name:      taskConfig.ID,
+				Namespace: namespace,
+			}, existingDeployment)
+			if err != nil {
+				return err // Return if fetching fails
+			}
+
+			// Update the existing deployment's spec
+			existingDeployment.Spec = deploymentSpec
+
+			// Apply the update
+			err = kubeClient.Update(ctx, existingDeployment)
+			if err != nil {
+				return err // Return if updating fails
+			}
 		}
 	}
 
