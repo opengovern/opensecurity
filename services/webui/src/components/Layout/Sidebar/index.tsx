@@ -249,7 +249,7 @@ export default function Sidebar({ currentPage }: ISidebar) {
                         isPreview: false,
                     },
                     {
-                        name: 'Task',
+                        name: 'Tasks',
                         page: 'tasks',
                         icon: RiShieldCheckLine,
                         isPreview: false,
