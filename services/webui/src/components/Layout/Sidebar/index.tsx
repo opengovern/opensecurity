@@ -1,30 +1,6 @@
 import { Badge, Card, Flex, Text } from '@tremor/react'
 import { Link, useNavigate } from 'react-router-dom'
-import {
-    BanknotesIcon,
-    ChevronLeftIcon,
-    ChevronRightIcon,
-    Cog6ToothIcon,
-    CubeIcon,
-    DocumentChartBarIcon,
-    ExclamationCircleIcon,
-    Squares2X2Icon,
-    MagnifyingGlassIcon,
-    PuzzlePieceIcon,
-    RectangleStackIcon,
-    ShieldCheckIcon,
-    ClipboardDocumentCheckIcon,
-    DocumentMagnifyingGlassIcon,
-    ArrowUpCircleIcon,
-    PresentationChartBarIcon,
-    CubeTransparentIcon,
-    BoltIcon,
-    ArrowUpIcon,
-    ChevronDoubleUpIcon,
-    CalendarDateRangeIcon,
-    CommandLineIcon,
-    UserIcon,
-} from '@heroicons/react/24/outline'
+
 import {
     RiAdminLine,
     RiChatSmileAiLine,
@@ -135,6 +111,14 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 page: '',
                 icon: RiHome2Line,
                 isPreview: false,
+                children: [
+                    {
+                        name: 'Overview',
+                        page: '',
+                        icon: RiHome2Line,
+                        isPreview: false,
+                    },
+                ],
             },
             {
                 name: 'Find',
@@ -174,20 +158,20 @@ export default function Sidebar({ currentPage }: ISidebar) {
                         icon: RiShieldCheckLine,
                         isPreview: false,
                     },
+                    // {
+                    //     name: 'Policies',
+                    //     page: 'compliance/policies',
+                    //     icon: RiShieldCheckLine,
+                    //     isPreview: false,
+                    // },
+                    // {
+                    //     name: 'Parameters',
+                    //     page: 'compliance/parameters',
+                    //     icon: RiShieldCheckLine,
+                    //     isPreview: false,
+                    // },
                     {
-                        name: 'Policies',
-                        page: 'compliance/policies',
-                        icon: RiShieldCheckLine,
-                        isPreview: false,
-                    },
-                    {
-                        name: 'Parameters',
-                        page: 'compliance/parameters',
-                        icon: RiShieldCheckLine,
-                        isPreview: false,
-                    },
-                    {
-                        name: 'Compliance Checks',
+                        name: 'Compliance Jobs',
                         page: 'compliance/jobs',
                         icon: RiTaskLine,
                         isPreview: false,
@@ -199,28 +183,22 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 count: undefined,
                 error: false,
             },
-            {
-                name: 'Tasks',
-                icon: RiShieldCheckLine,
-                page: 'task',
-                children: [
-                    {
-                        name: 'Task',
-                        page: 'tasks',
-                        icon: RiShieldCheckLine,
-                        isPreview: false,
-                    },
-                    
-                ],
+            // {
+            //     name: 'Tasks',
+            //     icon: RiShieldCheckLine,
+            //     page: 'task',
+            //     children: [
 
-                isPreview: false,
-                isLoading: false,
-                count: undefined,
-                error: false,
-            },
+            //     ],
+
+            //     isPreview: false,
+            //     isLoading: false,
+            //     count: undefined,
+            //     error: false,
+            // },
 
             {
-                name: 'All Incidents',
+                name: 'Incidents',
                 icon: RiFileWarningFill,
                 page: 'incidents',
                 isPreview: false,
@@ -231,18 +209,18 @@ export default function Sidebar({ currentPage }: ISidebar) {
                         page: 'incidents',
                         isPreview: false,
                     },
-                    {
-                        name: 'Control Summary',
-                        icon: RiFileWarningFill,
-                        page: 'incidents/controls',
-                        isPreview: false,
-                    },
-                    {
-                        name: 'Resource Incident',
-                        icon: RiFileWarningFill,
-                        page: 'incidents/resources',
-                        isPreview: false,
-                    },
+                    // {
+                    //     name: 'Control Summary',
+                    //     icon: RiFileWarningFill,
+                    //     page: 'incidents/controls',
+                    //     isPreview: false,
+                    // },
+                    // {
+                    //     name: 'Resource Incident',
+                    //     icon: RiFileWarningFill,
+                    //     page: 'incidents/resources',
+                    //     isPreview: false,
+                    // },
                 ],
             },
 
@@ -268,6 +246,12 @@ export default function Sidebar({ currentPage }: ISidebar) {
 
                         // count: numericDisplay(connectionCount?.count) || 0,
                         error: undefined,
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Tasks',
+                        page: 'tasks',
+                        icon: RiShieldCheckLine,
                         isPreview: false,
                     },
 
