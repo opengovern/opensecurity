@@ -138,6 +138,8 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 			logger.Error("failed to decode manifest", zap.Error(err), zap.String("url", url))
 			return nil, nil, fmt.Errorf("decode manifest for url %s: %w", iPlugin, err)
 		}
+
+		logger.Info("manifestFile", zap.String("file", string(manifestFile)), zap.Any("manifest", m))
 		describerURL = m.DescriberURL
 		describerTags = m.DescriberTag
 		demoDataUrl = m.DemoDataURL
