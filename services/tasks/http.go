@@ -196,6 +196,8 @@ func (r *httpRoutes) GetTask(ctx echo.Context) error {
 		Credentials:  credentials,
 		EnvVars:      envVars,
 		ScaleConfig:  scaleConfig,
+		Params:       task.Params,
+		Configs:      task.Configs,
 	}
 
 	return ctx.JSON(http.StatusOK, taskResponse)

@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/jackc/pgtype"
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 	"time"
 )
@@ -28,6 +29,8 @@ type Task struct {
 	NatsConfig          pgtype.JSONB
 	ScaleConfig         pgtype.JSONB
 	EnvVars             pgtype.JSONB
+	Params              pq.StringArray `gorm:"type:text[]"`
+	Configs             pq.StringArray `gorm:"type:text[]"`
 }
 
 type TaskBinary struct {

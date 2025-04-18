@@ -46,4 +46,6 @@ type Task struct {
 	NatsConfig          NatsConfig        `yaml:"nats_config"`
 	ScaleConfig         ScaleConfig       `yaml:"scale_config"`
 	RunSchedule         []TaskRunSchedule `yaml:"run_schedule"`
+	Params              []string          `yaml:"params"`
+	Configs             []string          `yaml:"configs"`
 }
