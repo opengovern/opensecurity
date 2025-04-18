@@ -32,20 +32,20 @@ export default function Compliance() {
  
     useEffect(()=>{
         switch (tab_id?.get('tab')) {
-            case 'frameworks':
-                setTab('frameworks')
-                break
+            // case 'frameworks':
+            //     setTab('frameworks')
+            //     break
             case 'controls':
                 setTab('controls')
                 break
-            case 'policies':
-                setTab('policies')
-                break
+            // case 'policies':
+            //     setTab('policies')
+            //     break
             case 'parameters':
                 setTab('parameters')
                 break
             default:
-                setTab('frameworks')
+                setTab('controls')
                 break
         }
     },[tab_id])
@@ -62,23 +62,23 @@ export default function Compliance() {
                     setTab(detail.activeTabId)
                 }}
                 tabs={[
-                    {
-                        label: 'Frameworks',
-                        id: 'frameworks',
-                        content: (
-                            <Framework />
-                        ),
-                    },
+                    // {
+                    //     label: 'Frameworks',
+                    //     id: 'frameworks',
+                    //     content: (
+                    //         <Framework />
+                    //     ),
+                    // },
                     {
                         id: 'controls',
                         label: 'Controls',
                         content: <AllControls />,
                     },
-                    {
-                        id: 'policies',
-                        label: 'Policies',
-                        content: <AllPolicy />,
-                    },
+                    // {
+                    //     id: 'policies',
+                    //     label: 'Policies',
+                    //     content: <AllPolicy />,
+                    // },
                     {
                         id: 'parameters',
                         label: 'Parameters',

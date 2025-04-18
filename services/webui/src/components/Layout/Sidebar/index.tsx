@@ -164,12 +164,12 @@ export default function Sidebar({ currentPage }: ISidebar) {
                     //     icon: RiShieldCheckLine,
                     //     isPreview: false,
                     // },
-                    {
-                        name: 'Parameters',
-                        page: 'compliance/parameters',
-                        icon: RiShieldCheckLine,
-                        isPreview: false,
-                    },
+                    // {
+                    //     name: 'Parameters',
+                    //     page: 'compliance/parameters',
+                    //     icon: RiShieldCheckLine,
+                    //     isPreview: false,
+                    // },
                     {
                         name: 'Compliance Jobs',
                         page: 'compliance/jobs',

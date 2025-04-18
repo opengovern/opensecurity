@@ -19,7 +19,7 @@ import SettingsWorkspaceAPIKeys from '../pages/Settings/APIKeys'
 import SettingsParameters from '../pages/Settings/Parameters'
 import SettingsMembers from '../pages/Settings/Members'
 import NewBenchmarkSummary from '../pages/Compliance/NewBenchmarkSummary'
-import Search from '../pages/Search'
+
 import SettingsProfile from '../pages/Settings/Profile'
 import TypeDetail from '../pages/Integrations/TypeDetailNew'
 import EvaluateDetail from '../pages/Compliance/NewBenchmarkSummary/EvaluateTable/EvaluateDetail'
@@ -29,6 +29,7 @@ import AI from '../pages/AI'
 import AllPolicy from '../pages/Compliance/All Policy'
 import Framework from '../pages/Compliance/FrameWorks'
 import ComplianceJobs from '../pages/Settings/Jobs/Compliance'
+import Query from '../pages/Search/Query'
 
 const show_compliance = window.__RUNTIME_CONFIG__.REACT_APP_SHOW_COMPLIANCE
 console.log(show_compliance)
@@ -140,7 +141,7 @@ const authRoutes = [
     {
         key: 'Compliance',
         path: '/compliance/controls',
-        element: <AllControls />,
+        element: <Compliance />,
     },
     {
         key: 'Compliance',
@@ -150,7 +151,7 @@ const authRoutes = [
     {
         key: 'Compliance',
         path: '/compliance/parameters',
-        element: <SettingsParameters />,
+        element: <Compliance />,
     },
 
     {
@@ -164,8 +165,6 @@ const authRoutes = [
         path: '/compliance/library/parameters',
         element: <SettingsParameters />,
     },
-
-
 
     {
         key: 'benchmark single connection',
@@ -201,12 +200,10 @@ const authRoutes = [
         element: <Findings />,
     },
 
-
-
     {
         key: 'home',
         path: '/',
-        element: show_compliance !== 'false' ? <Overview /> : <Search />,
+        element: show_compliance !== 'false' ? <Overview /> : <Query />,
     },
 
     {
@@ -218,7 +215,7 @@ const authRoutes = [
     {
         key: 'Search',
         path: '/cloudql',
-        element: <Search />,
+        element: <Query />,
     },
     {
         key: 'Tasks',
