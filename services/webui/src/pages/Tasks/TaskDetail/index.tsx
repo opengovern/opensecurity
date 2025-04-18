@@ -86,6 +86,7 @@ export interface ScaleConfig {
 export default function TaskDetail() {
     const { id } = useParams()
     const [loading, setLoading] = useState(false)
+    const [runLoading, setRunLoading] = useState(false)
     const [task, setTask] = useState<Task>()
     const [page, setPage] = useState(1)
     const [total, setTotal] = useState(0)
@@ -121,7 +122,7 @@ export default function TaskDetail() {
             })
     }
     const getRunResult = () => {
-        setLoading(true)
+        setRunLoading(true)
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -143,15 +144,18 @@ export default function TaskDetail() {
                 config
             )
             .then((res) => {
-                setLoading(false)
+                setRunLoading(false)
                 if (res.data.items) {
                     setResults(res.data.items)
+                }
+                else{
+                    setResults([])
                 }
                 setTotal(res.data.total_count)
                 //  setTask(res.data)
             })
             .catch((err) => {
-                setLoading(false)
+                setRunLoading(false)
             })
     }
      const getRunDetail = (id: string) => {
@@ -220,9 +224,11 @@ export default function TaskDetail() {
             })
     }
     useEffect(() => {
-        getDetail()
         getRunResult()
-    }, [])
+    }, [page])
+      useEffect(() => {
+          getDetail()
+      }, [])
 
     const truncate = (text: string | undefined) => {
         if (text) {
@@ -593,6 +599,10 @@ export default function TaskDetail() {
                                             jobStatus = 'succeeded'
                                             jobColor = 'emerald'
                                             break
+                                        case 'FINISHED':
+                                            jobStatus = 'finished'
+                                            jobColor = 'emerald'
+                                            break
                                         case 'COMPLETED':
                                             jobStatus = 'completed'
                                             jobColor = 'emerald'
@@ -646,7 +656,7 @@ export default function TaskDetail() {
                             { id: 'createdAt', visible: true },
                             { id: 'updatedAt', visible: true },
                         ]}
-                        loading={loading}
+                        loading={runLoading}
                         // @ts-ignore
                         items={results ? results : []}
                         empty={
