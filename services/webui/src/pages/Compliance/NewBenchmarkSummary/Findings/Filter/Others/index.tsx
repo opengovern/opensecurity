@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { Button, Flex, Text, TextInput } from '@tremor/react'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { Checkbox, useCheckboxState } from 'pretty-checkbox-react'
-import { PlatformEnginePkgComplianceApiFindingFiltersWithMetadata } from '../../../../../../../api/api'
-import Spinner from '../../../../../../../components/Spinner'
+import { PlatformEnginePkgComplianceApiFindingFiltersWithMetadata } from '../../../../../../api/api'
+
 import Multiselect from '@cloudscape-design/components/multiselect'
 
 

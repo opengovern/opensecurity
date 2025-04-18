@@ -12,19 +12,19 @@ import {
 } from '@tremor/react'
 import { useEffect, useState } from 'react'
 import FindingsWithFailure from './FindingsWithFailure'
-import TopHeader from '../../../../../components/Layout/Header'
+
 // import Filter from './Filter'
 import {
     PlatformEnginePkgComplianceApiConformanceStatus,
     SourceType,
     TypesFindingSeverity,
-} from '../../../../../api/api'
+} from '../../../../api/api'
 import {
     DateRange,
     useURLParam,
     useURLState,
-} from '../../../../../utilities/urlstate'
-import Spinner from '../../../../../components/Spinner'
+} from '../../../../utilities/urlstate'
+import Spinner from '../../../../components/Spinner'
 interface Props {
     id: string
 }

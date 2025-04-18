@@ -1,4 +1,5 @@
-// @ts-noCheck
+// @ts-nocheck
+
 import { useAtomValue } from 'jotai'
 import {
     Button,
@@ -11,14 +12,13 @@ import {
 } from '@tremor/react'
 import { useEffect, useState } from 'react'
 import { Cog6ToothIcon } from '@heroicons/react/24/outline'
-import { isDemoAtom } from '../../../../../store'
-import DrawerPanel from '../../../../../components/DrawerPanel'
-import Table, { IColumn } from '../../../../../components/Table'
+import { isDemoAtom } from '../../../../store'
+
 import {
     useComplianceApiV1AssignmentsBenchmarkDetail,
     useComplianceApiV1BenchmarksSettingsCreate,
-} from '../../../../../api/compliance.gen'
-import Spinner from '../../../../../components/Spinner'
+} from '../../../../api/compliance.gen'
+
 import KTable from '@cloudscape-design/components/table'
 import KButton from '@cloudscape-design/components/button'
 
@@ -40,14 +40,13 @@ import {
     Pagination,
     PropertyFilter,
 } from '@cloudscape-design/components'
-import CustomPagination from '../../../../../components/Pagination'
+import CustomPagination from '../../../../components/Pagination'
 interface ISettings {
     id: string | undefined
     response: (x: number) => void
     autoAssign: boolean | undefined
     reload: () => void
 }
-
 
 interface ITransferState {
     connectionID: string
@@ -61,30 +60,25 @@ export default function Settings({
     reload,
 }: ISettings) {
     const [firstLoading, setFirstLoading] = useState<boolean>(true)
-  
+
     const [allEnable, setAllEnable] = useState(autoAssign)
     const [banner, setBanner] = useState(autoAssign)
     const isDemo = useAtomValue(isDemoAtom)
     const [loading, setLoading] = useState(false)
-    const [rows,setRows] = useState<any>([])
-       const [page, setPage] = useState(1)
-       const [totalPages,setTotalPages]=useState(0)
-       const [available,setAvailable]=useState([])
-       const [availableLoading,setAvailableLoading]=useState(false)
-       const [openAdd,setOpenAdd]=useState(false)
-       const [openDelete,setOpenDelete]=useState(false)
-       const [selected,setSelected]=useState<any>([])
-    const [selectedDelete,setSelectedDelete]=useState<any>([])
-    const [addLoading,setAddLoading]=useState(false)
-    const [deleteLoading,setDeleteLoading]=useState(false)
-    const [err,setError] = useState("")
- 
+    const [rows, setRows] = useState<any>([])
+    const [page, setPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(0)
+    const [available, setAvailable] = useState([])
+    const [availableLoading, setAvailableLoading] = useState(false)
+    const [openAdd, setOpenAdd] = useState(false)
+    const [openDelete, setOpenDelete] = useState(false)
+    const [selected, setSelected] = useState<any>([])
+    const [selectedDelete, setSelectedDelete] = useState<any>([])
+    const [addLoading, setAddLoading] = useState(false)
+    const [deleteLoading, setDeleteLoading] = useState(false)
+    const [err, setError] = useState('')
 
-   
-
-    
-
-  useComplianceApiV1AssignmentsBenchmarkDetail(String(id), {}, false)
+    useComplianceApiV1AssignmentsBenchmarkDetail(String(id), {}, false)
 
     const {
         isLoading: changeSettingsLoading,
@@ -98,92 +92,86 @@ export default function Settings({
         }
     }, [changeSettingsLoading])
 
+    const GetEnabled = () => {
+        setLoading(true)
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+        axios
+            .get(
+                `${url}/main/compliance/api/v1/frameworks/${id}/assignments?page_size=10&page=${page}`,
+                config
+            )
+            .then((res) => {
+                setRows(res.data?.data)
+                setTotalPages(res.data?.page_info.total_items)
+                setLoading(false)
+            })
+            .catch((err) => {
+                setLoading(false)
 
+                console.log(err)
+            })
+    }
+    const GetAvailable = () => {
+        setAvailableLoading(true)
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-
- 
-   const GetEnabled = () => {
-       
-       setLoading(true)
-       let url = ''
-       if (window.location.origin === 'http://localhost:3000') {
-           url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-       } else {
-           url = window.location.origin
-       }
-       // @ts-ignore
-       const token = JSON.parse(localStorage.getItem('openg_auth')).token
-
-       const config = {
-           headers: {
-               Authorization: `Bearer ${token}`,
-           },
-       }
-       axios
-           .get(
-               `${url}/main/compliance/api/v1/frameworks/${id}/assignments?page_size=10&page=${page}`,
-               config
-           )
-           .then((res) => {
-               setRows(res.data?.data)
-               setTotalPages(res.data?.page_info.total_items)
-               setLoading(false)
-           })
-           .catch((err) => {
-               setLoading(false)
-
-               console.log(err)
-           })
-   }
-   const GetAvailable = () => {
-       setAvailableLoading(true)
-       let url = ''
-       if (window.location.origin === 'http://localhost:3000') {
-           url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-       } else {
-           url = window.location.origin
-       }
-       // @ts-ignore
-       const token = JSON.parse(localStorage.getItem('openg_auth')).token
-
-       const config = {
-           headers: {
-               Authorization: `Bearer ${token}`,
-           },
-       }
-       axios
-           .get(
-               `${url}/main/compliance/api/v1/frameworks/${id}/assignments/available`,
-               config
-           )
-           .then((res) => {
-               if (res?.data?.items) {
-                   const temp = res?.data?.items?.map((item) => {
-                       return {
-                           label: item?.name,
-                           value: item?.integration_id,
-                           description: item?.provider_id,
-                       }
-                   })
-                   setAvailable(temp)
-               } else {
-                   setAvailable([])
-               }
-               setAvailableLoading(false)
-           })
-           .catch((err) => {
-               setAvailableLoading(false)
-               setAvailable([])
-               setError(err?.response?.data?.message)
-               console.log(err)
-           })
-           .catch((err) => {
-               setAvailableLoading(false)
-               setAvailable([])
-               console.log(err)
-           })
-   }
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+        axios
+            .get(
+                `${url}/main/compliance/api/v1/frameworks/${id}/assignments/available`,
+                config
+            )
+            .then((res) => {
+                if (res?.data?.items) {
+                    const temp = res?.data?.items?.map((item) => {
+                        return {
+                            label: item?.name,
+                            value: item?.integration_id,
+                            description: item?.provider_id,
+                        }
+                    })
+                    setAvailable(temp)
+                } else {
+                    setAvailable([])
+                }
+                setAvailableLoading(false)
+            })
+            .catch((err) => {
+                setAvailableLoading(false)
+                setAvailable([])
+                setError(err?.response?.data?.message)
+                console.log(err)
+            })
+            .catch((err) => {
+                setAvailableLoading(false)
+                setAvailable([])
+                console.log(err)
+            })
+    }
     const Add = () => {
         setAddLoading(true)
         let url = ''
@@ -203,12 +191,12 @@ export default function Settings({
         const body = {
             integrations: selected.map((item) => {
                 return item?.value
-            }
-        )
+            }),
         }
         axios
             .put(
-                `${url}/main/compliance/api/v1/frameworks/${id}/assignments`,body,
+                `${url}/main/compliance/api/v1/frameworks/${id}/assignments`,
+                body,
                 config
             )
             .then((res) => {
@@ -245,12 +233,10 @@ export default function Settings({
                 config
             )
             .then((res) => {
-              
                 setDeleteLoading(false)
                 setOpenDelete(false)
                 setSelectedDelete()
                 GetEnabled()
-
             })
             .catch((err) => {
                 setDeleteLoading(false)
@@ -258,12 +244,11 @@ export default function Settings({
                 console.log(err)
             })
     }
-  
+
     useEffect(() => {
-            GetEnabled()
-        
+        GetEnabled()
     }, [page])
-  
+
     return (
         <>
             <div
@@ -468,13 +453,11 @@ export default function Settings({
             >
                 <Multiselect
                     className="w-full"
-                    options={ available}
+                    options={available}
                     selectedOptions={selected}
                     loadingText="Loading Assignment"
                     emptyText="No assignment"
-                    
-                    empty={err && err !="" ? err : "No Assignment"}
-                    
+                    empty={err && err != '' ? err : 'No Assignment'}
                     loading={false}
                     tokenLimit={1}
                     // filteringType="auto"

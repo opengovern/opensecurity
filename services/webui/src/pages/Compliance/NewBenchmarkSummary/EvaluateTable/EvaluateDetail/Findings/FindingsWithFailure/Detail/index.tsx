@@ -6,13 +6,7 @@ import {
     Col,
     Flex,
     Grid,
-    List,
-    ListItem,
-    Tab,
-    TabGroup,
-    TabList,
-    TabPanel,
-    TabPanels,
+
     Text,
     Title,
 } from '@tremor/react'
@@ -25,14 +19,13 @@ import {
     PlatformEnginePkgComplianceApiResourceFinding,
 } from '../../../../../../../../api/api'
 import {
-    useComplianceApiV1BenchmarksControlsDetail,
-    useComplianceApiV1ControlsSummaryDetail,
+
     useComplianceApiV1FindingsEventsDetail,
     useComplianceApiV1FindingsResourceCreate,
 } from '../../../../../../../../api/compliance.gen'
 
 import { dateTimeDisplay } from '../../../../../../../../utilities/dateDisplay'
-import Timeline from './Timeline'
+
 import {
     useScheduleApiV1ComplianceReEvaluateDetail,
     useScheduleApiV1ComplianceReEvaluateUpdate,

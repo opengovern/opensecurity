@@ -23,11 +23,10 @@ import { useComplianceApiV1FindingsFiltersCreate } from '../.././../../../../../
 import Others from './Others'
 
 import {
-    CloudConnect,
-    Compliance,
+  
     Control,
     Id,
-    Lifecycle,
+
     Resources,
     SeverityIcon,
 } from '../../../../../../../icons/icons'
@@ -35,14 +34,11 @@ import Severity from './Severity'
 import Datepicker, { IDate } from './Datepicker'
 import {
     DateRange,
-    defaultEventTime,
-    defaultFindingsTime,
-    useURLParam,
-    useUrlDateRangeState,
+
 } from '../../../../../../../utilities/urlstate'
-import LimitHealthy from './LimitHealthy'
+
 import { PropertyFilter, Select } from '@cloudscape-design/components'
-import axios from 'axios'
+
 
 interface IFilters {
     onApply: (obj: {

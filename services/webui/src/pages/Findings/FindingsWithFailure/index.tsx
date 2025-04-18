@@ -1,4 +1,5 @@
 // @ts-nocheck
+
 import { Card, Flex, Text, Title } from '@tremor/react'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -13,7 +14,7 @@ import {
     SourceType,
     TypesFindingSeverity,
 } from '../../../api/api'
-import AxiosAPI from '../../../../api/ApiConfig'
+import AxiosAPI from '../../../api/ApiConfig'
 import FindingDetail from './Detail'
 
 import { getConnectorIcon } from '../../../components/Cards/ConnectorCard'

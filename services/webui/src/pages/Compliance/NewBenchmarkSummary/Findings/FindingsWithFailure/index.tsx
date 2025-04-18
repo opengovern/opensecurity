@@ -3,21 +3,21 @@ import { Card, Flex, Text, Title } from '@tremor/react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { useAtomValue, useSetAtom } from 'jotai'
-import { isDemoAtom, notificationAtom } from '../../../../../../store'
-import Table, { IColumn } from '../../../../../../components/Table'
-import { dateTimeDisplay } from '../../../../../../utilities/dateDisplay'
+import { isDemoAtom, notificationAtom } from '../../../../../store'
+
+import { dateTimeDisplay } from '../../../../../utilities/dateDisplay'
 import {
     Api,
     PlatformEnginePkgComplianceApiConformanceStatus,
     PlatformEnginePkgComplianceApiFinding,
     SourceType,
     TypesFindingSeverity,
-} from '../../../../../../api/api'
-import AxiosAPI from '../../../../../../api/ApiConfig'
+} from '../../../../../api/api'
+import AxiosAPI from '../../../../../api/ApiConfig'
 
 // import { severityBadge, statusBadge } from '../../Controls'
-import { getConnectorIcon } from '../../../../../../components/Cards/ConnectorCard'
-import { DateRange } from '../../../../../../utilities/urlstate'
+import { getConnectorIcon } from '../../../../../components/Cards/ConnectorCard'
+import { DateRange } from '../../../../../utilities/urlstate'
 import KTable from '@cloudscape-design/components/table'
 import Box from '@cloudscape-design/components/box'
 import SpaceBetween from '@cloudscape-design/components/space-between'
@@ -34,8 +34,7 @@ import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import Filter from '../Filter'
 import FindingDetail from './Detail'
 import dayjs from 'dayjs'
-import CustomPagination from '../../../../../../components/Pagination'
-
+import CustomPagination from '../../../../../components/Pagination'
 
 let sortKey = ''
 
@@ -70,47 +69,47 @@ export default function FindingsWithFailure({ query }: ICount) {
     const [totalCount, setTotalCount] = useState(0)
     const [totalPage, setTotalPage] = useState(0)
     const isDemo = useAtomValue(isDemoAtom)
-     const [queries, setQuery] = useState(query)
-      const today = new Date()
-      const lastWeek = new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          today.getDate() - 7
-      )
+    const [queries, setQuery] = useState(query)
+    const today = new Date()
+    const lastWeek = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() - 7
+    )
 
-      const [date, setDate] = useState({
-          key: 'previous-3-days',
-          amount: 3,
-          unit: 'day',
-          type: 'relative',
-      })
-  const truncate = (text: string | undefined) => {
-      if (text) {
-          return text.length > 40 ? text.substring(0, 40) + '...' : text
-      }
-  }
+    const [date, setDate] = useState({
+        key: 'previous-3-days',
+        amount: 3,
+        unit: 'day',
+        type: 'relative',
+    })
+    const truncate = (text: string | undefined) => {
+        if (text) {
+            return text.length > 40 ? text.substring(0, 40) + '...' : text
+        }
+    }
     const GetRows = () => {
         setLoading(true)
         const api = new Api()
         api.instance = AxiosAPI
-         let isRelative = false
-         let relative = ''
-         let start = ''
-         let end = ''
-         if (date) {
-             if (date.type == 'relative') {
-                 // @ts-ignore
-                 isRelative = true
-                 relative = `${date.amount} ${date.unit}s`
-             } else {
-                 // @ts-ignore
+        let isRelative = false
+        let relative = ''
+        let start = ''
+        let end = ''
+        if (date) {
+            if (date.type == 'relative') {
+                // @ts-ignore
+                isRelative = true
+                relative = `${date.amount} ${date.unit}s`
+            } else {
+                // @ts-ignore
 
-                 start = dayjs(date?.startDate)
-                 // @ts-ignore
+                start = dayjs(date?.startDate)
+                // @ts-ignore
 
-                 end = dayjs(date?.endDate)
-             }
-         }
+                end = dayjs(date?.endDate)
+            }
+        }
         api.compliance
             .apiV1FindingsCreate({
                 filters: {
@@ -191,7 +190,7 @@ export default function FindingsWithFailure({ query }: ICount) {
 
     useEffect(() => {
         GetRows()
-    }, [page,queries,date])
+    }, [page, queries, date])
     return (
         <>
             <AppLayout

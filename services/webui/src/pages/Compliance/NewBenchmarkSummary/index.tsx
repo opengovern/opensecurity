@@ -2,14 +2,9 @@ import { useParams } from 'react-router-dom'
 import {
     Card,
     Flex,
-    Tab,
-    TabGroup,
-    TabList,
-    TabPanel,
-    TabPanels,
+
     Text,
-    Title,
-    Switch,
+
 } from '@tremor/react'
 
 import Tabs from '@cloudscape-design/components/tabs'
@@ -22,19 +17,12 @@ import { useEffect, useState } from 'react'
 import {
     useComplianceApiV1BenchmarksSummaryDetail,
     useComplianceApiV1FindingEventsCountList,
-} from '../../../../api/compliance.gen'
-import { useScheduleApiV1ComplianceTriggerUpdate } from '../../../../api/schedule.gen'
-import Spinner from '../../../../components/Spinner'
+} from '../../../api/compliance.gen'
+import { useScheduleApiV1ComplianceTriggerUpdate } from '../../../api/schedule.gen'
+import Spinner from '../../../components/Spinner'
 import Controls from './Controls'
 import Settings from './Settings'
-import TopHeader from '../../../../components/Layout/Header'
-import {
-    defaultTime,
-    useFilterState,
-    useUrlDateRangeState,
-} from '../../../../utilities/urlstate'
 
-import { toErrorMessage } from '../../../../types/apierror'
 
 import Evaluate from './Evaluate'
 
@@ -42,13 +30,11 @@ import Findings from './Findings'
 import axios from 'axios'
 import { get } from 'http'
 import EvaluateTable from './EvaluateTable'
-import { notificationAtom } from '../../../../store'
+import { notificationAtom } from '../../../store'
 import { useSetAtom } from 'jotai'
-import ContentLayout from '@cloudscape-design/components/content-layout'
-import Container from '@cloudscape-design/components/container'
+
 import Header from '@cloudscape-design/components/header'
-import Link from '@cloudscape-design/components/link'
-import Button from '@cloudscape-design/components/button'
+
 // import { LineChart } from '@tremor/react'
 import {
     BreadcrumbGroup,
@@ -56,8 +42,6 @@ import {
     ExpandableSection,
     SpaceBetween,
 } from '@cloudscape-design/components'
-import ReactEcharts from 'echarts-for-react'
-import { numericDisplay } from '../../../../utilities/numericDisplay'
 
 export default function NewBenchmarkSummary() {
     const { ws } = useParams()

@@ -23,27 +23,27 @@ import {
     PlatformEnginePkgComplianceApiConformanceStatus,
     PlatformEnginePkgComplianceApiFinding,
     PlatformEnginePkgComplianceApiResourceFinding,
-} from '../../../../../../../api/api'
+} from '../../../../../../api/api'
 import {
     useComplianceApiV1BenchmarksControlsDetail,
     useComplianceApiV1ControlsSummaryDetail,
     useComplianceApiV1FindingsEventsDetail,
     useComplianceApiV1FindingsResourceCreate,
-} from '../../../../../../../api/compliance.gen'
-import Spinner from '../../../../../../../components/Spinner'
+} from '../../../../../../api/compliance.gen'
 
-import { dateTimeDisplay } from '../../../../../../../utilities/dateDisplay'
-import Timeline from './Timeline'
+import { dateTimeDisplay } from '../../../../../../utilities/dateDisplay'
+
 import {
     useScheduleApiV1ComplianceReEvaluateDetail,
     useScheduleApiV1ComplianceReEvaluateUpdate,
-} from '../../../../../../../api/schedule.gen'
-import { isDemoAtom, notificationAtom } from '../../../../../../../store'
-import { getErrorMessage } from '../../../../../../../types/apierror'
-import { searchAtom } from '../../../../../../../utilities/urlstate'
+} from '../../../../../../api/schedule.gen'
+import { isDemoAtom, notificationAtom } from '../../../../../../store'
+import { getErrorMessage } from '../../../../../../types/apierror'
+import { searchAtom } from '../../../../../../utilities/urlstate'
 import { KeyValuePairs, Tabs } from '@cloudscape-design/components'
-import { severityBadge } from '../../../../../Controls'
-import { RenderObject } from '../../../../../../../components/RenderObject'
+
+import { RenderObject } from '../../../../../../components/RenderObject'
+import { severityBadge } from '../../../../../../utilities/badge'
 
 
 interface IFindingDetail {

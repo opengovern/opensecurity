@@ -1,7 +1,7 @@
 import { Radio } from 'pretty-checkbox-react'
 import { Button, Flex, Text } from '@tremor/react'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
-import { PlatformEnginePkgComplianceApiConformanceStatus } from '../../../../../../../api/api'
+import { PlatformEnginePkgComplianceApiConformanceStatus } from '../../../../../../api/api'
 import Multiselect from '@cloudscape-design/components/multiselect'
 import { useEffect, useState } from 'react'
 

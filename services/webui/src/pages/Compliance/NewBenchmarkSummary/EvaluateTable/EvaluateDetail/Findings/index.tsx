@@ -13,7 +13,7 @@ import {
 import { useEffect, useState } from 'react'
 import FindingsWithFailure from './FindingsWithFailure'
 
-// import Filter from './Filter'
+
 import {
     PlatformEnginePkgComplianceApiConformanceStatus,
     SourceType,

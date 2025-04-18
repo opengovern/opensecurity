@@ -17,9 +17,9 @@ import {
     PlatformEnginePkgComplianceApiConformanceStatus,
     SourceType,
     TypesFindingSeverity,
-} from '../../../../../../api/api'
+} from '../../../../../api/api'
 import ConformanceStatus from './ConformanceStatus'
-import { useComplianceApiV1FindingsFiltersCreate } from '../../../../../../api/compliance.gen'
+import { useComplianceApiV1FindingsFiltersCreate } from '../../../../../api/compliance.gen'
 import Others from './Others'
 
 import {
@@ -30,7 +30,7 @@ import {
     Lifecycle,
     Resources,
     SeverityIcon,
-} from '../../../../../../icons/icons'
+} from '../../../../../icons/icons'
 import Severity from './Severity'
 import Datepicker, { IDate } from './Datepicker'
 import {
@@ -39,8 +39,8 @@ import {
     defaultFindingsTime,
     useURLParam,
     useUrlDateRangeState,
-} from '../../../../../../utilities/urlstate'
-import LimitHealthy from './LimitHealthy'
+} from '../../../../../utilities/urlstate'
+
 import { PropertyFilter, Select } from '@cloudscape-design/components'
 import axios from 'axios'
 
