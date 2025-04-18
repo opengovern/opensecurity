@@ -20,7 +20,7 @@ import { link } from 'fs'
 import { useEffect, useState } from 'react'
 import { title } from 'process'
 import { Modal } from '@cloudscape-design/components'
-import Evaluate from '../../../pages/Governance/Compliance/NewBenchmarkSummary/Evaluate'
+import Evaluate from '../../../pages/Compliance/NewBenchmarkSummary/Evaluate'
 import MemberInvite from '../../../pages/Settings/Members/MemberInvite'
 
 const navList = [

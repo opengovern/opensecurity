@@ -1,30 +1,6 @@
 import { Badge, Card, Flex, Text } from '@tremor/react'
 import { Link, useNavigate } from 'react-router-dom'
-import {
-    BanknotesIcon,
-    ChevronLeftIcon,
-    ChevronRightIcon,
-    Cog6ToothIcon,
-    CubeIcon,
-    DocumentChartBarIcon,
-    ExclamationCircleIcon,
-    Squares2X2Icon,
-    MagnifyingGlassIcon,
-    PuzzlePieceIcon,
-    RectangleStackIcon,
-    ShieldCheckIcon,
-    ClipboardDocumentCheckIcon,
-    DocumentMagnifyingGlassIcon,
-    ArrowUpCircleIcon,
-    PresentationChartBarIcon,
-    CubeTransparentIcon,
-    BoltIcon,
-    ArrowUpIcon,
-    ChevronDoubleUpIcon,
-    CalendarDateRangeIcon,
-    CommandLineIcon,
-    UserIcon,
-} from '@heroicons/react/24/outline'
+
 import {
     RiAdminLine,
     RiChatSmileAiLine,
@@ -135,6 +111,14 @@ export default function Sidebar({ currentPage }: ISidebar) {
                 page: '',
                 icon: RiHome2Line,
                 isPreview: false,
+                children: [
+                    {
+                        name: 'Overview',
+                        page: '',
+                        icon: RiHome2Line,
+                        isPreview: false,
+                    },
+                ],
             },
             {
                 name: 'Find',
@@ -214,7 +198,7 @@ export default function Sidebar({ currentPage }: ISidebar) {
             // },
 
             {
-                name: 'All Incidents',
+                name: 'Incidents',
                 icon: RiFileWarningFill,
                 page: 'incidents',
                 isPreview: false,
@@ -225,18 +209,18 @@ export default function Sidebar({ currentPage }: ISidebar) {
                         page: 'incidents',
                         isPreview: false,
                     },
-                    {
-                        name: 'Control Summary',
-                        icon: RiFileWarningFill,
-                        page: 'incidents/controls',
-                        isPreview: false,
-                    },
-                    {
-                        name: 'Resource Incident',
-                        icon: RiFileWarningFill,
-                        page: 'incidents/resources',
-                        isPreview: false,
-                    },
+                    // {
+                    //     name: 'Control Summary',
+                    //     icon: RiFileWarningFill,
+                    //     page: 'incidents/controls',
+                    //     isPreview: false,
+                    // },
+                    // {
+                    //     name: 'Resource Incident',
+                    //     icon: RiFileWarningFill,
+                    //     page: 'incidents/resources',
+                    //     isPreview: false,
+                    // },
                 ],
             },
 
