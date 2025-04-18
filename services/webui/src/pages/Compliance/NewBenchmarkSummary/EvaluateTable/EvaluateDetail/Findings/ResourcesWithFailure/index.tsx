@@ -1,3 +1,4 @@
+
 // @ts-nocheck
 
 import { Card, Flex, Text, Title } from '@tremor/react'
@@ -10,11 +11,11 @@ import {
     PlatformEnginePkgComplianceApiResourceFinding,
     SourceType,
     TypesFindingSeverity,
-} from '../../../../../../../../api/api'
-import AxiosAPI from '../../../../../../../../api/ApiConfig'
-import { isDemoAtom, notificationAtom } from '../../../../../../../../store'
-import { dateTimeDisplay } from '../../../../utilities/dateDisplay'
-import { getConnectorIcon } from '../../../../../../../../components/Cards/ConnectorCard'
+} from '../../../../../../../api/api'
+import AxiosAPI from '../../../../../../../api/ApiConfig'
+import { isDemoAtom, notificationAtom } from '../../../../../../../store'
+
+import { getConnectorIcon } from '../../../../../../../components/Cards/ConnectorCard'
 import ResourceFindingDetail from '../ResourceFindingDetail'
 import KTable from '@cloudscape-design/components/table'
 import Box from '@cloudscape-design/components/box'
@@ -31,7 +32,7 @@ import {
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import Filter from '../Filter'
 import dayjs from 'dayjs'
-import CustomPagination from '../../../../../../../../components/Pagination'
+import CustomPagination from '../../../../../../../components/Pagination'
 
 let sortKey: any[] = []
 

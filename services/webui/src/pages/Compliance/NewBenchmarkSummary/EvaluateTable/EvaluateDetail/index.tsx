@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useAtomValue } from 'jotai'
+
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
     Button,
@@ -17,16 +17,7 @@ import {
     InformationCircleIcon,
     PlayCircleIcon,
 } from '@heroicons/react/24/outline'
-import { Checkbox, useCheckboxState } from 'pretty-checkbox-react'
-import { useComplianceApiV1AssignmentsBenchmarkDetail } from '../../../../../api/compliance.gen'
-import {
-    PlatformEnginePkgComplianceApiBenchmarkAssignedConnection,
-    PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary,
-} from '../../../../../api/api'
-import DrawerPanel from '../../../../../components/DrawerPanel'
-import Table, { IColumn } from '../../../../../components/Table'
-import { isDemoAtom } from '../../../../../store'
-import KFilter from '../../../../../components/Filter'
+
 import {
     Box,
     DateRangePicker,
@@ -36,9 +27,6 @@ import {
     Tabs,
 } from '@cloudscape-design/components'
 
-import KMulstiSelect from '@cloudscape-design/components/multiselect'
-import { Fragment, ReactNode } from 'react'
-import { Dialog, Transition } from '@headlessui/react'
 import Modal from '@cloudscape-design/components/modal'
 import KButton from '@cloudscape-design/components/button'
 import axios from 'axios'
@@ -56,13 +44,13 @@ import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import {
     dateTimeDisplay,
     shortDateTimeDisplayDelta,
-} from '../../../../../../utilities/dateDisplay'
-import StatusIndicator from '@cloudscape-design/components/status-indicator'
+} from '../../../../../utilities/dateDisplay'
+
 import SeverityBar from './SeverityBar'
 import { useParams } from 'react-router-dom'
 import { RunDetail } from './types'
-import TopHeader from '../../../../../../components/Layout/Header'
-import CustomPagination from '../../../../../../components/Pagination'
+import TopHeader from '../../../../../components/Layout/Header'
+import CustomPagination from '../../../../../components/Pagination'
 import Findings from './Findings'
 
 const JOB_STATUS = {
@@ -140,7 +128,7 @@ export default function EvaluateDetail() {
     })
     const [integrationOpen, setIntegrationOpen] = useState(false)
     const [integrationDetail, setIntegrationDetail] = useState()
-  
+
     const GetDetail = () => {
         setDetailLoading(true)
         let url = ''
@@ -308,7 +296,7 @@ export default function EvaluateDetail() {
                 console.log(err)
             })
     }
- 
+
     const GetRunners = () => {
         setRunnerLoading(true)
         let url = ''

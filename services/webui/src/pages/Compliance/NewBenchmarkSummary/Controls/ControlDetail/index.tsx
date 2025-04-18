@@ -27,21 +27,18 @@ import {
     XCircleIcon,
 } from '@heroicons/react/24/outline'
 import {
-    PlatformEnginePkgBenchmarkApiListV3ResponseMetaData,
-    PlatformEnginePkgComplianceApiConformanceStatus,
-    PlatformEnginePkgComplianceApiResourceFinding,
+
     PlatformEnginePkgControlDetailV3,
-    PlatformEnginePkgInventoryApiSmartQueryItem,
-    PlatformEnginePkgInventoryApiSmartQueryItemV2,
-} from '../../../../../../api/api'
-import Spinner from '../../../../../../components/Spinner'
+
+} from '../../../../../api/api'
+import Spinner from '../../../../../components/Spinner'
 // import { severityBadge } from '../Controls'
-import { isDemoAtom, notificationAtom, queryAtom } from '../../../../../../store'
+import { isDemoAtom, notificationAtom, queryAtom } from '../../../../../store'
 // import Timeline from '../FindingsWithFailure/Detail/Timeline'
 import Editor from 'react-simple-code-editor'
 import { Badge, KeyValuePairs, Popover, Tabs } from '@cloudscape-design/components'
 import axios from 'axios'
-import { RenderObject } from '../../../../../../components/RenderObject'
+import { RenderObject } from '../../../../../components/RenderObject'
 import ImpactedResources from './ImpactedResources'
 import Benchmarks from './Benchmarks'
 

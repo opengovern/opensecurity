@@ -1,23 +1,12 @@
 import { useAtomValue, useSetAtom } from 'jotai'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-    Button,
-    Flex,
-    MultiSelect,
-    MultiSelectItem,
-    Title,
-} from '@tremor/react'
-import {
-    ArrowPathRoundedSquareIcon,
-    CloudIcon,
-    PlayCircleIcon,
-} from '@heroicons/react/24/outline'
-import { useComplianceApiV1AssignmentsBenchmarkDetail } from '../../../../../api/compliance.gen'
+
+
 import {
     PlatformEnginePkgComplianceApiBenchmarkAssignedConnection,
     PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary,
-} from '../../../../../api/api'
-import { isDemoAtom, notificationAtom } from '../../../../../store'
+} from '../../../../api/api'
+import { isDemoAtom, notificationAtom } from '../../../../store'
 import {
     Box,
     Checkbox,

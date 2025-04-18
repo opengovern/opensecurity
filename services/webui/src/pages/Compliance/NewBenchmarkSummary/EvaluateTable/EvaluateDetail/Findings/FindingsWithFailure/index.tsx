@@ -3,21 +3,21 @@ import { Card, Flex, Text, Title } from '@tremor/react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { useAtomValue, useSetAtom } from 'jotai'
-import { isDemoAtom, notificationAtom } from '../../../../../../../../store'
+import { isDemoAtom, notificationAtom } from '../../../../../../../store'
 
-import { dateTimeDisplay } from '../../../../../../../../utilities/dateDisplay'
+import { dateTimeDisplay } from '../../../../../../../utilities/dateDisplay'
 import {
     Api,
     PlatformEnginePkgComplianceApiConformanceStatus,
     PlatformEnginePkgComplianceApiFinding,
     SourceType,
     TypesFindingSeverity,
-} from '../../../../../../../../api/api'
-import AxiosAPI from '../../../../../../../../api/ApiConfig'
+} from '../../../../../../../api/api'
+import AxiosAPI from '../../../../../../../api/ApiConfig'
 
 // import { severityBadge, statusBadge } from '../../Controls'
-import { getConnectorIcon } from '../../../../../../../../components/Cards/ConnectorCard'
-import { DateRange } from '../../../../../../../../utilities/urlstate'
+import { getConnectorIcon } from '../../../../../../../components/Cards/ConnectorCard'
+import { DateRange } from '../../../../../../../utilities/urlstate'
 import KTable from '@cloudscape-design/components/table'
 import Box from '@cloudscape-design/components/box'
 import SpaceBetween from '@cloudscape-design/components/space-between'
@@ -34,7 +34,7 @@ import { AppLayout, SplitPanel } from '@cloudscape-design/components'
 import Filter from '../Filter'
 import FindingDetail from './Detail'
 import dayjs from 'dayjs'
-import CustomPagination from '../../../../../../../../components/Pagination'
+import CustomPagination from '../../../../../../../components/Pagination'
 
 let sortKey = ''
 
@@ -57,7 +57,7 @@ interface ICount {
     id: string
 }
 
-export default function FindingsWithFailure({ query,id }: ICount) {
+export default function FindingsWithFailure({ query, id }: ICount) {
     const setNotification = useSetAtom(notificationAtom)
 
     const [open, setOpen] = useState(false)
@@ -71,9 +71,7 @@ export default function FindingsWithFailure({ query,id }: ICount) {
     const [totalPage, setTotalPage] = useState(0)
     const isDemo = useAtomValue(isDemoAtom)
     const [queries, setQuery] = useState(query)
-  
 
-  
     const truncate = (text: string | undefined) => {
         if (text) {
             return text.length > 40 ? text.substring(0, 40) + '...' : text
@@ -87,7 +85,7 @@ export default function FindingsWithFailure({ query,id }: ICount) {
         let relative = ''
         let start = ''
         let end = ''
-        
+
         api.compliance
             .apiV1FindingsCreate({
                 filters: {
@@ -109,7 +107,6 @@ export default function FindingsWithFailure({ query,id }: ICount) {
                             to: queries.eventTimeRange.end.unix(),
                         },
                     }),
-                    
                 },
                 // sort: params.request.sortModel.length
                 //     ? [

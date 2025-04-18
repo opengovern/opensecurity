@@ -1,30 +1,17 @@
 // @ts-nocheck
 import { useAtomValue, useSetAtom } from 'jotai'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Button, Flex } from '@tremor/react'
 import {
-    Button,
-    Flex,
-    MultiSelect,
-    MultiSelectItem,
-    Text,
-    Title,
-} from '@tremor/react'
-import {
-    ArrowPathRoundedSquareIcon,
-    CloudIcon,
     InformationCircleIcon,
     PlayCircleIcon,
 } from '@heroicons/react/24/outline'
 import { Checkbox, useCheckboxState } from 'pretty-checkbox-react'
-import { useComplianceApiV1AssignmentsBenchmarkDetail } from '../../../../../api/compliance.gen'
-import {
-    PlatformEnginePkgComplianceApiBenchmarkAssignedConnection,
-    PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary,
-} from '../../../../../api/api'
-import DrawerPanel from '../../../../../components/DrawerPanel'
-import Table, { IColumn } from '../../../../../components/Table'
-import { isDemoAtom, notificationAtom } from '../../../../../store'
-import KFilter from '../../../../../components/Filter'
+
+import { PlatformEnginePkgComplianceApiBenchmarkEvaluationSummary } from '../../../../api/api'
+
+import { isDemoAtom, notificationAtom } from '../../../../store'
+
 import {
     Box,
     DateRangePicker,
@@ -34,14 +21,11 @@ import {
 } from '@cloudscape-design/components'
 
 import KMulstiSelect from '@cloudscape-design/components/multiselect'
-import { Fragment, ReactNode } from 'react'
-import { Dialog, Transition } from '@headlessui/react'
-import Modal from '@cloudscape-design/components/modal'
+
 import KButton from '@cloudscape-design/components/button'
 import axios from 'axios'
 import KTable from '@cloudscape-design/components/table'
-import KeyValuePairs from '@cloudscape-design/components/key-value-pairs'
-import Badge from '@cloudscape-design/components/badge'
+
 import {
     BreadcrumbGroup,
     Header,
@@ -49,12 +33,14 @@ import {
     Pagination,
     PropertyFilter,
 } from '@cloudscape-design/components'
-import { AppLayout, SplitPanel } from '@cloudscape-design/components'
-import { dateTimeDisplay, dateTimeDisplayAgo } from '../../../../../utilities/dateDisplay'
-import StatusIndicator from '@cloudscape-design/components/status-indicator'
-import SeverityBar from '../../BenchmarkCard/SeverityBar'
+
+import {
+    dateTimeDisplay,
+    dateTimeDisplayAgo,
+} from '../../../../utilities/dateDisplay'
+
 import { useNavigate } from 'react-router-dom'
-import CustomPagination from '../../../../../components/Pagination'
+import CustomPagination from '../../../../components/Pagination'
 
 const JOB_STATUS = {
     CANCELED: 'stopped',
@@ -116,7 +102,6 @@ export default function EvaluateTable({
         type: 'relative',
     })
     const GetHistory = () => {
-        
         setLoading(true)
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
@@ -186,7 +171,6 @@ export default function EvaluateTable({
             })
     }
     const GetIntegrations = () => {
-        
         setLoadingI(true)
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
@@ -220,7 +204,6 @@ export default function EvaluateTable({
             })
     }
 
-   
     useEffect(() => {
         GetHistory()
     }, [page, jobStatus, date, selectedIntegrations])
@@ -229,45 +212,44 @@ export default function EvaluateTable({
         GetIntegrations()
     }, [])
 
-
     const truncate = (text: string | undefined) => {
         if (text) {
             return text.length > 30 ? text.substring(0, 30) + '...' : text
         }
     }
-  const checkStatusRedirect = (status) => {
-      switch (status) {
-          case 'CREATED':
-              return false
-          case 'QUEUED':
-              return false
-          case 'IN_PROGRESS':
-              return true
-          case 'RUNNERS_IN_PROGRESS':
-              return true
-          case 'SUMMARIZER_IN_PROGRESS':
-              return true
-          case 'SINK_IN_PROGRESS':
-              return true
-          case 'OLD_RESOURCE_DELETION':
-              return true
-          case 'SUCCEEDED':
-              return true
-          case 'COMPLETED':
-              return true
-          case 'FAILED':
-              return true
-          case 'COMPLETED_WITH_FAILURE':
-              return true
-          case 'TIMEOUT':
-              return false
-          case 'CANCELED':
-              return false
+    const checkStatusRedirect = (status) => {
+        switch (status) {
+            case 'CREATED':
+                return false
+            case 'QUEUED':
+                return false
+            case 'IN_PROGRESS':
+                return true
+            case 'RUNNERS_IN_PROGRESS':
+                return true
+            case 'SUMMARIZER_IN_PROGRESS':
+                return true
+            case 'SINK_IN_PROGRESS':
+                return true
+            case 'OLD_RESOURCE_DELETION':
+                return true
+            case 'SUCCEEDED':
+                return true
+            case 'COMPLETED':
+                return true
+            case 'FAILED':
+                return true
+            case 'COMPLETED_WITH_FAILURE':
+                return true
+            case 'TIMEOUT':
+                return false
+            case 'CANCELED':
+                return false
 
-          default:
-              return false
-      }
-  }
+            default:
+                return false
+        }
+    }
     return (
         <>
             <div

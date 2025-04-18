@@ -3,13 +3,13 @@ import { useAtomValue, useSetAtom } from 'jotai/index'
 
 import { Card, Flex, Text, Title } from '@tremor/react'
 import { CheckCircleIcon, ExclamationCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
-import { isDemoAtom, notificationAtom } from '../../../../../../../store'
+import { isDemoAtom, notificationAtom } from '../../../../../../store'
 import {
     Api,
     PlatformEnginePkgComplianceApiConformanceStatus,
     PlatformEnginePkgComplianceApiResourceFinding,
-} from '../../../../../../../api/api'
-import AxiosAPI from '../../../../../../../api/ApiConfig'
+} from '../../../../../../api/api'
+import AxiosAPI from '../../../../../../api/ApiConfig'
 import ResourceFindingDetail from '../../../../../Findings/ResourceFindingDetail'
 import KTable from '@cloudscape-design/components/table'
 import Box from '@cloudscape-design/components/box'
@@ -24,7 +24,7 @@ import {
     SegmentedControl,
 } from '@cloudscape-design/components'
 import { AppLayout, SplitPanel } from '@cloudscape-design/components'
-import CustomPagination from '../../../../../../../components/Pagination'
+import CustomPagination from '../../../../../../components/Pagination'
 let sortKey: any[] = []
 
 interface IImpactedResources {

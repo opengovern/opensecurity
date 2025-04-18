@@ -20,20 +20,21 @@ import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import {
     PlatformEnginePkgComplianceApiConformanceStatus,
     PlatformEnginePkgComplianceApiResourceFinding,
-} from '../../../../../../../../api/api'
-import { useComplianceApiV1FindingsResourceCreate } from '../../../../../../../../api/compliance.gen'
-import Spinner from '../../../../../../../../components/Spinner'
-import { isDemoAtom, notificationAtom } from '../../../../../../../../store'
-import Timeline from '../FindingsWithFailure/Detail/Timeline'
-import { searchAtom } from '../../../../../../../../utilities/urlstate'
-import { dateTimeDisplay } from '../../../../../../../../utilities/dateDisplay'
+} from '../../../../../../../api/api'
+import { useComplianceApiV1FindingsResourceCreate } from '../../../../../../../api/compliance.gen'
+import Spinner from '../../../../../../../components/Spinner'
+import { isDemoAtom, notificationAtom } from '../../../../../../../store'
+
+import { searchAtom } from '../../../../../../../utilities/urlstate'
+import { dateTimeDisplay } from '../../../../../../../utilities/dateDisplay'
 import {
     KeyValuePairs,
     StatusIndicator,
     Tabs,
 } from '@cloudscape-design/components'
-import { RenderObject } from '../../../../../../../../components/RenderObject'
-import { severityBadge } from '../../../../../../Controls'
+import { RenderObject } from '../../../../../../../components/RenderObject'
+import { severityBadge } from '../../../../../../../utilities/badge'
+
 
 interface IResourceFindingDetail {
     resourceFinding:

@@ -1,7 +1,7 @@
 import { Button, Flex, Text } from '@tremor/react'
 import { Radio } from 'pretty-checkbox-react'
-import { SourceType } from '../../../../../../../../../api/api'
-import { AWSIcon, AzureIcon } from '../../../../../../../../../icons/icons'
+import { SourceType } from '../../../../../../../../api/api'
+import { AWSIcon, AzureIcon } from '../../../../../../../../icons/icons'
 
 interface IProvider {
     value: SourceType

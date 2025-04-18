@@ -2,17 +2,14 @@
 import { Card, Flex, Text } from '@tremor/react'
 import { useNavigate } from 'react-router-dom'
 import { useAtomValue } from 'jotai'
-import { useComplianceApiV1FindingsTopDetail } from '../../../../../../../../api/compliance.gen'
+import { useComplianceApiV1FindingsTopDetail } from '../../../../../../../api/compliance.gen'
 import {
     PlatformEnginePkgComplianceApiConformanceStatus,
     SourceType,
     TypesFindingSeverity,
-} from '../../../../../../../../api/api'
+} from '../../../../../../../api/api'
 
-import {
-    DateRange,
-    searchAtom,
-} from '../../../../../../../../utilities/urlstate'
+import { DateRange, searchAtom } from '../../../../../../../utilities/urlstate'
 import { useEffect, useState } from 'react'
 import KTable from '@cloudscape-design/components/table'
 import Box from '@cloudscape-design/components/box'
@@ -28,7 +25,7 @@ import {
 } from '@cloudscape-design/components'
 import Filter from '../Filter'
 import dayjs from 'dayjs'
-import CustomPagination from '../../../../../../../../components/Pagination'
+import CustomPagination from '../../../../../../../components/Pagination'
 
 interface ICount {
     query: {
@@ -47,7 +44,7 @@ interface ICount {
     id: string
 }
 
-export default function ControlsWithFailure({ query ,id}: ICount) {
+export default function ControlsWithFailure({ query, id }: ICount) {
     const navigate = useNavigate()
     const searchParams = useAtomValue(searchAtom)
     const [queries, setQuery] = useState(query)
@@ -57,7 +54,7 @@ export default function ControlsWithFailure({ query ,id}: ICount) {
         connectionId: query.connectionID,
         benchmarkId: query.benchmarkID,
     }
-  
+
     const {
         response: controls,
         isLoading,
@@ -81,14 +78,13 @@ export default function ControlsWithFailure({ query ,id}: ICount) {
         let relative = ''
         let start = ''
         let end = ''
-      
+
         GetRow('controlID', 10000, {
             integrationTypes: queries.connector.length ? queries.connector : [],
             severities: queries?.severity,
             connectionId: queries.connectionID,
             connectionGroup: queries?.connectionGroup,
             jobId: [id],
-           
         })
     }, [queries])
     return (
@@ -106,7 +102,7 @@ export default function ControlsWithFailure({ query ,id}: ICount) {
                 renderAriaLive={({ firstIndex, lastIndex, totalItemsCount }) =>
                     `Displaying items ${firstIndex} to ${lastIndex} of ${totalItemsCount}`
                 }
-                variant='full-page'
+                variant="full-page"
                 onSortingChange={(event) => {
                     // setSort(event.detail.sortingColumn.sortingField)
                     // setSortOrder(!sortOrder)
@@ -323,9 +319,8 @@ export default function ControlsWithFailure({ query ,id}: ICount) {
                                 // @ts-ignore
                                 setQuery(e)
                             }}
-                            setDate={()=>{}}
+                            setDate={() => {}}
                         />
-                    
                     </Flex>
                 }
                 header={

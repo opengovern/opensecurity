@@ -5,29 +5,29 @@ import { CallbackPage } from '../pages/Callback'
 import Settings from '../pages/Settings'
 import Logout from '../pages/Logout'
 import Integrations from '../pages/Integrations'
-import Compliance from '../pages/Governance/Compliance'
+import Compliance from '../pages/Compliance'
 import Overview from '../pages/Overview'
 // import Boostrap from '../pages/Workspaces/Bootstrap'
-import ControlDetail from '../pages/Governance/Controls/ControlSummary'
-import Findings from '../pages/Governance/Findings'
+
+import Findings from '../pages/Findings'
 import Layout from '../components/Layout'
 import RequestDemo from '../pages/RequestDemo'
 import RequestAccess from '../pages/Integrations/RequestAccess'
 import SettingsJobs from '../pages/Settings/Jobs'
-import AllControls from '../pages/Governance/Compliance/All Controls'
+import AllControls from '../pages/Compliance/All Controls'
 import SettingsWorkspaceAPIKeys from '../pages/Settings/APIKeys'
 import SettingsParameters from '../pages/Settings/Parameters'
 import SettingsMembers from '../pages/Settings/Members'
-import NewBenchmarkSummary from '../pages/Governance/Compliance/NewBenchmarkSummary'
+import NewBenchmarkSummary from '../pages/Compliance/NewBenchmarkSummary'
 import Search from '../pages/Search'
 import SettingsProfile from '../pages/Settings/Profile'
 import TypeDetail from '../pages/Integrations/TypeDetailNew'
-import EvaluateDetail from '../pages/Governance/Compliance/NewBenchmarkSummary/EvaluateTable/EvaluateDetail'
+import EvaluateDetail from '../pages/Compliance/NewBenchmarkSummary/EvaluateTable/EvaluateDetail'
 import Tasks from '../pages/Tasks'
 import TaskDetail from '../pages/Tasks/TaskDetail'
 import AI from '../pages/AI'
-import AllPolicy from '../pages/Governance/Compliance/All Policy'
-import Framework from '../pages/Governance/Compliance/FrameWorks'
+import AllPolicy from '../pages/Compliance/All Policy'
+import Framework from '../pages/Compliance/FrameWorks'
 import ComplianceJobs from '../pages/Settings/Jobs/Compliance'
 
 const show_compliance = window.__RUNTIME_CONFIG__.REACT_APP_SHOW_COMPLIANCE
@@ -165,11 +165,7 @@ const authRoutes = [
         element: <SettingsParameters />,
     },
 
-    {
-        key: 'benchmark summary',
-        path: '/compliance/frameworks/:benchmarkId/:controlId',
-        element: <ControlDetail />,
-    },
+
 
     {
         key: 'benchmark single connection',
@@ -205,11 +201,7 @@ const authRoutes = [
         element: <Findings />,
     },
 
-    {
-        key: 'incidents',
-        path: '/incidents/controls/:controlId',
-        element: <ControlDetail />,
-    },
+
 
     {
         key: 'home',

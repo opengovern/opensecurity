@@ -31,21 +31,18 @@ import Pagination from '@cloudscape-design/components/pagination'
 import DateRangePicker from '@cloudscape-design/components/date-range-picker'
 
 import { useAtomValue } from 'jotai'
-import { useComplianceApiV1BenchmarksControlsDetail } from '../../../../../api/compliance.gen'
-import Spinner from '../../../../../components/Spinner'
-import { numberDisplay } from '../../../../../utilities/numericDisplay'
-import DrawerPanel from '../../../../../components/DrawerPanel'
-import AnimatedAccordion from '../../../../../components/AnimatedAccordion'
-import { searchAtom } from '../../../../../utilities/urlstate'
+import { useComplianceApiV1BenchmarksControlsDetail } from '../../../../api/compliance.gen'
+
+import { searchAtom } from '../../../../utilities/urlstate'
 import {
     PlatformEnginePkgComplianceApiBenchmarkControlSummary,
     PlatformEnginePkgComplianceApiConformanceStatus,
     PlatformEnginePkgControlApiListV2,
     PlatformEnginePkgControlApiListV2ResponseItem,
-} from '../../../../../api/api'
+} from '../../../../api/api'
 import SideNavigation from '@cloudscape-design/components/side-navigation'
-import { Api } from '../../../../../api/api'
-import AxiosAPI from '../../../../../api/ApiConfig'
+import { Api } from '../../../../api/api'
+import AxiosAPI from '../../../../api/ApiConfig'
 import Table from '@cloudscape-design/components/table'
 import Box from '@cloudscape-design/components/box'
 import SpaceBetween from '@cloudscape-design/components/space-between'
@@ -66,8 +63,9 @@ import {
     SplitPanel,
 } from '@cloudscape-design/components'
 import ControlDetail from './ControlDetail'
-import { severityBadge } from '../../../Controls'
-import CustomPagination from '../../../../../components/Pagination'
+
+import CustomPagination from '../../../../components/Pagination'
+import { severityBadge } from '../../../../utilities/badge'
 
 interface IPolicies {
     id: string | undefined
@@ -162,11 +160,7 @@ export const countControls = (
     return total
 }
 
-export default function Controls({
-    id,
-    assignments,
-    enable,
-}: IPolicies) {
+export default function Controls({ id, assignments, enable }: IPolicies) {
     const { response: controls, isLoading } =
         useComplianceApiV1BenchmarksControlsDetail(String(id))
     const [page, setPage] = useState<number>(1)
@@ -199,7 +193,7 @@ export default function Controls({
     const [treePage, setTreePage] = useState(0)
     const [treeTotal, setTreeTotal] = useState(0)
     const [treeTotalPages, setTreeTotalPages] = useState(0)
-    const [coverage,setCoverage]= useState()
+    const [coverage, setCoverage] = useState()
 
     const [filters, setFilters] = useState([])
     const [filterOption, setFilterOptions] = useState([])
@@ -260,8 +254,7 @@ export default function Controls({
                 setTotalCount(resp.data.total_count)
                 if (resp.data.items) {
                     setRows(resp.data.items)
-                }
-                else{
+                } else {
                     setRows([])
                 }
 
@@ -338,7 +331,7 @@ export default function Controls({
                 console.log(err)
             })
     }
-    const GetCoverages = (flag: boolean,id: string|undefined) => {
+    const GetCoverages = (flag: boolean, id: string | undefined) => {
         let url = ''
         if (window.location.origin === 'http://localhost:3000') {
             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -367,7 +360,7 @@ export default function Controls({
                 console.log(err)
             })
     }
-    
+
     useEffect(() => {
         if (window.innerWidth > 640) {
             GetTree()
@@ -380,38 +373,37 @@ export default function Controls({
 
     useEffect(() => {
         GetControls(selected ? true : false, selected)
-    }, [selected, sort, sortOrder, page,query])
+    }, [selected, sort, sortOrder, page, query])
 
-useEffect(() => {
-    const temp_option = [
-        { propertyKey: 'severity', value: 'high' },
-        { propertyKey: 'severity', value: 'medium' },
-        { propertyKey: 'severity', value: 'low' },
-        { propertyKey: 'severity', value: 'critical' },
-        { propertyKey: 'severity', value: 'none' },
-    ]
-       const property = [
-           {
-               key: 'severity',
-               operators: ['='],
-               propertyLabel: 'Severity',
-               groupValuesLabel: 'Severity values',
-           },
+    useEffect(() => {
+        const temp_option = [
+            { propertyKey: 'severity', value: 'high' },
+            { propertyKey: 'severity', value: 'medium' },
+            { propertyKey: 'severity', value: 'low' },
+            { propertyKey: 'severity', value: 'critical' },
+            { propertyKey: 'severity', value: 'none' },
+        ]
+        const property = [
+            {
+                key: 'severity',
+                operators: ['='],
+                propertyLabel: 'Severity',
+                groupValuesLabel: 'Severity values',
+            },
 
-
-           {
-               key: 'list_of_resources',
-               operators: ['='],
-               propertyLabel: 'List of Resources',
-               groupValuesLabel: 'List of Resources values',
-           },
-           {
-               key: 'primary_resource',
-               operators: ['='],
-               propertyLabel: 'Primary Resources',
-               groupValuesLabel: 'Primary Resources values',
-           },
-       ]
+            {
+                key: 'list_of_resources',
+                operators: ['='],
+                propertyLabel: 'List of Resources',
+                groupValuesLabel: 'List of Resources values',
+            },
+            {
+                key: 'primary_resource',
+                operators: ['='],
+                propertyLabel: 'Primary Resources',
+                groupValuesLabel: 'Primary Resources values',
+            },
+        ]
         coverage?.list_of_resources?.map((unique, index) => {
             temp_option.push({
                 propertyKey: 'list_of_resources',
@@ -426,9 +418,7 @@ useEffect(() => {
         })
         setFilterOptions(property)
         setFilters(temp_option)
-
-
-}, [coverage])
+    }, [coverage])
     useEffect(() => {
         let temp = {}
 
@@ -443,8 +433,6 @@ useEffect(() => {
         })
         setQuery(temp)
     }, [queries])
-
-
 
     const getControlDetail = (id: string) => {
         const api = new Api()

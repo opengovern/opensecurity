@@ -18,13 +18,13 @@ import {
     PlatformEnginePkgComplianceApiConformanceStatus,
     SourceType,
     TypesFindingSeverity,
-} from '../../../../../../../api/api'
+} from '../../../../../../api/api'
 import {
     DateRange,
     useURLParam,
     useURLState,
-} from '../../../../../../../utilities/urlstate'
-import Spinner from '../../../../../../../components/Spinner'
+} from '../../../../../../utilities/urlstate'
+import Spinner from '../../../../../../components/Spinner'
 import ControlsWithFailure from './ControlsWithFailure'
 import ResourcesWithFailure from './ResourcesWithFailure'
 interface Props {

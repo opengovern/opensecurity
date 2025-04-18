@@ -1,29 +1,29 @@
 // @ts-nocheck
+
 import { Card, Flex, Text } from '@tremor/react'
-import { numberDisplay } from '../../../../../../../utilities/numericDisplay'
+import { numberDisplay } from '../../../../../../utilities/numericDisplay'
 
 export interface NewBenchmark {
-    total_controls:  number;
-    failed_controls: number;
-    control_view:    ControlView;
+    total_controls: number
+    failed_controls: number
+    control_view: ControlView
 }
 
 export interface ControlView {
-    by_severity: BySeverity;
+    by_severity: BySeverity
 }
 
 export interface BySeverity {
-    critical: Critical;
-    high:     Critical;
-    low:      Critical;
-    medium:   Critical;
+    critical: Critical
+    high: Critical
+    low: Critical
+    medium: Critical
 }
 
 export interface Critical {
-    total_controls:  number;
-    failed_controls: number;
+    total_controls: number
+    failed_controls: number
 }
-
 
 export enum Field {
     Control = 'Control',
@@ -31,7 +31,8 @@ export enum Field {
     ResourceType = 'ResourceType',
 }
 export const benchmarkChecks = (ben: NewBenchmark | undefined) => {
-    const critical = ben?.control_view?.by_severity?.critical?.total_controls || 0
+    const critical =
+        ben?.control_view?.by_severity?.critical?.total_controls || 0
     const high = ben?.control_view?.by_severity?.high?.total_controls || 0
     const medium = ben?.control_view?.by_severity?.medium?.total_controls || 0
     const low = ben?.control_view?.by_severity?.low?.total_controls || 0
@@ -59,11 +60,11 @@ const JOB_STATUS = {
     FAILED: 'Job Failed',
     SUMMARIZER_IN_PROGRESS: 'In progress',
     SINK_IN_PROGRESS: 'In progress',
-    RUNNERS_IN_PROGRESS : 'In progress',
+    RUNNERS_IN_PROGRESS: 'In progress',
 }
 const calcPasses = (benchmark: NewBenchmark | undefined) => {
     // @ts-ignore
-    return (benchmark?.total_controls  - benchmark?.failed_controls ) || 0
+    return benchmark?.total_controls - benchmark?.failed_controls || 0
 }
 
 export default function SeverityBar({ benchmark }: ISeverityBar) {
@@ -81,8 +82,7 @@ export default function SeverityBar({ benchmark }: ISeverityBar) {
                     ?.total_controls || 0) /
                     (benchmark?.total_controls || 1)) *
                 100,
-            control:
-                benchmark?.control_view?.by_severity?.critical,
+            control: benchmark?.control_view?.by_severity?.critical,
         },
         {
             name: 'High',
@@ -97,8 +97,7 @@ export default function SeverityBar({ benchmark }: ISeverityBar) {
                     0) /
                     (benchmark?.total_controls || 1)) *
                 100,
-            control:
-                benchmark?.control_view?.by_severity?.high,
+            control: benchmark?.control_view?.by_severity?.high,
         },
         {
             name: 'Medium',
@@ -113,8 +112,7 @@ export default function SeverityBar({ benchmark }: ISeverityBar) {
                     ?.total_controls || 0) /
                     (benchmark?.total_controls || 1)) *
                 100,
-            control:
-                benchmark?.control_view?.by_severity?.medium,
+            control: benchmark?.control_view?.by_severity?.medium,
         },
         {
             name: 'Low',
@@ -129,8 +127,7 @@ export default function SeverityBar({ benchmark }: ISeverityBar) {
                     0) /
                     (benchmark?.total_controls || 1)) *
                 100,
-            control:
-                benchmark?.control_view?.by_severity?.low,
+            control: benchmark?.control_view?.by_severity?.low,
         },
         // {
         //     name: 'None',
@@ -158,20 +155,13 @@ export default function SeverityBar({ benchmark }: ISeverityBar) {
         name: 'Passed',
         color: '#54B584',
         percent:
-            (((calcPasses(benchmark)) 
-                 ||
-                0) /
+            ((calcPasses(benchmark) || 0) /
                 (benchmarkChecks(benchmark).total ?? 0)) *
             100,
-        count:
-            (calcPasses(benchmark)) 
-            ,
+        count: calcPasses(benchmark),
         controlPercent:
-            ((calcPasses(benchmark)) /
-                (benchmark?.total_controls || 1)) *
-            100,
+            (calcPasses(benchmark) / (benchmark?.total_controls || 1)) * 100,
         control: calcPasses(benchmark),
-        
     }
 
     return (
@@ -331,10 +321,13 @@ export default function SeverityBar({ benchmark }: ISeverityBar) {
             <Text className="mb-2 w-full">{`${numberDisplay(
                 (benchmark?.total_controls || 0) - calcPasses(benchmark),
                 0
-            )}  of ${numberDisplay(benchmark?.total_controls || 0, 0)} (${Math.ceil(
+            )}  of ${numberDisplay(
+                benchmark?.total_controls || 0,
+                0
+            )} (${Math.ceil(
                 ((benchmark?.failed_controls ?? 0) /
                     (benchmark?.total_controls || 1)) *
-                100
+                    100
             )}%) controls failed`}</Text>
         </Flex>
     )
