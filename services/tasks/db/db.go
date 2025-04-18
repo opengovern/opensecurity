@@ -104,6 +104,20 @@ func (db Database) FetchCreatedTaskRunsByTaskID(taskID string) ([]models.TaskRun
 	return tasks, nil
 }
 
+// CountInProgressTaskRunsByTaskID retrieves a list of task runs
+func (db Database) CountInProgressTaskRunsByTaskID(taskID string) (*int64, error) {
+	var count int64
+	tx := db.Orm.Model(&models.TaskRun{}).
+		Where("task_id = ?", taskID).
+		Where("status IN ?", []models.TaskRunStatus{models.TaskRunStatusInProgress, models.TaskRunStatusQueued}).
+		Count(&count)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return &count, nil
+}
+
 // FetchLastCreatedTaskRunsByTaskID retrieves last task runs
 func (db Database) FetchLastCreatedTaskRunsByTaskID(taskID string) (*models.TaskRun, error) {
 	var task models.TaskRun

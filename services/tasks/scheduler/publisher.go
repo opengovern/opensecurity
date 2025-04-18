@@ -14,6 +14,10 @@ import (
 	"net/http"
 )
 
+const (
+	MaximumInProgressTaskRuns = 10
+)
+
 func (s *TaskScheduler) runPublisher(ctx context.Context) error {
 	ctx2 := &httpclient.Context{UserRole: api.AdminRole}
 	ctx2.Ctx = ctx
@@ -26,6 +30,16 @@ func (s *TaskScheduler) runPublisher(ctx context.Context) error {
 		s.logger.Error("failed to timeout task runs", zap.String("task_id", s.TaskID),
 			zap.Uint64("timeout minutes", frequencyInMinutes), zap.Error(err))
 		return err
+	}
+
+	inProgressCount, err := s.db.CountInProgressTaskRunsByTaskID(s.TaskID)
+	if err != nil {
+		s.logger.Error("failed to count in-progress task runs", zap.Error(err))
+		return err
+	}
+	if inProgressCount != nil && *inProgressCount > MaximumInProgressTaskRuns {
+		s.logger.Info("in progress tasks reached the maximum number of task runs")
+		return nil
 	}
 
 	runs, err := s.db.FetchCreatedTaskRunsByTaskID(s.TaskID)
