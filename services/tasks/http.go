@@ -13,6 +13,7 @@ import (
 	"github.com/opengovern/opensecurity/services/tasks/db"
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	"net/http"
+	"sort"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -90,14 +91,6 @@ func (r *httpRoutes) ListTasks(ctx echo.Context) error {
 
 	}
 
-	totalCount := len(items)
-	if perPage != 0 {
-		if cursor == 0 {
-			items = utils.Paginate(1, perPage, items)
-		} else {
-			items = utils.Paginate(cursor, perPage, items)
-		}
-	}
 	var taskResponses []api.TaskResponse
 	for _, task := range items {
 		runSchedules, err := r.db.GetTaskRunSchedules(task.ID)
@@ -112,6 +105,18 @@ func (r *httpRoutes) ListTasks(ctx echo.Context) error {
 			ImageUrl:        task.ImageUrl,
 			SchedulesNumber: len(runSchedules),
 		})
+	}
+
+	sort.Slice(taskResponses, func(i, j int) bool {
+		return taskResponses[i].ID < taskResponses[j].ID
+	})
+	totalCount := len(taskResponses)
+	if perPage != 0 {
+		if cursor == 0 {
+			taskResponses = utils.Paginate(1, perPage, taskResponses)
+		} else {
+			taskResponses = utils.Paginate(cursor, perPage, taskResponses)
+		}
 	}
 
 	return ctx.JSON(http.StatusOK, api.TaskListResponse{
@@ -347,14 +352,6 @@ func (r *httpRoutes) ListTaskRunResults(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, "failed to get task results")
 	}
 
-	totalCount := len(items)
-	if perPage != 0 {
-		if cursor == 0 {
-			items = utils.Paginate(1, perPage, items)
-		} else {
-			items = utils.Paginate(cursor, perPage, items)
-		}
-	}
 	var taskRunResponses []api.TaskRun
 	for _, task := range items {
 		var params map[string]interface{}
@@ -380,6 +377,19 @@ func (r *httpRoutes) ListTaskRunResults(ctx echo.Context) error {
 			FailureMessage: task.FailureMessage,
 		})
 	}
+
+	sort.Slice(taskRunResponses, func(i, j int) bool {
+		return taskRunResponses[i].ID < taskRunResponses[j].ID
+	})
+	totalCount := len(taskRunResponses)
+	if perPage != 0 {
+		if cursor == 0 {
+			taskRunResponses = utils.Paginate(1, perPage, taskRunResponses)
+		} else {
+			taskRunResponses = utils.Paginate(cursor, perPage, taskRunResponses)
+		}
+	}
+
 	return ctx.JSON(http.StatusOK, api.ListTaskRunsResponse{
 		TotalCount: totalCount,
 		Items:      taskRunResponses,
