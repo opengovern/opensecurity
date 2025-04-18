@@ -6,7 +6,9 @@ import { Badge, Card, Color, Flex } from '@tremor/react'
 import { DocumentTextIcon } from '@heroicons/react/24/outline'
 import {
     Cards,
+    FormField,
     Grid,
+    Input,
     KeyValuePairs,
     Link,
     Modal,
@@ -45,6 +47,8 @@ export interface Task {
     run_schedules: RunSchedule[];
     credentials:   string[];
     env_vars:      EnvVars;
+    params:        string[];
+    configs:       string[];
     scale_config:  ScaleConfig;
 }
 
@@ -84,6 +88,7 @@ export interface ScaleConfig {
     cooldown_period:  number;
 }
 
+
 export default function TaskDetail() {
     const { id } = useParams()
     const [loading, setLoading] = useState(false)
@@ -97,6 +102,8 @@ export default function TaskDetail() {
     const [scaleOpen, setScaleOpen] = useState(false)
     const [runOpen, setRunOpen] = useState(false)
     const [runParams, setRunParams] = useState<any>({})
+    const [configOpen, setConfigOpen] = useState(false)
+    const [config, setConfig] = useState<any>({})
     const setNotification = useSetAtom(notificationAtom)
     
     
@@ -216,7 +223,9 @@ export default function TaskDetail() {
             },
         }
         const body ={
-            task_id:id
+            task_id:id,
+            params: runParams
+
         }
 
         axios
@@ -229,6 +238,44 @@ export default function TaskDetail() {
                 setLoading(false)
             })
     }
+     const ConfigTask = () => {
+         setLoading(true)
+         let url = ''
+         if (window.location.origin === 'http://localhost:3000') {
+             url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+         } else {
+             url = window.location.origin
+         }
+         // @ts-ignore
+         const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+         const config = {
+             headers: {
+                 Authorization: `Bearer ${token}`,
+             },
+         }
+         const body = {
+             credentials: config,
+         }
+
+         axios
+             .post(`${url}/main/tasks/api/v1/tasks/${id}/config`, body, config)
+             .then((res) => {
+                 setConfigOpen(false)
+                 setNotification({
+                        type: 'success',
+                        text: 'Task Configured Successfully',
+                    })
+                 //  setTask(res.data)
+             })
+             .catch((err) => {
+                 setLoading(false)
+                    setNotification({
+                            type: 'error',
+                            text: 'Error Configuring Task',
+                        })
+             })
+     }
     useEffect(() => {
         getRunResult()
     }, [page])
@@ -304,9 +351,8 @@ export default function TaskDetail() {
                                                                 {key}:
                                                             </h4>
                                                             {typeof selected
-                                                                ?.params[
-                                                                key
-                                                            ] != 'object' ? (
+                                                                ?.params[key] !=
+                                                            'object' ? (
                                                                 <Text>
                                                                     {
                                                                         selected
@@ -374,6 +420,7 @@ export default function TaskDetail() {
                     </Modal>
                     <Modal
                         visible={scaleOpen}
+                        size="large"
                         onDismiss={() => setScaleOpen(false)}
                         header="Task Detail"
                     >
@@ -386,14 +433,26 @@ export default function TaskDetail() {
                                         label: 'Image Url',
                                         value: task?.image_url,
                                     },
+                                    {
+                                        label: 'Last Run',
+                                        value: dateTimeDisplay(
+                                            task?.run_schedules[0]?.last_run
+                                        ),
+                                    },
+                                    {
+                                        label: 'Frequency',
+                                        value: task?.run_schedules[0]
+                                            ?.frequency,
+                                    },
                                 ]}
                             />
+
                             <span className="text-base font-semibold">
                                 Scale Config
                             </span>
 
                             <KeyValuePairs
-                                columns={3}
+                                columns={4}
                                 items={[
                                     {
                                         label: 'Stream',
@@ -428,25 +487,109 @@ export default function TaskDetail() {
                                     },
                                 ]}
                             />
-                            <span className="text-base font-semibold">
-                                Run Schedules
-                            </span>
-                            <KeyValuePairs
-                                columns={4}
-                                items={[
-                                    {
-                                        label: 'Last Run',
-                                        value: dateTimeDisplay(
-                                            task?.run_schedules[0]?.last_run
-                                        ),
-                                    },
-                                    {
-                                        label: 'Frequency',
-                                        value: task?.run_schedules[0]
-                                            ?.frequency,
-                                    },
-                                ]}
-                            />
+                            <Flex className='w-full gap-2 justify-end mt-2'>
+                                <Button
+                                    // className='bg-white'
+                                    iconName="settings"
+
+                                    onClick={() => {
+                                        setScaleOpen(false)
+                                        setConfigOpen(true)
+                                    }}
+                                >
+                                    Configure Credentials
+                                </Button>
+                            </Flex>
+                        </Flex>
+                    </Modal>
+                    <Modal
+                        visible={runOpen}
+                        onDismiss={() => setRunOpen(false)}
+                        header="Run Task"
+                    >
+                        <Flex className="flex-col justify-start items-start gap-2">
+                            <>
+                                {task?.params?.map((param: any) => {
+                                    return (
+                                        <>
+                                            <FormField
+                                                label={`Value for ${param}`}
+                                                className="w-full"
+                                            >
+                                                <Input
+                                                    value={runParams[param]}
+                                                    onChange={(e) => {
+                                                        setRunParams({
+                                                            ...runParams,
+                                                            [param]:
+                                                                e.detail.value,
+                                                        })
+                                                    }}
+                                                    placeholder={`value for ${param}`}
+                                                />
+                                            </FormField>
+                                        </>
+                                    )
+                                })}
+                            </>
+
+                            <Flex
+                                className="w-full justify-end flex-row items-center
+                            "
+                            >
+                                <Button
+                                    onClick={() => {
+                                        RunTask()
+                                    }}
+                                >
+                                    Run
+                                </Button>
+                            </Flex>
+                        </Flex>
+                    </Modal>
+                    <Modal
+                        visible={configOpen}
+                        onDismiss={() => setConfigOpen(false)}
+                        header="Configure Task"
+                    >
+                        <Flex className="flex-col justify-start items-start gap-2">
+                            <>
+                                {task?.credentials?.map((param: any) => {
+                                    return (
+                                        <>
+                                            <FormField
+                                                label={`Value for ${param}`}
+                                                className="w-full"
+                                            >
+                                                <Input
+                                                    value={config[param]}
+                                                    onChange={(e) => {
+                                                        setConfig({
+                                                            ...config,
+                                                            [param]:
+                                                                e.detail.value,
+                                                        })
+                                                    }}
+                                                    placeholder={`value for ${param}`}
+                                                />
+                                            </FormField>
+                                        </>
+                                    )
+                                })}
+                            </>
+
+                            <Flex
+                                className="w-full justify-end flex-row items-center
+                            "
+                            >
+                                <Button
+                                    onClick={() => {
+                                        ConfigTask()
+                                    }}
+                                >
+                                    Save
+                                </Button>
+                            </Flex>
                         </Flex>
                     </Modal>
 
@@ -688,7 +831,7 @@ export default function TaskDetail() {
                                 }
                                 className="w-full"
                             >
-                                Results {total ??0}
+                                Results {total ?? 0}
                             </Header>
                         }
                         pagination={
