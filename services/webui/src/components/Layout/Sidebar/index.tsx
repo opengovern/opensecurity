@@ -118,6 +118,18 @@ export default function Sidebar({ currentPage }: ISidebar) {
                         icon: RiHome2Line,
                         isPreview: false,
                     },
+                    {
+                        name: 'Widgets',
+                        page: 'widgets',
+                        icon: RiHome2Line,
+                        isPreview: false,
+                    },
+                    {
+                        name: 'Dashbaords',
+                        page: 'dashboards',
+                        icon: RiHome2Line,
+                        isPreview: false,
+                    },
                 ],
             },
             {
