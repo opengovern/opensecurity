@@ -24,7 +24,12 @@ import { array } from 'prop-types'
 import Shortcuts from '../Shortcuts'
 import Integrations from '../Integrations'
 import SRE from '../KPI_Cards'
-import { APIToWidget, Widget, WidgetAPI, WidgetToAPI } from '../../../utilities/widget'
+import {
+    APIToWidget,
+    Widget,
+    WidgetAPI,
+    WidgetToAPI,
+} from '../../../utilities/widget'
 import { v4 as uuid } from 'uuid'
 const COMPONENT_MAPPING = {
     table: TableWidget,
@@ -63,6 +68,7 @@ export interface Data {
 export interface WidgetLayoutProps {
     input_layout: any
     is_default: boolean
+    HandleAddBlankItem: Function
     HandleAddItem: Function
 }
 
@@ -70,6 +76,7 @@ export default function WidgetLayout({
     input_layout,
     is_default,
     HandleAddItem,
+    HandleAddBlankItem
 }: WidgetLayoutProps) {
     const [layout, setLayout] = useState(input_layout)
     const [me, setMe] = useAtom(meAtom)
@@ -82,6 +89,12 @@ export default function WidgetLayout({
     const [editId, setEditId] = useState('')
     const [openEditLayout, setOpenEditLayout] = useState(false)
     const [editLayout, setEditLayout] = useState<any>()
+    const [idModalOpen, setIdModalOpen] = useState(false)
+    const [id, setId] = useState('')
+    const [idLoading, setIdLoading] = useState(false)
+    const [DashboardIdModalOpen, setDashboardIdModalOpen] = useState(false)
+    const [DashboardId, setDashboarDId] = useState('')
+    const [dashbordLoading, setDashboardLoading] = useState(false)
     const setNotification = useSetAtom(notificationAtom)
     useEffect(() => {
         if (layout) {
@@ -136,56 +149,159 @@ export default function WidgetLayout({
                 console.log(err)
             })
     }
-const GetDefaultLayout = () => {
-    const id = layout?.id
-    axios
-        .get(
-            `https://raw.githubusercontent.com/opengovern/platform-configuration/refs/heads/main/default_layout.json`
-        )
-        .then((res) => {
-            SetDefaultLayoutWithDashbord(res?.data, me, id)
-            setLayout(res?.data)
+    const GetDefaultLayout = () => {
+        const id = layout?.id
+        axios
+            .get(
+                `https://raw.githubusercontent.com/opengovern/platform-configuration/refs/heads/main/default_layout.json`
+            )
+            .then((res) => {
+                SetDefaultLayoutWithDashbord(res?.data, me, id)
+                setLayout(res?.data)
 
-            setLayoutLoading(false)
-        })
-        .catch((err) => {
-            setLayoutLoading(false)
-        })
-}
-const SetDefaultLayoutWithDashbord = (layout: any, meResponse: any,id: string) => {
-    let url = ''
-    if (window.location.origin === 'http://localhost:3000') {
-        url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-    } else {
-        url = window.location.origin
+                setLayoutLoading(false)
+            })
+            .catch((err) => {
+                setLayoutLoading(false)
+            })
     }
-    // @ts-ignore
-    const token = JSON.parse(localStorage.getItem('openg_auth')).token
+    const SetDefaultLayoutWithDashbord = (
+        layout: any,
+        meResponse: any,
+        id: string
+    ) => {
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-    const config = {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    }
-    const body = {
-        user_id: meResponse?.username,
-        widgets: layout?.widgets?.map((widget: Widget) => {
-            return WidgetToAPI(widget, meResponse?.username, true, true)
-        }),
-        name: layout?.name,
-        description: layout?.description,
-        is_default: true,
-        is_private: true,
-        id: id == 'default' ? undefined : id,
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+        const body = {
+            user_id: meResponse?.username,
+            widgets: layout?.widgets?.map((widget: Widget) => {
+                return WidgetToAPI(widget, meResponse?.username, true, true)
+            }),
+            name: layout?.name,
+            description: layout?.description,
+            is_default: true,
+            is_private: true,
+            id: id == 'default' ? undefined : id,
+        }
+
+        axios
+            .post(`${url}/main/core/api/v4/layout/set/widgets`, body, config)
+            .then((res) => {})
+            .catch((err) => {
+                console.log(err)
+            })
     }
 
-    axios
-        .post(`${url}/main/core/api/v4/layout/set/widgets`, body, config)
-        .then((res) => {})
-        .catch((err) => {
-            console.log(err)
-        })
-}
+    const HandleAddWidgetByID = () => {
+        setIdLoading(true)
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+        const body = {
+            user_id: me?.username,
+        }
+
+        axios
+            .post(
+                `${url}/main/core/api/v4/layout/widget/get/${id}`,
+                body,
+                config
+            )
+            .then((res) => {
+                if (res?.data) {
+                    const widget = APIToWidget(res?.data)
+                    setItems([...items, widget])
+                    setIdLoading(false)
+                    setIdModalOpen(false)
+                    setNotification({
+                        text: `Widget ${widget?.data?.title} added`,
+                        type: 'success',
+                    })
+                    setId('')
+                }
+            })
+            .catch((err) => {
+                setNotification({
+                    text: `Widget not found`,
+                    type: 'error',
+                })
+                console.log(err)
+                setIdLoading(false)
+            })
+    }
+    const HandleAddDashboardByID = () => {
+        setDashboardLoading(true)
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+        const body = {
+            user_id: me?.username,
+        }
+
+        axios
+            .post(`${url}/main/core/api/v4/layout/get/${DashboardId}`, body, config)
+            .then((res) => {
+                if (res?.data) {
+                    const dashboard= res?.data
+                    const widgets = dashboard?.widgets?.map((widget: WidgetAPI) => {
+                        return APIToWidget(widget)
+                    })
+                    dashboard.widgets= widgets
+
+                    HandleAddItem(dashboard)
+                    setDashboardIdModalOpen(false)
+
+                    setNotification({
+                        text: `Dashboard added`,
+                        type: 'success',
+                    })
+                    setDashboarDId('')
+                    setDashboardLoading(false)
+                }
+            })
+            .catch((err) => {
+                setNotification({
+                    text: `Dashboard not found`,
+                    type: 'error',
+                })
+                console.log(err)
+                setDashboardLoading(false)
+            })
+    }
 
     const HandleRemoveItemByID = (id: string) => {
         const newItems = items.filter((item: any) => item.id !== id)
@@ -355,6 +471,7 @@ const SetDefaultLayoutWithDashbord = (layout: any, meResponse: any,id: string) =
         setAddModalOpen(false)
         setWidgetProps({})
     }
+
     const HandleAddProductWidgets = (id: string) => {
         // check if id not exist in items
         const check = items.filter((item: any) => item.id === id)
@@ -477,30 +594,34 @@ const SetDefaultLayoutWithDashbord = (layout: any, meResponse: any,id: string) =
         })
     }
     const SaveWidget = (widget: any) => {
-           let url = ''
-           if (window.location.origin === 'http://localhost:3000') {
-               url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
-           } else {
-               url = window.location.origin
-           }
-           // @ts-ignore
-           const token = JSON.parse(localStorage.getItem('openg_auth')).token
+        let url = ''
+        if (window.location.origin === 'http://localhost:3000') {
+            url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
+        } else {
+            url = window.location.origin
+        }
+        // @ts-ignore
+        const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-           const config = {
-               headers: {
-                   Authorization: `Bearer ${token}`,
-               },
-           }
-           const body = WidgetToAPI(widget, me?.username, widget?.data?.is_public, false)
-           
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+        const body = WidgetToAPI(
+            widget,
+            me?.username,
+            widget?.data?.is_public,
+            false
+        )
 
-           axios
-               .post(`${url}/main/core/api/v4/layout/widget/set`, body, config)
-               .then((res) => {})
-               .catch((err) => {
-                   console.log(err)
-               })
-       }
+        axios
+            .post(`${url}/main/core/api/v4/layout/widget/set`, body, config)
+            .then((res) => {})
+            .catch((err) => {
+                console.log(err)
+            })
+    }
 
     return (
         <div className="w-full h-full flex flex-col gap-8">
@@ -511,7 +632,8 @@ const SetDefaultLayoutWithDashbord = (layout: any, meResponse: any,id: string) =
                     <div className="flex flex-row gap-2">
                         <ButtonDropdown
                             items={[
-                                { id: 'add', text: 'Add new dashboard' },
+                                { id: 'add', text: 'Add Blank dashboard' },
+                                { id: 'add-id', text: 'Add dashboard with ID' },
 
                                 { id: 'save', text: 'Save' },
                                 { id: 'edit', text: 'Edit' },
@@ -522,18 +644,23 @@ const SetDefaultLayoutWithDashbord = (layout: any, meResponse: any,id: string) =
                             ]}
                             onItemClick={(event: any) => {
                                 if (event.detail.id == 'add') {
-                                    HandleAddItem()
+                                    HandleAddBlankItem()
+                                }
+                                if (event.detail.id == 'add-id') {
+                                    setDashboardIdModalOpen(true)
                                 }
                                 if (event.detail.id == 'reset') {
                                     GetDefaultLayout()
                                 }
                                 if (event.detail.id == 'save') {
-                                    if(layout?.id=='default') {
-                                        SetDefaultLayoutWithDashbord(layout,me,layout?.id)
-                                    }
-                                    else{
+                                    if (layout?.id == 'default') {
+                                        SetDefaultLayoutWithDashbord(
+                                            layout,
+                                            me,
+                                            layout?.id
+                                        )
+                                    } else {
                                         SetDefaultLayout(items)
-
                                     }
                                 }
                                 if (event.detail.id == 'edit') {
@@ -553,6 +680,7 @@ const SetDefaultLayoutWithDashbord = (layout: any, meResponse: any,id: string) =
                                 { id: 'integration', text: 'Integrations' },
                                 { id: 'shortcut', text: 'Shortcuts' },
                                 { id: 'sre', text: 'SRE' },
+                                { id: 'id', text: 'Add with ID' },
                             ]}
                             onItemClick={(event: any) => {
                                 if (
@@ -561,6 +689,8 @@ const SetDefaultLayoutWithDashbord = (layout: any, meResponse: any,id: string) =
                                     event.detail.id == 'integration'
                                 ) {
                                     HandleAddProductWidgets(event.detail.id)
+                                } else if (event.detail.id === 'id') {
+                                    setIdModalOpen(true)
                                 } else {
                                     setSelectedAddItem(event.detail.id)
                                     setAddModalOpen(true)
@@ -611,7 +741,7 @@ const SetDefaultLayoutWithDashbord = (layout: any, meResponse: any,id: string) =
                                             setEditId(item.id)
                                             setAddModalOpen(true)
                                         }
-                                        if(event.detail.id === 'save') {
+                                        if (event.detail.id === 'save') {
                                             SaveWidget(item)
                                         }
                                     }}
@@ -786,20 +916,21 @@ const SetDefaultLayoutWithDashbord = (layout: any, meResponse: any,id: string) =
                     </FormField>
 
                     {HandleWidgetProps()}
-                    {isEdit && (<>
-                    
-                    <Checkbox
-                        checked={widgetProps?.is_public}
-                        onChange={(e: any) => {
-                            setWidgetProps({
-                                ...widgetProps,
-                                is_public: e.detail.checked,
-                            })
-                        }}
-                    >
-                        Public widget
-                    </Checkbox>
-                    </>)}
+                    {isEdit && (
+                        <>
+                            <Checkbox
+                                checked={widgetProps?.is_public}
+                                onChange={(e: any) => {
+                                    setWidgetProps({
+                                        ...widgetProps,
+                                        is_public: e.detail.checked,
+                                    })
+                                }}
+                            >
+                                Public widget
+                            </Checkbox>
+                        </>
+                    )}
                     {(!widgetProps?.title || !widgetProps?.description) && (
                         <Alert
                             type="error"
@@ -874,6 +1005,74 @@ const SetDefaultLayoutWithDashbord = (layout: any, meResponse: any,id: string) =
                             onClick={() => {
                                 setLayout(editLayout)
                                 setOpenEditLayout(false)
+                            }}
+                        >
+                            save
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+            <Modal
+                visible={idModalOpen}
+                onDismiss={() => {
+                    setIdModalOpen(false)
+                }}
+                header={`Add widget by id`}
+            >
+                <div className="flex flex-col gap-2">
+                    <FormField
+                        // description="This is a description."
+                        label="Widget ID"
+                    >
+                        <Input
+                            placeholder="WidgetID"
+                            ariaRequired={true}
+                            value={id}
+                            onChange={(e: any) => {
+                                setId(e.detail.value)
+                            }}
+                        />
+                    </FormField>
+
+                    <div className="flex w-full justify-end items-center">
+                        <Button
+                            loading={idLoading}
+                            onClick={() => {
+                                HandleAddWidgetByID()
+                            }}
+                        >
+                            save
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+            <Modal
+                visible={DashboardIdModalOpen}
+                onDismiss={() => {
+                    setDashboardIdModalOpen(false)
+                }}
+                header={`Add Dashboard by id`}
+            >
+                <div className="flex flex-col gap-2">
+                    <FormField
+                        // description="This is a description."
+                        label="Dashboard ID"
+                    >
+                        <Input
+                            placeholder="Dashboard Id"
+                            ariaRequired={true}
+                            value={DashboardId}
+                            onChange={(e: any) => {
+                                setDashboarDId(e.detail.value)
+                            }}
+                        />
+                    </FormField>
+
+                    <div className="flex w-full justify-end items-center">
+                        <Button
+                            loading={dashbordLoading}
+                            onClick={() => {
+                                HandleAddDashboardByID()
                             }}
                         >
                             save

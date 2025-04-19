@@ -249,6 +249,7 @@ const {
                     <WidgetLayout
                         input_layout={item}
                         is_default={item?.is_default}
+                        HandleAddBlankItem={HandleAddBlankItem}
                         HandleAddItem={HandleAddItem}
                     />
                 ),
@@ -256,7 +257,7 @@ const {
                 dissmissLabel: 'Delete',
                 onDismiss: () => {
                     HandleRemoveItem(item?.id)
-                }
+                },
             })
         })
         return temp
@@ -264,7 +265,12 @@ const {
 
 
     }
-    const HandleAddItem = ()=>{
+    const HandleAddItem = (item: any) => {
+        setLayouts(
+            [...layouts,item]
+        )
+    }
+    const HandleAddBlankItem = () => {
         setLayouts([
             ...layouts,
             {
