@@ -3,6 +3,7 @@ export interface Widget {
     id: string
     data: Data
     rowSpan: number
+    is_public: boolean
     columnSpan: number
     columnOffset: ColumnOffset
 }
