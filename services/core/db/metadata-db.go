@@ -169,6 +169,19 @@ func (db Database) GetUserDefaultLayout(userID string) (*models.Dashboard, error
 	return &userLayout, nil
 }
 
+// GetUserDefaultLayout Get the default layout for a user
+func (db Database) GetLayoutByID(id string) (*models.Dashboard, error) {
+	var userLayout models.Dashboard
+	err := db.orm.Preload("Widgets").Where("id = ?", id).First(&userLayout).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &userLayout, nil
+}
+
 // SetUserLayout Upsert dashboard and update associated widgets
 func (db Database) SetUserLayout(layoutConfig models.Dashboard) error {
 	return db.orm.Transaction(func(tx *gorm.DB) error {

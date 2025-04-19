@@ -117,6 +117,8 @@ func (h *HttpHandler) Register(r *echo.Echo) {
 	v4.GET("/about", httpserver.AuthorizeHandler(h.GetAboutShort, api3.ViewerRole))
 	v4.GET("/queries/sync", httpserver.AuthorizeHandler(h.SyncQueries, api3.ViewerRole))
 	v4.POST("/layout/get", httpserver.AuthorizeHandler(h.GetUserLayouts, api3.ViewerRole))
+	v4.POST("/layout/get/:id", httpserver.AuthorizeHandler(h.GetLayoutById, api3.ViewerRole))
+
 	v4.POST("/layout/get-default", httpserver.AuthorizeHandler(h.GetUserDefaultLayout, api3.ViewerRole))
 	v4.POST("/layout/set", httpserver.AuthorizeHandler(h.SetUserLayout, api3.ViewerRole))
 	
@@ -124,7 +126,7 @@ func (h *HttpHandler) Register(r *echo.Echo) {
 	v4.GET("/layout/public", httpserver.AuthorizeHandler(h.GetPublicLayouts, api3.ViewerRole))
 	v4.POST("/layout/widget/get", httpserver.AuthorizeHandler(h.GetUserWidgets, api3.ViewerRole))
 	v4.POST("/layout/widget/get/public", httpserver.AuthorizeHandler(h.GetAllPublicWidgets, api3.ViewerRole))
-	v4.GET("/layout/widget/get/:id", httpserver.AuthorizeHandler(h.GetWidget, api3.ViewerRole))
+	v4.POST("/layout/widget/get/:id", httpserver.AuthorizeHandler(h.GetWidget, api3.ViewerRole))
 	v4.DELETE("/layout/widget/delete/:id", httpserver.AuthorizeHandler(h.DeleteUserWidget, api3.ViewerRole))
 	v4.POST("/layout/update/widget", httpserver.AuthorizeHandler(h.UpdateDashboardWidgets, api3.ViewerRole))
 	v4.POST("/layout/widget/update", httpserver.AuthorizeHandler(h.UpdateWidgetDashboards, api3.ViewerRole))
@@ -1704,6 +1706,69 @@ func (h *HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, response)
 }
 
+
+// Get the default layout for a user
+func (h *HttpHandler) GetLayoutById(echoCtx echo.Context) error {
+	var req api.GetUserLayoutRequest
+	if err := bindValidate(echoCtx, &req); err != nil {
+				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+
+	}
+	ID := echoCtx.Param("id")
+	if ID == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+	}
+
+	layout, err := h.db.GetLayoutByID(ID)
+	if err != nil {
+		h.logger.Error("failed to get default layout", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get default layout")
+	}
+	if layout == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "default layout not found")
+	}
+	if(layout.IsPrivate){
+		if layout.UserID != req.UserID {
+			return echo.NewHTTPError(http.StatusForbidden, "user not authorized to access this layout")
+		}
+	}
+	var widgets []api.WidgetResponse
+	for _, widget := range layout.Widgets {
+		widgets = append(widgets, api.WidgetResponse{
+			ID:           widget.ID,
+			UserID:       widget.UserID,
+			Title:        widget.Title,
+			Description:  widget.Description,
+			WidgetType:   widget.WidgetType,
+			WidgetProps:  func() map[string]any {
+			var config map[string]any
+			if err := json.Unmarshal(widget.WidgetProps.Bytes, &config); err != nil {
+				h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+				return nil
+			}
+			return config
+		}(),
+			RowSpan:      widget.RowSpan,
+			ColumnSpan:   widget.ColumnSpan,
+			ColumnOffset: widget.ColumnOffset,
+			UpdatedAt:    widget.UpdatedAt,
+			IsPublic:     widget.IsPublic,
+		})
+	}
+	response := api.GetUserLayoutResponse{
+		ID:          layout.ID,
+		UserID:      layout.UserID,
+		Name:        layout.Name,
+		Description: layout.Description,
+		IsPrivate:   layout.IsPrivate,
+		Widgets: widgets,
+		IsDefault:   layout.IsDefault,
+		UpdatedAt:   layout.UpdatedAt,
+	}
+
+	return echoCtx.JSON(http.StatusOK, response)
+}
+
 // Upsert a dashboard with widget associations
 func (h *HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	var req api.SetUserLayoutRequest
@@ -1829,8 +1894,17 @@ func (h *HttpHandler) GetUserWidgets(echoCtx echo.Context) error {
 
 // Get a single widget by ID
 func (h *HttpHandler) GetWidget(echoCtx echo.Context) error {
+	var req api.GetUserWidgetRequest
+	if err := bindValidate(echoCtx, &req); err != nil {
+				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+	}
 	widgetID := echoCtx.Param("id")
 	widget, err := h.db.GetWidget(widgetID)
+	if(!widget.IsPublic){
+		if widget.UserID != req.UserID {
+			return echo.NewHTTPError(http.StatusForbidden, "user not authorized to access this widget")
+		}
+	}
 	if err != nil {
 		h.logger.Error("failed to get widget", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get widget")
