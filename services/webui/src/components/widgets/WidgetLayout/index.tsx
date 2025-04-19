@@ -176,7 +176,7 @@ const SetDefaultLayoutWithDashbord = (layout: any, meResponse: any,id: string) =
         description: layout?.description,
         is_default: true,
         is_private: true,
-        id: id,
+        id: id == 'default' ? undefined : id,
     }
 
     axios
@@ -491,7 +491,7 @@ const SetDefaultLayoutWithDashbord = (layout: any, meResponse: any,id: string) =
                    Authorization: `Bearer ${token}`,
                },
            }
-           const body = WidgetToAPI(widget, me?.username, false, false)
+           const body = WidgetToAPI(widget, me?.username, widget?.data?.is_public, false)
            
 
            axios
@@ -528,7 +528,13 @@ const SetDefaultLayoutWithDashbord = (layout: any, meResponse: any,id: string) =
                                     GetDefaultLayout()
                                 }
                                 if (event.detail.id == 'save') {
-                                    SetDefaultLayout(items)
+                                    if(layout?.id=='default') {
+                                        SetDefaultLayoutWithDashbord(layout,me,layout?.id)
+                                    }
+                                    else{
+                                        SetDefaultLayout(items)
+
+                                    }
                                 }
                                 if (event.detail.id == 'edit') {
                                     setEditLayout(layout)
@@ -595,6 +601,8 @@ const SetDefaultLayoutWithDashbord = (layout: any, meResponse: any,id: string) =
                                                 title: item?.data?.title,
                                                 description:
                                                     item?.data?.description,
+                                                is_public:
+                                                    item?.data?.is_public,
                                                 ...item?.data?.props,
                                             })
                                             setSelectedAddItem(
@@ -778,6 +786,20 @@ const SetDefaultLayoutWithDashbord = (layout: any, meResponse: any,id: string) =
                     </FormField>
 
                     {HandleWidgetProps()}
+                    {isEdit && (<>
+                    
+                    <Checkbox
+                        checked={widgetProps?.is_public}
+                        onChange={(e: any) => {
+                            setWidgetProps({
+                                ...widgetProps,
+                                is_public: e.detail.checked,
+                            })
+                        }}
+                    >
+                        Public widget
+                    </Checkbox>
+                    </>)}
                     {(!widgetProps?.title || !widgetProps?.description) && (
                         <Alert
                             type="error"

@@ -30,6 +30,8 @@ import AllPolicy from '../pages/Compliance/All Policy'
 import Framework from '../pages/Compliance/FrameWorks'
 import ComplianceJobs from '../pages/Settings/Jobs/Compliance'
 import Query from '../pages/Search/Query'
+import Widgets from '../pages/Overview/Widgets'
+import Dashboards from '../pages/Overview/Dashboards'
 
 const show_compliance = window.__RUNTIME_CONFIG__.REACT_APP_SHOW_COMPLIANCE
 console.log(show_compliance)
@@ -69,11 +71,7 @@ const authRoutes = [
         path: '/automation',
         element: <RequestAccess />,
     },
-    {
-        key: 'Automation',
-        path: '/dashboards',
-        element: <RequestAccess />,
-    },
+ 
 
     {
         key: 'integrations',
@@ -204,6 +202,17 @@ const authRoutes = [
         key: 'home',
         path: '/',
         element: show_compliance !== 'false' ? <Overview /> : <Query />,
+    },
+    {
+        key: 'widgets',
+        path: '/widgets',
+        element: <Widgets />,
+    },
+
+    {
+        key: 'dashboards',
+        path: '/dashboards',
+        element: <Dashboards />,
     },
 
     {

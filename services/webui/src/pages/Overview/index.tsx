@@ -272,7 +272,8 @@ const {
                 description: 'This is a default dashboard',
                 is_default: false,
                 is_private: true,
-                layout_config: []
+                id: 'default',
+                widgets: [],
             },
         ])
     }
@@ -285,7 +286,6 @@ const {
         setLayouts([layout])
         setTabId(layout?.id)
     },[layout])
-    console.log(tabId)
     return (
         <>
             <Modal
@@ -482,6 +482,10 @@ const {
          
             <Tabs
                 activeTabId={tabId}
+                onChange={(event) => {
+                    setTabId(event.detail.activeTabId)
+                   
+                }}
             tabs={getTabItems()} />
         </>
     )

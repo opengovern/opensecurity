@@ -69,7 +69,6 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
             },
         ]
         const path = window.location.pathname
-        console.log(path)
         if (path.includes('integration')) {
             if(path.includes('jobs')){
                 temp.push({
@@ -131,7 +130,6 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
         }
         if (
             path.includes('automation') ||
-            path.includes('dashboards') ||
             path.includes('request-access') ||
             path.includes('stacks') ||
             path.includes('/workload-optimizer')
@@ -284,6 +282,20 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
                 })
             }
         }
+        if(path.includes('widgets')){
+            temp.push(
+                {
+                    text: 'Widgets',
+                    href: '/widgets',
+                }
+            )
+        }
+        if (path.includes('dashboards')) {
+            temp.push({
+                text: 'Dashboards',
+                href: '/dashboards',
+            })
+        }
 
         return setBreadCrumbItems(temp)
     }
@@ -324,7 +336,6 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
             return '/ai'
         } else if (
             path.includes('automation') ||
-            path.includes('dashboards') ||
             path.includes('request-access') ||
             path.includes('stacks') ||
             path.includes('/workload-optimizer')
@@ -342,6 +353,27 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
         }
         else if (path.includes('tasks')){
             return '/tasks'
+        }
+        else if (path.includes('widgets')){
+            return '/widgets'
+        }
+        else if (path.includes('dashboards')) {
+            return '/dashboards'
+        }
+        else if (path.includes('callback')) {
+            return '/callback'
+        }
+        else if (path.includes('profile')) {
+            return '/profile'
+        }
+        else if (path.includes('settings')) {
+            return '/settings'
+        }
+        else if (path.includes('integration')) {
+            return '/integration/plugins'
+        }
+        else if (path.includes('overview')) {
+            return '/overview'
         }
 
         return ''
