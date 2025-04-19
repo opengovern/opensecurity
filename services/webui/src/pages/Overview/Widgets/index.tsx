@@ -99,20 +99,30 @@ export default function Widgets() {
     return (
         <>
             <Tabs
-                activeTabId={tabId }
+                activeTabId={tabId}
                 onChange={(event) => {
-                   setTabId(event.detail.activeTabId)
+                    setTabId(event.detail.activeTabId)
                 }}
                 tabs={[
                     {
                         id: 'private',
                         label: 'My Widgets',
-                        content: <WidgetsTable widgets={widgets} />,
+                        content: (
+                            <WidgetsTable
+                                widgets={widgets}
+                                loading={isLoading}
+                            />
+                        ),
                     },
                     {
                         id: 'public',
                         label: 'Public Widgets',
-                        content: <WidgetsTable widgets={widgets} />,
+                        content: (
+                            <WidgetsTable
+                                widgets={widgets}
+                                loading={isLoading}
+                            />
+                        ),
                     },
                 ]}
             />

@@ -71,11 +71,7 @@ const authRoutes = [
         path: '/automation',
         element: <RequestAccess />,
     },
-    {
-        key: 'Automation',
-        path: '/dashboards',
-        element: <RequestAccess />,
-    },
+ 
 
     {
         key: 'integrations',
