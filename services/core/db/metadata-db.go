@@ -253,7 +253,7 @@ func (db Database) AddWidgets(widgets []models.Widget) error {
 		DoUpdates: clause.AssignmentColumns([]string{
 			"title", "description", "widget_type", "widget_props",
 			"row_span", "column_span", "column_offset", "is_public",
-			"user_id", "updated_at",
+			 "updated_at",
 		}),
 	}).Create(&widgets).Error
 	
@@ -266,7 +266,7 @@ func (db Database) SetUserWidget(widget models.Widget) error {
 		DoUpdates: clause.AssignmentColumns([]string{
 			"title", "description", "widget_type", "widget_props",
 			"row_span", "column_span", "column_offset", "is_public",
-			"user_id", "updated_at",
+			 "updated_at",
 		}),
 	}).Create(&widget).Error
 }
