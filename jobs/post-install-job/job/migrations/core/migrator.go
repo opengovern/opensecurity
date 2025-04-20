@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
+	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/config"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/db"
@@ -65,5 +67,83 @@ func CoreMigration(conf config.MigratorConfig, logger *zap.Logger, metadataFileP
 			return err
 		}
 	}
+	// Create three default widgets
+	var widgets []models.Widget
+
+	widgets= append(widgets, models.Widget{
+
+		ID:           "integration",
+		UserID:       "system",
+		Title:        "Integrations",
+		Description: "",
+		WidgetType:   "integration",
+		WidgetProps: func() pgtype.JSONB {
+				var jsonb pgtype.JSONB
+				// Ensure WidgetProps is never undefined
+				_ = jsonb.Set(map[string]interface{}{})
+				return jsonb
+			}(),
+		RowSpan:     8,
+		ColumnSpan:   1,
+		ColumnOffset: 3,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		IsPublic:     true,
+
+	})
+	widgets= append(widgets, models.Widget{
+
+		ID:           "shortcut",
+		UserID:       "system",
+		Title:        "Shortcuts",
+		Description: "",
+		WidgetType:   "shortcut",
+		WidgetProps: func() pgtype.JSONB {
+				var jsonb pgtype.JSONB
+				// Ensure WidgetProps is never undefined
+				_ = jsonb.Set(map[string]interface{}{})
+				return jsonb
+			}(),
+		RowSpan:     2,
+		ColumnSpan:   3,
+		ColumnOffset: 0,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		IsPublic:     true,
+
+	})
+	widgets= append(widgets, models.Widget{
+
+		ID:           "sre",
+		UserID:       "system",
+		Title:        "SRE",
+		Description: "",
+		WidgetType:   "sre",
+		WidgetProps: func() pgtype.JSONB {
+				var jsonb pgtype.JSONB
+				// Ensure WidgetProps is never undefined
+				_ = jsonb.Set(map[string]interface{}{})
+				return jsonb
+			}(),
+		RowSpan:     2,
+		ColumnSpan:   3,
+		ColumnOffset: 0,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		IsPublic:     true,
+
+	})
+	err = dbm.ORM.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns([]string{
+			"title", "description", "widget_type", "widget_props",
+			"row_span", "column_span", "column_offset", "is_public",
+			"user_id", "updated_at",
+		}),
+	}).Create(&widgets).Error
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
