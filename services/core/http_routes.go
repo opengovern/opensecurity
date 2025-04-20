@@ -1929,6 +1929,9 @@ func (h *HttpHandler) SetUserWidget(echoCtx echo.Context) error {
 	if req.ID == "" {
 		req.ID = uuid.New().String()
 	}
+	if(req.WidgetType == "integration" ||req.WidgetType == "shortcut" ||req.WidgetType == "sre"  ){
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid widget type")
+	}
 
 	widget := models.Widget{
 		ID:           req.ID,
