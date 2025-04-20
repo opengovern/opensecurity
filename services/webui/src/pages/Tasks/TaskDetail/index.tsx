@@ -233,10 +233,20 @@ export default function TaskDetail() {
             .post(`${url}/main/tasks/api/v1/tasks/run/`, body,config)
             .then((res) => {
                 setLoading(false)
+                setNotification({
+                    type: 'success',
+                    text: 'Task Run Successfully',
+                })
+                setRunOpen(false)
+                getRunResult()
                 //  setTask(res.data)
             })
             .catch((err) => {
                 setLoading(false)
+                setNotification({
+                    type: 'error',
+                    text: 'Error Running Task',
+                })
             })
     }
      const ConfigTask = () => {
@@ -271,6 +281,7 @@ export default function TaskDetail() {
                      type: 'success',
                      text: 'Task Configured Successfully',
                  })
+
                  setConfigLoading(false)
                  //  setTask(res.data)
              })
