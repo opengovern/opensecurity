@@ -104,6 +104,7 @@ export default function TaskDetail() {
     const [runParams, setRunParams] = useState<any>({})
     const [configOpen, setConfigOpen] = useState(false)
     const [config, setConfig] = useState<any>({})
+    const [configLoading, setConfigLoading] = useState(false)
     const setNotification = useSetAtom(notificationAtom)
     
     
@@ -239,7 +240,7 @@ export default function TaskDetail() {
             })
     }
      const ConfigTask = () => {
-         setLoading(true)
+         setConfigLoading(true)
          let url = ''
          if (window.location.origin === 'http://localhost:3000') {
              url = window.__RUNTIME_CONFIG__.REACT_APP_BASE_URL
@@ -249,7 +250,7 @@ export default function TaskDetail() {
          // @ts-ignore
          const token = JSON.parse(localStorage.getItem('openg_auth')).token
 
-         const config = {
+         const Headerconfig = {
              headers: {
                  Authorization: `Bearer ${token}`,
              },
@@ -259,21 +260,26 @@ export default function TaskDetail() {
          }
 
          axios
-             .post(`${url}/main/tasks/api/v1/tasks/${id}/config`, body, config)
+             .post(
+                 `${url}/main/tasks/api/v1/tasks/${id}/config`,
+                 body,
+                 Headerconfig
+             )
              .then((res) => {
                  setConfigOpen(false)
                  setNotification({
-                        type: 'success',
-                        text: 'Task Configured Successfully',
-                    })
+                     type: 'success',
+                     text: 'Task Configured Successfully',
+                 })
+                 setConfigLoading(false)
                  //  setTask(res.data)
              })
              .catch((err) => {
-                 setLoading(false)
-                    setNotification({
-                            type: 'error',
-                            text: 'Error Configuring Task',
-                        })
+                 setConfigLoading(false)
+                 setNotification({
+                     type: 'error',
+                     text: 'Error Configuring Task',
+                 })
              })
      }
     useEffect(() => {
