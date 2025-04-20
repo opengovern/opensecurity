@@ -1795,9 +1795,7 @@ func (h *HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	var jsonb pgtype.JSONB
 	jsonb.Set(map[string]interface{}{})
 	for _, widgetID := range req.WidgetIDs {
-		if(widgetID == "integration" ||widgetID == "shortcut" ||widgetID == "sre"  ){
-						continue
-			}
+		
 		dashboard.Widgets = append(dashboard.Widgets, models.Widget{ID: widgetID,WidgetProps: jsonb})
 	}
 
@@ -2035,10 +2033,7 @@ func (h *HttpHandler) SetDashboardWithWidgets(echoCtx echo.Context) error {
 	var widgets []models.Widget
 	for _, widget := range req.Widgets {
 		// Check if widget ID is empty
-		if(widget.WidgetType == "integration" ||widget.WidgetType == "shortcut" ||widget.WidgetType == "sre" ||
-					widget.WidgetProps == nil  ){
-						continue
-			}
+	
 		if widget.ID == "" {
 			widget.ID = uuid.New().String()
 		}
