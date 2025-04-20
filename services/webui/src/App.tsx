@@ -123,7 +123,12 @@ const SetDefaultLayout = (layout: any, meResponse: any) => {
     const body = {
         user_id: meResponse?.username,
         widgets: layout?.widgets?.map(((widget : Widget) => {
-            return WidgetToAPI(widget, meResponse?.username, true,true)
+           if(widget.id == 'integration' || widget.id == 'shortcut' || widget.id == 'sre'){
+             return WidgetToAPI(widget, meResponse?.username, true, false)
+           }
+           else{
+             return WidgetToAPI(widget, meResponse?.username, true, true)
+           }
         })),
         name: layout?.name,
         description: layout?.description,
