@@ -384,8 +384,12 @@ export default function Layout({ children, onScroll, scrollRef }: IProps) {
 
     return (
         <>
+            <TopHeader />
+
             <AppLayoutToolbar
-                breadcrumbs={<BreadcrumbGroup items={breadCrumbItems} />}
+                breadcrumbs={
+                        <BreadcrumbGroup items={breadCrumbItems} />
+                }
                 navigationOpen={showSidebar}
                 onNavigationChange={({ detail }) => setShowSidebar(detail.open)}
                 toolsHide={true}

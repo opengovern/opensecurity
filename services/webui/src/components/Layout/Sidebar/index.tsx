@@ -16,27 +16,13 @@ import {
     RiTaskLine,
     RiTerminalBoxLine,
 } from '@remixicon/react'
-import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import { Popover, Transition } from '@headlessui/react'
-import { Fragment, useEffect, useState } from 'react'
-import { previewAtom, sideBarCollapsedAtom } from '../../../store'
-import { OpenGovernance, OpenGovernanceBig } from '../../../icons/icons'
-import Utilities from './Utilities'
-import {
-    useInventoryApiV2AnalyticsCountList,
-    useInventoryApiV2AnalyticsSpendCountList,
-} from '../../../api/inventory.gen'
-import { useIntegrationApiV1ConnectionsCountList } from '../../../api/integration.gen'
-import { numericDisplay } from '../../../utilities/numericDisplay'
-import AnimatedAccordion from '../../AnimatedAccordion'
+
+
 import { setAuthHeader } from '../../../api/ApiConfig'
-import {
-    searchAtom,
-    oldUrlAtom,
-    nextUrlAtom,
-} from '../../../utilities/urlstate'
+
 import { useAuth } from '../../../utilities/auth'
 import { SideNavigation } from '@cloudscape-design/components'
+import { useEffect } from 'react'
 
 
 
@@ -58,7 +44,6 @@ interface ISidebarItem {
 
 export default function Sidebar({ currentPage }: ISidebar) {
     const { isAuthenticated, getAccessTokenSilently } = useAuth()
-    console.log(currentPage)
     useEffect(() => {
         if (isAuthenticated) {
             getAccessTokenSilently()
@@ -314,15 +299,7 @@ export default function Sidebar({ currentPage }: ISidebar) {
 
     return (
         <>
-            <div className="flex flex-col gap-2 p-2 mt-3 w-full">
-                {/* logo */}
-                <Flex className="">
-                    <img
-                        src={require('../../../icons/logo-light.png')}
-                        className="ml-4"
-                    />
-                </Flex>
-            </div>
+         
             <SideNavigation
                 className="w-full custom-nav"
                 // @ts-ignore
