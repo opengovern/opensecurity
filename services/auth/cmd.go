@@ -8,8 +8,10 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	dexApi "github.com/dexidp/dex/api/v2"
 	"os"
 	"strconv"
+	"strings"
 
 	config2 "github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/httpserver"
@@ -24,14 +26,16 @@ import (
 )
 
 var (
-	dexAuthDomain         = os.Getenv("DEX_AUTH_DOMAIN")
-	dexAuthPublicClientID = os.Getenv("DEX_AUTH_PUBLIC_CLIENT_ID")
-	dexGrpcAddress        = os.Getenv("DEX_GRPC_ADDR")
-	httpServerAddress     = os.Getenv("HTTP_ADDRESS")
-	platformHost          = os.Getenv("PLATFORM_HOST")
-	platformKeyEnabledStr = os.Getenv("PLATFORM_KEY_ENABLED")
-	platformPublicKeyStr  = os.Getenv("PLATFORM_PUBLIC_KEY")
-	platformPrivateKeyStr = os.Getenv("PLATFORM_PRIVATE_KEY")
+	dexPublicClientRedirectUris  = os.Getenv("DEX_PUBLIC_CLIENT_REDIRECT_URIS")
+	dexPrivateClientRedirectUris = os.Getenv("DEX_PRIVATE_CLIENT_REDIRECT_URIS")
+	dexAuthDomain                = os.Getenv("DEX_AUTH_DOMAIN")
+	dexAuthPublicClientID        = os.Getenv("DEX_AUTH_PUBLIC_CLIENT_ID")
+	dexGrpcAddress               = os.Getenv("DEX_GRPC_ADDR")
+	httpServerAddress            = os.Getenv("HTTP_ADDRESS")
+	platformHost                 = os.Getenv("PLATFORM_HOST")
+	platformKeyEnabledStr        = os.Getenv("PLATFORM_KEY_ENABLED")
+	platformPublicKeyStr         = os.Getenv("PLATFORM_PUBLIC_KEY")
+	platformPrivateKeyStr        = os.Getenv("PLATFORM_PRIVATE_KEY")
 )
 
 func Command() *cobra.Command {
@@ -214,10 +218,23 @@ func start(ctx context.Context) error {
 		}
 	}
 
+	dexClient, err := newDexClient(dexGrpcAddress)
+	if err != nil {
+		logger.Error("Auth Migrator: failed to create dex client", zap.Error(err))
+		return err
+	}
+
+	err = ensureDexClients(ctx, logger, dexClient)
+	if err != nil {
+		logger.Error("Auth Migrator: failed to ensure dex clients", zap.Error(err))
+		return err
+	}
+
 	authServer := &Server{
 		host:                platformHost,
 		platformPublicKey:   platformPublicKey,
 		dexVerifier:         dexVerifier,
+		dexClient:           dexClient,
 		logger:              logger,
 		db:                  adb,
 		updateLoginUserList: nil,
@@ -263,4 +280,80 @@ func newServerCredentials(certPath string, keyPath string, caPath string) (crede
 		Certificates: []tls.Certificate{srv},
 		RootCAs:      p,
 	}), nil
+}
+
+func ensureDexClients(ctx context.Context, logger *zap.Logger, dexClient dexApi.DexClient) error {
+	publicUris := strings.Split(dexPublicClientRedirectUris, ",")
+
+	publicClientResp, _ := dexClient.GetClient(ctx, &dexApi.GetClientReq{
+		Id: "public-client",
+	})
+
+	logger.Info("public URIS", zap.Any("uris", publicUris))
+
+	if publicClientResp != nil && publicClientResp.Client != nil {
+		publicClientReq := dexApi.UpdateClientReq{
+			Id:           "public-client",
+			Name:         "Public Client",
+			RedirectUris: publicUris,
+		}
+
+		_, err := dexClient.UpdateClient(ctx, &publicClientReq)
+		if err != nil {
+			logger.Error("Auth Migrator: failed to create dex public client", zap.Error(err))
+			return err
+		}
+	} else {
+		publicClientReq := dexApi.CreateClientReq{
+			Client: &dexApi.Client{
+				Id:           "public-client",
+				Name:         "Public Client",
+				RedirectUris: publicUris,
+				Public:       true,
+			},
+		}
+
+		_, err := dexClient.CreateClient(ctx, &publicClientReq)
+		if err != nil {
+			logger.Error("Auth Migrator: failed to create dex public client", zap.Error(err))
+			return err
+		}
+	}
+
+	privateUris := strings.Split(dexPrivateClientRedirectUris, ",")
+
+	logger.Info("private URIS", zap.Any("uris", privateUris))
+
+	privateClientResp, _ := dexClient.GetClient(ctx, &dexApi.GetClientReq{
+		Id: "private-client",
+	})
+	if privateClientResp != nil && privateClientResp.Client != nil {
+		privateClientReq := dexApi.UpdateClientReq{
+			Id:           "private-client",
+			Name:         "Private Client",
+			RedirectUris: privateUris,
+		}
+
+		_, err := dexClient.UpdateClient(ctx, &privateClientReq)
+		if err != nil {
+			logger.Error("Auth Migrator: failed to create dex private client", zap.Error(err))
+			return err
+		}
+	} else {
+		privateClientReq := dexApi.CreateClientReq{
+			Client: &dexApi.Client{
+				Id:           "private-client",
+				Name:         "Private Client",
+				RedirectUris: privateUris,
+				Secret:       "secret",
+			},
+		}
+
+		_, err := dexClient.CreateClient(ctx, &privateClientReq)
+		if err != nil {
+			logger.Error("Auth Migrator: failed to create dex private client", zap.Error(err))
+			return err
+		}
+	}
+	return nil
 }

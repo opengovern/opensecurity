@@ -8,6 +8,7 @@ import (
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	cloudql_init_job "github.com/opengovern/opensecurity/jobs/cloudql-init-job"
+	authClient "github.com/opengovern/opensecurity/services/auth/client"
 	complianceapi "github.com/opengovern/opensecurity/services/compliance/api"
 	coreApi "github.com/opengovern/opensecurity/services/core/api"
 	"net/http"
@@ -16,7 +17,6 @@ import (
 	"sync"
 	"time"
 
-	dexApi "github.com/dexidp/dex/api/v2"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	"github.com/google/uuid"
 	api6 "github.com/hashicorp/vault/api"
@@ -48,13 +48,13 @@ type HttpHandler struct {
 	schedulerClient    describeClient.SchedulerServiceClient
 	integrationClient  integrationClient.IntegrationServiceClient
 	complianceClient   complianceClient.ComplianceServiceClient
+	authClient         authClient.AuthServiceClient
 	logger             *zap.Logger
 	viewCheckpoint     time.Time
 	cfg                config.Config
 	kubeClient         client.Client
 	vault              vault.VaultSourceConfig
 	vaultSecretHandler vault.VaultSecretHandler
-	dexClient          dexApi.DexClient
 	migratorDb         *db2.Database
 
 	queryParameters []coreApi.QueryParameter
@@ -67,8 +67,8 @@ type HttpHandler struct {
 
 func InitializeHttpHandler(
 	cfg config.Config,
-	schedulerBaseUrl string, integrationBaseUrl string, complianceBaseUrl string,
-	logger *zap.Logger, dexClient dexApi.DexClient, esConf config3.ElasticSearch,
+	schedulerBaseUrl string, integrationBaseUrl string, complianceBaseUrl string, authBaseUrl string,
+	logger *zap.Logger, esConf config3.ElasticSearch,
 	complianceEnabled string,
 ) (h *HttpHandler, err error) {
 	h = &HttpHandler{
@@ -144,7 +144,6 @@ func InitializeHttpHandler(
 	h.kubeClient = kubeClient
 	h.cfg = cfg
 	h.migratorDb = migratorDb
-	h.dexClient = dexClient
 	h.viewCheckpoint = time.Now().Add(-time.Hour * 2)
 	switch cfg.Vault.Provider {
 	case vault.HashiCorpVault:
@@ -216,6 +215,8 @@ func InitializeHttpHandler(
 	h.schedulerClient = describeClient.NewSchedulerServiceClient(schedulerBaseUrl)
 
 	h.integrationClient = integrationClient.NewIntegrationServiceClient(integrationBaseUrl)
+
+	h.authClient = authClient.NewAuthClient(authBaseUrl)
 
 	if strings.ToLower(complianceEnabled) == "true" {
 		h.complianceClient = complianceClient.NewComplianceClient(complianceBaseUrl)

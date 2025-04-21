@@ -121,7 +121,7 @@ func (h *HttpHandler) Register(r *echo.Echo) {
 
 	v4.POST("/layout/get-default", httpserver.AuthorizeHandler(h.GetUserDefaultLayout, api3.ViewerRole))
 	v4.POST("/layout/set", httpserver.AuthorizeHandler(h.SetUserLayout, api3.ViewerRole))
-	
+
 	v4.POST("/layout/change-privacy", httpserver.AuthorizeHandler(h.ChangePrivacy, api3.ViewerRole))
 	v4.GET("/layout/public", httpserver.AuthorizeHandler(h.GetPublicLayouts, api3.ViewerRole))
 	v4.POST("/layout/widget/get", httpserver.AuthorizeHandler(h.GetUserWidgets, api3.ViewerRole))
@@ -132,8 +132,6 @@ func (h *HttpHandler) Register(r *echo.Echo) {
 	v4.POST("/layout/widget/update", httpserver.AuthorizeHandler(h.UpdateWidgetDashboards, api3.ViewerRole))
 	v4.POST("/layout/widget/set", httpserver.AuthorizeHandler(h.SetUserWidget, api3.ViewerRole))
 	v4.POST("/layout/set/widgets", httpserver.AuthorizeHandler(h.SetDashboardWithWidgets, api3.ViewerRole))
-
-
 
 	// Chatbot
 	v4.GET("/chatbot/agents", httpserver.AuthorizeHandler(h.GetAgents, api3.ViewerRole))
@@ -1183,21 +1181,17 @@ func (h *HttpHandler) GetAbout(echoCtx echo.Context) error {
 
 	var dexConnectors []api.DexConnectorInfo
 
-	if h.dexClient != nil {
-		dexRes, err := h.dexClient.ListConnectors(context.Background(), &dexApi.ListConnectorReq{})
-		if err != nil {
-			h.logger.Error("failed to list dex connectors", zap.Error(err))
-			return echo.NewHTTPError(http.StatusBadRequest, "failed to list dex connectors")
-		}
-		if dexRes != nil {
-			for _, c := range dexRes.Connectors {
-				dexConnectors = append(dexConnectors, api.DexConnectorInfo{
-					ID:   c.Id,
-					Name: c.Name,
-					Type: c.Type,
-				})
-			}
-		}
+	dcs, err := h.authClient.GetConnectors(ctx)
+	if err != nil {
+		h.logger.Error("failed to get dex connectors", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get dex connectors")
+	}
+	for _, dc := range dcs {
+		dexConnectors = append(dexConnectors, api.DexConnectorInfo{
+			ID:   strconv.Itoa(int(dc.ID)),
+			Name: dc.Name,
+			Type: dc.Type,
+		})
 	}
 
 	loaded, err := h.SampleDataLoaded(echoCtx)
@@ -1624,7 +1618,7 @@ func (h *HttpHandler) SyncQueries(echoCtx echo.Context) error {
 func (h *HttpHandler) GetUserLayouts(echoCtx echo.Context) error {
 	var req api.GetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
 
 	}
 
@@ -1657,7 +1651,7 @@ func (h *HttpHandler) GetUserLayouts(echoCtx echo.Context) error {
 func (h *HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 	var req api.GetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
 
 	}
 
@@ -1672,19 +1666,19 @@ func (h *HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 	var widgets []api.WidgetResponse
 	for _, widget := range layout.Widgets {
 		widgets = append(widgets, api.WidgetResponse{
-			ID:           widget.ID,
-			UserID:       widget.UserID,
-			Title:        widget.Title,
-			Description:  widget.Description,
-			WidgetType:   widget.WidgetType,
-			WidgetProps:  func() map[string]any {
-			var config map[string]any
-			if err := json.Unmarshal(widget.WidgetProps.Bytes, &config); err != nil {
-				h.logger.Error("failed to unmarshal layout config", zap.Error(err))
-				return nil
-			}
-			return config
-		}(),
+			ID:          widget.ID,
+			UserID:      widget.UserID,
+			Title:       widget.Title,
+			Description: widget.Description,
+			WidgetType:  widget.WidgetType,
+			WidgetProps: func() map[string]any {
+				var config map[string]any
+				if err := json.Unmarshal(widget.WidgetProps.Bytes, &config); err != nil {
+					h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+					return nil
+				}
+				return config
+			}(),
 			RowSpan:      widget.RowSpan,
 			ColumnSpan:   widget.ColumnSpan,
 			ColumnOffset: widget.ColumnOffset,
@@ -1698,7 +1692,7 @@ func (h *HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 		Name:        layout.Name,
 		Description: layout.Description,
 		IsPrivate:   layout.IsPrivate,
-		Widgets: widgets,
+		Widgets:     widgets,
 		IsDefault:   layout.IsDefault,
 		UpdatedAt:   layout.UpdatedAt,
 	}
@@ -1706,12 +1700,11 @@ func (h *HttpHandler) GetUserDefaultLayout(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, response)
 }
 
-
 // Get the default layout for a user
 func (h *HttpHandler) GetLayoutById(echoCtx echo.Context) error {
 	var req api.GetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
 
 	}
 	ID := echoCtx.Param("id")
@@ -1727,7 +1720,7 @@ func (h *HttpHandler) GetLayoutById(echoCtx echo.Context) error {
 	if layout == nil {
 		return echo.NewHTTPError(http.StatusNotFound, "default layout not found")
 	}
-	if(layout.IsPrivate){
+	if layout.IsPrivate {
 		if layout.UserID != req.UserID {
 			return echo.NewHTTPError(http.StatusForbidden, "user not authorized to access this layout")
 		}
@@ -1735,19 +1728,19 @@ func (h *HttpHandler) GetLayoutById(echoCtx echo.Context) error {
 	var widgets []api.WidgetResponse
 	for _, widget := range layout.Widgets {
 		widgets = append(widgets, api.WidgetResponse{
-			ID:           widget.ID,
-			UserID:       widget.UserID,
-			Title:        widget.Title,
-			Description:  widget.Description,
-			WidgetType:   widget.WidgetType,
-			WidgetProps:  func() map[string]any {
-			var config map[string]any
-			if err := json.Unmarshal(widget.WidgetProps.Bytes, &config); err != nil {
-				h.logger.Error("failed to unmarshal layout config", zap.Error(err))
-				return nil
-			}
-			return config
-		}(),
+			ID:          widget.ID,
+			UserID:      widget.UserID,
+			Title:       widget.Title,
+			Description: widget.Description,
+			WidgetType:  widget.WidgetType,
+			WidgetProps: func() map[string]any {
+				var config map[string]any
+				if err := json.Unmarshal(widget.WidgetProps.Bytes, &config); err != nil {
+					h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+					return nil
+				}
+				return config
+			}(),
 			RowSpan:      widget.RowSpan,
 			ColumnSpan:   widget.ColumnSpan,
 			ColumnOffset: widget.ColumnOffset,
@@ -1761,7 +1754,7 @@ func (h *HttpHandler) GetLayoutById(echoCtx echo.Context) error {
 		Name:        layout.Name,
 		Description: layout.Description,
 		IsPrivate:   layout.IsPrivate,
-		Widgets: widgets,
+		Widgets:     widgets,
 		IsDefault:   layout.IsDefault,
 		UpdatedAt:   layout.UpdatedAt,
 	}
@@ -1773,7 +1766,7 @@ func (h *HttpHandler) GetLayoutById(echoCtx echo.Context) error {
 func (h *HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	var req api.SetUserLayoutRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
 
 	}
 
@@ -1781,7 +1774,6 @@ func (h *HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	if id == "" {
 		id = uuid.New().String()
 	}
-
 
 	dashboard := models.Dashboard{
 		ID:          id,
@@ -1795,8 +1787,8 @@ func (h *HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 	var jsonb pgtype.JSONB
 	jsonb.Set(map[string]interface{}{})
 	for _, widgetID := range req.WidgetIDs {
-		
-		dashboard.Widgets = append(dashboard.Widgets, models.Widget{ID: widgetID,WidgetProps: jsonb})
+
+		dashboard.Widgets = append(dashboard.Widgets, models.Widget{ID: widgetID, WidgetProps: jsonb})
 	}
 
 	if err := h.db.SetUserLayout(dashboard); err != nil {
@@ -1811,7 +1803,7 @@ func (h *HttpHandler) SetUserLayout(echoCtx echo.Context) error {
 func (h *HttpHandler) ChangePrivacy(echoCtx echo.Context) error {
 	var req api.ChangePrivacyRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
 
 	}
 
@@ -1839,33 +1831,33 @@ func (h *HttpHandler) GetPublicLayouts(echoCtx echo.Context) error {
 		var widgets []api.WidgetResponse
 		for _, widget := range layout.Widgets {
 			widgets = append(widgets, api.WidgetResponse{
-				ID:           widget.ID,
-				UserID:       widget.UserID,
-				Title:        widget.Title,
-				Description:  widget.Description,
-				WidgetType:   widget.WidgetType,
-				WidgetProps:  func() map[string]any {
-				var config map[string]any
-				if err := json.Unmarshal(widget.WidgetProps.Bytes, &config); err != nil {
-					h.logger.Error("failed to unmarshal layout config", zap.Error(err))
-					return nil
-				}
-				return config
-			}(),
+				ID:          widget.ID,
+				UserID:      widget.UserID,
+				Title:       widget.Title,
+				Description: widget.Description,
+				WidgetType:  widget.WidgetType,
+				WidgetProps: func() map[string]any {
+					var config map[string]any
+					if err := json.Unmarshal(widget.WidgetProps.Bytes, &config); err != nil {
+						h.logger.Error("failed to unmarshal layout config", zap.Error(err))
+						return nil
+					}
+					return config
+				}(),
 				RowSpan:      widget.RowSpan,
 				ColumnSpan:   widget.ColumnSpan,
 				ColumnOffset: widget.ColumnOffset,
 				UpdatedAt:    widget.UpdatedAt,
 				IsPublic:     widget.IsPublic,
 			})
-		}	
+		}
 		response = append(response, api.GetUserLayoutResponse{
 			ID:          layout.ID,
 			UserID:      layout.UserID,
 			Name:        layout.Name,
 			Description: layout.Description,
 			IsPrivate:   layout.IsPrivate,
-			Widgets: 	widgets,
+			Widgets:     widgets,
 			IsDefault:   layout.IsDefault,
 			UpdatedAt:   layout.UpdatedAt,
 		})
@@ -1880,7 +1872,7 @@ func (h *HttpHandler) GetPublicLayouts(echoCtx echo.Context) error {
 func (h *HttpHandler) GetUserWidgets(echoCtx echo.Context) error {
 	var req api.GetUserWidgetRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
 
 	}
 
@@ -1897,11 +1889,11 @@ func (h *HttpHandler) GetUserWidgets(echoCtx echo.Context) error {
 func (h *HttpHandler) GetWidget(echoCtx echo.Context) error {
 	var req api.GetUserWidgetRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
 	}
 	widgetID := echoCtx.Param("id")
 	widget, err := h.db.GetWidget(widgetID)
-	if(!widget.IsPublic){
+	if !widget.IsPublic {
 		if widget.UserID != req.UserID {
 			return echo.NewHTTPError(http.StatusForbidden, "user not authorized to access this widget")
 		}
@@ -1920,36 +1912,36 @@ func (h *HttpHandler) GetWidget(echoCtx echo.Context) error {
 func (h *HttpHandler) SetUserWidget(echoCtx echo.Context) error {
 	var req api.SetUserWidgetRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
 
 	}
 
 	if req.ID == "" {
 		req.ID = uuid.New().String()
 	}
-	if(req.WidgetType == "integration" ||req.WidgetType == "shortcut" ||req.WidgetType == "sre"  ){
+	if req.WidgetType == "integration" || req.WidgetType == "shortcut" || req.WidgetType == "sre" {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid widget type")
 	}
 
 	widget := models.Widget{
-		ID:           req.ID,
-		UserID:       req.UserID,
-		Title:        req.Title,
-		Description:  req.Description,
-		WidgetType:   req.WidgetType,
-			WidgetProps: func() pgtype.JSONB {
-		var jsonb pgtype.JSONB
-		// Ensure WidgetProps is never undefined
-		if req.WidgetProps != nil {
-			if err := jsonb.Set(req.WidgetProps); err != nil {
-				h.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
+		ID:          req.ID,
+		UserID:      req.UserID,
+		Title:       req.Title,
+		Description: req.Description,
+		WidgetType:  req.WidgetType,
+		WidgetProps: func() pgtype.JSONB {
+			var jsonb pgtype.JSONB
+			// Ensure WidgetProps is never undefined
+			if req.WidgetProps != nil {
+				if err := jsonb.Set(req.WidgetProps); err != nil {
+					h.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
+				}
+			} else {
+				// Set an empty object instead of undefined
+				_ = jsonb.Set(map[string]interface{}{})
 			}
-		} else {
-			// Set an empty object instead of undefined
-			_ = jsonb.Set(map[string]interface{}{})
-		}
-		return jsonb
-	}(),
+			return jsonb
+		}(),
 		RowSpan:      req.RowSpan,
 		ColumnSpan:   req.ColumnSpan,
 		ColumnOffset: req.ColumnOffset,
@@ -1975,16 +1967,13 @@ func (h *HttpHandler) DeleteUserWidget(echoCtx echo.Context) error {
 	return echoCtx.NoContent(http.StatusOK)
 }
 
-
 // Update widgets associated with a dashboard
 func (h *HttpHandler) UpdateDashboardWidgets(echoCtx echo.Context) error {
 	var req api.UpdateDashboardWidgetsRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
 
 	}
-
-	
 
 	if err := h.db.UpdateDashboardWidgets(req.DashboardID, req.Widgets); err != nil {
 		h.logger.Error("failed to update dashboard widgets", zap.Error(err))
@@ -1998,10 +1987,9 @@ func (h *HttpHandler) UpdateDashboardWidgets(echoCtx echo.Context) error {
 func (h *HttpHandler) UpdateWidgetDashboards(echoCtx echo.Context) error {
 	var req api.UpdateWidgetDashboardsRequest
 	if err := bindValidate(echoCtx, &req); err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
 
 	}
-
 
 	if err := h.db.UpdateWidgetDashboards(req.WidgetID, req.Dashboards); err != nil {
 		h.logger.Error("failed to update widget dashboards", zap.Error(err))
@@ -2022,7 +2010,6 @@ func (h *HttpHandler) GetAllPublicWidgets(echoCtx echo.Context) error {
 	return echoCtx.JSON(http.StatusOK, widgets)
 }
 
-
 // setDahboardWithWidgets
 func (h *HttpHandler) SetDashboardWithWidgets(echoCtx echo.Context) error {
 	var req api.SetDashboardWithWidgetsRequest
@@ -2033,39 +2020,39 @@ func (h *HttpHandler) SetDashboardWithWidgets(echoCtx echo.Context) error {
 	var widgets []models.Widget
 	for _, widget := range req.Widgets {
 		// Check if widget ID is empty
-	
+
 		if widget.ID == "" {
 			widget.ID = uuid.New().String()
 		}
 		widgets = append(widgets, models.Widget{
-			ID:           widget.ID,
-			UserID:       widget.UserID,
-			Title:        widget.Title,
-			Description:  widget.Description,
-			WidgetType:   widget.WidgetType,
+			ID:          widget.ID,
+			UserID:      widget.UserID,
+			Title:       widget.Title,
+			Description: widget.Description,
+			WidgetType:  widget.WidgetType,
 			WidgetProps: func() pgtype.JSONB {
-					var jsonb pgtype.JSONB
-					// Ensure WidgetProps is never undefined
-					if widget.WidgetProps != nil {
-						if err := jsonb.Set(widget.WidgetProps); err != nil {
-							h.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
-						}
-					} else {
-						// Set an empty object instead of undefined
-						_ = jsonb.Set(map[string]interface{}{})
+				var jsonb pgtype.JSONB
+				// Ensure WidgetProps is never undefined
+				if widget.WidgetProps != nil {
+					if err := jsonb.Set(widget.WidgetProps); err != nil {
+						h.logger.Error("failed to convert WidgetProps to JSONB", zap.Error(err))
 					}
-					return jsonb
-				}(),
+				} else {
+					// Set an empty object instead of undefined
+					_ = jsonb.Set(map[string]interface{}{})
+				}
+				return jsonb
+			}(),
 			RowSpan:      widget.RowSpan,
 			ColumnSpan:   widget.ColumnSpan,
 			ColumnOffset: widget.ColumnOffset,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
 			IsPublic:     widget.IsPublic,
 		})
 	}
 	// add widgets
-	err:= h.db.AddWidgets(widgets)
+	err := h.db.AddWidgets(widgets)
 	if err != nil {
 		h.logger.Error("failed to add widgets", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to add widgets")
@@ -2081,16 +2068,16 @@ func (h *HttpHandler) SetDashboardWithWidgets(echoCtx echo.Context) error {
 		Description: req.Description,
 		IsDefault:   req.IsDefault,
 		IsPrivate:   req.IsPrivate,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 	dashboard.Widgets = make([]models.Widget, 0)
 	for _, widget := range widgets {
 
 		dashboard.Widgets = append(dashboard.Widgets, models.Widget{
-		ID: widget.ID,
-		WidgetProps: widget.WidgetProps,
-	})
+			ID:          widget.ID,
+			WidgetProps: widget.WidgetProps,
+		})
 	}
 	err = h.db.SetUserLayout(dashboard)
 	if err != nil {
@@ -2098,5 +2085,5 @@ func (h *HttpHandler) SetDashboardWithWidgets(echoCtx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to set user layout")
 	}
 
-	return echoCtx.JSON(http.StatusAccepted,nil)
+	return echoCtx.JSON(http.StatusAccepted, nil)
 }

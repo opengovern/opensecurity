@@ -10,6 +10,7 @@ import (
 
 type AuthServiceClient interface {
 	ListUsers(ctx *httpclient.Context) ([]api.GetUsersResponse, error)
+	GetConnectors(ctx *httpclient.Context) ([]api.GetConnectorsResponse, error)
 }
 
 type authClient struct {
@@ -31,4 +32,17 @@ func (s *authClient) ListUsers(ctx *httpclient.Context) ([]api.GetUsersResponse,
 		return nil, err
 	}
 	return users, nil
+}
+
+func (s *authClient) GetConnectors(ctx *httpclient.Context) ([]api.GetConnectorsResponse, error) {
+	url := fmt.Sprintf("%s/api/v1/connectors", s.baseURL)
+
+	var connectors []api.GetConnectorsResponse
+	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &connectors); err != nil {
+		if 400 <= statusCode && statusCode < 500 {
+			return nil, echo.NewHTTPError(statusCode, err.Error())
+		}
+		return nil, err
+	}
+	return connectors, nil
 }

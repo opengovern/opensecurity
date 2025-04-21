@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	dexApi "github.com/dexidp/dex/api/v2"
+	"google.golang.org/grpc"
 	"net/http"
 	"strings"
 	"time"
@@ -38,6 +40,7 @@ type Server struct {
 	host                string
 	platformPublicKey   *rsa.PublicKey
 	dexVerifier         *oidc.IDTokenVerifier
+	dexClient           dexApi.DexClient
 	logger              *zap.Logger
 	db                  db.Database
 	updateLoginUserList []User
@@ -333,4 +336,12 @@ func newDexOidcVerifier(ctx context.Context, domain, clientId string) (*oidc.IDT
 		SkipClientIDCheck: true,
 		SkipIssuerCheck:   true,
 	}), nil
+}
+
+func newDexClient(hostAndPort string) (dexApi.DexClient, error) {
+	conn, err := grpc.NewClient(hostAndPort, grpc.WithInsecure())
+	if err != nil {
+		return nil, fmt.Errorf("dial: %v", err)
+	}
+	return dexApi.NewDexClient(conn), nil
 }

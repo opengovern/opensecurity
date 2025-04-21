@@ -21,7 +21,6 @@ import (
 	"github.com/opengovern/og-util/pkg/httpserver"
 	"github.com/opengovern/opensecurity/services/auth/utils"
 	"golang.org/x/crypto/bcrypt"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 
 	"github.com/opengovern/opensecurity/services/auth/db"
@@ -507,11 +506,6 @@ func (r *httpRoutes) DoCreateUser(req api.CreateUserRequest) error {
 	if req.Password != nil {
 		connector = "local"
 		userId := fmt.Sprintf("local|%s", req.EmailAddress)
-		dexClient, err := newDexClient(dexGrpcAddress)
-		if err != nil {
-			r.logger.Error("failed to create dex client", zap.Error(err))
-			return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex client")
-		}
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(*req.Password), bcrypt.DefaultCost)
 		if err != nil {
 			r.logger.Error("failed to hash token", zap.Error(err))
@@ -526,7 +520,7 @@ func (r *httpRoutes) DoCreateUser(req api.CreateUserRequest) error {
 			},
 		}
 
-		resp, err := dexClient.CreatePassword(context.TODO(), dexReq)
+		resp, err := r.authServer.dexClient.CreatePassword(context.TODO(), dexReq)
 		if err != nil {
 			r.logger.Error("failed to create dex password", zap.Error(err))
 			return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex password")
@@ -537,7 +531,7 @@ func (r *httpRoutes) DoCreateUser(req api.CreateUserRequest) error {
 				NewHash: hashedPassword,
 			}
 
-			_, err = dexClient.UpdatePassword(context.TODO(), dexReq)
+			_, err = r.authServer.dexClient.UpdatePassword(context.TODO(), dexReq)
 			if err != nil {
 				r.logger.Error("failed to update dex password", zap.Error(err))
 				return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex password")
@@ -603,11 +597,6 @@ func (r *httpRoutes) UpdateUser(ctx echo.Context) error {
 	}
 
 	if req.Password != nil && req.ConnectorId == "local" {
-		dexClient, err := newDexClient(dexGrpcAddress)
-		if err != nil {
-			r.logger.Error("failed to create dex client", zap.Error(err))
-			return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex client")
-		}
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(*req.Password), bcrypt.DefaultCost)
 		if err != nil {
 			r.logger.Error("failed to hash token", zap.Error(err))
@@ -619,7 +608,7 @@ func (r *httpRoutes) UpdateUser(ctx echo.Context) error {
 			NewHash: hashedPassword,
 		}
 
-		resp, err := dexClient.UpdatePassword(context.TODO(), dexReq)
+		resp, err := r.authServer.dexClient.UpdatePassword(context.TODO(), dexReq)
 		if err != nil {
 			r.logger.Error("failed to update dex password", zap.Error(err))
 			return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex password")
@@ -633,7 +622,7 @@ func (r *httpRoutes) UpdateUser(ctx echo.Context) error {
 				},
 			}
 
-			_, err = dexClient.CreatePassword(context.TODO(), dexReq)
+			_, err = r.authServer.dexClient.CreatePassword(context.TODO(), dexReq)
 			if err != nil {
 				r.logger.Error("failed to create dex password", zap.Error(err))
 				return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex password")
@@ -695,12 +684,6 @@ func (r *httpRoutes) DeleteUser(ctx echo.Context) error {
 }
 
 func (r *httpRoutes) DoDeleteUser(id string) error {
-	dexClient, err := newDexClient(dexGrpcAddress)
-	if err != nil {
-		r.logger.Error("failed to create dex client", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex client")
-	}
-
 	user, err2 := r.db.GetUser(id)
 
 	if err2 != nil {
@@ -716,7 +699,7 @@ func (r *httpRoutes) DoDeleteUser(id string) error {
 		Email: user.Email,
 	}
 
-	_, err = dexClient.DeletePassword(context.TODO(), dexReq)
+	_, err := r.authServer.dexClient.DeletePassword(context.TODO(), dexReq)
 	if err != nil {
 		r.logger.Error("failed to remove dex password", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to remove dex password")
@@ -728,14 +711,6 @@ func (r *httpRoutes) DoDeleteUser(id string) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to create user")
 	}
 	return nil
-}
-
-func newDexClient(hostAndPort string) (dexApi.DexClient, error) {
-	conn, err := grpc.NewClient(hostAndPort, grpc.WithInsecure())
-	if err != nil {
-		return nil, fmt.Errorf("dial: %v", err)
-	}
-	return dexApi.NewDexClient(conn), nil
 }
 
 // CheckUserPasswordChangeRequired godoc
@@ -795,18 +770,12 @@ func (r *httpRoutes) ResetUserPassword(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "user connector should be local")
 	}
 
-	dexClient, err := newDexClient(dexGrpcAddress)
-	if err != nil {
-		r.logger.Error("failed to create dex client", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex client")
-	}
-
 	dexReq := &dexApi.VerifyPasswordReq{
 		Email:    user.Email,
 		Password: req.CurrentPassword,
 	}
 
-	resp, err := dexClient.VerifyPassword(context.TODO(), dexReq)
+	resp, err := r.authServer.dexClient.VerifyPassword(context.TODO(), dexReq)
 	if err != nil {
 		r.logger.Error("failed to validate dex password", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to validate dex password")
@@ -829,7 +798,7 @@ func (r *httpRoutes) ResetUserPassword(ctx echo.Context) error {
 		NewHash: hashedPassword,
 	}
 
-	passwordUpdateResp, err := dexClient.UpdatePassword(context.TODO(), passwordUpdateReq)
+	passwordUpdateResp, err := r.authServer.dexClient.UpdatePassword(context.TODO(), passwordUpdateReq)
 	if err != nil {
 		r.logger.Error("failed to update dex password", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to update dex password")
@@ -843,7 +812,7 @@ func (r *httpRoutes) ResetUserPassword(ctx echo.Context) error {
 			},
 		}
 
-		_, err = dexClient.CreatePassword(context.TODO(), dexReq)
+		_, err = r.authServer.dexClient.CreatePassword(context.TODO(), dexReq)
 		if err != nil {
 			r.logger.Error("failed to create dex password", zap.Error(err))
 			return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex password")
@@ -872,14 +841,8 @@ func (r *httpRoutes) ResetUserPassword(ctx echo.Context) error {
 func (r *httpRoutes) GetConnectors(ctx echo.Context) error {
 	req := &dexApi.ListConnectorReq{}
 	connectorType := ctx.Param("type")
-	// Create a context with timeout for the gRPC call.
-	dexClient, err := newDexClient(dexGrpcAddress)
-	if err != nil {
-		r.logger.Error("failed to create dex client", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex client")
-	}
 	// Execute the ListConnectors RPC.
-	respDex, err := dexClient.ListConnectors(context.TODO(), req)
+	respDex, err := r.authServer.dexClient.ListConnectors(context.TODO(), req)
 	if err != nil {
 		r.logger.Error("failed to list connectors", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to list connectors")
@@ -1073,12 +1036,8 @@ func (r *httpRoutes) CreateConnector(ctx echo.Context) error {
 		r.logger.Error("Error on Creating dex request", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
-	dexClient, err := newDexClient(dexGrpcAddress)
-	if err != nil {
-		r.logger.Error("failed to create dex client", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex client")
-	}
-	res, err := dexClient.CreateConnector(context.TODO(), dexreq)
+
+	res, err := r.authServer.dexClient.CreateConnector(context.TODO(), dexreq)
 	if err != nil {
 		r.logger.Error("failed to create dex connector", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex connector")
@@ -1122,26 +1081,20 @@ func (r *httpRoutes) CreateAuth0Connector(ctx echo.Context) error {
 	}
 
 	creator := utils.CreateAuth0Connector
-	
-	
+
 	dexRequest := utils.CreateAuth0ConnectorRequest{
-		Issuer:           req.Issuer,
-		ClientID:         req.ClientID,
-		ClientSecret:     req.ClientSecret,
-		Domain: 			req.Domain,
+		Issuer:       req.Issuer,
+		ClientID:     req.ClientID,
+		ClientSecret: req.ClientSecret,
+		Domain:       req.Domain,
 	}
 	dexreq, err := creator(dexRequest)
 	if err != nil {
 		r.logger.Error("Error on Creating dex request", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
-	dexClient, err := newDexClient(dexGrpcAddress)
-	if err != nil {
-		r.logger.Error("failed to create dex client", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex client")
-	}
-	publicUris:= req.PublicURIS
-	publicClientResp, _ := dexClient.GetClient(context.TODO(), &dexApi.GetClientReq{
+	publicUris := req.PublicURIS
+	publicClientResp, _ := r.authServer.dexClient.GetClient(context.TODO(), &dexApi.GetClientReq{
 		Id: "public-client",
 	})
 
@@ -1154,7 +1107,7 @@ func (r *httpRoutes) CreateAuth0Connector(ctx echo.Context) error {
 			RedirectUris: publicUris,
 		}
 
-		_, err = dexClient.UpdateClient(context.TODO(), &publicClientReq)
+		_, err = r.authServer.dexClient.UpdateClient(context.TODO(), &publicClientReq)
 		if err != nil {
 			r.logger.Error("Auth Migrator: failed to create dex public client", zap.Error(err))
 			return err
@@ -1169,7 +1122,7 @@ func (r *httpRoutes) CreateAuth0Connector(ctx echo.Context) error {
 			},
 		}
 
-		_, err = dexClient.CreateClient(context.TODO(), &publicClientReq)
+		_, err = r.authServer.dexClient.CreateClient(context.TODO(), &publicClientReq)
 		if err != nil {
 			r.logger.Error("Auth Migrator: failed to create dex public client", zap.Error(err))
 			return err
@@ -1179,7 +1132,7 @@ func (r *httpRoutes) CreateAuth0Connector(ctx echo.Context) error {
 
 	r.logger.Info("private URIS", zap.Any("uris", privateUris))
 
-	privateClientResp, _ := dexClient.GetClient(context.TODO(), &dexApi.GetClientReq{
+	privateClientResp, _ := r.authServer.dexClient.GetClient(context.TODO(), &dexApi.GetClientReq{
 		Id: "private-client",
 	})
 	if privateClientResp != nil && privateClientResp.Client != nil {
@@ -1189,7 +1142,7 @@ func (r *httpRoutes) CreateAuth0Connector(ctx echo.Context) error {
 			RedirectUris: privateUris,
 		}
 
-		_, err = dexClient.UpdateClient(context.TODO(), &privateClientReq)
+		_, err = r.authServer.dexClient.UpdateClient(context.TODO(), &privateClientReq)
 		if err != nil {
 			r.logger.Error("Auth Migrator: failed to create dex private client", zap.Error(err))
 			return err
@@ -1204,15 +1157,14 @@ func (r *httpRoutes) CreateAuth0Connector(ctx echo.Context) error {
 			},
 		}
 
-		_, err = dexClient.CreateClient(context.TODO(), &privateClientReq)
+		_, err = r.authServer.dexClient.CreateClient(context.TODO(), &privateClientReq)
 		if err != nil {
 			r.logger.Error("Auth Migrator: failed to create dex private client", zap.Error(err))
 			return err
 		}
 	}
 
-
-	res, err := dexClient.CreateConnector(context.TODO(), dexreq)
+	res, err := r.authServer.dexClient.CreateConnector(context.TODO(), dexreq)
 	if err != nil {
 		r.logger.Error("failed to create dex connector", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex connector")
@@ -1230,7 +1182,6 @@ func (r *httpRoutes) CreateAuth0Connector(ctx echo.Context) error {
 		r.logger.Error("failed to create connector", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to create connector")
 	}
-	
 
 	// restart dex pod on connector creation
 	err = utils.RestartDexPod()
@@ -1239,18 +1190,8 @@ func (r *httpRoutes) CreateAuth0Connector(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to restart dex pod")
 	}
 
-
-
 	return ctx.JSON(http.StatusCreated, res)
 }
-
-
-
-
-
-
-
-
 
 // UpdateConnector godoc
 //
@@ -1326,13 +1267,7 @@ func (r *httpRoutes) UpdateConnector(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	dexClient, err := newDexClient(dexGrpcAddress)
-	if err != nil {
-		r.logger.Error("failed to create dex client", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex client")
-	}
-
-	res, err := dexClient.UpdateConnector(context.TODO(), dexreq)
+	res, err := r.authServer.dexClient.UpdateConnector(context.TODO(), dexreq)
 	if err != nil {
 		r.logger.Error("failed to update dex connector", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to update dex connector")
@@ -1380,12 +1315,8 @@ func (r *httpRoutes) DeleteConnector(ctx echo.Context) error {
 	req := &dexApi.DeleteConnectorReq{
 		Id: connectorID,
 	}
-	dexClient, err := newDexClient(dexGrpcAddress)
-	if err != nil {
-		r.logger.Error("failed to create dex client", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex client")
-	}
-	resp, err := dexClient.DeleteConnector(context.TODO(), req)
+
+	resp, err := r.authServer.dexClient.DeleteConnector(context.TODO(), req)
 	if err != nil {
 		r.logger.Error("failed to delete connector", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to delete connector")
