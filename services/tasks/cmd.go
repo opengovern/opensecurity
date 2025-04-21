@@ -8,6 +8,7 @@ import (
 	api3 "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/httpserver"
+	"github.com/opengovern/og-util/pkg/jq"
 	"github.com/opengovern/og-util/pkg/koanf"
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/og-util/pkg/vault"
@@ -93,7 +94,13 @@ func start(ctx context.Context) error {
 		return err
 	}
 
-	mainScheduler, err := scheduler.NewMainScheduler(cfg, logger, db, kubeClient, vaultSc)
+	jq, err := jq.New(cfg.NATS.URL, logger)
+	if err != nil {
+		logger.Error("Failed to create job queue", zap.Error(err))
+		return err
+	}
+
+	mainScheduler, err := scheduler.NewMainScheduler(cfg, logger, db, kubeClient, vaultSc, jq)
 	if err != nil {
 		return err
 	}
@@ -110,6 +117,7 @@ func start(ctx context.Context) error {
 	return httpserver.RegisterAndStart(ctx, logger, cfg.Http.Address, &httpRoutes{
 		logger: logger,
 		db:     db,
+		jq:     jq,
 		vault:  vaultSc,
 	})
 }

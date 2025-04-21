@@ -31,13 +31,7 @@ type MainScheduler struct {
 
 var RunningTasks = make(map[string]bool)
 
-func NewMainScheduler(cfg config.Config, logger *zap.Logger, db db.Database, kubeClient client.Client, vault vault.VaultSourceConfig) (*MainScheduler, error) {
-	jq, err := jq.New(cfg.NATS.URL, logger)
-	if err != nil {
-		logger.Error("Failed to create job queue", zap.Error(err))
-		return nil, err
-	}
-
+func NewMainScheduler(cfg config.Config, logger *zap.Logger, db db.Database, kubeClient client.Client, vault vault.VaultSourceConfig, jq *jq.JobQueue) (*MainScheduler, error) {
 	return &MainScheduler{
 		jq:         jq,
 		db:         db,

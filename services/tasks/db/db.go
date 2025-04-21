@@ -63,8 +63,8 @@ func (db Database) GetTask(id string) (*models.Task, error) {
 	return &task, nil
 }
 
-// GetTaskRunResult retrieves a task result by Task ID
-func (db Database) GetTaskRunResult(id string) (*models.TaskRun, error) {
+// GetTaskRun retrieves a task result by Task ID
+func (db Database) GetTaskRun(id string) (*models.TaskRun, error) {
 	var task models.TaskRun
 	tx := db.Orm.Model(&models.TaskRun{}).Where("id = ?", id).
 		First(&task)

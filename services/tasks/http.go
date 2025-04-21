@@ -7,11 +7,14 @@ import (
 	"github.com/jackc/pgtype"
 	api2 "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpserver"
+	"github.com/opengovern/og-util/pkg/jq"
+	"github.com/opengovern/og-util/pkg/tasks"
 	"github.com/opengovern/og-util/pkg/vault"
 	"github.com/opengovern/opensecurity/pkg/utils"
 	"github.com/opengovern/opensecurity/services/tasks/api"
 	"github.com/opengovern/opensecurity/services/tasks/db"
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
+	"github.com/opengovern/opensecurity/services/tasks/worker/consts"
 	"net/http"
 	"sort"
 	"strconv"
@@ -25,6 +28,7 @@ type httpRoutes struct {
 
 	platformPrivateKey *rsa.PrivateKey
 	db                 db.Database
+	jq                 *jq.JobQueue
 	vault              vault.VaultSourceConfig
 }
 
@@ -38,6 +42,8 @@ func (r *httpRoutes) Register(e *echo.Echo) {
 	v1.POST("/tasks/run", httpserver.AuthorizeHandler(r.RunTask, api2.EditorRole))
 	// Get Task Result
 	v1.GET("/tasks/run/:id", httpserver.AuthorizeHandler(r.GetTaskRunResult, api2.ViewerRole))
+	// Cancel task run
+	v1.PUT("/tasks/run/:id/cancel", httpserver.AuthorizeHandler(r.CancelTaskRun, api2.EditorRole))
 	// List Tasks Result
 	v1.GET("/tasks/:id/runs", httpserver.AuthorizeHandler(r.ListTaskRunResults, api2.ViewerRole))
 	// Add Task Configurations
@@ -263,7 +269,7 @@ func (r *httpRoutes) RunTask(ctx echo.Context) error {
 //	@Router		/tasks/api/v1/tasks/run/:id [get]
 func (r *httpRoutes) GetTaskRunResult(ctx echo.Context) error {
 	id := ctx.Param("id")
-	task, err := r.db.GetTaskRunResult(id)
+	task, err := r.db.GetTaskRun(id)
 	if err != nil {
 		r.logger.Error("failed to get task results", zap.Error(err))
 		return ctx.JSON(http.StatusInternalServerError, "failed to get task results")
@@ -293,7 +299,66 @@ func (r *httpRoutes) GetTaskRunResult(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, taskRun)
+}
 
+// CancelTaskRun godoc
+//
+//	@Summary	Get task run
+//	@Security	BearerToken
+//	@Tags		scheduler
+//	@Param		id	path	string	true	"run id"
+//	@Produce	json
+//	@Success	200	{object}	models.TaskRun
+//	@Router		/tasks/api/v1/tasks/run/:id/cancel [put]
+func (r *httpRoutes) CancelTaskRun(ctx echo.Context) error {
+	id := ctx.Param("id")
+	run, err := r.db.GetTaskRun(id)
+	if err != nil {
+		r.logger.Error("failed to get task results", zap.Error(err))
+		return ctx.JSON(http.StatusInternalServerError, "failed to get task results")
+	}
+	if run == nil {
+		r.logger.Error("failed to find task results", zap.String("id", id))
+		return ctx.JSON(http.StatusInternalServerError, "failed to find task results")
+	}
+
+	task, err := r.db.GetTask(run.TaskID)
+	if err != nil {
+		r.logger.Error("failed to get task", zap.Error(err))
+		return ctx.JSON(http.StatusInternalServerError, "failed to get task")
+	}
+	var envVars map[string]string
+	if task.EnvVars.Status == pgtype.Present {
+		if err := json.Unmarshal(task.EnvVars.Bytes, &envVars); err != nil {
+			return err
+		}
+	}
+
+	switch run.Status {
+	case models.TaskRunStatusCancelled:
+		return ctx.JSON(http.StatusBadRequest, "task is already cancelled")
+	case models.TaskRunStatusFinished:
+		return ctx.JSON(http.StatusBadRequest, "task is already finished")
+	case models.TaskRunStatusTimeout:
+		return ctx.JSON(http.StatusBadRequest, "task is already timed out")
+	case models.TaskRunStatusFailed:
+		return ctx.JSON(http.StatusBadRequest, "task is already failed")
+	default:
+	}
+
+	var cancelSubject string
+	if natsTopic, ok := envVars[consts.NatsTopicNameEnv]; ok {
+		cancelSubject = tasks.GetTaskRunCancelSubject(natsTopic, run.ID)
+	} else {
+		return ctx.JSON(http.StatusInternalServerError, "failed to find nats topic")
+	}
+	_, err = r.jq.Produce(ctx.Request().Context(), cancelSubject, nil, fmt.Sprintf("taskrun-%d-cancel", run.ID))
+	if err != nil {
+		r.logger.Error("failed to cancel taskrun", zap.Error(err))
+		return ctx.JSON(http.StatusInternalServerError, "failed to cancel taskrun")
+	}
+
+	return ctx.NoContent(http.StatusOK)
 }
 
 // ListTaskRunResults godoc
