@@ -260,49 +260,45 @@ export default function Profile() {
                     size="large"
                     triggerType="custom"
                     content={
-                        <Card className="bg-openg-950 px-4 py-2 w-64 !ring-gray-600">
+                        <Flex
+                            flexDirection="col"
+                            alignItems="start"
+                            className="pb-0 mb-0 "
+                            // border-b border-b-gray-700
+                        >
+                            {/* <Text className="mb-1">ACCOUNT</Text> */}
                             <Flex
-                                flexDirection="col"
-                                alignItems="start"
-                                className="pb-0 mb-0 "
-                                // border-b border-b-gray-700
+                                onClick={() => {
+                                    // navigate(`/profile`)
+                                    navigate(`/`)
+                                }}
+                                className="py-2 px-5 rounded-md cursor-pointer justify-start flex-row items-center gap-2 text-gray-900 hover:text-gray-800 hover:bg-gray-300"
                             >
-                                {/* <Text className="mb-1">ACCOUNT</Text> */}
-                                <Flex
-                                    onClick={() => {
-                                        // navigate(`/profile`)
-                                        navigate(`/`)
-                                    }}
-                                    className="py-2 px-5 rounded-md cursor-pointer justify-start flex-row items-center gap-2 text-gray-300 hover:text-gray-50 hover:bg-openg-800"
-                                >
-                                    <MagnifyingGlassIcon className="h-6 w-6 stroke-2" />
-                                    <Text className="text-inherit">
-                                        CloudQL
-                                    </Text>
-                                </Flex>
-                                <Flex
-                                    onClick={() => {
-                                        navigate(`/integration/plugins`)
-                                    }}
-                                    className="py-2 px-5 rounded-md cursor-pointer justify-start flex-row items-center gap-2 text-gray-300 hover:text-gray-50 hover:bg-openg-800"
-                                >
-                                    <PuzzlePieceIcon className="h-6 w-6 stroke-2" />
-                                    <Text className="text-inherit">
-                                        Integration
-                                    </Text>
-                                </Flex>
-
-                                <Flex
-                                    onClick={() => navigate(`/administration`)}
-                                    className="py-2 px-5 text-gray-300 justify-start flex-row items-center gap-2 rounded-md cursor-pointer hover:text-gray-50 hover:bg-openg-800"
-                                >
-                                    <Cog6ToothIcon className="h-6 w-6 stroke-2" />
-                                    <Text className="text-inherit">
-                                        Administration
-                                    </Text>
-                                </Flex>
+                                <MagnifyingGlassIcon className="h-6 w-6 stroke-2" />
+                                <Text className="text-inherit">CloudQL</Text>
                             </Flex>
-                        </Card>
+                            <Flex
+                                onClick={() => {
+                                    navigate(`/integration/plugins`)
+                                }}
+                                className="py-2 px-5 rounded-md cursor-pointer justify-start flex-row items-center gap-2 text-gray-900 hover:text-gray-800 hover:bg-gray-300"
+                            >
+                                <PuzzlePieceIcon className="h-6 w-6 stroke-2" />
+                                <Text className="text-inherit">
+                                    Integration
+                                </Text>
+                            </Flex>
+
+                            <Flex
+                                onClick={() => navigate(`/administration`)}
+                                className="py-2 px-5 text-gray-900 hover:text-gray-800 justify-start flex-row items-center gap-2 rounded-md cursor-pointer  hover:bg-gray-300"
+                            >
+                                <Cog6ToothIcon className="h-6 w-6 stroke-2" />
+                                <Text className="text-inherit">
+                                    Administration
+                                </Text>
+                            </Flex>
+                        </Flex>
                     }
                 >
                     <Button iconName="menu"></Button>
@@ -314,51 +310,48 @@ export default function Profile() {
                 position="bottom"
                 size="large"
                 triggerType="custom"
+                // className="bg-openg-950 px-4 py-2 w-64 !ring-gray-600"
                 content={
-                    <Card className="bg-openg-950 px-4 py-2 w-64 !ring-gray-600">
+                    <Flex
+                        flexDirection="col"
+                        alignItems="start"
+                        className="pb-0 mb-0 "
+                        // border-b border-b-gray-700
+                    >
+                        {/* <Text className="mb-1">ACCOUNT</Text> */}
                         <Flex
-                            flexDirection="col"
-                            alignItems="start"
-                            className="pb-0 mb-0 "
-                            // border-b border-b-gray-700
+                            onClick={() => {
+                                // navigate(`/profile`)
+                                navigate(`/profile`)
+                            }}
+                            className="py-2 px-5 rounded-md cursor-pointer text-gray-900 hover:text-gray-800 hover:bg-gray-300"
                         >
-                            {/* <Text className="mb-1">ACCOUNT</Text> */}
-                            <Flex
-                                onClick={() => {
-                                    // navigate(`/profile`)
-                                    navigate(`/profile`)
-                                }}
-                                className="py-2 px-5 rounded-md cursor-pointer text-gray-300 hover:text-gray-50 hover:bg-openg-800"
-                            >
-                                <Text className="text-inherit">
-                                    Profile info
-                                </Text>
-                            </Flex>
-                            <Flex
-                                onClick={() => {
-                                    setChange(true)
-                                }}
-                                className="py-2 px-5 rounded-md cursor-pointer text-gray-300 hover:text-gray-50 hover:bg-openg-800"
-                            >
-                                <Text className="text-inherit">
-                                    Change Password
-                                </Text>
-                            </Flex>
-                            {/* <Flex
+                            <Text className="text-inherit">Profile info</Text>
+                        </Flex>
+                        <Flex
+                            onClick={() => {
+                                setChange(true)
+                            }}
+                            className="py-2 px-5 rounded-md cursor-pointer text-gray-900 hover:text-gray-800 hover:bg-gray-300"
+                        >
+                            <Text className="text-inherit">
+                                Change Password
+                            </Text>
+                        </Flex>
+                        {/* <Flex
                                 onClick={() => navigate(`/ws/billing`)}
-                                className="py-2 px-5 rounded-md cursor-pointer text-gray-300 hover:text-gray-50 hover:bg-openg-800"
+                                className="py-2 px-5 rounded-md cursor-pointer text-gray-300 hover:text-gray-50 hover:bg-gray-300"
                             >
                                 <Text className="text-inherit">Billing</Text>
                             </Flex> */}
-                            <Flex
-                                onClick={() => logout()}
-                                className="py-2 px-5 text-gray-300 rounded-md cursor-pointer hover:text-gray-50 hover:bg-openg-800"
-                            >
-                                <Text className="text-inherit">Logout</Text>
-                                <ArrowTopRightOnSquareIcon className="w-5 text-gray-400" />
-                            </Flex>
+                        <Flex
+                            onClick={() => logout()}
+                            className="py-2 px-5 text-gray-900 rounded-md cursor-pointer hover:text-gray-800 hover:bg-gray-300"
+                        >
+                            <Text className="text-inherit">Logout</Text>
+                            <ArrowTopRightOnSquareIcon className="w-5 text-gray-900" />
                         </Flex>
-                    </Card>
+                    </Flex>
                 }
             >
                 <Button iconName="user-profile"></Button>
