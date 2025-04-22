@@ -3,6 +3,7 @@ package pg
 import (
 	"context"
 	"errors"
+	"github.com/google/uuid"
 	integration "github.com/opengovern/opensecurity/services/integration/models"
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	"gorm.io/gorm"
@@ -16,6 +17,15 @@ func (c Client) ListIntegrations(ctx context.Context) ([]integration.Integration
 		return nil, err
 	}
 	return result, nil
+}
+
+func (c Client) GetCredential(ctx context.Context, id uuid.UUID) (*integration.Credential, error) {
+	var result integration.Credential
+	err := c.db.Preload(clause.Associations).Where("id = ?", id).Find(&result).Error
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
 
 func (c Client) GetIntegrationByID(ctx context.Context, opengovernanceId string, id string) (*integration.Integration, error) {

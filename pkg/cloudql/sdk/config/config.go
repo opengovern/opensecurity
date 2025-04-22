@@ -22,7 +22,8 @@ type ClientConfig struct {
 	PgDatabase *string `cty:"pg_database"`
 	PgSslMode  *string `cty:"pg_ssl_mode"`
 
-	ComplianceServiceBaseURL *string `cty:"compliance_service_baseurl"`
+	ComplianceServiceBaseURL  *string `cty:"compliance_service_baseurl"`
+	IntegrationServiceBaseURL *string `cty:"integration_service_baseurl"`
 }
 
 func Schema() map[string]*schema.Attribute {
