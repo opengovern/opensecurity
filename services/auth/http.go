@@ -162,7 +162,7 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 		"client_id": "public-client",
 		"client_secret": "",
 	}
-	url := fmt.Sprintf("http://%s/token", domain)
+	url := fmt.Sprintf("%s/token", domain)
 	// set headers
 	headers := map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
