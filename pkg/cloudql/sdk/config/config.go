@@ -68,6 +68,10 @@ func Schema() map[string]*schema.Attribute {
 			Type:     schema.TypeString,
 			Required: false,
 		},
+		"integration_service_baseurl": {
+			Type:     schema.TypeString,
+			Required: false,
+		},
 	}
 }
 

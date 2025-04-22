@@ -17,11 +17,11 @@ func NewIntegrationClientCached(c config.ClientConfig, cache *connection.Connect
 
 	plugin.Logger(ctx).Warn("integration service client is not cached, creating a new one")
 
-	if c.ComplianceServiceBaseURL == nil {
+	if c.IntegrationServiceBaseURL == nil {
 		plugin.Logger(ctx).Error("integration service base url is not set")
 		return nil, errors.New("integration service base url is not set")
 	}
-	client := integrationClient.NewIntegrationServiceClient(*c.ComplianceServiceBaseURL)
+	client := integrationClient.NewIntegrationServiceClient(*c.IntegrationServiceBaseURL)
 
 	cache.Set(ctx, "opengovernance-integration-service-client", client)
 

@@ -51,7 +51,7 @@ func ListIntegrationCredentials(ctx context.Context, d *plugin.QueryData, _ *plu
 			plugin.Logger(ctx).Error("ListIntegrations", "integration", i, "error", err)
 			continue
 		}
-		if credential == nil {
+		if credential == nil || credential.Secret == "" {
 			continue
 		}
 		row := getIntegrationCredentialRowFromIntegrationCredential(i.IntegrationID.String(), *credential)
@@ -82,6 +82,9 @@ func GetIntegrationCredential(ctx context.Context, d *plugin.QueryData, _ *plugi
 	if err != nil {
 		plugin.Logger(ctx).Error("ListIntegrations", "integration", i, "error", err)
 		return nil, err
+	}
+	if credential == nil || credential.Secret == "" {
+		return nil, nil
 	}
 
 	row := getIntegrationCredentialRowFromIntegrationCredential(i.IntegrationID.String(), *credential)
