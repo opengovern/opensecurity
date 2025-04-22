@@ -52,7 +52,7 @@ func (r *httpRoutes) Register(e *echo.Echo) {
 	v1 := e.Group("/api/v1")
 	// VAlidate token
 	v1.GET("/check", r.Check)
-	v1.GET("/token", r.Token)
+	v1.POST("/token", r.Token)
 
 	// USERS
 	v1.GET("/users", httpserver.AuthorizeHandler(r.GetUsers, api2.EditorRole))                                      //checked
