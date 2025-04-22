@@ -162,7 +162,7 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 		"client_id": "public-client",
 		"client_secret": "",
 	}
-	url := fmt.Sprintf("https://%s/token?code=%s&redirect_uri=%s&grant_type=authorization_code&client_id=public-client&client_secret=", domain, req.Code, req.CallBackUrl)
+	url := fmt.Sprintf("http://%s/token", domain)
 	// set headers
 	headers := map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
@@ -182,10 +182,12 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 	}
 	response, err := client.Do(request)
 	if err != nil {
+		r.logger.Error("failed to make request", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to make request")
 	}
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
+		r.logger.Error("failed to get token", zap.String("status", response.Status))
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to get token")
 	}
 	var tokenResponse map[string]interface{}
