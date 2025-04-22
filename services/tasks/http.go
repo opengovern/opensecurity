@@ -1,7 +1,6 @@
 package tasks
 
 import (
-	"context"
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
@@ -353,7 +352,7 @@ func (r *httpRoutes) CancelTaskRun(ctx echo.Context) error {
 	} else {
 		return ctx.JSON(http.StatusInternalServerError, "failed to find nats topic")
 	}
-	_, err = r.jq.Produce(context.Background(), cancelSubject, nil, fmt.Sprintf("taskrun-%d-cancel", run.ID))
+	err = r.jq.ProduceFireAndForget(cancelSubject, nil)
 	if err != nil {
 		r.logger.Error("failed to cancel taskrun", zap.Error(err))
 		return ctx.JSON(http.StatusInternalServerError, "failed to cancel taskrun")
