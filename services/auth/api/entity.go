@@ -73,3 +73,8 @@ type ResetUserPasswordRequest struct {
 	CurrentPassword string `json:"current_password"`
 	NewPassword     string `json:"new_password"`
 }
+
+type GetTokenRequest struct {
+	Code string `json:"code"`
+	CallBackUrl string `json:"callback_url"`
+}

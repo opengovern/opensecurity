@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -46,10 +47,13 @@ type httpRoutes struct {
 	authServer         *Server
 }
 
+
 func (r *httpRoutes) Register(e *echo.Echo) {
 	v1 := e.Group("/api/v1")
 	// VAlidate token
 	v1.GET("/check", r.Check)
+	v1.GET("/token", r.Token)
+
 	// USERS
 	v1.GET("/users", httpserver.AuthorizeHandler(r.GetUsers, api2.EditorRole))                                      //checked
 	v1.GET("/user/:id", httpserver.AuthorizeHandler(r.GetUserDetails, api2.EditorRole))                             //checked
@@ -134,6 +138,100 @@ func (r *httpRoutes) Check(ctx echo.Context) error {
 	}
 
 	return ctx.NoContent(http.StatusOK)
+}
+func (r *httpRoutes) Token(ctx echo.Context) error {
+	var req api.GetTokenRequest
+	if err := bindValidate(ctx, &req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+	if req.Code == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "code is required")
+	}
+	if req.CallBackUrl == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "callback url is required")
+	}
+
+	// make an http call to dex pod to get the token
+	domain:=os.Getenv("DEX_AUTH_DOMAIN")
+	// http call to dex pod with code and callback url serach params
+	// make body 
+	body:= map[string]string{
+		"code": req.Code,
+		"redirect_uri": req.CallBackUrl,
+		"grant_type": "authorization_code",
+		"client_id": "public-client",
+		"client_secret": "",
+	}
+	url := fmt.Sprintf("https://%s/token?code=%s&redirect_uri=%s&grant_type=authorization_code&client_id=public-client&client_secret=", domain, req.Code, req.CallBackUrl)
+	// set headers
+	headers := map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+	// make http call
+	client := &http.Client{}
+	reqBody, err := json.Marshal(body)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to create request body")
+	}
+	request, err := http.NewRequest("POST", url, strings.NewReader(string(reqBody)))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to create request")
+	}
+	for key, value := range headers {
+		request.Header.Set(key, value)
+	}
+	response, err := client.Do(request)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to make request")
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to get token")
+	}
+	var tokenResponse map[string]interface{}
+	if err := json.NewDecoder(response.Body).Decode(&tokenResponse); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to decode response")
+	}
+	accessToken, ok := tokenResponse["access_token"].(string)
+	if !ok {
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to get access token")
+	}
+	dv,err := r.authServer.dexVerifier.Verify(ctx.Request().Context(), accessToken)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to verify token")
+	}
+	var claims json.RawMessage
+	if err := dv.Claims(&claims); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to get claims")
+	}
+	var claimsMap DexClaims
+	if err = json.Unmarshal(claims, &claimsMap); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to unmarshal claims")
+	}
+	// check if the claimsMap is empty
+	// find the user in the db
+	user, err := r.db.GetUserByEmail(claimsMap.Email)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to get user")
+	}
+	// add user role to claims
+	claimsMap.Groups = append(claimsMap.Groups, string(user.Role))
+	// convert claims map to json
+	
+	// update dv claims
+
+	// create a new token
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256,claimsMap )
+	// sign the token with the private key
+	signedToken, err := token.SignedString(r.platformPrivateKey)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to sign token")
+	}
+	// return the token
+	tokenResponse["access_token"] = signedToken
+	return ctx.JSON(http.StatusOK, tokenResponse)
+
+
 }
 
 // GetUsers godoc
@@ -235,7 +333,9 @@ func (r *httpRoutes) GetUserDetails(ctx echo.Context) error {
 func (r *httpRoutes) GetMe(ctx echo.Context) error {
 	userID := httpserver.GetUserID(ctx)
 
-	user, err := utils.GetUser(userID, r.db)
+	db_user, err := r.db.GetUserByExternalID(userID)
+	user ,_:= utils.DbUserToApi(db_user)
+
 	if err != nil {
 		return err
 	}
