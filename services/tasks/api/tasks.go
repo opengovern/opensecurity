@@ -1,9 +1,5 @@
 package api
 
-import (
-	"time"
-)
-
 type TaskListResponse struct {
 	Items      []TaskResponse `json:"items"`
 	TotalCount int            `json:"total_count"`
@@ -41,7 +37,7 @@ type ScaleConfig struct {
 }
 
 type RunScheduleObject struct {
-	LastRun   *time.Time     `json:"last_run"`
+	ID        string         `json:"id"`
 	Params    map[string]any `json:"params"`
 	Frequency float64        `json:"frequency"`
 }

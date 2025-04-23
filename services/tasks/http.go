@@ -161,7 +161,7 @@ func (r *httpRoutes) GetTask(ctx echo.Context) error {
 			return ctx.JSON(http.StatusInternalServerError, "failed to get task run params")
 		}
 		runSchedulesObjects = append(runSchedulesObjects, api.RunScheduleObject{
-			LastRun:   runSchedule.LastRun,
+			ID:        runSchedule.ID,
 			Params:    params,
 			Frequency: runSchedule.Frequency,
 		})
