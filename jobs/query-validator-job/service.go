@@ -50,6 +50,7 @@ func NewWorker(
 		Postgres:      config.PostgresPlugin,
 		ElasticSearch: config.ElasticSearch,
 		Steampipe:     config.Steampipe,
+		Integration:   config.Integration,
 	}, integrationClient)
 	steampipeConn, err := pluginJob.Run(ctx)
 	if err != nil {

@@ -33,6 +33,7 @@ func Command() *cobra.Command {
 				Postgres:      cnf.PostgresPlugin,
 				ElasticSearch: cnf.ElasticSearch,
 				Steampipe:     cnf.Steampipe,
+				Integration:   cnf.Integration,
 			}, integrationClient)
 			steampipeConn, err := pluginJob.Run(ctx)
 			if err != nil {

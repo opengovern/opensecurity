@@ -239,6 +239,7 @@ func InitializeHttpHandler(
 		},
 		ElasticSearch: esConf,
 		Steampipe:     config3.Postgres{},
+		Integration:   config3.OpenGovernanceService{BaseURL: integrationBaseUrl},
 	}, h.integrationClient)
 	h.PluginJob = pluginJob
 	h.initializeSteampipePluginsWithRetry(ctx, 5, 2*time.Second)

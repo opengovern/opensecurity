@@ -80,6 +80,7 @@ func NewWorker(
 		Postgres:      config.PostgresPlugin,
 		ElasticSearch: config.ElasticSearch,
 		Steampipe:     config.Steampipe,
+		Integration:   config.Integration,
 	}, integrationClient)
 	logger.Info("running plugin job to initialize integrations in cloudql")
 	steampipeConn, err := pluginJob.Run(ctx)

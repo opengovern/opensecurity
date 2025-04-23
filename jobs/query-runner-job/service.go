@@ -62,13 +62,14 @@ func NewWorker(
 		Postgres:      config.PostgresPlugin,
 		ElasticSearch: config.ElasticSearch,
 		Steampipe:     config.Steampipe,
+		Integration:   config.Integration,
 	}, integrationClient)
 	steampipeConn, err := pluginJob.Run(ctx)
 	if err != nil {
 		logger.Error("failed to run plugin job", zap.Error(err))
 		return nil, err
 	}
-	
+
 	esClient, err := opengovernance.NewClient(opengovernance.ClientConfig{
 		Addresses:     []string{config.ElasticSearch.Address},
 		Username:      &config.ElasticSearch.Username,
