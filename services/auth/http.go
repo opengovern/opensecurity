@@ -152,7 +152,7 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 	}
 
 	// make an http call to dex pod to get the token
-	domain:=os.Getenv("DEX_DOMAIN")
+	domain:=os.Getenv("DEX_AUTH_DOMAIN")
 	// http call to dex pod with code and callback url serach params
 	// make body 
 	body:= map[string]string{
@@ -163,6 +163,7 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 		"client_secret": "",
 	}
 	url := fmt.Sprintf("%s/token", domain)
+	r.logger.Info("dex url", zap.String("url", url))
 	// set headers
 	headers := map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
