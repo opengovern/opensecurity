@@ -4,7 +4,6 @@ import (
 	"github.com/jackc/pgtype"
 	"github.com/lib/pq"
 	"gorm.io/gorm"
-	"time"
 )
 
 type TaskSecretHealthStatus string
@@ -46,9 +45,8 @@ type TaskConfigSecret struct {
 }
 
 type TaskRunSchedule struct {
-	ID        uint `gorm:"primarykey"`
-	TaskID    string
-	LastRun   *time.Time
-	Params    pgtype.JSONB
-	Frequency float64
+	SchedulerID string `gorm:"primarykey"`
+	TaskID      string `gorm:"primarykey"`
+	Params      pgtype.JSONB
+	Frequency   float64
 }

@@ -40,27 +40,30 @@ func (s *MainScheduler) createTasks(ctx context.Context) error {
 			return err
 		}
 		for _, runSchedule := range runSchedules {
-			if runSchedule.LastRun != nil {
-				if time.Now().Before(runSchedule.LastRun.Add(time.Duration(runSchedule.Frequency) * time.Second)) {
+			lastRun, err := s.db.FetchLastTaskRunsByTaskSchedulerID(task.ID, runSchedule.SchedulerID)
+			if err != nil {
+				return err
+			}
+			if lastRun != nil {
+				if time.Now().Before(lastRun.CreatedAt.Add(time.Duration(runSchedule.Frequency) * time.Second)) {
 					continue
 				}
 			}
+
 			newRun := models.TaskRun{
-				TaskID: task.ID,
-				Status: models.TaskRunStatusCreated,
+				TaskID:      task.ID,
+				Status:      models.TaskRunStatusCreated,
+				TriggerType: models.TriggerTypeScheduled,
+				TriggeredBy: runSchedule.SchedulerID,
 			}
 
-			err := newRun.Result.Set([]byte("{}"))
+			err = newRun.Result.Set([]byte("{}"))
 			if err != nil {
 				return err
 			}
 			newRun.Params = runSchedule.Params
 
 			if err = s.db.CreateTaskRun(&newRun); err != nil {
-				return err
-			}
-
-			if err = s.db.UpdateTaskRunScheduleLastRun(runSchedule.ID); err != nil {
 				return err
 			}
 		}

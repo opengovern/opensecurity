@@ -7,7 +7,6 @@ import (
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"time"
 )
 
 type Database struct {
@@ -136,6 +135,25 @@ func (db Database) FetchLastCreatedTaskRunsByTaskID(taskID string) (*models.Task
 	return &task, nil
 }
 
+// FetchLastTaskRunsByTaskSchedulerID retrieves last task run by scheduler id
+func (db Database) FetchLastTaskRunsByTaskSchedulerID(taskID, taskSchedulerID string) (*models.TaskRun, error) {
+	var task models.TaskRun
+	tx := db.Orm.Model(&models.TaskRun{}).
+		Where("task_id = ?", taskID).
+		Where("trigger_type = ?", models.TriggerTypeScheduled).
+		Where("triggered_by = ?", taskSchedulerID).
+		Order("created_at desc").
+		First(&task)
+	if tx.Error != nil {
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, tx.Error
+	}
+
+	return &task, nil
+}
+
 // TimeoutTaskRunsByTaskID Timeout task runs for given task id by given timeout interval
 func (db Database) TimeoutTaskRunsByTaskID(taskID string, timeoutInterval uint64) error {
 	tx := db.Orm.
@@ -240,12 +258,4 @@ func (db Database) GetTaskConfigSecret(taskId string) (*models.TaskConfigSecret,
 	}
 
 	return &configSecret, nil
-}
-
-func (db Database) UpdateTaskRunScheduleLastRun(id uint) error {
-	tx := db.Orm.Model(&models.TaskRunSchedule{}).Where("id = ?", id).Update("last_run", time.Now())
-	if tx.Error != nil {
-		return tx.Error
-	}
-	return nil
 }
