@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -188,8 +189,17 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 	}
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
-		r.logger.Error("failed to get token", zap.String("status", response.Status))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to get token")
+		bodyBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		r.logger.Error("failed to read response body", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to read response")
+	}
+
+	bodyString := string(bodyBytes)
+	r.logger.Error("failed to get token", zap.String("status", response.Status))
+	r.logger.Error("response body", zap.String("body", bodyString))
+
+	return echo.NewHTTPError(http.StatusBadRequest, "failed to get token")
 	}
 	var tokenResponse map[string]interface{}
 	if err := json.NewDecoder(response.Body).Decode(&tokenResponse); err != nil {
