@@ -19,6 +19,7 @@ import (
 
 	dexApi "github.com/dexidp/dex/api/v2"
 	envoyauth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
+	"github.com/google/uuid"
 	api2 "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpserver"
 	"github.com/opengovern/opensecurity/services/auth/utils"
@@ -226,9 +227,11 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 	}
 	// add user role to claims
 	claimsMap.Groups = append(claimsMap.Groups, string(user.Role))
-	// convert claims map to json
+	claimsMap.Name = user.Username
+	claimsMap.Id = user.ExternalId
+
+	// remove empty ones
 	
-	// update dv claims
 
 	// create a new token
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256,claimsMap )
@@ -401,11 +404,23 @@ func (r *httpRoutes) CreateAPIKey(ctx echo.Context) error {
 	if usr == nil {
 		return errors.New("failed to find user in auth")
 	}
+	jti := uuid.New().String()
 
-	u := userClaim{
-		Role:           req.Role,
+
+	u := DexClaims{
+		EmailVerified:           usr.EmailVerified,
 		Email:          usr.Email,
-		ExternalUserID: usr.ExternalId,
+		Groups: 		[]string{string(usr.Role)},
+		Name:           usr.Username,
+		StandardClaims: jwt.StandardClaims{
+		Issuer:    "dex",                      // who issued the token
+		Subject:   userID,                     // user id
+		Audience:  "public-client",  // or []string{}
+		ExpiresAt: jwt.TimeFunc().Add(24 *time.Hour).Unix(), // expires in 24 hours
+		IssuedAt:  jwt.TimeFunc().Unix(),
+		Id:        jti,              // optional
+	},
+		
 	}
 
 	if r.platformPrivateKey == nil {
@@ -438,6 +453,7 @@ func (r *httpRoutes) CreateAPIKey(ctx echo.Context) error {
 	}
 	r.logger.Info("creating API Key")
 	apikey := db.ApiKey{
+		
 		Name:          req.Name,
 		Role:          req.Role,
 		CreatorUserID: userID,
