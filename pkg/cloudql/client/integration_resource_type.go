@@ -66,11 +66,11 @@ func ListIntegrationResourceTypes(ctx context.Context, d *plugin.QueryData, _ *p
 		plugin.Logger(ctx).Error("GetBenchmarkSummary compliance client call failed", "error", err)
 		return nil, err
 	}
-	if rts == nil || len(rts) == 0 {
+	if rts == nil || len(rts.ResourceTypes) == 0 {
 		return nil, nil
 	}
 
-	for _, rt := range rts {
+	for _, rt := range rts.ResourceTypes {
 		row := getIntegrationResourceTypeRowFromIntegrationResourceType(rt)
 		d.StreamListItem(ctx, row)
 	}
