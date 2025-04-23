@@ -40,7 +40,7 @@ func (s *MainScheduler) createTasks(ctx context.Context) error {
 			return err
 		}
 		for _, runSchedule := range runSchedules {
-			lastRun, err := s.db.FetchLastTaskRunsByTaskSchedulerID(task.ID, runSchedule.SchedulerID)
+			lastRun, err := s.db.FetchLastTaskRunsByTaskSchedulerID(task.ID, runSchedule.ID)
 			if err != nil {
 				return err
 			}
@@ -54,7 +54,7 @@ func (s *MainScheduler) createTasks(ctx context.Context) error {
 				TaskID:      task.ID,
 				Status:      models.TaskRunStatusCreated,
 				TriggerType: models.TriggerTypeScheduled,
-				TriggeredBy: runSchedule.SchedulerID,
+				TriggeredBy: runSchedule.ID,
 			}
 
 			err = newRun.Result.Set([]byte("{}"))

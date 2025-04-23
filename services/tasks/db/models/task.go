@@ -45,8 +45,8 @@ type TaskConfigSecret struct {
 }
 
 type TaskRunSchedule struct {
-	SchedulerID string `gorm:"primarykey"`
-	TaskID      string `gorm:"primarykey"`
-	Params      pgtype.JSONB
-	Frequency   float64
+	ID        string `gorm:"primarykey"`
+	TaskID    string `gorm:"primarykey"`
+	Params    pgtype.JSONB
+	Frequency float64
 }

@@ -29,6 +29,7 @@ type Interval struct {
 }
 
 type TaskRunSchedule struct {
+	ID        string         `yaml:"id"`
 	Params    map[string]any `yaml:"params"`
 	Frequency string         `yaml:"frequency"`
 }

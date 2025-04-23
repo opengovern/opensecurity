@@ -187,6 +187,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			}
 
 			if err = dbm.ORM.Create(&models.TaskRunSchedule{
+				ID:        runSchedule.ID,
 				TaskID:    task.ID,
 				Params:    paramsJsonb,
 				Frequency: frequencyFloat,
