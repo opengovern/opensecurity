@@ -156,13 +156,13 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 	domain:=os.Getenv("DEX_AUTH_DOMAIN")
 	// http call to dex pod with code and callback url serach params
 	// make body 
-	body:= map[string]string{
-		"code": req.Code,
-		"redirect_uri": req.CallBackUrl,
-		"grant_type": "authorization_code",
-		"client_id": "public-client",
-		"client_secret": "",
-	}
+
+	data := url.Values{}
+	data.Set("code", req.Code)
+	data.Set("redirect_uri", req.CallBackUrl)
+	data.Set("grant_type", "authorization_code")
+	data.Set("client_id", "public-client")
+	data.Set("client_secret", "")
 	url := fmt.Sprintf("%s/token", domain)
 	r.logger.Info("dex url", zap.String("url", url))
 	// set headers
@@ -171,11 +171,8 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 	}
 	// make http call
 	client := &http.Client{}
-	reqBody, err := json.Marshal(body)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create request body")
-	}
-	request, err := http.NewRequest("POST", url, strings.NewReader(string(reqBody)))
+	
+	request, err := http.NewRequest("POST", url, strings.NewReader(data.Encode()))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to create request")
 	}
