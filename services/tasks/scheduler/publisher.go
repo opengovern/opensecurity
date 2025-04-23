@@ -79,6 +79,7 @@ func (s *TaskScheduler) runPublisher(ctx context.Context) error {
 			EsDeliverEndpoint:         s.cfg.ESSinkEndpoint,
 			IngestionPipelineEndpoint: s.cfg.ElasticSearch.IngestionEndpoint,
 			UseOpenSearch:             s.cfg.ElasticSearch.IsOpenSearch,
+			VaultConfig:               s.cfg.Vault,
 			TaskDefinition: tasks.TaskDefinition{
 				RunID:    run.ID,
 				TaskType: s.TaskID,
