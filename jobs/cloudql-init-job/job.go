@@ -140,7 +140,7 @@ func (j *Job) Run(ctx context.Context) (*steampipe.Database, error) {
 		}
 
 		if cloudqlBinary == "" {
-			j.logger.Debug("steampipe plugin binary not found - skipping task", zap.String("id", task.ID))
+			j.logger.Warn("steampipe plugin binary not found - skipping task", zap.String("id", task.ID))
 			continue
 		}
 		err = steampipe.PopulateSteampipeConfig(j.cfg.ElasticSearch, steampipePluginName)

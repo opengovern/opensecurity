@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/hashicorp/go-getter"
 	"github.com/jackc/pgtype"
-	"github.com/lib/pq"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/config"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/db"
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
@@ -154,8 +153,8 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			NatsConfig:          natsJsonb,
 			ScaleConfig:         scaleJsonb,
 			EnvVars:             envVarsJsonb,
-			Params:              pq.StringArray(task.Params),
-			Configs:             pq.StringArray(task.Configs),
+			Params:              task.Params,
+			Configs:             task.Configs,
 		}).Error; err != nil {
 			return err
 		}
@@ -304,6 +303,10 @@ func restartTaskService(ctx context.Context, logger *zap.Logger, clientset *kube
 }
 
 func loadCloudqlBinary(itDbm db.Database, logger *zap.Logger, task worker.Task) (err error) {
+	if task.ArtifactsURL == "" || task.SteampipePluginName == "" {
+		logger.Warn("task artifacts url or steampipe-plugin name is empty")
+	}
+
 	baseDir := "/tasks"
 
 	// create tmp directory if not exists
@@ -315,10 +318,6 @@ func loadCloudqlBinary(itDbm db.Database, logger *zap.Logger, task worker.Task) 
 	}
 
 	// download files from urls
-
-	if task.ArtifactsURL == "" || task.SteampipePluginName == "" {
-		return fmt.Errorf("task artifacts url or steampipe-plugin name is empty")
-	}
 	url := task.ArtifactsURL
 	// remove existing files
 	if err = os.RemoveAll(baseDir + "/" + task.SteampipePluginName); err != nil {
