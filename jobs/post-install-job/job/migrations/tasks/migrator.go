@@ -304,7 +304,8 @@ func restartTaskService(ctx context.Context, logger *zap.Logger, clientset *kube
 
 func loadCloudqlBinary(itDbm db.Database, logger *zap.Logger, task worker.Task) (err error) {
 	if task.ArtifactsURL == "" || task.SteampipePluginName == "" {
-		logger.Warn("task artifacts url or steampipe-plugin name is empty")
+		logger.Warn("task artifacts url or steampipe-plugin name is empty", zap.String("task", task.ID))
+		return nil
 	}
 
 	baseDir := "/tasks"
