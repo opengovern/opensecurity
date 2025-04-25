@@ -44,7 +44,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		return err
 	}
 
-	count, err := dbm.GetUsersCount()
+	count, err := dbm.GetUsersCount(ctx)
 	if err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 		IsActive:              true,
 		RequirePasswordChange: true,
 	}
-	err = dbm.CreateUser(user)
+	err = dbm.CreateUser(ctx,user)
 	if err != nil {
 		logger.Error("Auth Migrator: failed to create user in database", zap.Error(err))
 		return err
