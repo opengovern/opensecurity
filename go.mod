@@ -1,8 +1,6 @@
 module github.com/opengovern/opensecurity
 
-go 1.24
-
-toolchain go1.24.1
+go 1.23.3
 
 require (
 	github.com/Azure/go-workflow v0.1.6
