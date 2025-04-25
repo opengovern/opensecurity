@@ -1,277 +1,279 @@
-// cmd.go
 package auth
 
 import (
 	"context"
-	"crypto" // Added
+	"crypto"
 	"crypto/rand"
-	"crypto/rsa" // Added
+	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"errors"
 	"fmt"
+	"log" // Use standard log for fatal startup errors before zap is ready
 	"net/http"
 	"os"
-	"strconv"
+	"os/signal"
+	"strconv" // Keep strconv only if needed elsewhere, removed for Port
 	"strings"
+	"syscall"
 	"time"
 
-	"github.com/coreos/go-oidc/v3/oidc"
 	dexApi "github.com/dexidp/dex/api/v2"
-
-	"github.com/go-jose/go-jose/v4" // Added
 	config2 "github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/httpserver"
-	"github.com/opengovern/og-util/pkg/postgres"
-	"github.com/opengovern/opensecurity/services/auth/db"
+	"github.com/opengovern/og-util/pkg/postgres"          // Used for postgres.Config
+	"github.com/opengovern/opensecurity/services/auth/db" // Local DB package
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
+
+	// Use v4 as confirmed working by 'go get'
+	jose "github.com/go-jose/go-jose/v4"
+
+	"github.com/coreos/go-oidc/v3/oidc"
 )
 
 var (
-	dexPublicClientRedirectUris  = os.Getenv("DEX_PUBLIC_CLIENT_REDIRECT_URIS")
-	dexPrivateClientRedirectUris = os.Getenv("DEX_PRIVATE_CLIENT_REDIRECT_URIS")
+	// Keep environment variable reads for existing configs
 	dexAuthDomain                = os.Getenv("DEX_AUTH_DOMAIN")
 	dexAuthPublicClientID        = os.Getenv("DEX_AUTH_PUBLIC_CLIENT_ID")
 	dexGrpcAddress               = os.Getenv("DEX_GRPC_ADDR")
+	dexPublicClientRedirectUris  = os.Getenv("DEX_PUBLIC_CLIENT_REDIRECT_URIS")
+	dexPrivateClientRedirectUris = os.Getenv("DEX_PRIVATE_CLIENT_REDIRECT_URIS")
 	httpServerAddress            = os.Getenv("HTTP_ADDRESS")
 	platformHost                 = os.Getenv("PLATFORM_HOST")
 	platformKeyEnabledStr        = os.Getenv("PLATFORM_KEY_ENABLED")
 	platformPublicKeyStr         = os.Getenv("PLATFORM_PUBLIC_KEY")
 	platformPrivateKeyStr        = os.Getenv("PLATFORM_PRIVATE_KEY")
-	// PLATFORM_KEY_ID env var reading is removed
 )
 
-// --- ADDED HELPER FUNCTION ---
-// calculateKeyID computes the JWK thumbprint (SHA256, Base64URL encoded) for the given public key.
+// calculateKeyID computes the JWK thumbprint (SHA256, Base64URL encoded).
 func calculateKeyID(pub *rsa.PublicKey) (string, error) {
-	// Use the public key directly to create the JWK representation for thumbprint
 	jwk := jose.JSONWebKey{Key: pub}
-	thumbprintBytes, err := jwk.Thumbprint(crypto.SHA256) // Calculate SHA256 thumbprint
+	thumbprintBytes, err := jwk.Thumbprint(crypto.SHA256)
 	if err != nil {
 		return "", fmt.Errorf("failed to calculate JWK thumbprint: %w", err)
 	}
-	// The thumbprint needs to be base64url encoded for use as kid
 	kid := base64.RawURLEncoding.EncodeToString(thumbprintBytes)
 	return kid, nil
 }
 
-// --- END HELPER FUNCTION ---
-
+// Command creates the Cobra command for the auth service.
 func Command() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{Use: "auth-service", Short: "Starts the OpenSecurity authentication and authorization service", SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return start(cmd.Context())
+			ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+			defer stop()
+			err := start(ctx)
+			if err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, http.ErrServerClosed) {
+				log.Printf("ERROR: Service failed: %v\n", err)
+				return err
+			}
+			if errors.Is(err, context.Canceled) {
+				log.Println("Service shutdown requested via signal.")
+			}
+			log.Println("Service shutdown complete.")
+			return nil
 		},
 	}
+	return cmd
 }
 
+// ServerConfig holds configuration read from the environment.
 type ServerConfig struct {
-	PostgreSQL config2.Postgres
+	PostgreSQL config2.Postgres // Assumes config2.Postgres has Port as string
 }
 
-// start runs both HTTP and GRPC server.
-// GRPC server has Check method to ensure user is
-// authenticated and authorized to perform an action.
-// HTTP server has multiple endpoints to view and update
-// the user roles.
+// start initializes and runs the auth service components.
 func start(ctx context.Context) error {
-	var conf ServerConfig
-	config2.ReadFromEnv(&conf, nil)
-
 	logger, err := zap.NewProduction()
 	if err != nil {
+		log.Fatalf("CRITICAL: Failed to initialize Zap logger: %v", err)
 		return err
 	}
-	logger = logger.Named("auth")
+	defer func() { _ = logger.Sync() }()
+	logger = logger.Named("auth-service")
+	logger.Info("Auth service starting...")
 
+	// --- Configuration Reading & Validation ---
+	var conf ServerConfig
+	// Fix #1: Call ReadFromEnv directly as it returns no error
+	config2.ReadFromEnv(&conf, nil)
+	// Note: The original ReadFromEnv panics on strconv errors inside, so no error check needed here.
+	logger.Info("Configuration loaded from environment")
+
+	// Validate essential configurations
+	if dexAuthDomain == "" || dexAuthPublicClientID == "" || dexGrpcAddress == "" {
+		return fmt.Errorf("required Dex configuration missing (DEX_AUTH_DOMAIN, DEX_AUTH_PUBLIC_CLIENT_ID, DEX_GRPC_ADDR)")
+	}
+	if httpServerAddress == "" {
+		return fmt.Errorf("required HTTP server address missing (HTTP_ADDRESS)")
+	}
+	// Fix #2: Validate Port as string
+	if conf.PostgreSQL.Host == "" || conf.PostgreSQL.Port == "" || conf.PostgreSQL.Username == "" || conf.PostgreSQL.DB == "" {
+		return fmt.Errorf("incomplete PostgreSQL configuration provided (host, port, user, db required)")
+	}
+	// Fix #2: Remove Atoi conversion here. Use string directly below.
+	// dbPortInt, err := strconv.Atoi(conf.PostgreSQL.Port)
+	// if err != nil || dbPortInt <= 0 {
+	// 	return fmt.Errorf("invalid PostgreSQL port number '%s': %w", conf.PostgreSQL.Port, err)
+	// }
+	logger.Info("Configuration validated")
+
+	// --- OIDC Verifier Setup ---
 	dexVerifier, err := newDexOidcVerifier(ctx, dexAuthDomain, dexAuthPublicClientID)
 	if err != nil {
-		return fmt.Errorf("open id connect dex verifier: %w", err)
+		return fmt.Errorf("failed to create OIDC dex verifier: %w", err)
 	}
-	logger.Info("Instantiated a new Open ID Connect verifier")
+	logger.Info("Instantiated Open ID Connect verifier", zap.String("issuer", dexAuthDomain))
 
-	// setup postgres connection
-	cfg := postgres.Config{
-		Host:    conf.PostgreSQL.Host,
+	// --- Database Setup ---
+	pgCfg := postgres.Config{
+		Host: conf.PostgreSQL.Host,
+		// Fix #2: Use the original Port string, assuming postgres.Config expects string
 		Port:    conf.PostgreSQL.Port,
 		User:    conf.PostgreSQL.Username,
 		Passwd:  conf.PostgreSQL.Password,
 		DB:      conf.PostgreSQL.DB,
 		SSLMode: conf.PostgreSQL.SSLMode,
 	}
-	orm, err := postgres.NewClient(&cfg, logger)
+	orm, err := postgres.NewClient(&pgCfg, logger.Named("postgres"))
 	if err != nil {
-		return fmt.Errorf("new postgres client: %w", err)
+		return fmt.Errorf("failed to create postgres client: %w", err)
 	}
-	adb := db.Database{Orm: orm}
-	fmt.Println("Connected to the postgres database: ", conf.PostgreSQL.DB)
-	err = adb.Initialize()
+	sqlDB, err := orm.DB()
 	if err != nil {
-		// Use a more specific error message than just "new postgres client"
-		return fmt.Errorf("database initialization error: %w", err)
+		return fmt.Errorf("failed to get underlying sql.DB: %w", err)
 	}
+	if err := sqlDB.PingContext(ctx); err != nil {
+		return fmt.Errorf("failed to ping database: %w", err)
+	}
+	adb := db.Database{Orm: orm} // Concrete DB struct
+	logger.Info("Connected to the postgres database", zap.String("db_name", conf.PostgreSQL.DB))
+	if err := adb.Initialize(); err != nil {
+		return fmt.Errorf("database migration/initialization error: %w", err)
+	}
+	logger.Info("Database initialized successfully")
 
+	// --- Platform Key Loading/Generation (Keep existing logic) ---
 	if platformKeyEnabledStr == "" {
 		platformKeyEnabledStr = "false"
 	}
 	platformKeyEnabled, err := strconv.ParseBool(platformKeyEnabledStr)
 	if err != nil {
-		return fmt.Errorf("platformKeyEnabled [%s]: %w", platformKeyEnabledStr, err)
+		return fmt.Errorf("invalid PLATFORM_KEY_ENABLED value [%s]: %w", platformKeyEnabledStr, err)
 	}
-
 	var platformPublicKey *rsa.PublicKey
 	var platformPrivateKey *rsa.PrivateKey
-	var platformKeyID string // Variable to store the calculated Key ID
-
+	var platformKeyID string
 	if platformKeyEnabled {
-		// --- Load keys from Environment Variables ---
 		logger.Info("Loading platform keys from environment variables.")
-		b, err := base64.StdEncoding.DecodeString(platformPublicKeyStr)
+		if platformPublicKeyStr == "" || platformPrivateKeyStr == "" {
+			return fmt.Errorf("PLATFORM_KEY_ENABLED=true but PLATFORM_PUBLIC_KEY or PLATFORM_PRIVATE_KEY is missing")
+		}
+		pubBytes, err := base64.StdEncoding.DecodeString(platformPublicKeyStr)
 		if err != nil {
-			return fmt.Errorf("public key decode: %w", err)
+			return fmt.Errorf("failed to base64 decode PLATFORM_PUBLIC_KEY: %w", err)
 		}
-		block, _ := pem.Decode(b)
-		if block == nil {
-			return fmt.Errorf("failed to decode public key PEM block from env")
+		pubBlock, _ := pem.Decode(pubBytes)
+		if pubBlock == nil {
+			return fmt.Errorf("failed to pem decode PLATFORM_PUBLIC_KEY")
 		}
-		pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+		pubParsed, err := x509.ParsePKIXPublicKey(pubBlock.Bytes)
 		if err != nil {
 			return fmt.Errorf("failed to parse public key from env: %w", err)
 		}
 		var ok bool
-		platformPublicKey, ok = pub.(*rsa.PublicKey)
+		platformPublicKey, ok = pubParsed.(*rsa.PublicKey)
 		if !ok {
-			return fmt.Errorf("key parsed from env is not an RSA public key")
+			return fmt.Errorf("key parsed from PLATFORM_PUBLIC_KEY is not an RSA public key")
 		}
-
-		b, err = base64.StdEncoding.DecodeString(platformPrivateKeyStr)
+		privBytes, err := base64.StdEncoding.DecodeString(platformPrivateKeyStr)
 		if err != nil {
-			return fmt.Errorf("private key decode: %w", err)
+			return fmt.Errorf("failed to base64 decode PLATFORM_PRIVATE_KEY: %w", err)
 		}
-		block, _ = pem.Decode(b)
-		if block == nil {
-			// Use return instead of panic for better error handling during startup
-			return fmt.Errorf("failed to decode private key PEM block from env")
+		privBlock, _ := pem.Decode(privBytes)
+		if privBlock == nil {
+			return fmt.Errorf("failed to pem decode PLATFORM_PRIVATE_KEY")
 		}
-		pri, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		privParsed, err := x509.ParsePKCS8PrivateKey(privBlock.Bytes)
 		if err != nil {
-			// Use return instead of panic
-			return fmt.Errorf("failed to parse private key from env: %w", err)
+			return fmt.Errorf("failed to parse private key (PKCS8) from env: %w", err)
 		}
-		platformPrivateKey, ok = pri.(*rsa.PrivateKey)
+		platformPrivateKey, ok = privParsed.(*rsa.PrivateKey)
 		if !ok {
-			return fmt.Errorf("key parsed from env is not an RSA private key")
+			return fmt.Errorf("key parsed from PLATFORM_PRIVATE_KEY is not an RSA private key")
 		}
-		// --- END Load keys ---
-
-		// --- Calculate Key ID from loaded public key ---
-		platformKeyID, err = calculateKeyID(platformPublicKey)
-		if err != nil {
-			logger.Error("Failed to calculate Key ID from environment public key", zap.Error(err))
-			return fmt.Errorf("failed to derive platform key ID from env key: %w", err)
-		}
-		logger.Info("Derived platform Key ID (kid) from environment key", zap.String("kid", platformKeyID))
-		// --- END Calculate Key ID ---
-
 	} else {
-		// --- Load/Generate keys from/to Database ---
-		logger.Info("Attempting to load platform keys from database.")
-		keyPair, err := adb.GetKeyPair()
-		// Use return instead of panic for DB errors during startup
+		logger.Info("Attempting to load/generate platform keys from/to database.")
+		keyPair, err := adb.GetKeyPair(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to query key pair from db: %w", err)
 		}
-
 		if len(keyPair) == 0 {
-			// --- Generate New Keys ---
 			logger.Info("No keys found in database, generating new platform RSA key pair.")
 			platformPrivateKey, err = rsa.GenerateKey(rand.Reader, 2048)
 			if err != nil {
 				return fmt.Errorf("error generating RSA key: %w", err)
 			}
 			platformPublicKey = &platformPrivateKey.PublicKey
-
-			// Store public key
 			bPub, errPub := x509.MarshalPKIXPublicKey(platformPublicKey)
 			if errPub != nil {
 				return fmt.Errorf("failed to marshal generated public key: %w", errPub)
 			}
-			bpPub := pem.EncodeToMemory(&pem.Block{Type: "RSA PUBLIC KEY", Bytes: bPub})
+			bpPub := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: bPub})
 			strPub := base64.StdEncoding.EncodeToString(bpPub)
-			errDbPub := adb.AddConfiguration(&db.Configuration{Key: "public_key", Value: strPub})
+			errDbPub := adb.AddConfiguration(ctx, &db.Configuration{Key: "public_key", Value: strPub})
 			if errDbPub != nil {
 				return fmt.Errorf("failed to save generated public key to db: %w", errDbPub)
 			}
-
-			// Store private key
 			bPri, errPri := x509.MarshalPKCS8PrivateKey(platformPrivateKey)
 			if errPri != nil {
-				return fmt.Errorf("failed to marshal generated private key: %w", errPri)
+				return fmt.Errorf("failed to marshal generated private key (PKCS8): %w", errPri)
 			}
-			bpPri := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: bPri})
+			bpPri := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: bPri})
 			strPri := base64.StdEncoding.EncodeToString(bpPri)
-			errDbPri := adb.AddConfiguration(&db.Configuration{Key: "private_key", Value: strPri})
+			errDbPri := adb.AddConfiguration(ctx, &db.Configuration{Key: "private_key", Value: strPri})
 			if errDbPri != nil {
 				return fmt.Errorf("failed to save generated private key to db: %w", errDbPri)
 			}
 			logger.Info("Saved generated key pair to database.")
-			// --- END Generate New Keys ---
-
-			// --- Calculate Key ID from generated public key ---
-			platformKeyID, err = calculateKeyID(platformPublicKey)
-			if err != nil {
-				logger.Error("Failed to calculate Key ID from generated public key", zap.Error(err))
-				return fmt.Errorf("failed to derive platform key ID from generated key: %w", err)
-			}
-			logger.Info("Derived platform Key ID (kid) from generated key", zap.String("kid", platformKeyID))
-			// --- END Calculate Key ID ---
-
 		} else {
-			// --- Load Keys From DB ---
+			logger.Info("Loading platform key pair from database.")
 			var pubFound, privFound bool
 			for _, k := range keyPair {
+				keyBytes, err := base64.StdEncoding.DecodeString(k.Value)
+				if err != nil {
+					return fmt.Errorf("failed to base64 decode key '%s' from db: %w", k.Key, err)
+				}
+				block, _ := pem.Decode(keyBytes)
+				if block == nil {
+					return fmt.Errorf("failed to pem decode key '%s' from db", k.Key)
+				}
 				if k.Key == "public_key" {
-					b, err := base64.StdEncoding.DecodeString(k.Value)
-					if err != nil {
-						return fmt.Errorf("db public key decode error: %w", err)
-					}
-					block, _ := pem.Decode(b)
-					if block == nil {
-						return fmt.Errorf("failed to decode public key PEM block from db")
-					}
-					pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+					pubParsed, err := x509.ParsePKIXPublicKey(block.Bytes)
 					if err != nil {
 						return fmt.Errorf("failed to parse public key from db: %w", err)
 					}
 					var ok bool
-					platformPublicKey, ok = pub.(*rsa.PublicKey)
+					platformPublicKey, ok = pubParsed.(*rsa.PublicKey)
 					if !ok {
-						return fmt.Errorf("key from db is not an RSA public key")
+						return fmt.Errorf("public key from db is not RSA")
 					}
 					pubFound = true
 				} else if k.Key == "private_key" {
-					b, err := base64.StdEncoding.DecodeString(k.Value)
+					privParsed, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 					if err != nil {
-						return fmt.Errorf("db private key decode error: %w", err)
-					}
-					block, _ := pem.Decode(b)
-					if block == nil {
-						// Use return instead of panic
-						return fmt.Errorf("failed to decode private key PEM block from db")
-					}
-					pri, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-					if err != nil {
-						// Use return instead of panic
-						return fmt.Errorf("failed to parse private key from db: %w", err)
+						return fmt.Errorf("failed to parse private key (PKCS8) from db: %w", err)
 					}
 					var ok bool
-					platformPrivateKey, ok = pri.(*rsa.PrivateKey)
+					platformPrivateKey, ok = privParsed.(*rsa.PrivateKey)
 					if !ok {
-						return fmt.Errorf("key from db is not an RSA private key")
+						return fmt.Errorf("private key from db is not RSA")
 					}
 					privFound = true
 				}
@@ -279,175 +281,159 @@ func start(ctx context.Context) error {
 			if !pubFound || !privFound {
 				return fmt.Errorf("could not find both public and private keys in db configuration")
 			}
-			logger.Info("Loaded platform key pair from database.")
-			// --- END Load Keys From DB ---
-
-			// --- Calculate Key ID from loaded public key ---
-			platformKeyID, err = calculateKeyID(platformPublicKey)
-			if err != nil {
-				logger.Error("Failed to calculate Key ID from database public key", zap.Error(err))
-				return fmt.Errorf("failed to derive platform key ID from db key: %w", err)
-			}
-			logger.Info("Derived platform Key ID (kid) from database key", zap.String("kid", platformKeyID))
-			// --- END Calculate Key ID ---
 		}
 	}
 
-	// Final check after loading/generating
-	if platformPrivateKey == nil || platformPublicKey == nil || platformKeyID == "" {
-		return fmt.Errorf("platform key pair or key ID could not be initialized")
+	if platformPublicKey == nil {
+		return fmt.Errorf("platform public key was not loaded or generated")
+	}
+	platformKeyID, err = calculateKeyID(platformPublicKey)
+	if err != nil {
+		logger.Error("Failed to calculate Key ID from platform public key", zap.Error(err))
+		return fmt.Errorf("failed to derive platform key ID: %w", err)
+	}
+	logger.Info("Derived platform Key ID (kid) for JWTs", zap.String("kid", platformKeyID))
+	if platformPrivateKey == nil || platformKeyID == "" {
+		return fmt.Errorf("platform private key or key ID could not be initialized")
 	}
 
 	// --- Dex Client Setup ---
-	dexClient, err := newDexClient(dexGrpcAddress)
+	dexClient, conn, err := newDexClient(dexGrpcAddress)
 	if err != nil {
 		logger.Error("Failed to create dex client", zap.Error(err))
-		return err // Return the error directly
+		return err
 	}
-	err = ensureDexClients(ctx, logger, dexClient)
-	if err != nil {
+	defer func() {
+		logger.Info("Closing Dex gRPC client connection...")
+		if closeErr := conn.Close(); closeErr != nil {
+			logger.Warn("Error closing Dex gRPC client connection", zap.Error(closeErr))
+		}
+	}()
+	if err = ensureDexClients(ctx, logger, dexClient); err != nil {
 		logger.Error("Failed to ensure dex clients", zap.Error(err))
-		return err // Return the error directly
+		return err
 	}
-	// --- END Dex Client Setup ---
+	logger.Info("Dex gRPC client connected and clients ensured")
 
 	// --- Instantiate Servers ---
+	// Pass pointer (&adb) which satisfies db.DatabaseInterface
+	// !!! THIS WILL FAIL TO COMPILE until methods in db/db.go are updated !!!
 	authServer := &Server{
-		host:                platformHost,
-		platformPublicKey:   platformPublicKey,
-		platformKeyID:       platformKeyID, // Pass calculated Key ID
-		dexVerifier:         dexVerifier,
-		dexClient:           dexClient,
-		logger:              logger,
-		db:                  adb,
-		updateLoginUserList: nil, // Initialize properly later if needed
-		updateLogin:         make(chan User, 100000),
+		host: platformHost, platformPublicKey: platformPublicKey, platformKeyID: platformKeyID,
+		dexVerifier: dexVerifier, dexClient: dexClient, logger: logger.Named("authServer"),
+		db:          &adb, // Assign pointer to concrete struct to interface field
+		updateLogin: make(chan User, 100000),
 	}
-
 	go authServer.UpdateLastLoginLoop()
 
-	errors := make(chan error, 1)
-	go func() {
-		routes := httpRoutes{
-			logger:             logger,
-			platformPrivateKey: platformPrivateKey,
-			platformKeyID:      platformKeyID, // Pass calculated Key ID
-			db:                 adb,
-			authServer:         authServer,
-		}
-		// Use the httpserver package's function correctly
-		errors <- fmt.Errorf("http server: %w", httpserver.RegisterAndStart(ctx, logger, httpServerAddress, &routes))
-	}()
-	// --- END Instantiate Servers ---
+	errorsChan := make(chan error, 1)
 
-	return <-errors
+	go func() {
+		// !!! THIS WILL FAIL TO COMPILE until methods in db/db.go are updated !!!
+		httpRoutes := httpRoutes{
+			logger: logger.Named("httpRoutes"), platformPrivateKey: platformPrivateKey,
+			platformKeyID: platformKeyID, db: &adb, // Assign pointer to concrete struct to interface field
+			authServer: authServer,
+		}
+		logger.Info("Starting HTTP server", zap.String("address", httpServerAddress))
+		serverErr := httpserver.RegisterAndStart(ctx, logger, httpServerAddress, &httpRoutes)
+		if serverErr != nil && !errors.Is(serverErr, http.ErrServerClosed) {
+			errorsChan <- fmt.Errorf("http server error: %w", serverErr)
+		} else {
+			logger.Info("HTTP server shut down.")
+			close(errorsChan)
+		}
+	}()
+
+	// --- Wait for Shutdown Signal or Error ---
+	logger.Info("Auth service started successfully. Waiting for shutdown signal...")
+	select {
+	case err, ok := <-errorsChan:
+		// Fix #1: Check error from channel correctly using errors.Is
+		if ok && err != nil {
+			logger.Error("Service failed", zap.Error(err))
+			if errors.Is(err, http.ErrServerClosed) {
+				logger.Info("HTTP server closed normally.")
+				return nil
+			}
+			return err
+		}
+		logger.Info("Errors channel closed, service stopped gracefully.")
+		return nil
+	case <-ctx.Done():
+		logger.Info("Service shutting down due to context cancellation signal...")
+		return ctx.Err()
+	}
 }
 
-// newServerCredentials loads TLS transport credentials for the GRPC server.
+// --- Helper Functions (Keep as before, ensure imports are correct) ---
+
+// newServerCredentials (Example TLS setup)
 func newServerCredentials(certPath string, keyPath string, caPath string) (credentials.TransportCredentials, error) {
 	srv, err := tls.LoadX509KeyPair(certPath, keyPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to load TLS key pair (%s, %s): %w", certPath, keyPath, err)
 	}
-
-	p := x509.NewCertPool()
-
+	cp := x509.NewCertPool()
 	if caPath != "" {
-		ca, err := os.ReadFile(caPath)
+		caBytes, err := os.ReadFile(caPath)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to read CA certificate %s: %w", caPath, err)
 		}
-
-		p.AppendCertsFromPEM(ca)
+		if !cp.AppendCertsFromPEM(caBytes) {
+			return nil, fmt.Errorf("failed to append CA certs from %s", caPath)
+		}
 	}
-
-	return credentials.NewTLS(&tls.Config{
-		MinVersion:   tls.VersionTLS12,
-		Certificates: []tls.Certificate{srv},
-		RootCAs:      p, // For server validation of clients (mTLS), use ClientCAs
-	}), nil
+	return credentials.NewTLS(&tls.Config{Certificates: []tls.Certificate{srv}, RootCAs: cp, MinVersion: tls.VersionTLS12}), nil
 }
 
 // newDexOidcVerifier creates a verifier for tokens issued by Dex.
 func newDexOidcVerifier(ctx context.Context, domain, clientId string) (*oidc.IDTokenVerifier, error) {
-	transport := &http.Transport{
-		MaxIdleConns:        10,
-		IdleConnTimeout:     30 * time.Second,
-		MaxIdleConnsPerHost: 10,
-	}
-	httpClient := &http.Client{
-		Transport: transport,
-	}
-
-	// Use context with client for provider creation
+	httpClient := &http.Client{Timeout: 10 * time.Second}
 	providerCtx := oidc.ClientContext(ctx, httpClient)
-
-	// Allow insecure issuer URL for http endpoints (like localhost testing)
-	// Use oidc.Provider for production with https
-	provider, err := oidc.NewProvider(
-		oidc.InsecureIssuerURLContext(providerCtx, domain),
-		domain,
-	)
+	// IMPORTANT: Production Dex should use HTTPS, remove InsecureIssuerURLContext wrapper unless required for dev
+	provider, err := oidc.NewProvider(oidc.InsecureIssuerURLContext(providerCtx, domain), domain)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create OIDC provider: %w", err)
+		return nil, fmt.Errorf("failed to create OIDC provider for %s: %w", domain, err)
 	}
-
-	return provider.Verifier(&oidc.Config{
-		ClientID: clientId,
-		// Skipping checks might be necessary if Dex issuer/client_id setup is unusual,
-		// but it's generally safer to validate them if possible.
-		SkipClientIDCheck: true,
-		SkipIssuerCheck:   true,
-	}), nil
+	return provider.Verifier(&oidc.Config{ClientID: clientId}), nil // Removed Skip checks
 }
 
-// newDexClient creates a gRPC client connection to Dex.
-func newDexClient(hostAndPort string) (dexApi.DexClient, error) {
-	// Use grpc.WithInsecure() for non-TLS connections (e.g., localhost testing)
-	// For production, configure TLS credentials:
-	// creds, err := credentials.NewClientTLSFromFile(caPath, serverNameOverride)
-	// conn, err := grpc.NewClient(hostAndPort, grpc.WithTransportCredentials(creds))
-	conn, err := grpc.NewClient(hostAndPort, grpc.WithInsecure()) // Assuming insecure for now
+// newDexClient creates a gRPC client connection to Dex. Returns client, connection, error.
+func newDexClient(hostAndPort string) (dexApi.DexClient, *grpc.ClientConn, error) {
+	// Production TODO: Replace WithTransportCredentials(insecure.NewCredentials()) with TLS credentials
+	log.Printf("WARNING: Connecting to Dex gRPC at %s using insecure credentials. THIS IS NOT PRODUCTION SAFE.", hostAndPort)
+	conn, err := grpc.NewClient(hostAndPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return nil, fmt.Errorf("failed to dial dex grpc server: %w", err)
+		return nil, nil, fmt.Errorf("failed to dial dex grpc server at %s: %w", hostAndPort, err)
 	}
-	return dexApi.NewDexClient(conn), nil
+	return dexApi.NewDexClient(conn), conn, nil
 }
 
 // ensureDexClients ensures the required public and private OAuth clients exist in Dex.
 func ensureDexClients(ctx context.Context, logger *zap.Logger, dexClient dexApi.DexClient) error {
 	// Public Client
-	publicUris := strings.Split(dexPublicClientRedirectUris, ",")
-	if len(publicUris) == 0 || (len(publicUris) == 1 && publicUris[0] == "") {
+	publicUris := strings.Split(strings.TrimSpace(dexPublicClientRedirectUris), ",")
+	if len(publicUris) == 0 || publicUris[0] == "" {
 		logger.Warn("DEX_PUBLIC_CLIENT_REDIRECT_URIS is not set or empty, skipping public client setup.")
 	} else {
-		publicClientResp, _ := dexClient.GetClient(ctx, &dexApi.GetClientReq{Id: "public-client"})
-		logger.Info("Checking Dex public client", zap.Any("redirectURIs", publicUris))
-		if publicClientResp != nil && publicClientResp.Client != nil {
-			// Update existing client if needed (e.g., to update redirect URIs)
-			// You might want to compare existing URIs before updating
-			publicClientReq := dexApi.UpdateClientReq{
-				Id:           "public-client",
-				Name:         "Public Client", // Keep name consistent
-				RedirectUris: publicUris,
-			}
-			_, err := dexClient.UpdateClient(ctx, &publicClientReq)
+		clientResp, err := dexClient.GetClient(ctx, &dexApi.GetClientReq{Id: "public-client"})
+		if err != nil && !strings.Contains(err.Error(), "not found") {
+			logger.Error("Failed to get dex public client", zap.Error(err))
+			return fmt.Errorf("failed to get dex public client: %w", err)
+		}
+		logger.Info("Ensuring Dex public client exists/is updated", zap.Any("redirectURIs", publicUris))
+		if clientResp != nil && clientResp.Client != nil {
+			req := dexApi.UpdateClientReq{Id: "public-client", Name: "Public Client", RedirectUris: publicUris}
+			_, err := dexClient.UpdateClient(ctx, &req)
 			if err != nil {
 				logger.Error("Failed to update dex public client", zap.Error(err))
 				return fmt.Errorf("failed to update dex public client: %w", err)
 			}
 			logger.Info("Updated existing Dex public client.")
 		} else {
-			// Create new client
-			publicClientReq := dexApi.CreateClientReq{
-				Client: &dexApi.Client{
-					Id:           "public-client",
-					Name:         "Public Client",
-					RedirectUris: publicUris,
-					Public:       true, // Mark as public
-				},
-			}
-			_, err := dexClient.CreateClient(ctx, &publicClientReq)
+			req := dexApi.CreateClientReq{Client: &dexApi.Client{Id: "public-client", Name: "Public Client", RedirectUris: publicUris, Public: true}}
+			_, err := dexClient.CreateClient(ctx, &req)
 			if err != nil {
 				logger.Error("Failed to create dex public client", zap.Error(err))
 				return fmt.Errorf("failed to create dex public client: %w", err)
@@ -455,39 +441,33 @@ func ensureDexClients(ctx context.Context, logger *zap.Logger, dexClient dexApi.
 			logger.Info("Created new Dex public client.")
 		}
 	}
-
 	// Private Client
-	privateUris := strings.Split(dexPrivateClientRedirectUris, ",")
-	if len(privateUris) == 0 || (len(privateUris) == 1 && privateUris[0] == "") {
+	privateUris := strings.Split(strings.TrimSpace(dexPrivateClientRedirectUris), ",")
+	if len(privateUris) == 0 || privateUris[0] == "" {
 		logger.Warn("DEX_PRIVATE_CLIENT_REDIRECT_URIS is not set or empty, skipping private client setup.")
 	} else {
-		privateClientResp, _ := dexClient.GetClient(ctx, &dexApi.GetClientReq{Id: "private-client"})
-		logger.Info("Checking Dex private client", zap.Any("redirectURIs", privateUris))
-		if privateClientResp != nil && privateClientResp.Client != nil {
-			// Update existing client
-			privateClientReq := dexApi.UpdateClientReq{
-				Id:           "private-client",
-				Name:         "Private Client", // Keep name consistent
-				RedirectUris: privateUris,
-				// Secret cannot be updated via API, it seems
-			}
-			_, err := dexClient.UpdateClient(ctx, &privateClientReq)
+		clientResp, err := dexClient.GetClient(ctx, &dexApi.GetClientReq{Id: "private-client"})
+		if err != nil && !strings.Contains(err.Error(), "not found") {
+			logger.Error("Failed to get dex private client", zap.Error(err))
+			return fmt.Errorf("failed to get dex private client: %w", err)
+		}
+		logger.Info("Ensuring Dex private client exists/is updated", zap.Any("redirectURIs", privateUris))
+		if clientResp != nil && clientResp.Client != nil {
+			req := dexApi.UpdateClientReq{Id: "private-client", Name: "Private Client", RedirectUris: privateUris}
+			_, err := dexClient.UpdateClient(ctx, &req)
 			if err != nil {
 				logger.Error("Failed to update dex private client", zap.Error(err))
 				return fmt.Errorf("failed to update dex private client: %w", err)
 			}
 			logger.Info("Updated existing Dex private client.")
 		} else {
-			// Create new client
-			privateClientReq := dexApi.CreateClientReq{
-				Client: &dexApi.Client{
-					Id:           "private-client",
-					Name:         "Private Client",
-					RedirectUris: privateUris,
-					Secret:       "secret", // Use a configurable secret in production
-				},
+			dexClientSecret := os.Getenv("DEX_PRIVATE_CLIENT_SECRET")
+			if dexClientSecret == "" {
+				dexClientSecret = "secret"
+				logger.Warn("DEX_PRIVATE_CLIENT_SECRET not set, using insecure default secret for private client")
 			}
-			_, err := dexClient.CreateClient(ctx, &privateClientReq)
+			req := dexApi.CreateClientReq{Client: &dexApi.Client{Id: "private-client", Name: "Private Client", RedirectUris: privateUris, Secret: dexClientSecret}}
+			_, err := dexClient.CreateClient(ctx, &req)
 			if err != nil {
 				logger.Error("Failed to create dex private client", zap.Error(err))
 				return fmt.Errorf("failed to create dex private client: %w", err)
