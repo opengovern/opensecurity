@@ -32,7 +32,7 @@ import (
 	"github.com/opengovern/opensecurity/services/auth/db" // Local DB package (imports interface now too)
 	"github.com/opengovern/opensecurity/services/auth/utils"
 	"golang.org/x/crypto/bcrypt"
-	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/codes" // For gRPC status codes
 
 	// Use v5 if that's standard in your project, otherwise v4
 	"github.com/golang-jwt/jwt" // Or jwt "github.com/golang-jwt/jwt/v5"
@@ -63,7 +63,8 @@ type httpRoutes struct {
 	platformPrivateKey *rsa.PrivateKey      // Private key used for signing platform JWTs and API Keys.
 	platformKeyID      string               // Key ID ('kid') associated with the platform keys.
 	db                 db.DatabaseInterface // Interface for database operations (allows mocking).
-	authServer         *Server              // Reference to the core server logic (e.g., for Dex gRPC client).
+	authServer         *Server              // Reference to the core server logic (e.g., for Dex gRPC client, public key).
+	dexPublicClientID  string               // Effective Dex public client ID (from config/env).
 }
 
 // Register sets up the HTTP routes, middleware, and handlers for the auth service API
@@ -73,42 +74,35 @@ func (r *httpRoutes) Register(e *echo.Echo) {
 	v1 := e.Group("/api/v1")
 
 	// --- Public / Semi-public endpoints ---
-	// Check endpoint typically called by Envoy for authorization decisions.
-	v1.GET("/check", r.Check)
-	// Token endpoint for exchanging OIDC authorization code for a platform token.
-	v1.POST("/token", r.Token)
+	v1.GET("/check", r.Check)  // For Envoy auth checks
+	v1.POST("/token", r.Token) // For OAuth/OIDC code exchange
 
 	// --- User Management Endpoints ---
-	// Require Editor role for user management APIs
 	v1.GET("/users", httpserver.AuthorizeHandler(r.GetUsers, api2.EditorRole))
-	v1.GET("/user/:id", httpserver.AuthorizeHandler(r.GetUserDetails, api2.EditorRole)) // ID is DB uint ID
+	v1.GET("/user/:id", httpserver.AuthorizeHandler(r.GetUserDetails, api2.EditorRole))
+	v1.GET("/me", httpserver.AuthorizeHandler(r.GetMe, api2.ViewerRole))
 	v1.POST("/user", httpserver.AuthorizeHandler(r.CreateUser, api2.EditorRole))
 	v1.PUT("/user", httpserver.AuthorizeHandler(r.UpdateUser, api2.EditorRole))
-	v1.DELETE("/user/:id", httpserver.AuthorizeHandler(r.DeleteUser, api2.AdminRole)) // Only Admin can delete users
+	v1.GET("/user/password/check", httpserver.AuthorizeHandler(r.CheckUserPasswordChangeRequired, api2.ViewerRole))
+	v1.POST("/user/password/reset", httpserver.AuthorizeHandler(r.ResetUserPassword, api2.ViewerRole))
+	v1.DELETE("/user/:id", httpserver.AuthorizeHandler(r.DeleteUser, api2.AdminRole))
 	v1.PUT("/user/:id/enable", httpserver.AuthorizeHandler(r.EnableUserHandler, api2.AdminRole))
 	v1.PUT("/user/:id/disable", httpserver.AuthorizeHandler(r.DisableUserHandler, api2.AdminRole))
 
-	// Require Viewer role for user-specific actions
-	v1.GET("/me", httpserver.AuthorizeHandler(r.GetMe, api2.ViewerRole)) // Current user details
-	v1.GET("/user/password/check", httpserver.AuthorizeHandler(r.CheckUserPasswordChangeRequired, api2.ViewerRole))
-	v1.POST("/user/password/reset", httpserver.AuthorizeHandler(r.ResetUserPassword, api2.ViewerRole)) // User resets own password
-
 	// --- API Key Management Endpoints ---
-	// Require Admin role for all API key management
 	v1.POST("/keys", httpserver.AuthorizeHandler(r.CreateAPIKey, api2.AdminRole))
 	v1.GET("/keys", httpserver.AuthorizeHandler(r.ListAPIKeys, api2.AdminRole))
-	v1.DELETE("/key/:id", httpserver.AuthorizeHandler(r.DeleteAPIKey, api2.AdminRole)) // ID is DB uint ID
-	v1.PUT("/key/:id", httpserver.AuthorizeHandler(r.EditAPIKey, api2.AdminRole))      // ID is DB uint ID
+	v1.DELETE("/key/:id", httpserver.AuthorizeHandler(r.DeleteAPIKey, api2.AdminRole))
+	v1.PUT("/key/:id", httpserver.AuthorizeHandler(r.EditAPIKey, api2.AdminRole))
 
 	// --- Connector Management Endpoints ---
-	// Require Admin role for all connector management
 	v1.GET("/connectors", httpserver.AuthorizeHandler(r.GetConnectors, api2.AdminRole))
 	v1.GET("/connectors/supported-connector-types", httpserver.AuthorizeHandler(r.GetSupportedType, api2.AdminRole))
-	v1.GET("/connector/:type", httpserver.AuthorizeHandler(r.GetConnectors, api2.AdminRole)) // Filters connectors by type
+	v1.GET("/connector/:type", httpserver.AuthorizeHandler(r.GetConnectors, api2.AdminRole)) // Filters by type
 	v1.POST("/connector", httpserver.AuthorizeHandler(r.CreateConnector, api2.AdminRole))
-	v1.POST("/connector/auth0", httpserver.AuthorizeHandler(r.CreateAuth0Connector, api2.AdminRole)) // Specialized endpoint
-	v1.PUT("/connector", httpserver.AuthorizeHandler(r.UpdateConnector, api2.AdminRole))             // Requires local DB ID and Connector ID in body
-	v1.DELETE("/connector/:id", httpserver.AuthorizeHandler(r.DeleteConnector, api2.AdminRole))      // ID is Dex Connector ID string
+	v1.POST("/connector/auth0", httpserver.AuthorizeHandler(r.CreateAuth0Connector, api2.AdminRole))
+	v1.PUT("/connector", httpserver.AuthorizeHandler(r.UpdateConnector, api2.AdminRole))
+	v1.DELETE("/connector/:id", httpserver.AuthorizeHandler(r.DeleteConnector, api2.AdminRole)) // ID is Dex Connector ID string
 }
 
 // bindValidate is a helper function to bind the request body (typically JSON)
@@ -117,14 +111,10 @@ func (r *httpRoutes) Register(e *echo.Echo) {
 func bindValidate(ctx echo.Context, i interface{}) error {
 	// Bind the request body to the provided struct pointer.
 	if err := ctx.Bind(i); err != nil {
-		// Log the binding error for debugging?
-		// r.logger.Warn("Failed to bind request body", zap.Error(err))
 		return fmt.Errorf("failed to bind request: %w", err)
 	}
 	// Validate the populated struct using Echo's validator.
-	// Assumes a validator (like validator.v9) is registered with the Echo instance.
 	if err := ctx.Validate(i); err != nil {
-		// Return validation errors directly, often results in a 400 Bad Request.
 		return fmt.Errorf("validation failed: %w", err)
 	}
 	return nil
@@ -132,12 +122,12 @@ func bindValidate(ctx echo.Context, i interface{}) error {
 
 // Check godoc
 // @Summary Perform Authorization Check (Envoy)
-// @Description Endpoint typically called by Envoy External Authorization filter. It verifies the Bearer token from the Authorization header, checks user status/permissions via the core auth server logic, and returns an authorization decision compatible with Envoy's CheckRequest/CheckResponse protocol (translated to HTTP status codes and headers). Not intended for direct browser/user consumption.
+// @Description Endpoint typically called by Envoy External Authorization filter. Verifies Bearer token, checks user status/permissions.
 // @Tags auth
-// @Success 200 {string} string "OK (Authorization granted, user headers added to response)"
-// @Failure 401 {object} echo.HTTPError "Unauthorized (Token missing/invalid/expired, user inactive, or other verification failure)"
-// @Failure 403 {object} echo.HTTPError "Forbidden (User authenticated but lacks permissions or is inactive)"
-// @Failure 500 {object} echo.HTTPError "Internal Server Error (Auth server check logic failed)"
+// @Success 200 {string} string "OK (Authorization granted)"
+// @Failure 401 {object} echo.HTTPError "Unauthorized"
+// @Failure 403 {object} echo.HTTPError "Forbidden"
+// @Failure 500 {object} echo.HTTPError "Internal Server Error"
 // @Router /auth/api/v1/check [get]
 // Check handles Envoy's Check request by reconstructing the Envoy request attributes,
 // calling the core gRPC Check logic in the authServer, and translating the gRPC response
@@ -145,7 +135,6 @@ func bindValidate(ctx echo.Context, i interface{}) error {
 // or 401/403 on deny).
 func (r *httpRoutes) Check(ctx echo.Context) error {
 	// 1. Reconstruct Envoy CheckRequest from incoming HTTP headers.
-	// Envoy sends request details (headers, path, method) in the CheckRequest.
 	checkRequest := envoyauth.CheckRequest{
 		Attributes: &envoyauth.AttributeContext{
 			Request: &envoyauth.AttributeContext_Request{
@@ -153,7 +142,6 @@ func (r *httpRoutes) Check(ctx echo.Context) error {
 			},
 		},
 	}
-	// Copy headers (lowercase keys are common from proxies).
 	for k, v := range ctx.Request().Header {
 		headerKey := strings.ToLower(k)
 		if len(v) > 0 {
@@ -162,7 +150,6 @@ func (r *httpRoutes) Check(ctx echo.Context) error {
 			checkRequest.Attributes.Request.Http.Headers[headerKey] = ""
 		}
 	}
-	// Extract original path and method if provided by the proxy (e.g., via x-original-uri).
 	originalURIStr := ctx.Request().Header.Get("x-original-uri")
 	originalMethod := ctx.Request().Header.Get("x-original-method")
 	if originalURIStr != "" {
@@ -181,24 +168,19 @@ func (r *httpRoutes) Check(ctx echo.Context) error {
 	} else {
 		checkRequest.Attributes.Request.Http.Method = ctx.Request().Method
 	}
-	checkRequest.Attributes.Request.Http.Id = ctx.Request().Header.Get("x-request-id") // Preserve request ID for tracing.
+	checkRequest.Attributes.Request.Http.Id = ctx.Request().Header.Get("x-request-id")
 
 	// 2. Delegate the core authorization check to the authServer component.
-	// Pass the request context for cancellation propagation.
 	res, err := r.authServer.Check(ctx.Request().Context(), &checkRequest)
 	if err != nil {
-		// Log internal errors during the check process.
 		r.logger.Error("Auth server Check failed", zap.String("path", checkRequest.Attributes.Request.Http.Path), zap.Error(err))
-		// Return a generic 500 error to the caller (Envoy).
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal authorization error")
 	}
 
 	// 3. Process the CheckResponse from authServer.
 	if res.Status.Code != int32(codes.OK) {
-		// Authorization Denied. Translate gRPC status to HTTP status.
-		httpStatusCode := http.StatusUnauthorized // Default deny status.
-		respBody := "Access Denied"               // Default deny message.
-		// Use details from the DeniedResponse if provided.
+		httpStatusCode := http.StatusUnauthorized
+		respBody := "Access Denied"
 		if deniedResp := res.GetDeniedResponse(); deniedResp != nil {
 			if deniedResp.Status != nil {
 				httpStatusCode = int(deniedResp.Status.Code)
@@ -211,17 +193,12 @@ func (r *httpRoutes) Check(ctx echo.Context) error {
 		return echo.NewHTTPError(httpStatusCode, respBody)
 	}
 
-	// Authorization Granted.
+	// 4. Authorization Granted: Add headers from OkResponse to the current HTTP response.
 	okResp := res.GetOkResponse()
 	if okResp == nil {
-		// This indicates a logic error in the authServer.Check implementation.
 		r.logger.Error("Auth server returned OK status but nil OkResponse")
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal authorization configuration error")
 	}
-
-	// 4. Add headers from the OkResponse to the current HTTP response.
-	// These headers will be sent back to Envoy, which should then add them
-	// to the original request before forwarding it to the upstream service.
 	for _, headerOpt := range okResp.GetHeaders() {
 		if header := headerOpt.GetHeader(); header != nil {
 			ctx.Response().Header().Set(header.Key, header.Value)
@@ -229,13 +206,12 @@ func (r *httpRoutes) Check(ctx echo.Context) error {
 	}
 
 	r.logger.Debug("Check request approved, returning OK", zap.String("path", checkRequest.Attributes.Request.Http.Path))
-	// Return HTTP 200 OK with no body. Envoy uses the headers set on the response.
 	return ctx.NoContent(http.StatusOK)
 }
 
 // Token godoc
 // @Summary Exchange OIDC Code for Platform Token
-// @Description Handles the OIDC authorization code flow callback. Exchanges the provided code with Dex for an OIDC token set, verifies the ID token, looks up the user locally, enriches claims with local role/IDs, and issues a new platform-specific JWT signed by this service.
+// @Description Handles the OIDC authorization code flow callback. Exchanges the provided code with Dex for an OIDC token set, verifies the ID token, looks up the user locally, enriches claims with local role/IDs, and issues a new platform-specific JWT signed by this service. Includes a self-verification step after signing.
 // @Tags auth
 // @Accept json
 // @Produce json
@@ -244,39 +220,33 @@ func (r *httpRoutes) Check(ctx echo.Context) error {
 // @Failure 400 {object} echo.HTTPError "Bad Request (Missing code/callback, invalid request format)"
 // @Failure 401 {object} echo.HTTPError "Unauthorized (Failed to verify token from Dex)"
 // @Failure 403 {object} echo.HTTPError "Forbidden (User authenticated with Dex but not found locally or inactive)"
-// @Failure 500 {object} echo.HTTPError "Internal Server Error (DB error, token signing error, config error)"
+// @Failure 500 {object} echo.HTTPError "Internal Server Error (DB error, token signing/verification error, config error)"
 // @Failure 502 {object} echo.HTTPError "Bad Gateway (Failed to communicate with Dex)"
 // @Router /auth/api/v1/token [post]
-// Token handles the OIDC authorization code exchange. It receives a code,
-// talks to the Dex /token endpoint, verifies the resulting ID token using the OIDC verifier,
-// finds the corresponding user in the local database, creates a new JWT with enriched claims
-// (local role, canonical external ID as subject, platform issuer/audience), signs this new JWT
-// with the platform's private key (adding the platform key ID 'kid' header), and returns
-// the original Dex token response but with the access_token replaced by the new platform JWT.
+// Token handles the OIDC authorization code exchange.
 func (r *httpRoutes) Token(ctx echo.Context) error {
-	// 1. Bind and validate the incoming request body.
+	// 1. Bind and validate request.
 	var req api.GetTokenRequest
 	if err := bindValidate(ctx, &req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	// 2. Get Dex configuration from environment.
+	// 2. Prepare Dex token endpoint request.
 	domain := os.Getenv("DEX_AUTH_DOMAIN")
 	if domain == "" {
 		r.logger.Error("DEX_AUTH_DOMAIN environment variable not set")
 		return echo.NewHTTPError(http.StatusInternalServerError, "Identity provider configuration error")
 	}
 	dexTokenURL := fmt.Sprintf("%s/token", domain)
-
-	// 3. Prepare the token exchange request for Dex.
 	data := url.Values{}
 	data.Set("grant_type", "authorization_code")
 	data.Set("code", req.Code)
 	data.Set("redirect_uri", req.CallBackUrl)
-	data.Set("client_id", "public-client") // Assuming public client
-	r.logger.Info("Exchanging code with Dex", zap.String("url", dexTokenURL), zap.String("clientId", "public-client"))
+	data.Set("client_id", r.dexPublicClientID)
+	data.Set("client_secret", "") // Use configured public client ID
+	r.logger.Info("Exchanging code with Dex", zap.String("url", dexTokenURL), zap.String("clientId", r.dexPublicClientID))
 
-	// 4. Execute the HTTP POST request to Dex's token endpoint.
+	// 3. Execute request to Dex.
 	client := &http.Client{Timeout: 10 * time.Second}
 	httpReq, err := http.NewRequestWithContext(ctx.Request().Context(), "POST", dexTokenURL, strings.NewReader(data.Encode()))
 	if err != nil {
@@ -297,14 +267,12 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadGateway, "Token exchange with identity provider failed")
 	}
 
-	// 5. Decode the JSON response from Dex.
+	// 4. Decode Dex response.
 	var tokenResponse map[string]interface{}
 	if err := json.NewDecoder(httpResp.Body).Decode(&tokenResponse); err != nil {
 		r.logger.Error("Failed to decode Dex token response", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to process identity provider response")
 	}
-
-	// 6. Extract the ID token (preferred) or Access token for verification.
 	tokenToVerify := ""
 	if idToken, ok := tokenResponse["id_token"].(string); ok && idToken != "" {
 		tokenToVerify = idToken
@@ -317,14 +285,12 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid token response from identity provider")
 	}
 
-	// 7. Verify the Dex token using the OIDC verifier.
+	// 5. Verify Dex token and extract claims.
 	dv, err := r.authServer.dexVerifier.Verify(ctx.Request().Context(), tokenToVerify)
 	if err != nil {
 		r.logger.Warn("Failed to verify token from Dex", zap.Error(err))
 		return echo.NewHTTPError(http.StatusUnauthorized, "Failed to verify token")
 	}
-
-	// 8. Extract claims from the verified Dex token.
 	var claims json.RawMessage
 	if err := dv.Claims(&claims); err != nil {
 		r.logger.Error("Failed to get claims from verified Dex token", zap.Error(err))
@@ -336,8 +302,8 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to process token claims")
 	}
 
-	// 9. Look up the user in the local database using the verified email.
-	user, err := r.db.GetUserByEmail(ctx.Request().Context(), claimsMap.Email) // Use interface
+	// 6. Look up local user and check status.
+	user, err := r.db.GetUserByEmail(ctx.Request().Context(), claimsMap.Email)
 	if err != nil || user == nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) || user == nil {
 			r.logger.Warn("User from Dex token not found in local DB", zap.String("email", claimsMap.Email))
@@ -351,7 +317,7 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusForbidden, "User account is inactive")
 	}
 
-	// 10. Enrich claims: Start with Dex claims, add local role, override sub/name/iss/aud/jti.
+	// 7. Enrich claims for platform token.
 	enrichedClaims := claimsMap
 	enrichedClaims.Groups = append(enrichedClaims.Groups, string(user.Role))
 	enrichedClaims.Name = user.Username
@@ -359,9 +325,8 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 	enrichedClaims.Id = uuid.NewString()
 	enrichedClaims.Issuer = "platform-auth-service"
 	enrichedClaims.Audience = "platform-client"
-	// Optionally adjust expiry: enrichedClaims.ExpiresAt = time.Now().Add(1 * time.Hour).Unix()
 
-	// 11. Create and sign the new Platform JWT.
+	// 8. Create and sign the new platform JWT with kid header.
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, enrichedClaims)
 	if r.platformKeyID != "" {
 		token.Header["kid"] = r.platformKeyID
@@ -375,9 +340,37 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to sign token")
 	}
 
-	// 12. Replace the original access token in the response map with the new platform token.
-	tokenResponse["access_token"] = signedToken
+	// 9. Perform self-verification of the newly created token.
+	var validationClaims DexClaims
+	keyFunc := func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		if kid, ok := token.Header["kid"].(string); ok {
+			if kid != r.platformKeyID {
+				return nil, fmt.Errorf("token 'kid' [%s] does not match expected platform key ID [%s]", kid, r.platformKeyID)
+			}
+		} else {
+			return nil, fmt.Errorf("newly signed token missing required 'kid' header")
+		}
+		if r.authServer.platformPublicKey == nil {
+			return nil, fmt.Errorf("platform public key unavailable for self-verification")
+		}
+		return r.authServer.platformPublicKey, nil
+	}
+	parsedToken, err := jwt.ParseWithClaims(signedToken, &validationClaims, keyFunc)
+	if err != nil {
+		r.logger.Error("CRITICAL: Newly signed platform token failed self-verification", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal error generating valid token")
+	}
+	if !parsedToken.Valid {
+		r.logger.Error("CRITICAL: Newly signed platform token parsed but marked invalid")
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal error generating valid token")
+	}
+	r.logger.Debug("Newly signed platform token passed self-verification.")
 
+	// 10. Update response map and return.
+	tokenResponse["access_token"] = signedToken
 	r.logger.Info("Successfully exchanged code and issued enriched token", zap.String("email", claimsMap.Email), zap.String("externalId", user.ExternalId))
 	return ctx.JSON(http.StatusOK, tokenResponse)
 }
@@ -403,7 +396,6 @@ func mapsKeys(m map[string]interface{}) []string {
 // @Failure 500 {object} echo.HTTPError "Internal Server Error"
 // @Router /auth/api/v1/users [get]
 // GetUsers handles requests to list all users stored in the local database.
-// It requires the requesting user to have at least the Editor role.
 func (r *httpRoutes) GetUsers(ctx echo.Context) error {
 	users, err := r.db.GetUsers(ctx.Request().Context())
 	if err != nil {
@@ -435,8 +427,7 @@ func (r *httpRoutes) GetUsers(ctx echo.Context) error {
 // @Failure 404 {object} echo.HTTPError "User Not Found"
 // @Failure 500 {object} echo.HTTPError "Internal Server Error"
 // @Router /auth/api/v1/user/{id} [get]
-// GetUserDetails handles requests to fetch details for a single user, identified by their database primary key ID.
-// It requires the requesting user to have at least the Editor role.
+// GetUserDetails handles requests to fetch details for a single user by database ID.
 func (r *httpRoutes) GetUserDetails(ctx echo.Context) error {
 	userIDParam := ctx.Param("id")
 	userID, err := strconv.ParseUint(userIDParam, 10, 32)
@@ -473,8 +464,7 @@ func (r *httpRoutes) GetUserDetails(ctx echo.Context) error {
 // @Failure 404 {object} echo.HTTPError "User Not Found (User from token not in DB)"
 // @Failure 500 {object} echo.HTTPError "Internal Server Error"
 // @Router /auth/api/v1/me [get]
-// GetMe handles requests for the calling user's own details. It uses the User ID extracted
-// from the validated JWT header (via middleware) to look up the user in the database.
+// GetMe handles requests for the calling user's own details.
 func (r *httpRoutes) GetMe(ctx echo.Context) error {
 	userID := httpserver.GetUserID(ctx)
 	if userID == "" {
@@ -518,9 +508,6 @@ func (r *httpRoutes) GetMe(ctx echo.Context) error {
 // @Failure 503 {object} echo.HTTPError "Service Unavailable (Platform key signing disabled)"
 // @Router /auth/api/v1/keys [post]
 // CreateAPIKey generates a new platform API key (JWT format) for the requesting user.
-// It checks the user's key limit, generates standard JWT claims (no expiry), adds the platform kid,
-// signs it with the platform private key, stores a hash and metadata in the database,
-// and returns the full token only upon creation.
 func (r *httpRoutes) CreateAPIKey(ctx echo.Context) error {
 	userID := httpserver.GetUserID(ctx)
 	var req api.CreateAPIKeyRequest
@@ -637,7 +624,6 @@ func (r *httpRoutes) EditAPIKey(ctx echo.Context) error {
 	if err := bindValidate(ctx, &req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	// ID for UpdateAPIKey is string in current DB interface, ensure DB method handles string ID
 	err := r.db.UpdateAPIKey(ctx.Request().Context(), idParam, req.IsActive, req.Role)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -808,9 +794,7 @@ func (r *httpRoutes) DoCreateUser(ctx context.Context, req api.CreateUserRequest
 // @Failure 500 {object} echo.HTTPError "Internal Server Error (DB error, password hashing error)"
 // @Failure 502 {object} echo.HTTPError "Bad Gateway (Error communicating with Dex for password update)"
 // @Router /auth/api/v1/user [put]
-// UpdateUser handles requests to modify an existing user. It finds the user by email,
-// updates local password details via Dex gRPC if provided (for local users),
-// updates other attributes in the database record, and saves the changes.
+// UpdateUser handles requests to modify an existing user.
 func (r *httpRoutes) UpdateUser(ctx echo.Context) error {
 	var req api.UpdateUserRequest
 	if err := bindValidate(ctx, &req); err != nil {
@@ -915,7 +899,6 @@ func (r *httpRoutes) UpdateUser(ctx echo.Context) error {
 // @Failure 502 {object} echo.HTTPError "Bad Gateway (Error communicating with Dex for password deletion)"
 // @Router /auth/api/v1/user/{id} [delete]
 // DeleteUser handles requests to delete a user by their database ID.
-// It calls DoDeleteUser to perform the core logic.
 func (r *httpRoutes) DeleteUser(ctx echo.Context) error {
 	idParam := ctx.Param("id")
 	userID, err := strconv.ParseUint(idParam, 10, 32)
@@ -932,7 +915,6 @@ func (r *httpRoutes) DeleteUser(ctx echo.Context) error {
 }
 
 // DoDeleteUser contains the core logic for deleting a user (DB and Dex cleanup).
-// It prevents deletion of user ID 1 and removes the Dex password entry if the user is local.
 func (r *httpRoutes) DoDeleteUser(ctx context.Context, userID uint) error {
 	user, err := r.db.GetUser(ctx, strconv.FormatUint(uint64(userID), 10))
 	if err != nil {
@@ -1021,7 +1003,6 @@ func (r *httpRoutes) CheckUserPasswordChangeRequired(ctx echo.Context) error {
 // @Failure 502 {object} echo.HTTPError "Bad Gateway (Error communicating with Dex)"
 // @Router /auth/api/v1/user/password/reset [post]
 // ResetUserPassword allows authenticated users to change their own password if it's a local account.
-// It verifies the current password against Dex, hashes the new password, updates Dex, and updates the local user flag.
 func (r *httpRoutes) ResetUserPassword(ctx echo.Context) error {
 	userId := httpserver.GetUserID(ctx)
 	if userId == "" {
@@ -1090,6 +1071,82 @@ func (r *httpRoutes) ResetUserPassword(ctx echo.Context) error {
 	return ctx.NoContent(http.StatusAccepted)
 }
 
+// EnableUserHandler godoc
+// @Summary Enable User Account
+// @Description Marks a user account as active. Requires Admin role. Cannot enable the initial admin (ID 1).
+// @Security BearerToken
+// @Tags users
+// @Produce json
+// @Param id path int true "User Database ID to enable" format(uint) example(123)
+// @Success 204 {string} string "No Content (User enabled successfully)"
+// @Failure 400 {object} echo.HTTPError "Bad Request (Invalid ID format, attempt to modify ID 1)"
+// @Failure 401 {object} echo.HTTPError "Unauthorized"
+// @Failure 403 {object} echo.HTTPError "Forbidden (Insufficient role)"
+// @Failure 404 {object} echo.HTTPError "User Not Found"
+// @Failure 500 {object} echo.HTTPError "Internal Server Error"
+// @Router /auth/api/v1/user/{id}/enable [put]
+// EnableUserHandler handles requests to mark a user account as active (is_active=true).
+func (r *httpRoutes) EnableUserHandler(ctx echo.Context) error {
+	idParam := ctx.Param("id")
+	userID, err := strconv.ParseUint(idParam, 10, 32)
+	if err != nil {
+		r.logger.Warn("Invalid user ID format in EnableUserHandler", zap.String("idParam", idParam), zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
+	}
+	if userID == 1 {
+		r.logger.Warn("Attempt to modify activation status for user ID 1", zap.Uint64("userID", userID))
+		return echo.NewHTTPError(http.StatusBadRequest, "Cannot modify activation status for the initial administrator user")
+	}
+	err = r.db.EnableUser(ctx.Request().Context(), uint(userID))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return echo.NewHTTPError(http.StatusNotFound, "User not found")
+		}
+		r.logger.Error("Failed to enable user in database", zap.Uint64("userID", userID), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to enable user")
+	}
+	r.logger.Info("User enabled successfully", zap.Uint64("userID", userID))
+	return ctx.NoContent(http.StatusNoContent)
+}
+
+// DisableUserHandler godoc
+// @Summary Disable User Account
+// @Description Marks a user account as inactive (is_active=false). Requires Admin role. Cannot disable the initial admin (ID 1).
+// @Security BearerToken
+// @Tags users
+// @Produce json
+// @Param id path int true "User Database ID to disable" format(uint) example(123)
+// @Success 204 {string} string "No Content (User disabled successfully)"
+// @Failure 400 {object} echo.HTTPError "Bad Request (Invalid ID format, attempt to disable ID 1)"
+// @Failure 401 {object} echo.HTTPError "Unauthorized"
+// @Failure 403 {object} echo.HTTPError "Forbidden (Insufficient role)"
+// @Failure 404 {object} echo.HTTPError "User Not Found"
+// @Failure 500 {object} echo.HTTPError "Internal Server Error"
+// @Router /auth/api/v1/user/{id}/disable [put]
+// DisableUserHandler handles requests to mark a user account as inactive (is_active=false).
+func (r *httpRoutes) DisableUserHandler(ctx echo.Context) error {
+	idParam := ctx.Param("id")
+	userID, err := strconv.ParseUint(idParam, 10, 32)
+	if err != nil {
+		r.logger.Warn("Invalid user ID format in DisableUserHandler", zap.String("idParam", idParam), zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
+	}
+	if userID == 1 {
+		r.logger.Warn("Attempt to disable user ID 1", zap.Uint64("userID", userID))
+		return echo.NewHTTPError(http.StatusBadRequest, "Cannot disable the initial administrator user")
+	}
+	err = r.db.DisableUser(ctx.Request().Context(), uint(userID))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return echo.NewHTTPError(http.StatusNotFound, "User not found")
+		}
+		r.logger.Error("Failed to disable user in database", zap.Uint64("userID", userID), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to disable user")
+	}
+	r.logger.Info("User disabled successfully", zap.Uint64("userID", userID))
+	return ctx.NoContent(http.StatusNoContent)
+}
+
 // GetConnectors godoc
 // @Summary List Dex Connectors
 // @Description Retrieves a list of configured identity provider connectors from Dex, augmented with local metadata. Requires Admin role. Optionally filters by connector type if provided in the path.
@@ -1105,13 +1162,11 @@ func (r *httpRoutes) ResetUserPassword(ctx echo.Context) error {
 // @Router /auth/api/v1/connectors [get]
 // @Router /auth/api/v1/connector/{type} [get]
 // GetConnectors lists configured Dex connectors, optionally filtered by type.
-// It calls the Dex ListConnectors gRPC method and supplements the data with local DB info.
 func (r *httpRoutes) GetConnectors(ctx echo.Context) error {
 	connectorTypeFilter := ctx.Param("type")
 	if connectorTypeFilter != "" {
 		r.logger.Info("Filtering connectors by type", zap.String("type", connectorTypeFilter))
 	}
-	// Use singular ListConnectorReq based on provided proto
 	req := &dexApi.ListConnectorReq{}
 	respDex, err := r.authServer.dexClient.ListConnectors(ctx.Request().Context(), req)
 	if err != nil {
@@ -1206,8 +1261,6 @@ func (r *httpRoutes) GetSupportedType(ctx echo.Context) error {
 // @Failure 502 {object} echo.HTTPError "Bad Gateway (Error communicating with Dex)"
 // @Router /auth/api/v1/connector [post]
 // CreateConnector handles creating a new Dex connector configuration.
-// It uses utility functions to prepare the Dex request, calls the Dex gRPC API,
-// creates a local DB record, and triggers a Dex pod restart.
 func (r *httpRoutes) CreateConnector(ctx echo.Context) error {
 	var req api.CreateConnectorRequest
 	if err := bindValidate(ctx, &req); err != nil {
@@ -1264,8 +1317,7 @@ func (r *httpRoutes) CreateConnector(ctx echo.Context) error {
 // @Failure 500 {object} echo.HTTPError "Internal Server Error (DB error, K8s interaction error)"
 // @Failure 502 {object} echo.HTTPError "Bad Gateway (Error communicating with Dex)"
 // @Router /auth/api/v1/connector/auth0 [post]
-// CreateAuth0Connector handles the specific workflow for adding Auth0 as a connector,
-// including updating Dex OAuth client configurations and creating the connector itself.
+// CreateAuth0Connector handles the specific workflow for adding Auth0 as a connector.
 func (r *httpRoutes) CreateAuth0Connector(ctx echo.Context) error {
 	var req api.CreateAuth0ConnectorRequest
 	if err := bindValidate(ctx, &req); err != nil {
@@ -1361,8 +1413,6 @@ func (r *httpRoutes) ensureDexClient(id, name string, redirectUris []string, isP
 // @Failure 502 {object} echo.HTTPError "Bad Gateway (Error communicating with Dex)"
 // @Router /auth/api/v1/connector [put]
 // UpdateConnector handles updating an existing Dex connector configuration.
-// It requires both the local DB ID and the Dex Connector ID in the request.
-// It calls Dex gRPC, updates the local DB record, and triggers a Dex pod restart.
 func (r *httpRoutes) UpdateConnector(ctx echo.Context) error {
 	var req api.UpdateConnectorRequest
 	if err := bindValidate(ctx, &req); err != nil {
@@ -1422,8 +1472,6 @@ func (r *httpRoutes) UpdateConnector(ctx echo.Context) error {
 // @Failure 502 {object} echo.HTTPError "Bad Gateway (Error communicating with Dex)"
 // @Router /auth/api/v1/connector/{id} [delete]
 // DeleteConnector handles deleting a Dex connector configuration and its corresponding local metadata.
-// It takes the Dex connector ID (e.g., "oidc-google") as a path parameter.
-// It calls the Dex gRPC API, deletes the local DB record, and triggers a Dex pod restart.
 func (r *httpRoutes) DeleteConnector(ctx echo.Context) error {
 	connectorID := ctx.Param("id")
 	if connectorID == "" {
@@ -1470,102 +1518,4 @@ func max(a, b int) int {
 		return a
 	}
 	return b
-}
-
-// EnableUserHandler godoc
-// @Summary Enable User Account
-// @Description Marks a user account as active. Requires Admin role.
-// @Security BearerToken
-// @Tags users
-// @Produce json
-// @Param id path int true "User Database ID to enable" format(uint) example(123)
-// @Success 204 {string} string "No Content (User enabled successfully)"
-// @Failure 400 {object} echo.HTTPError "Bad Request (Invalid ID format)"
-// @Failure 401 {object} echo.HTTPError "Unauthorized"
-// @Failure 403 {object} echo.HTTPError "Forbidden (Insufficient role)"
-// @Failure 404 {object} echo.HTTPError "User Not Found"
-// @Failure 500 {object} echo.HTTPError "Internal Server Error"
-// @Router /auth/api/v1/user/{id}/enable [put]
-// EnableUserHandler handles requests to mark a user account as active (is_active=true).
-// It requires Admin privileges.
-func (r *httpRoutes) EnableUserHandler(ctx echo.Context) error {
-	// Extract user ID (database uint ID) from path parameter.
-	idParam := ctx.Param("id")
-	userID, err := strconv.ParseUint(idParam, 10, 32) // Parse as uint32 as ID is uint
-	if err != nil {
-		r.logger.Warn("Invalid user ID format in EnableUserHandler", zap.String("idParam", idParam), zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
-	}
-
-	// Prevent enabling the super admin user (ID 1) if applicable, though usually they aren't disabled.
-	if userID == 1 {
-		r.logger.Warn("Attempt to modify activation status for user ID 1", zap.Uint64("userID", userID))
-		return echo.NewHTTPError(http.StatusBadRequest, "Cannot modify activation status for the initial administrator user")
-	}
-
-	// Call the database method to enable the user.
-	// Assumes db.EnableUser exists and takes context and uint ID.
-	err = r.db.EnableUser(ctx.Request().Context(), uint(userID))
-	if err != nil {
-		// Handle specific errors like "not found".
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return echo.NewHTTPError(http.StatusNotFound, "User not found")
-		}
-		// Log other database errors.
-		r.logger.Error("Failed to enable user in database", zap.Uint64("userID", userID), zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to enable user")
-	}
-
-	r.logger.Info("User enabled successfully", zap.Uint64("userID", userID))
-	// Return 204 No Content on success.
-	return ctx.NoContent(http.StatusNoContent)
-}
-
-// DisableUserHandler godoc
-// @Summary Disable User Account
-// @Description Marks a user account as inactive (is_active=false). Requires Admin role. Cannot disable the initial admin (ID 1).
-// @Security BearerToken
-// @Tags users
-// @Produce json
-// @Param id path int true "User Database ID to disable" format(uint) example(123)
-// @Success 204 {string} string "No Content (User disabled successfully)"
-// @Failure 400 {object} echo.HTTPError "Bad Request (Invalid ID format, attempt to disable ID 1)"
-// @Failure 401 {object} echo.HTTPError "Unauthorized"
-// @Failure 403 {object} echo.HTTPError "Forbidden (Insufficient role)"
-// @Failure 404 {object} echo.HTTPError "User Not Found"
-// @Failure 500 {object} echo.HTTPError "Internal Server Error"
-// @Router /auth/api/v1/user/{id}/disable [put]
-// DisableUserHandler handles requests to mark a user account as inactive (is_active=false).
-// It requires Admin privileges and prevents disabling the primary admin user (ID 1).
-func (r *httpRoutes) DisableUserHandler(ctx echo.Context) error {
-	// Extract user ID (database uint ID) from path parameter.
-	idParam := ctx.Param("id")
-	userID, err := strconv.ParseUint(idParam, 10, 32) // Parse as uint32 as ID is uint
-	if err != nil {
-		r.logger.Warn("Invalid user ID format in DisableUserHandler", zap.String("idParam", idParam), zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
-	}
-
-	// Prevent disabling the super admin user (ID 1).
-	if userID == 1 {
-		r.logger.Warn("Attempt to disable user ID 1", zap.Uint64("userID", userID))
-		return echo.NewHTTPError(http.StatusBadRequest, "Cannot disable the initial administrator user")
-	}
-
-	// Call the database method to disable the user.
-	// Assumes db.DisableUser exists and takes context and uint ID.
-	err = r.db.DisableUser(ctx.Request().Context(), uint(userID))
-	if err != nil {
-		// Handle specific errors like "not found".
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return echo.NewHTTPError(http.StatusNotFound, "User not found")
-		}
-		// Log other database errors.
-		r.logger.Error("Failed to disable user in database", zap.Uint64("userID", userID), zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to disable user")
-	}
-
-	r.logger.Info("User disabled successfully", zap.Uint64("userID", userID))
-	// Return 204 No Content on success.
-	return ctx.NoContent(http.StatusNoContent)
 }
