@@ -2,32 +2,35 @@ package auth
 
 import (
 	"context"
-	"crypto/rsa"
-	"encoding/json"
+	"crypto/rsa" // Ensure rsa is imported
 	"errors"
 	"fmt"
-	dexApi "github.com/dexidp/dex/api/v2"
-	"google.golang.org/grpc"
 	"net/http"
 	"strings"
 	"time"
+
+	dexApi "github.com/dexidp/dex/api/v2"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	envoycore "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	envoyauth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/gogo/googleapis/google/rpc"
-	"github.com/golang-jwt/jwt"
+
+	// Use v4 or v5 consistently based on your go.mod
+	"github.com/golang-jwt/jwt" // Or jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpserver"
-	"github.com/opengovern/opensecurity/services/auth/db"
+	"github.com/opengovern/opensecurity/services/auth/db" // Local DB package
 	"go.uber.org/zap"
 	"google.golang.org/genproto/googleapis/rpc/status"
+	"gorm.io/gorm" // Import gorm if checking for ErrRecordNotFound
 )
 
+// User struct for internal use, e.g., in UpdateLastLoginLoop
 type User struct {
-	ID         string
+	ID         string // Typically ExternalId
 	Email      string
 	ExternalId string
 	Role       api.Role
@@ -35,314 +38,304 @@ type User struct {
 	CreatedAt  time.Time
 }
 
+// Server holds dependencies for the auth server logic (gRPC Check, Verify)
 type Server struct {
-	host                string
-	platformPublicKey   *rsa.PublicKey
-	dexVerifier         *oidc.IDTokenVerifier
-	dexClient           dexApi.DexClient
-	logger              *zap.Logger
-	db                  db.Database
-	updateLoginUserList []User
-	updateLogin         chan User
+	host              string
+	platformPublicKey *rsa.PublicKey
+	platformKeyID     string // Stores the calculated Key ID (JWK Thumbprint)
+	dexVerifier       *oidc.IDTokenVerifier
+	dexClient         dexApi.DexClient
+	logger            *zap.Logger
+	// --- MODIFIED ---
+	db db.DatabaseInterface // Use the database interface
+	// --- END MODIFIED ---
+	updateLogin chan User // Channel for queuing login updates
 }
 
-type DexClaims struct {
-	Email           string                 `json:"email"`
-	EmailVerified   bool                   `json:"email_verified"`
-	Groups          []string               `json:"groups"`
-	Name            string                 `json:"name"`
-	FederatedClaims map[string]interface{} `json:"federated_claims"`
+// userClaim represents the claims verified or derived by this auth service.
+type userClaim struct {
+	Role           api.Role
+	Email          string
+	MemberSince    *time.Time // Populated after DB lookup
+	UserLastLogin  *time.Time // Populated after DB lookup
+	ExternalUserID string     // Usually corresponds to 'sub' claim
+	EmailVerified  bool
+
+	// Embed standard claims for JWTs that use them (e.g., platform tokens)
 	jwt.StandardClaims
 }
 
+// Valid implements the jwt.Claims interface for the userClaim struct.
+// This method is called by jwt.ParseWithClaims after signature verification
+// and after default time-based claims (exp, nbf, iat) have been checked.
+// Use this method to enforce application-specific payload validation rules.
+func (u *userClaim) Valid() error {
+	// 1. Standard time validations (exp, nbf, iat) are handled by the default
+	//    jwt.ParseWithClaims logic before this method is called. We don't need
+	//    to repeat them here unless we want extremely custom error reporting.
+	//    Example using v5 helpers if needed (usually not necessary):
+	//    now := time.Now()
+	//    if !u.VerifyExpiresAt(now, true) { // true = required
+	// 	   return jwt.ErrTokenExpired
+	//    }
+	//    if !u.VerifyIssuedAt(now, true) { // true = required
+	// 	   return jwt.ErrTokenUsedBeforeIssued
+	//    }
+	//    if !u.VerifyNotBefore(now, true) { // true = required
+	// 	   return jwt.ErrTokenNotValidYet
+	//    }
+
+	// 2. Validate presence of essential application-specific claims.
+	//    The 'sub' (Subject) claim is critical for identifying the user.
+	//    It's mapped to the embedded StandardClaims.Subject field.
+	if u.Subject == "" {
+		// Use standard validation error types from the jwt package
+		return jwt.NewValidationError("token missing required 'sub' (subject) claim", jwt.ValidationErrorClaimsInvalid)
+	}
+
+	// 3. Validate Issuer if expected for platform tokens.
+	//    OIDC tokens issuer is validated by the oidc library.
+	//    Platform tokens (like API keys) should have a specific issuer.
+	//    We check this during parsing in Verify() rather than here, but could add here too.
+	// if u.Issuer != "platform-auth-service" { // Example check
+	//  return jwt.NewValidationError(fmt.Sprintf("invalid 'iss' (issuer) claim: %s", u.Issuer), jwt.ValidationErrorClaimsInvalid)
+	// }
+
+	// 4. Validate Audience if expected.
+	//    Audience checks are often done during ParseWithClaims using jwt.WithAudience option,
+	//    but can be done here if complex logic is needed.
+	// if !u.VerifyAudience("platform-api", true) { // Example check
+	//     return jwt.NewValidationError(fmt.Sprintf("invalid 'aud' (audience) claim: %v", u.Audience), jwt.ValidationErrorClaimsInvalid)
+	// }
+
+	// Add any other custom checks relevant to your specific claims payload here.
+	// For example, if you added a custom "scope" claim:
+	// if u.Scope == "" {
+	//     return jwt.NewValidationError("token missing required 'scope' claim", jwt.ValidationErrorClaimsInvalid)
+	// }
+
+	// If all application-specific checks pass, return nil.
+	return nil
+}
+
+// UpdateLastLoginLoop processes queued users to update their last login timestamp.
 func (s *Server) UpdateLastLoginLoop() {
+	ticker := time.NewTicker(1 * time.Minute) // Check less frequently
+	defer ticker.Stop()
+	usersToUpdate := make(map[string]User) // Use map for efficient deduplication
+
+	// Background context for DB calls originating from this loop
+	loopCtx := context.Background()
+
 	for {
-		finished := false
-		for !finished {
-			select {
-			case userId := <-s.updateLogin:
-				alreadyExists := false
-				for _, user := range s.updateLoginUserList {
-					if user.ExternalId == userId.ExternalId {
-						alreadyExists = true
-					}
-				}
-
-				if !alreadyExists {
-					s.updateLoginUserList = append(s.updateLoginUserList, userId)
-				}
-			default:
-				finished = true
+		select {
+		case user := <-s.updateLogin:
+			if user.ExternalId != "" { // Ensure we have an ID to work with
+				usersToUpdate[user.ExternalId] = user // Add/overwrite user in map
+				s.logger.Debug("User added/updated in last login queue", zap.String("externalId", user.ExternalId))
+			} else {
+				s.logger.Warn("Received user for last login update with empty ExternalId", zap.String("email", user.Email))
 			}
-		}
+		case <-ticker.C:
+			if len(usersToUpdate) == 0 {
+				continue
+			}
+			s.logger.Debug("Processing user last login update batch", zap.Int("queue_size", len(usersToUpdate)))
 
-		for i := 0; i < len(s.updateLoginUserList); i++ {
-			user := s.updateLoginUserList[i]
-			if user.ExternalId != "" {
-				usr, err := s.db.GetUserByEmail(user.Email)
+			processedIDs := []string{} // Keep track of processed IDs in this batch
+			for extId := range usersToUpdate {
+				processedIDs = append(processedIDs, extId) // Mark for processing
+
+				// --- MODIFIED: Pass context to DB calls ---
+				dbUser, err := s.db.GetUserByExternalID(loopCtx, extId)
 				if err != nil {
-					s.logger.Error("failed to get user metadata", zap.String(" External", user.ExternalId), zap.Error(err))
-					continue
-				}
-				tim := time.Time{}
-				if !usr.LastLogin.IsZero() {
-					tim = usr.LastLogin
-				}
-
-				if time.Now().After(tim.Add(15 * time.Minute)) {
-					s.logger.Info("updating metadata", zap.String("External Id", user.ExternalId))
-
-					tim = time.Now()
-					s.logger.Info("time is", zap.Time("time", tim))
-
-					err = s.db.UpdateUserLastLoginWithExternalID(user.ExternalId, tim)
-					if err != nil {
-						s.logger.Error("failed to update user metadata", zap.String("External Id", user.ExternalId), zap.Error(err))
+					// Check explicitly for not found (assuming db returns nil,nil or error)
+					if errors.Is(err, gorm.ErrRecordNotFound) || dbUser == nil && err == nil {
+						s.logger.Warn("User no longer exists in DB, cannot update last login", zap.String("externalId", extId))
+					} else {
+						s.logger.Error("Failed to get user from DB for last login update", zap.String("externalId", extId), zap.Error(err))
 					}
+					continue // Skip this user for now if error or not found
+				}
+				// Note: dbUser check for nil after error check might be redundant if GetUserByExternalID contract is clear
+
+				updateInterval := 15 * time.Minute
+				if time.Since(dbUser.LastLogin) > updateInterval {
+					s.logger.Info("Updating last login timestamp", zap.String("externalId", extId), zap.Time("previousLogin", dbUser.LastLogin))
+					updateTime := time.Now()
+					// --- MODIFIED: Pass context to DB calls ---
+					err = s.db.UpdateUserLastLoginWithExternalID(loopCtx, extId, updateTime)
+					if err != nil {
+						s.logger.Error("Failed to update user last login in DB", zap.String("externalId", extId), zap.Error(err))
+					} else {
+						s.logger.Debug("Successfully updated last login", zap.String("externalId", extId))
+					}
+				} else {
+					s.logger.Debug("Skipping last login update, too recent", zap.String("externalId", extId))
 				}
 			}
-
-			s.updateLoginUserList = append(s.updateLoginUserList[:i], s.updateLoginUserList[i+1:]...)
-			i--
+			// Remove processed users from the map
+			for _, id := range processedIDs {
+				delete(usersToUpdate, id)
+			}
+			s.logger.Debug("Finished processing user last login update batch")
+			// Add case for context cancellation if the loop needs to stop gracefully
+			// case <- loopCtx.Done():
+			//     s.logger.Info("UpdateLastLoginLoop stopping due to context cancellation.")
+			//     return
 		}
-		time.Sleep(time.Second)
 	}
 }
 
+// UpdateLastLogin queues a user for potential last login timestamp update check.
 func (s *Server) UpdateLastLogin(claim *userClaim) {
-	timeNow := time.Now()
-	doUpdate := false
-	if claim.MemberSince == nil {
-		claim.MemberSince = &timeNow
-		doUpdate = true
-	}
-	if claim.UserLastLogin == nil {
-		claim.UserLastLogin = &timeNow
-		doUpdate = true
-	} else {
-		if time.Now().After(claim.UserLastLogin.Add(15 * time.Minute)) {
-			claim.UserLastLogin = &timeNow
-			doUpdate = true
-		}
-	}
-
-	if doUpdate {
-		s.updateLogin <- User{
-			ExternalId: claim.ExternalUserID,
-			LastLogin:  *claim.UserLastLogin,
-			CreatedAt:  *claim.MemberSince,
-			Email:      claim.Email,
+	if claim != nil && claim.ExternalUserID != "" && claim.Email != "" {
+		select {
+		case s.updateLogin <- User{ExternalId: claim.ExternalUserID, Email: claim.Email}:
+			s.logger.Debug("Queued user for last login update check", zap.String("externalId", claim.ExternalUserID))
+		default:
+			s.logger.Warn("Update last login channel is full, dropping update request", zap.String("externalId", claim.ExternalUserID))
 		}
 	}
 }
 
+// Check implements the Envoy External Authorization gRPC Check method.
 func (s *Server) Check(ctx context.Context, req *envoyauth.CheckRequest) (*envoyauth.CheckResponse, error) {
 	unAuth := &envoyauth.CheckResponse{
-		Status: &status.Status{
-			Code: int32(rpc.UNAUTHENTICATED),
-		},
+		Status: &status.Status{Code: int32(rpc.UNAUTHENTICATED)},
 		HttpResponse: &envoyauth.CheckResponse_DeniedResponse{
 			DeniedResponse: &envoyauth.DeniedHttpResponse{
-				Status: &envoytype.HttpStatus{Code: 401},
+				Status: &envoytype.HttpStatus{Code: http.StatusUnauthorized},
 				Body:   http.StatusText(http.StatusUnauthorized),
 			},
 		},
 	}
 
 	httpRequest := req.GetAttributes().GetRequest().GetHttp()
+	if httpRequest == nil {
+		s.logger.Warn("Check request missing HTTP attributes")
+		return unAuth, fmt.Errorf("missing http attributes in check request")
+	}
 	headers := httpRequest.GetHeaders()
+	path := httpRequest.GetPath()
+	method := httpRequest.GetMethod()
 
 	authHeader := headers[echo.HeaderAuthorization]
 	if authHeader == "" {
 		authHeader = headers[strings.ToLower(echo.HeaderAuthorization)]
 	}
-
-	user, err := s.Verify(ctx, authHeader)
-	if err != nil {
-		s.logger.Warn("denied access due to unsuccessful token verification",
-			zap.String("reqId", httpRequest.Id),
-			zap.String("path", httpRequest.Path),
-			zap.String("method", httpRequest.Method),
-			zap.Error(err))
+	if authHeader == "" {
+		s.logger.Debug("Authorization header missing", zap.String("path", path), zap.String("method", method))
 		return unAuth, nil
 	}
 
-	user.Email = strings.ToLower(strings.TrimSpace(user.Email))
-	if user.Email == "" {
-		s.logger.Warn("denied access due to failure to get email from token",
-			zap.String("reqId", httpRequest.Id),
-			zap.String("path", httpRequest.Path),
-			zap.String("method", httpRequest.Method),
-			zap.Error(err))
+	verifiedClaim, err := s.Verify(ctx, authHeader) // Pass context
+	if err != nil {
+		s.logger.Info("Token verification failed", zap.String("path", path), zap.String("method", method), zap.Error(err))
 		return unAuth, nil
 	}
 
-	// theUser, err := utils.GetUserByEmail(user.Email, s.db)
-	theUser,err := s.db.GetUserByEmail(user.Email)
-	if err != nil {
-		s.logger.Warn("failed to get user",
-			zap.String("userId", user.ExternalUserID),
-			zap.String("email", user.Email),
-			zap.Error(err))
-		if errors.Is(err, errors.New("user disabled")) {
-			return unAuth, nil
-		}
-		if errors.Is(err, errors.New("user not found")) {
-			return unAuth, nil
-		}
+	verifiedClaim.Email = strings.ToLower(strings.TrimSpace(verifiedClaim.Email))
+	if verifiedClaim.Email == "" {
+		s.logger.Warn("Verified token missing email claim", zap.String("sub", verifiedClaim.Subject), zap.String("jti", verifiedClaim.Id))
+		return unAuth, nil
+	}
 
+	// Get user from local DB using the interface and passing context
+	theUser, err := s.db.GetUserByEmail(ctx, verifiedClaim.Email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			s.logger.Warn("User from token not found in local database", zap.String("email", verifiedClaim.Email))
+		} else {
+			s.logger.Error("Failed to get user from database during Check", zap.String("email", verifiedClaim.Email), zap.Error(err))
+		}
+		return unAuth, nil
 	}
 	if theUser == nil {
+		s.logger.Warn("GetUserByEmail returned nil user without error during Check", zap.String("email", verifiedClaim.Email))
 		return unAuth, nil
 	}
-	user.Role = (api.Role)(theUser.Role)
-	user.ExternalUserID = theUser.ExternalId
-	user.MemberSince = &theUser.CreatedAt
-	user.UserLastLogin = &theUser.LastLogin
 
-	go s.UpdateLastLogin(user)
-
-	return &envoyauth.CheckResponse{
-		Status: &status.Status{
-			Code: int32(rpc.OK),
-		},
-
-		HttpResponse: &envoyauth.CheckResponse_OkResponse{
-			OkResponse: &envoyauth.OkHttpResponse{
-				Headers: []*envoycore.HeaderValueOption{
-					// {
-					// 	Header: &envoycore.HeaderValue{
-					// 		Key:   httpserver.XplatformWorkspaceIDHeader,
-					// 		Value: rb.WorkspaceID,
-					// 	},
-					// },
-					// {
-					// 	Header: &envoycore.HeaderValue{
-					// 		Key:   httpserver.XplatformWorkspaceNameHeader,
-					// 		Value: rb.WorkspaceName,
-					// 	},
-					// },
-					{
-						Header: &envoycore.HeaderValue{
-							Key:   httpserver.XPlatformUserIDHeader,
-							Value: user.ExternalUserID,
-						},
-					},
-					{
-						Header: &envoycore.HeaderValue{
-							Key:   httpserver.XPlatformUserRoleHeader,
-							Value: string(user.Role),
-						},
-					},
-					{
-						Header: &envoycore.HeaderValue{
-							Key:   httpserver.XPlatformUserConnectionsScope,
-							Value: theUser.ExternalId,
-						},
-					},
-				},
-			},
-		},
-	}, nil
-}
-
-type userClaim struct {
-	Role           api.Role
-	Email          string
-	MemberSince    *time.Time
-	UserLastLogin  *time.Time
-	ConnectionIDs  map[string][]string
-	ExternalUserID string `json:"sub"`
-	EmailVerified  bool
-}
-
-func (u userClaim) Valid() error {
-	return nil
-}
-
-func (s *Server) Verify(ctx context.Context, authToken string) (*userClaim, error) {
-	if !strings.HasPrefix(authToken, "Bearer ") {
-		return nil, errors.New("invalid authorization token")
-	}
-	token := strings.TrimSpace(strings.TrimPrefix(authToken, "Bearer "))
-	if token == "" {
-		return nil, errors.New("missing authorization token")
+	if !theUser.IsActive {
+		s.logger.Warn("Authentication attempt by inactive user", zap.String("email", theUser.Email), zap.Uint("dbID", theUser.ID))
+		forbiddenResp := &envoyauth.CheckResponse{Status: &status.Status{Code: int32(rpc.PERMISSION_DENIED)}, HttpResponse: &envoyauth.CheckResponse_DeniedResponse{DeniedResponse: &envoyauth.DeniedHttpResponse{Status: &envoytype.HttpStatus{Code: http.StatusForbidden}, Body: "User account is inactive"}}}
+		return forbiddenResp, nil
 	}
 
-	var u userClaim
+	// Populate claim details from reliable DB source
+	verifiedClaim.Role = theUser.Role
+	verifiedClaim.ExternalUserID = theUser.ExternalId
+	verifiedClaim.MemberSince = &theUser.CreatedAt
+	verifiedClaim.UserLastLogin = &theUser.LastLogin
 
-	s.logger.Info("dex verifier verifying")
-	dv, err := s.dexVerifier.Verify(ctx, token)
-	
-	if err == nil {
-		var claims json.RawMessage
-		if err := dv.Claims(&claims); err != nil {
-			s.logger.Error("dex verifier claim error", zap.Error(err))
+	go s.UpdateLastLogin(verifiedClaim) // Queue async update
 
-			return nil, err
+	s.logger.Info("Access granted", zap.String("path", path), zap.String("method", method), zap.String("email", verifiedClaim.Email), zap.String("role", string(verifiedClaim.Role)), zap.String("externalId", verifiedClaim.ExternalUserID))
+	headersToSend := []*envoycore.HeaderValueOption{
+		{Header: &envoycore.HeaderValue{Key: httpserver.XPlatformUserIDHeader, Value: verifiedClaim.ExternalUserID}, AppendAction: envoycore.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD},
+		{Header: &envoycore.HeaderValue{Key: httpserver.XPlatformUserRoleHeader, Value: string(verifiedClaim.Role)}, AppendAction: envoycore.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD},
+	}
+	return &envoyauth.CheckResponse{Status: &status.Status{Code: int32(rpc.OK)}, HttpResponse: &envoyauth.CheckResponse_OkResponse{OkResponse: &envoyauth.OkHttpResponse{Headers: headersToSend}}}, nil
+}
+
+// Verify attempts to validate the token first via Dex OIDC, then via the platform key.
+func (s *Server) Verify(ctx context.Context, authHeader string) (*userClaim, error) {
+	if !strings.HasPrefix(authHeader, "Bearer ") {
+		return nil, fmt.Errorf("invalid authorization header format")
+	}
+	tokenString := strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
+	if tokenString == "" {
+		return nil, fmt.Errorf("missing authorization token")
+	}
+
+	// 1. Try verifying with Dex OIDC Verifier
+	s.logger.Debug("Attempting token verification via Dex OIDC Verifier")
+	idToken, errDex := s.dexVerifier.Verify(ctx, tokenString) // Pass context
+	if errDex == nil {
+		s.logger.Debug("Token successfully verified by Dex OIDC Verifier")
+		var dexClaims DexClaims
+		if err := idToken.Claims(&dexClaims); err != nil {
+			s.logger.Error("Failed to extract claims from Dex verified token", zap.Error(err))
+			return nil, fmt.Errorf("failed to extract Dex token claims: %w", err)
 		}
-		s.logger.Info("raw dex verifier claims", zap.Any("claims", string(claims)))
-		var claimsMap DexClaims
-		if err = json.Unmarshal(claims, &claimsMap); err != nil {
-			s.logger.Error("dex verifier claim error", zap.Error(err))
-
-			return nil, err
-		}
-		s.logger.Info("dex verifier claims", zap.Any("claims", claimsMap))
-
-		return &userClaim{
-			Email:         claimsMap.Email,
-			EmailVerified: claimsMap.EmailVerified,
-		}, nil
-	} else {
-		s.logger.Error("dex verifier verify error", zap.Error(err))
+		claim := &userClaim{Email: dexClaims.Email, EmailVerified: dexClaims.EmailVerified, ExternalUserID: dexClaims.Subject, StandardClaims: dexClaims.StandardClaims}
+		return claim, nil
 	}
+	s.logger.Debug("Dex OIDC verification failed, attempting platform key verification", zap.Error(errDex))
 
+	// 2. Try verifying with Platform Public Key
 	if s.platformPublicKey != nil {
-		_, errk := jwt.ParseWithClaims(token, &u, func(token *jwt.Token) (interface{}, error) {
+		s.logger.Debug("Attempting token verification via Platform Public Key")
+		var platformClaims userClaim
+		token, errPlatform := jwt.ParseWithClaims(tokenString, &platformClaims, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+				return nil, fmt.Errorf("unexpected signing method for platform token: %v", token.Header["alg"])
+			}
+			if kid, ok := token.Header["kid"].(string); ok {
+				if kid != s.platformKeyID {
+					return nil, fmt.Errorf("token 'kid' [%s] does not match expected platform key ID [%s]", kid, s.platformKeyID)
+				}
+				s.logger.Debug("Verifying platform token using kid", zap.String("kid", kid))
+			} else {
+				s.logger.Warn("Platform token header missing 'kid', verification may be ambiguous if keys rotate.")
+			}
 			return s.platformPublicKey, nil
 		})
-		if errk == nil {
-			return &u, nil
-		} else {
-			fmt.Println("failed to auth with platform cred due to", errk)
+
+		if errPlatform == nil && token.Valid {
+			s.logger.Debug("Token successfully verified by Platform Public Key")
+			if platformClaims.Subject == "" {
+				return nil, fmt.Errorf("platform token missing 'sub' claim")
+			}
+			platformClaims.ExternalUserID = platformClaims.Subject
+			return &platformClaims, nil
 		}
+		s.logger.Debug("Platform key verification failed", zap.String("expected_kid", s.platformKeyID), zap.Error(errPlatform))
+	} else {
+		s.logger.Debug("Platform public key not configured, skipping platform verification")
 	}
-	return nil, err
+
+	return nil, fmt.Errorf("token verification failed") // Generic failure
 }
 
-func newDexOidcVerifier(ctx context.Context, domain, clientId string) (*oidc.IDTokenVerifier, error) {
-	transport := &http.Transport{
-		MaxIdleConns:        10,
-		IdleConnTimeout:     30 * time.Second,
-		MaxIdleConnsPerHost: 10,
-	}
-
-	httpClient := &http.Client{
-		Transport: transport,
-	}
-
-	provider, err := oidc.NewProvider(
-		oidc.InsecureIssuerURLContext(
-			oidc.ClientContext(ctx, httpClient),
-			domain,
-		), domain,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return provider.Verifier(&oidc.Config{
-		ClientID:          clientId,
-		SkipClientIDCheck: true,
-		SkipIssuerCheck:   true,
-	}), nil
-}
-
-func newDexClient(hostAndPort string) (dexApi.DexClient, error) {
-	conn, err := grpc.NewClient(hostAndPort, grpc.WithInsecure())
-	if err != nil {
-		return nil, fmt.Errorf("dial: %v", err)
-	}
-	return dexApi.NewDexClient(conn), nil
-}
+// (Helper functions like newDexOidcVerifier, newDexClient are defined in cmd.go)

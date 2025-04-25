@@ -1,10 +1,11 @@
+// http.go
 package auth
 
 import (
 	"context"
 	"crypto/rsa"
 	"crypto/sha512"
-	_ "embed"
+	_ "embed" // Keep if needed for email templates etc.
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -17,84 +18,98 @@ import (
 	"strings"
 	"time"
 
-	dexApi "github.com/dexidp/dex/api/v2"
+	// Correct import path for Dex v2 API
+	dexApi "github.com/dexidp/dex/api/v2" // Ensure this exact path is used
+
 	envoyauth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"github.com/google/uuid"
-	api2 "github.com/opengovern/og-util/pkg/api"
+	api2 "github.com/opengovern/og-util/pkg/api" // Assuming this is the correct path for Role type
 	"github.com/opengovern/og-util/pkg/httpserver"
+	"github.com/opengovern/opensecurity/services/auth/db" // Local DB package (imports interface now too)
 	"github.com/opengovern/opensecurity/services/auth/utils"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
 
-	"github.com/opengovern/opensecurity/services/auth/db"
-
-	"github.com/golang-jwt/jwt"
+	// Use v5 if that's standard in your project, otherwise v4
+	"github.com/golang-jwt/jwt" // Or jwt "github.com/golang-jwt/jwt/v5"
 
 	"github.com/labstack/echo/v4"
-	"github.com/opengovern/opensecurity/services/auth/api"
+	"github.com/opengovern/opensecurity/services/auth/api" // Local API definitions
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
-// var (
-// 	//go:embed email/invite.html
-// 	inviteEmailTemplate string
-// )
+// DexClaims struct defines the expected claims from a Dex-issued token.
+type DexClaims struct {
+	Email           string                 `json:"email"`
+	EmailVerified   bool                   `json:"email_verified"`
+	Groups          []string               `json:"groups"`
+	Name            string                 `json:"name"`
+	FederatedClaims map[string]interface{} `json:"federated_claims,omitempty"`
+	jwt.StandardClaims
+}
 
+// httpRoutes holds dependencies for HTTP handlers.
 type httpRoutes struct {
 	logger *zap.Logger
 
 	platformPrivateKey *rsa.PrivateKey
-	db                 db.Database
-	authServer         *Server
+	platformKeyID      string // Stores the calculated Key ID (JWK Thumbprint)
+	// --- MODIFIED ---
+	db db.DatabaseInterface // Use the database interface for testability
+	// --- END MODIFIED ---
+	authServer *Server // Reference to the main auth server logic
 }
 
-
+// Register registers the HTTP routes with the Echo server.
 func (r *httpRoutes) Register(e *echo.Echo) {
 	v1 := e.Group("/api/v1")
-	// VAlidate token
-	v1.GET("/check", r.Check)
-	v1.POST("/token", r.Token)
 
-	// USERS
-	v1.GET("/users", httpserver.AuthorizeHandler(r.GetUsers, api2.EditorRole))                                      //checked
-	v1.GET("/user/:id", httpserver.AuthorizeHandler(r.GetUserDetails, api2.EditorRole))                             //checked
-	v1.GET("/me", httpserver.AuthorizeHandler(r.GetMe, api2.EditorRole))                                            //checked
-	v1.POST("/user", httpserver.AuthorizeHandler(r.CreateUser, api2.EditorRole))                                    //checked
-	v1.PUT("/user", httpserver.AuthorizeHandler(r.UpdateUser, api2.EditorRole))                                     //checked
-	v1.GET("/user/password/check", httpserver.AuthorizeHandler(r.CheckUserPasswordChangeRequired, api2.ViewerRole)) //checked
-	v1.POST("/user/password/reset", httpserver.AuthorizeHandler(r.ResetUserPassword, api2.ViewerRole))              //checked
-	v1.DELETE("/user/:id", httpserver.AuthorizeHandler(r.DeleteUser, api2.AdminRole))                               //checked
-	// API KEYS
-	v1.POST("/keys", httpserver.AuthorizeHandler(r.CreateAPIKey, api2.AdminRole)) //checked
-	v1.GET("/keys", httpserver.AuthorizeHandler(r.ListAPIKeys, api2.AdminRole))   //checked
-	v1.DELETE("/key/:id", httpserver.AuthorizeHandler(r.DeleteAPIKey, api2.AdminRole))
-	v1.PUT("/key/:id", httpserver.AuthorizeHandler(r.EditAPIKey, api2.AdminRole))
-	// connectors
+	// Public / Semi-public endpoints
+	v1.GET("/check", r.Check)  // For Envoy auth checks
+	v1.POST("/token", r.Token) // For OAuth/OIDC code exchange
+
+	// User Management (protected by roles)
+	v1.GET("/users", httpserver.AuthorizeHandler(r.GetUsers, api2.EditorRole))
+	v1.GET("/user/:id", httpserver.AuthorizeHandler(r.GetUserDetails, api2.EditorRole)) // ID likely DB uint ID
+	v1.GET("/me", httpserver.AuthorizeHandler(r.GetMe, api2.ViewerRole))                // Viewer should be enough
+	v1.POST("/user", httpserver.AuthorizeHandler(r.CreateUser, api2.EditorRole))
+	v1.PUT("/user", httpserver.AuthorizeHandler(r.UpdateUser, api2.EditorRole))
+	v1.GET("/user/password/check", httpserver.AuthorizeHandler(r.CheckUserPasswordChangeRequired, api2.ViewerRole))
+	v1.POST("/user/password/reset", httpserver.AuthorizeHandler(r.ResetUserPassword, api2.ViewerRole))
+	v1.DELETE("/user/:id", httpserver.AuthorizeHandler(r.DeleteUser, api2.AdminRole)) // ID likely DB uint ID
+
+	// API Key Management (protected by Admin role)
+	v1.POST("/keys", httpserver.AuthorizeHandler(r.CreateAPIKey, api2.AdminRole))
+	v1.GET("/keys", httpserver.AuthorizeHandler(r.ListAPIKeys, api2.AdminRole))
+	v1.DELETE("/key/:id", httpserver.AuthorizeHandler(r.DeleteAPIKey, api2.AdminRole)) // ID likely DB uint ID
+	v1.PUT("/key/:id", httpserver.AuthorizeHandler(r.EditAPIKey, api2.AdminRole))      // ID likely DB uint ID
+
+	// Connector Management (protected by Admin role)
 	v1.GET("/connectors", httpserver.AuthorizeHandler(r.GetConnectors, api2.AdminRole))
 	v1.GET("/connectors/supported-connector-types", httpserver.AuthorizeHandler(r.GetSupportedType, api2.AdminRole))
-	v1.GET("/connector/:type", httpserver.AuthorizeHandler(r.GetConnectors, api2.AdminRole))
+	v1.GET("/connector/:type", httpserver.AuthorizeHandler(r.GetConnectors, api2.AdminRole)) // Reuses GetConnectors with type filter in handler logic
 	v1.POST("/connector", httpserver.AuthorizeHandler(r.CreateConnector, api2.AdminRole))
 	v1.POST("/connector/auth0", httpserver.AuthorizeHandler(r.CreateAuth0Connector, api2.AdminRole))
-
 	v1.PUT("/connector", httpserver.AuthorizeHandler(r.UpdateConnector, api2.AdminRole))
-	v1.DELETE("/connector/:id", httpserver.AuthorizeHandler(r.DeleteConnector, api2.AdminRole))
-
+	v1.DELETE("/connector/:id", httpserver.AuthorizeHandler(r.DeleteConnector, api2.AdminRole)) // ID is Dex Connector ID string
 }
 
+// bindValidate binds and validates the request body.
 func bindValidate(ctx echo.Context, i interface{}) error {
 	if err := ctx.Bind(i); err != nil {
-		return err
+		return fmt.Errorf("failed to bind request: %w", err)
 	}
-
+	// Use Echo's validator (ensure a validator is registered with Echo instance)
 	if err := ctx.Validate(i); err != nil {
-		return err
+		return fmt.Errorf("validation failed: %w", err)
 	}
-
 	return nil
 }
 
+// Check handles Envoy's Check request.
 func (r *httpRoutes) Check(ctx echo.Context) error {
+	// Reconstruct CheckRequest from HTTP headers
 	checkRequest := envoyauth.CheckRequest{
 		Attributes: &envoyauth.AttributeContext{
 			Request: &envoyauth.AttributeContext_Request{
@@ -104,761 +119,626 @@ func (r *httpRoutes) Check(ctx echo.Context) error {
 			},
 		},
 	}
-
 	for k, v := range ctx.Request().Header {
-		if len(v) == 0 {
-			checkRequest.Attributes.Request.Http.Headers[k] = ""
+		headerKey := strings.ToLower(k)
+		if len(v) > 0 {
+			checkRequest.Attributes.Request.Http.Headers[headerKey] = v[0]
 		} else {
-			checkRequest.Attributes.Request.Http.Headers[k] = v[0]
+			checkRequest.Attributes.Request.Http.Headers[headerKey] = ""
 		}
 	}
-	originalUri, err := url.Parse(ctx.Request().Header.Get("X-Original-URI"))
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid original uri")
+	originalURIStr := ctx.Request().Header.Get("x-original-uri")
+	originalMethod := ctx.Request().Header.Get("x-original-method")
+	if originalURIStr != "" {
+		originalUri, err := url.Parse(originalURIStr)
+		if err != nil {
+			r.logger.Warn("Failed to parse X-Original-URI", zap.String("uri", originalURIStr), zap.Error(err))
+			checkRequest.Attributes.Request.Http.Path = "/"
+		} else {
+			checkRequest.Attributes.Request.Http.Path = originalUri.Path
+		}
+	} else {
+		checkRequest.Attributes.Request.Http.Path = ctx.Request().URL.Path
 	}
-	checkRequest.Attributes.Request.Http.Path = originalUri.Path
-	checkRequest.Attributes.Request.Http.Method = ctx.Request().Header.Get("X-Original-Method")
+	if originalMethod != "" {
+		checkRequest.Attributes.Request.Http.Method = originalMethod
+	} else {
+		checkRequest.Attributes.Request.Http.Method = ctx.Request().Method
+	}
+	checkRequest.Attributes.Request.Http.Id = ctx.Request().Header.Get("x-request-id")
 
+	// Call the core Check logic in the server component
 	res, err := r.authServer.Check(ctx.Request().Context(), &checkRequest)
 	if err != nil {
-		return err
+		r.logger.Error("Auth server Check failed", zap.String("path", checkRequest.Attributes.Request.Http.Path), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal authorization error")
 	}
-
 	if res.Status.Code != int32(codes.OK) {
-		return echo.NewHTTPError(http.StatusUnauthorized, res.Status.Message)
-	}
-
-	if res.GetOkResponse() == nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "no ok response")
-	}
-
-	for _, header := range res.GetOkResponse().GetHeaders() {
-		if header == nil || header.Header == nil {
-			continue
+		httpStatusCode := http.StatusUnauthorized
+		respBody := "Access Denied"
+		if deniedResp := res.GetDeniedResponse(); deniedResp != nil {
+			if deniedResp.Status != nil {
+				httpStatusCode = int(deniedResp.Status.Code)
+			}
+			if deniedResp.Body != "" {
+				respBody = deniedResp.Body
+			}
 		}
-		ctx.Response().Header().Set(header.Header.Key, header.Header.Value)
+		r.logger.Info("Access explicitly denied by auth server", zap.String("path", checkRequest.Attributes.Request.Http.Path), zap.Int32("grpc_code", res.Status.Code), zap.String("message", res.Status.Message), zap.Int("http_status", httpStatusCode))
+		return echo.NewHTTPError(httpStatusCode, respBody)
 	}
-
+	okResp := res.GetOkResponse()
+	if okResp == nil {
+		r.logger.Error("Auth server returned OK status but nil OkResponse")
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal authorization configuration error")
+	}
+	for _, headerOpt := range okResp.GetHeaders() {
+		if header := headerOpt.GetHeader(); header != nil {
+			ctx.Response().Header().Set(header.Key, header.Value)
+		}
+	}
+	r.logger.Debug("Check request approved, returning OK", zap.String("path", checkRequest.Attributes.Request.Http.Path))
 	return ctx.NoContent(http.StatusOK)
 }
+
+// Token handles the OAuth/OIDC code exchange.
 func (r *httpRoutes) Token(ctx echo.Context) error {
 	var req api.GetTokenRequest
 	if err := bindValidate(ctx, &req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	if req.Code == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "code is required")
+	domain := os.Getenv("DEX_AUTH_DOMAIN")
+	if domain == "" {
+		r.logger.Error("DEX_AUTH_DOMAIN environment variable not set")
+		return echo.NewHTTPError(http.StatusInternalServerError, "Identity provider configuration error")
 	}
-	if req.CallBackUrl == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "callback url is required")
-	}
-
-	// make an http call to dex pod to get the token
-	domain:=os.Getenv("DEX_AUTH_DOMAIN")
-	// http call to dex pod with code and callback url serach params
-	// make body 
-
+	dexTokenURL := fmt.Sprintf("%s/token", domain)
 	data := url.Values{}
+	data.Set("grant_type", "authorization_code")
 	data.Set("code", req.Code)
 	data.Set("redirect_uri", req.CallBackUrl)
-	data.Set("grant_type", "authorization_code")
 	data.Set("client_id", "public-client")
-	data.Set("client_secret", "")
-	url := fmt.Sprintf("%s/token", domain)
-	r.logger.Info("dex url", zap.String("url", url))
-	// set headers
-	headers := map[string]string{
-		"Content-Type": "application/x-www-form-urlencoded",
-	}
-	// make http call
-	client := &http.Client{}
-	
-	request, err := http.NewRequest("POST", url, strings.NewReader(data.Encode()))
+	r.logger.Info("Exchanging code with Dex", zap.String("url", dexTokenURL), zap.String("clientId", "public-client"))
+	client := &http.Client{Timeout: 10 * time.Second}
+	httpReq, err := http.NewRequestWithContext(ctx.Request().Context(), "POST", dexTokenURL, strings.NewReader(data.Encode()))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create request")
+		r.logger.Error("Failed to create Dex token request", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create token request")
 	}
-	for key, value := range headers {
-		request.Header.Set(key, value)
-	}
-	response, err := client.Do(request)
+	httpReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	httpReq.Header.Set("Accept", "application/json")
+	httpResp, err := client.Do(httpReq)
 	if err != nil {
-		r.logger.Error("failed to make request", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to make request")
+		r.logger.Error("Failed to make Dex token request", zap.String("url", dexTokenURL), zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadGateway, "Failed to communicate with identity provider")
 	}
-	defer response.Body.Close()
-	if response.StatusCode != http.StatusOK {
-		bodyBytes, err := io.ReadAll(response.Body)
-	if err != nil {
-		r.logger.Error("failed to read response body", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to read response")
-	}
-
-	bodyString := string(bodyBytes)
-	r.logger.Error("failed to get token", zap.String("status", response.Status))
-	r.logger.Error("response body", zap.String("body", bodyString))
-
-	return echo.NewHTTPError(http.StatusBadRequest, "failed to get token")
+	defer httpResp.Body.Close()
+	if httpResp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(httpResp.Body)
+		r.logger.Error("Dex token exchange failed", zap.String("url", dexTokenURL), zap.Int("status", httpResp.StatusCode), zap.String("body", string(bodyBytes)))
+		return echo.NewHTTPError(http.StatusBadGateway, "Token exchange with identity provider failed")
 	}
 	var tokenResponse map[string]interface{}
-	if err := json.NewDecoder(response.Body).Decode(&tokenResponse); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to decode response")
+	if err := json.NewDecoder(httpResp.Body).Decode(&tokenResponse); err != nil {
+		r.logger.Error("Failed to decode Dex token response", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to process identity provider response")
 	}
-	accessToken, ok := tokenResponse["access_token"].(string)
-	if !ok {
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to get access token")
+	tokenToVerify := ""
+	if idToken, ok := tokenResponse["id_token"].(string); ok && idToken != "" {
+		tokenToVerify = idToken
+		r.logger.Debug("Using id_token from Dex response for verification")
+	} else if accessToken, ok := tokenResponse["access_token"].(string); ok && accessToken != "" {
+		tokenToVerify = accessToken
+		r.logger.Debug("Using access_token from Dex response for verification (fallback)")
+	} else {
+		r.logger.Error("Neither id_token nor access_token found in Dex response", zap.Any("responseKeys", mapsKeys(tokenResponse)))
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid token response from identity provider")
 	}
-	dv,err := r.authServer.dexVerifier.Verify(ctx.Request().Context(), accessToken)
+
+	dv, err := r.authServer.dexVerifier.Verify(ctx.Request().Context(), tokenToVerify)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to verify token")
+		r.logger.Warn("Failed to verify token from Dex", zap.Error(err))
+		return echo.NewHTTPError(http.StatusUnauthorized, "Failed to verify token")
 	}
 	var claims json.RawMessage
 	if err := dv.Claims(&claims); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to get claims")
+		r.logger.Error("Failed to get claims from verified Dex token", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to process token claims")
 	}
 	var claimsMap DexClaims
 	if err = json.Unmarshal(claims, &claimsMap); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to unmarshal claims")
+		r.logger.Error("Failed to unmarshal Dex claims", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to process token claims")
 	}
-	// check if the claimsMap is empty
-	// find the user in the db
-	user, err := r.db.GetUserByEmail(claimsMap.Email)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to get user")
+
+	// Use the DB Interface for GetUserByEmail
+	user, err := r.db.GetUserByEmail(ctx.Request().Context(), claimsMap.Email)
+	if err != nil || user == nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) || user == nil {
+			r.logger.Warn("User from Dex token not found in local DB", zap.String("email", claimsMap.Email))
+			return echo.NewHTTPError(http.StatusForbidden, "User not registered in this application")
+		}
+		r.logger.Error("Failed to get user from local DB during token exchange", zap.String("email", claimsMap.Email), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve user data")
 	}
-	// add user role to claims
-	claimsMap.Groups = append(claimsMap.Groups, string(user.Role))
-	claimsMap.Name = user.Username
-	claimsMap.Id = user.ExternalId
+	if !user.IsActive {
+		r.logger.Warn("Login attempt via token exchange by inactive user", zap.String("email", user.Email), zap.Uint("userID", user.ID))
+		return echo.NewHTTPError(http.StatusForbidden, "User account is inactive")
+	}
 
-	// remove empty ones
-	
+	enrichedClaims := claimsMap
+	enrichedClaims.Groups = append(enrichedClaims.Groups, string(user.Role))
+	enrichedClaims.Name = user.Username
+	enrichedClaims.Subject = user.ExternalId
+	enrichedClaims.Id = uuid.NewString()
+	enrichedClaims.Issuer = "platform-auth-service"
+	enrichedClaims.Audience = "platform-client"
 
-	// create a new token
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256,claimsMap )
-	// sign the token with the private key
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, enrichedClaims)
+	if r.platformKeyID != "" {
+		token.Header["kid"] = r.platformKeyID
+		r.logger.Debug("Adding kid to enriched token JWT header", zap.String("kid", r.platformKeyID))
+	} else {
+		r.logger.Warn("Platform Key ID (kid) is not configured. Enriched token JWT header will not contain kid.")
+	}
 	signedToken, err := token.SignedString(r.platformPrivateKey)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to sign token")
+		r.logger.Error("Failed to sign enriched token", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to sign token")
 	}
-	// return the token
 	tokenResponse["access_token"] = signedToken
+
+	r.logger.Info("Successfully exchanged code and issued enriched token", zap.String("email", claimsMap.Email), zap.String("externalId", user.ExternalId))
 	return ctx.JSON(http.StatusOK, tokenResponse)
-
-
 }
 
-// GetUsers godoc
-//
-//	@Summary		List Users
-//	@Description	Retrieves a list of users who are members of the workspace.
-//	@Security		BearerToken
-//	@Tags			users
-//	@Produce		json
-//	@Param			request	body	api.GetUsersRequest	false	"Request Body"
-//	@Success		200		{array}	api.GetUsersResponse
-//	@Router			/auth/api/v1/users [get]
+// Helper to get map keys for logging without exposing values
+func mapsKeys(m map[string]interface{}) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+// --- GetUsers ---
 func (r *httpRoutes) GetUsers(ctx echo.Context) error {
-
-	var req api.GetUsersRequest
-	if err := ctx.Bind(&req); err != nil {
-		ctx.Logger().Errorf("bind the request: %v", err)
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
-	}
-	users, err := r.db.GetUsers()
+	users, err := r.db.GetUsers(ctx.Request().Context()) // Pass context
 	if err != nil {
-		return err
+		r.logger.Error("Failed to get users from DB", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve users")
 	}
-	var resp []api.GetUsersResponse
+	resp := make([]api.GetUsersResponse, 0, len(users))
 	for _, u := range users {
-		temp_resp := api.GetUsersResponse{
-			ID:            u.ID,
-			UserName:      u.Username,
-			Email:         u.Email,
-			EmailVerified: u.EmailVerified,
-			ExternalId:    u.ExternalId,
-			CreatedAt:     u.CreatedAt,
-			RoleName:      u.Role,
-			IsActive:      u.IsActive,
-			ConnectorId:   u.ConnectorId,
+		tempResp := api.GetUsersResponse{ID: u.ID, UserName: u.Username, Email: u.Email, EmailVerified: u.EmailVerified, ExternalId: u.ExternalId, RoleName: u.Role, CreatedAt: u.CreatedAt, IsActive: u.IsActive, ConnectorId: u.ConnectorId, FullName: u.FullName}
+		if !u.LastLogin.IsZero() {
+			tempResp.LastActivity = &u.LastLogin
 		}
-		if u.LastLogin.IsZero() {
-			temp_resp.LastActivity = nil
-		} else {
-			temp_resp.LastActivity = &u.LastLogin
-		}
-		resp = append(resp, temp_resp)
-
+		resp = append(resp, tempResp)
 	}
 	return ctx.JSON(http.StatusOK, resp)
 }
 
-// GetUserDetails godoc
-//
-//	@Summary		Get User details
-//	@Description	Returns user details by specified user id.
-//	@Security		BearerToken
-//	@Tags			users
-//	@Produce		json
-//	@Param			userId	path		string	true	"User ID"
-//	@Success		200		{object}	api.GetUserResponse
-//	@Router			/auth/api/v1/user/{userId} [get]
+// --- GetUserDetails ---
 func (r *httpRoutes) GetUserDetails(ctx echo.Context) error {
-
-	userID := ctx.Param("id")
-	userID, err := url.QueryUnescape(userID)
+	userIDParam := ctx.Param("id")
+	userID, err := strconv.ParseUint(userIDParam, 10, 32)
 	if err != nil {
-		return err
+		r.logger.Warn("Invalid user ID format in GetUserDetails", zap.String("idParam", userIDParam), zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
 	}
-	user, err := r.db.GetUser(userID)
+	user, err := r.db.GetUser(ctx.Request().Context(), strconv.FormatUint(userID, 10)) // Pass context
 	if err != nil {
-		return err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return echo.NewHTTPError(http.StatusNotFound, "User not found")
+		}
+		r.logger.Error("Failed to get user details from DB", zap.Uint64("userID", userID), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve user details")
 	}
-
-	resp := api.GetUserResponse{
-		ID:            user.ID,
-		UserName:      user.Username,
-		Email:         user.Email,
-		EmailVerified: user.EmailVerified,
-		CreatedAt:     user.CreatedAt,
-		Blocked:       user.IsActive,
-		RoleName:      user.Role,
+	if user == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "User not found")
 	}
-	// check if LastLogin is Default go time value remove it
-	if user.LastLogin.IsZero() {
-		resp.LastActivity = nil
-	} else {
+	resp := api.GetUserResponse{ID: user.ID, UserName: user.Username, Email: user.Email, EmailVerified: user.EmailVerified, CreatedAt: user.CreatedAt, Blocked: !user.IsActive, RoleName: user.Role}
+	if !user.LastLogin.IsZero() {
 		resp.LastActivity = &user.LastLogin
 	}
-
 	return ctx.JSON(http.StatusOK, resp)
-
 }
 
-// GetMe godoc
-//
-//	@Summary		Get Me
-//	@Description	Returns my user details
-//	@Security		BearerToken
-//	@Tags			users
-//	@Produce		json
-//	@Success		200	{object}	api.GetMeResponse
-//	@Router			/auth/api/v1/me [get]
+// --- GetMe ---
 func (r *httpRoutes) GetMe(ctx echo.Context) error {
 	userID := httpserver.GetUserID(ctx)
-
-	db_user, err := r.db.GetUserByExternalID(userID)
-	user ,_:= utils.DbUserToApi(db_user)
-
+	if userID == "" {
+		r.logger.Error("UserID missing from context in GetMe handler")
+		return echo.NewHTTPError(http.StatusUnauthorized, "User ID not found in request context")
+	}
+	dbUser, err := r.db.GetUserByExternalID(ctx.Request().Context(), userID) // Pass context
 	if err != nil {
-		return err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.logger.Warn("User from token context not found in DB", zap.String("externalID", userID))
+			return echo.NewHTTPError(http.StatusNotFound, "User not found")
+		}
+		r.logger.Error("Failed to get current user from DB", zap.String("externalID", userID), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve user data")
 	}
-
-	resp := api.GetMeResponse{
-
-		ID:            user.ID,
-		UserName:      user.Username,
-		Email:         user.Email,
-		EmailVerified: user.EmailVerified,
-		CreatedAt:     user.CreatedAt,
-		Blocked:       user.IsActive,
-		Role:          user.Role,
-		MemberSince:   user.CreatedAt,
-		ConnectorId:   user.ConnectorId,
+	if dbUser == nil {
+		return echo.NewHTTPError(http.StatusNotFound, "User not found")
 	}
-	if user.LastLogin.IsZero() {
-		resp.LastLogin = nil
-		resp.LastActivity = nil
-	} else {
-		resp.LastLogin = &user.LastLogin
-		resp.LastActivity = &user.LastLogin
+	resp := api.GetMeResponse{ID: dbUser.ID, UserName: dbUser.Username, Email: dbUser.Email, EmailVerified: dbUser.EmailVerified, CreatedAt: dbUser.CreatedAt, Blocked: !dbUser.IsActive, Role: string(dbUser.Role), MemberSince: dbUser.CreatedAt, ConnectorId: dbUser.ConnectorId}
+	if !dbUser.LastLogin.IsZero() {
+		resp.LastLogin = &dbUser.LastLogin
+		resp.LastActivity = &dbUser.LastLogin
 	}
-
 	return ctx.JSON(http.StatusOK, resp)
-
 }
 
-// CreateAPIKey godoc
-//
-//	@Summary		Create Workspace Key
-//	@Description	Creates workspace key for the defined role with the defined name in the workspace.
-//	@Security		BearerToken
-//	@Tags			keys
-//	@Produce		json
-//	@Param			request	body		api.CreateAPIKeyRequest	true	"Request Body"
-//	@Success		200		{object}	api.CreateAPIKeyResponse
-//	@Failure		406		{object}	echo.HTTPError
-//	@Router			/auth/api/v1/key/create [post]
+// --- CreateAPIKey ---
 func (r *httpRoutes) CreateAPIKey(ctx echo.Context) error {
 	userID := httpserver.GetUserID(ctx)
 	var req api.CreateAPIKeyRequest
 	if err := bindValidate(ctx, &req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+	// utils.GetUser needs modification to accept db.DatabaseInterface if it takes DB directly
+	// Assuming it's modified or we mock the underlying GetUserByExternalID call
+	usr, err := utils.GetUser(ctx.Request().Context(), userID, r.db)
 
-	usr, err := utils.GetUser(userID, r.db)
+	if err != nil || usr == nil {
+		r.logger.Error("Failed to get creator user details for API key", zap.String("userID", userID), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get user details")
+	}
+	keyLimit := int64(5)
+	currentKeyCount, err := r.db.CountApiKeysForUser(ctx.Request().Context(), userID)
 	if err != nil {
-		r.logger.Error("failed to get user", zap.Error(err))
-		return err
+		r.logger.Error("Failed to count user API keys", zap.String("userID", userID), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to count API keys")
 	}
-
-	if usr == nil {
-		return errors.New("failed to find user in auth")
+	if currentKeyCount >= keyLimit {
+		r.logger.Warn("API key limit reached for user", zap.String("userID", userID), zap.Int64("limit", keyLimit))
+		return echo.NewHTTPError(http.StatusConflict, fmt.Sprintf("Maximum number of %d API keys for user reached", keyLimit))
 	}
-	jti := uuid.New().String()
-
-
-	u := DexClaims{
-		EmailVerified:           usr.EmailVerified,
-		Email:          usr.Email,
-		Groups: 		[]string{string(usr.Role)},
-		Name:           usr.Username,
-		StandardClaims: jwt.StandardClaims{
-		Issuer:    "dex",                      // who issued the token
-		Subject:   userID,                     // user id
-		Audience:  "public-client",  // or []string{}
-		ExpiresAt: jwt.TimeFunc().Add(24 *time.Hour).Unix(), // expires in 24 hours
-		IssuedAt:  jwt.TimeFunc().Unix(),
-		Id:        jti,              // optional
-	},
-		
-	}
-
+	jti := uuid.NewString()
+	apiKeyClaims := &jwt.StandardClaims{Issuer: "platform-auth-service", Subject: userID, Audience: "platform-api", ExpiresAt: 0, IssuedAt: jwt.TimeFunc().Unix(), Id: jti}
 	if r.platformPrivateKey == nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "platform api key is disabled")
+		return echo.NewHTTPError(http.StatusServiceUnavailable, "Platform API key signing is disabled")
 	}
-	token, err := jwt.NewWithClaims(jwt.SigningMethodRS256, &u).SignedString(r.platformPrivateKey)
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, apiKeyClaims)
+	if r.platformKeyID != "" {
+		token.Header["kid"] = r.platformKeyID
+		r.logger.Debug("Adding kid to API Key JWT header", zap.String("kid", r.platformKeyID))
+	} else {
+		r.logger.Warn("Platform Key ID (kid) is not configured. API Key JWT header will not contain kid.")
+	}
+	signedToken, err := token.SignedString(r.platformPrivateKey)
 	if err != nil {
-		r.logger.Error("failed to create token", zap.Error(err))
-		return err
+		r.logger.Error("Failed to sign API key token", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create API key token")
 	}
-
-	masked := fmt.Sprintf("%s...%s", token[:10], token[len(token)-10:])
-
+	masked := fmt.Sprintf("%s...%s", signedToken[:min(10, len(signedToken))], signedToken[max(0, len(signedToken)-10):])
 	hash := sha512.New()
-	_, err = hash.Write([]byte(token))
+	_, err = hash.Write([]byte(signedToken))
 	if err != nil {
-		r.logger.Error("failed to hash token", zap.Error(err))
-		return err
+		r.logger.Error("Failed to hash API key token", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to hash API key")
 	}
 	keyHash := hex.EncodeToString(hash.Sum(nil))
-	r.logger.Info("hashed token")
-
-	currentKeyCount, err := r.db.CountApiKeysForUser(userID)
+	r.logger.Info("Creating API Key DB entry", zap.String("name", req.Name), zap.String("role", string(req.Role)))
+	apikey := db.ApiKey{Name: req.Name, Role: req.Role, CreatorUserID: userID, IsActive: true, MaskedKey: masked, KeyHash: keyHash}
+	err = r.db.AddApiKey(ctx.Request().Context(), &apikey)
 	if err != nil {
-		r.logger.Error("failed to get user API Keys count", zap.Error(err))
-		return err
+		r.logger.Error("Failed to add API Key to db", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to save API key")
 	}
-	if currentKeyCount > 5 {
-		return echo.NewHTTPError(http.StatusNotAcceptable, "maximum number of keys for user reached")
-	}
-	r.logger.Info("creating API Key")
-	apikey := db.ApiKey{
-		
-		Name:          req.Name,
-		Role:          req.Role,
-		CreatorUserID: userID,
-		IsActive:      true,
-		MaskedKey:     masked,
-		KeyHash:       keyHash,
-	}
-
-	r.logger.Info("adding API Key")
-	err = r.db.AddApiKey(&apikey)
-	if err != nil {
-		r.logger.Error("failed to add API Key", zap.Error(err))
-		return err
-	}
-
-	return ctx.JSON(http.StatusCreated, api.CreateAPIKeyResponse{
-		ID:        apikey.ID,
-		Name:      apikey.Name,
-		Active:    apikey.IsActive,
-		CreatedAt: apikey.CreatedAt,
-		RoleName:  apikey.Role,
-		Token:     token,
-	})
+	r.logger.Info("Successfully created and stored API Key", zap.Uint("apiKeyID", apikey.ID), zap.String("name", apikey.Name))
+	return ctx.JSON(http.StatusCreated, api.CreateAPIKeyResponse{ID: apikey.ID, Name: apikey.Name, Active: apikey.IsActive, CreatedAt: apikey.CreatedAt, RoleName: apikey.Role, Token: signedToken})
 }
 
-// DeleteAPIKey godoc
-//
-//	@Summary		Delete Workspace Key
-//	@Description	Deletes the specified workspace key by ID.
-//	@Security		BearerToken
-//	@Tags			keys
-//	@Produce		json
-//	@Param			id	path		string	true	"Key ID"
-//	@Success		200	{object}	nil
-//	@Router			/auth/api/v1/key/{id}/delete [delete]
+// DeleteAPIKey deletes an API key by its database ID.
 func (r *httpRoutes) DeleteAPIKey(ctx echo.Context) error {
-	// TODO: Ask from ANIL what should i do
-	// userId := httpserver.GetUserID(ctx)
-	id := ctx.Param("id")
-
-	integer_id, err := (strconv.ParseUint(id, 10, 32))
-
-	err = r.db.DeleteAPIKey(integer_id)
+	idParam := ctx.Param("id")
+	apiKeyID, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
-		return err
+		r.logger.Warn("Invalid API Key ID format in DeleteAPIKey", zap.String("idParam", idParam), zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid API Key ID format")
 	}
-
+	err = r.db.DeleteAPIKey(ctx.Request().Context(), apiKeyID)
+	if err != nil {
+		r.logger.Error("Failed to delete API Key", zap.Uint64("apiKeyID", apiKeyID), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete API Key")
+	}
+	r.logger.Info("Deleted API Key", zap.Uint64("apiKeyID", apiKeyID))
 	return ctx.NoContent(http.StatusAccepted)
 }
+
+// EditAPIKey updates the role and/or active status of an API key.
 func (r *httpRoutes) EditAPIKey(ctx echo.Context) error {
-	// TODO: Ask from ANIL what should i do
-	// userId := httpserver.GetUserID(ctx)
+	idParam := ctx.Param("id")
 	var req api.EditAPIKeyRequest
 	if err := bindValidate(ctx, &req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-
-	id := ctx.Param("id")
-	if id == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "id is required")
-	}
-
-	err := r.db.UpdateAPIKey(id, req.IsActive, req.Role)
+	err := r.db.UpdateAPIKey(ctx.Request().Context(), idParam, req.IsActive, req.Role)
 	if err != nil {
-		return err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return echo.NewHTTPError(http.StatusNotFound, "API Key not found")
+		}
+		r.logger.Error("Failed to update API Key", zap.String("apiKeyID", idParam), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update API Key")
 	}
-
+	r.logger.Info("Updated API Key", zap.String("apiKeyID", idParam), zap.Bool("isActive", req.IsActive), zap.String("role", string(req.Role)))
 	return ctx.NoContent(http.StatusAccepted)
 }
 
-// ListAPIKeys godoc
-//
-//	@Summary		Get API keys List
-//	@Description	Gets list of all keys.
-//	@Security		BearerToken
-//	@Tags			keys
-//	@Produce		json
-//	@Success		200	{object}	[]api.APIKeyResponse
-//	@Router			/auth/api/v1/keys [get]
+// ListAPIKeys lists API keys created by the requesting user.
 func (r *httpRoutes) ListAPIKeys(ctx echo.Context) error {
-	userID := httpserver.GetUserID(ctx)
-	keys, err := r.db.ListApiKeysForUser(userID)
+	requestingUserID := httpserver.GetUserID(ctx)
+	keys, err := r.db.ListApiKeysForUser(ctx.Request().Context(), requestingUserID)
 	if err != nil {
-		return err
+		r.logger.Error("Failed to list API keys for user", zap.String("userID", requestingUserID), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve API keys")
 	}
-
-	var resp []api.APIKeyResponse
+	resp := make([]api.APIKeyResponse, 0, len(keys))
 	for _, key := range keys {
-		resp = append(resp, api.APIKeyResponse{
-			ID:            key.ID,
-			CreatedAt:     key.CreatedAt,
-			Name:          key.Name,
-			RoleName:      key.Role,
-			CreatorUserID: key.CreatorUserID,
-			Active:        key.IsActive,
-			MaskedKey:     key.MaskedKey,
-		})
+		resp = append(resp, api.APIKeyResponse{ID: key.ID, CreatedAt: key.CreatedAt, UpdatedAt: key.UpdatedAt, Name: key.Name, RoleName: key.Role, CreatorUserID: key.CreatorUserID, Active: key.IsActive, MaskedKey: key.MaskedKey})
 	}
-
 	return ctx.JSON(http.StatusOK, resp)
 }
 
-// CreateUser godoc
-//
-//	@Summary		Create User
-//	@Description	Creates User.
-//	@Security		BearerToken
-//	@Tags			keys
-//	@Produce		json
-//	@Param			request	body	api.CreateUserRequest	true	"Request Body"
-//	@Success		200
-//	@Router			/auth/api/v1/user [post]
+// --- CreateUser ---
 func (r *httpRoutes) CreateUser(ctx echo.Context) error {
-
 	var req api.CreateUserRequest
 	if err := bindValidate(ctx, &req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-
-	err := r.DoCreateUser(req)
+	err := r.DoCreateUser(ctx.Request().Context(), req)
 	if err != nil {
 		return err
-	}
-
+	} // Pass context
+	r.logger.Info("User created successfully request received", zap.String("email", req.EmailAddress))
 	return ctx.NoContent(http.StatusCreated)
 }
 
-func (r *httpRoutes) DoCreateUser(req api.CreateUserRequest) error {
-
+// DoCreateUser contains the core logic for creating a user.
+func (r *httpRoutes) DoCreateUser(ctx context.Context, req api.CreateUserRequest) error { // Accept context
 	if req.EmailAddress == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "email address is required")
+		return echo.NewHTTPError(http.StatusBadRequest, "Email address is required")
 	}
-
-	user, err := r.db.GetUserByEmail(req.EmailAddress)
+	email := strings.ToLower(strings.TrimSpace(req.EmailAddress))
+	existingUser, err := r.db.GetUserByEmail(ctx, email) // Pass context
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		r.logger.Error("Failed to check existing user by email", zap.String("email", email), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to check user existence")
+	}
+	if existingUser != nil {
+		r.logger.Warn("Attempt to create user with existing email", zap.String("email", email))
+		return echo.NewHTTPError(http.StatusConflict, "Email address already in use")
+	}
+	count, err := r.db.GetUsersCount(ctx)
 	if err != nil {
-		r.logger.Error("failed to get user", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user")
+		r.logger.Error("Failed to get users count", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get users count")
 	}
-
-	if user != nil && user.Email != "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "email already used")
-	}
-
-	count, err := r.db.GetUsersCount()
-	if err != nil {
-		r.logger.Error("failed to get users count", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get users count")
-	}
-	adminAccount := false
-	var firstUser *db.User
-
-	if count == 1 {
-		firstUser, err = r.db.GetFirstUser()
-		if err != nil {
-			r.logger.Error("failed to get first user", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get first user")
-		}
-
-	} else if count == 0 {
-		adminAccount = true
-	}
-	if adminAccount && (req.Role == nil || *req.Role != api2.AdminRole) {
-		return echo.NewHTTPError(http.StatusBadRequest, "You should define admin role")
-	}
-
-	if adminAccount && firstUser != nil {
-		err = r.DoDeleteUser(firstUser.Email)
-		if err != nil {
-			r.logger.Error("failed to delete first user", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete first user")
-		}
-	}
-
-	connector := ""
-	userId := fmt.Sprintf("%v|%s", req.ConnectorId, req.EmailAddress)
-	if req.Password != nil {
-		connector = "local"
-		userId := fmt.Sprintf("local|%s", req.EmailAddress)
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(*req.Password), bcrypt.DefaultCost)
-		if err != nil {
-			r.logger.Error("failed to hash token", zap.Error(err))
-			return err
-		}
-
-		dexReq := &dexApi.CreatePasswordReq{
-			Password: &dexApi.Password{
-				UserId: userId,
-				Email:  req.EmailAddress,
-				Hash:   hashedPassword,
-			},
-		}
-
-		resp, err := r.authServer.dexClient.CreatePassword(context.TODO(), dexReq)
-		if err != nil {
-			r.logger.Error("failed to create dex password", zap.Error(err))
-			return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex password")
-		}
-		if resp.AlreadyExists {
-			dexReq := &dexApi.UpdatePasswordReq{
-				Email:   req.EmailAddress,
-				NewHash: hashedPassword,
-			}
-
-			_, err = r.authServer.dexClient.UpdatePassword(context.TODO(), dexReq)
-			if err != nil {
-				r.logger.Error("failed to update dex password", zap.Error(err))
-				return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex password")
-			}
-		}
-	}
-
+	isAdminBootstrap := count == 0
 	role := api2.ViewerRole
 	if req.Role != nil {
 		role = *req.Role
 	}
-
+	if isAdminBootstrap {
+		r.logger.Info("Creating first user, assigning Admin role", zap.String("email", email))
+		role = api2.AdminRole
+	} else if req.Role == nil {
+		r.logger.Info("No role specified for new user, defaulting to Viewer", zap.String("email", email))
+	}
+	connectorType := req.ConnectorId
+	externalID := ""
 	requirePasswordChange := true
-	if adminAccount {
+	if req.Password != nil && *req.Password != "" {
+		connectorType = "local"
+		externalID = fmt.Sprintf("local|%s", email)
+		r.logger.Info("Creating local user with password", zap.String("email", email), zap.String("externalId", externalID))
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(*req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			r.logger.Error("Failed to hash user password", zap.String("email", email), zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to process password")
+		}
+		dexReq := &dexApi.CreatePasswordReq{Password: &dexApi.Password{UserId: externalID, Email: email, Hash: hashedPassword, Username: email}}
+		resp, err := r.authServer.dexClient.CreatePassword(ctx, dexReq)
+		if err != nil {
+			r.logger.Error("Failed to create dex password", zap.String("email", email), zap.Error(err))
+			return echo.NewHTTPError(http.StatusBadGateway, "Failed to create user identity with provider")
+		}
+		if resp.AlreadyExists {
+			r.logger.Warn("Dex password entry already exists for new user, attempting update", zap.String("email", email))
+			updateReq := &dexApi.UpdatePasswordReq{Email: email, NewHash: hashedPassword, NewUsername: email}
+			_, err = r.authServer.dexClient.UpdatePassword(ctx, updateReq)
+			if err != nil {
+				r.logger.Error("Failed to update potentially existing dex password", zap.String("email", email), zap.Error(err))
+				return echo.NewHTTPError(http.StatusBadGateway, "Failed to update user identity with provider")
+			}
+		}
+		requirePasswordChange = false
+	} else {
+		if connectorType == "" || connectorType == "local" {
+			connectorType = "local"
+			externalID = fmt.Sprintf("local|%s", email)
+			r.logger.Info("Creating local user without initial password", zap.String("email", email))
+		} else {
+			externalID = fmt.Sprintf("%s|%s", connectorType, email)
+			r.logger.Info("Creating user linked to external connector", zap.String("email", email), zap.String("connector", connectorType))
+			requirePasswordChange = false
+		}
+	}
+	if isAdminBootstrap {
 		requirePasswordChange = false
 	}
-
-	newUser := &db.User{
-		Email:                 req.EmailAddress,
-		Username:              req.EmailAddress,
-		FullName:              req.EmailAddress,
-		Role:                  role,
-		EmailVerified:         false,
-		ConnectorId:           connector,
-		ExternalId:            userId,
-		RequirePasswordChange: requirePasswordChange,
-		IsActive:              true,
-	}
-	err = r.db.CreateUser(newUser)
+	newUser := &db.User{Email: email, Username: email, FullName: email, Role: role, EmailVerified: false, ConnectorId: connectorType, ExternalId: externalID, RequirePasswordChange: requirePasswordChange, IsActive: true}
+	err = r.db.CreateUser(ctx, newUser)
 	if err != nil {
-		r.logger.Error("failed to create user", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create user")
+		r.logger.Error("Failed to create user in local database", zap.String("email", email), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to save user data")
 	}
 	return nil
 }
 
-// UpdateUser godoc
-//
-//	@Summary		Update User
-//	@Description	Updates User.
-//	@Security		BearerToken
-//	@Tags			keys
-//	@Produce		json
-//	@Param			request	body	api.UpdateUserRequest	true	"Request Body"
-//	@Success		200
-//	@Router			/auth/api/v1/user [put]
+// --- UpdateUser ---
 func (r *httpRoutes) UpdateUser(ctx echo.Context) error {
 	var req api.UpdateUserRequest
 	if err := bindValidate(ctx, &req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-
 	if req.EmailAddress == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "email address is required")
+		return echo.NewHTTPError(http.StatusBadRequest, "Email address is required to identify user")
 	}
-
-	user, err := r.db.GetUserByEmail(req.EmailAddress)
+	email := strings.ToLower(strings.TrimSpace(req.EmailAddress))
+	user, err := r.db.GetUserByEmail(ctx.Request().Context(), email)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return echo.NewHTTPError(http.StatusNotFound, "User not found")
+		}
+		r.logger.Error("Failed to get user for update", zap.String("email", email), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve user")
 	}
 	if user == nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "user not found")
+		return echo.NewHTTPError(http.StatusNotFound, "User not found")
 	}
-
-	if req.Password != nil && req.ConnectorId == "local" {
+	if req.Password != nil && *req.Password != "" {
+		if user.ConnectorId != "local" {
+			r.logger.Warn("Attempt to set password for non-local user", zap.String("email", email), zap.String("connector", user.ConnectorId))
+			return echo.NewHTTPError(http.StatusBadRequest, "Cannot set password for user linked to external connector")
+		}
+		r.logger.Info("Updating password for local user", zap.String("email", email))
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(*req.Password), bcrypt.DefaultCost)
 		if err != nil {
-			r.logger.Error("failed to hash token", zap.Error(err))
-			return err
+			r.logger.Error("Failed to hash updated password", zap.String("email", email), zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to process password")
 		}
-
-		dexReq := &dexApi.UpdatePasswordReq{
-			Email:   req.EmailAddress,
-			NewHash: hashedPassword,
-		}
-
-		resp, err := r.authServer.dexClient.UpdatePassword(context.TODO(), dexReq)
+		dexUpdateReq := &dexApi.UpdatePasswordReq{Email: email, NewHash: hashedPassword, NewUsername: email}
+		resp, err := r.authServer.dexClient.UpdatePassword(ctx.Request().Context(), dexUpdateReq)
 		if err != nil {
-			r.logger.Error("failed to update dex password", zap.Error(err))
-			return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex password")
+			r.logger.Error("Failed to update dex password", zap.String("email", email), zap.Error(err))
+			return echo.NewHTTPError(http.StatusBadGateway, "Failed to update user identity with provider")
 		}
 		if resp.NotFound {
-			dexReq := &dexApi.CreatePasswordReq{
-				Password: &dexApi.Password{
-					UserId: fmt.Sprintf("local|%s", req.EmailAddress),
-					Email:  req.EmailAddress,
-					Hash:   hashedPassword,
-				},
-			}
-
-			_, err = r.authServer.dexClient.CreatePassword(context.TODO(), dexReq)
+			r.logger.Warn("Dex password entry not found during update, attempting creation", zap.String("email", email))
+			dexCreateReq := &dexApi.CreatePasswordReq{Password: &dexApi.Password{UserId: user.ExternalId, Email: email, Hash: hashedPassword, Username: email}}
+			_, err = r.authServer.dexClient.CreatePassword(ctx.Request().Context(), dexCreateReq)
 			if err != nil {
-				r.logger.Error("failed to create dex password", zap.Error(err))
-				return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex password")
+				r.logger.Error("Failed to create dex password during update fallback", zap.String("email", email), zap.Error(err))
+				return echo.NewHTTPError(http.StatusBadGateway, "Failed to create user identity with provider")
 			}
 		}
-
-		err = r.db.UserPasswordUpdate(user.ID)
+		err = r.db.UserPasswordUpdate(ctx.Request().Context(), user.ID)
 		if err != nil {
-			r.logger.Error("failed to update user", zap.Error(err))
-			return echo.NewHTTPError(http.StatusBadRequest, "failed to update user")
+			r.logger.Error("Failed to mark user password as updated in db", zap.Uint("userID", user.ID), zap.Error(err))
 		}
 	}
-
-	if req.Role != nil {
-		update_user := &db.User{
-			Model: gorm.Model{
-				ID: user.ID,
-			},
-			Role:        *req.Role,
-			IsActive:    req.IsActive,
-			Username:    req.UserName,
-			FullName:    req.FullName,
-			Email:       user.Email,
-			ExternalId:  fmt.Sprintf("%v|%s", req.ConnectorId, user.Email),
-			ConnectorId: req.ConnectorId,
-		}
-		err = r.db.UpdateUser(update_user)
-		if err != nil {
-			r.logger.Error("failed to update user", zap.Error(err))
-			return echo.NewHTTPError(http.StatusBadRequest, "failed to update user")
-		}
+	updateNeeded := false
+	if req.Role != nil && user.Role != *req.Role {
+		user.Role = *req.Role
+		updateNeeded = true
 	}
-
+	if user.IsActive != req.IsActive {
+		user.IsActive = req.IsActive
+		updateNeeded = true
+	}
+	if req.UserName != "" && user.Username != req.UserName {
+		user.Username = req.UserName
+		updateNeeded = true
+	}
+	if req.FullName != "" && user.FullName != req.FullName {
+		user.FullName = req.FullName
+		updateNeeded = true
+	}
+	if req.ConnectorId != "" && user.ConnectorId != req.ConnectorId {
+		user.ConnectorId = req.ConnectorId
+		user.ExternalId = fmt.Sprintf("%s|%s", req.ConnectorId, user.Email)
+		r.logger.Warn("User connector changed", zap.String("email", email), zap.String("oldConnector", user.ConnectorId), zap.String("newConnector", req.ConnectorId))
+		updateNeeded = true
+	}
+	if updateNeeded {
+		r.logger.Info("Updating user details in database", zap.String("email", email))
+		err = r.db.UpdateUser(ctx.Request().Context(), user)
+		if err != nil {
+			r.logger.Error("Failed to update user in database", zap.String("email", email), zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update user data")
+		}
+	} else {
+		r.logger.Info("No user details needed updating", zap.String("email", email))
+	}
 	return ctx.NoContent(http.StatusOK)
 }
 
-// DeleteUser godoc
-//
-//	@Summary		Delete User
-//	@Description	Delete User.
-//	@Security		BearerToken
-//	@Tags			keys
-//	@Produce		json
-//	@Param			email_address	path	string	true	"Request Body"
-//	@Success		200
-//	@Router			/auth/api/v3/user/{email_address}/delete [delete]
+// --- DeleteUser ---
 func (r *httpRoutes) DeleteUser(ctx echo.Context) error {
-	id := ctx.Param("id")
-	if id == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "id is required")
+	idParam := ctx.Param("id")
+	userID, err := strconv.ParseUint(idParam, 10, 32)
+	if err != nil {
+		r.logger.Warn("Invalid user ID format in DeleteUser", zap.String("idParam", idParam), zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
 	}
-
-	err := r.DoDeleteUser(id)
+	err = r.DoDeleteUser(ctx.Request().Context(), uint(userID))
 	if err != nil {
 		return err
 	}
-
+	r.logger.Info("User deleted successfully", zap.Uint("userID", uint(userID)))
 	return ctx.NoContent(http.StatusAccepted)
 }
 
-func (r *httpRoutes) DoDeleteUser(id string) error {
-	user, err2 := r.db.GetUser(id)
-
-	if err2 != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "user does not exist")
+// DoDeleteUser contains the core logic for deleting a user.
+func (r *httpRoutes) DoDeleteUser(ctx context.Context, userID uint) error { // Accept context
+	user, err := r.db.GetUser(ctx, strconv.FormatUint(uint64(userID), 10))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return echo.NewHTTPError(http.StatusNotFound, "User not found")
+		}
+		r.logger.Error("Failed to get user for deletion", zap.Uint("userID", userID), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve user before deletion")
 	}
 	if user == nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "user does not exist")
+		return echo.NewHTTPError(http.StatusNotFound, "User not found")
 	}
 	if user.ID == 1 {
-		return echo.NewHTTPError(http.StatusBadRequest, "cannot delete the first user")
+		r.logger.Warn("Attempt to delete the first user (ID 1)", zap.String("email", user.Email))
+		return echo.NewHTTPError(http.StatusBadRequest, "Cannot delete the initial administrator user")
 	}
-	dexReq := &dexApi.DeletePasswordReq{
-		Email: user.Email,
+	if user.ConnectorId == "local" {
+		r.logger.Info("Deleting Dex password entry for local user", zap.String("email", user.Email))
+		dexReq := &dexApi.DeletePasswordReq{Email: user.Email}
+		resp, err := r.authServer.dexClient.DeletePassword(ctx, dexReq)
+		if err != nil {
+			r.logger.Error("Failed to remove dex password during user deletion", zap.String("email", user.Email), zap.Error(err))
+			return echo.NewHTTPError(http.StatusBadGateway, "Failed to remove user identity from provider")
+		}
+		if resp.NotFound {
+			r.logger.Warn("Dex password entry not found during deletion, proceeding", zap.String("email", user.Email))
+		}
 	}
-
-	_, err := r.authServer.dexClient.DeletePassword(context.TODO(), dexReq)
+	err = r.db.DeleteUser(ctx, user.ID)
 	if err != nil {
-		r.logger.Error("failed to remove dex password", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to remove dex password")
-	}
-
-	err = r.db.DeleteUser(user.ID)
-	if err != nil {
-		r.logger.Error("failed to delete user", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create user")
+		r.logger.Error("Failed to delete user from local database", zap.Uint("userID", userID), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete user data")
 	}
 	return nil
 }
 
-// CheckUserPasswordChangeRequired godoc
-//
-//	@Summary		Delete User
-//	@Description	Delete User.
-//	@Security		BearerToken
-//	@Tags			keys
-//	@Produce		json
-//	@Success		200
-//	@Router			/auth/api/v3/user/password/check [get]
+// --- CheckUserPasswordChangeRequired ---
 func (r *httpRoutes) CheckUserPasswordChangeRequired(ctx echo.Context) error {
 	userId := httpserver.GetUserID(ctx)
-
-	user, err := r.db.GetUserByExternalID(userId)
+	if userId == "" {
+		r.logger.Error("UserID missing from context in CheckUserPasswordChangeRequired")
+		return echo.NewHTTPError(http.StatusUnauthorized, "User ID not found in request context")
+	}
+	user, err := r.db.GetUserByExternalID(ctx.Request().Context(), userId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return echo.NewHTTPError(http.StatusNotFound, "User not found")
+		}
+		r.logger.Error("Failed to get user for password check", zap.String("externalID", userId), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve user data")
 	}
 	if user == nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "user not found")
+		return echo.NewHTTPError(http.StatusNotFound, "User not found")
 	}
-
 	if user.RequirePasswordChange {
 		return ctx.String(http.StatusOK, "CHANGE_REQUIRED")
 	} else {
@@ -866,595 +746,353 @@ func (r *httpRoutes) CheckUserPasswordChangeRequired(ctx echo.Context) error {
 	}
 }
 
-// ResetUserPassword godoc
-//
-//	@Summary		Reset current user password
-//	@Description	Reset current user password
-//	@Security		BearerToken
-//	@Tags			user
-//	@Produce		json
-//	@Success		200
-//	@Router			/auth/api/v3/user/password/reset [post]
+// --- ResetUserPassword ---
 func (r *httpRoutes) ResetUserPassword(ctx echo.Context) error {
-
 	userId := httpserver.GetUserID(ctx)
-
-	user, err := r.db.GetUserByExternalID(userId)
+	if userId == "" {
+		r.logger.Error("UserID missing from context in ResetUserPassword")
+		return echo.NewHTTPError(http.StatusUnauthorized, "User ID not found in request context")
+	}
+	user, err := r.db.GetUserByExternalID(ctx.Request().Context(), userId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return echo.NewHTTPError(http.StatusNotFound, "User not found")
+		}
+		r.logger.Error("Failed to get user for password reset", zap.String("externalID", userId), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve user data")
 	}
 	if user == nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "user not found")
+		return echo.NewHTTPError(http.StatusNotFound, "User not found")
 	}
-
+	if user.ConnectorId != "local" {
+		r.logger.Warn("Password reset attempt for non-local user", zap.String("externalID", userId), zap.String("connector", user.ConnectorId))
+		return echo.NewHTTPError(http.StatusBadRequest, "Password reset only available for local accounts")
+	}
 	var req api.ResetUserPasswordRequest
 	if err := bindValidate(ctx, &req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-
-	if user.ConnectorId != "local" {
-		return echo.NewHTTPError(http.StatusBadRequest, "user connector should be local")
+	if req.CurrentPassword == "" || req.NewPassword == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Current and new passwords are required")
 	}
-
-	dexReq := &dexApi.VerifyPasswordReq{
-		Email:    user.Email,
-		Password: req.CurrentPassword,
+	if req.CurrentPassword == req.NewPassword {
+		return echo.NewHTTPError(http.StatusBadRequest, "New password must be different from the current password")
 	}
-
-	resp, err := r.authServer.dexClient.VerifyPassword(context.TODO(), dexReq)
+	dexVerifyReq := &dexApi.VerifyPasswordReq{Email: user.Email, Password: req.CurrentPassword}
+	resp, err := r.authServer.dexClient.VerifyPassword(ctx.Request().Context(), dexVerifyReq)
 	if err != nil {
-		r.logger.Error("failed to validate dex password", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to validate dex password")
+		r.logger.Error("Failed to verify current password with Dex", zap.String("email", user.Email), zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadGateway, "Failed to verify current password")
 	}
 	if resp.NotFound {
-		return echo.NewHTTPError(http.StatusNotFound, "user not found")
+		r.logger.Error("Dex password entry not found for existing local user during verification", zap.String("email", user.Email))
+		return echo.NewHTTPError(http.StatusInternalServerError, "User identity inconsistency")
 	}
 	if !resp.Verified {
-		return echo.NewHTTPError(http.StatusUnauthorized, "current password is incorrect")
+		r.logger.Info("Incorrect current password provided during reset", zap.String("email", user.Email))
+		return echo.NewHTTPError(http.StatusUnauthorized, "Incorrect current password")
 	}
-
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
-		r.logger.Error("failed to hash token", zap.Error(err))
-		return err
+		r.logger.Error("Failed to hash new password", zap.String("email", user.Email), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to process new password")
 	}
-
-	passwordUpdateReq := &dexApi.UpdatePasswordReq{
-		Email:   user.Email,
-		NewHash: hashedPassword,
-	}
-
-	passwordUpdateResp, err := r.authServer.dexClient.UpdatePassword(context.TODO(), passwordUpdateReq)
+	passwordUpdateReq := &dexApi.UpdatePasswordReq{Email: user.Email, NewHash: hashedPassword, NewUsername: user.Username}
+	passwordUpdateResp, err := r.authServer.dexClient.UpdatePassword(ctx.Request().Context(), passwordUpdateReq)
 	if err != nil {
-		r.logger.Error("failed to update dex password", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to update dex password")
+		r.logger.Error("Failed to update dex password during reset", zap.String("email", user.Email), zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadGateway, "Failed to update password with identity provider")
 	}
 	if passwordUpdateResp.NotFound {
-		dexReq := &dexApi.CreatePasswordReq{
-			Password: &dexApi.Password{
-				UserId: fmt.Sprintf("local|%s", user.Email),
-				Email:  user.Email,
-				Hash:   hashedPassword,
-			},
-		}
-
-		_, err = r.authServer.dexClient.CreatePassword(context.TODO(), dexReq)
-		if err != nil {
-			r.logger.Error("failed to create dex password", zap.Error(err))
-			return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex password")
-		}
+		r.logger.Error("Dex password entry not found for existing local user during update", zap.String("email", user.Email))
+		return echo.NewHTTPError(http.StatusInternalServerError, "User identity inconsistency")
 	}
-
-	err = r.db.UserPasswordUpdate(user.ID)
+	err = r.db.UserPasswordUpdate(ctx.Request().Context(), user.ID)
 	if err != nil {
-		r.logger.Error("failed to update user", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to update user")
+		r.logger.Error("Failed to mark user password as updated in db after reset", zap.Uint("userID", user.ID), zap.Error(err))
 	}
-
+	r.logger.Info("User successfully reset password", zap.String("email", user.Email))
 	return ctx.NoContent(http.StatusAccepted)
 }
 
-// GetConnector godoc
-//
-//	@Summary		Get  Connectors list
-//	@Description	Returns a list  connectors. can have connector type param
-//	@Security		BearerToken
-//	@Tags			connectors
-//	@Produce		json
-//	@Success		200
-//	@Router			/auth/api/v1/connectors [GET]
-
+// --- GetConnectors ---
 func (r *httpRoutes) GetConnectors(ctx echo.Context) error {
-	req := &dexApi.ListConnectorReq{}
-	connectorType := ctx.Param("type")
-	// Execute the ListConnectors RPC.
-	respDex, err := r.authServer.dexClient.ListConnectors(context.TODO(), req)
-	if err != nil {
-		r.logger.Error("failed to list connectors", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to list connectors")
-
+	connectorTypeFilter := ctx.Param("type")
+	if connectorTypeFilter != "" {
+		r.logger.Info("Filtering connectors by type", zap.String("type", connectorTypeFilter))
 	}
-
-	connectors := respDex.Connectors
-
-	var resp []api.GetConnectorsResponse
-	for _, connector := range connectors {
-
-		localConnector, err := r.db.GetConnectorByConnectorID(connector.Id)
+	// Assuming ListConnectorsReq is defined and empty, if compiler issue persists, check dex/api/v2 contents
+	req := &dexApi.ListConnectorReq{}
+	respDex, err := r.authServer.dexClient.ListConnectors(ctx.Request().Context(), req) // Pass context
+	if err != nil {
+		r.logger.Error("Failed to list connectors from Dex", zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadGateway, "Failed to retrieve connector list from provider")
+	}
+	connectorsFromDex := respDex.Connectors
+	resp := make([]api.GetConnectorsResponse, 0, len(connectorsFromDex))
+	for _, dexConnector := range connectorsFromDex {
+		if dexConnector.Id == "local" {
+			continue
+		}
+		if connectorTypeFilter != "" && !strings.EqualFold(connectorTypeFilter, dexConnector.Type) {
+			continue
+		}
+		localConnector, err := r.db.GetConnectorByConnectorID(ctx.Request().Context(), dexConnector.Id)
 		if err != nil {
-			r.logger.Error("failed to get connector", zap.Error(err))
-			return echo.NewHTTPError(http.StatusBadRequest, "failed to get connector")
-		}
-		if connectorType != "" && strings.ToLower(connectorType) != strings.ToLower(connector.Type) {
+			r.logger.Warn("Failed to get local DB record for Dex connector", zap.String("connectorID", dexConnector.Id), zap.Error(err))
 			continue
 		}
-		if connector.Id == "local" {
+		if localConnector == nil {
+			r.logger.Warn("Connector exists in Dex but not in local DB", zap.String("connectorID", dexConnector.Id))
 			continue
 		}
-		info := api.GetConnectorsResponse{
-			ID:          localConnector.ID,
-			ConnectorID: connector.Id,
-			Type:        connector.Type,
-			Name:        connector.Name,
-			SubType:     localConnector.ConnectorSubType,
-			UserCount:   localConnector.UserCount,
-			CreatedAt:   localConnector.CreatedAt,
-			LastUpdate:  localConnector.LastUpdate,
-		}
-
-		// If the connector is of type "oidc", attempt to extract Issuer and ClientID
-		if strings.ToLower(connector.Type) == "oidc" {
-			var config api.OIDCConfig
-			var data map[string]interface{}
-			err := json.Unmarshal(connector.Config, &config)
-			new_err := json.Unmarshal(connector.Config, &data)
-			r.logger.Info("data", zap.Any("data", data))
-			if new_err != nil {
-				r.logger.Error("Failed to unmarshal OIDC config for connector", zap.Error(err))
+		info := api.GetConnectorsResponse{ID: localConnector.ID, ConnectorID: dexConnector.Id, Type: dexConnector.Type, Name: dexConnector.Name, SubType: localConnector.ConnectorSubType, UserCount: localConnector.UserCount, CreatedAt: localConnector.CreatedAt, LastUpdate: localConnector.LastUpdate}
+		if strings.EqualFold(dexConnector.Type, "oidc") && len(dexConnector.Config) > 0 {
+			var oidcConfig struct {
+				Issuer   string `json:"issuer"`
+				ClientID string `json:"clientID"`
 			}
+			err := json.Unmarshal(dexConnector.Config, &oidcConfig)
 			if err != nil {
-				r.logger.Error("Failed to unmarshal OIDC config for connector", zap.Error(err))
+				r.logger.Warn("Failed to unmarshal OIDC config for connector", zap.String("connectorID", dexConnector.Id), zap.Error(err))
 			} else {
-				info.Issuer = config.Issuer
-				info.ClientID = config.ClientID
-				// Note: Omitting ClientSecret for security reasons
+				info.Issuer = oidcConfig.Issuer
+				info.ClientID = oidcConfig.ClientID
 			}
 		}
-
 		resp = append(resp, info)
 	}
 	return ctx.JSON(http.StatusOK, resp)
 }
 
-// GetSupportedConnectors godoc
-//
-//	@Summary		Get Supported Connectors
-//	@Description	Returns a list of supported connectors.
-//	@Security		BearerToken
-//	@Tags			connectors
-//	@Produce		json
-//	@Success		200
-//	@Router			/auth/api/v1/connectors/ [GET]
-
+// --- GetSupportedType ---
 func (r *httpRoutes) GetSupportedType(ctx echo.Context) error {
-	var connectors []api.GetSupportedConnectorTypeResponse
-
-	subTypes := utils.SupportedConnectors["oidc"]
-	subTypesNames := utils.SupportedConnectorsNames["oidc"]
-
-	var types []api.ConnectorSubTypes
-	for i, key := range subTypes {
-		types = append(types, api.ConnectorSubTypes{
-			ID:   key,
-			Name: subTypesNames[i],
-		})
+	supportedConnectors := utils.SupportedConnectors
+	supportedNames := utils.SupportedConnectorsNames
+	responseList := make([]api.GetSupportedConnectorTypeResponse, 0, len(supportedConnectors))
+	if subTypes, ok := supportedConnectors["oidc"]; ok {
+		subTypeNames := supportedNames["oidc"]
+		if len(subTypes) != len(subTypeNames) {
+			r.logger.Error("Mismatch between supported OIDC subtypes and names in utils config")
+		}
+		apiSubTypes := make([]api.ConnectorSubTypes, 0, len(subTypes))
+		for i, subTypeID := range subTypes {
+			name := subTypeID
+			if i < len(subTypeNames) {
+				name = subTypeNames[i]
+			}
+			apiSubTypes = append(apiSubTypes, api.ConnectorSubTypes{ID: subTypeID, Name: name})
+		}
+		responseList = append(responseList, api.GetSupportedConnectorTypeResponse{ConnectorType: "oidc", SubTypes: apiSubTypes})
 	}
-	connectors = append(connectors, api.GetSupportedConnectorTypeResponse{
-		ConnectorType: "oidc",
-		SubTypes:      types,
-	})
-
-	return ctx.JSON(http.StatusOK, connectors)
-
+	return ctx.JSON(http.StatusOK, responseList)
 }
 
-// CreateConnector godoc
-//
-//	@Summary		Create Connector
-//	@Description	Creates new OIDC connector.
-//	@Security		BearerToken
-//	@Tags			connectors
-//	@Produce		json
-//	@Success		200
-//	@Router			/auth/api/v1/connector/supported-connector-types [post]
+// --- CreateConnector ---
 func (r *httpRoutes) CreateConnector(ctx echo.Context) error {
 	var req api.CreateConnectorRequest
 	if err := bindValidate(ctx, &req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-
-	if req.ConnectorType == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "connector type is required")
+	dexUtilReq := utils.CreateConnectorRequest{ConnectorType: req.ConnectorType, ConnectorSubType: req.ConnectorSubType, Issuer: req.Issuer, TenantID: req.TenantID, ClientID: req.ClientID, ClientSecret: req.ClientSecret, ID: req.ID, Name: req.Name}
+	dexAPICreator := utils.GetConnectorCreator(strings.ToLower(dexUtilReq.ConnectorType))
+	if dexAPICreator == nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Unsupported connector type: %s", dexUtilReq.ConnectorType))
 	}
-	connectorTypeLower := strings.ToLower(req.ConnectorType)
-	creator := utils.GetConnectorCreator(connectorTypeLower)
-	if creator == nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "connector type is not supported")
-	}
-
-	// default
-	connectorSubTypeLower := "general" // default
-	if req.ConnectorSubType != "" {
-		connectorSubTypeLower = strings.ToLower(req.ConnectorSubType)
-	} else {
-		r.logger.Info("No connector_sub_type specified. Defaulting to 'general'")
-	}
-	if !utils.IsSupportedSubType(connectorTypeLower, connectorSubTypeLower) {
-		err := fmt.Sprintf("unsupported connector_sub_type '%s' for connector_type '%s'", connectorSubTypeLower, connectorTypeLower)
-		r.logger.Info(err)
-		return echo.NewHTTPError(http.StatusBadRequest, err)
-
-	}
-	switch connectorSubTypeLower {
-	case "general":
-		// Required: issuer, client_id, client_secret
-		if strings.TrimSpace(req.Issuer) == "" {
-			r.logger.Warn("Missing 'issuer' for 'general' OIDC connector")
-			return ctx.JSON(http.StatusBadRequest, map[string]string{
-				"error": "issuer is required for 'general' OIDC connector",
-			})
-
-		}
-
-		// Set default id and name if not provided
-		if strings.TrimSpace(req.ID) == "" {
-			req.ID = "oidc-default"
-		}
-		if strings.TrimSpace(req.Name) == "" {
-			req.Name = "General OIDC"
-		}
-
-	case "entraid":
-		// Required: tenant_id, client_id, client_secret
-		if strings.TrimSpace(req.TenantID) == "" {
-			err := "Missing 'tenant_id' for 'entraid' OIDC connector"
-			r.logger.Info(err)
-			return echo.NewHTTPError(http.StatusBadRequest, err)
-
-		}
-		// fetching issuer
-
-		// Set default id and name if not provided
-		if strings.TrimSpace(req.ID) == "" {
-			req.ID = "entra-id"
-
-		}
-		if strings.TrimSpace(req.Name) == "" {
-			req.Name = "AzureAD/EntraID"
-
-		}
-
-	case "google-workspace":
-		// Required: client_id, client_secret
-
-		// Set default id and name if not provided
-		if strings.TrimSpace(req.ID) == "" {
-			req.ID = "google-oidc"
-
-		}
-		if strings.TrimSpace(req.Name) == "" {
-			req.Name = "Google Workspaces "
-
-		}
-	}
-	dexRequest := utils.CreateConnectorRequest{
-		ConnectorType:    req.ConnectorType,
-		ConnectorSubType: req.ConnectorSubType,
-		Issuer:           req.Issuer,
-		TenantID:         req.TenantID,
-		ClientID:         req.ClientID,
-		ClientSecret:     req.ClientSecret,
-		ID:               req.ID,
-		Name:             req.Name,
-	}
-	dexreq, err := creator(dexRequest)
+	dexAPIReq, err := dexAPICreator(dexUtilReq)
 	if err != nil {
-		r.logger.Error("Error on Creating dex request", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		r.logger.Warn("Failed to prepare Dex connector creation request", zap.Error(err), zap.Any("request", req))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Failed to create connector request: %s", err.Error()))
 	}
-
-	res, err := r.authServer.dexClient.CreateConnector(context.TODO(), dexreq)
+	r.logger.Info("Creating Dex connector", zap.String("id", dexAPIReq.Connector.Id), zap.String("type", dexAPIReq.Connector.Type), zap.String("name", dexAPIReq.Connector.Name))
+	res, err := r.authServer.dexClient.CreateConnector(ctx.Request().Context(), dexAPIReq)
 	if err != nil {
-		r.logger.Error("failed to create dex connector", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex connector")
+		r.logger.Error("Failed to create Dex connector via gRPC", zap.String("id", dexAPIReq.Connector.Id), zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadGateway, "Failed to create connector with identity provider")
 	}
 	if res.AlreadyExists {
-		return echo.NewHTTPError(http.StatusBadRequest, "connector already exists")
+		r.logger.Warn("Attempt to create Dex connector that already exists", zap.String("id", dexAPIReq.Connector.Id))
+		return echo.NewHTTPError(http.StatusConflict, "Connector with this ID already exists")
 	}
-	err = r.db.CreateConnector(&db.Connector{
-		LastUpdate:       time.Now(),
-		ConnectorID:      req.ID,
-		ConnectorType:    req.ConnectorType,
-		ConnectorSubType: req.ConnectorSubType,
-	})
+	localConnector := &db.Connector{ConnectorID: dexAPIReq.Connector.Id, ConnectorType: dexAPIReq.Connector.Type, ConnectorSubType: req.ConnectorSubType, LastUpdate: time.Now()}
+	err = r.db.CreateConnector(ctx.Request().Context(), localConnector)
 	if err != nil {
-		r.logger.Error("failed to create connector", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create connector")
+		r.logger.Error("Failed to create local DB record for new connector", zap.String("connectorID", dexAPIReq.Connector.Id), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to save connector metadata locally after creation")
 	}
-	// restart dex pod on connector creation
+	r.logger.Info("Restarting Dex pod to apply connector changes", zap.String("connectorID", dexAPIReq.Connector.Id))
 	err = utils.RestartDexPod()
 	if err != nil {
-		r.logger.Error("failed to restart dex pod", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to restart dex pod")
+		r.logger.Error("Failed to restart Dex pod after connector creation", zap.String("connectorID", dexAPIReq.Connector.Id), zap.Error(err))
 	}
-
-	return ctx.JSON(http.StatusCreated, res)
+	r.logger.Info("Successfully created connector", zap.String("id", dexAPIReq.Connector.Id))
+	return ctx.JSON(http.StatusCreated, map[string]interface{}{"id": localConnector.ID, "connector_id": localConnector.ConnectorID, "type": localConnector.ConnectorType, "sub_type": localConnector.ConnectorSubType, "created_at": localConnector.CreatedAt})
 }
 
-// CreateConnector godoc
-//
-//	@Summary		Create Connector
-//	@Description	Creates new OIDC connector.
-//	@Security		BearerToken
-//	@Tags			connectors
-//	@Produce		json
-//	@Success		200
-//	@Router			/auth/api/v1/connector/supported-connector-types [post]
+// --- CreateAuth0Connector ---
 func (r *httpRoutes) CreateAuth0Connector(ctx echo.Context) error {
 	var req api.CreateAuth0ConnectorRequest
 	if err := bindValidate(ctx, &req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-
-	creator := utils.CreateAuth0Connector
-
-	dexRequest := utils.CreateAuth0ConnectorRequest{
-		Issuer:       req.Issuer,
-		ClientID:     req.ClientID,
-		ClientSecret: req.ClientSecret,
-		Domain:       req.Domain,
-	}
-	dexreq, err := creator(dexRequest)
+	dexUtilReq := utils.CreateAuth0ConnectorRequest{Issuer: req.Issuer, ClientID: req.ClientID, ClientSecret: req.ClientSecret, Domain: req.Domain}
+	dexAPIReq, err := utils.CreateAuth0Connector(dexUtilReq)
 	if err != nil {
-		r.logger.Error("Error on Creating dex request", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		r.logger.Warn("Failed to prepare Dex Auth0 connector creation request", zap.Error(err), zap.Any("request", req))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Failed to create Auth0 connector request: %s", err.Error()))
 	}
 	publicUris := req.PublicURIS
-	publicClientResp, _ := r.authServer.dexClient.GetClient(context.TODO(), &dexApi.GetClientReq{
-		Id: "public-client",
-	})
-
-	r.logger.Info("public URIS", zap.Any("uris", publicUris))
-
-	if publicClientResp != nil && publicClientResp.Client != nil {
-		publicClientReq := dexApi.UpdateClientReq{
-			Id:           "public-client",
-			Name:         "Public Client",
-			RedirectUris: publicUris,
-		}
-
-		_, err = r.authServer.dexClient.UpdateClient(context.TODO(), &publicClientReq)
+	if len(publicUris) > 0 {
+		err = r.ensureDexClient("public-client", "Public Client", publicUris, true)
 		if err != nil {
-			r.logger.Error("Auth Migrator: failed to create dex public client", zap.Error(err))
-			return err
-		}
-	} else {
-		publicClientReq := dexApi.CreateClientReq{
-			Client: &dexApi.Client{
-				Id:           "public-client",
-				Name:         "Public Client",
-				RedirectUris: publicUris,
-				Public:       true,
-			},
-		}
-
-		_, err = r.authServer.dexClient.CreateClient(context.TODO(), &publicClientReq)
-		if err != nil {
-			r.logger.Error("Auth Migrator: failed to create dex public client", zap.Error(err))
 			return err
 		}
 	}
 	privateUris := req.PrivateURIS
-
-	r.logger.Info("private URIS", zap.Any("uris", privateUris))
-
-	privateClientResp, _ := r.authServer.dexClient.GetClient(context.TODO(), &dexApi.GetClientReq{
-		Id: "private-client",
-	})
-	if privateClientResp != nil && privateClientResp.Client != nil {
-		privateClientReq := dexApi.UpdateClientReq{
-			Id:           "private-client",
-			Name:         "Private Client",
-			RedirectUris: privateUris,
-		}
-
-		_, err = r.authServer.dexClient.UpdateClient(context.TODO(), &privateClientReq)
+	if len(privateUris) > 0 {
+		err = r.ensureDexClient("private-client", "Private Client", privateUris, false)
 		if err != nil {
-			r.logger.Error("Auth Migrator: failed to create dex private client", zap.Error(err))
-			return err
-		}
-	} else {
-		privateClientReq := dexApi.CreateClientReq{
-			Client: &dexApi.Client{
-				Id:           "private-client",
-				Name:         "Private Client",
-				RedirectUris: privateUris,
-				Secret:       "secret",
-			},
-		}
-
-		_, err = r.authServer.dexClient.CreateClient(context.TODO(), &privateClientReq)
-		if err != nil {
-			r.logger.Error("Auth Migrator: failed to create dex private client", zap.Error(err))
 			return err
 		}
 	}
-
-	res, err := r.authServer.dexClient.CreateConnector(context.TODO(), dexreq)
+	r.logger.Info("Creating Dex Auth0 connector", zap.String("id", dexAPIReq.Connector.Id), zap.String("name", dexAPIReq.Connector.Name))
+	res, err := r.authServer.dexClient.CreateConnector(ctx.Request().Context(), dexAPIReq)
 	if err != nil {
-		r.logger.Error("failed to create dex connector", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create dex connector")
+		r.logger.Error("Failed to create Dex Auth0 connector via gRPC", zap.String("id", dexAPIReq.Connector.Id), zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadGateway, "Failed to create connector with identity provider")
 	}
 	if res.AlreadyExists {
-		return echo.NewHTTPError(http.StatusBadRequest, "connector already exists")
+		r.logger.Warn("Attempt to create Dex Auth0 connector that already exists", zap.String("id", dexAPIReq.Connector.Id))
+		return echo.NewHTTPError(http.StatusConflict, "Connector with ID 'auth0' already exists")
 	}
-	err = r.db.CreateConnector(&db.Connector{
-		LastUpdate:       time.Now(),
-		ConnectorID:      "auth0",
-		ConnectorType:    "oidc",
-		ConnectorSubType: "auth0",
-	})
+	localConnector := &db.Connector{ConnectorID: dexAPIReq.Connector.Id, ConnectorType: "oidc", ConnectorSubType: "auth0", LastUpdate: time.Now()}
+	err = r.db.CreateConnector(ctx.Request().Context(), localConnector)
 	if err != nil {
-		r.logger.Error("failed to create connector", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create connector")
+		r.logger.Error("Failed to create local DB record for Auth0 connector", zap.String("connectorID", dexAPIReq.Connector.Id), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to save connector metadata locally after creation")
 	}
-
-	// restart dex pod on connector creation
+	r.logger.Info("Restarting Dex pod to apply Auth0 connector changes", zap.String("connectorID", dexAPIReq.Connector.Id))
 	err = utils.RestartDexPod()
 	if err != nil {
-		r.logger.Error("failed to restart dex pod", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to restart dex pod")
+		r.logger.Error("Failed to restart Dex pod after Auth0 connector creation", zap.Error(err))
 	}
-
-	return ctx.JSON(http.StatusCreated, res)
+	r.logger.Info("Successfully created Auth0 connector", zap.String("id", dexAPIReq.Connector.Id))
+	return ctx.JSON(http.StatusCreated, map[string]interface{}{"id": localConnector.ID, "connector_id": localConnector.ConnectorID, "type": localConnector.ConnectorType, "sub_type": localConnector.ConnectorSubType, "created_at": localConnector.CreatedAt})
 }
 
-// UpdateConnector godoc
-//
-//	@Summary		Update Connector
-//	@Description	Update new OIDC connector.
-//	@Security		BearerToken
-//	@Tags			connectors
-//	@Produce		json
-//	@Success		200
-//	@Router			/auth/api/v1/connector [put]
+// Helper for ensuring Dex OAuth client exists/is updated
+func (r *httpRoutes) ensureDexClient(id, name string, redirectUris []string, isPublic bool) error {
+	ctx := context.TODO()
+	clientResp, _ := r.authServer.dexClient.GetClient(ctx, &dexApi.GetClientReq{Id: id})
+	if clientResp != nil && clientResp.Client != nil {
+		r.logger.Info("Updating Dex OAuth client", zap.String("id", id), zap.Strings("redirectUris", redirectUris))
+		updateReq := dexApi.UpdateClientReq{Id: id, Name: name, RedirectUris: redirectUris}
+		_, err := r.authServer.dexClient.UpdateClient(ctx, &updateReq)
+		if err != nil {
+			r.logger.Error("Failed to update Dex OAuth client", zap.String("id", id), zap.Error(err))
+			return echo.NewHTTPError(http.StatusBadGateway, fmt.Sprintf("Failed to update OAuth client '%s'", id))
+		}
+	} else {
+		r.logger.Info("Creating Dex OAuth client", zap.String("id", id), zap.Strings("redirectUris", redirectUris), zap.Bool("public", isPublic))
+		createReq := dexApi.CreateClientReq{Client: &dexApi.Client{Id: id, Name: name, RedirectUris: redirectUris, Public: isPublic}}
+		if !isPublic {
+			createReq.Client.Secret = "secret"
+		}
+		_, err := r.authServer.dexClient.CreateClient(ctx, &createReq)
+		if err != nil {
+			r.logger.Error("Failed to create Dex OAuth client", zap.String("id", id), zap.Error(err))
+			return echo.NewHTTPError(http.StatusBadGateway, fmt.Sprintf("Failed to create OAuth client '%s'", id))
+		}
+	}
+	return nil
+}
 
+// --- UpdateConnector ---
 func (r *httpRoutes) UpdateConnector(ctx echo.Context) error {
 	var req api.UpdateConnectorRequest
 	if err := bindValidate(ctx, &req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-
 	if req.ID == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "ID required")
+		return echo.NewHTTPError(http.StatusBadRequest, "Local database connector ID is required for update")
 	}
-
-	if !utils.IsSupportedSubType(req.ConnectorType, req.ConnectorSubType) {
-		err := fmt.Sprintf("unsupported connector_sub_type '%s' for connector_type '%s'", req.ConnectorType, req.ConnectorSubType)
-		r.logger.Info(err)
-		return echo.NewHTTPError(http.StatusBadRequest, err)
-
+	if req.ConnectorID == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Dex connector_id is required in the request body for update")
 	}
-	switch req.ConnectorSubType {
-	case "general":
-		// Required: issuer, client_id, client_secret
-		if strings.TrimSpace(req.Issuer) == "" {
-			err := "Missing 'issuer' for 'general' OIDC connector update"
-			r.logger.Error(err)
-			return echo.NewHTTPError(http.StatusBadRequest, err)
-
-		}
-		// client_id and client_secret are already validated as required in the struct
-
-	case "entraid":
-		// Required: tenant_id, client_id, client_secret
-		if strings.TrimSpace(req.TenantID) == "" {
-			err := "Missing 'tenant_id' for 'entraid' OIDC connector update"
-			r.logger.Error(err)
-			return echo.NewHTTPError(http.StatusBadRequest, err)
-
-		}
-		// client_id and client_secret are already validated as required in the struct
-
-	case "google-workspace":
-		// Required: client_id, client_secret
-		// No additional fields needed
-		// client_id and client_secret are already validated as required in the struct
-
-	default:
-		err := fmt.Sprintf("unsupported connector_sub_type: %s", req.ConnectorSubType)
-		r.logger.Error(err)
-		return echo.NewHTTPError(http.StatusBadRequest, err)
-
-	}
-	dexRequest := utils.UpdateConnectorRequest{
-		ConnectorType:    req.ConnectorType,
-		ConnectorSubType: req.ConnectorSubType,
-		Issuer:           req.Issuer,
-		TenantID:         req.TenantID,
-		ClientID:         req.ClientID,
-		ClientSecret:     req.ClientSecret,
-		ID:               req.ConnectorID,
-	}
-
-	dexreq, err := utils.UpdateOIDCConnector(dexRequest)
+	dexUtilReq := utils.UpdateConnectorRequest{ID: req.ConnectorID, ConnectorType: req.ConnectorType, ConnectorSubType: req.ConnectorSubType, Issuer: req.Issuer, TenantID: req.TenantID, ClientID: req.ClientID, ClientSecret: req.ClientSecret}
+	dexAPIReq, err := utils.UpdateOIDCConnector(dexUtilReq)
 	if err != nil {
-		r.logger.Error("Error on Creating dex request", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		r.logger.Warn("Failed to prepare Dex connector update request", zap.Error(err), zap.Any("request", req))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Failed to create connector update request: %s", err.Error()))
 	}
-
-	res, err := r.authServer.dexClient.UpdateConnector(context.TODO(), dexreq)
+	r.logger.Info("Updating Dex connector", zap.String("id", dexAPIReq.Id))
+	res, err := r.authServer.dexClient.UpdateConnector(ctx.Request().Context(), dexAPIReq)
 	if err != nil {
-		r.logger.Error("failed to update dex connector", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to update dex connector")
-
+		r.logger.Error("Failed to update Dex connector via gRPC", zap.String("id", dexAPIReq.Id), zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadGateway, "Failed to update connector with identity provider")
 	}
-
 	if res.NotFound {
-		return echo.NewHTTPError(http.StatusNotFound, "connector not found")
+		r.logger.Warn("Attempt to update Dex connector that does not exist", zap.String("id", dexAPIReq.Id))
+		return echo.NewHTTPError(http.StatusNotFound, "Connector not found in identity provider")
 	}
-	err = r.db.UpdateConnector(&db.Connector{
-		Model: gorm.Model{
-			ID: req.ID,
-		},
-		LastUpdate:       time.Now(),
-		ConnectorID:      req.ConnectorID,
-		ConnectorType:    req.ConnectorType,
-		ConnectorSubType: req.ConnectorSubType,
-	})
+	localConnectorUpdate := &db.Connector{Model: gorm.Model{ID: req.ID}, ConnectorID: req.ConnectorID, ConnectorType: req.ConnectorType, ConnectorSubType: req.ConnectorSubType, LastUpdate: time.Now()}
+	err = r.db.UpdateConnector(ctx.Request().Context(), localConnectorUpdate)
 	if err != nil {
-		r.logger.Error("failed to update connector", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to update connector")
+		r.logger.Error("Failed to update local DB record for connector", zap.Uint("localID", req.ID), zap.String("connectorID", req.ConnectorID), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to save connector metadata locally after update")
 	}
-	return ctx.JSON(http.StatusAccepted, res)
-
+	r.logger.Info("Restarting Dex pod to apply connector changes", zap.String("connectorID", req.ConnectorID))
+	err = utils.RestartDexPod()
+	if err != nil {
+		r.logger.Error("Failed to restart Dex pod after connector update", zap.String("connectorID", req.ConnectorID), zap.Error(err))
+	}
+	r.logger.Info("Successfully updated connector", zap.String("id", req.ConnectorID))
+	return ctx.NoContent(http.StatusAccepted)
 }
 
-// DeleteConnector godoc
-//
-//	@Summary		Delete Connector
-//	@Description	Delete  OIDC connector.
-//	@Security		BearerToken
-//	@Tags			connectors
-//	@Produce		json
-//	@Success		200
-//	@Router			/auth/api/v1/connector/:id [Delete]
-
+// --- DeleteConnector ---
 func (r *httpRoutes) DeleteConnector(ctx echo.Context) error {
 	connectorID := ctx.Param("id")
 	if connectorID == "" {
-		r.logger.Error("Missing connector_id in DeleteConnectorByIDHandler request")
-		return ctx.JSON(http.StatusBadRequest, map[string]string{
-			"error": "connector_id is required in the URL path",
-		})
+		return echo.NewHTTPError(http.StatusBadRequest, "Connector ID is required in path")
 	}
-	req := &dexApi.DeleteConnectorReq{
-		Id: connectorID,
+	if connectorID == "local" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Cannot delete the built-in 'local' connector")
 	}
-
-	resp, err := r.authServer.dexClient.DeleteConnector(context.TODO(), req)
+	r.logger.Info("Deleting Dex connector", zap.String("id", connectorID))
+	dexReq := &dexApi.DeleteConnectorReq{Id: connectorID}
+	resp, err := r.authServer.dexClient.DeleteConnector(ctx.Request().Context(), dexReq)
 	if err != nil {
-		r.logger.Error("failed to delete connector", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to delete connector")
+		r.logger.Error("Failed to delete Dex connector via gRPC", zap.String("id", connectorID), zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadGateway, "Failed to delete connector with identity provider")
 	}
 	if resp.NotFound {
-		return echo.NewHTTPError(http.StatusNotFound, "connector not found")
+		r.logger.Warn("Attempt to delete Dex connector that does not exist", zap.String("id", connectorID))
 	}
-	err = r.db.DeleteConnector(connectorID)
+	err = r.db.DeleteConnector(ctx.Request().Context(), connectorID)
 	if err != nil {
-		r.logger.Error("failed to delete connector", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to delete connector")
+		r.logger.Error("Failed to delete local DB record for connector after Dex deletion", zap.String("connectorID", connectorID), zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete connector metadata locally")
 	}
-
+	r.logger.Info("Restarting Dex pod to apply connector changes", zap.String("connectorID", connectorID))
+	err = utils.RestartDexPod()
+	if err != nil {
+		r.logger.Error("Failed to restart Dex pod after connector deletion", zap.String("connectorID", connectorID), zap.Error(err))
+	}
+	r.logger.Info("Successfully deleted connector", zap.String("id", connectorID))
 	return ctx.NoContent(http.StatusAccepted)
+}
+
+// Helper min/max for masking - keep at end or move to utils
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
