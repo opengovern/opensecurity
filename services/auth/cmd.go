@@ -32,7 +32,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	// Use v4 as confirmed working by 'go get'
-	jose "github.com/go-jose/go-jose/v4"
+	jose "github.com/go-jose/go-jose/v3"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 )
