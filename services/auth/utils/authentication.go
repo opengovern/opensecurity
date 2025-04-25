@@ -1,15 +1,25 @@
+// Package utils provides helper functions and shared logic for the auth service,
+// including database interactions, connector configurations, and Kubernetes interactions.
+// This specific file focuses on authentication-related utilities like user data mapping
+// and potentially interacting with user data via the database interface.
 package utils
 
 import (
 	"context" // Added context import
+	"fmt"
 	"time"
 
 	// Ensure correct import path to where DatabaseInterface is defined
 	"github.com/opengovern/opensecurity/services/auth/db"
+	// Import other necessary packages, like API roles if used directly
+	// "github.com/opengovern/og-util/pkg/api"
 )
 
-// Service might hold context/configuration for utility functions.
-// Updated to use the database interface.
+// Service might hold configuration or shared dependencies for utility functions
+// within this package, such as domain info or client secrets if needed for
+// operations beyond simple DB interactions (e.g., interacting with an external
+// user management API).
+// It now uses the db.DatabaseInterface for testability and abstraction.
 type Service struct {
 	domain       string
 	clientID     string
@@ -18,43 +28,46 @@ type Service struct {
 	Connection   string
 	InviteTTL    int
 
-	database db.DatabaseInterface // Use interface type
+	database db.DatabaseInterface // Database access via interface.
 }
 
-// User represents the API/utility layer user structure.
+// User represents the user data structure used within the utility package or
+// potentially returned by API client functions. It may differ slightly from the
+// database model (db.User), for example, by representing Role as a string.
 type User struct {
-	ID            uint      `json:"id"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
-	Email         string    `json:"email"`
-	EmailVerified bool      `json:"email_verified"`
-	FullName      string    `json:"full_name"`
-	LastLogin     time.Time `json:"last_login"`
-	Username      string    `json:"username"`
-	Role          string    `json:"role"` // Role as string in this layer
-	IsActive      bool      `json:"is_active"`
-	ConnectorId   string    `json:"connector_id"`
-	ExternalId    string    `json:"external_id"`
+	ID            uint      `json:"id"`             // Internal database primary key.
+	CreatedAt     time.Time `json:"created_at"`     // Timestamp of user creation.
+	UpdatedAt     time.Time `json:"updated_at"`     // Timestamp of last user update.
+	Email         string    `json:"email"`          // User's email address.
+	EmailVerified bool      `json:"email_verified"` // Whether the user's email has been verified.
+	FullName      string    `json:"full_name"`      // User's full name.
+	LastLogin     time.Time `json:"last_login"`     // Timestamp of the last recorded login.
+	Username      string    `json:"username"`       // User's chosen username.
+	Role          string    `json:"role"`           // User's application role (as a string).
+	IsActive      bool      `json:"is_active"`      // Whether the user account is currently active.
+	ConnectorId   string    `json:"connector_id"`   // Identifier of the connector used for authentication (e.g., "local", "oidc-google").
+	ExternalId    string    `json:"external_id"`    // Canonical user identifier across the system (e.g., "connector|id").
 }
 
-// DbUserToApi converts a user object from the database layer to the utility/API layer.
-// No changes needed here as it works on the DB type directly.
+// DbUserToApi converts a database user model (*db.User) to the utility/API layer
+// user representation (*utils.User). It handles nil input gracefully, returning nil, nil.
+// It also converts the Role type (likely an enum in db.User) to its string representation.
 func DbUserToApi(u *db.User) (*User, error) {
+	// If the input database user is nil (e.g., user not found), return nil, nil.
 	if u == nil {
-		// Return nil, nil to represent "not found" consistently
-		// if the underlying DB method returns nil, nil for not found.
 		return nil, nil
 	}
 
+	// Map fields from the database struct to the utility struct.
 	return &User{
 		CreatedAt:     u.CreatedAt,
-		UpdatedAt:     u.UpdatedAt, // Make sure db.User has UpdatedAt from gorm.Model
+		UpdatedAt:     u.UpdatedAt, // Assumes db.User embeds gorm.Model
 		Email:         u.Email,
 		EmailVerified: u.EmailVerified,
 		FullName:      u.FullName,
 		LastLogin:     u.LastLogin,
-		Username:      u.Username,     // Username field seems to be string already in db.User
-		Role:          string(u.Role), // Convert db Role (likely api.Role) to string
+		Username:      u.Username,     // Assumes db.User.Username is string
+		Role:          string(u.Role), // Convert db.User.Role (e.g., api.Role) to string
 		ExternalId:    u.ExternalId,
 		ID:            u.ID,
 		IsActive:      u.IsActive,
@@ -62,8 +75,8 @@ func DbUserToApi(u *db.User) (*User, error) {
 	}, nil
 }
 
-// New creates a new Service instance.
-// Updated to accept the database interface.
+// New creates a new instance of the utility Service, injecting necessary
+// configuration and the database interface dependency.
 func New(domain, appClientID, clientID, clientSecret, connection string, inviteTTL int, database db.DatabaseInterface) *Service {
 	return &Service{
 		domain:       domain,
@@ -72,38 +85,42 @@ func New(domain, appClientID, clientID, clientSecret, connection string, inviteT
 		clientSecret: clientSecret,
 		Connection:   connection,
 		InviteTTL:    inviteTTL,
-		database:     database, // Assign interface
+		database:     database, // Store the provided database interface implementation.
 	}
 }
 
-// GetUser retrieves user details by external ID using the provided database interface.
-// Updated signature to accept context and interface.
+// GetUser is a helper function to retrieve user details mapped to the utils.User struct,
+// identified by their external ID. It requires a context for cancellation propagation
+// and uses the provided db.DatabaseInterface implementation to fetch the data.
+// Returns nil, nil if the user is not found by the database layer.
 func GetUser(ctx context.Context, id string, database db.DatabaseInterface) (*User, error) {
-	// Pass context down to the database method call
-	user, err := database.GetUserByExternalID(ctx, id) // Call via interface
+	// Call the database layer method via the interface, passing the context.
+	user, err := database.GetUserByExternalID(ctx, id)
 	if err != nil {
-		// Includes case where err is gorm.ErrRecordNotFound (handled by DbUserToApi returning nil, nil)
-		// Or other DB errors
+		// Propagate database errors (includes potential gorm.ErrRecordNotFound).
 		return nil, err
 	}
 
-	// Convert db.User to utils.User
+	// Convert the database model to the utility/API layer model.
+	// DbUserToApi handles the case where 'user' is nil (not found).
 	resp, err := DbUserToApi(user)
 	if err != nil {
-		// This error likely only happens if DbUserToApi logic changes,
-		// as conversion itself shouldn't fail here.
-		return nil, err
+		// This error is unlikely if DbUserToApi only does field mapping.
+		return nil, fmt.Errorf("failed to map db user to api user: %w", err)
 	}
 
-	return resp, nil // Returns nil, nil if user not found and DbUserToApi handles it
+	// Return the mapped user or nil, nil if not found.
+	return resp, nil
 }
 
-// UpdateUserLastLogin updates the user's last login time.
-// Updated signature to accept context and interface.
+// UpdateUserLastLogin is a helper function to update the user's last login timestamp
+// in the database, identified by their external user ID.
+// It requires a context and uses the provided db.DatabaseInterface implementation.
 func UpdateUserLastLogin(ctx context.Context, userId string, lastLogin time.Time, database db.DatabaseInterface) error {
-	// Pass context down to the database method call
-	err := database.UpdateUserLastLoginWithExternalID(ctx, userId, lastLogin) // Call via interface
+	// Call the database layer method via the interface, passing the context.
+	err := database.UpdateUserLastLoginWithExternalID(ctx, userId, lastLogin)
 	if err != nil {
+		// Propagate database errors.
 		return err
 	}
 	return nil

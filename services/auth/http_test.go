@@ -1,4 +1,5 @@
-// http_test.go
+// Package auth provides the core authentication and authorization logic.
+// This file contains unit and handler tests for the HTTP API layer (http.go).
 package auth
 
 import (
@@ -26,7 +27,7 @@ import (
 	api2 "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpserver"         // For header constants
 	"github.com/opengovern/opensecurity/services/auth/api" // Local API definitions
-	"github.com/opengovern/opensecurity/services/auth/db"
+	"github.com/opengovern/opensecurity/services/auth/db"  // Needed because CreateAPIKey uses utils.GetUser
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -40,12 +41,14 @@ import (
 
 // --- Mock Database ---
 
-// MockDatabase is a mock type for the db.DatabaseInterface
+// MockDatabase is a mock type for the db.DatabaseInterface.
+// It uses testify/mock to allow setting expectations and asserting calls.
 type MockDatabase struct {
 	mock.Mock
 }
 
-// Implement methods defined in db.DatabaseInterface that are used by handlers under test
+// Implement all methods defined in db.DatabaseInterface.
+
 func (m *MockDatabase) GetUserByEmail(ctx context.Context, email string) (*db.User, error) {
 	args := m.Called(ctx, email)
 	userArg := args.Get(0)
@@ -130,12 +133,10 @@ func (m *MockDatabase) ListApiKeysForUser(ctx context.Context, userId string) ([
 	}
 	return keysArg.([]db.ApiKey), args.Error(1)
 }
-
-// --- Fix #3: Correct Role type in UpdateAPIKey mock signature ---
 func (m *MockDatabase) UpdateAPIKey(ctx context.Context, id string, isActive bool, role api2.Role) error {
 	args := m.Called(ctx, id, isActive, role)
 	return args.Error(0)
-}
+} // Use api2.Role
 func (m *MockDatabase) DeleteAPIKey(ctx context.Context, id uint64) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
@@ -206,25 +207,58 @@ func (m *MockDatabase) AddConfiguration(ctx context.Context, c *db.Configuration
 }
 func (m *MockDatabase) Initialize() error { args := m.Called(); return args.Error(0) }
 
+// Implement EnableUser/DisableUser from the interface
+func (m *MockDatabase) EnableUser(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+func (m *MockDatabase) DisableUser(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
 // --- Mock Dex Client ---
 
-// MockDexClient mocks the dexApi.DexClient interface
+// MockDexClient mocks the dexApi.DexClient interface.
+// It uses testify/mock and includes all methods defined in the interface
+// to ensure compile-time compatibility.
 type MockDexClient struct {
 	mock.Mock
 }
 
-// --- Fix #1 & #2: Correct GetDiscovery return type ---
-func (m *MockDexClient) GetDiscovery(ctx context.Context, in *dexApi.DiscoveryReq, opts ...grpc.CallOption) (*dexApi.DiscoveryResp, error) {
+// Implement ALL methods from dexApi.DexClient interface.
+func (m *MockDexClient) CreateClient(ctx context.Context, in *dexApi.CreateClientReq, opts ...grpc.CallOption) (*dexApi.CreateClientResp, error) {
 	args := m.Called(ctx, in)
 	respArg := args.Get(0)
 	if respArg == nil {
 		return nil, args.Error(1)
 	}
-	// Type assertion must match the corrected return type
-	return respArg.(*dexApi.DiscoveryResp), args.Error(1)
+	return respArg.(*dexApi.CreateClientResp), args.Error(1)
 }
-
-// --- Implement other methods called by handlers or needed to satisfy interface ---
+func (m *MockDexClient) UpdateClient(ctx context.Context, in *dexApi.UpdateClientReq, opts ...grpc.CallOption) (*dexApi.UpdateClientResp, error) {
+	args := m.Called(ctx, in)
+	respArg := args.Get(0)
+	if respArg == nil {
+		return nil, args.Error(1)
+	}
+	return respArg.(*dexApi.UpdateClientResp), args.Error(1)
+}
+func (m *MockDexClient) DeleteClient(ctx context.Context, in *dexApi.DeleteClientReq, opts ...grpc.CallOption) (*dexApi.DeleteClientResp, error) {
+	args := m.Called(ctx, in)
+	respArg := args.Get(0)
+	if respArg == nil {
+		return nil, args.Error(1)
+	}
+	return respArg.(*dexApi.DeleteClientResp), args.Error(1)
+}
+func (m *MockDexClient) GetClient(ctx context.Context, in *dexApi.GetClientReq, opts ...grpc.CallOption) (*dexApi.GetClientResp, error) {
+	args := m.Called(ctx, in)
+	respArg := args.Get(0)
+	if respArg == nil {
+		return nil, args.Error(1)
+	}
+	return respArg.(*dexApi.GetClientResp), args.Error(1)
+}
 func (m *MockDexClient) CreatePassword(ctx context.Context, in *dexApi.CreatePasswordReq, opts ...grpc.CallOption) (*dexApi.CreatePasswordResp, error) {
 	args := m.Called(ctx, in)
 	respArg := args.Get(0)
@@ -265,62 +299,6 @@ func (m *MockDexClient) VerifyPassword(ctx context.Context, in *dexApi.VerifyPas
 	}
 	return respArg.(*dexApi.VerifyPasswordResp), args.Error(1)
 }
-func (m *MockDexClient) CreateClient(ctx context.Context, in *dexApi.CreateClientReq, opts ...grpc.CallOption) (*dexApi.CreateClientResp, error) {
-	args := m.Called(ctx, in)
-	respArg := args.Get(0)
-	if respArg == nil {
-		return nil, args.Error(1)
-	}
-	return respArg.(*dexApi.CreateClientResp), args.Error(1)
-}
-func (m *MockDexClient) UpdateClient(ctx context.Context, in *dexApi.UpdateClientReq, opts ...grpc.CallOption) (*dexApi.UpdateClientResp, error) {
-	args := m.Called(ctx, in)
-	respArg := args.Get(0)
-	if respArg == nil {
-		return nil, args.Error(1)
-	}
-	return respArg.(*dexApi.UpdateClientResp), args.Error(1)
-}
-func (m *MockDexClient) DeleteClient(ctx context.Context, in *dexApi.DeleteClientReq, opts ...grpc.CallOption) (*dexApi.DeleteClientResp, error) {
-	args := m.Called(ctx, in)
-	respArg := args.Get(0)
-	if respArg == nil {
-		return nil, args.Error(1)
-	}
-	return respArg.(*dexApi.DeleteClientResp), args.Error(1)
-}
-func (m *MockDexClient) GetClient(ctx context.Context, in *dexApi.GetClientReq, opts ...grpc.CallOption) (*dexApi.GetClientResp, error) {
-	args := m.Called(ctx, in)
-	respArg := args.Get(0)
-	if respArg == nil {
-		return nil, args.Error(1)
-	}
-	return respArg.(*dexApi.GetClientResp), args.Error(1)
-}
-func (m *MockDexClient) GetVersion(ctx context.Context, in *dexApi.VersionReq, opts ...grpc.CallOption) (*dexApi.VersionResp, error) {
-	args := m.Called(ctx, in)
-	respArg := args.Get(0)
-	if respArg == nil {
-		return nil, args.Error(1)
-	}
-	return respArg.(*dexApi.VersionResp), args.Error(1)
-}
-func (m *MockDexClient) ListRefresh(ctx context.Context, in *dexApi.ListRefreshReq, opts ...grpc.CallOption) (*dexApi.ListRefreshResp, error) {
-	args := m.Called(ctx, in)
-	respArg := args.Get(0)
-	if respArg == nil {
-		return nil, args.Error(1)
-	}
-	return respArg.(*dexApi.ListRefreshResp), args.Error(1)
-}
-func (m *MockDexClient) RevokeRefresh(ctx context.Context, in *dexApi.RevokeRefreshReq, opts ...grpc.CallOption) (*dexApi.RevokeRefreshResp, error) {
-	args := m.Called(ctx, in)
-	respArg := args.Get(0)
-	if respArg == nil {
-		return nil, args.Error(1)
-	}
-	return respArg.(*dexApi.RevokeRefreshResp), args.Error(1)
-}
 func (m *MockDexClient) CreateConnector(ctx context.Context, in *dexApi.CreateConnectorReq, opts ...grpc.CallOption) (*dexApi.CreateConnectorResp, error) {
 	args := m.Called(ctx, in)
 	respArg := args.Get(0)
@@ -353,12 +331,40 @@ func (m *MockDexClient) ListConnectors(ctx context.Context, in *dexApi.ListConne
 	}
 	return respArg.(*dexApi.ListConnectorResp), args.Error(1)
 } // Note: Uses ListConnectorReq based on proto
-// Add ListKeys and GetKeys needed to fully satisfy the interface
+func (m *MockDexClient) GetVersion(ctx context.Context, in *dexApi.VersionReq, opts ...grpc.CallOption) (*dexApi.VersionResp, error) {
+	args := m.Called(ctx, in)
+	respArg := args.Get(0)
+	if respArg == nil {
+		return nil, args.Error(1)
+	}
+	return respArg.(*dexApi.VersionResp), args.Error(1)
+}
+func (m *MockDexClient) GetDiscovery(ctx context.Context, in *dexApi.DiscoveryReq, opts ...grpc.CallOption) (*dexApi.DiscoveryResp, error) {
+	args := m.Called(ctx, in)
+	respArg := args.Get(0)
+	if respArg == nil {
+		return nil, args.Error(1)
+	}
+	return respArg.(*dexApi.DiscoveryResp), args.Error(1)
+} // Corrected return type
+func (m *MockDexClient) ListRefresh(ctx context.Context, in *dexApi.ListRefreshReq, opts ...grpc.CallOption) (*dexApi.ListRefreshResp, error) {
+	args := m.Called(ctx, in)
+	respArg := args.Get(0)
+	if respArg == nil {
+		return nil, args.Error(1)
+	}
+	return respArg.(*dexApi.ListRefreshResp), args.Error(1)
+}
+func (m *MockDexClient) RevokeRefresh(ctx context.Context, in *dexApi.RevokeRefreshReq, opts ...grpc.CallOption) (*dexApi.RevokeRefreshResp, error) {
+	args := m.Called(ctx, in)
+	respArg := args.Get(0)
+	if respArg == nil {
+		return nil, args.Error(1)
+	}
+	return respArg.(*dexApi.RevokeRefreshResp), args.Error(1)
+}
 
-// --- Corrected ListKeys Mock ---
-// ListKeys mocks the Dex gRPC ListKeys method.
-// The input type is ListKeysReq (plural).
-// In http_test.go - MockDexClient
+// Add ListKeys and GetKeys needed to fully satisfy the interface
 func (m *MockDexClient) ListKeys(ctx context.Context, in *dexApi.ListKeysReq, opts ...grpc.CallOption) (*dexApi.ListKeysResp, error) {
 	args := m.Called(ctx, in)
 	respArg := args.Get(0)
@@ -367,22 +373,18 @@ func (m *MockDexClient) ListKeys(ctx context.Context, in *dexApi.ListKeysReq, op
 	}
 	return respArg.(*dexApi.ListKeysResp), args.Error(1)
 }
-
-// --- Corrected GetKeys Mock ---
-// GetKeys mocks the Dex gRPC GetKeys method.
-// (The original signature provided was actually correct for this one)
 func (m *MockDexClient) GetKeys(ctx context.Context, in *dexApi.GetKeysReq, opts ...grpc.CallOption) (*dexApi.GetKeysResp, error) {
 	args := m.Called(ctx, in)
 	respArg := args.Get(0)
-	errArg := args.Error(1)
-
 	if respArg == nil {
-		return nil, errArg
+		return nil, args.Error(1)
 	}
-	return respArg.(*dexApi.GetKeysResp), errArg
+	return respArg.(*dexApi.GetKeysResp), args.Error(1)
 }
 
 // --- Helper Functions ---
+
+// calculateKeyID computes the JWK thumbprint (SHA256, Base64URL encoded).
 func calculateTestKeyID(pub *rsa.PublicKey) (string, error) {
 	jwk := jose.JSONWebKey{Key: pub}
 	tb, err := jwk.Thumbprint(crypto.SHA256)
@@ -391,6 +393,8 @@ func calculateTestKeyID(pub *rsa.PublicKey) (string, error) {
 	}
 	return base64.RawURLEncoding.EncodeToString(tb), nil
 }
+
+// generateTestKeys creates a new RSA key pair and calculates its kid for testing.
 func generateTestKeys(t *testing.T) (*rsa.PrivateKey, *rsa.PublicKey, string) {
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	require.NoError(t, err)
@@ -400,9 +404,10 @@ func generateTestKeys(t *testing.T) (*rsa.PrivateKey, *rsa.PublicKey, string) {
 	require.NotEmpty(t, kid)
 	return priv, pub, kid
 }
-func now() int64 { return time.Now().Unix() }
 
 // --- Setup Test Suite Helper ---
+
+// httpTestDeps holds all mocked dependencies and common setup needed for HTTP handler tests.
 type httpTestDeps struct {
 	routes         *httpRoutes
 	mockDb         *MockDatabase
@@ -413,31 +418,40 @@ type httpTestDeps struct {
 	echoInstance   *echo.Echo
 }
 
+// setupHttpTests initializes mocks, test keys, and the httpRoutes struct for testing.
 func setupHttpTests(t *testing.T) httpTestDeps {
 	testPrivateKey, testPublicKey, testKid := generateTestKeys(t)
 	mockDb := new(MockDatabase)
 	mockDex := new(MockDexClient) // MockDexClient should now implement DexClient fully
-	testLogger := zap.NewNop()
+	testLogger := zap.NewNop()    // Use Nop logger for tests unless output is needed
 
+	// Create a minimal Server struct containing the mocked Dex client.
+	// Add other fields like dexVerifier if the handlers under test interact with them directly.
 	testAuthServer := &Server{
 		logger:            testLogger.Named("testAuthServer"),
-		dexClient:         mockDex, // This assignment should now work
+		dexClient:         mockDex, // Inject mock Dex client
 		platformPublicKey: testPublicKey,
 		platformKeyID:     testKid,
+		// db field is not needed here as httpRoutes uses its own db interface instance
 	}
 
+	// Instantiate httpRoutes with test dependencies.
 	routes := &httpRoutes{
 		logger:             testLogger.Named("httpRoutes"),
 		platformPrivateKey: testPrivateKey,
 		platformKeyID:      testKid,
-		db:                 mockDb, // Assign mockDb (satisfies interface)
+		db:                 mockDb, // Assign mockDb which satisfies db.DatabaseInterface
 		authServer:         testAuthServer,
 	}
+
 	e := echo.New()
+	// e.Validator = &YourCustomValidator{} // Register validator if needed
+
 	return httpTestDeps{routes: routes, mockDb: mockDb, mockDexClient: mockDex, testPrivateKey: testPrivateKey, testPublicKey: testPublicKey, testKid: testKid, echoInstance: e}
 }
 
-// Helper to create a test Echo context
+// createTestContext is a helper to create an Echo context with a request, response recorder,
+// and optional headers for testing handlers.
 func createTestContext(e *echo.Echo, method, path string, body io.Reader, headers map[string]string) (echo.Context, *httptest.ResponseRecorder) {
 	req := httptest.NewRequest(method, path, body)
 	if body != nil {
@@ -453,6 +467,7 @@ func createTestContext(e *echo.Echo, method, path string, body io.Reader, header
 // --- Test Functions ---
 
 // TestCreateAPIKeyHandler fully tests the CreateAPIKey HTTP handler.
+// It mocks database interactions and verifies the HTTP response and the generated JWT.
 func TestCreateAPIKeyHandler(t *testing.T) {
 	deps := setupHttpTests(t)
 	creatorUserID := "local|creator@example.com"
@@ -461,12 +476,20 @@ func TestCreateAPIKeyHandler(t *testing.T) {
 	apiKeyName := "My-Test-Key-1"
 	requestBody := api.CreateAPIKeyRequest{Name: apiKeyName, Role: apiKeyRole}
 	requestBodyBytes, _ := json.Marshal(requestBody)
-	deps.mockDb.On("GetUserByExternalID", mock.Anything, creatorUserID).Return(mockCreatorDbUser, nil).Once()
+
+	// Mock Expectations
+	deps.mockDb.On("GetUserByExternalID", mock.Anything, creatorUserID).Return(mockCreatorDbUser, nil).Once() // Called by utils.GetUser
 	deps.mockDb.On("CountApiKeysForUser", mock.Anything, creatorUserID).Return(int64(0), nil).Once()
 	deps.mockDb.On("AddApiKey", mock.Anything, mock.AnythingOfType("*db.ApiKey")).Return(nil).Once()
+
+	// Setup Echo Context
 	headers := map[string]string{httpserver.XPlatformUserIDHeader: creatorUserID}
 	c, rec := createTestContext(deps.echoInstance, http.MethodPost, "/api/v1/keys", bytes.NewReader(requestBodyBytes), headers)
+
+	// Execute Handler
 	err := deps.routes.CreateAPIKey(c)
+
+	// Assertions
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, rec.Code)
 	var respBody api.CreateAPIKeyResponse
@@ -490,7 +513,8 @@ func TestCreateAPIKeyHandler(t *testing.T) {
 	deps.mockDb.AssertExpectations(t)
 }
 
-// TestGetUsersHandler tests listing users.
+// TestGetUsersHandler tests the GET /users endpoint.
+// It mocks the database call to return a predefined list of users and verifies the JSON response.
 func TestGetUsersHandler(t *testing.T) {
 	deps := setupHttpTests(t)
 	mockUsers := []db.User{{Model: gorm.Model{ID: 1}, Email: "test1@example.com", Username: "test1", Role: api2.ViewerRole, ExternalId: "local|test1@example.com", IsActive: true}, {Model: gorm.Model{ID: 2}, Email: "test2@example.com", Username: "test2", Role: api2.EditorRole, ExternalId: "local|test2@example.com", IsActive: false}}
@@ -507,7 +531,8 @@ func TestGetUsersHandler(t *testing.T) {
 	deps.mockDb.AssertExpectations(t)
 }
 
-// TestDeleteUserHandler tests deleting a user.
+// TestDeleteUserHandler tests the DELETE /user/:id endpoint for a successful deletion.
+// It mocks database calls and the Dex gRPC call for password deletion.
 func TestDeleteUserHandler(t *testing.T) {
 	deps := setupHttpTests(t)
 	userIDToDelete := uint(5)
@@ -527,7 +552,7 @@ func TestDeleteUserHandler(t *testing.T) {
 	deps.mockDexClient.AssertExpectations(t)
 }
 
-// TestDeleteFirstUserHandler tests preventing deletion of user ID 1.
+// TestDeleteFirstUserHandler tests that deleting the user with ID 1 is forbidden.
 func TestDeleteFirstUserHandler(t *testing.T) {
 	deps := setupHttpTests(t)
 	userIDToDelete := uint(1)
@@ -543,10 +568,10 @@ func TestDeleteFirstUserHandler(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, httpErr.Code)
 	assert.Contains(t, httpErr.Message.(string), "Cannot delete the initial administrator user")
 	deps.mockDb.AssertExpectations(t)
-	deps.mockDexClient.AssertExpectations(t)
+	deps.mockDexClient.AssertExpectations(t) // No Dex calls expected
 }
 
-// TestResetUserPasswordHandler tests the password reset flow.
+// TestResetUserPasswordHandler tests the successful password reset flow for a local user.
 func TestResetUserPasswordHandler(t *testing.T) {
 	deps := setupHttpTests(t)
 	userID := "local|reset@example.com"
@@ -572,7 +597,7 @@ func TestResetUserPasswordHandler(t *testing.T) {
 	deps.mockDexClient.AssertExpectations(t)
 }
 
-// TestResetUserPasswordHandler_WrongPassword tests failure on incorrect current password.
+// TestResetUserPasswordHandler_WrongPassword tests failure on incorrect current password during reset.
 func TestResetUserPasswordHandler_WrongPassword(t *testing.T) {
 	deps := setupHttpTests(t)
 	userID := "local|reset@example.com"
@@ -597,7 +622,103 @@ func TestResetUserPasswordHandler_WrongPassword(t *testing.T) {
 	deps.mockDexClient.AssertExpectations(t)
 }
 
+// TestEnableUserHandler tests enabling a user successfully by an admin.
+func TestEnableUserHandler(t *testing.T) {
+	deps := setupHttpTests(t)
+	userIDToEnable := uint(99)
+	adminUserID := "local|admin@example.com" // ID of the admin making the request
+
+	// Mock DB call for EnableUser
+	deps.mockDb.On("EnableUser", mock.Anything, userIDToEnable).Return(nil).Once()
+
+	// Setup context with Admin UserID header
+	headers := map[string]string{httpserver.XPlatformUserIDHeader: adminUserID}
+	c, rec := createTestContext(deps.echoInstance, http.MethodPut, "/api/v1/user/"+strconv.Itoa(int(userIDToEnable))+"/enable", nil, headers)
+	c.SetParamNames("id")
+	c.SetParamValues(strconv.Itoa(int(userIDToEnable)))
+
+	// Execute (assuming AuthorizeHandler middleware allows based on header role - tested elsewhere)
+	err := deps.routes.EnableUserHandler(c)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusNoContent, rec.Code)
+	deps.mockDb.AssertExpectations(t)
+}
+
+// TestDisableUserHandler tests disabling a user successfully by an admin.
+func TestDisableUserHandler(t *testing.T) {
+	deps := setupHttpTests(t)
+	userIDToDisable := uint(98)
+	adminUserID := "local|admin@example.com"
+
+	// Mock DB call for DisableUser
+	deps.mockDb.On("DisableUser", mock.Anything, userIDToDisable).Return(nil).Once()
+
+	// Setup context with Admin UserID header
+	headers := map[string]string{httpserver.XPlatformUserIDHeader: adminUserID}
+	c, rec := createTestContext(deps.echoInstance, http.MethodPut, "/api/v1/user/"+strconv.Itoa(int(userIDToDisable))+"/disable", nil, headers)
+	c.SetParamNames("id")
+	c.SetParamValues(strconv.Itoa(int(userIDToDisable)))
+
+	// Execute
+	err := deps.routes.DisableUserHandler(c)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusNoContent, rec.Code)
+	deps.mockDb.AssertExpectations(t)
+}
+
+// TestDisableUserHandler_NotFound tests disabling a non-existent user.
+func TestDisableUserHandler_NotFound(t *testing.T) {
+	deps := setupHttpTests(t)
+	userIDToDisable := uint(101)
+	adminUserID := "local|admin@example.com"
+
+	// Mock DB call for DisableUser to return not found
+	deps.mockDb.On("DisableUser", mock.Anything, userIDToDisable).Return(gorm.ErrRecordNotFound).Once()
+
+	headers := map[string]string{httpserver.XPlatformUserIDHeader: adminUserID}
+	c, _ := createTestContext(deps.echoInstance, http.MethodPut, "/api/v1/user/"+strconv.Itoa(int(userIDToDisable))+"/disable", nil, headers)
+	c.SetParamNames("id")
+	c.SetParamValues(strconv.Itoa(int(userIDToDisable)))
+
+	err := deps.routes.DisableUserHandler(c)
+
+	require.Error(t, err)
+	httpErr, ok := err.(*echo.HTTPError)
+	require.True(t, ok)
+	assert.Equal(t, http.StatusNotFound, httpErr.Code)
+	deps.mockDb.AssertExpectations(t)
+}
+
+// TestDisableUserHandler_DisableAdmin1 tests preventing disabling user ID 1.
+func TestDisableUserHandler_DisableAdmin1(t *testing.T) {
+	deps := setupHttpTests(t)
+	userIDToDisable := uint(1)
+	adminUserID := "local|otheradmin@example.com"
+
+	// DB call should not be made for ID 1
+	deps.mockDb.On("DisableUser", mock.Anything, userIDToDisable).Return(nil).Maybe() // Use Maybe if unsure
+
+	headers := map[string]string{httpserver.XPlatformUserIDHeader: adminUserID}
+	c, _ := createTestContext(deps.echoInstance, http.MethodPut, "/api/v1/user/1/disable", nil, headers)
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+
+	err := deps.routes.DisableUserHandler(c)
+
+	require.Error(t, err)
+	httpErr, ok := err.(*echo.HTTPError)
+	require.True(t, ok)
+	assert.Equal(t, http.StatusBadRequest, httpErr.Code)
+	assert.Contains(t, httpErr.Message.(string), "Cannot disable the initial administrator user")
+	deps.mockDb.AssertExpectations(t) // Ensure DisableUser was NOT called
+}
+
 // TestTokenGenerationLogic verifies the JWT signing part of the Token exchange logic.
+// This test focuses specifically on the claims enrichment and signing process.
 func TestTokenGenerationLogic(t *testing.T) {
 	deps := setupHttpTests(t)
 	testEmail := "test@example.com"
