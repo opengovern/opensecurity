@@ -17,7 +17,7 @@ type IntegrationResourceTypeRow struct {
 	IntegrationType string      `json:"integration_type"`
 	Description     string      `json:"description"`
 	Params          []Parameter `json:"params"`
-	Table           string      `json:"table"`
+	ResourceTable   string      `json:"resource_table"`
 }
 
 type Parameter struct {
@@ -44,7 +44,7 @@ func getIntegrationResourceTypeRowFromIntegrationResourceType(rt models.Resource
 		IntegrationType: string(rt.IntegrationType),
 		Description:     rt.Description,
 		Params:          params,
-		Table:           rt.Table,
+		ResourceTable:   rt.Table,
 	}
 
 	return row
