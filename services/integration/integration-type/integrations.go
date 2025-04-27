@@ -186,10 +186,12 @@ func NewIntegrationTypeManager(logger *zap.Logger, database db.Database, integra
 		manager.Clients[integrationType] = client
 		manager.PingLocks[integrationType] = &sync.Mutex{}
 
-		err = manager.EnableIntegrationTypeHelper(context.Background(), &p)
-		if err != nil {
-			logger.Error("failed to enable integration type", zap.Error(err))
-			continue
+		if p.DiscoveryType == models.IntegrationPluginDiscoveryTypeClassic {
+			err = manager.EnableIntegrationTypeHelper(context.Background(), &p)
+			if err != nil {
+				logger.Error("failed to enable integration type", zap.Error(err))
+				continue
+			}
 		}
 
 		pType, ok := typesMap[integrationType]

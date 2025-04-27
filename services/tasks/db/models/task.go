@@ -32,12 +32,6 @@ type Task struct {
 	Configs             pq.StringArray `gorm:"type:text[]"`
 }
 
-type TaskBinary struct {
-	TaskID string `gorm:"primaryKey"`
-
-	CloudQlPlugin []byte `gorm:"type:bytea"`
-}
-
 type TaskConfigSecret struct {
 	TaskID       string `gorm:"primarykey"`
 	Secret       string

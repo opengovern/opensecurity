@@ -16,10 +16,13 @@ type Manifest struct {
 	Author                   string           `json:"Author" yaml:"Author"`
 	SupportedPlatformVersion string           `json:"SupportedPlatformVersion" yaml:"SupportedPlatformVersion"`
 	UpdateDate               string           `json:"UpdateDate" yaml:"UpdateDate"`
+	DiscoveryType            string           `json:"DiscoveryType" yaml:"DiscoveryType"`
 }
 
 type IntegrationPluginInstallState string
 type IntegrationPluginOperationalStatus string
+
+type IntegrationPluginDiscoveryType string
 
 const (
 	IntegrationTypeInstallStateNotInstalled IntegrationPluginInstallState = "not_installed"
@@ -31,6 +34,11 @@ const (
 	IntegrationPluginOperationalStatusEnabled  IntegrationPluginOperationalStatus = "enabled"
 	IntegrationPluginOperationalStatusDisabled IntegrationPluginOperationalStatus = "disabled"
 	IntegrationPluginOperationalStatusFailed   IntegrationPluginOperationalStatus = "failed"
+)
+
+const (
+	IntegrationPluginDiscoveryTypeClassic IntegrationPluginDiscoveryType = "classic"
+	IntegrationPluginDiscoveryTypeTask    IntegrationPluginDiscoveryType = "task"
 )
 
 type OperationalStatusUpdate struct {
@@ -59,7 +67,8 @@ type IntegrationPlugin struct {
 	DemoDataURL              string
 	DemoDataLoaded           bool
 	DescriberTag             string
-	OperationalStatusUpdates pgtype.JSONB `gorm:"default:'[]'"`
+	DiscoveryType            IntegrationPluginDiscoveryType `gorm:"default:classic"`
+	OperationalStatusUpdates pgtype.JSONB                   `gorm:"default:'[]'"`
 	Tags                     pgtype.JSONB
 }
 

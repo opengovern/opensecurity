@@ -1210,10 +1210,12 @@ func (a *API) LoadPlugin(ctx context.Context, plugin *models2.IntegrationPlugin,
 
 	a.typeManager.PingLocks[plugin.IntegrationType] = &sync.Mutex{}
 
-	err = a.typeManager.EnableIntegrationTypeHelper(ctx, plugin)
-	if err != nil {
-		a.logger.Error("failed to enable integration type describer", zap.Error(err))
-		return err
+	if plugin.DiscoveryType == models2.IntegrationPluginDiscoveryTypeClassic {
+		err = a.typeManager.EnableIntegrationTypeHelper(ctx, plugin)
+		if err != nil {
+			a.logger.Error("failed to enable integration type describer", zap.Error(err))
+			return err
+		}
 	}
 
 	err = a.coreClient.ReloadPluginSteampipeConfig(&httpclient.Context{UserRole: api.AdminRole}, plugin.PluginID)

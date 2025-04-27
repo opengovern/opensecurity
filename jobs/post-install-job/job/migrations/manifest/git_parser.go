@@ -13,20 +13,11 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type GitParser struct {
 	Manifest ManifestYAML
-}
-
-type Manifest struct {
-	IntegrationType          integration.Type `json:"IntegrationType" yaml:"IntegrationType"`
-	DescriberURL             string           `json:"DescriberURL" yaml:"DescriberURL"`
-	DescriberTag             string           `json:"DescriberTag" yaml:"DescriberTag"`
-	Publisher                string           `json:"Publisher" yaml:"Publisher"`
-	Author                   string           `json:"Author" yaml:"Author"`
-	SupportedPlatformVersion string           `json:"SupportedPlatformVersion" yaml:"SupportedPlatformVersion"`
-	UpdateDate               string           `json:"UpdateDate" yaml:"UpdateDate"`
 }
 
 type IntegrationPlugin struct {
@@ -103,6 +94,7 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 	var integrationPlugin []byte
 	var cloudqlPlugin []byte
 	var describerURL, describerTags, demoDataUrl string
+	discoveryType := models.IntegrationPluginDiscoveryTypeClassic
 	installState := models.IntegrationTypeInstallStateNotInstalled
 	operationalStatus := models.IntegrationPluginOperationalStatusDisabled
 
@@ -143,6 +135,9 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 		describerURL = m.DescriberURL
 		describerTags = m.DescriberTag
 		demoDataUrl = m.DemoDataURL
+		if strings.ToLower(m.DiscoveryType) == "task" {
+			discoveryType = models.IntegrationPluginDiscoveryTypeTask
+		}
 		if iPlugin.Default.Enable && iPlugin.Default.Install {
 			// read integration-plugin file
 			integrationPlugin, err = os.ReadFile(baseDir + "/integarion_type/integration-plugin")
@@ -200,6 +195,7 @@ func (g *GitParser) ExtractIntegrationBinaries(logger *zap.Logger, iPlugin Integ
 			DemoDataURL:              demoDataUrl,
 			DemoDataLoaded:           false,
 			DescriberTag:             describerTags,
+			DiscoveryType:            discoveryType,
 			Tags:                     tagsJsonb,
 		}, &models.IntegrationPluginBinary{
 			PluginID:          iPlugin.IntegrationType.String(),
