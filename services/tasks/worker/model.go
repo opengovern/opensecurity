@@ -35,18 +35,19 @@ type TaskRunSchedule struct {
 }
 
 type Task struct {
-	ID                  string            `yaml:"id"`
-	Name                string            `yaml:"name"`
-	Description         string            `yaml:"description"`
-	IsEnabled           bool              `yaml:"is_enabled"`
-	ImageURL            string            `yaml:"image_url"`
-	ArtifactsURL        string            `yaml:"artifacts_url"`
-	SteampipePluginName string            `yaml:"steampipe_plugin_name"`
-	Command             string            `yaml:"command"`
-	Timeout             string            `yaml:"timeout"`
-	NatsConfig          NatsConfig        `yaml:"nats_config"`
-	ScaleConfig         ScaleConfig       `yaml:"scale_config"`
-	RunSchedule         []TaskRunSchedule `yaml:"run_schedule"`
-	Params              []string          `yaml:"params"`
-	Configs             []string          `yaml:"configs"`
+	Type                string            `json:"type" yaml:"type"`
+	ID                  string            `json:"id" yaml:"id"`
+	Name                string            `json:"name" yaml:"name"`
+	Description         string            `json:"description" yaml:"description"`
+	IsEnabled           bool              `json:"is_enabled" yaml:"is_enabled"`
+	ImageURL            string            `json:"image_url" yaml:"image_url"`
+	ArtifactsURL        string            `json:"artifacts_url" yaml:"artifacts_url"`
+	SteampipePluginName string            `json:"steampipe_plugin_name" yaml:"steampipe_plugin_name"`
+	Command             string            `json:"command" yaml:"command"`
+	Timeout             string            `json:"timeout" yaml:"timeout"`
+	NatsConfig          NatsConfig        `json:"nats_config" yaml:"nats_config"`
+	ScaleConfig         ScaleConfig       `json:"scale_config" yaml:"scale_config"`
+	RunSchedule         []TaskRunSchedule `json:"run_schedule" yaml:"run_schedule"`
+	Params              []string          `json:"params" yaml:"params"`
+	Configs             []string          `json:"configs" yaml:"configs"`
 }

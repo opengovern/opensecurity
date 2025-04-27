@@ -14,6 +14,8 @@ import (
 	"github.com/opengovern/opensecurity/services/tasks/api"
 	"github.com/opengovern/opensecurity/services/tasks/db"
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
+	utils2 "github.com/opengovern/opensecurity/services/tasks/utils"
+	"github.com/opengovern/opensecurity/services/tasks/worker"
 	"github.com/opengovern/opensecurity/services/tasks/worker/consts"
 	"net/http"
 	"sort"
@@ -28,6 +30,7 @@ type httpRoutes struct {
 
 	platformPrivateKey *rsa.PrivateKey
 	db                 db.Database
+	itDb               db.Database
 	jq                 *jq.JobQueue
 	vault              vault.VaultSourceConfig
 }
@@ -36,6 +39,8 @@ func (r *httpRoutes) Register(e *echo.Echo) {
 	v1 := e.Group("/api/v1")
 	// List all tasks
 	v1.GET("/tasks", httpserver.AuthorizeHandler(r.ListTasks, api2.ViewerRole))
+	// Load task
+	v1.POST("/tasks/load", httpserver.AuthorizeHandler(r.LoadTask, api2.EditorRole))
 	// Get task
 	v1.GET("/tasks/:id", httpserver.AuthorizeHandler(r.GetTask, api2.ViewerRole))
 	// Create a new task
@@ -496,6 +501,34 @@ func (r *httpRoutes) AddTaskConfig(ctx echo.Context) error {
 	if err != nil {
 		r.logger.Error("failed to set task config", zap.Error(err))
 		return ctx.JSON(http.StatusInternalServerError, "failed to set task config")
+	}
+
+	return ctx.NoContent(http.StatusOK)
+}
+
+// LoadTask godoc
+//
+//	@Summary	Load Task
+//	@Security	BearerToken
+//	@Tags		scheduler
+//	@Param		cursor		query	int	false	"cursor"
+//	@Param		per_page	query	int	false	"per page"
+//	@Produce	json
+//	@Success	200	{object}	api.ListTaskRunsResponse
+//	@Router		/tasks/api/v1/tasks/load [post]
+func (r *httpRoutes) LoadTask(ctx echo.Context) error {
+	var req worker.Task
+	if err := bindValidate(ctx, &req); err != nil {
+		r.logger.Error("failed to bind task", zap.Error(err))
+		return ctx.JSON(http.StatusBadRequest, "failed to bind task")
+	}
+
+	req.Type = "task"
+
+	err := utils2.LoadTask(r.db.Orm, r.itDb.Orm, r.logger, req)
+	if err != nil {
+		r.logger.Error("failed to load task", zap.Error(err))
+		return ctx.JSON(http.StatusInternalServerError, "failed to load task")
 	}
 
 	return ctx.NoContent(http.StatusOK)

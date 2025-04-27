@@ -81,10 +81,27 @@ func start(ctx context.Context) error {
 		return fmt.Errorf("new postgres client: %w", err)
 	}
 
-	db := db.Database{Orm: orm}
+	dbm := db.Database{Orm: orm}
 	fmt.Println("Connected to the postgres database: ", cfg.Postgres.DB)
 
-	err = db.Initialize()
+	// setup postgres connection
+	itPostgresConfig := postgres.Config{
+		Host:    cfg.Postgres.Host,
+		Port:    cfg.Postgres.Port,
+		User:    cfg.Postgres.Username,
+		Passwd:  cfg.Postgres.Password,
+		DB:      "integration_types",
+		SSLMode: cfg.Postgres.SSLMode,
+	}
+	itOrm, err := postgres.NewClient(&itPostgresConfig, logger)
+	if err != nil {
+		return fmt.Errorf("new postgres client: %w", err)
+	}
+
+	itDbm := db.Database{Orm: itOrm}
+	fmt.Println("Connected to the postgres database: ", cfg.Postgres.DB)
+
+	err = dbm.Initialize()
 	if err != nil {
 		return fmt.Errorf("new postgres client: %w", err)
 	}
@@ -100,7 +117,7 @@ func start(ctx context.Context) error {
 		return err
 	}
 
-	mainScheduler, err := scheduler.NewMainScheduler(cfg, logger, db, kubeClient, vaultSc, jq)
+	mainScheduler, err := scheduler.NewMainScheduler(cfg, logger, dbm, kubeClient, vaultSc, jq)
 	if err != nil {
 		return err
 	}
@@ -116,7 +133,8 @@ func start(ctx context.Context) error {
 
 	return httpserver.RegisterAndStart(ctx, logger, cfg.Http.Address, &httpRoutes{
 		logger: logger,
-		db:     db,
+		db:     dbm,
+		itDb:   itDbm,
 		jq:     jq,
 		vault:  vaultSc,
 	})

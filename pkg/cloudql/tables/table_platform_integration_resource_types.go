@@ -37,7 +37,7 @@ func tablePlatformIntegrationResourceTypes(_ context.Context) *plugin.Table {
 			{Name: "integration_type", Type: proto.ColumnType_STRING},
 			{Name: "description", Type: proto.ColumnType_STRING},
 			{Name: "params", Type: proto.ColumnType_JSON},
-			{Name: "table", Type: proto.ColumnType_STRING},
+			{Name: "resource_table", Type: proto.ColumnType_STRING},
 		},
 	}
 }
