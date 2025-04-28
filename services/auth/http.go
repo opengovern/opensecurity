@@ -49,7 +49,6 @@ type httpRoutes struct {
 	authServer         *Server
 }
 
-
 func (r *httpRoutes) Register(e *echo.Echo) {
 	v1 := e.Group("/api/v1")
 	// VAlidate token
@@ -154,9 +153,9 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 	}
 
 	// make an http call to dex pod to get the token
-	domain:=os.Getenv("DEX_AUTH_DOMAIN")
+	domain := os.Getenv("DEX_AUTH_DOMAIN")
 	// http call to dex pod with code and callback url serach params
-	// make body 
+	// make body
 
 	data := url.Values{}
 	data.Set("code", req.Code)
@@ -172,7 +171,7 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 	}
 	// make http call
 	client := &http.Client{}
-	
+
 	request, err := http.NewRequest("POST", url, strings.NewReader(data.Encode()))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to create request")
@@ -188,16 +187,16 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
 		bodyBytes, err := io.ReadAll(response.Body)
-	if err != nil {
-		r.logger.Error("failed to read response body", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to read response")
-	}
+		if err != nil {
+			r.logger.Error("failed to read response body", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to read response")
+		}
 
-	bodyString := string(bodyBytes)
-	r.logger.Error("failed to get token", zap.String("status", response.Status))
-	r.logger.Error("response body", zap.String("body", bodyString))
+		bodyString := string(bodyBytes)
+		r.logger.Error("failed to get token", zap.String("status", response.Status))
+		r.logger.Error("response body", zap.String("body", bodyString))
 
-	return echo.NewHTTPError(http.StatusBadRequest, "failed to get token")
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to get token")
 	}
 	var tokenResponse map[string]interface{}
 	if err := json.NewDecoder(response.Body).Decode(&tokenResponse); err != nil {
@@ -207,7 +206,7 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 	if !ok {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to get access token")
 	}
-	dv,err := r.authServer.dexVerifier.Verify(ctx.Request().Context(), accessToken)
+	dv, err := r.authServer.dexVerifier.Verify(ctx.Request().Context(), accessToken)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to verify token")
 	}
@@ -231,19 +230,22 @@ func (r *httpRoutes) Token(ctx echo.Context) error {
 	claimsMap.Id = user.ExternalId
 
 	// remove empty ones
-	
 
 	// create a new token
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256,claimsMap )
-	// sign the token with the private key
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claimsMap)
+
+	r.logger.Info("resigning jwt...", zap.String("jti", claimsMap.Id), zap.String("user", claimsMap.Email))
+
 	signedToken, err := token.SignedString(r.platformPrivateKey)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to sign token")
 	}
-	// return the token
+
+	// test logging of the raw JWT
+	r.logger.Info("new jwt issued", zap.String("jti", claimsMap.Id), zap.String("token", signedToken))
+
 	tokenResponse["access_token"] = signedToken
 	return ctx.JSON(http.StatusOK, tokenResponse)
-
 
 }
 
@@ -347,7 +349,7 @@ func (r *httpRoutes) GetMe(ctx echo.Context) error {
 	userID := httpserver.GetUserID(ctx)
 
 	db_user, err := r.db.GetUserByExternalID(userID)
-	user ,_:= utils.DbUserToApi(db_user)
+	user, _ := utils.DbUserToApi(db_user)
 
 	if err != nil {
 		return err
@@ -406,21 +408,19 @@ func (r *httpRoutes) CreateAPIKey(ctx echo.Context) error {
 	}
 	jti := uuid.New().String()
 
-
 	u := DexClaims{
-		EmailVerified:           usr.EmailVerified,
-		Email:          usr.Email,
-		Groups: 		[]string{string(usr.Role)},
-		Name:           usr.Username,
+		EmailVerified: usr.EmailVerified,
+		Email:         usr.Email,
+		Groups:        []string{string(usr.Role)},
+		Name:          usr.Username,
 		StandardClaims: jwt.StandardClaims{
-		Issuer:    "dex",                      // who issued the token
-		Subject:   userID,                     // user id
-		Audience:  "public-client",  // or []string{}
-		ExpiresAt: jwt.TimeFunc().Add(24 *time.Hour).Unix(), // expires in 24 hours
-		IssuedAt:  jwt.TimeFunc().Unix(),
-		Id:        jti,              // optional
-	},
-		
+			Issuer:    "dex",                                     // who issued the token
+			Subject:   userID,                                    // user id
+			Audience:  "public-client",                           // or []string{}
+			ExpiresAt: jwt.TimeFunc().Add(24 * time.Hour).Unix(), // expires in 24 hours
+			IssuedAt:  jwt.TimeFunc().Unix(),
+			Id:        jti, // optional
+		},
 	}
 
 	if r.platformPrivateKey == nil {
@@ -453,7 +453,7 @@ func (r *httpRoutes) CreateAPIKey(ctx echo.Context) error {
 	}
 	r.logger.Info("creating API Key")
 	apikey := db.ApiKey{
-		
+
 		Name:          req.Name,
 		Role:          req.Role,
 		CreatorUserID: userID,
