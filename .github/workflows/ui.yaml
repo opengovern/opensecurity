@@ -74,7 +74,7 @@ jobs:
 
       - name: Build
         env:
-          CI: true # Or false if absolutely necessary
+          CI: false # Or false if absolutely necessary
         run: npm run build
         working-directory: services/webui
 
