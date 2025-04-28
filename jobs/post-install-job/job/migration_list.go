@@ -8,6 +8,7 @@ import (
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/integration"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/inventory"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/manifest"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/plugins"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/resource_collection"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/resource_info"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/tasks"
@@ -34,6 +35,7 @@ var manualMigrations = map[string]types.Migration{
 	"resource_info":       resource_info.Migration{},
 	"auth":                auth.Migration{},
 	"tasks":               tasks.Migration{},
+	"plugins":             plugins.Migration{},
 }
 
 // Ordered keys slice
@@ -48,4 +50,5 @@ var ManualOrder = []string{
 	"resource_info",
 	"auth",
 	"tasks",
+	"plugins",
 }

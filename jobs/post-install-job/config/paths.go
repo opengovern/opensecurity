@@ -12,6 +12,7 @@ const (
 	ResourceCollectionGitPath = ConfigzGitPath + "/resource-collections"
 	IntegrationsGitPath       = ConfigzGitPath + "/integrations"
 	TasksGitPath              = ConfigzGitPath + "/tasks"
+	PluginsGitPath            = ConfigzGitPath + "/plugins"
 	ManifestYamlPath          = ConfigzGitPath + "/manifest.yaml"
 	ParametersYamlPath        = ConfigzGitPath + "/parameters.yaml"
 
