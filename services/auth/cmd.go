@@ -8,10 +8,11 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
-	dexApi "github.com/dexidp/dex/api/v2"
 	"os"
 	"strconv"
 	"strings"
+
+	dexApi "github.com/dexidp/dex/api/v2"
 
 	config2 "github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/httpserver"

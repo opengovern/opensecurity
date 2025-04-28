@@ -2,7 +2,6 @@ import dayjs from 'dayjs'
 import { atom, useAtom } from 'jotai'
 import jwtDecode from 'jwt-decode'
 import { authHostname } from '../api/ApiConfig'
-import axios from 'axios'
 
 interface IAuthModel {
     token: string
@@ -108,69 +107,69 @@ export function useAuth() {
                 })
 
                 const callback = `${window.location.origin}/callback`
-                const url = `${authHostname()}/auth/api/v1/token`
+                const url = `${authHostname()}/dex/token`
                 const headers = new Headers()
                 headers.append(
                     'Content-Type',
                     'application/x-www-form-urlencoded'
                 )
 
-             
-                const body = {
-                    code: code,
-                    callback_url: callback,
+                const body = new URLSearchParams()
+                body.append('grant_type', 'authorization_code')
+                body.append('client_id', 'public-client')
+                body.append('client_secret', '')
+                body.append('code', code)
+                body.append('redirect_uri', callback)
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers,
+                        body,
+                    })
+
+                    const data = await response.json()
+                    if (data.error) {
+                        if (retryCount < 3) {
+                            getToken(retryCount + 1)
+                        } else {
+                            console.log(
+                                `Failed to fetch token due to ${data.error}`
+                            )
+                            setAuth({
+                                ...auth,
+                                isLoading: false,
+                                isSuccessful: false,
+                                error: data.error_description,
+                            })
+                        }
+                    } else {
+                        const newAuth = {
+                            token: data.access_token,
+                            isLoading: false,
+                            isSuccessful: true,
+                            error: '',
+                            resp: data,
+                        }
+                        setAuth(newAuth)
+                        localStorage.setItem(
+                            'openg_auth',
+                            JSON.stringify(newAuth)
+                        )
+                    }
+                } catch (error) {
+                    if (retryCount < 3) {
+                        getToken(retryCount + 1)
+                    } else {
+                        console.log(`Failed to fetch token due to ${error}`)
+                        setAuth({
+                            ...auth,
+                            isLoading: false,
+                            isSuccessful: false,
+                            error: `Failed to fetch token due to ${error}`,
+                        })
+                    }
                 }
-
-                   axios
-                       .post(url, body)
-                       .then((response) => {
-                           const data = response.data
-                           if (data.error) {
-                               if (retryCount < 3) {
-                                   getToken(retryCount + 1)
-                               } else {
-                                   console.log(
-                                       `Failed to fetch token due to ${data.error}`
-                                   )
-                                   setAuth({
-                                       ...auth,
-                                       isLoading: false,
-                                       isSuccessful: false,
-                                       error: data.error_description,
-                                   })
-                               }
-                           } else {
-                               const newAuth = {
-                                   token: data.access_token,
-                                   isLoading: false,
-                                   isSuccessful: true,
-                                   error: '',
-                                   resp: data,
-                               }
-                               setAuth(newAuth)
-                               localStorage.setItem(
-                                   'openg_auth',
-                                   JSON.stringify(newAuth)
-                               )
-                           }
-                       })
-                       .catch((e) => {
-                           if (retryCount < 3) {
-                               getToken(retryCount + 1)
-                           } else {
-                               console.log(
-                                   `Failed to fetch token due to ${e}`
-                               )
-                               setAuth({
-                                   ...auth,
-                                   isLoading: false,
-                                   isSuccessful: false,
-                                   error: `Failed to fetch token due to ${e}`,
-                               })
-                           }
-                       })
-
-                
             }
 
             return getToken(0).finally(() => {

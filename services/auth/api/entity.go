@@ -1,8 +1,9 @@
 package api
 
 import (
-	"github.com/opengovern/og-util/pkg/api"
 	"time"
+
+	"github.com/opengovern/og-util/pkg/api"
 )
 
 type GetUserResponse struct {
@@ -72,9 +73,4 @@ type CreateUserRequest struct {
 type ResetUserPasswordRequest struct {
 	CurrentPassword string `json:"current_password"`
 	NewPassword     string `json:"new_password"`
-}
-
-type GetTokenRequest struct {
-	Code string `json:"code"`
-	CallBackUrl string `json:"callback_url"`
 }
