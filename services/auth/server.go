@@ -6,11 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	dexApi "github.com/dexidp/dex/api/v2"
-	"google.golang.org/grpc"
 	"net/http"
 	"strings"
 	"time"
+
+	dexApi "github.com/dexidp/dex/api/v2"
+	"google.golang.org/grpc"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	envoycore "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
@@ -22,6 +23,7 @@ import (
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpserver"
 	"github.com/opengovern/opensecurity/services/auth/db"
+	"github.com/opengovern/opensecurity/services/auth/utils"
 	"go.uber.org/zap"
 	"google.golang.org/genproto/googleapis/rpc/status"
 )
@@ -79,7 +81,7 @@ func (s *Server) UpdateLastLoginLoop() {
 		for i := 0; i < len(s.updateLoginUserList); i++ {
 			user := s.updateLoginUserList[i]
 			if user.ExternalId != "" {
-				usr, err := s.db.GetUserByEmail(user.Email)
+				usr, err := utils.GetUserByEmail(user.Email, s.db)
 				if err != nil {
 					s.logger.Error("failed to get user metadata", zap.String(" External", user.ExternalId), zap.Error(err))
 					continue
@@ -95,7 +97,7 @@ func (s *Server) UpdateLastLoginLoop() {
 					tim = time.Now()
 					s.logger.Info("time is", zap.Time("time", tim))
 
-					err = s.db.UpdateUserLastLoginWithExternalID(user.ExternalId, tim)
+					err = utils.UpdateUserLastLogin(user.ExternalId, tim, s.db)
 					if err != nil {
 						s.logger.Error("failed to update user metadata", zap.String("External Id", user.ExternalId), zap.Error(err))
 					}
@@ -177,8 +179,7 @@ func (s *Server) Check(ctx context.Context, req *envoyauth.CheckRequest) (*envoy
 		return unAuth, nil
 	}
 
-	// theUser, err := utils.GetUserByEmail(user.Email, s.db)
-	theUser,err := s.db.GetUserByEmail(user.Email)
+	theUser, err := utils.GetUserByEmail(user.Email, s.db)
 	if err != nil {
 		s.logger.Warn("failed to get user",
 			zap.String("userId", user.ExternalUserID),
@@ -273,7 +274,6 @@ func (s *Server) Verify(ctx context.Context, authToken string) (*userClaim, erro
 
 	s.logger.Info("dex verifier verifying")
 	dv, err := s.dexVerifier.Verify(ctx, token)
-	
 	if err == nil {
 		var claims json.RawMessage
 		if err := dv.Claims(&claims); err != nil {

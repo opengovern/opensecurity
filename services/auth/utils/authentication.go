@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"time"
 
 	"github.com/opengovern/opensecurity/services/auth/db"
@@ -52,7 +53,32 @@ func DbUserToApi(u *db.User) (*User, error) {
 	}, nil
 }
 
+func GetUserByEmail(email string, database db.Database) (*User, error) {
 
+	if email == "" {
+		return nil, errors.New("GetUserByEmail: empty email")
+	}
+
+	user, err := database.GetUserByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+
+	if !user.IsActive {
+		return nil, errors.New("user disabled")
+	}
+
+	resp, err := DbUserToApi(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
 func New(domain, appClientID, clientID, clientSecret, connection string, inviteTTL int, database db.Database) *Service {
 	return &Service{
 		domain:       domain,

@@ -2,10 +2,11 @@ package client
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/opensecurity/services/auth/api"
-	"net/http"
 )
 
 type AuthServiceClient interface {
