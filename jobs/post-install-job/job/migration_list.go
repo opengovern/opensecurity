@@ -8,8 +8,6 @@ import (
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/integration"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/inventory"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/manifest"
-	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/resource_collection"
-	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/resource_info"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/tasks"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/types"
 )
@@ -24,16 +22,16 @@ var Order = []string{
 }
 
 var manualMigrations = map[string]types.Migration{
-	"elasticsearch":       elasticsearch.Migration{},
-	"manifest":            manifest.Migration{},
-	"core":                core.Migration{},
-	"integration":         integration.Migration{},
-	"inventory":           inventory.Migration{},
-	"resource_collection": resource_collection.Migration{},
-	"compliance":          compliance.Migration{},
-	"resource_info":       resource_info.Migration{},
-	"auth":                auth.Migration{},
-	"tasks":               tasks.Migration{},
+	"elasticsearch": elasticsearch.Migration{},
+	"manifest":      manifest.Migration{},
+	"core":          core.Migration{},
+	"integration":   integration.Migration{},
+	"inventory":     inventory.Migration{},
+	//"resource_collection": resource_collection.Migration{},
+	"compliance": compliance.Migration{},
+	//"resource_info":       resource_info.Migration{},
+	"auth":  auth.Migration{},
+	"tasks": tasks.Migration{},
 }
 
 // Ordered keys slice
@@ -43,9 +41,9 @@ var ManualOrder = []string{
 	"core",
 	"integration",
 	"inventory",
-	"resource_collection",
+	//"resource_collection",
 	"compliance",
-	"resource_info",
+	//"resource_info",
 	"auth",
 	"tasks",
 }
