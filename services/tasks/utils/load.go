@@ -2,10 +2,12 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/hashicorp/go-getter"
 	"github.com/jackc/pgtype"
+	"github.com/opengovern/og-util/pkg/platformspec"
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
-	"github.com/opengovern/opensecurity/services/tasks/worker"
 	"github.com/opengovern/opensecurity/services/tasks/worker/consts"
 	"github.com/xhit/go-str2duration/v2"
 	"go.uber.org/zap"
@@ -25,7 +27,36 @@ var (
 	NatsURL          = os.Getenv("NATS_URL")
 )
 
-func LoadTask(orm *gorm.DB, itOrm *gorm.DB, logger *zap.Logger, task worker.Task) error {
+func ValidateAndLoadTask(orm *gorm.DB, itOrm *gorm.DB, logger *zap.Logger, data []byte) error {
+	validator := platformspec.NewDefaultValidator()
+
+	// --- Process the Specification (Full Validation including Artifacts) ---
+	validatedSpecInterface, err := validator.ProcessSpecification(
+		data,
+		"",
+		"",
+		platformspec.ArtifactTypeAll,
+		false,
+	)
+	if err != nil {
+		return err
+	}
+	switch spec := validatedSpecInterface.(type) {
+	case *platformspec.TaskSpecification:
+		if spec == nil {
+			return errors.New("nil plugin specification")
+		}
+		err = LoadTask(orm, itOrm, logger, *spec)
+		if err != nil {
+			return err
+		}
+	default:
+		return errors.New("invalid type for ValidateAndLoadPlugin")
+	}
+	return nil
+}
+
+func LoadTask(orm *gorm.DB, itOrm *gorm.DB, logger *zap.Logger, task platformspec.TaskSpecification) error {
 	if strings.ToLower(task.Type) != "task" {
 		return nil
 	}
@@ -71,6 +102,15 @@ func LoadTask(orm *gorm.DB, itOrm *gorm.DB, logger *zap.Logger, task worker.Task
 	if err != nil {
 		return err
 	}
+	var command string
+	if task.Command != nil && len(task.Command) > 0 {
+		command = task.Command[0]
+	}
+
+	var configs []string
+	for _, config := range task.Configs {
+		configs = append(configs, fmt.Sprintf("%v", config))
+	}
 
 	if err = orm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
@@ -83,13 +123,13 @@ func LoadTask(orm *gorm.DB, itOrm *gorm.DB, logger *zap.Logger, task worker.Task
 		ImageUrl:            task.ImageURL,
 		SteampipePluginName: task.SteampipePluginName,
 		ArtifactsUrl:        task.ArtifactsURL,
-		Command:             task.Command,
+		Command:             command,
 		Timeout:             timeoutFloat,
 		NatsConfig:          natsJsonb,
 		ScaleConfig:         scaleJsonb,
 		EnvVars:             envVarsJsonb,
 		Params:              task.Params,
-		Configs:             task.Configs,
+		Configs:             configs,
 	}).Error; err != nil {
 		return err
 	}
@@ -132,7 +172,7 @@ func LoadTask(orm *gorm.DB, itOrm *gorm.DB, logger *zap.Logger, task worker.Task
 	return nil
 }
 
-func loadCloudqlBinary(orm *gorm.DB, logger *zap.Logger, task worker.Task) (err error) {
+func loadCloudqlBinary(orm *gorm.DB, logger *zap.Logger, task platformspec.TaskSpecification) (err error) {
 	if task.ArtifactsURL == "" || task.SteampipePluginName == "" {
 		logger.Warn("task artifacts url or steampipe-plugin name is empty", zap.String("task", task.ID))
 		return nil
@@ -187,7 +227,7 @@ func loadCloudqlBinary(orm *gorm.DB, logger *zap.Logger, task worker.Task) (err 
 	return nil
 }
 
-func defaultEnvs(taskConfig *worker.Task) map[string]string {
+func defaultEnvs(taskConfig *platformspec.TaskSpecification) map[string]string {
 	return map[string]string{
 		consts.NatsURLEnv:                    NatsURL,
 		consts.NatsConsumerEnv:               taskConfig.NatsConfig.Consumer,
@@ -205,7 +245,7 @@ func defaultEnvs(taskConfig *worker.Task) map[string]string {
 	}
 }
 
-func fillMissedConfigs(taskConfig *worker.Task) {
+func fillMissedConfigs(taskConfig *platformspec.TaskSpecification) {
 	if taskConfig.NatsConfig.Stream == "" {
 		taskConfig.NatsConfig.Stream = taskConfig.ID
 	}

@@ -9,8 +9,10 @@ import (
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/elasticsearch"
 	coreClient "github.com/opengovern/opensecurity/services/core/client"
 	demo_import "github.com/opengovern/opensecurity/services/integration/demo-import"
+	utils2 "github.com/opengovern/opensecurity/services/integration/utils"
 	hczap "github.com/zaffka/zap-to-hclog"
 	"golang.org/x/net/context"
+	"io"
 	"io/fs"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -71,6 +73,7 @@ func (a *API) Register(e *echo.Group) {
 	e.GET("/:integration_type/configuration", httpserver.AuthorizeHandler(a.GetConfiguration, api.ViewerRole))
 
 	plugin := e.Group("/plugin")
+	plugin.GET("/spec", httpserver.AuthorizeHandler(a.AddPluginSpec, api.ViewerRole))
 	plugin.GET("/:id/setup", httpserver.AuthorizeHandler(a.GetSetup, api.ViewerRole))
 	plugin.GET("/:id/manifest", httpserver.AuthorizeHandler(a.GetManifest, api.ViewerRole))
 	plugin.POST("/load/id/:id", httpserver.AuthorizeHandler(a.LoadPluginWithID, api.EditorRole))
@@ -767,6 +770,7 @@ func (a *API) ListPlugins(c echo.Context) error {
 			SourceCode:               plugin.SourceCode,
 			PackageType:              plugin.PackageType,
 			DescriberURL:             plugin.DescriberURL,
+			DiscoveryType:            string(plugin.DiscoveryType),
 			Name:                     plugin.Name,
 			Count:                    count,
 		})
@@ -870,6 +874,7 @@ func (a *API) GetPlugin(c echo.Context) error {
 		SourceCode:               plugin.SourceCode,
 		PackageType:              plugin.PackageType,
 		DescriberURL:             plugin.DescriberURL,
+		DiscoveryType:            string(plugin.DiscoveryType),
 		Name:                     plugin.Name,
 	})
 }
@@ -1416,4 +1421,30 @@ func (a *API) RemovePluginDemoData(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusOK)
+}
+
+// AddPluginSpec godoc
+//
+//	@Summary	Load Task
+//	@Security	BearerToken
+//	@Tags		scheduler
+//	@Param		cursor		query	int	false	"cursor"
+//	@Param		per_page	query	int	false	"per page"
+//	@Produce	json
+//	@Success	200	{object}	api.ListTaskRunsResponse
+//	@Router		/tasks/api/v1/plugin/spec [post]
+func (a *API) AddPluginSpec(ctx echo.Context) error {
+	bodyBytes, err := io.ReadAll(ctx.Request().Body)
+	if err != nil {
+		a.logger.Error("failed to read request body", zap.Error(err))
+		return ctx.JSON(http.StatusBadRequest, "failed to read body")
+	}
+
+	err = utils2.ValidateAndLoadPlugin(a.typeManager.IntegrationTypeDb, a.logger, bodyBytes)
+	if err != nil {
+		a.logger.Error("failed to add plugin spec", zap.Error(err))
+		return ctx.JSON(http.StatusInternalServerError, "failed to add plugin spec")
+	}
+
+	return ctx.NoContent(http.StatusOK)
 }

@@ -8,8 +8,6 @@ import (
 	"github.com/opengovern/opensecurity/jobs/post-install-job/db"
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	"github.com/opengovern/opensecurity/services/tasks/utils"
-	"github.com/opengovern/opensecurity/services/tasks/worker"
-	"gopkg.in/yaml.v3"
 	"io/fs"
 	"io/ioutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -83,13 +81,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			return err
 		}
 
-		var task worker.Task
-		err = yaml.Unmarshal(file, &task)
-		if err != nil {
-			return err
-		}
-
-		return utils.LoadTask(orm, itOrm, logger, task)
+		return utils.ValidateAndLoadTask(orm, itOrm, logger, file)
 	})
 	if err != nil {
 		return err

@@ -15,8 +15,8 @@ import (
 	"github.com/opengovern/opensecurity/services/tasks/db"
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	utils2 "github.com/opengovern/opensecurity/services/tasks/utils"
-	"github.com/opengovern/opensecurity/services/tasks/worker"
 	"github.com/opengovern/opensecurity/services/tasks/worker/consts"
+	"io"
 	"net/http"
 	"sort"
 	"strconv"
@@ -40,7 +40,7 @@ func (r *httpRoutes) Register(e *echo.Echo) {
 	// List all tasks
 	v1.GET("/tasks", httpserver.AuthorizeHandler(r.ListTasks, api2.ViewerRole))
 	// Load task
-	v1.POST("/tasks/load", httpserver.AuthorizeHandler(r.LoadTask, api2.EditorRole))
+	v1.POST("/tasks/spec", httpserver.AuthorizeHandler(r.AddTaskSpec, api2.EditorRole))
 	// Get task
 	v1.GET("/tasks/:id", httpserver.AuthorizeHandler(r.GetTask, api2.ViewerRole))
 	// Create a new task
@@ -506,7 +506,7 @@ func (r *httpRoutes) AddTaskConfig(ctx echo.Context) error {
 	return ctx.NoContent(http.StatusOK)
 }
 
-// LoadTask godoc
+// AddTaskSpec godoc
 //
 //	@Summary	Load Task
 //	@Security	BearerToken
@@ -515,17 +515,15 @@ func (r *httpRoutes) AddTaskConfig(ctx echo.Context) error {
 //	@Param		per_page	query	int	false	"per page"
 //	@Produce	json
 //	@Success	200	{object}	api.ListTaskRunsResponse
-//	@Router		/tasks/api/v1/tasks/load [post]
-func (r *httpRoutes) LoadTask(ctx echo.Context) error {
-	var req worker.Task
-	if err := bindValidate(ctx, &req); err != nil {
-		r.logger.Error("failed to bind task", zap.Error(err))
-		return ctx.JSON(http.StatusBadRequest, "failed to bind task")
+//	@Router		/tasks/api/v1/tasks/spec [post]
+func (r *httpRoutes) AddTaskSpec(ctx echo.Context) error {
+	bodyBytes, err := io.ReadAll(ctx.Request().Body)
+	if err != nil {
+		r.logger.Error("failed to read request body", zap.Error(err))
+		return ctx.JSON(http.StatusBadRequest, "failed to read body")
 	}
 
-	req.Type = "task"
-
-	err := utils2.LoadTask(r.db.Orm, r.itDb.Orm, r.logger, req)
+	err = utils2.ValidateAndLoadTask(r.db.Orm, r.itDb.Orm, r.logger, bodyBytes)
 	if err != nil {
 		r.logger.Error("failed to load task", zap.Error(err))
 		return ctx.JSON(http.StatusInternalServerError, "failed to load task")

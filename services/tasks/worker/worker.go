@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/jackc/pgtype"
 	kedav1alpha1 "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
+	"github.com/opengovern/og-util/pkg/platformspec"
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	"golang.org/x/net/context"
 	appsv1 "k8s.io/api/apps/v1"
@@ -97,7 +98,7 @@ func CreateWorker(ctx context.Context, kubeClient client.Client, taskConfig *mod
 		}
 	}
 
-	var scaleConfig ScaleConfig
+	var scaleConfig platformspec.ScaleConfig
 	if taskConfig.ScaleConfig.Status == pgtype.Present {
 		if err = json.Unmarshal(taskConfig.ScaleConfig.Bytes, &scaleConfig); err != nil {
 			return err
@@ -122,10 +123,10 @@ func CreateWorker(ctx context.Context, kubeClient client.Client, taskConfig *mod
 					Kind:       "Deployment",
 					APIVersion: "apps/v1",
 				},
-				PollingInterval: aws.Int32(scaleConfig.PollingInterval),
-				CooldownPeriod:  aws.Int32(scaleConfig.CooldownPeriod),
-				MinReplicaCount: aws.Int32(scaleConfig.MinReplica),
-				MaxReplicaCount: aws.Int32(scaleConfig.MaxReplica),
+				PollingInterval: aws.Int32(int32(scaleConfig.PollingInterval)),
+				CooldownPeriod:  aws.Int32(int32(scaleConfig.CooldownPeriod)),
+				MinReplicaCount: aws.Int32(int32(scaleConfig.MinReplica)),
+				MaxReplicaCount: aws.Int32(int32(scaleConfig.MaxReplica)),
 				Fallback: &kedav1alpha1.Fallback{
 					FailureThreshold: 1,
 					Replicas:         1,
