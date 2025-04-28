@@ -73,7 +73,7 @@ func (a *API) Register(e *echo.Group) {
 	e.GET("/:integration_type/configuration", httpserver.AuthorizeHandler(a.GetConfiguration, api.ViewerRole))
 
 	plugin := e.Group("/plugin")
-	plugin.GET("/spec", httpserver.AuthorizeHandler(a.AddPluginSpec, api.ViewerRole))
+	plugin.GET("/load-v1", httpserver.AuthorizeHandler(a.AddPluginSpec, api.ViewerRole))
 	plugin.GET("/:id/setup", httpserver.AuthorizeHandler(a.GetSetup, api.ViewerRole))
 	plugin.GET("/:id/manifest", httpserver.AuthorizeHandler(a.GetManifest, api.ViewerRole))
 	plugin.POST("/load/id/:id", httpserver.AuthorizeHandler(a.LoadPluginWithID, api.EditorRole))
@@ -1432,7 +1432,7 @@ func (a *API) RemovePluginDemoData(c echo.Context) error {
 //	@Param		per_page	query	int	false	"per page"
 //	@Produce	json
 //	@Success	200	{object}	api.ListTaskRunsResponse
-//	@Router		/tasks/api/v1/plugin/spec [post]
+//	@Router		/tasks/api/v1/plugin/load-v1 [post]
 func (a *API) AddPluginSpec(ctx echo.Context) error {
 	bodyBytes, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {

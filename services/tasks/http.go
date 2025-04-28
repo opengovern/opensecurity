@@ -40,7 +40,7 @@ func (r *httpRoutes) Register(e *echo.Echo) {
 	// List all tasks
 	v1.GET("/tasks", httpserver.AuthorizeHandler(r.ListTasks, api2.ViewerRole))
 	// Load task
-	v1.POST("/tasks/spec", httpserver.AuthorizeHandler(r.AddTaskSpec, api2.EditorRole))
+	v1.POST("/tasks/load-v1", httpserver.AuthorizeHandler(r.AddTaskSpec, api2.EditorRole))
 	// Get task
 	v1.GET("/tasks/:id", httpserver.AuthorizeHandler(r.GetTask, api2.ViewerRole))
 	// Create a new task
@@ -515,7 +515,7 @@ func (r *httpRoutes) AddTaskConfig(ctx echo.Context) error {
 //	@Param		per_page	query	int	false	"per page"
 //	@Produce	json
 //	@Success	200	{object}	api.ListTaskRunsResponse
-//	@Router		/tasks/api/v1/tasks/spec [post]
+//	@Router		/tasks/api/v1/tasks/load-v1 [post]
 func (r *httpRoutes) AddTaskSpec(ctx echo.Context) error {
 	bodyBytes, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
