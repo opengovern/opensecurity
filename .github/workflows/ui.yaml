@@ -1,3 +1,5 @@
+# .github/workflows/webui-build.yaml (Ensure this filename is correct)
+
 name: Web UI Build
 
 on:
@@ -12,81 +14,89 @@ on:
   push:
     branches:
       - main  # Only run this workflow on pushes to the main branch
+    paths: # <-- Added paths filter
+      - 'services/webui/**'
+      - 'docker/WebUiServiceDockerfile'
+      - '.github/workflows/webui-build.yaml'
 
 jobs:
   build:
-    # Check if the last commit is a merge from the `ui-changes` branch
-    if: (github.event.inputs.buildWebUI == 'true') || (contains(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, 'ui-changes') &&  github.event_name != 'pull_request')
+    # Updated Condition:
+    # Run if:
+    # 1. Manual dispatch with buildWebUI=true
+    # 2. OR It's a push event (which means it passed the branch/paths filter in 'on:')
+    #    This implicitly covers both the original commit message scenario AND the path-change scenario.
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.buildWebUI == 'true') || (github.event_name == 'push')
     runs-on: ubuntu-latest
     environment: docker
     permissions:
       id-token: write
-      contents: write
+      contents: write # Needed for github-tag-action
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Needed for github-tag-action
 
       - name: GitHub Tag
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.1
         with:
-          github_token: ${{ secrets.GHCR_PAT }}
+          github_token: ${{ secrets.GHCR_PAT }} # Ensure PAT has contents:write scope
+          # Optional: tag_prefix: web-v
+
+      - name: Set UI tag output
+        id: set_latest_ui_tag
+        run: |
+          UI_TAG=""
+          if [[ -n "${{ steps.tag_version.outputs.new_tag }}" ]]; then
+            UI_TAG="${{ steps.tag_version.outputs.new_tag }}"
+          elif [[ -n "${{ steps.tag_version.outputs.previous_tag }}" ]]; then
+            UI_TAG="${{ steps.tag_version.outputs.previous_tag }}"
+          else
+            echo "::error::Could not determine a tag to use. No new or previous tag found."
+            exit 1
+          fi
+          echo "ui_tag=${UI_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Using UI Tag: ${UI_TAG}"
 
       - name: Use Node.js 20.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
-
-      - name: NPM Cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.npm
-            ~/.cache
-            ./node_modules
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
-
-      - name: Go to Code Directory
-        working-directory: services/webui
-        run: |
-          echo "Navigating to code directory..."
+          cache: 'npm'
+          cache-dependency-path: services/webui/package-lock.json
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
         working-directory: services/webui
 
       - name: Build
         env:
-          CI: false
+          CI: true # Or false if absolutely necessary
         run: npm run build
         working-directory: services/webui
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
-      - name: Log in to the Container Registry
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+      - name: Log in to the Container Registry (ghcr.io)
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
-      - name: Go Back  to main Code Directory
-        working-directory: ../
-        run: |
-          echo "Navigating to main directory..."
-          pwd
-          ls
+
       - name: Build and Push Docker Image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
+          file: docker/WebUiServiceDockerfile
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/${{ github.repository_owner }}/web-ui:${{ steps.tag_version.outputs.new_tag }}
-          file: docker/WebUiServiceDockerfile
+            ghcr.io/${{ github.repository_owner }}/web-ui:${{ steps.set_latest_ui_tag.outputs.ui_tag }}
+            ${{ github.ref == 'refs/heads/main' && format('ghcr.io/{0}/web-ui:latest', github.repository_owner) || '' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
