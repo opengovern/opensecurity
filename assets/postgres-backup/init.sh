@@ -51,7 +51,7 @@ integrationTypesDatabaseName="integration_types"
 
 echo "$dt - Running: psql -v ON_ERROR_STOP=1 --username postgres --dbname postgres ...";
 
-PGPASSWORD="postgres" psql -v ON_ERROR_STOP=1 --username "postgres" --dbname "postgres" <<-EOSQL
+PGPASSWORD="${POSTGRES_PASSWORD}" psql -v ON_ERROR_STOP=1 --username "postgres" --dbname "postgres" <<-EOSQL
 
 SELECT 'CREATE DATABASE $informationDatabaseName'
 WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$informationDatabaseName')\gexec
@@ -243,9 +243,7 @@ ALTER USER $migratorUserName WITH SUPERUSER;
 EOSQL
 
 echo "$dt - Init script is completed";
-export PGPASSWORD='postgres'
-set "PGPASSWORD=postgres"
-PGPASSWORD="postgres"
+export PGPASSWORD="${POSTGRES_PASSWORD}"
 pg_restore -h localhost -p 5432 -U postgres -d $authDatabaseName -v "$authDatabaseName.bak";
 pg_restore -h localhost -p 5432 -U postgres -d $integrationDatabaseName -v "$integrationDatabaseName.bak";
 pg_restore -h localhost -p 5432 -U postgres -d $integrationTypesDatabaseName -v "$integrationTypesDatabaseName.bak";
