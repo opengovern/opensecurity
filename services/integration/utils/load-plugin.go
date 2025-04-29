@@ -7,14 +7,12 @@ import (
 	"github.com/hashicorp/go-getter"
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-util/pkg/platformspec"
-	"github.com/opengovern/opensecurity/jobs/post-install-job/config"
 	"github.com/opengovern/opensecurity/services/integration/models"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -156,18 +154,6 @@ func ExtractIntegrationBinaries(logger *zap.Logger, plugin platformspec.PluginSp
 		if err != nil {
 			logger.Error("failed to open integration-plugin file", zap.Error(err), zap.String("url", plugin.Components.PlatformBinary.URI))
 			return nil, nil, fmt.Errorf("open integration-plugin file for url %s: %w", plugin, err)
-		}
-		// copy contents of index-templates folder to config.IndexTemplatesPath/pluginName if it exists
-		if stat, err := os.Stat(filepath.Join(baseDir, "integarion_type", "index-templates")); err == nil && stat.IsDir() {
-			fs := os.DirFS(filepath.Join(baseDir, "integarion_type", "index-templates"))
-			err = os.CopyFS(filepath.Join(config.IndexTemplatesPath, plugin.IntegrationType.String()), fs)
-			if err != nil {
-				logger.Error("failed to copy index-templates folder", zap.Error(err))
-			} else {
-				logger.Info("index-templates folder copied successfully", zap.String("integrationType", plugin.IntegrationType.String()))
-			}
-		} else {
-			logger.Info("index-templates folder not found for integration type - skipping", zap.String("integrationType", plugin.IntegrationType.String()))
 		}
 
 		installState = models.IntegrationTypeInstallStateInstalled
