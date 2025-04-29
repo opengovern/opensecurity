@@ -2,22 +2,20 @@ package inventory
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/goccy/go-yaml"
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
-	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/utils"
 	"github.com/opengovern/opensecurity/pkg/types"
 	coreClient "github.com/opengovern/opensecurity/services/core/client"
 	integrationClient "github.com/opengovern/opensecurity/services/integration/client"
-	"io/fs"
-	"os"
-	"path"
-	"path/filepath"
-	"strings"
 
 	"github.com/opengovern/og-util/pkg/model"
 	"github.com/opengovern/og-util/pkg/postgres"
@@ -29,31 +27,39 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-type ResourceType struct {
-	ResourceName         string
-	Category             []string
-	ResourceLabel        string
-	ServiceName          string
-	ListDescriber        string
-	GetDescriber         string
-	TerraformName        []string
-	TerraformNameString  string `json:"-"`
-	TerraformServiceName string
-	Discovery            string
-	IgnoreSummarize      bool
-	SteampipeTable       string
-	Model                string
+/*
+	type ResourceType struct {
+		ResourceName         string
+		Category             []string
+		ResourceLabel        string
+		ServiceName          string
+		ListDescriber        string
+		GetDescriber         string
+		TerraformName        []string
+		TerraformNameString  string `json:"-"`
+		TerraformServiceName string
+		Discovery            string
+		IgnoreSummarize      bool
+		SteampipeTable       string
+		Model                string
+	}
+*/
+type Migration struct {
 }
 
-type Migration struct {
+func (m Migration) AttachmentFolderPath() string {
+	return "/core-migration"
 }
 
 func (m Migration) IsGitBased() bool {
 	return false
 }
+
+/*
 func (m Migration) AttachmentFolderPath() string {
 	return "/inventory-data-config"
 }
+*/
 
 func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *zap.Logger) error {
 	orm, err := postgres.NewClient(&postgres.Config{
@@ -69,106 +75,107 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 	dbm := db.Database{ORM: orm}
 
-	awsResourceTypesContent, err := os.ReadFile(path.Join(m.AttachmentFolderPath(), "aws-resource-types.json"))
-	if err != nil {
-		return err
-	}
-	azureResourceTypesContent, err := os.ReadFile(path.Join(m.AttachmentFolderPath(), "azure-resource-types.json"))
-	if err != nil {
-		return err
-	}
-	var awsResourceTypes []ResourceType
-	var azureResourceTypes []ResourceType
-	if err := json.Unmarshal(awsResourceTypesContent, &awsResourceTypes); err != nil {
-		return err
-	}
-	if err := json.Unmarshal(azureResourceTypesContent, &azureResourceTypes); err != nil {
-		return err
-	}
-
-	err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(&models.ResourceType{}).Where("integration_type = ?", integration.Type("aws_cloud_account")).Unscoped().Delete(&models.ResourceType{}).Error
+	/*
+		awsResourceTypesContent, err := os.ReadFile(path.Join(m.AttachmentFolderPath(), "aws-resource-types.json"))
 		if err != nil {
-			logger.Error("failed to delete aws resource types", zap.Error(err))
+			return err
+		}
+		azureResourceTypesContent, err := os.ReadFile(path.Join(m.AttachmentFolderPath(), "azure-resource-types.json"))
+		if err != nil {
+			return err
+		}
+		var awsResourceTypes []ResourceType
+		var azureResourceTypes []ResourceType
+		if err := json.Unmarshal(awsResourceTypesContent, &awsResourceTypes); err != nil {
+			return err
+		}
+		if err := json.Unmarshal(azureResourceTypesContent, &azureResourceTypes); err != nil {
 			return err
 		}
 
-		for _, resourceType := range awsResourceTypes {
-			err = tx.Clauses(clause.OnConflict{
-				DoNothing: true,
-			}).Create(&models.ResourceType{
-				IntegrationType: "aws_cloud_account",
-				ResourceType:    resourceType.ResourceName,
-				ResourceLabel:   resourceType.ResourceLabel,
-				ServiceName:     strings.ToLower(resourceType.ServiceName),
-				DoSummarize:     !resourceType.IgnoreSummarize,
-			}).Error
+		err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
+			err := tx.Model(&models.ResourceType{}).Where("integration_type = ?", integration.Type("aws_cloud_account")).Unscoped().Delete(&models.ResourceType{}).Error
 			if err != nil {
-				logger.Error("failed to create aws resource type", zap.Error(err))
+				logger.Error("failed to delete aws resource types", zap.Error(err))
 				return err
 			}
 
-			err = tx.Clauses(clause.OnConflict{
-				DoNothing: true,
-			}).Create(&models.ResourceTypeTag{
-				Tag: model.Tag{
-					Key:   "category",
-					Value: resourceType.Category,
-				},
-				ResourceType: resourceType.ResourceName,
-			}).Error
-			if err != nil {
-				logger.Error("failed to create aws resource type tag", zap.Error(err))
-				return err
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return fmt.Errorf("failure in aws transaction: %v", err)
-	}
+			for _, resourceType := range awsResourceTypes {
+				err = tx.Clauses(clause.OnConflict{
+					DoNothing: true,
+				}).Create(&models.ResourceType{
+					IntegrationType: "aws_cloud_account",
+					ResourceType:    resourceType.ResourceName,
+					ResourceLabel:   resourceType.ResourceLabel,
+					ServiceName:     strings.ToLower(resourceType.ServiceName),
+					DoSummarize:     !resourceType.IgnoreSummarize,
+				}).Error
+				if err != nil {
+					logger.Error("failed to create aws resource type", zap.Error(err))
+					return err
+				}
 
-	err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(&models.ResourceType{}).Where("integration_type = ?", integration.Type("azure_subscription")).Unscoped().Delete(&models.ResourceType{}).Error
+				err = tx.Clauses(clause.OnConflict{
+					DoNothing: true,
+				}).Create(&models.ResourceTypeTag{
+					Tag: model.Tag{
+						Key:   "category",
+						Value: resourceType.Category,
+					},
+					ResourceType: resourceType.ResourceName,
+				}).Error
+				if err != nil {
+					logger.Error("failed to create aws resource type tag", zap.Error(err))
+					return err
+				}
+			}
+			return nil
+		})
 		if err != nil {
-			logger.Error("failed to delete azure resource types", zap.Error(err))
-			return err
+			return fmt.Errorf("failure in aws transaction: %v", err)
 		}
-		for _, resourceType := range azureResourceTypes {
-			err = tx.Clauses(clause.OnConflict{
-				DoNothing: true,
-			}).Create(&models.ResourceType{
-				IntegrationType: "azure_subscription",
-				ResourceType:    resourceType.ResourceName,
-				ResourceLabel:   resourceType.ResourceLabel,
-				ServiceName:     strings.ToLower(resourceType.ServiceName),
-				DoSummarize:     !resourceType.IgnoreSummarize,
-			}).Error
+
+		err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
+			err := tx.Model(&models.ResourceType{}).Where("integration_type = ?", integration.Type("azure_subscription")).Unscoped().Delete(&models.ResourceType{}).Error
 			if err != nil {
-				logger.Error("failed to create azure resource type", zap.Error(err))
+				logger.Error("failed to delete azure resource types", zap.Error(err))
 				return err
 			}
+			for _, resourceType := range azureResourceTypes {
+				err = tx.Clauses(clause.OnConflict{
+					DoNothing: true,
+				}).Create(&models.ResourceType{
+					IntegrationType: "azure_subscription",
+					ResourceType:    resourceType.ResourceName,
+					ResourceLabel:   resourceType.ResourceLabel,
+					ServiceName:     strings.ToLower(resourceType.ServiceName),
+					DoSummarize:     !resourceType.IgnoreSummarize,
+				}).Error
+				if err != nil {
+					logger.Error("failed to create azure resource type", zap.Error(err))
+					return err
+				}
 
-			err = tx.Clauses(clause.OnConflict{
-				DoNothing: true,
-			}).Create(&models.ResourceTypeTag{
-				Tag: model.Tag{
-					Key:   "category",
-					Value: resourceType.Category,
-				},
-				ResourceType: resourceType.ResourceName,
-			}).Error
-			if err != nil {
-				logger.Error("failed to create azure resource type tag", zap.Error(err))
-				return err
+				err = tx.Clauses(clause.OnConflict{
+					DoNothing: true,
+				}).Create(&models.ResourceTypeTag{
+					Tag: model.Tag{
+						Key:   "category",
+						Value: resourceType.Category,
+					},
+					ResourceType: resourceType.ResourceName,
+				}).Error
+				if err != nil {
+					logger.Error("failed to create azure resource type tag", zap.Error(err))
+					return err
+				}
 			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("failure in azure transaction: %v", err)
 		}
-		return nil
-	})
-	if err != nil {
-		return fmt.Errorf("failure in azure transaction: %v", err)
-	}
-
+	*/
 	err = ExtractQueriesAndViews(ctx, logger, dbm, conf)
 	if err != nil {
 		return err

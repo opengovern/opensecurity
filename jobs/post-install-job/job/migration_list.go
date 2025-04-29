@@ -9,6 +9,7 @@ import (
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/integration"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/inventory"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/manifest"
+
 	// Import kept from main as it seems unrelated to the removal
 	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/plugins"
 	// Imports removed as per feat-removing-resource-info
