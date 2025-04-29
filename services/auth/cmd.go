@@ -2,30 +2,41 @@ package auth
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	dexApi "github.com/dexidp/dex/api/v2"
+	"github.com/spf13/cobra"
+	"gorm.io/gorm"
 
 	config2 "github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/httpserver"
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/opensecurity/services/auth/db"
 
-	"crypto/rand"
-
-	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/credentials"
 )
 
+// --- Constants for DB Retry Logic ---
+const (
+	dbConnectRetryInterval = 5 * time.Second      // How often to retry DB connection
+	dbConnectRetryDuration = 180 * time.Second    // Total duration to keep retrying
+	skipDBRetryEnvVar      = "AUTH_SKIP_DB_RETRY" // Env var to disable retries (e.g., set to "true")
+)
+
+// --- End Constants ---
 var (
 	dexPublicClientRedirectUris  = os.Getenv("DEX_PUBLIC_CLIENT_REDIRECT_URIS")
 	dexPrivateClientRedirectUris = os.Getenv("DEX_PRIVATE_CLIENT_REDIRECT_URIS")
@@ -37,225 +48,479 @@ var (
 	platformKeyEnabledStr        = os.Getenv("PLATFORM_KEY_ENABLED")
 	platformPublicKeyStr         = os.Getenv("PLATFORM_PUBLIC_KEY")
 	platformPrivateKeyStr        = os.Getenv("PLATFORM_PRIVATE_KEY")
+	skipRetryVal                 = strings.ToLower(os.Getenv(skipDBRetryEnvVar))
 )
-
-func Command() *cobra.Command {
-	return &cobra.Command{
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return start(cmd.Context())
-		},
-	}
-}
 
 type ServerConfig struct {
 	PostgreSQL config2.Postgres
 }
 
-// start runs both HTTP and GRPC server.
-// GRPC server has Check method to ensure user is
-// authenticated and authorized to perform an action.
-// HTTP server has multiple endpoints to view and update
-// the user roles.
-func start(ctx context.Context) error {
-	var conf ServerConfig
-	config2.ReadFromEnv(&conf, nil)
+// Env var for development logging (can be defined here or imported if exported from auth)
+const devModeEnvVar = "AUTH_DEV_MODE"
 
-	logger, err := zap.NewProduction()
-	if err != nil {
-		return err
+// Command defines the root command for the auth service application.
+func Command() *cobra.Command {
+	return &cobra.Command{
+		Use:   "auth-service", // Set a use command name
+		Short: "OpenSecurity Authentication Service",
+		Long:  `Runs the OpenSecurity Authentication Service, handling user authentication and authorization.`,
+		// Define the main execution logic for the command
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Initialize logger early for startup messages
+			var logger *zap.Logger
+			var err error
+			// Check dev mode env var to determine logger type
+			if strings.ToLower(os.Getenv(devModeEnvVar)) == "true" {
+				logger, err = zap.NewDevelopment()          // Human-readable logs for dev
+				fmt.Println("Development logging enabled.") // Simple stdout feedback
+			} else {
+				logger, err = zap.NewProduction() // JSON logs for prod
+			}
+			if err != nil {
+				// Use fmt if logger fails
+				fmt.Fprintf(os.Stderr, "Error: Failed to create logger: %v\n", err)
+				return fmt.Errorf("failed to create logger: %w", err)
+			}
+			defer logger.Sync() // Ensure logs are flushed
+
+			// Run the main start logic from the auth package, passing the context and logger
+			logger.Info("Executing auth service start logic...")
+			runErr := start(cmd.Context(), logger) // Call the exported Start function
+			if runErr != nil {
+				// Log the final error before exiting if start fails
+				// Avoid logging if logger.Fatal was already called in start
+				if runErr != nil && !strings.Contains(runErr.Error(), "database connection/initialization timed out") {
+					logger.Error("Service startup failed", zap.Error(runErr))
+				}
+			}
+			return runErr // Return the error from start
+		},
+	}
+}
+
+// start runs the main application logic after initial setup.
+// It now takes the logger as an argument.
+func start(ctx context.Context, logger *zap.Logger) error {
+	logger = logger.Named("auth_startup") // Add specific name for startup phase
+	logger.Info("Starting Auth Service...")
+
+	// --- Configuration Loading and Validation ---
+	var conf ServerConfig
+	// Assuming ReadFromEnv handles its own logging/errors if needed for PG vars
+	config2.ReadFromEnv(&conf, nil) // TODO: Check if ReadFromEnv returns errors or logs them
+
+	// Validate essential environment variables explicitly
+	validationErrors := []string{}
+	if dexAuthDomain == "" {
+		validationErrors = append(validationErrors, "DEX_AUTH_DOMAIN is required")
+	} else if !strings.HasPrefix(dexAuthDomain, "http://") && !strings.HasPrefix(dexAuthDomain, "https://") {
+		validationErrors = append(validationErrors, fmt.Sprintf("DEX_AUTH_DOMAIN ('%s') must start with http:// or https://", dexAuthDomain))
+	}
+	if dexAuthPublicClientID == "" {
+		validationErrors = append(validationErrors, "DEX_AUTH_PUBLIC_CLIENT_ID is required")
+	}
+	if dexGrpcAddress == "" {
+		validationErrors = append(validationErrors, "DEX_GRPC_ADDR is required (e.g., localhost:5557)")
+	}
+	if httpServerAddress == "" {
+		validationErrors = append(validationErrors, "HTTP_ADDRESS is required (e.g., :8080)")
+	}
+	// Add checks for critical PostgreSQL config if not handled by ReadFromEnv
+	if conf.PostgreSQL.Host == "" {
+		validationErrors = append(validationErrors, "POSTGRES_HOST is required")
+	}
+	if conf.PostgreSQL.Port == "" {
+		validationErrors = append(validationErrors, "POSTGRES_PORT is required")
+	}
+	if conf.PostgreSQL.Username == "" {
+		validationErrors = append(validationErrors, "POSTGRES_USER is required")
+	}
+	// Password might be optional depending on auth method
+	if conf.PostgreSQL.DB == "" {
+		validationErrors = append(validationErrors, "POSTGRES_DB is required")
 	}
 
-	logger = logger.Named("auth")
+	// Validate Port format, but don't store the int yet
+	if _, convErr := strconv.Atoi(conf.PostgreSQL.Port); convErr != nil && conf.PostgreSQL.Port != "" { // Only error if port is non-empty but invalid
+		validationErrors = append(validationErrors, fmt.Sprintf("POSTGRES_PORT ('%s') is not a valid integer", conf.PostgreSQL.Port))
+	}
 
+	if len(validationErrors) > 0 {
+		errMsg := "Missing or invalid required configuration"
+		logger.Error(errMsg, zap.Strings("details", validationErrors))
+		return errors.New(errMsg + ": " + strings.Join(validationErrors, ", "))
+	}
+
+	// Log loaded configuration for verification
+	logger.Info("Loaded configuration",
+		zap.String("dexAuthDomain", dexAuthDomain),
+		zap.String("dexAuthPublicClientID", dexAuthPublicClientID),
+		zap.String("dexGrpcAddress", dexGrpcAddress),
+		zap.String("httpServerAddress", httpServerAddress),
+		zap.String("platformHost", platformHost),
+		zap.String("platformKeyEnabled", platformKeyEnabledStr),
+		zap.String("postgresHost", conf.PostgreSQL.Host),
+		zap.String("postgresPort", conf.PostgreSQL.Port),
+		zap.String("postgresUser", conf.PostgreSQL.Username),
+		zap.String("postgresDB", conf.PostgreSQL.DB),
+		zap.String("postgresSSLMode", conf.PostgreSQL.SSLMode),
+	)
+	// --- End Configuration Loading and Validation ---
+
+	// --- Initialize Dex Verifier ---
+	logger.Info("Initializing Dex OIDC Verifier...")
 	dexVerifier, err := newDexOidcVerifier(ctx, dexAuthDomain, dexAuthPublicClientID)
 	if err != nil {
-		return fmt.Errorf("open id connect dex verifier: %w", err)
+		logger.Error("Failed to initialize Dex OIDC Verifier",
+			zap.String("domain", dexAuthDomain),
+			zap.String("clientId", dexAuthPublicClientID),
+			zap.Error(err),
+		)
+		return fmt.Errorf("failed to initialize Dex OIDC Verifier: %w", err)
 	}
+	logger.Info("Dex OIDC Verifier initialized successfully.")
+	// --- End Initialize Dex Verifier ---
 
-	logger.Info("Instantiated a new Open ID Connect verifier")
-	//m := email.NewSendGridClient(mailApiKey, mailSender, mailSenderName, logger)
+	// --- Database Connection and Initialization with Retry ---
+	var orm *gorm.DB
+	var adb db.Database
+	var lastDbErr error
 
-	// setup postgres connection
+	skipRetryVal := strings.ToLower(os.Getenv(skipDBRetryEnvVar))
+	skipRetry := skipRetryVal == "true" || skipRetryVal == "1"
+	dbReady := false
+	startTime := time.Now()
+
 	cfg := postgres.Config{
 		Host:    conf.PostgreSQL.Host,
-		Port:    conf.PostgreSQL.Port,
-		User:    conf.PostgreSQL.Username,
-		Passwd:  conf.PostgreSQL.Password,
+		Port:    conf.PostgreSQL.Port,     // Pass the Port string directly
+		User:    conf.PostgreSQL.Username, // Use correct field name 'User'
+		Passwd:  conf.PostgreSQL.Password, // Use correct field name 'Passwd'
 		DB:      conf.PostgreSQL.DB,
 		SSLMode: conf.PostgreSQL.SSLMode,
 	}
-	orm, err := postgres.NewClient(&cfg, logger)
-	if err != nil {
-		return fmt.Errorf("new postgres client: %w", err)
-	}
 
-	adb := db.Database{Orm: orm}
-	fmt.Println("Connected to the postgres database: ", conf.PostgreSQL.DB)
+	if skipRetry {
+		logger.Info("Attempting database connection (retries skipped)", zap.String("envVar", skipDBRetryEnvVar))
+		orm, err = postgres.NewClient(&cfg, logger)
+		if err != nil {
+			logger.Error("Database connection failed (retries skipped)", zap.Error(err))
+			return fmt.Errorf("database connection failed: %w", err)
+		}
+		adb = db.Database{Orm: orm, Logger: logger.Named("database")}
+		logger.Info("Attempting database initialization (retries skipped)...")
+		err = adb.Initialize()
+		if err != nil {
+			logger.Error("Database initialization failed (retries skipped)", zap.Error(err))
+			return fmt.Errorf("database initialization failed: %w", err)
+		}
+		dbReady = true
+		logger.Info("Database connected and initialized successfully (retries skipped).")
+	} else {
+		logger.Info("Attempting to connect and initialize database with retry",
+			zap.Duration("timeout", dbConnectRetryDuration),
+			zap.Duration("interval", dbConnectRetryInterval))
 
-	err = adb.Initialize()
-	if err != nil {
-		return fmt.Errorf("new postgres client: %w", err)
-	}
+		for time.Since(startTime) < dbConnectRetryDuration {
+			logger.Info("Attempting database connection...")
+			orm, err = postgres.NewClient(&cfg, logger)
+			if err != nil {
+				lastDbErr = err
+				logger.Warn("Database connection attempt failed, retrying...", zap.Error(err), zap.Duration("retryIn", dbConnectRetryInterval))
+				time.Sleep(dbConnectRetryInterval)
+				continue
+			}
 
-	if platformKeyEnabledStr == "" {
-		platformKeyEnabledStr = "false"
+			logger.Info("Database connection successful. Attempting initialization...")
+			adb = db.Database{Orm: orm, Logger: logger.Named("database")}
+			err = adb.Initialize()
+			if err != nil {
+				lastDbErr = err
+				logger.Warn("Database initialization attempt failed, retrying...", zap.Error(err), zap.Duration("retryIn", dbConnectRetryInterval))
+				sqlDB, dbErr := orm.DB() // Attempt to get underlying DB
+				if dbErr == nil && sqlDB != nil {
+					sqlDB.Close() // Close connection if init failed
+				}
+				orm = nil
+				time.Sleep(dbConnectRetryInterval)
+				continue
+			}
+
+			dbReady = true
+			logger.Info("Database connected and initialized successfully.")
+			break
+		}
+
+		if !dbReady {
+			logger.Fatal("Failed to connect to and initialize database after timeout",
+				zap.Duration("duration", dbConnectRetryDuration),
+				zap.NamedError("lastError", lastDbErr),
+			)
+			return fmt.Errorf("database connection/initialization timed out after %v: %w", dbConnectRetryDuration, lastDbErr)
+		}
 	}
-	platformKeyEnabled, err := strconv.ParseBool(platformKeyEnabledStr)
-	if err != nil {
-		return fmt.Errorf("platformKeyEnabled [%s]: %w", platformKeyEnabledStr, err)
+	// --- End Database Connection and Initialization ---
+
+	// --- Platform Key Handling ---
+	logger.Info("Setting up platform keys...")
+	// *** CORRECTED: Declare platformKeyEnabled before the if/else block ***
+	var platformKeyEnabled bool
+	var keyErr error // Use a separate error variable for ParseBool
+
+	// Use err from ParseBool, default platformKeyEnabled to false if string is empty or invalid
+	platformKeyEnabled, keyErr = strconv.ParseBool(platformKeyEnabledStr)
+	if keyErr != nil {
+		logger.Warn("Invalid value for PLATFORM_KEY_ENABLED, defaulting to false",
+			zap.String("value", platformKeyEnabledStr),
+			zap.Error(keyErr)) // Log the parsing error
+		platformKeyEnabled = false // Default to false on error
 	}
 
 	var platformPublicKey *rsa.PublicKey
 	var platformPrivateKey *rsa.PrivateKey
-	if platformKeyEnabled {
-		b, err := base64.StdEncoding.DecodeString(platformPublicKeyStr)
-		if err != nil {
-			return fmt.Errorf("public key decode: %w", err)
-		}
-		block, _ := pem.Decode(b)
-		if block == nil {
-			return fmt.Errorf("failed to decode my private key")
-		}
-		pub, err := x509.ParsePKIXPublicKey(block.Bytes)
-		if err != nil {
-			return err
-		}
-		platformPublicKey = pub.(*rsa.PublicKey)
 
-		b, err = base64.StdEncoding.DecodeString(platformPrivateKeyStr)
+	if platformKeyEnabled {
+		logger.Info("Platform key loading from environment variables enabled")
+		// Public Key loading
+		bPub, err := base64.StdEncoding.DecodeString(platformPublicKeyStr)
 		if err != nil {
-			return fmt.Errorf("private key decode: %w", err)
+			logger.Error("Failed to decode base64 public key from env", zap.Error(err))
+			return fmt.Errorf("platform public key decode error: %w", err)
 		}
-		block, _ = pem.Decode(b)
-		if block == nil {
-			panic("failed to decode private key")
+		blockPub, _ := pem.Decode(bPub)
+		if blockPub == nil || !strings.Contains(blockPub.Type, "PUBLIC KEY") {
+			logger.Error("Failed to decode PEM block from public key or invalid type", zap.String("type", blockPub.Type))
+			return fmt.Errorf("invalid platform public key PEM block or type")
 		}
-		pri, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		pubInterface, err := x509.ParsePKIXPublicKey(blockPub.Bytes)
 		if err != nil {
-			panic(err)
+			logger.Error("Failed to parse PKIX public key", zap.Error(err))
+			return fmt.Errorf("failed to parse platform public key: %w", err)
 		}
-		platformPrivateKey = pri.(*rsa.PrivateKey)
+		var ok bool
+		platformPublicKey, ok = pubInterface.(*rsa.PublicKey)
+		if !ok {
+			logger.Error("Platform public key is not an RSA public key")
+			return fmt.Errorf("platform public key is not RSA")
+		}
+
+		// Private Key loading
+		bPriv, err := base64.StdEncoding.DecodeString(platformPrivateKeyStr)
+		if err != nil {
+			logger.Error("Failed to decode base64 private key from env", zap.Error(err))
+			return fmt.Errorf("platform private key decode error: %w", err)
+		}
+		blockPriv, _ := pem.Decode(bPriv)
+		if blockPriv == nil || !strings.Contains(blockPriv.Type, "PRIVATE KEY") {
+			logger.Error("Failed to decode PEM block from private key or invalid type", zap.String("type", blockPriv.Type))
+			return fmt.Errorf("invalid platform private key PEM block or type")
+		}
+		privInterface, err := x509.ParsePKCS8PrivateKey(blockPriv.Bytes) // Try PKCS8 first
+		if err != nil {
+			logger.Warn("Failed to parse PKCS8 private key, attempting PKCS1", zap.Error(err))
+			privInterface, err = x509.ParsePKCS1PrivateKey(blockPriv.Bytes) // Fallback to PKCS1
+			if err != nil {
+				logger.Error("Failed to parse private key as PKCS8 or PKCS1", zap.Error(err))
+				return fmt.Errorf("failed to parse platform private key: %w", err)
+			}
+		}
+		platformPrivateKey, ok = privInterface.(*rsa.PrivateKey)
+		if !ok {
+			logger.Error("Platform private key is not an RSA private key")
+			return fmt.Errorf("platform private key is not RSA")
+		}
+		logger.Info("Successfully loaded platform keys from environment variables.")
+
 	} else {
+		logger.Info("Platform key loading from environment disabled, checking database...")
 		keyPair, err := adb.GetKeyPair()
 		if err != nil {
-			panic(err)
+			logger.Error("Failed to get key pair from database", zap.Error(err))
+			return fmt.Errorf("failed to get platform key pair from database: %w", err)
 		}
 
-		if len(keyPair) == 0 {
+		if len(keyPair) < 2 {
+			// Generate and save new keys if not found or incomplete
+			if len(keyPair) == 1 {
+				logger.Warn("Found only one platform key in database, generating new pair.")
+				// Consider deleting the single key here if desired
+			}
+			logger.Info("Generating new platform RSA key pair...")
 			platformPrivateKey, err = rsa.GenerateKey(rand.Reader, 2048)
 			if err != nil {
-				panic(fmt.Sprintf("Error generating RSA key: %v", err))
+				logger.Error("Error generating platform RSA key", zap.Error(err))
+				return fmt.Errorf("error generating platform RSA key: %w", err)
 			}
 			platformPublicKey = &platformPrivateKey.PublicKey
 
-			b, err := x509.MarshalPKIXPublicKey(platformPublicKey)
+			// Save Public Key
+			pubBytes, err := x509.MarshalPKIXPublicKey(platformPublicKey)
 			if err != nil {
-				panic(err)
+				logger.Error("Failed to marshal generated public key", zap.Error(err))
+				return fmt.Errorf("failed to marshal generated public key: %w", err)
 			}
-			bp := pem.EncodeToMemory(&pem.Block{
-				Type:    "RSA PUBLIC KEY",
-				Headers: nil,
-				Bytes:   b,
-			})
-			str := base64.StdEncoding.EncodeToString(bp)
-			err = adb.AddConfiguration(&db.Configuration{
-				Key:   "public_key",
-				Value: str,
-			})
-			if err != nil {
-				panic(err)
+			pubPEM := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: pubBytes})
+			pubStr := base64.StdEncoding.EncodeToString(pubPEM)
+			if err = adb.AddConfiguration(&db.Configuration{Key: "public_key", Value: pubStr}); err != nil {
+				logger.Error("Failed to save generated public key to database", zap.Error(err))
+				return fmt.Errorf("failed to save generated public key: %w", err)
 			}
 
-			b, err = x509.MarshalPKCS8PrivateKey(platformPrivateKey)
+			// Save Private Key
+			privBytes, err := x509.MarshalPKCS8PrivateKey(platformPrivateKey) // Save as PKCS8
 			if err != nil {
-				panic(err)
+				logger.Error("Failed to marshal generated private key", zap.Error(err))
+				return fmt.Errorf("failed to marshal generated private key: %w", err)
 			}
-			bp = pem.EncodeToMemory(&pem.Block{
-				Type:    "RSA PRIVATE KEY",
-				Headers: nil,
-				Bytes:   b,
-			})
-			str = base64.StdEncoding.EncodeToString(bp)
-			err = adb.AddConfiguration(&db.Configuration{
-				Key:   "private_key",
-				Value: str,
-			})
-			if err != nil {
-				panic(err)
+			privPEM := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privBytes})
+			privStr := base64.StdEncoding.EncodeToString(privPEM)
+			if err = adb.AddConfiguration(&db.Configuration{Key: "private_key", Value: privStr}); err != nil {
+				logger.Error("Failed to save generated private key to database", zap.Error(err))
+				return fmt.Errorf("failed to save generated private key: %w", err)
 			}
+			logger.Info("Successfully generated and saved new platform key pair to database.")
 
 		} else {
+			// Load keys from database records
+			logger.Info("Loading platform keys from database...")
+			foundPub, foundPriv := false, false
 			for _, k := range keyPair {
+				keyBytes, err := base64.StdEncoding.DecodeString(k.Value)
+				if err != nil {
+					logger.Error("Failed to decode key from database", zap.String("key_name", k.Key), zap.Error(err))
+					return fmt.Errorf("failed to decode platform key '%s': %w", k.Key, err)
+				}
+				block, _ := pem.Decode(keyBytes)
+				if block == nil {
+					logger.Error("Failed to decode PEM block from database key", zap.String("key_name", k.Key))
+					return fmt.Errorf("failed to decode PEM block for platform key '%s'", k.Key)
+				}
+
 				if k.Key == "public_key" {
-					b, err := base64.StdEncoding.DecodeString(k.Value)
+					if !strings.Contains(block.Type, "PUBLIC KEY") {
+						logger.Error("Invalid PEM type for public key in DB", zap.String("type", block.Type))
+						return fmt.Errorf("invalid public key type in DB: %s", block.Type)
+					}
+					pubInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
 					if err != nil {
-						return fmt.Errorf("public key decode: %w", err)
+						logger.Error("Failed to parse public key from DB", zap.Error(err))
+						return fmt.Errorf("failed to parse public key from DB: %w", err)
 					}
-					block, _ := pem.Decode(b)
-					if block == nil {
-						return fmt.Errorf("failed to decode my private key")
+					var ok bool
+					platformPublicKey, ok = pubInterface.(*rsa.PublicKey)
+					if !ok {
+						logger.Error("Public key from DB is not an RSA key")
+						return fmt.Errorf("public key from DB is not RSA")
 					}
-					pub, err := x509.ParsePKIXPublicKey(block.Bytes)
-					if err != nil {
-						return err
-					}
-					platformPublicKey = pub.(*rsa.PublicKey)
+					foundPub = true
 				} else if k.Key == "private_key" {
-					b, err := base64.StdEncoding.DecodeString(k.Value)
+					if !strings.Contains(block.Type, "PRIVATE KEY") {
+						logger.Error("Invalid PEM type for private key in DB", zap.String("type", block.Type))
+						return fmt.Errorf("invalid private key type in DB: %s", block.Type)
+					}
+					privInterface, err := x509.ParsePKCS8PrivateKey(block.Bytes) // Try PKCS8
 					if err != nil {
-						return fmt.Errorf("private key decode: %w", err)
+						logger.Warn("Failed to parse PKCS8 private key from DB, attempting PKCS1", zap.Error(err))
+						privInterface, err = x509.ParsePKCS1PrivateKey(block.Bytes) // Fallback PKCS1
+						if err != nil {
+							logger.Error("Failed to parse private key from DB as PKCS8 or PKCS1", zap.Error(err))
+							return fmt.Errorf("failed to parse private key from DB: %w", err)
+						}
 					}
-					block, _ := pem.Decode(b)
-					if block == nil {
-						panic("failed to decode private key")
+					var ok bool
+					platformPrivateKey, ok = privInterface.(*rsa.PrivateKey)
+					if !ok {
+						logger.Error("Private key from DB is not an RSA key")
+						return fmt.Errorf("private key from DB is not RSA")
 					}
-					pri, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-					if err != nil {
-						panic(err)
-					}
-					platformPrivateKey = pri.(*rsa.PrivateKey)
+					foundPriv = true
 				}
 			}
+			if !foundPub || !foundPriv {
+				logger.Error("Could not load both platform keys from database records")
+				return fmt.Errorf("incomplete platform key pair found in database")
+			}
+			logger.Info("Successfully loaded platform keys from database.")
 		}
 	}
+	// --- End Platform Key Handling ---
 
+	// --- Dex Client Setup ---
+	logger.Info("Setting up Dex gRPC client...")
 	dexClient, err := newDexClient(dexGrpcAddress)
 	if err != nil {
-		logger.Error("Auth Migrator: failed to create dex client", zap.Error(err))
-		return err
+		// Log context before returning wrapped error
+		logger.Error("Failed to create Dex gRPC client", zap.String("address", dexGrpcAddress), zap.Error(err))
+		return fmt.Errorf("failed to create Dex gRPC client: %w", err)
 	}
+	logger.Info("Dex gRPC client connected.", zap.String("address", dexGrpcAddress))
 
+	logger.Info("Ensuring Dex OAuth clients...")
 	err = ensureDexClients(ctx, logger, dexClient)
 	if err != nil {
-		logger.Error("Auth Migrator: failed to ensure dex clients", zap.Error(err))
-		return err
+		// Log context before returning wrapped error
+		logger.Error("Failed to ensure Dex OAuth clients", zap.Error(err))
+		return fmt.Errorf("failed to ensure Dex OAuth clients: %w", err)
 	}
+	logger.Info("Dex OAuth clients ensured.")
+	// --- End Dex Client Setup ---
 
+	// --- Server Initialization ---
+	logger.Info("Initializing main application server...")
+	// Ensure adb is valid here (it should be if dbReady is true)
+	if !dbReady {
+		// This case should theoretically be caught by the timeout check earlier,
+		// but adding a safeguard.
+		logger.Error("Database is not ready, cannot initialize server")
+		return errors.New("cannot initialize server, database not ready")
+	}
 	authServer := &Server{
-		host:                platformHost,
-		platformPublicKey:   platformPublicKey,
-		dexVerifier:         dexVerifier,
-		dexClient:           dexClient,
-		logger:              logger,
-		db:                  adb,
-		updateLoginUserList: nil,
-		updateLogin:         make(chan User, 100000),
+		host:              platformHost,
+		platformPublicKey: platformPublicKey,
+		dexVerifier:       dexVerifier,
+		dexClient:         dexClient,
+		logger:            logger.Named("authServer"),
+		db:                adb,                     // Use the initialized adb
+		updateLogin:       make(chan User, 100000), // Consider if buffer size is appropriate
 	}
 
 	go authServer.UpdateLastLoginLoop()
+	logger.Info("Application server initialized.")
+	// --- End Server Initialization ---
 
-	errors := make(chan error, 1)
+	// --- Start HTTP Server ---
+	logger.Info("Starting HTTP server...", zap.String("address", httpServerAddress))
+	httpServerErrors := make(chan error, 1)
 	go func() {
+		// Pass down specifically named loggers if desired
 		routes := httpRoutes{
-			logger:             logger,
+			logger:             logger.Named("httpRoutes"),
 			platformPrivateKey: platformPrivateKey,
 			db:                 adb,
 			authServer:         authServer,
 		}
-		errors <- fmt.Errorf("http server: %w", httpserver.RegisterAndStart(ctx, logger, httpServerAddress, &routes))
+		// Log error from RegisterAndStart within the goroutine if needed
+		httpErr := httpserver.RegisterAndStart(ctx, logger.Named("httpServer"), httpServerAddress, &routes)
+		if httpErr != nil && !errors.Is(httpErr, http.ErrServerClosed) { // Don't wrap ErrServerClosed
+			httpServerErrors <- fmt.Errorf("http server error: %w", httpErr)
+		} else {
+			httpServerErrors <- httpErr // Send nil or ErrServerClosed
+		}
 	}()
+	// --- End Start HTTP Server ---
 
-	return <-errors
+	// Wait for server exit
+	logger.Info("Auth Service started successfully.")
+	err = <-httpServerErrors // Block until the HTTP server stops
+
+	// Log shutdown reason
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		logger.Error("HTTP server stopped unexpectedly", zap.Error(err))
+		return err // Return the actual error
+	}
+
+	logger.Info("HTTP server stopped gracefully.")
+	return nil // Graceful shutdown
 }
 
 // newServerCredentials loads TLS transport credentials for the GRPC server.
