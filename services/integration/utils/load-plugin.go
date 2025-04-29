@@ -83,7 +83,7 @@ func LoadPlugin(itOrm *gorm.DB, logger *zap.Logger, plugin platformspec.PluginSp
 	//}
 	//pluginBinary = nil
 
-	logger.Info("integration binary created")
+	logger.Info("integration created")
 
 	return nil
 }
@@ -196,7 +196,7 @@ func ExtractIntegrationBinaries(logger *zap.Logger, plugin platformspec.PluginSp
 			IntegrationType:          plugin.IntegrationType,
 			Name:                     plugin.Name,
 			Description:              plugin.Metadata.Description,
-			Icon:                     plugin.Icon,
+			Icon:                     plugin.Metadata.Icon,
 			PackageType:              plugin.Type,
 			InstallState:             installState,
 			OperationalStatus:        operationalStatus,
