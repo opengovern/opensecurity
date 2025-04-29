@@ -21,12 +21,14 @@ import (
 
 // This map seems unchanged between branches in the non-conflicting part
 var migrations = map[string]types.Migration{
+	"auth":          auth.Migration{},
 	"elasticsearch": elasticsearch.Migration{},
 	"manifest":      manifest.Migration{},
 }
 
 // This order seems unchanged between branches in the non-conflicting part
 var Order = []string{
+	"auth",
 	"elasticsearch",
 	"manifest",
 }

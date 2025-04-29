@@ -206,6 +206,14 @@ func (s *Scheduler) scheduleDescribeJob(ctx context.Context) {
 	}
 
 	for _, integration := range integrations.Integrations {
+		plugin, err := s.integrationClient.GetIntegrationConfiguration(&httpclient.Context{UserRole: apiAuth.AdminRole}, integration.IntegrationType.String())
+		if err != nil {
+			s.logger.Error("failed to get integration configuration", zap.String("spot", "GetIntegrationConfiguration"), zap.Error(err))
+			continue
+		}
+		if plugin.DiscoveryType == "task" {
+			continue
+		}
 		if integration.State == models.IntegrationStateSample || integration.State == models.IntegrationStateInactive {
 			continue
 		}

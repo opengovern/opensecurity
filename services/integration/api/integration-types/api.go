@@ -158,6 +158,12 @@ func (a *API) GetResourceTypeFromTableName(c echo.Context) error {
 func (a *API) GetConfiguration(c echo.Context) error {
 	integrationType := c.Param("integration_type")
 
+	plugin, err := a.database.GetPluginByID(integrationType)
+	if err != nil {
+		a.logger.Error("failed to get integration plugin", zap.String("integrationType", string(integrationType)), zap.Error(err))
+		return echo.NewHTTPError(500, "failed to get integration plugin")
+	}
+
 	rtMap := a.typeManager.GetIntegrationTypeMap()
 	if value, ok := rtMap[a.typeManager.ParseType(integrationType)]; ok {
 		conf, err := value.GetConfiguration()
@@ -165,7 +171,10 @@ func (a *API) GetConfiguration(c echo.Context) error {
 			return echo.NewHTTPError(500, err.Error())
 		}
 
-		return c.JSON(200, conf)
+		return c.JSON(200, models.IntegrationTypeConfiguration{
+			IntegrationConfiguration: conf,
+			DiscoveryType:            string(plugin.DiscoveryType),
+		})
 	} else {
 		return echo.NewHTTPError(404, "integration type not found")
 	}

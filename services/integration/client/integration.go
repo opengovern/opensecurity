@@ -16,7 +16,7 @@ type IntegrationServiceClient interface {
 	GetResourceTypeFromTableName(ctx *httpclient.Context, integrationType string, tableName string) (string, error)
 	GetResourceTypesByLabels(ctx *httpclient.Context, integrationType string, labels map[string]string, integrationID *string) ([]interfaces.ResourceTypeConfiguration, error)
 	GetIntegrationTypeTables(ctx *httpclient.Context, integrationType string) (map[string][]interfaces.CloudQLColumn, error)
-	GetIntegrationConfiguration(ctx *httpclient.Context, integrationType string) (interfaces.IntegrationConfiguration, error)
+	GetIntegrationConfiguration(ctx *httpclient.Context, integrationType string) (models.IntegrationTypeConfiguration, error)
 	GetIntegration(ctx *httpclient.Context, integrationID string) (*models.Integration, error)
 	ListIntegrations(ctx *httpclient.Context, integrationTypes []string) (*models.ListIntegrationsResponse, error)
 	ListIntegrationsByFilters(ctx *httpclient.Context, req models.ListIntegrationsRequest) (*models.ListIntegrationsResponse, error)
@@ -102,9 +102,9 @@ func (c *integrationClient) GetIntegrationTypeTables(ctx *httpclient.Context, in
 	return response.Tables, nil
 }
 
-func (c *integrationClient) GetIntegrationConfiguration(ctx *httpclient.Context, integrationType string) (interfaces.IntegrationConfiguration, error) {
+func (c *integrationClient) GetIntegrationConfiguration(ctx *httpclient.Context, integrationType string) (models.IntegrationTypeConfiguration, error) {
 	url := fmt.Sprintf("%s/api/v1/integration-types/%s/configuration", c.baseURL, integrationType)
-	var response interfaces.IntegrationConfiguration
+	var response models.IntegrationTypeConfiguration
 
 	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &response); err != nil {
 		if 400 <= statusCode && statusCode < 500 {

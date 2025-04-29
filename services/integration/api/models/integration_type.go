@@ -52,3 +52,8 @@ type GetResourceTypesByLabelsResponse struct {
 type ListTablesResponse struct {
 	Tables map[string][]interfaces.CloudQLColumn `json:"tables"`
 }
+
+type IntegrationTypeConfiguration struct {
+	interfaces.IntegrationConfiguration
+	DiscoveryType string `json:"discovery_type"`
+}
