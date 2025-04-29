@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/config"
-	"github.com/opengovern/opensecurity/jobs/post-install-job/db"
 	"github.com/opengovern/opensecurity/services/integration/models"
 	"github.com/opengovern/opensecurity/services/integration/utils"
 	"go.uber.org/zap"
@@ -37,9 +36,8 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	if err != nil {
 		return fmt.Errorf("new postgres client: %w", err)
 	}
-	dbm := db.Database{ORM: orm}
 
-	err = dbm.ORM.AutoMigrate(&models.IntegrationPlugin{}, &models.IntegrationPluginBinary{})
+	err = orm.AutoMigrate(&models.IntegrationPlugin{}, &models.IntegrationPluginBinary{})
 	if err != nil {
 		logger.Error("failed to auto migrate integration binaries", zap.Error(err))
 		return err
@@ -56,14 +54,15 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 			if err != nil {
 				return err
 			}
+			logger.Info(fmt.Sprintf("migrated plugin: %s", path))
 		}
 
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}
+	logger.Info(fmt.Sprintf("plugins migrated"))
 
 	return nil
 }

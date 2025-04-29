@@ -82,6 +82,8 @@ func LoadPlugin(itOrm *gorm.DB, logger *zap.Logger, plugin platformspec.PluginSp
 		return err
 	}
 
+	logger.Info("integration binary created")
+
 	return nil
 }
 
