@@ -52,7 +52,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 
 			err = utils.ValidateAndLoadPlugin(orm, logger, content)
 			if err != nil {
-				return err
+				logger.Warn("Failed to read file", zap.String("path", path), zap.Error(err))
 			}
 			logger.Info(fmt.Sprintf("migrated plugin: %s", path))
 		}

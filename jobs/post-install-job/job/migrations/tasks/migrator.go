@@ -72,16 +72,21 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	dbm.ORM.Model(&models.TaskRunSchedule{}).Where("1=1").Unscoped().Delete(&models.TaskRunSchedule{})
 	itDbm.ORM.Model(&models.TaskBinary{}).Where("1=1").Unscoped().Delete(&models.TaskBinary{})
 
-	err = filepath.WalkDir(m.AttachmentFolderPath(), func(path string, d fs.DirEntry, err error) error {
-		if !(strings.HasSuffix(path, ".yaml") || strings.HasSuffix(path, ".yml")) {
-			return nil
-		}
-		file, err := ioutil.ReadFile(path)
-		if err != nil {
-			return err
-		}
+	err = filepath.WalkDir(m.AttachmentFolderPath(), func(path string, info fs.DirEntry, err error) error {
+		if !info.IsDir() && strings.HasSuffix(path, ".yaml") {
 
-		return utils.ValidateAndLoadTask(orm, itOrm, logger, file)
+			file, err := ioutil.ReadFile(path)
+			if err != nil {
+				logger.Warn("Failed to read file", zap.String("path", path), zap.Error(err))
+				return nil
+			}
+
+			err = utils.ValidateAndLoadTask(orm, itOrm, logger, file)
+			if err != nil {
+				logger.Error("failed to load task", zap.String("path", path), zap.Error(err))
+			}
+		}
+		return nil
 	})
 	if err != nil {
 		return err
