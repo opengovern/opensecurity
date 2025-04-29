@@ -248,6 +248,12 @@ func ExtractQueriesAndViews(ctx context.Context, logger *zap.Logger, dbm db.Data
 	}
 
 	err = dbm.ORM.Transaction(func(tx *gorm.DB) error {
+		tx.Model(&models.QueryView{}).Where("1=1").Unscoped().Delete(&models.QueryView{})
+		tx.Model(&models.QueryParameter{}).Where("1=1").Unscoped().Delete(&models.QueryParameter{})
+		tx.Model(&models.NamedQuery{}).Where("1=1").Unscoped().Delete(&models.NamedQuery{})
+		tx.Model(&models.NamedQueryTag{}).Where("1=1").Unscoped().Delete(&models.NamedQueryTag{})
+		tx.Model(&models.Query{}).Where("1=1").Unscoped().Delete(&models.Query{})
+
 		err := filepath.Walk(config.QueriesGitPath, func(path string, info fs.FileInfo, err error) error {
 			if !info.IsDir() && strings.HasSuffix(path, ".yaml") {
 				id := strings.TrimSuffix(info.Name(), ".yaml")
@@ -388,7 +394,10 @@ func ExtractQueriesAndViews(ctx context.Context, logger *zap.Logger, dbm db.Data
 
 				if len(tags) > 0 {
 					for _, tag := range tags {
-						err = tx.Model(&models.NamedQueryTag{}).Create(&tag).Error
+						err = tx.Clauses(clause.OnConflict{
+							Columns:   []clause.Column{{Name: "named_query_id"}, {Name: "key"}},
+							DoNothing: true,
+						}).Create(&tag).Error
 						if err != nil {
 							logger.Error("failure in insert tags", zap.Error(err))
 							return err
@@ -425,12 +434,6 @@ func ExtractQueriesAndViews(ctx context.Context, logger *zap.Logger, dbm db.Data
 	}
 
 	err = dbm.ORM.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		tx.Model(&models.QueryView{}).Where("1=1").Unscoped().Delete(&models.QueryView{})
-		tx.Model(&models.QueryParameter{}).Where("1=1").Unscoped().Delete(&models.QueryParameter{})
-		tx.Model(&models.NamedQuery{}).Where("1=1").Unscoped().Delete(&models.NamedQuery{})
-		tx.Model(&models.NamedQueryTag{}).Where("1=1").Unscoped().Delete(&models.NamedQueryTag{})
-		tx.Model(&models.Query{}).Where("1=1").Unscoped().Delete(&models.Query{})
-
 		for _, q := range queries {
 			q.QueryViews = nil
 			err := tx.Clauses(clause.OnConflict{
