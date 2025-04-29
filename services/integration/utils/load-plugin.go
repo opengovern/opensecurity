@@ -134,7 +134,6 @@ func ExtractIntegrationBinaries(logger *zap.Logger, plugin platformspec.PluginSp
 			logger.Error("failed to open manifest file", zap.Error(err))
 			return nil, nil, fmt.Errorf("open manifest file: %w", err)
 		}
-		logger.Info("manifestFile", zap.String("file", string(manifestFile)))
 
 		var m models.Manifest
 		// decode yaml
@@ -150,6 +149,7 @@ func ExtractIntegrationBinaries(logger *zap.Logger, plugin platformspec.PluginSp
 		if strings.ToLower(m.DiscoveryType) == "task" {
 			discoveryType = models.IntegrationPluginDiscoveryTypeTask
 		}
+		logger.Info("platform binary path", zap.String("path", baseDir+"/integarion_type/"+plugin.Components.PlatformBinary.PathInArchive))
 		integrationPlugin, err = os.ReadFile(baseDir + "/integarion_type/" + plugin.Components.PlatformBinary.PathInArchive)
 		if err != nil {
 			logger.Error("failed to open integration-plugin file", zap.Error(err), zap.String("url", plugin.Components.PlatformBinary.URI))
@@ -175,6 +175,7 @@ func ExtractIntegrationBinaries(logger *zap.Logger, plugin platformspec.PluginSp
 			url = plugin.Components.CloudQLBinary.URI
 		}
 
+		logger.Info("cloudql binary path", zap.String("path", baseDir+"/integarion_type/"+plugin.Components.CloudQLBinary.PathInArchive))
 		cloudqlPlugin, err = os.ReadFile(baseDir + "/integarion_type/" + plugin.Components.CloudQLBinary.PathInArchive)
 		if err != nil {
 			logger.Error("failed to open cloudql-plugin file", zap.Error(err), zap.String("url", plugin.Components.CloudQLBinary.URI))
