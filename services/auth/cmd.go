@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/coreos/go-oidc/v3/oidc"
 	dexApi "github.com/dexidp/dex/api/v2"
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
@@ -23,21 +24,27 @@ import (
 	config2 "github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/httpserver"
 	"github.com/opengovern/og-util/pkg/postgres"
+	"github.com/opengovern/opensecurity/services/auth/authcache"
 	"github.com/opengovern/opensecurity/services/auth/db"
 
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
 
-// --- Constants for DB Retry Logic ---
+// --- Constants ---
 const (
 	dbConnectRetryInterval = 5 * time.Second      // How often to retry DB connection
 	dbConnectRetryDuration = 180 * time.Second    // Total duration to keep retrying
 	skipDBRetryEnvVar      = "AUTH_SKIP_DB_RETRY" // Env var to disable retries (e.g., set to "true")
+	devModeEnvVar          = "AUTH_DEV_MODE"      // Env var for development logging (e.g., set to "true")
+	authCacheDefaultTTL    = 10 * time.Minute     // <-- Default TTL for user auth cache
 )
 
 // --- End Constants ---
+
 var (
+	// Read env vars - values will be validated in start()
 	dexPublicClientRedirectUris  = os.Getenv("DEX_PUBLIC_CLIENT_REDIRECT_URIS")
 	dexPrivateClientRedirectUris = os.Getenv("DEX_PRIVATE_CLIENT_REDIRECT_URIS")
 	dexAuthDomain                = os.Getenv("DEX_AUTH_DOMAIN")
@@ -48,15 +55,11 @@ var (
 	platformKeyEnabledStr        = os.Getenv("PLATFORM_KEY_ENABLED")
 	platformPublicKeyStr         = os.Getenv("PLATFORM_PUBLIC_KEY")
 	platformPrivateKeyStr        = os.Getenv("PLATFORM_PRIVATE_KEY")
-	skipRetryVal                 = strings.ToLower(os.Getenv(skipDBRetryEnvVar))
 )
 
 type ServerConfig struct {
 	PostgreSQL config2.Postgres
 }
-
-// Env var for development logging (can be defined here or imported if exported from auth)
-const devModeEnvVar = "AUTH_DEV_MODE"
 
 // Command defines the root command for the auth service application.
 func Command() *cobra.Command {
@@ -98,67 +101,88 @@ func Command() *cobra.Command {
 	}
 }
 
-// start runs the main application logic after initial setup.
-// It now takes the logger as an argument.
+// Start runs the main application logic after initial setup.
+// It now takes the logger as an argument. Exported for main.go.
 func start(ctx context.Context, logger *zap.Logger) error {
-	logger = logger.Named("auth_startup") // Add specific name for startup phase
+	logger = logger.Named("auth_startup")
 	logger.Info("Starting Auth Service...")
 
 	// --- Configuration Loading and Validation ---
 	var conf ServerConfig
-	// Assuming ReadFromEnv handles its own logging/errors if needed for PG vars
-	config2.ReadFromEnv(&conf, nil) // TODO: Check if ReadFromEnv returns errors or logs them
+	config2.ReadFromEnv(&conf, nil) // Load PostgreSQL config
 
-	// Validate essential environment variables explicitly
+	// *** Strict check for specifically requested mandatory environment variables ***
+	fatalEnvVars := map[string]string{
+		"DEX_PUBLIC_CLIENT_REDIRECT_URIS":  dexPublicClientRedirectUris,
+		"DEX_PRIVATE_CLIENT_REDIRECT_URIS": dexPrivateClientRedirectUris,
+		"DEX_AUTH_DOMAIN":                  dexAuthDomain,
+		"DEX_AUTH_PUBLIC_CLIENT_ID":        dexAuthPublicClientID,
+		"DEX_GRPC_ADDR":                    dexGrpcAddress,
+		"PLATFORM_HOST":                    platformHost,
+		// Removed: HTTP_ADDRESS, PG details, DEX_CALLBACK_URL from fatal check list
+	}
+
 	validationErrors := []string{}
-	if dexAuthDomain == "" {
-		validationErrors = append(validationErrors, "DEX_AUTH_DOMAIN is required")
-	} else if !strings.HasPrefix(dexAuthDomain, "http://") && !strings.HasPrefix(dexAuthDomain, "https://") {
-		validationErrors = append(validationErrors, fmt.Sprintf("DEX_AUTH_DOMAIN ('%s') must start with http:// or https://", dexAuthDomain))
+	for name, value := range fatalEnvVars {
+		if value == "" {
+			validationErrors = append(validationErrors, fmt.Sprintf("%s is required", name))
+		}
 	}
-	if dexAuthPublicClientID == "" {
-		validationErrors = append(validationErrors, "DEX_AUTH_PUBLIC_CLIENT_ID is required")
+
+	// If any of the *specifically required* vars are missing, log Fatal and exit
+	if len(validationErrors) > 0 {
+		errMsg := "Missing critical configuration"
+		for _, detail := range validationErrors {
+			logger.Error("Configuration error", zap.String("detail", detail))
+		}
+		logger.Fatal(errMsg, zap.Strings("missing_variables", validationErrors))
+		return errors.New(errMsg) // Fatal should exit first
 	}
-	if dexGrpcAddress == "" {
-		validationErrors = append(validationErrors, "DEX_GRPC_ADDR is required (e.g., localhost:5557)")
+
+	// --- Optional/Format Validation for other variables ---
+	// Check non-fatal but potentially problematic variables or formats
+	formatValidationErrors := []string{}
+	if dexAuthDomain != "" && !strings.HasPrefix(dexAuthDomain, "http://") && !strings.HasPrefix(dexAuthDomain, "https://") {
+		// This was already checked above, but keep format check
+		formatValidationErrors = append(formatValidationErrors, fmt.Sprintf("DEX_AUTH_DOMAIN ('%s') must start with http:// or https://", dexAuthDomain))
 	}
 	if httpServerAddress == "" {
-		validationErrors = append(validationErrors, "HTTP_ADDRESS is required (e.g., :8080)")
+		// Log a warning if HTTP address is missing, but don't exit
+		logger.Warn("HTTP_ADDRESS environment variable is not set, service might not be reachable", zap.String("variable", "HTTP_ADDRESS"))
+		// Assign a default or handle appropriately later? For now, just warn.
+		// httpServerAddress = ":8080" // Example default
 	}
-	// Add checks for critical PostgreSQL config if not handled by ReadFromEnv
+	// Validate PG details (even if not fatal if missing, they are needed for DB connection)
 	if conf.PostgreSQL.Host == "" {
-		validationErrors = append(validationErrors, "POSTGRES_HOST is required")
+		formatValidationErrors = append(formatValidationErrors, "POSTGRES_HOST is required for database connection")
 	}
 	if conf.PostgreSQL.Port == "" {
-		validationErrors = append(validationErrors, "POSTGRES_PORT is required")
+		formatValidationErrors = append(formatValidationErrors, "POSTGRES_PORT is required for database connection")
+	} else if _, convErr := strconv.Atoi(conf.PostgreSQL.Port); convErr != nil {
+		formatValidationErrors = append(formatValidationErrors, fmt.Sprintf("POSTGRES_PORT ('%s') is not a valid integer", conf.PostgreSQL.Port))
 	}
 	if conf.PostgreSQL.Username == "" {
-		validationErrors = append(validationErrors, "POSTGRES_USER is required")
+		formatValidationErrors = append(formatValidationErrors, "POSTGRES_USER is required for database connection")
 	}
-	// Password might be optional depending on auth method
 	if conf.PostgreSQL.DB == "" {
-		validationErrors = append(validationErrors, "POSTGRES_DB is required")
+		formatValidationErrors = append(formatValidationErrors, "POSTGRES_DB is required for database connection")
 	}
 
-	// Validate Port format, but don't store the int yet
-	if _, convErr := strconv.Atoi(conf.PostgreSQL.Port); convErr != nil && conf.PostgreSQL.Port != "" { // Only error if port is non-empty but invalid
-		validationErrors = append(validationErrors, fmt.Sprintf("POSTGRES_PORT ('%s') is not a valid integer", conf.PostgreSQL.Port))
+	// If format errors exist for non-fatal vars, log Error and exit gracefully (not Fatal)
+	if len(formatValidationErrors) > 0 {
+		errMsg := "Invalid configuration format"
+		logger.Error(errMsg, zap.Strings("details", formatValidationErrors))
+		return errors.New(errMsg + ": " + strings.Join(formatValidationErrors, ", "))
 	}
 
-	if len(validationErrors) > 0 {
-		errMsg := "Missing or invalid required configuration"
-		logger.Error(errMsg, zap.Strings("details", validationErrors))
-		return errors.New(errMsg + ": " + strings.Join(validationErrors, ", "))
-	}
-
-	// Log loaded configuration for verification
+	// Log loaded configuration
 	logger.Info("Loaded configuration",
 		zap.String("dexAuthDomain", dexAuthDomain),
 		zap.String("dexAuthPublicClientID", dexAuthPublicClientID),
 		zap.String("dexGrpcAddress", dexGrpcAddress),
-		zap.String("httpServerAddress", httpServerAddress),
+		zap.String("httpServerAddress", httpServerAddress), // Log even if optional
 		zap.String("platformHost", platformHost),
-		zap.String("platformKeyEnabled", platformKeyEnabledStr),
+		zap.String("platformKeyEnabled", platformKeyEnabledStr), // Log the string value
 		zap.String("postgresHost", conf.PostgreSQL.Host),
 		zap.String("postgresPort", conf.PostgreSQL.Port),
 		zap.String("postgresUser", conf.PostgreSQL.Username),
@@ -193,9 +217,9 @@ func start(ctx context.Context, logger *zap.Logger) error {
 
 	cfg := postgres.Config{
 		Host:    conf.PostgreSQL.Host,
-		Port:    conf.PostgreSQL.Port,     // Pass the Port string directly
-		User:    conf.PostgreSQL.Username, // Use correct field name 'User'
-		Passwd:  conf.PostgreSQL.Password, // Use correct field name 'Passwd'
+		Port:    conf.PostgreSQL.Port,
+		User:    conf.PostgreSQL.Username,
+		Passwd:  conf.PostgreSQL.Password,
 		DB:      conf.PostgreSQL.DB,
 		SSLMode: conf.PostgreSQL.SSLMode,
 	}
@@ -237,9 +261,9 @@ func start(ctx context.Context, logger *zap.Logger) error {
 			if err != nil {
 				lastDbErr = err
 				logger.Warn("Database initialization attempt failed, retrying...", zap.Error(err), zap.Duration("retryIn", dbConnectRetryInterval))
-				sqlDB, dbErr := orm.DB() // Attempt to get underlying DB
+				sqlDB, dbErr := orm.DB()
 				if dbErr == nil && sqlDB != nil {
-					sqlDB.Close() // Close connection if init failed
+					sqlDB.Close()
 				}
 				orm = nil
 				time.Sleep(dbConnectRetryInterval)
@@ -261,19 +285,37 @@ func start(ctx context.Context, logger *zap.Logger) error {
 	}
 	// --- End Database Connection and Initialization ---
 
+	// --- Initialize Auth Cache ---
+	logger.Info("Initializing Auth Cache service...")
+	authCacheSvc, err := authcache.NewAuthCacheService(logger) // Uses DefaultTTL from authcache pkg
+	if err != nil {
+		logger.Error("Failed to initialize Auth Cache service", zap.Error(err))
+		return fmt.Errorf("failed to initialize auth cache: %w", err)
+	}
+	defer func() {
+		logger.Info("Attempting to close Auth Cache service...")
+		if closeErr := authCacheSvc.Close(); closeErr != nil {
+			logger.Error("Error closing auth cache", zap.Error(closeErr))
+		} else {
+			logger.Info("Auth Cache service closed successfully.")
+		}
+	}()
+	logger.Info("Auth Cache service initialized successfully.")
+	// --- End Initialize Auth Cache ---
+
 	// --- Platform Key Handling ---
 	logger.Info("Setting up platform keys...")
-	// *** CORRECTED: Declare platformKeyEnabled before the if/else block ***
 	var platformKeyEnabled bool
-	var keyErr error // Use a separate error variable for ParseBool
+	var keyErr error
 
-	// Use err from ParseBool, default platformKeyEnabled to false if string is empty or invalid
+	// Default platformKeyEnabled to false if string is empty or invalid
 	platformKeyEnabled, keyErr = strconv.ParseBool(platformKeyEnabledStr)
 	if keyErr != nil {
-		logger.Warn("Invalid value for PLATFORM_KEY_ENABLED, defaulting to false",
+		// Log as Info/Warn since default is false, not a fatal error if missing/invalid
+		logger.Info("PLATFORM_KEY_ENABLED not set or invalid, defaulting to false",
 			zap.String("value", platformKeyEnabledStr),
-			zap.Error(keyErr)) // Log the parsing error
-		platformKeyEnabled = false // Default to false on error
+			zap.Error(keyErr))
+		platformKeyEnabled = false
 	}
 
 	var platformPublicKey *rsa.PublicKey
@@ -281,7 +323,11 @@ func start(ctx context.Context, logger *zap.Logger) error {
 
 	if platformKeyEnabled {
 		logger.Info("Platform key loading from environment variables enabled")
-		// Public Key loading
+		// Public Key loading (ensure PLATFORM_PUBLIC_KEY is set if enabled)
+		if platformPublicKeyStr == "" {
+			logger.Fatal("PLATFORM_KEY_ENABLED is true, but PLATFORM_PUBLIC_KEY is not set")
+			return errors.New("PLATFORM_PUBLIC_KEY is required when PLATFORM_KEY_ENABLED is true")
+		}
 		bPub, err := base64.StdEncoding.DecodeString(platformPublicKeyStr)
 		if err != nil {
 			logger.Error("Failed to decode base64 public key from env", zap.Error(err))
@@ -304,7 +350,11 @@ func start(ctx context.Context, logger *zap.Logger) error {
 			return fmt.Errorf("platform public key is not RSA")
 		}
 
-		// Private Key loading
+		// Private Key loading (ensure PLATFORM_PRIVATE_KEY is set if enabled)
+		if platformPrivateKeyStr == "" {
+			logger.Fatal("PLATFORM_KEY_ENABLED is true, but PLATFORM_PRIVATE_KEY is not set")
+			return errors.New("PLATFORM_PRIVATE_KEY is required when PLATFORM_KEY_ENABLED is true")
+		}
 		bPriv, err := base64.StdEncoding.DecodeString(platformPrivateKeyStr)
 		if err != nil {
 			logger.Error("Failed to decode base64 private key from env", zap.Error(err))
@@ -315,10 +365,10 @@ func start(ctx context.Context, logger *zap.Logger) error {
 			logger.Error("Failed to decode PEM block from private key or invalid type", zap.String("type", blockPriv.Type))
 			return fmt.Errorf("invalid platform private key PEM block or type")
 		}
-		privInterface, err := x509.ParsePKCS8PrivateKey(blockPriv.Bytes) // Try PKCS8 first
+		privInterface, err := x509.ParsePKCS8PrivateKey(blockPriv.Bytes)
 		if err != nil {
 			logger.Warn("Failed to parse PKCS8 private key, attempting PKCS1", zap.Error(err))
-			privInterface, err = x509.ParsePKCS1PrivateKey(blockPriv.Bytes) // Fallback to PKCS1
+			privInterface, err = x509.ParsePKCS1PrivateKey(blockPriv.Bytes)
 			if err != nil {
 				logger.Error("Failed to parse private key as PKCS8 or PKCS1", zap.Error(err))
 				return fmt.Errorf("failed to parse platform private key: %w", err)
@@ -340,10 +390,8 @@ func start(ctx context.Context, logger *zap.Logger) error {
 		}
 
 		if len(keyPair) < 2 {
-			// Generate and save new keys if not found or incomplete
 			if len(keyPair) == 1 {
 				logger.Warn("Found only one platform key in database, generating new pair.")
-				// Consider deleting the single key here if desired
 			}
 			logger.Info("Generating new platform RSA key pair...")
 			platformPrivateKey, err = rsa.GenerateKey(rand.Reader, 2048)
@@ -353,7 +401,6 @@ func start(ctx context.Context, logger *zap.Logger) error {
 			}
 			platformPublicKey = &platformPrivateKey.PublicKey
 
-			// Save Public Key
 			pubBytes, err := x509.MarshalPKIXPublicKey(platformPublicKey)
 			if err != nil {
 				logger.Error("Failed to marshal generated public key", zap.Error(err))
@@ -366,8 +413,7 @@ func start(ctx context.Context, logger *zap.Logger) error {
 				return fmt.Errorf("failed to save generated public key: %w", err)
 			}
 
-			// Save Private Key
-			privBytes, err := x509.MarshalPKCS8PrivateKey(platformPrivateKey) // Save as PKCS8
+			privBytes, err := x509.MarshalPKCS8PrivateKey(platformPrivateKey)
 			if err != nil {
 				logger.Error("Failed to marshal generated private key", zap.Error(err))
 				return fmt.Errorf("failed to marshal generated private key: %w", err)
@@ -381,7 +427,6 @@ func start(ctx context.Context, logger *zap.Logger) error {
 			logger.Info("Successfully generated and saved new platform key pair to database.")
 
 		} else {
-			// Load keys from database records
 			logger.Info("Loading platform keys from database...")
 			foundPub, foundPriv := false, false
 			for _, k := range keyPair {
@@ -418,10 +463,10 @@ func start(ctx context.Context, logger *zap.Logger) error {
 						logger.Error("Invalid PEM type for private key in DB", zap.String("type", block.Type))
 						return fmt.Errorf("invalid private key type in DB: %s", block.Type)
 					}
-					privInterface, err := x509.ParsePKCS8PrivateKey(block.Bytes) // Try PKCS8
+					privInterface, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 					if err != nil {
 						logger.Warn("Failed to parse PKCS8 private key from DB, attempting PKCS1", zap.Error(err))
-						privInterface, err = x509.ParsePKCS1PrivateKey(block.Bytes) // Fallback PKCS1
+						privInterface, err = x509.ParsePKCS1PrivateKey(block.Bytes)
 						if err != nil {
 							logger.Error("Failed to parse private key from DB as PKCS8 or PKCS1", zap.Error(err))
 							return fmt.Errorf("failed to parse private key from DB: %w", err)
@@ -449,7 +494,6 @@ func start(ctx context.Context, logger *zap.Logger) error {
 	logger.Info("Setting up Dex gRPC client...")
 	dexClient, err := newDexClient(dexGrpcAddress)
 	if err != nil {
-		// Log context before returning wrapped error
 		logger.Error("Failed to create Dex gRPC client", zap.String("address", dexGrpcAddress), zap.Error(err))
 		return fmt.Errorf("failed to create Dex gRPC client: %w", err)
 	}
@@ -458,7 +502,6 @@ func start(ctx context.Context, logger *zap.Logger) error {
 	logger.Info("Ensuring Dex OAuth clients...")
 	err = ensureDexClients(ctx, logger, dexClient)
 	if err != nil {
-		// Log context before returning wrapped error
 		logger.Error("Failed to ensure Dex OAuth clients", zap.Error(err))
 		return fmt.Errorf("failed to ensure Dex OAuth clients: %w", err)
 	}
@@ -467,10 +510,7 @@ func start(ctx context.Context, logger *zap.Logger) error {
 
 	// --- Server Initialization ---
 	logger.Info("Initializing main application server...")
-	// Ensure adb is valid here (it should be if dbReady is true)
 	if !dbReady {
-		// This case should theoretically be caught by the timeout check earlier,
-		// but adding a safeguard.
 		logger.Error("Database is not ready, cannot initialize server")
 		return errors.New("cannot initialize server, database not ready")
 	}
@@ -480,10 +520,12 @@ func start(ctx context.Context, logger *zap.Logger) error {
 		dexVerifier:       dexVerifier,
 		dexClient:         dexClient,
 		logger:            logger.Named("authServer"),
-		db:                adb,                     // Use the initialized adb
-		updateLogin:       make(chan User, 100000), // Consider if buffer size is appropriate
+		db:                adb,
+		authCache:         authCacheSvc,            // Inject AuthCacheService
+		updateLogin:       make(chan User, 100000), // TODO: Remove if loop is removed
 	}
 
+	// TODO: Remove this goroutine call if UpdateLastLoginLoop is removed
 	go authServer.UpdateLastLoginLoop()
 	logger.Info("Application server initialized.")
 	// --- End Server Initialization ---
@@ -492,35 +534,33 @@ func start(ctx context.Context, logger *zap.Logger) error {
 	logger.Info("Starting HTTP server...", zap.String("address", httpServerAddress))
 	httpServerErrors := make(chan error, 1)
 	go func() {
-		// Pass down specifically named loggers if desired
 		routes := httpRoutes{
 			logger:             logger.Named("httpRoutes"),
 			platformPrivateKey: platformPrivateKey,
 			db:                 adb,
+			authCache:          authCacheSvc, // Inject AuthCacheService
 			authServer:         authServer,
 		}
-		// Log error from RegisterAndStart within the goroutine if needed
 		httpErr := httpserver.RegisterAndStart(ctx, logger.Named("httpServer"), httpServerAddress, &routes)
-		if httpErr != nil && !errors.Is(httpErr, http.ErrServerClosed) { // Don't wrap ErrServerClosed
+		if httpErr != nil && !errors.Is(httpErr, http.ErrServerClosed) {
 			httpServerErrors <- fmt.Errorf("http server error: %w", httpErr)
 		} else {
-			httpServerErrors <- httpErr // Send nil or ErrServerClosed
+			httpServerErrors <- httpErr
 		}
 	}()
 	// --- End Start HTTP Server ---
 
 	// Wait for server exit
 	logger.Info("Auth Service started successfully.")
-	err = <-httpServerErrors // Block until the HTTP server stops
+	err = <-httpServerErrors
 
-	// Log shutdown reason
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logger.Error("HTTP server stopped unexpectedly", zap.Error(err))
-		return err // Return the actual error
+		return err
 	}
 
 	logger.Info("HTTP server stopped gracefully.")
-	return nil // Graceful shutdown
+	return nil
 }
 
 // newServerCredentials loads TLS transport credentials for the GRPC server.
@@ -622,4 +662,44 @@ func ensureDexClients(ctx context.Context, logger *zap.Logger, dexClient dexApi.
 		}
 	}
 	return nil
+}
+
+// --- Helpers  ---
+
+func newDexOidcVerifier(ctx context.Context, domain, clientId string) (*oidc.IDTokenVerifier, error) {
+	transport := &http.Transport{
+		MaxIdleConns:        10,
+		IdleConnTimeout:     30 * time.Second,
+		MaxIdleConnsPerHost: 10,
+	}
+
+	httpClient := &http.Client{
+		Transport: transport,
+	}
+
+	provider, err := oidc.NewProvider(
+		oidc.InsecureIssuerURLContext(
+			oidc.ClientContext(ctx, httpClient),
+			domain,
+		), domain,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return provider.Verifier(&oidc.Config{
+		ClientID:          clientId,
+		SkipClientIDCheck: true,
+		SkipIssuerCheck:   true,
+	}), nil
+}
+
+func newDexClient(hostAndPort string) (dexApi.DexClient, error) {
+	// TODO: Add TLS credentials if Dex gRPC requires them
+
+	conn, err := grpc.NewClient(hostAndPort, grpc.WithInsecure())
+	if err != nil {
+		return nil, fmt.Errorf("dial: %v", err)
+	}
+	return dexApi.NewDexClient(conn), nil
 }
