@@ -109,9 +109,12 @@ func start(ctx context.Context, logger *zap.Logger) error {
 
 	// --- Configuration Loading and Validation ---
 	var conf ServerConfig
-	config2.ReadFromEnv(&conf, nil) // Load PostgreSQL config
+	// Load PostgreSQL specific config (e.g., host, port, user, dbname, sslmode)
+	config2.ReadFromEnv(&conf, nil)
+	logger.Info("PostgreSQL configuration loaded from environment")
 
-	// *** Strict check for specifically requested mandatory environment variables ***
+	// Define environment variables that are absolutely critical for startup.
+	// The service will fatally exit if any of these are missing.
 	fatalEnvVars := map[string]string{
 		"DEX_PUBLIC_CLIENT_REDIRECT_URIS":  dexPublicClientRedirectUris,
 		"DEX_PRIVATE_CLIENT_REDIRECT_URIS": dexPrivateClientRedirectUris,
@@ -119,38 +122,48 @@ func start(ctx context.Context, logger *zap.Logger) error {
 		"DEX_AUTH_PUBLIC_CLIENT_ID":        dexAuthPublicClientID,
 		"DEX_GRPC_ADDR":                    dexGrpcAddress,
 		"PLATFORM_HOST":                    platformHost,
-		// Removed: HTTP_ADDRESS, PG details, DEX_CALLBACK_URL from fatal check list
 	}
-
-	validationErrors := []string{}
+	validationErrorMessages := []string{} // Collects messages for the final fatal log summary
+	// Check each mandatory variable
 	for name, value := range fatalEnvVars {
 		if value == "" {
-			validationErrors = append(validationErrors, fmt.Sprintf("%s is required", name))
+			// *** ADDED DEBUG LOGGING HERE ***
+			// Log the specific error including the (empty) value for immediate debugging context.
+			logger.Error("Required environment variable is missing or empty",
+				zap.String("variable", name),
+				zap.String("value", value), // Explicitly log the empty value found
+			)
+			// Add a user-friendly message to the list for the final fatal error summary.
+			validationErrorMessages = append(validationErrorMessages, fmt.Sprintf("%s is required", name))
 		}
 	}
 
-	// If any of the *specifically required* vars are missing, log Fatal and exit
-	if len(validationErrors) > 0 {
-		errMsg := "Missing critical configuration"
-		for _, detail := range validationErrors {
-			logger.Error("Configuration error", zap.String("detail", detail))
-		}
-		logger.Fatal(errMsg, zap.Strings("missing_variables", validationErrors))
-		return errors.New(errMsg) // Fatal should exit first
+	// If any critical variables were missing, log details and exit fatally.
+	if len(validationErrorMessages) > 0 {
+		errMsg := "Missing critical configuration. See preceding errors for details."
+		// Log Fatal with a summary message. The individual errors with values were already logged above.
+		logger.Fatal(errMsg,
+			zap.Strings("missing_variables_summary", validationErrorMessages),
+		)
+		// Fatal should exit, but return an error in case it doesn't (e.g., in tests)
+		return errors.New(errMsg + ": " + strings.Join(validationErrorMessages, ", "))
 	}
+	logger.Info("Successfully validated critical environment variables.")
 
 	// --- Optional/Format Validation for other variables ---
-	// Check non-fatal but potentially problematic variables or formats
+	// Check non-fatal but potentially problematic variables or formats.
 	formatValidationErrors := []string{}
+	// Validate DEX_AUTH_DOMAIN format (must start with http:// or https://)
 	if dexAuthDomain != "" && !strings.HasPrefix(dexAuthDomain, "http://") && !strings.HasPrefix(dexAuthDomain, "https://") {
-		// This was already checked above, but keep format check
-		formatValidationErrors = append(formatValidationErrors, fmt.Sprintf("DEX_AUTH_DOMAIN ('%s') must start with http:// or https://", dexAuthDomain))
+		// Note: dexAuthDomain emptiness was already checked by fatalEnvVars, this focuses on format.
+		errDetail := fmt.Sprintf("DEX_AUTH_DOMAIN ('%s') must start with http:// or https://", dexAuthDomain)
+		formatValidationErrors = append(formatValidationErrors, errDetail)
+		logger.Warn("Configuration format issue", zap.String("detail", errDetail)) // Log as warning/info
 	}
+	// Warn if HTTP_ADDRESS is not set, as the service might be unreachable.
 	if httpServerAddress == "" {
-		// Log a warning if HTTP address is missing, but don't exit
-		logger.Warn("HTTP_ADDRESS environment variable is not set, service might not be reachable", zap.String("variable", "HTTP_ADDRESS"))
-		// Assign a default or handle appropriately later? For now, just warn.
-		// httpServerAddress = ":8080" // Example default
+		logger.Warn("HTTP_ADDRESS environment variable is not set, service might not be reachable externally", zap.String("variable", "HTTP_ADDRESS"))
+		// Consider setting a default like ":8080" if appropriate, but for now just warn.
 	}
 	// Validate PG details (even if not fatal if missing, they are needed for DB connection)
 	if conf.PostgreSQL.Host == "" {
