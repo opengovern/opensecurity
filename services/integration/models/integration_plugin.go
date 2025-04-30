@@ -67,6 +67,7 @@ type IntegrationPlugin struct {
 	DemoDataURL              string
 	DemoDataLoaded           bool
 	DescriberTag             string
+	SupportedPlatformVersion string
 	DiscoveryType            IntegrationPluginDiscoveryType `gorm:"default:classic"`
 	OperationalStatusUpdates pgtype.JSONB                   `gorm:"default:'[]'"`
 	Tags                     pgtype.JSONB

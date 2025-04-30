@@ -18,7 +18,6 @@ import (
 	"github.com/opengovern/opensecurity/pkg/utils"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	dexApi "github.com/dexidp/dex/api/v2"
 	"github.com/jackc/pgtype"
 	api3 "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
@@ -33,7 +32,6 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
 	"gorm.io/gorm"
 	_ "gorm.io/gorm"
 	batchv1 "k8s.io/api/batch/v1"
@@ -1268,14 +1266,6 @@ func (h *HttpHandler) GetAboutShort(echoCtx echo.Context) error {
 	}
 
 	return echoCtx.JSON(http.StatusOK, response)
-}
-
-func newDexClient(hostAndPort string) (dexApi.DexClient, error) {
-	conn, err := grpc.NewClient(hostAndPort, grpc.WithInsecure())
-	if err != nil {
-		return nil, fmt.Errorf("dial: %v", err)
-	}
-	return dexApi.NewDexClient(conn), nil
 }
 
 func (h *HttpHandler) SampleDataLoaded(echoCtx echo.Context) (bool, error) {

@@ -62,27 +62,6 @@ func LoadPlugin(itOrm *gorm.DB, logger *zap.Logger, plugin platformspec.PluginSp
 		return err
 	}
 
-	//err = itOrm.Clauses(clause.OnConflict{
-	//	Columns: []clause.Column{{Name: "plugin_id"}},
-	//	DoUpdates: clause.Assignments(map[string]interface{}{
-	//		"integration_plugin": gorm.Expr(
-	//			"CASE WHEN ? <> '' THEN CAST(? AS bytea) ELSE integration_plugin_binaries.integration_plugin END",
-	//			pluginBinary.IntegrationPlugin,
-	//			pluginBinary.IntegrationPlugin,
-	//		),
-	//		"cloud_ql_plugin": gorm.Expr(
-	//			"CASE WHEN ? <> '' THEN CAST(? AS bytea) ELSE integration_plugin_binaries.cloud_ql_plugin END",
-	//			pluginBinary.CloudQlPlugin,
-	//			pluginBinary.CloudQlPlugin,
-	//		),
-	//	}),
-	//}).Create(pluginBinary).Error
-	//if err != nil {
-	//	logger.Error("failed to create integration binary", zap.Error(err))
-	//	return err
-	//}
-	//pluginBinary = nil
-
 	logger.Info("integration created")
 
 	return nil
@@ -106,9 +85,6 @@ func ExtractIntegrationBinaries(logger *zap.Logger, plugin platformspec.PluginSp
 	tagsJsonb := pgtype.JSONB{}
 	err = tagsJsonb.Set(tagsJsonData)
 
-	// download files from urls
-	//binaries := &models.IntegrationPluginBinary{
-	//	PluginID: plugin.IntegrationType.String()}
 	var describerURL, describerTags, demoDataUrl, url string
 	discoveryType := models.IntegrationPluginDiscoveryTypeClassic
 	installState := models.IntegrationTypeInstallStateNotInstalled
@@ -153,14 +129,6 @@ func ExtractIntegrationBinaries(logger *zap.Logger, plugin platformspec.PluginSp
 			discoveryType = models.IntegrationPluginDiscoveryTypeTask
 		}
 		logger.Info("platform binary path", zap.String("path", baseDir+"/integarion_type/"+plugin.Components.PlatformBinary.PathInArchive))
-		//binaries.IntegrationPlugin, err = os.ReadFile(baseDir + "/integarion_type/" + plugin.Components.PlatformBinary.PathInArchive)
-		//if err != nil {
-		//	logger.Error("failed to open integration-plugin file", zap.Error(err), zap.String("url", plugin.Components.PlatformBinary.URI))
-		//	return nil, nil, fmt.Errorf("open integration-plugin file for url %s: %w", plugin, err)
-		//}
-
-		//installState = models.IntegrationTypeInstallStateInstalled
-		//operationalStatus = models.IntegrationPluginOperationalStatusEnabled
 	}
 	if plugin.Components.CloudQLBinary.URI != "" && plugin.Components.CloudQLBinary.PathInArchive != "" {
 		if plugin.Components.CloudQLBinary.URI != plugin.Components.PlatformBinary.URI {
@@ -179,17 +147,17 @@ func ExtractIntegrationBinaries(logger *zap.Logger, plugin platformspec.PluginSp
 		}
 
 		logger.Info("cloudql binary path", zap.String("path", baseDir+"/integarion_type/"+plugin.Components.CloudQLBinary.PathInArchive))
-		//binaries.CloudQlPlugin, err = os.ReadFile(baseDir + "/integarion_type/" + plugin.Components.CloudQLBinary.PathInArchive)
-		//if err != nil {
-		//	logger.Error("failed to open cloudql-plugin file", zap.Error(err), zap.String("url", plugin.Components.CloudQLBinary.URI))
-		//	return nil, nil, fmt.Errorf("open cloudql-plugin file for url %s: %w", plugin.IntegrationType.String(), err)
-		//}
 	}
 
 	logger.Info("integration binaries loaded")
 
 	operationalStatusUpdates := pgtype.JSONB{}
 	operationalStatusUpdates.Set("[]")
+
+	var supportedPlatformVersion string
+	if plugin.SupportedPlatformVersions != nil {
+		supportedPlatformVersion = strings.Join(plugin.SupportedPlatformVersions, ", ")
+	}
 
 	return &models.IntegrationPlugin{
 			PluginID:                 plugin.Name,
@@ -201,6 +169,7 @@ func ExtractIntegrationBinaries(logger *zap.Logger, plugin platformspec.PluginSp
 			InstallState:             installState,
 			OperationalStatus:        operationalStatus,
 			OperationalStatusUpdates: operationalStatusUpdates,
+			SupportedPlatformVersion: supportedPlatformVersion,
 			URL:                      url,
 			DescriberURL:             describerURL,
 			DemoDataURL:              demoDataUrl,

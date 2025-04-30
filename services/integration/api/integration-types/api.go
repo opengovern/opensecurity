@@ -208,7 +208,7 @@ func (a *API) GetSetup(c echo.Context) error {
 	}
 }
 
-// GetSetup godoc
+// GetManifest godoc
 // @Summary			Get integration manifest
 // @Description		Get integration manifest
 // @Security		BearerToken
@@ -230,6 +230,13 @@ func (a *API) GetManifest(c echo.Context) error {
 		if err := yaml.Unmarshal(conf.Manifest, &manifest); err != nil {
 			return echo.NewHTTPError(500, err.Error())
 		}
+
+		if plugin, err := a.database.GetPluginByID(integrationType); err == nil {
+			if plugin.SupportedPlatformVersion != "" {
+				manifest.SupportedPlatformVersion = plugin.SupportedPlatformVersion
+			}
+		}
+
 		return c.JSON(200, manifest)
 
 	} else {
