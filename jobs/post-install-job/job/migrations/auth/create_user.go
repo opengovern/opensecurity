@@ -36,7 +36,7 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	if err != nil {
 		return fmt.Errorf("new postgres client: %w", err)
 	}
-	dbm := db.Database{Orm: orm}
+	dbm := db.Database{Orm: orm, Logger: logger}
 
 	dexClient, err := newDexClient(conf.DexGrpcAddress)
 	if err != nil {

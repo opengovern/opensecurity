@@ -149,6 +149,9 @@ func (db Database) CountApiKeysForUser(userID string) (int64, error) {
 // --- User Methods ---
 
 func (db Database) CreateUser(user *User) error {
+	if user == nil {
+		return fmt.Errorf("user is nil")
+	}
 	// Ensure ExternalId is provided if it's the conflict target
 	if user.ExternalId == "" {
 		db.Logger.Error("CreateUser attempted with empty ExternalId, which is used for OnConflict")

@@ -24,12 +24,11 @@ type ApiKey struct {
 
 type Connector struct {
 	gorm.Model
-	UserCount 		uint  `gorm:"default:0"`
-	ConnectorID string
-	ConnectorType string
-	ConnectorSubType string	
-	LastUpdate 		time.Time
-	
+	UserCount        uint `gorm:"default:0"`
+	ConnectorID      string
+	ConnectorType    string
+	ConnectorSubType string
+	LastUpdate       time.Time
 }
 
 type User struct {
@@ -39,7 +38,7 @@ type User struct {
 	FullName              string
 	Role                  api.Role
 	ConnectorId           string
-	ExternalId            string
+	ExternalId            string `gorm:"unique"`
 	LastLogin             time.Time
 	Username              string
 	RequirePasswordChange bool `gorm:"default:true"`
