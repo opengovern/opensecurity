@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rsa"
 	"crypto/sha512"
+	"database/sql"
 	_ "embed" // Keep if needed for email templates later
 	"encoding/hex"
 	"encoding/json"
@@ -45,7 +46,8 @@ type httpRoutes struct {
 
 // Register defines and registers all HTTP routes for the auth service.
 func (r *httpRoutes) Register(e *echo.Echo) {
-	v1 := e.Group("/api/v1") // Base path for v1 API
+	v1 := e.Group("/api/v1")        // Base path for v1 API
+	e.GET("/health", r.HealthCheck) // <-- Add this line
 
 	// Health/Check Endpoint (usually public or less restricted)
 	v1.GET("/check", r.Check) // Envoy external auth check endpoint
@@ -74,6 +76,48 @@ func (r *httpRoutes) Register(e *echo.Echo) {
 	v1.POST("/connector/auth0", httpserver.AuthorizeHandler(r.CreateAuth0Connector, api2.AdminRole)) // Specific endpoint for Auth0
 	v1.PUT("/connector", httpserver.AuthorizeHandler(r.UpdateConnector, api2.AdminRole))
 	v1.DELETE("/connector/:id", httpserver.AuthorizeHandler(r.DeleteConnector, api2.AdminRole)) // Assuming delete by ConnectorID (string)
+}
+
+const healthCheckDBTimeout = 2 * time.Second
+
+// HealthCheck performs a basic health check of the service.
+// It pings the database via the GORM connection pool to verify connectivity.
+func (r *httpRoutes) HealthCheck(ctx echo.Context) error {
+	// Create a context with a timeout specific to this health check operation.
+	dbCtx, cancel := context.WithTimeout(ctx.Request().Context(), healthCheckDBTimeout)
+	defer cancel() // Ensure the context is cancelled and resources are released
+
+	var sqlDB *sql.DB
+	var err error
+
+	// Access the underlying *sql.DB connection pool from the GORM instance.
+	// This allows us to use the standard library's PingContext for a lightweight check.
+	sqlDB, err = r.db.Orm.DB()
+	if err != nil {
+		// Log an error if we cannot retrieve the DB instance from GORM.
+		r.logger.Error("HealthCheck handler: Failed to get *sql.DB from GORM", zap.Error(err))
+		// Return a 503 status indicating the service is unavailable due to this internal error.
+		return ctx.JSON(http.StatusServiceUnavailable, map[string]string{"status": "error", "detail": "database instance retrieval failed"})
+	}
+
+	// Attempt to ping the database using the timeout context.
+	err = sqlDB.PingContext(dbCtx)
+	if err != nil {
+		// Log the specific reason the ping failed.
+		r.logger.Error("HealthCheck handler: Database ping failed", zap.Error(err))
+
+		// Provide more specific detail if the error was a timeout.
+		statusDetail := "database ping failed"
+		if errors.Is(err, context.DeadlineExceeded) {
+			statusDetail = "database ping timed out"
+		}
+		// Return a 503 status indicating the database dependency is unhealthy.
+		return ctx.JSON(http.StatusServiceUnavailable, map[string]string{"status": "unhealthy", "dependency": "database", "detail": statusDetail})
+	}
+
+	// If the ping succeeds, the database connection is considered healthy.
+	// Return a 200 OK status with a simple confirmation message.
+	return ctx.JSON(http.StatusOK, map[string]string{"status": "ok"})
 }
 
 // bindValidate is a helper to bind and validate request data.
