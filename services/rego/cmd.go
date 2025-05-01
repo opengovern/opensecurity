@@ -3,7 +3,7 @@ package rego
 import (
 	config2 "github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/httpserver"
-	cloudql_init_job "github.com/opengovern/opensecurity/jobs/cloudql-init-job"
+	cloudql_init_job "github.com/opengovern/opensecurity/jobs/cloudql-init"
 	"github.com/opengovern/opensecurity/services/integration/client"
 	"github.com/opengovern/opensecurity/services/rego/api"
 	"github.com/opengovern/opensecurity/services/rego/config"

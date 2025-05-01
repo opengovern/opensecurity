@@ -12,13 +12,14 @@ import (
 	"sync"
 	"time"
 
-	auditjob "github.com/opengovern/opensecurity/jobs/compliance-quick-run-job"
+	auditjob "github.com/opengovern/opensecurity/jobs/compliance-job-summary"
 	compliance_quick_run "github.com/opengovern/opensecurity/services/scheduler/schedulers/compliance-quick-run"
 
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
-	queryrunner "github.com/opengovern/opensecurity/jobs/query-runner-job"
+	queryrunner "github.com/opengovern/opensecurity/jobs/query-runner"
 	queryrunnerscheduler "github.com/opengovern/opensecurity/services/scheduler/schedulers/query-runner"
-	queryrvalidatorscheduler "github.com/opengovern/opensecurity/services/scheduler/schedulers/query-validator"
+
+	//queryrvalidatorscheduler "github.com/opengovern/opensecurity/services/scheduler/schedulers/query-validator"
 
 	envoyAuth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"github.com/nats-io/nats.go/jetstream"
@@ -30,10 +31,10 @@ import (
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/og-util/pkg/ticker"
 	"github.com/opengovern/og-util/proto/src/golang"
-	"github.com/opengovern/opensecurity/jobs/checkup-job"
-	checkupAPI "github.com/opengovern/opensecurity/jobs/checkup-job/api"
-	runner "github.com/opengovern/opensecurity/jobs/compliance-runner-job"
-	summarizer "github.com/opengovern/opensecurity/jobs/compliance-summarizer-job"
+	runner "github.com/opengovern/opensecurity/jobs/compliance-runner"
+	summarizer "github.com/opengovern/opensecurity/jobs/compliance-summarizer"
+	checkup "github.com/opengovern/opensecurity/jobs/integration-health-check"
+	checkupAPI "github.com/opengovern/opensecurity/jobs/integration-health-check/api"
 	"github.com/opengovern/opensecurity/pkg/utils"
 	"github.com/opengovern/opensecurity/services/compliance/client"
 	integrationClient "github.com/opengovern/opensecurity/services/integration/client"
@@ -121,12 +122,12 @@ type Scheduler struct {
 	OperationMode        OperationMode
 	MaxConcurrentCall    int64
 
-	auditScheduler          *compliance_quick_run.JobScheduler
-	complianceScheduler     *compliance.JobScheduler
-	discoveryScheduler      *discovery.Scheduler
-	queryRunnerScheduler    *queryrunnerscheduler.JobScheduler
-	queryValidatorScheduler *queryrvalidatorscheduler.JobScheduler
-	conf                    config.SchedulerConfig
+	auditScheduler       *compliance_quick_run.JobScheduler
+	complianceScheduler  *compliance.JobScheduler
+	discoveryScheduler   *discovery.Scheduler
+	queryRunnerScheduler *queryrunnerscheduler.JobScheduler
+	//queryValidatorScheduler *queryrvalidatorscheduler.JobScheduler
+	conf config.SchedulerConfig
 
 	complianceEnabled bool
 }

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/nats-io/nats.go/jetstream"
-	queryrunner "github.com/opengovern/opensecurity/jobs/query-runner-job"
+	queryrunner "github.com/opengovern/opensecurity/jobs/query-runner"
 	"go.uber.org/zap"
 )
 

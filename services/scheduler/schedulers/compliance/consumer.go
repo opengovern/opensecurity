@@ -3,13 +3,14 @@ package compliance
 import (
 	"context"
 	"encoding/json"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/opengovern/opensecurity/services/scheduler/db/model"
+
 	"github.com/nats-io/nats.go/jetstream"
-	runner "github.com/opengovern/opensecurity/jobs/compliance-runner-job"
-	summarizer "github.com/opengovern/opensecurity/jobs/compliance-summarizer-job"
+	runner "github.com/opengovern/opensecurity/jobs/compliance-runner"
+	summarizer "github.com/opengovern/opensecurity/jobs/compliance-summarizer"
 	"go.uber.org/zap"
 )
 

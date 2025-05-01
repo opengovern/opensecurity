@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	summarizer "github.com/opengovern/opensecurity/jobs/compliance-summarizer-job"
+	summarizer "github.com/opengovern/opensecurity/jobs/compliance-summarizer"
 	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"gorm.io/gorm"
 )

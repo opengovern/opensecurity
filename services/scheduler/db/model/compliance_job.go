@@ -1,11 +1,12 @@
 package model
 
 import (
-	"github.com/jackc/pgtype"
 	"time"
 
+	"github.com/jackc/pgtype"
+
 	"github.com/lib/pq"
-	summarizer "github.com/opengovern/opensecurity/jobs/compliance-summarizer-job"
+	summarizer "github.com/opengovern/opensecurity/jobs/compliance-summarizer"
 	"github.com/opengovern/opensecurity/services/scheduler/api"
 	"gorm.io/gorm"
 )

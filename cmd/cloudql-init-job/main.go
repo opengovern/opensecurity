@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	runner "github.com/opengovern/opensecurity/jobs/cloudql-init-job"
+	runner "github.com/opengovern/opensecurity/jobs/cloudql-init"
 )
 
 func main() {

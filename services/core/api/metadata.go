@@ -3,7 +3,7 @@ package api
 import (
 	"time"
 
-	"github.com/opengovern/opensecurity/jobs/post-install-job/db/model"
+	"github.com/opengovern/opensecurity/jobs/config-manager/db/model"
 	authApi "github.com/opengovern/opensecurity/services/auth/api"
 	api "github.com/opengovern/opensecurity/services/integration/api/models"
 )
@@ -42,7 +42,6 @@ type GetMigrationStatusResponse struct {
 	}
 	UpdatedAt time.Time `json:"updated_at"`
 	CreatedAt time.Time `json:"created_at"`
-	
 }
 
 type GetSampleSyncStatusResponse struct {

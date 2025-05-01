@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/opengovern/opensecurity/jobs/post-install-job"
+	migrator "github.com/opengovern/opensecurity/jobs/config-manager"
 )
 
 func main() {

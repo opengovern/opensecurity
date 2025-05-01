@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	summarizer "github.com/opengovern/opensecurity/jobs/compliance-summarizer-job"
-	types2 "github.com/opengovern/opensecurity/jobs/compliance-summarizer-job/types"
+	summarizer "github.com/opengovern/opensecurity/jobs/compliance-summarizer"
+	types2 "github.com/opengovern/opensecurity/jobs/compliance-summarizer/types"
 	"github.com/opengovern/opensecurity/pkg/types"
 	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"go.uber.org/zap"

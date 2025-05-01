@@ -15,9 +15,9 @@ import (
 
 	// og-util api alias
 	"github.com/opengovern/og-util/pkg/httpclient"
-	cloudql_init_job "github.com/opengovern/opensecurity/jobs/cloudql-init-job"
-	db2 "github.com/opengovern/opensecurity/jobs/post-install-job/db"
-	"github.com/opengovern/opensecurity/jobs/post-install-job/db/model"
+	cloudql_init_job "github.com/opengovern/opensecurity/jobs/cloudql-init"
+	db2 "github.com/opengovern/opensecurity/jobs/config-manager/db"
+	"github.com/opengovern/opensecurity/jobs/config-manager/db/model"
 	complianceapi "github.com/opengovern/opensecurity/services/compliance/api"
 	complianceClient "github.com/opengovern/opensecurity/services/compliance/client"
 	"github.com/opengovern/opensecurity/services/core/api" // core api alias

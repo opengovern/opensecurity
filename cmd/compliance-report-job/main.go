@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	runner "github.com/opengovern/opensecurity/jobs/compliance-runner-job"
+	runner "github.com/opengovern/opensecurity/jobs/compliance-runner"
 )
 
 func main() {

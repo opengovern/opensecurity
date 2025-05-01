@@ -3,20 +3,8 @@ package integration_types
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/opengovern/og-util/pkg/config"
-	"github.com/opengovern/og-util/pkg/httpclient"
-	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
-	"github.com/opengovern/opensecurity/jobs/post-install-job/job/migrations/elasticsearch"
-	coreClient "github.com/opengovern/opensecurity/services/core/client"
-	demo_import "github.com/opengovern/opensecurity/services/integration/demo-import"
-	utils2 "github.com/opengovern/opensecurity/services/integration/utils"
-	hczap "github.com/zaffka/zap-to-hclog"
-	"golang.org/x/net/context"
 	"io"
 	"io/fs"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/env"
 	"math/big"
 	"net/http"
 	"os"
@@ -25,6 +13,21 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/opengovern/og-util/pkg/config"
+	"github.com/opengovern/og-util/pkg/httpclient"
+	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
+	"github.com/opengovern/opensecurity/jobs/config-manager/job/migrations/elasticsearch"
+	coreClient "github.com/opengovern/opensecurity/services/core/client"
+	demo_import "github.com/opengovern/opensecurity/services/integration/demo-import"
+	utils2 "github.com/opengovern/opensecurity/services/integration/utils"
+	hczap "github.com/zaffka/zap-to-hclog"
+	"golang.org/x/net/context"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/env"
+
+	"sort"
 
 	"github.com/goccy/go-yaml"
 	"github.com/hashicorp/go-getter"
@@ -40,7 +43,6 @@ import (
 	integration_type "github.com/opengovern/opensecurity/services/integration/integration-type"
 	models2 "github.com/opengovern/opensecurity/services/integration/models"
 	"go.uber.org/zap"
-	"sort"
 )
 
 const OneGB = 1024 * 1024 * 1024

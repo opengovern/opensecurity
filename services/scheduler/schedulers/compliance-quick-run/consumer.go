@@ -3,7 +3,8 @@ package compliance_quick_run
 import (
 	"context"
 	"encoding/json"
-	auditjob "github.com/opengovern/opensecurity/jobs/compliance-quick-run-job"
+
+	auditjob "github.com/opengovern/opensecurity/jobs/compliance-job-summary"
 	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 
 	"github.com/nats-io/nats.go/jetstream"

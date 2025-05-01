@@ -3,7 +3,7 @@ package api
 import (
 	"time"
 
-	queryrunner "github.com/opengovern/opensecurity/jobs/query-runner-job"
+	queryrunner "github.com/opengovern/opensecurity/jobs/query-runner"
 )
 
 type QuickScanSequenceStatus string

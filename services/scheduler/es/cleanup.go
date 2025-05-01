@@ -2,9 +2,10 @@ package es
 
 import (
 	"encoding/json"
+
 	es2 "github.com/opengovern/og-util/pkg/es"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
-	types2 "github.com/opengovern/opensecurity/jobs/compliance-summarizer-job/types"
+	types2 "github.com/opengovern/opensecurity/jobs/compliance-summarizer/types"
 	"github.com/opengovern/opensecurity/pkg/types"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"

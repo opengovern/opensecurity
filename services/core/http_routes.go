@@ -22,9 +22,10 @@ import (
 	api3 "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/httpserver"
-	model2 "github.com/opengovern/opensecurity/jobs/demo-importer-job/db/model"
-	"github.com/opengovern/opensecurity/jobs/post-install-job/db/model"
+
+	"github.com/opengovern/opensecurity/jobs/config-manager/db/model"
 	complianceapi "github.com/opengovern/opensecurity/services/compliance/api"
+	model2 "github.com/opengovern/opensecurity/services/core/db/models"
 	integrationApi "github.com/opengovern/opensecurity/services/integration/api/models"
 	integrationClient "github.com/opengovern/opensecurity/services/integration/client"
 	"go.opentelemetry.io/otel"
@@ -1002,6 +1003,7 @@ func (h *HttpHandler) GetMigrationStatus(echoCtx echo.Context) error {
 	})
 }
 
+/*
 // GetSampleSyncStatus godoc
 //
 //	@Summary		Sync demo
@@ -1035,7 +1037,7 @@ func (h *HttpHandler) GetSampleSyncStatus(echoCtx echo.Context) error {
 		Progress: jobsStatus.Progress,
 	})
 }
-
+*/
 // GetConfiguredStatus godoc
 //
 //	@Summary		Sync demo

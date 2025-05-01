@@ -11,7 +11,7 @@ import (
 	"github.com/opengovern/opensecurity/services/scheduler/db/model"
 	"golang.org/x/net/context"
 
-	runner "github.com/opengovern/opensecurity/jobs/compliance-runner-job"
+	runner "github.com/opengovern/opensecurity/jobs/compliance-runner"
 	complianceApi "github.com/opengovern/opensecurity/services/compliance/api"
 	"go.uber.org/zap"
 )

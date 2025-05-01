@@ -1,7 +1,7 @@
 package model
 
 import (
-	checkupapi "github.com/opengovern/opensecurity/jobs/checkup-job/api"
+	checkupapi "github.com/opengovern/opensecurity/jobs/integration-health-check/api"
 	"gorm.io/gorm"
 )
 
