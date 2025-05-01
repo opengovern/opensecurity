@@ -27,18 +27,18 @@ import (
 	"go.uber.org/zap"
 	batchv1 "k8s.io/api/batch/v1"
 
-	_ "gorm.io/gorm" // GORM driver import blank
+	_ "gorm.io/gorm"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	api6 "github.com/hashicorp/vault/api"              // vault client api
-	config3 "github.com/opengovern/og-util/pkg/config" // og-util config alias
+	api6 "github.com/hashicorp/vault/api"
+	config3 "github.com/opengovern/og-util/pkg/config"
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/og-util/pkg/steampipe"
-	"github.com/opengovern/og-util/pkg/vault" // og-util vault types
+	"github.com/opengovern/og-util/pkg/vault"
 	authClient "github.com/opengovern/opensecurity/services/auth/client"
-	"github.com/opengovern/opensecurity/services/core/config" // core config alias
-	"github.com/opengovern/opensecurity/services/core/db"     // core db alias
+	"github.com/opengovern/opensecurity/services/core/config"
+	"github.com/opengovern/opensecurity/services/core/db"
 	"github.com/opengovern/opensecurity/services/core/db/models"
 	describeClient "github.com/opengovern/opensecurity/services/scheduler/client"
 	v1 "k8s.io/api/apps/v1"
@@ -46,10 +46,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	k8sclient "sigs.k8s.io/controller-runtime/pkg/client" // Use alias k8sClient
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/labstack/echo/v4"
-	authApi "github.com/opengovern/og-util/pkg/api" // Rename import
+	authApi "github.com/opengovern/og-util/pkg/api"
 )
 
 type HttpHandler struct {
@@ -62,14 +62,14 @@ type HttpHandler struct {
 	authClient         authClient.AuthServiceClient
 	logger             *zap.Logger
 	viewCheckpoint     time.Time
-	cfg                config.Config            // core/config type
-	kubeClient         k8sclient.Client         // Use alias k8sClient
-	vault              vault.VaultSourceConfig  // from og-util
-	vaultSecretHandler vault.VaultSecretHandler // from og-util
-	vaultSealHandler   *vault2.SealHandler      // <<< CORRECTED: Use POINTER to core/vault.SealHandler
+	cfg                config.Config
+	kubeClient         k8sclient.Client
+	vault              vault.VaultSourceConfig
+	vaultSecretHandler vault.VaultSecretHandler
+	vaultSealHandler   *vault2.SealHandler
 	migratorDb         *db2.Database
 
-	queryParameters []api.QueryParameter // core/api type
+	queryParameters []api.QueryParameter
 	queryParamsMu   sync.RWMutex
 
 	complianceEnabled bool
@@ -79,19 +79,17 @@ type HttpHandler struct {
 
 // InitializeHttpHandler initializes the main HttpHandler.
 func InitializeHttpHandler(
-	cfg config.Config, // core/config type
+	cfg config.Config,
 	schedulerBaseUrl string, integrationBaseUrl string, complianceBaseUrl string, authBaseUrl string,
-	sealHandler *vault2.SealHandler,                  // <<< CORRECT: Use POINTER to core/vault.SealHandler
-	logger *zap.Logger, esConf config3.ElasticSearch, // Use og-util/pkg/config type
+	sealHandler *vault2.SealHandler,
+	logger *zap.Logger, esConf config3.ElasticSearch,
 	complianceEnabled string,
 ) (h *HttpHandler, err error) {
 	h = &HttpHandler{
-		queryParamsMu: sync.RWMutex{},
-		cfg:           cfg,
-		logger:        logger,
-		// *** Assign the pointer directly ***
-		vaultSealHandler: sealHandler, // <<< CORRECT assignment (pointer to pointer)
-		// Initialize other fields...
+		queryParamsMu:    sync.RWMutex{},
+		cfg:              cfg,
+		logger:           logger,
+		vaultSealHandler: sealHandler,
 	}
 	ctx := context.Background()
 

@@ -160,7 +160,7 @@ func ExtractIntegrationBinaries(logger *zap.Logger, plugin platformspec.PluginSp
 	}
 
 	return &models.IntegrationPlugin{
-			PluginID:                 plugin.Name,
+			PluginID:                 plugin.IntegrationType.String(),
 			IntegrationType:          plugin.IntegrationType,
 			Name:                     plugin.Name,
 			Description:              plugin.Metadata.Description,
