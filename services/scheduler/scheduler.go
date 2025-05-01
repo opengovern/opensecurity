@@ -498,20 +498,21 @@ func (s *Scheduler) Run(ctx context.Context) error {
 
 	// Inventory summarizer
 
-	// Policy Runner
-	s.queryRunnerScheduler = queryrunnerscheduler.New(
-		func(ctx context.Context) error {
-			return s.SetupNats(ctx)
-		},
-		s.conf,
-		s.logger,
-		s.db,
-		s.jq,
-		s.es,
-		s.complianceClient,
-		s.coreClient,
-	)
-	s.queryRunnerScheduler.Run(ctx)
+	if s.conf.QueryRunnerEnabled == "true" {
+		s.queryRunnerScheduler = queryrunnerscheduler.New(
+			func(ctx context.Context) error {
+				return s.SetupNats(ctx)
+			},
+			s.conf,
+			s.logger,
+			s.db,
+			s.jq,
+			s.es,
+			s.complianceClient,
+			s.coreClient,
+		)
+		s.queryRunnerScheduler.Run(ctx)
+	}
 
 	if s.complianceEnabled {
 		s.auditScheduler = compliance_quick_run.New(
@@ -528,10 +529,7 @@ func (s *Scheduler) Run(ctx context.Context) error {
 			s.integrationClient,
 		)
 		s.auditScheduler.Run(ctx)
-	}
 
-	// Compliance
-	if s.complianceEnabled {
 		s.complianceScheduler = compliance.New(
 			func(ctx context.Context) error {
 				return s.SetupNats(ctx)
