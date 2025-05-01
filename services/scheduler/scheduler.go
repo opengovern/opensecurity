@@ -15,8 +15,6 @@ import (
 	auditjob "github.com/opengovern/opensecurity/jobs/compliance-quick-run-job"
 	compliance_quick_run "github.com/opengovern/opensecurity/services/scheduler/schedulers/compliance-quick-run"
 
-	queryvalidator "github.com/opengovern/opensecurity/jobs/query-validator-job"
-
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	queryrunner "github.com/opengovern/opensecurity/jobs/query-runner-job"
 	queryrunnerscheduler "github.com/opengovern/opensecurity/services/scheduler/schedulers/query-runner"
@@ -161,6 +159,7 @@ func InitializeScheduler(
 		describeExternalEndpoint:     DescribeExternalEndpoint,
 		keyARN:                       KeyARN,
 		keyRegion:                    KeyRegion,
+		complianceEnabled:            complianceEnabled,
 	}
 	defer func() {
 		if err != nil && s != nil {
@@ -285,8 +284,6 @@ func InitializeScheduler(
 		s.MaxConcurrentCall = MaxGetQueuedAtATime
 	}
 
-	s.complianceEnabled = complianceEnabled
-
 	s.discoveryScheduler = discovery.New(
 		conf,
 		s.logger,
@@ -315,19 +312,35 @@ func (s *Scheduler) SetupNats(ctx context.Context) error {
 		return err
 	}
 
-	if err := s.jq.Stream(ctx, queryvalidator.StreamName, "Policy Validator job queues", []string{queryvalidator.JobQueueTopic, queryvalidator.JobResultQueueTopic}, 1000); err != nil {
-		s.logger.Error("Failed to stream to Policy Validator queue", zap.Error(err))
+	if err := s.jq.Stream(ctx, summarizer.StreamName, "compliance summarizer job queues", []string{summarizer.JobQueueTopic, summarizer.JobQueueTopicManuals, summarizer.ResultQueueTopic}, 100); err != nil {
+		s.logger.Error("Failed to stream to compliance summarizer queue", zap.Error(err))
 		return err
 	}
 
-	if s.complianceEnabled {
-		if err := s.jq.Stream(ctx, summarizer.StreamName, "compliance summarizer job queues", []string{summarizer.JobQueueTopic, summarizer.JobQueueTopicManuals, summarizer.ResultQueueTopic}, 1000); err != nil {
-			s.logger.Error("Failed to stream to compliance summarizer queue", zap.Error(err))
-			return err
-		}
+	if err := s.jq.CreateOrUpdateConsumer(ctx, summarizer.ConsumerGroup, summarizer.StreamName, []string{summarizer.JobQueueTopic}, jetstream.ConsumerConfig{
+		Replicas:          1,
+		AckPolicy:         jetstream.AckExplicitPolicy,
+		DeliverPolicy:     jetstream.DeliverAllPolicy,
+		MaxAckPending:     -1,
+		AckWait:           time.Minute * 30,
+		InactiveThreshold: time.Hour,
+	}); err != nil {
+		s.logger.Error("Failed to stream to compliance runner consumer", zap.Error(err))
+		return err
+	}
+	if err := s.jq.CreateOrUpdateConsumer(ctx, summarizer.ConsumerGroupManuals, summarizer.StreamName, []string{summarizer.JobQueueTopicManuals}, jetstream.ConsumerConfig{
+		Replicas:          1,
+		AckPolicy:         jetstream.AckExplicitPolicy,
+		DeliverPolicy:     jetstream.DeliverAllPolicy,
+		MaxAckPending:     -1,
+		AckWait:           time.Minute * 30,
+		InactiveThreshold: time.Hour,
+	}); err != nil {
+		s.logger.Error("Failed to stream to compliance runner manuals consumer", zap.Error(err))
+		return err
 	}
 
-	if err := s.jq.Stream(ctx, runner.StreamName, "compliance runner job queues", []string{runner.JobQueueTopic, runner.JobQueueTopicManuals, runner.ResultQueueTopic}, 1000000); err != nil {
+	if err := s.jq.Stream(ctx, runner.StreamName, "compliance runner job queues", []string{runner.JobQueueTopic, runner.JobQueueTopicManuals, runner.ResultQueueTopic}, 10000); err != nil {
 		s.logger.Error("Failed to stream to compliance runner queue", zap.Error(err))
 		return err
 	}
