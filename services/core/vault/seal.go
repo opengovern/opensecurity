@@ -9,7 +9,9 @@ import (
 	"strings"
 	"time"
 
+	vaultAPI "github.com/hashicorp/vault/api" // <<< Add Vault API import for response type
 	"github.com/opengovern/og-util/pkg/vault"
+
 	"github.com/opengovern/opensecurity/services/core/config"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -317,4 +319,17 @@ func (s *SealHandler) Start(ctx context.Context) error { // <<< Changed signatur
 
 	s.logger.Info("VaultSealHandler Start completed successfully.")
 	return nil // <<< Return nil on success
+}
+
+// *** ADD THIS METHOD ***
+// Health checks the underlying Vault instance by delegating to the wrapped handler.
+func (s *SealHandler) Health(ctx context.Context) (*vaultAPI.HealthResponse, error) {
+	// Check if the wrapped handler (from og-util) is initialized
+	if s.vaultSealHandler == nil {
+		// This might indicate an initialization issue in NewSealHandler
+		return nil, errors.New("internal vault seal handler (from og-util) is not initialized")
+	}
+	// Delegate the call to the Health method on the *vault.HashiCorpVaultSealHandler
+	// This assumes the Health method exists on that type in og-util/pkg/vault
+	return s.vaultSealHandler.Health(ctx)
 }
