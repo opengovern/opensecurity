@@ -25,6 +25,7 @@ import (
 	vault2 "github.com/opengovern/opensecurity/services/core/vault" // <<< Use alias for core/vault consistently
 	integrationClient "github.com/opengovern/opensecurity/services/integration/client"
 	"go.uber.org/zap"
+	batchv1 "k8s.io/api/batch/v1"
 
 	_ "gorm.io/gorm" // GORM driver import blank
 
@@ -80,7 +81,7 @@ type HttpHandler struct {
 func InitializeHttpHandler(
 	cfg config.Config, // core/config type
 	schedulerBaseUrl string, integrationBaseUrl string, complianceBaseUrl string, authBaseUrl string,
-	sealHandler *vault2.SealHandler, // <<< CORRECT: Use POINTER to core/vault.SealHandler
+	sealHandler *vault2.SealHandler,                  // <<< CORRECT: Use POINTER to core/vault.SealHandler
 	logger *zap.Logger, esConf config3.ElasticSearch, // Use og-util/pkg/config type
 	complianceEnabled string,
 ) (h *HttpHandler, err error) {
@@ -241,6 +242,9 @@ func NewKubeClient() (client.Client, error) {
 		return nil, err
 	}
 	if err := v1.AddToScheme(scheme); err != nil {
+		return nil, err
+	}
+	if err := batchv1.AddToScheme(scheme); err != nil {
 		return nil, err
 	}
 	kubeClient, err := client.New(ctrl.GetConfigOrDie(), client.Options{Scheme: scheme})
