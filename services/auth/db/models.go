@@ -33,14 +33,14 @@ type Connector struct {
 
 type User struct {
 	gorm.Model
-	Email                 string
-	EmailVerified         bool
+	Email                 string    `gorm:"not null"` // Enforce NOT NULL
+	EmailVerified         bool	`gorm:"default:false;not null"`
 	FullName              string
-	Role                  api.Role
-	ConnectorId           string
-	ExternalId            string `gorm:"unique"`
+	Role                  api.Role  `gorm:"not null"` // Enforce NOT NULL
+	ConnectorId           string    `gorm:"not null"` // Enforce NOT NULL
+	ExternalId            string    `gorm:"unique"`
 	LastLogin             time.Time
 	Username              string
-	RequirePasswordChange bool `gorm:"default:true"`
-	IsActive              bool `gorm:"default:true"`
+	RequirePasswordChange bool      `gorm:"default:true;not null"`
+	IsActive              bool      `gorm:"default:true;not null"`
 }
