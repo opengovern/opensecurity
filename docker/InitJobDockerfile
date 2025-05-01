@@ -1,0 +1,50 @@
+# --- Stage 1: Builder ---
+# Use specific Go Alpine version (Pinning minor version is good practice)
+FROM golang:1.23-alpine AS builder
+
+# Set the Current Working Directory inside the container
+WORKDIR /app
+
+# --- Dependency Caching ---
+# Copy ONLY the go module files first.
+# Assumes go.mod/go.sum are in the root of the build context (where you run 'docker build').
+COPY go.mod go.sum ./
+
+# Download dependencies based *only* on the module files.
+# This layer is cached and only re-runs if go.mod or go.sum change.
+RUN go mod download
+
+# --- Service-Specific Code ---
+# Copy ONLY the source code required for *this specific service*.
+# Copies the main package directory: opensecurity/cmd/app-init-job/ -> /app/cmd/app-init-job/
+COPY cmd/app-init-job/ ./cmd/app-init-job/
+# Copies the related code directory: opensecurity/jobs/app-init/ -> /app/jobs/app-init/
+COPY jobs/app-init/ ./jobs/app-init/
+
+# --- Build ---
+# Build ONLY the specific Go application binary for this service.
+# This step only re-runs if go.mod/go.sum or the specifically copied source code changes.
+# The path './cmd/app-init-job' is relative to the WORKDIR (/app) and finds the main.go there.
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/app-init-job ./cmd/app-init-job
+
+# --- Stage 2: Final Runtime Image ---
+# Start from a minimal Alpine image (Pinning version is good practice)
+FROM alpine:latest 
+
+# Set working directory
+WORKDIR /app
+
+# Install base dependencies.
+# ca-certificates for HTTPS/TLS communication.
+# tzdata for timezone information (remove if not needed by this specific service).
+RUN apk add --no-cache ca-certificates tzdata
+
+# Copy only the compiled binary from the builder stage
+COPY --from=builder /app/app-init-job /app/app-init-job
+
+# Optional: Run as non-root user for enhanced security
+# RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# USER appuser
+
+# Set the binary as the entrypoint for the container
+ENTRYPOINT ["/app/app-init-job"]
