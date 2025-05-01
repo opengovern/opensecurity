@@ -38,6 +38,11 @@ func (m Migration) Run(ctx context.Context, conf config.MigratorConfig, logger *
 	}
 	dbm := db.Database{Orm: orm, Logger: logger}
 
+	err = orm.AutoMigrate(&db.User{})
+	if err != nil {
+		return fmt.Errorf("auto migrate user: %w", err)
+	}
+
 	dexClient, err := newDexClient(conf.DexGrpcAddress)
 	if err != nil {
 		logger.Error("Auth Migrator: failed to create dex client", zap.Error(err))
