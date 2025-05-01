@@ -22,5 +22,4 @@ type SchedulerConfig struct {
 	Integration             config.OpenGovernanceService
 	NATS                    config.NATS
 	Vault                   vault.Config `yaml:"vault" koanf:"vault"`
-	QueryValidatorEnabled   string       `yaml:"query_validator_enabled" koanf:"query_validator_enabled"`
 }

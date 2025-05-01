@@ -530,23 +530,6 @@ func (s *Scheduler) Run(ctx context.Context) error {
 		s.auditScheduler.Run(ctx)
 	}
 
-	if s.conf.QueryValidatorEnabled == "true" {
-		// Policy Validator
-		s.queryValidatorScheduler = queryrvalidatorscheduler.New(
-			func(ctx context.Context) error {
-				return s.SetupNats(ctx)
-			},
-			s.conf,
-			s.logger,
-			s.db,
-			s.jq,
-			s.es,
-			s.complianceClient,
-			s.coreClient,
-		)
-		s.queryValidatorScheduler.Run(ctx)
-	}
-
 	// Compliance
 	if s.complianceEnabled {
 		s.complianceScheduler = compliance.New(
