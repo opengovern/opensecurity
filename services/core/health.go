@@ -167,12 +167,3 @@ func (h *HttpHandler) healthCheck(c echo.Context) error {
 
 	return c.JSON(httpCode, response)
 }
-
-// Note: This file assumes the following are defined/available in the 'core' package:
-// - type HttpHandler struct { ... } containing initialized fields:
-//   - db      db.Database
-//   - logger  *zap.Logger
-//   - cfg     config.Config
-//   - vaultSealHandler *vault.HashiCorpVaultSealHandler // Make sure this is correctly passed & stored
-// - func (db Database) Ping(ctx context.Context) error // Defined in db/db.go
-// - func (h *HttpHandler) Register(r *echo.Echo) error // Defined in http_handler.go, needs to call r.GET("/health", h.healthCheck)
