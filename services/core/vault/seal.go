@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors" // Import errors
 	"fmt"
-	"os"
 	"runtime/debug"
 	"time"
 
@@ -39,7 +38,7 @@ var (
 	ErrUnsealCheckerExited     = errors.New("unseal checker exited prematurely before signaling success")
 )
 
-var secretName = os.Getenv("vault-unseal-keys") //vault-unseal-keys"
+var secretName = "vault-unseal-keys" //vault-unseal-keys"
 
 type SealHandler struct {
 	logger           *zap.Logger
