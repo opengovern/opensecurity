@@ -51,6 +51,11 @@ func (s *TaskScheduler) RunTaskResponseConsumer(ctx context.Context) error {
 				s.logger.Error("failed to set result", zap.Error(err))
 				return
 			}
+			s.logger.Info("Received task response message",
+				zap.Uint("runId", response.RunID),
+				zap.String("status", string(response.Status)),
+				zap.Int("resultSize", len(response.Result)),
+				zap.String("failureMsg", response.FailureMessage))
 			err = s.db.UpdateTaskRun(response.RunID, taskRunUpdate.Status, taskRunUpdate.Result, taskRunUpdate.FailureMessage)
 			if err != nil {
 				s.logger.Error("Failed to update the status of RunTaskResponse",
