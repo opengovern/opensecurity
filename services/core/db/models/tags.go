@@ -26,14 +26,3 @@ func (r ResourceType) GetTagsMap() map[string][]string {
 	}
 	return r.tagsMap
 }
-
-func (r ResourceCollection) GetTagsMap() map[string][]string {
-	if r.tagsMap == nil {
-		tagLikeArr := make([]model.TagLike, 0, len(r.Tags))
-		for _, tag := range r.Tags {
-			tagLikeArr = append(tagLikeArr, tag)
-		}
-		r.tagsMap = model.GetTagsMap(tagLikeArr)
-	}
-	return r.tagsMap
-}

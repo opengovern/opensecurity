@@ -24,7 +24,7 @@ func GitClone(conf config.MigratorConfig, logger *zap.Logger) (string, error) {
 	coreClient := client.NewCoreServiceClient(conf.Core.BaseURL)
 	value, err := coreClient.GetConfigMetadata(&httpclient.Context{
 		UserRole: api.AdminRole,
-	}, models.MetadataKeyAnalyticsGitURL)
+	}, models.MetadataKeyPlatformConfigurationGitURL)
 
 	if err == nil && len(value.GetValue().(string)) > 0 {
 		gitConfig.AnalyticsGitURL = value.GetValue().(string)

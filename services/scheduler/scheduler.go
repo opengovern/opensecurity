@@ -459,7 +459,8 @@ func (s *Scheduler) Run(ctx context.Context) error {
 		UserRole: authAPI.ViewerRole,
 	}
 	httpCtx.Ctx = ctx
-	describeJobIntM, err := s.coreClient.GetConfigMetadata(httpCtx, models.MetadataKeyDescribeJobInterval)
+	describeJobIntM, err := s.coreClient.GetConfigMetadata(httpCtx, models.MetadataKeyAssetDiscoveryJobInterval)
+
 	if err != nil {
 		s.logger.Error("failed to set describe interval due to error", zap.Error(err))
 	} else {
@@ -470,20 +471,21 @@ func (s *Scheduler) Run(ctx context.Context) error {
 			s.logger.Error("failed to set describe interval due to invalid type", zap.String("type", string(describeJobIntM.GetType())))
 		}
 	}
-
-	costDiscoveryJobIntM, err := s.coreClient.GetConfigMetadata(httpCtx, models.MetadataKeyCostDiscoveryJobInterval)
-	if err != nil {
-		s.logger.Error("failed to set describe interval due to error", zap.Error(err))
-	} else {
-		if v, ok := costDiscoveryJobIntM.GetValue().(int); ok {
-			s.costDiscoveryIntervalHours = time.Duration(v) * time.Hour
-			s.logger.Info("set describe interval", zap.Int64("interval", int64(s.costDiscoveryIntervalHours.Hours())))
+	/*
+		costDiscoveryJobIntM, err := s.coreClient.GetConfigMetadata(httpCtx, models.MetadataKeyCostDiscoveryJobInterval)
+		if err != nil {
+			s.logger.Error("failed to set describe interval due to error", zap.Error(err))
 		} else {
-			s.logger.Error("failed to set describe interval due to invalid type", zap.String("type", string(costDiscoveryJobIntM.GetType())))
+			if v, ok := costDiscoveryJobIntM.GetValue().(int); ok {
+				s.costDiscoveryIntervalHours = time.Duration(v) * time.Hour
+				s.logger.Info("set describe interval", zap.Int64("interval", int64(s.costDiscoveryIntervalHours.Hours())))
+			} else {
+				s.logger.Error("failed to set describe interval due to invalid type", zap.String("type", string(costDiscoveryJobIntM.GetType())))
+			}
 		}
-	}
+	*/
 
-	complianceJobIntM, err := s.coreClient.GetConfigMetadata(httpCtx, models.MetadataKeyComplianceJobInterval)
+	complianceJobIntM, err := s.coreClient.GetConfigMetadata(httpCtx, models.MetadataKeyDefaultComplianceJobInterval)
 	if err != nil {
 		s.logger.Error("failed to set describe interval due to error", zap.Error(err))
 	} else {

@@ -64,21 +64,21 @@ func (h *HttpHandler) Register(r *echo.Echo) {
 	queryV1 := v1.Group("/query")
 	queryV1.GET("", httpserver.AuthorizeHandler(h.ListQueries, api3.ViewerRole))
 	queryV1.POST("/run", httpserver.AuthorizeHandler(h.RunQuery, api3.ViewerRole))
-	queryV1.GET("/run/history", httpserver.AuthorizeHandler(h.GetRecentRanQueries, api3.ViewerRole))
+	//queryV1.GET("/run/history", httpserver.AuthorizeHandler(h.GetRecentRanQueries, api3.ViewerRole))
 	v2 := r.Group("/api/v2")
 	metadatav2 := v2.Group("/metadata")
 	metadatav2.GET("/resourcetype", httpserver.AuthorizeHandler(h.ListResourceTypeMetadata, api3.ViewerRole))
 
-	resourceCollectionMetadata := metadata.Group("/resource-collection")
-	resourceCollectionMetadata.GET("", httpserver.AuthorizeHandler(h.ListResourceCollectionsMetadata, api3.ViewerRole))
-	resourceCollectionMetadata.GET("/:resourceCollectionId", httpserver.AuthorizeHandler(h.GetResourceCollectionMetadata, api3.ViewerRole))
+	//resourceCollectionMetadata := metadata.Group("/resource-collection")
+	//resourceCollectionMetadata.GET("", httpserver.AuthorizeHandler(h.ListResourceCollectionsMetadata, api3.ViewerRole))
+	//resourceCollectionMetadata.GET("/:resourceCollectionId", httpserver.AuthorizeHandler(h.GetResourceCollectionMetadata, api3.ViewerRole))
 
 	v3 := r.Group("/api/v3")
 	// metadata
-	v3.PUT("/sample/purge", httpserver.AuthorizeHandler(h.PurgeSampleData, api3.ViewerRole))
-	v3.PUT("/sample/sync", httpserver.AuthorizeHandler(h.SyncDemo, api3.ViewerRole))
-	v3.PUT("/sample/loaded", httpserver.AuthorizeHandler(h.WorkspaceLoadedSampleData, api3.ViewerRole))
-	v3.GET("/sample/sync/status", httpserver.AuthorizeHandler(h.GetSampleSyncStatus, api3.ViewerRole))
+	//v3.PUT("/sample/purge", httpserver.AuthorizeHandler(h.PurgeSampleData, api3.ViewerRole))
+	//v3.PUT("/sample/sync", httpserver.AuthorizeHandler(h.SyncDemo, api3.ViewerRole))
+	//v3.PUT("/sample/loaded", httpserver.AuthorizeHandler(h.WorkspaceLoadedSampleData, api3.ViewerRole))
+	//v3.GET("/sample/sync/status", httpserver.AuthorizeHandler(h.GetSampleSyncStatus, api3.ViewerRole))
 	v3.GET("/migration/status", httpserver.AuthorizeHandler(h.GetMigrationStatus, api3.ViewerRole))
 	v3.GET("/configured/status", httpserver.AuthorizeHandler(h.GetConfiguredStatus, api3.ViewerRole))
 	v3.PUT("/configured/set", httpserver.AuthorizeHandler(h.SetConfiguredStatus, api3.AdminRole))
@@ -718,6 +718,8 @@ func (h *HttpHandler) PurgeSampleData(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+/*
+
 // SyncDemo godoc
 //
 //	@Summary		Sync demo
@@ -939,7 +941,7 @@ func (h *HttpHandler) WorkspaceLoadedSampleData(echoCtx echo.Context) error {
 	}
 	return echoCtx.String(http.StatusOK, "False")
 }
-
+*/
 // GetMigrationStatus godoc
 //
 //	@Summary		Sync demo
@@ -1501,20 +1503,8 @@ func (h *HttpHandler) SyncQueries(echoCtx echo.Context) error {
 	}
 	if mig != nil {
 		if mig.Status == "PENDING" || mig.Status == "IN_PROGRESS" {
-			return echo.NewHTTPError(http.StatusBadRequest, "sync sample data already in progress")
+			return echo.NewHTTPError(http.StatusBadRequest, "Another Job already in progress")
 		}
-	}
-
-	enabled, err := coreUtils.GetConfigMetadata(h.db, string(models.MetadataKeyCustomizationEnabled))
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return echo.NewHTTPError(http.StatusNotFound, "config not found")
-		}
-		return err
-	}
-
-	if !enabled.GetValue().(bool) {
-		return echo.NewHTTPError(http.StatusForbidden, "customization is not allowed")
 	}
 
 	configzGitURL := echoCtx.QueryParam("configzGitURL")
@@ -1525,17 +1515,19 @@ func (h *HttpHandler) SyncQueries(echoCtx echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid url")
 		}
 
-		err = coreUtils.SetConfigMetadata(h.db, models.MetadataKeyAnalyticsGitURL, configzGitURL)
+		err = coreUtils.SetConfigMetadata(h.db, models.MetadataKeyPlatformConfigurationGitURL, configzGitURL)
 		if err != nil {
 			return err
 		}
 	}
 
 	var migratorJob batchv1.Job
-	err = h.kubeClient.Get(ctx, k8sclient.ObjectKey{
+
+	err := h.kubeClient.Get(ctx, k8sclient.ObjectKey{
 		Namespace: h.cfg.OpengovernanceNamespace,
 		Name:      "post-install-configuration",
 	}, &migratorJob)
+
 	if err != nil {
 		return err
 	}

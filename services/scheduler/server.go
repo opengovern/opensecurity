@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	es2 "github.com/opengovern/opensecurity/services/compliance/es"
 	"net/http"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	es2 "github.com/opengovern/opensecurity/services/compliance/es"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/opengovern/opensecurity/pkg/types"

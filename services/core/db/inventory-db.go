@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/lib/pq"
 	"github.com/opengovern/og-util/pkg/integration"
@@ -152,11 +151,11 @@ func (db Database) GetQuery(id string) (*models.NamedQuery, error) {
 }
 
 func (db Database) ListQueriesByFilters(queryIds []string, search *string, tagFilters map[string][]string, integrationTypes []string,
-	hasParameters *bool, primaryTable []string, listOfTables []string, params []string,owner string , visibility string) ([]models.NamedQuery, error) {
+	hasParameters *bool, primaryTable []string, listOfTables []string, params []string, owner string, visibility string) ([]models.NamedQuery, error) {
 	var s []models.NamedQuery
 
 	m := db.orm.Model(&models.NamedQuery{}).Distinct("named_queries.*").
-	Preload(clause.Associations).Preload("Query.Parameters").Preload("Tags")
+		Preload(clause.Associations).Preload("Query.Parameters").Preload("Tags")
 
 	if len(queryIds) > 0 {
 		m = m.Where("id IN ?", queryIds)
@@ -187,11 +186,11 @@ func (db Database) ListQueriesByFilters(queryIds []string, search *string, tagFi
 	}
 	if owner != "" {
 		m = m.Where("owner = ?", owner)
-		if(visibility != "") {
+		if visibility != "" {
 			m = m.Where("visibility = ?", visibility)
 		}
-	}else{
-		m=m.Where("visibility = ?", "public")
+	} else {
+		m = m.Where("visibility = ?", "public")
 	}
 
 	if hasParameters != nil || len(params) > 0 || len(primaryTable) > 0 || len(listOfTables) > 0 {
@@ -280,53 +279,54 @@ GROUP BY key;
 	return results, nil
 }
 
-func (db Database) GetQueryHistory() ([]models.NamedQueryHistory, error) {
-	var history []models.NamedQueryHistory
-	tx := db.orm.Order("executed_at desc").Limit(3).Find(&history)
-	if tx.Error != nil {
-		return nil, tx.Error
+/*
+	func (db Database) GetQueryHistory() ([]models.NamedQueryHistory, error) {
+		var history []models.NamedQueryHistory
+		tx := db.orm.Order("executed_at desc").Limit(3).Find(&history)
+		if tx.Error != nil {
+			return nil, tx.Error
+		}
+
+		return history, nil
 	}
 
-	return history, nil
-}
-
-func (db Database) UpdateQueryHistory(query string) error {
-	history := models.NamedQueryHistory{
-		Query:      query,
-		ExecutedAt: time.Now(),
-	}
-	// Upsert query history
-	err := db.orm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "query"}},
-		DoUpdates: clause.AssignmentColumns([]string{"executed_at"}),
-	}).Create(&history).Error
-	if err != nil {
-		return err
-	}
-
-	// Only keep latest 100 queries in history
-	const keepNumber = 100
-	var count int64
-	err = db.orm.Model(&models.NamedQueryHistory{}).Count(&count).Error
-	if err != nil {
-		return err
-	}
-	if count > keepNumber {
-		var oldest models.NamedQueryHistory
-		err = db.orm.Model(&models.NamedQueryHistory{}).Order("executed_at desc").Offset(keepNumber - 1).Limit(1).Find(&oldest).Error
+	func (db Database) UpdateQueryHistory(query string) error {
+		history := models.NamedQueryHistory{
+			Query:      query,
+			ExecutedAt: time.Now(),
+		}
+		// Upsert query history
+		err := db.orm.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "query"}},
+			DoUpdates: clause.AssignmentColumns([]string{"executed_at"}),
+		}).Create(&history).Error
 		if err != nil {
 			return err
 		}
 
-		err = db.orm.Model(&models.NamedQueryHistory{}).Where("executed_at < ?", oldest.ExecutedAt).Delete(&models.NamedQueryHistory{}).Error
+		// Only keep latest 100 queries in history
+		const keepNumber = 100
+		var count int64
+		err = db.orm.Model(&models.NamedQueryHistory{}).Count(&count).Error
 		if err != nil {
 			return err
 		}
+		if count > keepNumber {
+			var oldest models.NamedQueryHistory
+			err = db.orm.Model(&models.NamedQueryHistory{}).Order("executed_at desc").Offset(keepNumber - 1).Limit(1).Find(&oldest).Error
+			if err != nil {
+				return err
+			}
+
+			err = db.orm.Model(&models.NamedQueryHistory{}).Where("executed_at < ?", oldest.ExecutedAt).Delete(&models.NamedQueryHistory{}).Error
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
 	}
-
-	return nil
-}
-
+*/
 func (db Database) ListResourceTypeTagsKeysWithPossibleValues(integrationTypes []integration.Type, doSummarize *bool) (map[string][]string, error) {
 	var tags []models.ResourceTypeTag
 	tx := db.orm.Model(models.ResourceTypeTag{}).Joins("JOIN resource_types ON resource_type_tags.resource_type = resource_types.resource_type")
@@ -387,48 +387,6 @@ func (db Database) GetResourceType(resourceType string) (*models.ResourceType, e
 		return nil, tx.Error
 	}
 	return &rtObj, nil
-}
-
-func (db Database) ListResourceCollections(ids []string, statuses []models.ResourceCollectionStatus) ([]models.ResourceCollection, error) {
-	var resourceCollections []models.ResourceCollection
-	tx := db.orm.Model(models.ResourceCollection{}).Preload(clause.Associations)
-	if len(ids) > 0 {
-		tx = tx.Where("id IN ?", ids)
-	}
-	if len(statuses) > 0 {
-		tx = tx.Where("status IN ?", statuses)
-	}
-	tx.Find(&resourceCollections)
-	if tx.Error != nil {
-		return nil, tx.Error
-	}
-	for i := range resourceCollections {
-		if len(resourceCollections[i].FiltersJson.Bytes) > 0 {
-			err := json.Unmarshal(resourceCollections[i].FiltersJson.Bytes, &resourceCollections[i].Filters)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	return resourceCollections, nil
-}
-
-func (db Database) GetResourceCollection(collectionID string) (*models.ResourceCollection, error) {
-	var collection models.ResourceCollection
-	tx := db.orm.Model(models.ResourceCollection{}).Preload(clause.Associations).Where("id = ?", collectionID).First(&collection)
-	if tx.Error != nil {
-		return nil, tx.Error
-	}
-
-	if len(collection.FiltersJson.Bytes) > 0 {
-		err := json.Unmarshal(collection.FiltersJson.Bytes, &collection.Filters)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &collection, nil
 }
 
 func (db Database) ListNamedQueriesUniqueProviders() ([]string, error) {

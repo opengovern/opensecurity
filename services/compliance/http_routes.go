@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/opengovern/og-util/pkg/integration"
 	"net/http"
 	"net/url"
 	"os"
@@ -14,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/opengovern/og-util/pkg/integration"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/uuid"
@@ -3717,17 +3718,18 @@ func (h *HttpHandler) SyncQueries(echoCtx echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest, "sync sample data already in progress")
 		}
 	}
+	/*
+		enabled, err := h.coreClient.GetConfigMetadata(&httpclient.Context{UserRole: authApi.AdminRole}, models.MetadataKeyCustomizationEnabled)
+		if err != nil {
+			h.logger.Error("get config metadata", zap.Error(err))
+			return err
+		}
 
-	enabled, err := h.coreClient.GetConfigMetadata(&httpclient.Context{UserRole: authApi.AdminRole}, models.MetadataKeyCustomizationEnabled)
-	if err != nil {
-		h.logger.Error("get config metadata", zap.Error(err))
-		return err
-	}
+		if !enabled.GetValue().(bool) {
+			return echo.NewHTTPError(http.StatusForbidden, "customization is not allowed")
+		}
 
-	if !enabled.GetValue().(bool) {
-		return echo.NewHTTPError(http.StatusForbidden, "customization is not allowed")
-	}
-
+	*/
 	configzGitURL := echoCtx.QueryParam("configzGitURL")
 	if configzGitURL != "" {
 		// validate url
@@ -3736,7 +3738,7 @@ func (h *HttpHandler) SyncQueries(echoCtx echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid url")
 		}
 
-		err = h.coreClient.SetConfigMetadata(&httpclient.Context{UserRole: authApi.AdminRole}, models.MetadataKeyAnalyticsGitURL, configzGitURL)
+		err = h.coreClient.SetConfigMetadata(&httpclient.Context{UserRole: authApi.AdminRole}, models.MetadataKeyPlatformConfigurationGitURL, configzGitURL)
 		if err != nil {
 			h.logger.Error("set config metadata", zap.Error(err))
 			return err
@@ -3749,7 +3751,7 @@ func (h *HttpHandler) SyncQueries(echoCtx echo.Context) error {
 	}
 
 	var migratorJob batchv1.Job
-	err = h.kubeClient.Get(ctx, k8sclient.ObjectKey{
+	err := h.kubeClient.Get(ctx, k8sclient.ObjectKey{
 		Namespace: currentNamespace,
 		Name:      "post-install-configuration",
 	}, &migratorJob)

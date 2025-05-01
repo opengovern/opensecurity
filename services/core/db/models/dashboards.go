@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
 	"github.com/lib/pq"
-	"github.com/opengovern/og-util/pkg/model"
 )
 
 // Metadata models
@@ -32,11 +31,6 @@ type PolicyParameterValues struct {
 	Key       string `gorm:"primaryKey"`
 	ControlID string `gorm:"primaryKey"`
 	Value     string `gorm:"type:text;not null"`
-}
-
-type QueryViewTag struct {
-	model.Tag
-	QueryViewID string `gorm:"primaryKey"`
 }
 
 type QueryView struct {

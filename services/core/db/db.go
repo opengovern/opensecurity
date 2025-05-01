@@ -37,12 +37,12 @@ func (db Database) Initialize() error {
 		&models.QueryParameter{},
 		// inventory
 		&models.ResourceType{},
-		&models.NamedQuery{},
-		&models.NamedQueryTag{},
-		&models.NamedQueryHistory{},
+		//&models.NamedQuery{},
+		//&models.NamedQueryTag{},
+		//&models.NamedQueryHistory{},
 		&models.ResourceTypeTag{},
-		&models.ResourceCollection{},
-		&models.ResourceCollectionTag{},
+		//&models.ResourceCollection{},
+		//&models.ResourceCollectionTag{},
 		&models.ResourceTypeV2{},
 		// metadata
 		&models.ConfigMetadata{},

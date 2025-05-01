@@ -30,14 +30,9 @@ import (
 	"github.com/opengovern/og-util/pkg/httpserver"
 	"github.com/opengovern/og-util/pkg/integration"
 	queryrunner "github.com/opengovern/opensecurity/jobs/query-runner-job"
-	"github.com/opengovern/opensecurity/pkg/types"
-	"github.com/opengovern/opensecurity/services/core/rego_runner"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 
 	"github.com/labstack/echo/v4"
-	"github.com/open-policy-agent/opa/rego"
 	"github.com/opengovern/og-util/pkg/model"
-	esSdk "github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/steampipe"
 	"github.com/opengovern/opensecurity/pkg/utils"
 	"github.com/opengovern/opensecurity/services/core/api"
@@ -48,7 +43,6 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 )
 
 func (h *HttpHandler) getIntegrationTypesFromIntegrationIDs(ctx echo.Context, integrationTypes []integration.Type, integrationIDs []string) ([]integration.Type, error) {
@@ -229,7 +223,7 @@ func (h *HttpHandler) ListQueriesV2(ctx echo.Context) error {
 	}
 
 	queries, err := h.db.ListQueriesByFilters(req.QueryIDs, search, req.Tags, req.IntegrationTypes, req.HasParameters, req.PrimaryTable,
-		tablesFilter, nil,req.Owner,req.Visibility)
+		tablesFilter, nil, req.Owner, req.Visibility)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
@@ -542,11 +536,11 @@ func (h *HttpHandler) RunQuery(ctx echo.Context) error {
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
-	} else if *req.Engine == api.QueryEngineCloudQLRego {
+		/*} else if *req.Engine == api.QueryEngineCloudQLRego {
 		resp, err = h.RunRegoNamedQuery(ctx.Request().Context(), *req.Query, queryOutput.String(), &req)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
+		}*/
 	} else {
 		return fmt.Errorf("invalid query engine: %s", *req.Engine)
 	}
@@ -634,6 +628,7 @@ func calculateParamsHash(params map[string]string) (string, error) {
 //	@Produce		json
 //	@Success		200	{object}	[]api.NamedQueryHistory
 //	@Router			/inventory/api/v1/query/run/history [get]
+/*
 func (h *HttpHandler) GetRecentRanQueries(ctx echo.Context) error {
 	// trace :
 	_, span := tracer.Start(ctx.Request().Context(), "new_GetQueryHistory", trace.WithSpanKind(trace.SpanKindServer))
@@ -658,7 +653,7 @@ func (h *HttpHandler) GetRecentRanQueries(ctx echo.Context) error {
 
 	return ctx.JSON(200, res)
 }
-
+*/
 func (h *HttpHandler) RunSQLNamedQuery(ctx context.Context, title, query string, req *api.RunQueryRequest) (*api.RunQueryResponse, error) {
 	var err error
 	lastIdx := (req.Page.No - 1) * req.Page.Size
@@ -735,12 +730,14 @@ func (h *HttpHandler) RunSQLNamedQuery(ctx context.Context, title, query string,
 			}
 		}
 	}
+	/*
 
-	err = h.db.UpdateQueryHistory(query)
-	if err != nil {
-		h.logger.Error("failed to update query history", zap.Error(err))
-		return nil, err
-	}
+		err = h.db.UpdateQueryHistory(query)
+		if err != nil {
+			h.logger.Error("failed to update query history", zap.Error(err))
+			return nil, err
+		}
+	*/
 
 	resp := api.RunQueryResponse{
 		Title:   title,
@@ -756,150 +753,151 @@ type resourceFieldItem struct {
 	value     interface{}
 }
 
-func (h *HttpHandler) RunRegoNamedQuery(ctx context.Context, title, query string, req *api.RunQueryRequest) (*api.RunQueryResponse, error) {
-	var err error
-	lastIdx := (req.Page.No - 1) * req.Page.Size
+/*
+	func (h *HttpHandler) RunRegoNamedQuery(ctx context.Context, title, query string, req *api.RunQueryRequest) (*api.RunQueryResponse, error) {
+		var err error
+		lastIdx := (req.Page.No - 1) * req.Page.Size
 
-	reqoQuery, err := rego.New(
-		rego.Query("x = data.cloudql.query.allow; resource_type = data.cloudql.query.resource_type"),
-		rego.Module("cloudql.query", query),
-	).PrepareForEval(ctx)
-	if err != nil {
-		return nil, err
-	}
-	results, err := reqoQuery.Eval(ctx, rego.EvalInput(map[string]interface{}{}))
-	if err != nil {
-		return nil, err
-	}
-	if len(results) == 0 {
-		return nil, fmt.Errorf("undefined result")
-	}
-	resourceType, ok := results[0].Bindings["resource_type"].(string)
-	if !ok {
-		return nil, errors.New("resource_type not defined")
-	}
-	h.logger.Info("reqo runner", zap.String("resource_type", resourceType))
-
-	var filters []esSdk.BoolFilter
-	if req.AccountId != nil {
-		if len(*req.AccountId) > 0 && *req.AccountId != "all" {
-			var accountFieldName string
-			// TODO: removed for integration dependencies
-			//awsRTypes := onboardApi.GetAWSSupportedResourceTypeMap()
-			//if _, ok := awsRTypes[strings.ToLower(resourceType)]; ok {
-			//	accountFieldName = "AccountID"
-			//}
-			//azureRTypes := onboardApi.GetAzureSupportedResourceTypeMap()
-			//if _, ok := azureRTypes[strings.ToLower(resourceType)]; ok {
-			//	accountFieldName = "SubscriptionID"
-			//}
-
-			filters = append(filters, esSdk.NewTermFilter("metadata."+accountFieldName, *req.AccountId))
-		}
-	}
-
-	if req.SourceId != nil {
-		filters = append(filters, esSdk.NewTermFilter("source_id", *req.SourceId))
-	}
-
-	jsonFilters, _ := json.Marshal(filters)
-	plugin.Logger(ctx).Trace("reqo runner", "filters", filters, "jsonFilters", string(jsonFilters))
-
-	paginator, err := rego_runner.Client{ES: h.client}.NewResourcePaginator(filters, nil, types.ResourceTypeToESIndex(resourceType))
-	if err != nil {
-		return nil, err
-	}
-	defer paginator.Close(ctx)
-
-	ignore := lastIdx
-	size := req.Page.Size
-
-	h.logger.Info("reqo runner page", zap.Int("ignoreInit", ignore), zap.Int("sizeInit", size), zap.Bool("hasPage", paginator.HasNext()))
-	var header []string
-	var result [][]any
-	for paginator.HasNext() {
-		page, err := paginator.NextPage(ctx)
+		reqoQuery, err := rego.New(
+			rego.Query("x = data.cloudql.query.allow; resource_type = data.cloudql.query.resource_type"),
+			rego.Module("cloudql.query", query),
+		).PrepareForEval(ctx)
 		if err != nil {
 			return nil, err
 		}
+		results, err := reqoQuery.Eval(ctx, rego.EvalInput(map[string]interface{}{}))
+		if err != nil {
+			return nil, err
+		}
+		if len(results) == 0 {
+			return nil, fmt.Errorf("undefined result")
+		}
+		resourceType, ok := results[0].Bindings["resource_type"].(string)
+		if !ok {
+			return nil, errors.New("resource_type not defined")
+		}
+		h.logger.Info("reqo runner", zap.String("resource_type", resourceType))
 
-		for _, v := range page {
-			if ignore > 0 {
-				h.logger.Info("rego ignoring resource", zap.Int("ignore", ignore))
-				ignore--
-				continue
+		var filters []esSdk.BoolFilter
+		if req.AccountId != nil {
+			if len(*req.AccountId) > 0 && *req.AccountId != "all" {
+				var accountFieldName string
+				// TODO: removed for integration dependencies
+				//awsRTypes := onboardApi.GetAWSSupportedResourceTypeMap()
+				//if _, ok := awsRTypes[strings.ToLower(resourceType)]; ok {
+				//	accountFieldName = "AccountID"
+				//}
+				//azureRTypes := onboardApi.GetAzureSupportedResourceTypeMap()
+				//if _, ok := azureRTypes[strings.ToLower(resourceType)]; ok {
+				//	accountFieldName = "SubscriptionID"
+				//}
+
+				filters = append(filters, esSdk.NewTermFilter("metadata."+accountFieldName, *req.AccountId))
 			}
+		}
 
-			if size <= 0 {
-				h.logger.Info("rego pagination finished", zap.Int("size", size))
-				break
-			}
+		if req.SourceId != nil {
+			filters = append(filters, esSdk.NewTermFilter("source_id", *req.SourceId))
+		}
 
-			evalResults, err := reqoQuery.Eval(ctx, rego.EvalInput(v))
+		jsonFilters, _ := json.Marshal(filters)
+		plugin.Logger(ctx).Trace("reqo runner", "filters", filters, "jsonFilters", string(jsonFilters))
+
+		paginator, err := rego_runner.Client{ES: h.client}.NewResourcePaginator(filters, nil, types.ResourceTypeToESIndex(resourceType))
+		if err != nil {
+			return nil, err
+		}
+		defer paginator.Close(ctx)
+
+		ignore := lastIdx
+		size := req.Page.Size
+
+		h.logger.Info("reqo runner page", zap.Int("ignoreInit", ignore), zap.Int("sizeInit", size), zap.Bool("hasPage", paginator.HasNext()))
+		var header []string
+		var result [][]any
+		for paginator.HasNext() {
+			page, err := paginator.NextPage(ctx)
 			if err != nil {
 				return nil, err
 			}
-			if len(evalResults) == 0 {
-				return nil, fmt.Errorf("undefined result")
-			}
 
-			allowed, ok := evalResults[0].Bindings["x"].(bool)
-			if !ok {
-				return nil, errors.New("x not defined")
-			}
-
-			if !allowed {
-				h.logger.Info("rego resource not allowed", zap.Any("resource", v))
-				continue
-			}
-
-			var cells []resourceFieldItem
-			for k, vv := range v {
-				cells = append(cells, resourceFieldItem{
-					fieldName: k,
-					value:     vv,
-				})
-			}
-			sort.Slice(cells, func(i, j int) bool {
-				return cells[i].fieldName < cells[j].fieldName
-			})
-
-			if len(header) == 0 {
-				for _, c := range cells {
-					header = append(header, c.fieldName)
+			for _, v := range page {
+				if ignore > 0 {
+					h.logger.Info("rego ignoring resource", zap.Int("ignore", ignore))
+					ignore--
+					continue
 				}
-			}
 
-			size--
-			var res []any
-			for _, va := range cells {
-				res = append(res, va.value)
+				if size <= 0 {
+					h.logger.Info("rego pagination finished", zap.Int("size", size))
+					break
+				}
+
+				evalResults, err := reqoQuery.Eval(ctx, rego.EvalInput(v))
+				if err != nil {
+					return nil, err
+				}
+				if len(evalResults) == 0 {
+					return nil, fmt.Errorf("undefined result")
+				}
+
+				allowed, ok := evalResults[0].Bindings["x"].(bool)
+				if !ok {
+					return nil, errors.New("x not defined")
+				}
+
+				if !allowed {
+					h.logger.Info("rego resource not allowed", zap.Any("resource", v))
+					continue
+				}
+
+				var cells []resourceFieldItem
+				for k, vv := range v {
+					cells = append(cells, resourceFieldItem{
+						fieldName: k,
+						value:     vv,
+					})
+				}
+				sort.Slice(cells, func(i, j int) bool {
+					return cells[i].fieldName < cells[j].fieldName
+				})
+
+				if len(header) == 0 {
+					for _, c := range cells {
+						header = append(header, c.fieldName)
+					}
+				}
+
+				size--
+				var res []any
+				for _, va := range cells {
+					res = append(res, va.value)
+				}
+				result = append(result, res)
 			}
-			result = append(result, res)
 		}
+
+		_, span := tracer.Start(ctx, "new_UpdateQueryHistory", trace.WithSpanKind(trace.SpanKindServer))
+		span.SetName("new_UpdateQueryHistory")
+
+		err = h.db.UpdateQueryHistory(query)
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			h.logger.Error("failed to update query history", zap.Error(err))
+			return nil, err
+		}
+		span.End()
+
+		resp := api.RunQueryResponse{
+			Title:   title,
+			Query:   query,
+			Headers: header,
+			Result:  result,
+		}
+		return &resp, nil
 	}
-
-	_, span := tracer.Start(ctx, "new_UpdateQueryHistory", trace.WithSpanKind(trace.SpanKindServer))
-	span.SetName("new_UpdateQueryHistory")
-
-	err = h.db.UpdateQueryHistory(query)
-	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		h.logger.Error("failed to update query history", zap.Error(err))
-		return nil, err
-	}
-	span.End()
-
-	resp := api.RunQueryResponse{
-		Title:   title,
-		Query:   query,
-		Headers: header,
-		Result:  result,
-	}
-	return &resp, nil
-}
-
+*/
 func (h *HttpHandler) ListResourceTypeMetadata(ctx echo.Context) error {
 	tagMap := model.TagStringsToTagMap(httpserver.QueryArrayParam(ctx, "tag"))
 	integrationTypes := make([]integration.Type, 0)
@@ -951,6 +949,7 @@ func (h *HttpHandler) ListResourceTypeMetadata(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, result)
 }
 
+/*
 // ListResourceCollectionsMetadata godoc
 //
 //	@Summary		List resource collections
@@ -1231,7 +1230,7 @@ func arrayContains(array []string, key string) bool {
 	}
 	return false
 }
-
+*/
 // RunQueryByID godoc
 //
 //	@Summary		Run query by named query or compliance ID
@@ -1327,7 +1326,7 @@ func (h *HttpHandler) RunQueryByID(ctx echo.Context) error {
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
-	} else if engine == api.QueryEngineCloudQLRego {
+		/*} else if engine == api.QueryEngineCloudQLRego {
 		resp, err = h.RunRegoNamedQuery(newCtx, query, queryOutput.String(), &api.RunQueryRequest{
 			Page:   req.Page,
 			Query:  &query,
@@ -1336,7 +1335,7 @@ func (h *HttpHandler) RunQueryByID(ctx echo.Context) error {
 		})
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
+		}*/
 	} else {
 		resp, err = h.RunSQLNamedQuery(newCtx, query, queryOutput.String(), &api.RunQueryRequest{
 			Page:   req.Page,
@@ -1369,7 +1368,7 @@ func (h *HttpHandler) RunQueryByID(ctx echo.Context) error {
 
 // add query
 
-func (h *HttpHandler)AddQuery(ctx echo.Context) error {
+func (h *HttpHandler) AddQuery(ctx echo.Context) error {
 	var req api.AddQueryRequest
 	// valideate request
 	if err := bindValidate(ctx, &req); err != nil {
@@ -1378,30 +1377,29 @@ func (h *HttpHandler)AddQuery(ctx echo.Context) error {
 
 	query := models.Query{
 		QueryToExecute: req.Query,
-		ID: req.QueryID,
-		Engine: "sql",
-		Global: false,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		ID:             req.QueryID,
+		Engine:         "sql",
+		Global:         false,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
-	err:= h.db.CreateQuery(&query)
+	err := h.db.CreateQuery(&query)
 	if err != nil {
 		h.logger.Error("failed to create query", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create query")
 	}
 	// add query to cache
 	named_query := models.NamedQuery{
-		ID: req.QueryID,
+		ID:               req.QueryID,
 		IntegrationTypes: req.IntegrationTypes,
-		CacheEnabled: true,
-		Owner: req.Owner,
-		Query: &query,
-		QueryID: &req.QueryID,
-		Visibility: req.Visibility,
-		IsBookmarked: req.IsBookmarked,
-		Title: req.QueryName,
-		Description: req.Description,
-	
+		CacheEnabled:     true,
+		Owner:            req.Owner,
+		Query:            &query,
+		QueryID:          &req.QueryID,
+		Visibility:       req.Visibility,
+		IsBookmarked:     req.IsBookmarked,
+		Title:            req.QueryName,
+		Description:      req.Description,
 	}
 	err = h.db.CreateNamedQuery(&named_query)
 	if err != nil {
@@ -1409,10 +1407,10 @@ func (h *HttpHandler)AddQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create named query")
 	}
 	return ctx.JSON(http.StatusCreated, nil)
-	
+
 }
 
-func (h *HttpHandler)UpdateQuery(ctx echo.Context) error {
+func (h *HttpHandler) UpdateQuery(ctx echo.Context) error {
 	var req api.AddQueryRequest
 	// valideate request
 	if err := bindValidate(ctx, &req); err != nil {
@@ -1421,28 +1419,26 @@ func (h *HttpHandler)UpdateQuery(ctx echo.Context) error {
 
 	query := models.Query{
 		QueryToExecute: req.Query,
-		ID: req.QueryID,
-		Engine: "sql",
-		
+		ID:             req.QueryID,
+		Engine:         "sql",
 	}
-	err:= h.db.UpdateQuery(&query)
+	err := h.db.UpdateQuery(&query)
 	if err != nil {
 		h.logger.Error("failed to create query", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create query")
 	}
 	// add query to cache
 	named_query := models.NamedQuery{
-		ID: req.QueryID,
+		ID:               req.QueryID,
 		IntegrationTypes: req.IntegrationTypes,
-		CacheEnabled: true,
-		Owner: req.Owner,
-		Query: &query,
-		QueryID: &req.QueryID,
-		Visibility: req.Visibility,
-		IsBookmarked: req.IsBookmarked,
-		Title: req.QueryName,
-		Description: req.Description,
-	
+		CacheEnabled:     true,
+		Owner:            req.Owner,
+		Query:            &query,
+		QueryID:          &req.QueryID,
+		Visibility:       req.Visibility,
+		IsBookmarked:     req.IsBookmarked,
+		Title:            req.QueryName,
+		Description:      req.Description,
 	}
 	err = h.db.UpdateNamedQuery(&named_query)
 	if err != nil {
@@ -1450,10 +1446,8 @@ func (h *HttpHandler)UpdateQuery(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create named query")
 	}
 	return ctx.JSON(http.StatusAccepted, nil)
-	
+
 }
-
-
 
 // ListQueriesFilters godoc
 //
@@ -1997,7 +1991,7 @@ func (h *HttpHandler) ListQueriesV2Internal(req api.ListQueryV2Request) (*api.Li
 	}
 
 	queries, err := h.db.ListQueriesByFilters(req.QueryIDs, search, req.Tags, req.IntegrationTypes, req.HasParameters, req.PrimaryTable,
-		tablesFilter, nil,"","")
+		tablesFilter, nil, "", "")
 	if err != nil {
 		return &namedQuery, err
 	}
@@ -2108,11 +2102,12 @@ func (h *HttpHandler) RunQueryInternal(ctx context.Context, req api.RunQueryRequ
 		if err != nil {
 			return resp, err
 		}
-	} else if *req.Engine == api.QueryEngineCloudQLRego {
-		resp, err = h.RunRegoNamedQuery(ctx, *req.Query, queryOutput.String(), &req)
-		if err != nil {
-			return resp, err
-		}
+		/*
+			} else if *req.Engine == api.QueryEngineCloudQLRego {
+				resp, err = h.RunRegoNamedQuery(ctx, *req.Query, queryOutput.String(), &req)
+				if err != nil {
+					return resp, err
+				}*/
 	} else {
 		return resp, fmt.Errorf("invalid query engine: %s", *req.Engine)
 	}
@@ -2343,10 +2338,10 @@ func (h *HttpHandler) GenerateQuery(ctx echo.Context) error {
 	}
 
 	inferenceResult := api.InferenceResult{
-		Type:                      finalResult.Type,
-		ClarifyingQuestions:       clarifyingQuestions,
-		Reason:                    finalResult.Reason,
-		RawResponse:               finalResult.RawResponse,
+		Type:                finalResult.Type,
+		ClarifyingQuestions: clarifyingQuestions,
+		Reason:              finalResult.Reason,
+		RawResponse:         finalResult.RawResponse,
 	}
 
 	return ctx.JSON(http.StatusOK, api.GenerateQueryResponse{
@@ -2561,7 +2556,7 @@ func (h *HttpHandler) GetChatbotSession(ctx echo.Context) error {
 
 	var chats []api.Chat
 	for _, chat := range session.Chats {
-		complete_chat,err := h.db.GetChat(chat.ID)
+		complete_chat, err := h.db.GetChat(chat.ID)
 		if err != nil {
 			h.logger.Error("failed to get chat", zap.Error(err))
 		}
@@ -2677,7 +2672,7 @@ func (h *HttpHandler) DownloadChatbotChat(ctx echo.Context) error {
 		if err := json.Unmarshal(chat.Result.Bytes, &result); err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to unmarshal chat result")
 		}
-		
+
 	}
 	if (result.Result == nil || len(result.Result) == 0) && chat.QueryError != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "no result found")
@@ -2687,7 +2682,7 @@ func (h *HttpHandler) DownloadChatbotChat(ctx echo.Context) error {
 	writer := csv.NewWriter(&buf)
 
 	// Extract headers from first row
-	
+
 	if err := writer.Write(result.Headers); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to write csv headers")
 	}
@@ -2711,7 +2706,7 @@ func (h *HttpHandler) DownloadChatbotChat(ctx echo.Context) error {
 
 	// convert results to csv
 	csvData := buf.Bytes()
-	
+
 	// create a new file
 	fileName := fmt.Sprintf("chat_%s.csv", chat.ID.String())
 	// set the content type and disposition
@@ -2727,7 +2722,7 @@ func (h *HttpHandler) DownloadChatbotChat(ctx echo.Context) error {
 	}
 	// return response
 	return nil
-	
+
 }
 
 func convertChatToApi(chat models.Chat) (*api.Chat, error) {
@@ -2749,8 +2744,7 @@ func convertChatToApi(chat models.Chat) (*api.Chat, error) {
 		clarifyingQuestions = append(clarifyingQuestions, api.ClarificationQuestion{
 			ClarificationId: chatClarification.ID.String(),
 			Question:        chatClarification.Questions,
-			Answer: *chatClarification.Answer,
-			
+			Answer:          *chatClarification.Answer,
 		})
 	}
 
