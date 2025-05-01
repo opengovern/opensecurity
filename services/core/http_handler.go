@@ -4,6 +4,12 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"net/http"
+	"sort"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/labstack/echo/v4"
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
@@ -11,11 +17,6 @@ import (
 	authClient "github.com/opengovern/opensecurity/services/auth/client"
 	complianceapi "github.com/opengovern/opensecurity/services/compliance/api"
 	coreApi "github.com/opengovern/opensecurity/services/core/api"
-	"net/http"
-	"sort"
-	"strings"
-	"sync"
-	"time"
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	"github.com/google/uuid"
@@ -55,7 +56,9 @@ type HttpHandler struct {
 	kubeClient         client.Client
 	vault              vault.VaultSourceConfig
 	vaultSecretHandler vault.VaultSecretHandler
-	migratorDb         *db2.Database
+	vaultSealHandler   *vault.HashiCorpVaultSealHandler // <<< ADD THIS FIELD (use actual type/interface, e.g., *vault.HashiCorpVaultSealHandler)
+
+	migratorDb *db2.Database
 
 	queryParameters []coreApi.QueryParameter
 	queryParamsMu   sync.RWMutex
@@ -65,189 +68,165 @@ type HttpHandler struct {
 	PluginJob *cloudql_init_job.Job
 }
 
+// InitializeHttpHandler initializes the main HttpHandler.
 func InitializeHttpHandler(
-	cfg config.Config,
+	cfg config.Config, // core/config type
 	schedulerBaseUrl string, integrationBaseUrl string, complianceBaseUrl string, authBaseUrl string,
-	logger *zap.Logger, esConf config3.ElasticSearch,
+	sealHandler *vault.HashiCorpVaultSealHandler, // Parameter is pointer type
+	logger *zap.Logger, esConf config3.ElasticSearch, // Use og-util/pkg/config type
 	complianceEnabled string,
 ) (h *HttpHandler, err error) {
 	h = &HttpHandler{
 		queryParamsMu: sync.RWMutex{},
+		cfg:           cfg,
+		logger:        logger,
+		// *** Assign the pointer directly ***
+		vaultSealHandler: sealHandler, // <<< CORRECTED assignment (no dereference *)
+		// Initialize other fields... (Need to add based on struct definition)
+		// Example: ensure these are initialized if needed later, even if nil initially
+		// vault:             nil, // Or initialize properly if needed here
+		// vaultSecretHandler: nil, // Or initialize properly
 	}
 	ctx := context.Background()
 
-	fmt.Println("Initializing http handler")
-	// shared
-	// setup postgres connection
-	psqlCfg := postgres.Config{
-		Host:    cfg.Postgres.Host,
-		Port:    cfg.Postgres.Port,
-		User:    cfg.Postgres.Username,
-		Passwd:  cfg.Postgres.Password,
-		DB:      cfg.Postgres.DB,
-		SSLMode: cfg.Postgres.SSLMode,
-	}
+	logger.Info("Initializing http handler...")
+
+	// --- Initialize Database Connections ---
+	logger.Debug("Connecting to core database...")
+	psqlCfg := postgres.Config{Host: cfg.Postgres.Host, Port: cfg.Postgres.Port, User: cfg.Postgres.Username, Passwd: cfg.Postgres.Password, DB: cfg.Postgres.DB, SSLMode: cfg.Postgres.SSLMode}
 	orm, err := postgres.NewClient(&psqlCfg, logger)
 	if err != nil {
-		return nil, fmt.Errorf("new postgres client: %w", err)
+		return nil, fmt.Errorf("new core postgres client: %w", err)
 	}
-
 	h.db = db.NewDatabase(orm)
-	fmt.Println("Connected to the postgres database: ", cfg.Postgres.DB)
+	if err = h.db.Initialize(); err != nil {
+		return nil, fmt.Errorf("initialize core db: %w", err)
+	}
+	logger.Info("Connected and initialized core database", zap.String("db", cfg.Postgres.DB))
 
-	err = h.db.Initialize()
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println("Initialized postgres database: ", cfg.Postgres.DB)
-	// metadata
-	apps, err := h.db.ListApp()
-	if err != nil {
-		return nil, err
-	}
-	if len(apps) == 0 {
-		err = h.db.CreateApp(&models.PlatformConfiguration{
-			InstallID: uuid.New(),
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	migratorDbCfg := postgres.Config{
-		Host:    cfg.Postgres.Host,
-		Port:    cfg.Postgres.Port,
-		User:    cfg.Postgres.Username,
-		Passwd:  cfg.Postgres.Password,
-		DB:      "migrator",
-		SSLMode: cfg.Postgres.SSLMode,
-	}
+	logger.Debug("Connecting to migrator database...")
+	migratorDbCfg := postgres.Config{Host: cfg.Postgres.Host, Port: cfg.Postgres.Port, User: cfg.Postgres.Username, Passwd: cfg.Postgres.Password, DB: "migrator", SSLMode: cfg.Postgres.SSLMode}
 	migratorOrm, err := postgres.NewClient(&migratorDbCfg, logger)
 	if err != nil {
-		return nil, fmt.Errorf("new postgres client: %w", err)
+		return nil, fmt.Errorf("new migrator postgres client: %w", err)
 	}
 	if err := migratorOrm.AutoMigrate(&model.Migration{}); err != nil {
-		return nil, fmt.Errorf("gorm migrate: %w", err)
+		return nil, fmt.Errorf("gorm migrate migrator db: %w", err)
 	}
-	migratorDb := &db2.Database{ORM: migratorOrm}
+	h.migratorDb = &db2.Database{ORM: migratorOrm}
+	logger.Info("Connected and initialized migrator database", zap.String("db", "migrator"))
 
+	// --- Initialize App Config (if needed) ---
+	apps, err := h.db.ListApp()
+	if err != nil {
+		return nil, fmt.Errorf("list app config: %w", err)
+	}
+	if len(apps) == 0 {
+		logger.Info("No platform configuration found, creating initial entry.")
+		err = h.db.CreateApp(&models.PlatformConfiguration{InstallID: uuid.New(), CreatedAt: time.Now(), UpdatedAt: time.Now()})
+		if err != nil {
+			return nil, fmt.Errorf("create app config: %w", err)
+		}
+	}
+
+	// --- Initialize Kubernetes Client ---
+	logger.Debug("Initializing Kubernetes client...")
 	kubeClient, err := NewKubeClient()
 	if err != nil {
-		return nil, err
-	}
-	err = v1.AddToScheme(kubeClient.Scheme())
-	if err != nil {
-		return nil, fmt.Errorf("add v1 to scheme: %w", err)
+		return nil, fmt.Errorf("new kube client: %w", err)
 	}
 	h.kubeClient = kubeClient
-	h.cfg = cfg
-	h.migratorDb = migratorDb
-	h.viewCheckpoint = time.Now().Add(-time.Hour * 2)
-	switch cfg.Vault.Provider {
-	case vault.HashiCorpVault:
+	logger.Debug("Kubernetes client initialized.")
+
+	// --- Initialize Vault Clients (Secret Handler and Source Config) ---
+	if cfg.Vault.Provider == vault.HashiCorpVault {
+		logger.Debug("Initializing HashiCorp Vault Secret Handler...")
 		h.vaultSecretHandler, err = vault.NewHashiCorpVaultSecretHandler(ctx, logger, cfg.Vault.HashiCorp)
 		if err != nil {
-			logger.Error("new hashicorp vaultClient secret handler", zap.Error(err))
-			return nil, fmt.Errorf("new hashicorp vaultClient secret handler: %w", err)
+			logger.Error("new hashicorp vault secret handler failed", zap.Error(err))
+			return nil, fmt.Errorf("new hashicorp vault secret handler: %w", err)
 		}
 
+		logger.Debug("Initializing HashiCorp Vault Source Config...")
 		h.vault, err = vault.NewHashiCorpVaultClient(ctx, logger, cfg.Vault.HashiCorp, cfg.Vault.KeyId)
 		if err != nil {
-			if strings.Contains(err.Error(), api6.ErrSecretNotFound.Error()) {
+			if h.vaultSecretHandler != nil && strings.Contains(err.Error(), api6.ErrSecretNotFound.Error()) {
+				logger.Warn("Vault AES key secret not found, attempting to create.", zap.String("keyID", cfg.Vault.KeyId))
 				b := make([]byte, 32)
-				_, err := rand.Read(b)
-				if err != nil {
-					return nil, err
+				_, randErr := rand.Read(b)
+				if randErr != nil {
+					return nil, fmt.Errorf("generate random bytes for vault key: %w", randErr)
 				}
-
-				_, err = h.vaultSecretHandler.SetSecret(ctx, cfg.Vault.KeyId, b)
-				if err != nil {
-					return nil, err
+				_, setErr := h.vaultSecretHandler.SetSecret(ctx, cfg.Vault.KeyId, b)
+				if setErr != nil {
+					return nil, fmt.Errorf("set initial vault secret for key %s: %w", cfg.Vault.KeyId, setErr)
 				}
-
+				logger.Info("Created new Vault AES key secret.", zap.String("keyID", cfg.Vault.KeyId))
 				h.vault, err = vault.NewHashiCorpVaultClient(ctx, logger, cfg.Vault.HashiCorp, cfg.Vault.KeyId)
 				if err != nil {
-					logger.Error("new hashicorp vaultClient source config after setSecret", zap.Error(err))
-					return nil, fmt.Errorf("new hashicorp vaultClient source config after setSecret: %w", err)
+					logger.Error("new hashicorp vault source config after setSecret failed", zap.Error(err))
+					return nil, fmt.Errorf("new hashicorp vault source config after setSecret: %w", err)
 				}
 			} else {
-				logger.Error("new hashicorp vaultClient source config", zap.Error(err))
-				return nil, fmt.Errorf("new hashicorp vaultClient source config: %w", err)
+				logger.Error("new hashicorp vault source config failed", zap.Error(err))
+				return nil, fmt.Errorf("new hashicorp vault source config: %w", err)
 			}
 		}
-	default:
+		logger.Info("HashiCorp Vault Secret Handler and Source Config initialized.")
+	} else if cfg.Vault.Provider != "" {
+		logger.Error("Unsupported vault provider specified in config", zap.String("provider", string(cfg.Vault.Provider)))
 		return nil, fmt.Errorf("unsupported vault provider: %s", cfg.Vault.Provider)
+	} else {
+		logger.Info("No Vault provider configured in core config.")
 	}
 
-	switch cfg.Vault.Provider {
-	case vault.AzureKeyVault, vault.HashiCorpVault:
-		_, err = h.vaultSecretHandler.GetSecret(ctx, h.cfg.Vault.KeyId)
-		if err != nil {
-			// create new aes key
-			b := make([]byte, 32)
-			_, err := rand.Read(b)
-			if err != nil {
-				h.logger.Error("failed to generate random bytes", zap.Error(err))
-			}
-			_, err = h.vaultSecretHandler.SetSecret(ctx, h.cfg.Vault.KeyId, b)
-			if err != nil {
-				h.logger.Error("failed to set secret", zap.Error(err))
-			}
-		}
-	default:
-		h.logger.Error("unsupported vault provider", zap.Any("provider", h.cfg.Vault.Provider))
-	}
-
-	h.client, err = opengovernance.NewClient(opengovernance.ClientConfig{
-		Addresses:     []string{esConf.Address},
-		Username:      &esConf.Username,
-		Password:      &esConf.Password,
-		IsOnAks:       &esConf.IsOnAks,
-		IsOpenSearch:  &esConf.IsOpenSearch,
-		AwsRegion:     &esConf.AwsRegion,
-		AssumeRoleArn: &esConf.AssumeRoleArn,
-	})
+	// --- Initialize ES Client ---
+	logger.Debug("Initializing Elasticsearch client...")
+	h.client, err = opengovernance.NewClient(opengovernance.ClientConfig{Addresses: []string{esConf.Address}, Username: &esConf.Username, Password: &esConf.Password, IsOnAks: &esConf.IsOnAks, IsOpenSearch: &esConf.IsOpenSearch, AwsRegion: &esConf.AwsRegion, AssumeRoleArn: &esConf.AssumeRoleArn})
 	if err != nil {
-		return nil, err
+		logger.Error("Failed to create Elasticsearch client", zap.Error(err))
+		return nil, fmt.Errorf("new opengovernance es client: %w", err)
 	}
+	logger.Info("Elasticsearch client initialized.")
+
+	// --- Initialize Service Clients ---
+	logger.Debug("Initializing service clients...")
 	h.schedulerClient = describeClient.NewSchedulerServiceClient(schedulerBaseUrl)
-
 	h.integrationClient = integrationClient.NewIntegrationServiceClient(integrationBaseUrl)
-
 	h.authClient = authClient.NewAuthClient(authBaseUrl)
+	logger.Debug("Initialized service clients", zap.Strings("urls", []string{schedulerBaseUrl, integrationBaseUrl, authBaseUrl}))
 
-	if strings.ToLower(complianceEnabled) == "true" {
+	// --- Initialize Compliance Client (optional) ---
+	if lcComplianceEnabled := strings.ToLower(complianceEnabled); lcComplianceEnabled == "true" {
 		h.complianceClient = complianceClient.NewComplianceClient(complianceBaseUrl)
 		h.complianceEnabled = true
-	} else if strings.ToLower(complianceEnabled) == "false" {
-		h.complianceEnabled = false
+		logger.Info("Compliance client initialized.", zap.String("url", complianceBaseUrl))
 	} else {
-		logger.Error("unsupported compliance enabled", zap.String("complianceEnabled", complianceEnabled))
+		h.complianceEnabled = false
+		if lcComplianceEnabled != "false" && lcComplianceEnabled != "" {
+			logger.Warn("Unsupported value for COMPLIANCE_ENABLED env var, disabling compliance client.", zap.String("value", complianceEnabled))
+		} else {
+			logger.Info("Compliance client disabled.")
+		}
 	}
 
-	h.logger = logger
-
-	// setup steampipe connection
+	// --- Initialize Plugin Job Runner ---
+	logger.Debug("Initializing Plugin Job Runner...")
 	pluginJob := cloudql_init_job.NewJob(h.logger, cloudql_init_job.Config{
-		Postgres: config3.Postgres{
-			Host:     PostgresPluginHost,
-			Port:     PostgresPluginPort,
-			Username: PostgresPluginUsername,
-			Password: PostgresPluginPassword,
-		},
-		ElasticSearch: esConf,
-		Steampipe:     config3.Postgres{},
-		Integration:   config3.OpenGovernanceService{BaseURL: integrationBaseUrl},
+		Postgres:      config3.Postgres{Host: PostgresPluginHost, Port: PostgresPluginPort, Username: PostgresPluginUsername, Password: PostgresPluginPassword}, // Use package vars
+		ElasticSearch: esConf, Steampipe: config3.Postgres{}, Integration: config3.OpenGovernanceService{BaseURL: integrationBaseUrl},
 	}, h.integrationClient)
 	h.PluginJob = pluginJob
-	h.initializeSteampipePluginsWithRetry(ctx, 5, 2*time.Second)
+	h.initializeSteampipePluginsWithRetry(ctx, 5, 2*time.Second) // Run Steampipe init
+	logger.Debug("Plugin Job Runner initialized.")
 
+	// Start background parameter fetch
 	go h.fetchParameters()
+	logger.Debug("Started background parameter fetch.")
 
+	logger.Info("HttpHandler initialization complete.")
 	return h, nil
-}
+} // --- END InitializeHttpHandler ---
 
 func NewKubeClient() (client.Client, error) {
 	scheme := runtime.NewScheme()
