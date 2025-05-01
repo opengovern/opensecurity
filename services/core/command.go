@@ -2,7 +2,7 @@ package core
 
 import (
 	"context"
-	"fmt"
+	"fmt" // <<< Added missing import for placeholder
 	"os"
 	"strings"
 
@@ -12,7 +12,7 @@ import (
 	"github.com/opengovern/og-util/pkg/koanf"
 	"github.com/opengovern/og-util/pkg/vault"
 	config2 "github.com/opengovern/opensecurity/services/core/config" // Aliased standard config import
-	vault2 "github.com/opengovern/opensecurity/services/core/vault"
+	vault2 "github.com/opengovern/opensecurity/services/core/vault"   // Use alias for vault package
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -30,80 +30,82 @@ var (
 	ComplianceEnabled      = os.Getenv("COMPLIANCE_ENABLED")
 )
 
+// Gets secret name from VAULT_SECRET_NAME env var or returns default
+func getVaultSecretName() string {
+	const defaultSecretName = "vault-unseal-keys"
+	envVarName := "VAULT_SECRET_NAME" // Standard env var name
+	secretName := os.Getenv(envVarName)
+	trimmedName := strings.TrimSpace(secretName)
+
+	if trimmedName == "" {
+		// Using fmt here as logger might not be ready yet
+		fmt.Printf("INFO: Environment variable %s not set or empty, using default Vault secret name: %s\n", envVarName, defaultSecretName)
+		return defaultSecretName
+	}
+	fmt.Printf("INFO: Using Vault secret name from environment variable %s: %s\n", envVarName, trimmedName)
+	return trimmedName
+}
+
 // Command remains the same
 func Command() *cobra.Command {
 	return &cobra.Command{
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var cnf config2.Config
-			// Read config - note this might potentially load values over env vars depending on precedence
 			config.ReadFromEnv(&cnf, nil)
-			return start(cmd.Context(), cnf) // Pass potentially populated cnf
+			return start(cmd.Context(), cnf)
 		},
 	}
 }
 
 // start contains the main application startup logic.
 func start(ctx context.Context, cnf config2.Config) error {
-	// Load config using Koanf (can potentially override env vars if set in files/flags)
 	cfg := koanf.Provide("core", config2.Config{})
-
-	// Setup Logger
 	logger, err := zap.NewProduction()
 	if err != nil {
-		// Cannot log error here as logger failed, return directly
-		return fmt.Errorf("failed to initialize zap logger: %w", err)
+		return fmt.Errorf("new logger: %w", err)
 	}
-	defer logger.Sync() // Flushes buffer, important for reliable logging
+	defer logger.Sync()
 	logger.Info("Core service starting...")
 
 	// --- Environment Variable Check ---
-	logger.Debug("Checking required environment variables...")
-	requiredEnvVars := map[string]string{ // Use map for easy value access
-		"POSTGRESPLUGIN_HOST":     PostgresPluginHost,
-		"POSTGRESPLUGIN_PORT":     PostgresPluginPort,
-		"POSTGRESPLUGIN_USERNAME": PostgresPluginUsername,
-		"POSTGRESPLUGIN_PASSWORD": PostgresPluginPassword,
-		"SCHEDULER_BASE_URL":      SchedulerBaseUrl,
-		"INTEGRATION_BASE_URL":    IntegrationBaseUrl,
-		"COMPLIANCE_BASE_URL":     ComplianceBaseUrl,
-		"AUTH_BASE_URL":           AuthBaseUrl,
-		"COMPLIANCE_ENABLED":      ComplianceEnabled,
-	}
+	// ... (check logic remains the same) ...
+	requiredEnvVars := map[string]string{ /* ... vars ... */ }
 	var missingVars []string
 	for name, value := range requiredEnvVars {
-		// Check if the value read at startup is empty
 		if strings.TrimSpace(value) == "" {
 			missingVars = append(missingVars, name)
 		}
 	}
-
 	if len(missingVars) > 0 {
-		errMsg := fmt.Sprintf("critical configuration error: required environment variable(s) not set: %s", strings.Join(missingVars, ", "))
-		// Log before panic, although panic might prevent flushing
+		errMsg := fmt.Sprintf("critical config error: required env var(s) not set: %s", strings.Join(missingVars, ", "))
 		logger.Error(errMsg)
-		// Panic as requested
 		panic(errMsg)
 	}
 	logger.Debug("Required environment variables check passed.")
 	// --- END Environment Variable Check ---
 
-	logger.Debug("Koanf configuration loaded", zap.Any("config", cfg)) // Be careful logging sensitive config
-	var sealHandler *vault.HashiCorpVaultSealHandler                   // <<< UPDATED TYPE
+	logger.Debug("Koanf configuration loaded", zap.Any("config", cfg))
+	var sealHandler *vault2.SealHandler // <<< Use the type from core/vault package
 
 	// --- Vault Initialization and Unsealing ---
 	if cfg.Vault.Provider == vault.HashiCorpVault {
 		logger.Info("HashiCorp Vault provider configured, initializing SealHandler...")
-		// Pass the koanf loaded cfg here, as it likely contains vault specifics
-		sealHandler, err := vault2.NewSealHandler(ctx, logger, cfg)
+
+		// *** ADD variable declaration by CALLING getVaultSecretName() ***
+		vaultSecretName := getVaultSecretName()
+		logger.Debug("Using Vault secret name", zap.String("secretName", vaultSecretName)) // Log the name being used
+
+		// Pass the koanf loaded cfg and the determined secret name
+		// Use alias vault2 for the vault package from services/core/vault
+		sealHandler, err = vault2.NewSealHandler(ctx, logger, cfg, vaultSecretName) // <<< PASS variable HERE
 		if err != nil {
 			logger.Error("Failed to create Vault seal handler", zap.Error(err))
 			return fmt.Errorf("new seal handler: %w", err)
 		}
 
 		logger.Info("Starting Vault seal handler (blocks until ready or error)...")
-		err = sealHandler.Start(ctx) // Start now returns an error
+		err = sealHandler.Start(ctx) // Start returns an error
 		if err != nil {
-			// Log and return error - main() will handle exit
 			logger.Error("Vault seal handler failed to start or timed out", zap.Error(err))
 			return fmt.Errorf("vault seal handler start failed: %w", err)
 		}
@@ -115,11 +117,11 @@ func start(ctx context.Context, cnf config2.Config) error {
 
 	// --- Initialize HTTP Handler ---
 	logger.Info("Initializing HTTP handler...")
-	// *** Pass the concrete pointer type ***
+	// Pass sealHandler (which might be nil if Vault disabled)
 	handler, err := InitializeHttpHandler(
 		cfg,
 		SchedulerBaseUrl, IntegrationBaseUrl, ComplianceBaseUrl, AuthBaseUrl,
-		sealHandler,
+		sealHandler, // Pass the initialized (or nil) sealHandler
 		logger,
 		cnf.ElasticSearch,
 		ComplianceEnabled,

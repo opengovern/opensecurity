@@ -1,3 +1,4 @@
+// http_handler.go
 package core
 
 import (
@@ -10,36 +11,44 @@ import (
 	"sync"
 	"time"
 
-	"github.com/labstack/echo/v4"
-	authApi "github.com/opengovern/og-util/pkg/api"
+	"github.com/google/uuid"
+
+	// og-util api alias
 	"github.com/opengovern/og-util/pkg/httpclient"
 	cloudql_init_job "github.com/opengovern/opensecurity/jobs/cloudql-init-job"
-	authClient "github.com/opengovern/opensecurity/services/auth/client"
+	db2 "github.com/opengovern/opensecurity/jobs/post-install-job/db"
+	"github.com/opengovern/opensecurity/jobs/post-install-job/db/model"
 	complianceapi "github.com/opengovern/opensecurity/services/compliance/api"
+	complianceClient "github.com/opengovern/opensecurity/services/compliance/client"
+	"github.com/opengovern/opensecurity/services/core/api" // core api alias
 	coreApi "github.com/opengovern/opensecurity/services/core/api"
+	vault2 "github.com/opengovern/opensecurity/services/core/vault" // <<< Use alias for core/vault consistently
+	integrationClient "github.com/opengovern/opensecurity/services/integration/client"
+	"go.uber.org/zap"
+
+	_ "gorm.io/gorm" // GORM driver import blank
 
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
-	"github.com/google/uuid"
-	api6 "github.com/hashicorp/vault/api"
-	config3 "github.com/opengovern/og-util/pkg/config"
+	api6 "github.com/hashicorp/vault/api"              // vault client api
+	config3 "github.com/opengovern/og-util/pkg/config" // og-util config alias
 	"github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 	"github.com/opengovern/og-util/pkg/postgres"
 	"github.com/opengovern/og-util/pkg/steampipe"
-	"github.com/opengovern/og-util/pkg/vault"
-	db2 "github.com/opengovern/opensecurity/jobs/post-install-job/db"
-	"github.com/opengovern/opensecurity/jobs/post-install-job/db/model"
-	complianceClient "github.com/opengovern/opensecurity/services/compliance/client"
-	"github.com/opengovern/opensecurity/services/core/config"
-	"github.com/opengovern/opensecurity/services/core/db"
+	"github.com/opengovern/og-util/pkg/vault" // og-util vault types
+	authClient "github.com/opengovern/opensecurity/services/auth/client"
+	"github.com/opengovern/opensecurity/services/core/config" // core config alias
+	"github.com/opengovern/opensecurity/services/core/db"     // core db alias
 	"github.com/opengovern/opensecurity/services/core/db/models"
-	integrationClient "github.com/opengovern/opensecurity/services/integration/client"
 	describeClient "github.com/opengovern/opensecurity/services/scheduler/client"
-	"go.uber.org/zap"
-	v1 "k8s.io/api/batch/v1"
+	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client" // Use alias k8sClient
+
+	"github.com/labstack/echo/v4"
+	authApi "github.com/opengovern/og-util/pkg/api" // Rename import
 )
 
 type HttpHandler struct {
@@ -52,15 +61,14 @@ type HttpHandler struct {
 	authClient         authClient.AuthServiceClient
 	logger             *zap.Logger
 	viewCheckpoint     time.Time
-	cfg                config.Config
-	kubeClient         client.Client
-	vault              vault.VaultSourceConfig
-	vaultSecretHandler vault.VaultSecretHandler
-	vaultSealHandler   *vault.HashiCorpVaultSealHandler // <<< ADD THIS FIELD (use actual type/interface, e.g., *vault.HashiCorpVaultSealHandler)
+	cfg                config.Config            // core/config type
+	kubeClient         k8sclient.Client         // Use alias k8sClient
+	vault              vault.VaultSourceConfig  // from og-util
+	vaultSecretHandler vault.VaultSecretHandler // from og-util
+	vaultSealHandler   *vault2.SealHandler      // <<< CORRECTED: Use POINTER to core/vault.SealHandler
+	migratorDb         *db2.Database
 
-	migratorDb *db2.Database
-
-	queryParameters []coreApi.QueryParameter
+	queryParameters []api.QueryParameter // core/api type
 	queryParamsMu   sync.RWMutex
 
 	complianceEnabled bool
@@ -72,7 +80,7 @@ type HttpHandler struct {
 func InitializeHttpHandler(
 	cfg config.Config, // core/config type
 	schedulerBaseUrl string, integrationBaseUrl string, complianceBaseUrl string, authBaseUrl string,
-	sealHandler *vault.HashiCorpVaultSealHandler, // Parameter is pointer type
+	sealHandler *vault2.SealHandler, // <<< CORRECT: Use POINTER to core/vault.SealHandler
 	logger *zap.Logger, esConf config3.ElasticSearch, // Use og-util/pkg/config type
 	complianceEnabled string,
 ) (h *HttpHandler, err error) {
@@ -81,11 +89,8 @@ func InitializeHttpHandler(
 		cfg:           cfg,
 		logger:        logger,
 		// *** Assign the pointer directly ***
-		vaultSealHandler: sealHandler, // <<< CORRECTED assignment (no dereference *)
-		// Initialize other fields... (Need to add based on struct definition)
-		// Example: ensure these are initialized if needed later, even if nil initially
-		// vault:             nil, // Or initialize properly if needed here
-		// vaultSecretHandler: nil, // Or initialize properly
+		vaultSealHandler: sealHandler, // <<< CORRECT assignment (pointer to pointer)
+		// Initialize other fields...
 	}
 	ctx := context.Background()
 
@@ -212,12 +217,12 @@ func InitializeHttpHandler(
 
 	// --- Initialize Plugin Job Runner ---
 	logger.Debug("Initializing Plugin Job Runner...")
+	pluginDbCfg := config3.Postgres{Host: PostgresPluginHost, Port: PostgresPluginPort, Username: PostgresPluginUsername, Password: PostgresPluginPassword}
 	pluginJob := cloudql_init_job.NewJob(h.logger, cloudql_init_job.Config{
-		Postgres:      config3.Postgres{Host: PostgresPluginHost, Port: PostgresPluginPort, Username: PostgresPluginUsername, Password: PostgresPluginPassword}, // Use package vars
-		ElasticSearch: esConf, Steampipe: config3.Postgres{}, Integration: config3.OpenGovernanceService{BaseURL: integrationBaseUrl},
+		Postgres: pluginDbCfg, ElasticSearch: esConf, Steampipe: config3.Postgres{}, Integration: config3.OpenGovernanceService{BaseURL: integrationBaseUrl},
 	}, h.integrationClient)
 	h.PluginJob = pluginJob
-	h.initializeSteampipePluginsWithRetry(ctx, 5, 2*time.Second) // Run Steampipe init
+	h.initializeSteampipePluginsWithRetry(ctx, 5, 2*time.Second)
 	logger.Debug("Plugin Job Runner initialized.")
 
 	// Start background parameter fetch
@@ -226,8 +231,7 @@ func InitializeHttpHandler(
 
 	logger.Info("HttpHandler initialization complete.")
 	return h, nil
-} // --- END InitializeHttpHandler ---
-
+}
 func NewKubeClient() (client.Client, error) {
 	scheme := runtime.NewScheme()
 	if err := corev1.AddToScheme(scheme); err != nil {

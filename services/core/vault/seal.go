@@ -6,6 +6,7 @@ import (
 	"errors" // Import errors
 	"fmt"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/opengovern/og-util/pkg/vault"
@@ -46,31 +47,57 @@ type SealHandler struct {
 	cfg              config.Config
 	vaultSealHandler *vault.HashiCorpVaultSealHandler
 	kubeClientset    kubernetes.Interface
-	secretName       string // <<< ADDED struct field to store the name
+	secretName       string // <<< Field definition is correct
 }
 
-// NewSealHandler remains the same
-func NewSealHandler(ctx context.Context, logger *zap.Logger, cfg config.Config) (*SealHandler, error) {
-	// ... (implementation unchanged) ...
-	componentLogger := logger.With(zap.String("component", componentName), zap.String("namespace", cfg.OpengovernanceNamespace))
+// NewSealHandler: **** MODIFY SIGNATURE and BODY ****
+func NewSealHandler(ctx context.Context, logger *zap.Logger, cfg config.Config, secretNameIn string) (*SealHandler, error) { // <<< ADD secretNameIn parameter
+	componentLogger := logger.With(
+		zap.String("component", componentName),
+		zap.String("namespace", cfg.OpengovernanceNamespace),
+	)
 	componentLogger.Debug("Initializing VaultSealHandler...")
+
 	if cfg.OpengovernanceNamespace == "" {
 		return nil, fmt.Errorf("opengovernance namespace is required in configuration")
 	}
+
+	// Validate and store the incoming secret name
+	secretName := strings.TrimSpace(secretNameIn)
+	if secretName == "" {
+		return nil, fmt.Errorf("vault secret name provided to NewSealHandler cannot be empty")
+	}
+	componentLogger.Debug("Using Vault secret name", zap.String("secretName", secretName))
+
 	hashiCorpVaultSealHandler, err := vault.NewHashiCorpVaultSealHandler(ctx, componentLogger, cfg.Vault.HashiCorp)
 	if err != nil {
+		// Log error and return it
+		componentLogger.Error("Failed to create underlying HashiCorp Vault seal handler", zap.Error(err))
 		return nil, fmt.Errorf("new hashicorp vault seal handler: %w", err)
 	}
+	componentLogger.Debug("Underlying HashiCorp Vault seal handler created")
+
 	kuberConfig, err := rest.InClusterConfig()
 	if err != nil {
+		componentLogger.Error("Failed to get in-cluster Kubernetes config", zap.Error(err))
 		return nil, fmt.Errorf("failed to get kubernetes config: %w", err)
 	}
 	clientset, err := kubernetes.NewForConfig(kuberConfig)
 	if err != nil {
+		componentLogger.Error("Failed to create Kubernetes clientset", zap.Error(err))
 		return nil, fmt.Errorf("failed to create kubernetes clientset: %w", err)
 	}
-	handler := &SealHandler{logger: componentLogger, cfg: cfg, vaultSealHandler: hashiCorpVaultSealHandler, kubeClientset: clientset}
-	componentLogger.Info("VaultSealHandler initialized successfully")
+	componentLogger.Debug("Kubernetes clientset created")
+
+	handler := &SealHandler{
+		logger:           componentLogger,
+		cfg:              cfg,
+		vaultSealHandler: hashiCorpVaultSealHandler,
+		kubeClientset:    clientset,
+		secretName:       secretName, // <<< ASSIGN parameter to the struct field
+	}
+
+	componentLogger.Info("VaultSealHandler initialized successfully", zap.String("secretName", handler.secretName))
 	return handler, nil
 }
 

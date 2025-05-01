@@ -96,6 +96,7 @@ func (h *HttpHandler) healthCheck(c echo.Context) error {
 			healthCtx, healthCancel := context.WithTimeout(ctx, 4*time.Second) // Shorter timeout for Vault call
 			var healthResp *vaultapi.HealthResponse
 			healthResp, err := h.vaultSealHandler.Health(healthCtx) // Use the correct handler
+
 			healthCancel()
 
 			// Process response or error
