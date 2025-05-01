@@ -38,13 +38,15 @@ var (
 	ErrUnsealCheckerExited     = errors.New("unseal checker exited prematurely before signaling success")
 )
 
-var secretName = "vault-unseal-keys" //vault-unseal-keys"
+// REMOVED package-level var secretName
+// var secretName = "vault-unseal-keys"
 
 type SealHandler struct {
 	logger           *zap.Logger
 	cfg              config.Config
 	vaultSealHandler *vault.HashiCorpVaultSealHandler
 	kubeClientset    kubernetes.Interface
+	secretName       string // <<< ADDED struct field to store the name
 }
 
 // NewSealHandler remains the same
@@ -74,6 +76,7 @@ func NewSealHandler(ctx context.Context, logger *zap.Logger, cfg config.Config) 
 
 // initVault checks Vault initialization status, initializes if necessary,
 // and ensures the keys secret state is consistent. Returns (bool, error).
+// Uses s.secretName now.
 func (s *SealHandler) initVault(ctx context.Context) (bool, error) {
 	s.logger.Debug("Entering initVault")
 	defer s.logger.Debug("Exiting initVault")
@@ -81,97 +84,88 @@ func (s *SealHandler) initVault(ctx context.Context) (bool, error) {
 	initRes, err := s.vaultSealHandler.TryInit(ctx)
 	if err != nil {
 		s.logger.Error("Failed checking vault init status", zap.Error(err))
-		// Return specific error type
 		return false, fmt.Errorf("%w: %w", ErrVaultInitCheckFailed, err)
 	}
 
 	if initRes != nil {
 		s.logger.Info("Vault was not initialized. Initialization performed, storing keys.")
-		keysSecret := corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: secretName, Namespace: s.cfg.OpengovernanceNamespace}, Type: corev1.SecretTypeOpaque, StringData: make(map[string]string)}
+		keysSecret := corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: s.secretName /* Use field */, Namespace: s.cfg.OpengovernanceNamespace}, Type: corev1.SecretTypeOpaque, StringData: make(map[string]string)}
 		for i, key := range initRes.Keys {
 			keysSecret.StringData[fmt.Sprintf("key-%d", i)] = key
 		}
 		keysSecret.StringData["root-token"] = initRes.RootToken
 
 		secretsClient := s.kubeClientset.CoreV1().Secrets(s.cfg.OpengovernanceNamespace)
-		s.logger.Info("Attempting to create Kubernetes secret for unseal keys", zap.String("secretName", secretName))
+		s.logger.Info("Attempting to create Kubernetes secret for unseal keys", zap.String("secretName", s.secretName /* Use field */))
 		_, err = secretsClient.Create(ctx, &keysSecret, metav1.CreateOptions{})
 		if err != nil {
 			if k8serrors.IsAlreadyExists(err) {
-				s.logger.Warn("Vault keys secret already existed unexpectedly after init, attempting update.", zap.String("secretName", secretName))
+				s.logger.Warn("Vault keys secret already existed unexpectedly after init, attempting update.", zap.String("secretName", s.secretName /* Use field */))
 				_, updateErr := secretsClient.Update(ctx, &keysSecret, metav1.UpdateOptions{})
 				if updateErr != nil {
-					s.logger.Error("Failed to update existing vault keys secret after initialization", zap.String("secretName", secretName), zap.Error(updateErr))
-					// Return specific error type
+					s.logger.Error("Failed to update existing vault keys secret after initialization", zap.String("secretName", s.secretName), zap.Error(updateErr))
 					return false, fmt.Errorf("%w: %w", ErrVaultSecretUpdateFailed, updateErr)
 				}
-				s.logger.Info("Successfully updated existing vault keys secret.", zap.String("secretName", secretName))
+				s.logger.Info("Successfully updated existing vault keys secret.", zap.String("secretName", s.secretName /* Use field */))
 			} else {
-				s.logger.Error("Failed to create vault keys secret after initialization", zap.String("secretName", secretName), zap.Error(err))
-				// Return specific error type
+				s.logger.Error("Failed to create vault keys secret after initialization", zap.String("secretName", s.secretName), zap.Error(err))
 				return false, fmt.Errorf("%w: %w", ErrVaultSecretCreateFailed, err)
 			}
 		} else {
-			s.logger.Info("Successfully created vault keys secret.", zap.String("secretName", secretName))
+			s.logger.Info("Successfully created vault keys secret.", zap.String("secretName", s.secretName /* Use field */))
 		}
 		s.logger.Info("Vault initialization complete and keys stored.")
 		return true, nil // New init, success
 	} else {
 		s.logger.Info("Vault already initialized. Verifying keys secret exists.")
 		secretsClient := s.kubeClientset.CoreV1().Secrets(s.cfg.OpengovernanceNamespace)
-		_, err := secretsClient.Get(ctx, secretName, metav1.GetOptions{})
+		_, err := secretsClient.Get(ctx, s.secretName /* Use field */, metav1.GetOptions{})
 		if err != nil {
 			errMsg := ""
 			var specificErr error
 			if k8serrors.IsNotFound(err) {
-				errMsg = fmt.Sprintf("inconsistent State: Vault initialized, but keys secret '%s' is missing in namespace '%s'", secretName, s.cfg.OpengovernanceNamespace)
+				errMsg = fmt.Sprintf("inconsistent State: Vault initialized, but keys secret '%s' is missing in namespace '%s'", s.secretName /* Use field */, s.cfg.OpengovernanceNamespace)
 				specificErr = ErrVaultKeysMissing
 			} else {
-				errMsg = fmt.Sprintf("failed to get vault keys secret '%s' for verification", secretName)
+				errMsg = fmt.Sprintf("failed to get vault keys secret '%s' for verification", s.secretName /* Use field */)
 				specificErr = ErrVaultSecretGetFailed
 			}
 			s.logger.Error(errMsg, zap.Error(err))
 			return false, fmt.Errorf("%w: %w", specificErr, err) // Wrap original k8s error
 		}
-		s.logger.Info("Vault initialized state and keys secret existence verified.", zap.String("secretName", secretName))
+		s.logger.Info("Vault initialized state and keys secret existence verified.", zap.String("secretName", s.secretName /* Use field */))
 		return false, nil // No new init, success
 	}
 }
 
+// vault/seal.go
+
 // unsealChecker attempts initial unseal & setup, then runs periodic checks.
-// Returns early if critical startup steps fail (key retrieval). Logs other errors.
+// Uses s.secretName now.
 func (s *SealHandler) unsealChecker(ctx context.Context, isNewInit bool, unsealed chan<- struct{}) {
 	s.logger.Debug("Starting unsealChecker goroutine", zap.Bool("isNewInit", isNewInit))
 	signaledSuccessfully := false
 
-	// Ensure channel is closed on exit if not signaled (prevents Start hang)
-	defer func() {
-		// Recover from panics during periodic checks only
+	defer func() { // Defer function remains the same
 		if r := recover(); r != nil {
-			s.logger.Error("Panic recovered in unsealChecker periodic loop. Goroutine exiting.",
-				zap.Any("panicValue", r),
-				zap.String("stacktrace", string(debug.Stack())),
-			)
+			s.logger.Error("Panic recovered in unsealChecker periodic loop.", zap.Any("panicValue", r), zap.String("stacktrace", string(debug.Stack())))
 		}
 		if !signaledSuccessfully && unsealed != nil {
-			s.logger.Warn("Closing unseal channel due to unsealChecker exiting before initial success signal.")
+			s.logger.Warn("Closing unseal channel due to unsealChecker exiting early.")
 			close(unsealed)
 		}
 		s.logger.Debug("unsealChecker goroutine finished.")
 	}()
 
-	// 1. Get Keys (Critical startup step)
-	s.logger.Debug("Attempting to get unseal keys from Kubernetes secret", zap.String("secretName", secretName))
+	// 1. Get Keys
+	s.logger.Debug("Attempting to get unseal keys from Kubernetes secret", zap.String("secretName", s.secretName /* Use field */))
 	secretsClient := s.kubeClientset.CoreV1().Secrets(s.cfg.OpengovernanceNamespace)
-	keysSecret, err := secretsClient.Get(ctx, secretName, metav1.GetOptions{})
+	keysSecret, err := secretsClient.Get(ctx, s.secretName /* Use field */, metav1.GetOptions{})
 	if err != nil {
-		s.logger.Error("CRITICAL: Failed to get vault unseal keys secret at start. Cannot proceed.",
-			zap.String("secretName", secretName), zap.Error(err),
-		)
-		// Returning will trigger the defer, closing the channel, signaling failure to Start
-		return
+		s.logger.Error("CRITICAL: Failed to get vault unseal keys secret at start. Cannot proceed.", zap.String("secretName", s.secretName), zap.Error(err))
+		return // Exit goroutine, defer closes channel
 	}
-	s.logger.Debug("Successfully retrieved unseal keys secret", zap.String("secretName", secretName))
+	s.logger.Debug("Successfully retrieved unseal keys secret", zap.String("secretName", s.secretName /* Use field */))
 
 	keys := make([]string, 0, len(keysSecret.Data))
 	var rootTokenBytes []byte
@@ -186,9 +180,8 @@ func (s *SealHandler) unsealChecker(ctx context.Context, isNewInit bool, unseale
 	}
 	s.logger.Debug("Extracted unseal keys from secret", zap.Int("keyCount", len(keys)), zap.Bool("rootTokenFound", rootTokenFound))
 	if len(keys) == 0 {
-		s.logger.Error("CRITICAL: No unseal keys found in secret data. Cannot proceed.", zap.String("secretName", secretName))
-		// Returning will trigger the defer, closing the channel, signaling failure to Start
-		return
+		s.logger.Error("CRITICAL: No unseal keys found in secret data. Cannot proceed.", zap.String("secretName", s.secretName /* Use field */))
+		return // Exit goroutine, defer closes channel
 	}
 
 	// 2. Initial Unseal & Auth Setup
@@ -198,18 +191,25 @@ func (s *SealHandler) unsealChecker(ctx context.Context, isNewInit bool, unseale
 		err = s.vaultSealHandler.TryUnseal(ctx, keys)
 		if err != nil {
 			s.logger.Error("Initial unseal attempt failed, will retry periodically.", zap.Error(err))
-			// Do not signal success. Allow Start to timeout if this persists.
 		} else {
 			s.logger.Info("Initial unseal successful")
 			initialAttemptDone = true
-			if rootTokenFound && len(rootTokenBytes) > 0 { /* ... setup kube auth ... */
-			} else { /* ... log warn ... */
+			if rootTokenFound && len(rootTokenBytes) > 0 {
+				s.logger.Info("Attempting to setup Kubernetes auth in Vault...")
+				kubeAuthErr := s.vaultSealHandler.SetupKuberAuth(ctx, string(rootTokenBytes))
+				if kubeAuthErr != nil {
+					s.logger.Error("Failed to setup Kubernetes auth", zap.Error(kubeAuthErr))
+				} else {
+					s.logger.Info("Kubernetes auth setup successful or already configured.")
+				}
+			} else {
+				s.logger.Warn("Root token not found/empty in secret, skipping Kubernetes auth setup.", zap.String("secretName", s.secretName /* Use field */))
 			}
 			s.logger.Debug("Signaling initial unseal complete.")
 			select {
 			case unsealed <- struct{}{}:
 				signaledSuccessfully = true
-				close(unsealed) // Close immediately after successful send
+				close(unsealed)
 			case <-ctx.Done():
 				s.logger.Warn("Context cancelled before initial unseal signal could be sent.")
 				close(unsealed)
@@ -217,10 +217,10 @@ func (s *SealHandler) unsealChecker(ctx context.Context, isNewInit bool, unseale
 			unsealed = nil // Prevent double close in defer
 		}
 	} else {
-		s.logger.Warn("unsealChecker called with nil channel, skipping initial unseal logic.")
+		s.logger.Warn("unsealChecker called with nil channel.")
 	}
 
-	// 3. Periodic Loop (only run if initial attempt was relevant)
+	// 3. Periodic Loop
 	if unsealed == nil && !initialAttemptDone {
 		return
 	} // Exit if channel was nil initially
@@ -231,7 +231,6 @@ func (s *SealHandler) unsealChecker(ctx context.Context, isNewInit bool, unseale
 	} else {
 		s.logger.Warn("Initial unseal failed, starting periodic retry loop", zap.Duration("interval", unsealCheckInterval))
 	}
-
 	for {
 		select {
 		case <-ctx.Done():
@@ -246,8 +245,8 @@ func (s *SealHandler) unsealChecker(ctx context.Context, isNewInit bool, unseale
 			}
 		}
 	}
-}
 
+} // --- END unsealChecker ---
 // Start initiates the Vault initialization and unsealing process.
 // It blocks until the initial unseal attempt completes successfully or a timeout occurs.
 // Returns an error if init fails or if the initial unseal fails/times out.
