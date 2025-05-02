@@ -9,8 +9,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/opengovern/og-util/pkg/api"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"os"
 	"strconv"
@@ -514,22 +512,22 @@ func start(ctx context.Context, logger *zap.Logger) error {
 		return fmt.Errorf("failed to create Dex gRPC client: %w", err)
 	}
 	logger.Info("Dex gRPC client connected.", zap.String("address", dexGrpcAddress))
+	/*
+		logger.Info("Ensuring Dex OAuth clients...")
+		err = ensureDexClients(ctx, logger, dexClient)
+		if err != nil {
+			logger.Error("Failed to ensure Dex OAuth clients", zap.Error(err))
+			return fmt.Errorf("failed to ensure Dex OAuth clients: %w", err)
+		}
+		logger.Info("Dex OAuth clients ensured.")
+		// --- End Dex Client Setup ---
 
-	logger.Info("Ensuring Dex OAuth clients...")
-	err = ensureDexClients(ctx, logger, dexClient)
-	if err != nil {
-		logger.Error("Failed to ensure Dex OAuth clients", zap.Error(err))
-		return fmt.Errorf("failed to ensure Dex OAuth clients: %w", err)
-	}
-	logger.Info("Dex OAuth clients ensured.")
-	// --- End Dex Client Setup ---
-
-	err = initFirstUser(ctx, adb, dexClient, logger)
-	if err != nil {
-		logger.Error("Failed to initialize first user", zap.Error(err))
-		return fmt.Errorf("failed to initialize first user: %w", err)
-	}
-
+		err = initFirstUser(ctx, adb, dexClient, logger)
+		if err != nil {
+			logger.Error("Failed to initialize first user", zap.Error(err))
+			return fmt.Errorf("failed to initialize first user: %w", err)
+		}
+	*/
 	// --- Server Initialization ---
 	logger.Info("Initializing main application server...")
 	if !dbReady {
@@ -585,6 +583,7 @@ func start(ctx context.Context, logger *zap.Logger) error {
 	return nil
 }
 
+/*
 func ensureDexClients(ctx context.Context, logger *zap.Logger, dexClient dexApi.DexClient) error {
 	publicUris := strings.Split(dexPublicClientRedirectUris, ",")
 
@@ -660,6 +659,7 @@ func ensureDexClients(ctx context.Context, logger *zap.Logger, dexClient dexApi.
 	}
 	return nil
 }
+*/
 
 // --- Helpers  ---
 
@@ -691,59 +691,60 @@ func newDexOidcVerifier(ctx context.Context, domain, clientId string) (*oidc.IDT
 	}), nil
 }
 
-func initFirstUser(ctx context.Context, dbm db.Database, dexClient dexApi.DexClient, logger *zap.Logger) error {
-	count, err := dbm.GetUsersCount()
-	if err != nil {
-		return err
-	}
-	if count > 0 {
-		logger.Info("users already exist")
+/*
+	func initFirstUser(ctx context.Context, dbm db.Database, dexClient dexApi.DexClient, logger *zap.Logger) error {
+		count, err := dbm.GetUsersCount()
+		if err != nil {
+			return err
+		}
+		if count > 0 {
+			logger.Info("users already exist")
+			return nil
+		}
+
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(DefaultDexUserPassword), bcrypt.DefaultCost)
+		if err != nil {
+			logger.Error("Auth Migrator: failed to generate password", zap.Error(err))
+			return err
+		}
+
+		req := dexApi.CreatePasswordReq{
+			Password: &dexApi.Password{
+				Email:    DefaultDexUserEmail,
+				Username: DefaultDexUserName,
+				UserId:   fmt.Sprintf("local|%s", DefaultDexUserEmail),
+				Hash:     hashedPassword,
+			},
+		}
+
+		_, err = dexClient.CreatePassword(ctx, &req)
+		if err != nil {
+			logger.Error("Auth Migrator: failed to create dex password", zap.Error(err))
+			return err
+		}
+
+		role := api.AdminRole
+
+		user := &db.User{
+
+			Email:                 DefaultDexUserEmail,
+			Username:              DefaultDexUserEmail,
+			FullName:              DefaultDexUserEmail,
+			Role:                  role,
+			ExternalId:            fmt.Sprintf("local|%s", DefaultDexUserEmail),
+			ConnectorId:           "local",
+			IsActive:              true,
+			RequirePasswordChange: true,
+		}
+		err = dbm.CreateUser(user)
+		if err != nil {
+			logger.Error("Auth Migrator: failed to create user in database", zap.Error(err))
+			return err
+		}
+
 		return nil
 	}
-
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(DefaultDexUserPassword), bcrypt.DefaultCost)
-	if err != nil {
-		logger.Error("Auth Migrator: failed to generate password", zap.Error(err))
-		return err
-	}
-
-	req := dexApi.CreatePasswordReq{
-		Password: &dexApi.Password{
-			Email:    DefaultDexUserEmail,
-			Username: DefaultDexUserName,
-			UserId:   fmt.Sprintf("local|%s", DefaultDexUserEmail),
-			Hash:     hashedPassword,
-		},
-	}
-
-	_, err = dexClient.CreatePassword(ctx, &req)
-	if err != nil {
-		logger.Error("Auth Migrator: failed to create dex password", zap.Error(err))
-		return err
-	}
-
-	role := api.AdminRole
-
-	user := &db.User{
-
-		Email:                 DefaultDexUserEmail,
-		Username:              DefaultDexUserEmail,
-		FullName:              DefaultDexUserEmail,
-		Role:                  role,
-		ExternalId:            fmt.Sprintf("local|%s", DefaultDexUserEmail),
-		ConnectorId:           "local",
-		IsActive:              true,
-		RequirePasswordChange: true,
-	}
-	err = dbm.CreateUser(user)
-	if err != nil {
-		logger.Error("Auth Migrator: failed to create user in database", zap.Error(err))
-		return err
-	}
-
-	return nil
-}
-
+*/
 func newDexClient(hostAndPort string) (dexApi.DexClient, error) {
 	// TODO: Add TLS credentials if Dex gRPC requires them
 
