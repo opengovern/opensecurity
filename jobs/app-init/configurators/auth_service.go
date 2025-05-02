@@ -391,6 +391,7 @@ func (a *AuthComponent) CheckIfInitializationIsRequired(ctx context.Context) err
 }
 
 // configureDexClients ensures only the public Dex OAuth client exists.
+// It creates the client if it's missing. It does NOT update existing clients.
 func (a *AuthComponent) configureDexClients(ctx context.Context) error {
 	log.Printf("INFO: [%s] Configure: Ensuring Dex public client (%s) exists...", a.Name(), a.dexPublicClientID)
 	publicUris := strings.Split(a.dexPublicUris, ",")
@@ -400,26 +401,41 @@ func (a *AuthComponent) configureDexClients(ctx context.Context) error {
 	log.Printf("INFO: [%s] Configure: Checking Dex client ID=%s", a.Name(), publicClientID)
 	getCtxPub, getCancelPub := context.WithTimeout(ctx, initTypes.DexTimeout)
 	_, err := a.dexClient.GetClient(getCtxPub, &dexApi.GetClientReq{Id: publicClientID})
-	getCancelPub()
+	getCancelPub() // Cancel context immediately after use
 
 	if err != nil {
 		st, ok := status.FromError(err)
-		if ok && st.Code() == codes.NotFound {
-			log.Printf("INFO: [%s] Configure: Public client %s not found, attempting creation...", a.Name(), publicClientID)
-			createReq := dexApi.CreateClientReq{Client: &dexApi.Client{Id: publicClientID, Name: "Public Client", RedirectUris: publicUris, Public: true}}
+		// *** UPDATED ERROR HANDLING ***
+		// Check for NotFound OR Unknown code with "not found" message
+		isNotFoundErr := (ok && st.Code() == codes.NotFound) ||
+			(ok && st.Code() == codes.Unknown && strings.Contains(st.Message(), "not found"))
+
+		if isNotFoundErr {
+			// Client doesn't exist, create it.
+			log.Printf("INFO: [%s] Configure: Public client %s not found (error: %v), attempting creation...", a.Name(), publicClientID, err) // Log the original error
+			createReq := dexApi.CreateClientReq{
+				Client: &dexApi.Client{
+					Id:           publicClientID,
+					Name:         "Public Client", // Standard name
+					RedirectUris: publicUris,
+					Public:       true,
+				},
+			}
 			createCtx, createCancel := context.WithTimeout(ctx, initTypes.DexTimeout)
 			_, createErr := a.dexClient.CreateClient(createCtx, &createReq)
-			createCancel()
+			createCancel() // Cancel context immediately after use
 			if createErr != nil {
 				log.Printf("ERROR: [%s] Configure: Failed to create dex public client %s: %v", a.Name(), publicClientID, createErr)
 				return fmt.Errorf("failed to create dex public client %s: %w", publicClientID, createErr)
 			}
 			log.Printf("INFO: [%s] Configure: Successfully created Dex client: %s", a.Name(), publicClientID)
 		} else {
+			// Other error during GetClient.
 			log.Printf("ERROR: [%s] Configure: Failed to get dex public client %s: %v", a.Name(), publicClientID, err)
 			return fmt.Errorf("failed to get dex public client %s: %w", publicClientID, err)
 		}
 	} else {
+		// Client already exists, do nothing as per requirement.
 		log.Printf("INFO: [%s] Configure: Public client %s already exists. No action needed.", a.Name(), publicClientID)
 	}
 
@@ -460,7 +476,7 @@ func (a *AuthComponent) configureInitialUser(ctx context.Context, db *sql.DB) er
 
 	// --- DEBUG: Log password before hashing ---
 	// WARNING: Logging raw passwords is a security risk. Remove this line before production.
-	log.Printf("DEBUG: [%s] Configure: Raw password for default user '%s' before hashing: '%s' <<< REMOVE THIS LOG IN PRODUCTION >>>", a.Name(), a.defaultUserEmail, a.defaultUserPassword)
+	// log.Printf("DEBUG: [%s] Configure: Raw password for default user '%s' before hashing: '%s' <<< REMOVE THIS LOG IN PRODUCTION >>>", a.Name(), a.defaultUserEmail, a.defaultUserPassword)
 	// --- END DEBUG ---
 
 	log.Printf("DEBUG: [%s] Configure: Hashing password for default user using cost %d...", a.Name(), dexPasswordHashCost)
