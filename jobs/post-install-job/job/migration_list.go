@@ -21,13 +21,11 @@ import (
 // This map seems unchanged between branches in the non-conflicting part
 var migrations = map[string]types.Migration{
 	"elasticsearch": elasticsearch.Migration{},
-	"manifest":      manifest.Migration{},
 }
 
 // This order seems unchanged between branches in the non-conflicting part
 var Order = []string{
 	"elasticsearch",
-	"manifest",
 }
 
 // manualMigrations resolved: Keep removals from HEAD, add plugins from main
@@ -37,11 +35,9 @@ var manualMigrations = map[string]types.Migration{
 	"core":          core.Migration{},
 	"integration":   integration.Migration{},
 	"inventory":     inventory.Migration{},
-	// "resource_collection": resource_collection.Migration{}, // Kept commented out / removed from HEAD
-	"compliance": compliance.Migration{},
-	// "resource_info":       resource_info.Migration{}, // Kept commented out / removed from HEAD
-	"tasks":   tasks.Migration{},
-	"plugins": plugins.Migration{}, // Added from main
+	"compliance":    compliance.Migration{},
+	"tasks":         tasks.Migration{},
+	"plugins":       plugins.Migration{},
 }
 
 // ManualOrder resolved: Keep removals from HEAD, ensure plugins is present
