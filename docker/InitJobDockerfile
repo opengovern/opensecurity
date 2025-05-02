@@ -25,11 +25,10 @@ COPY jobs/app-init/ ./jobs/app-init/
 # Build ONLY the specific Go application binary for this service.
 # This step only re-runs if go.mod/go.sum or the specifically copied source code changes.
 # The path './cmd/app-init-job' is relative to the WORKDIR (/app) and finds the main.go there.
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/app-init-job ./cmd/app-init-job
-
+RUN GOOS=linux CGO_ENABLED=0 go build -ldflags="-w -s" -o /app/app-init-job ./cmd/app-init-job
 # --- Stage 2: Final Runtime Image ---
 # Start from a minimal Alpine image (Pinning version is good practice)
-FROM alpine:latest 
+FROM alpine:latest
 
 # Set working directory
 WORKDIR /app

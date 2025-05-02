@@ -3,13 +3,12 @@ package app_init
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"os"
 
-	// Import the types package from the sibling 'types' directory
-	initTypes "github.com/opengovern/opensecurity/jobs/app-init/types" // <<< ADJUST PATH AS NEEDED
+	// Use the types package from the sibling directory
+	initTypes "github.com/opengovern/opensecurity/jobs/app-init/types"
 )
 
 // Runner handles the ordered execution of initialization components.
@@ -19,65 +18,77 @@ type Runner struct {
 
 // NewRunner creates a new Runner instance.
 func NewRunner(logger *log.Logger) *Runner {
-	// Use default logger if nil is passed
 	if logger == nil {
+		// Fallback to default logger if none provided, ensuring logger is never nil.
 		logger = log.New(os.Stdout, "APP-INIT-RUNNER: ", log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile)
+		logger.Println("WARN: No logger provided to NewRunner, using default.")
 	}
 	return &Runner{logger: logger}
 }
 
-// Run executes the initialization lifecycle for the provided components in order.
-// It stops and returns an error on the first failure.
+// Run executes the initialization lifecycle for the provided components sequentially.
+// It stops and returns an error on the first failure in any step for any component.
 func (r *Runner) Run(ctx context.Context, components []initTypes.InitializableComponent) error {
-	r.logger.Println("INFO: Beginning component initialization sequence...")
+	r.logger.Printf("INFO: Beginning component initialization sequence (%d components)...", len(components))
 	if len(components) == 0 {
 		r.logger.Println("WARN: No components provided to initialize.")
-		return nil
+		return nil // Nothing to do, not an error.
 	}
 
-	for _, comp := range components {
+	for i, comp := range components {
 		componentName := comp.Name()
-		r.logger.Printf("----- Initializing Component: %s -----", componentName)
+		r.logger.Printf("----- Initializing Component %d/%d: %s -----", i+1, len(components), componentName)
 
-		// 1. Check Availability
-		r.logger.Printf("INFO: [%s] Checking availability...", componentName)
+		// Check for overall context cancellation before starting component
+		select {
+		case <-ctx.Done():
+			r.logger.Printf("WARN: [%s] Context cancelled before starting initialization.", componentName)
+			return fmt.Errorf("context cancelled before initializing component %s: %w", componentName, ctx.Err())
+		default:
+			// Continue initialization
+		}
+
+		// --- Step 1: Check Availability ---
+		r.logger.Printf("INFO: [%s] Step 1/4: Checking availability...", componentName)
 		if err := comp.CheckAvailability(ctx); err != nil {
 			r.logger.Printf("ERROR: [%s] Availability check failed.", componentName)
-			return fmt.Errorf("%s availability check failed: %w", componentName, err) // Stop on first failure
+			// Wrap error for context
+			return fmt.Errorf("component '%s' availability check failed: %w", componentName, err)
 		}
-		r.logger.Printf("INFO: [%s] Component is available.", componentName)
+		r.logger.Printf("INFO: [%s] Availability check successful.", componentName)
 
-		// 2. Check if Configuration is Required
-		r.logger.Printf("INFO: [%s] Checking if configuration is required...", componentName)
-		initErr := comp.CheckIfInitializationIsRequired(ctx)
+		// --- Step 2: Check if Initialization is Required ---
+		r.logger.Printf("INFO: [%s] Step 2/4: Checking if initialization is required...", componentName)
+		// This checks the core prerequisite (e.g., DB exists).
+		// It returns nil ONLY if the prerequisite is met.
+		initRequiredErr := comp.CheckIfInitializationIsRequired(ctx)
 
-		if initErr == nil {
-			// Configuration IS required
-			r.logger.Printf("INFO: [%s] Configuration required. Proceeding...", componentName)
+		// --- Step 3: Configure (if needed) ---
+		if initRequiredErr == nil {
+			// Prerequisite met (e.g., DB exists), proceed to configuration steps (Dex clients, user).
+			r.logger.Printf("INFO: [%s] Step 3/4: Prerequisite met. Proceeding with configuration...", componentName)
 			if err := comp.Configure(ctx); err != nil {
 				r.logger.Printf("ERROR: [%s] Configuration failed.", componentName)
-				return fmt.Errorf("%s configuration failed: %w", componentName, err) // Stop on failure
+				return fmt.Errorf("component '%s' configuration failed: %w", componentName, err)
 			}
-			r.logger.Printf("INFO: [%s] Component configured successfully.", componentName)
-		} else if errors.Is(initErr, initTypes.ErrAlreadyInitialized) {
-			// Configuration is NOT required, skip Configure step
-			r.logger.Printf("INFO: [%s] Configuration step skipped (already initialized).", componentName)
+			r.logger.Printf("INFO: [%s] Configuration successful.", componentName)
 		} else {
-			// An actual error occurred during the check itself
-			r.logger.Printf("ERROR: [%s] Failed to check if configuration is required.", componentName)
-			return fmt.Errorf("%s check for required configuration failed: %w", componentName, initErr) // Stop on failure
+			// Prerequisite NOT met (e.g., DB doesn't exist). This is a fatal error for this component.
+			r.logger.Printf("ERROR: [%s] Step 3/4: Prerequisite check failed. Halting initialization for this component.", componentName)
+			// Return the specific error from CheckIfInitializationIsRequired.
+			return fmt.Errorf("component '%s' prerequisite check failed: %w", componentName, initRequiredErr)
 		}
 
-		// 3. Check Health Post-Configuration/Check
-		r.logger.Printf("INFO: [%s] Performing post-configuration health check...", componentName)
+		// --- Step 4: Check Health Post-Configuration ---
+		r.logger.Printf("INFO: [%s] Step 4/4: Performing post-configuration health check...", componentName)
 		if err := comp.CheckHealth(ctx); err != nil {
 			r.logger.Printf("ERROR: [%s] Health check failed.", componentName)
-			return fmt.Errorf("%s health check failed: %w", componentName, err) // Stop on failure
+			return fmt.Errorf("component '%s' health check failed: %w", componentName, err)
 		}
-		r.logger.Printf("INFO: [%s] Component is healthy.", componentName)
+		r.logger.Printf("INFO: [%s] Health check successful.", componentName)
 
 		r.logger.Printf("----- Component Initialized Successfully: %s -----", componentName)
-	} // End loop
+	} // End component loop
 
 	r.logger.Println("INFO: All components initialized successfully.")
 	return nil // Overall Success

@@ -3,55 +3,64 @@ package types
 
 import (
 	"context"
-	"errors" // <<< Add/Ensure 'errors' package is imported
+	"errors"
 	"fmt"
 	"log"
 	"time"
 )
 
-// Constants for retry logic (Exported for use by components/callers)
+// Constants for retry logic, exported for use by components and callers.
 const (
-	MaxRetries     = 3
-	RetryDelay     = 5 * time.Second
-	RequestTimeout = 15 * time.Second
+	MaxRetries     = 5                // Number of retries after the initial attempt fails
+	RetryDelay     = 5 * time.Second  // Delay between retries
+	RequestTimeout = 15 * time.Second // Timeout for individual check attempts (HTTP, DB ping, gRPC calls etc.)
+	// Define longer timeouts specifically for potentially slow operations like Dex calls or DB DML
+	DexTimeout = 30 * time.Second
+	DBTimeout  = 30 * time.Second
 )
 
-// *** ADD Sentinel Error Definition ***
-// ErrAlreadyInitialized is returned by CheckIfInitializationIsRequired when configuration is not needed.
-var ErrAlreadyInitialized = errors.New("component already initialized/configured")
+// ErrAlreadyInitialized is a sentinel error.
+// NOTE: In the final implementation, this specific error is NOT returned by CheckIfInitializationIsRequired.
+// CheckIfInitializationIsRequired now returns nil ONLY if the DB exists, otherwise it returns a specific error.
+// This constant remains defined but unused by the current AuthComponent logic.
+var ErrAlreadyInitialized = errors.New("component prerequisite met, proceed with configuration check")
 
 // InitializableComponent defines the standard lifecycle methods for a dependency
 // that needs to be checked and potentially configured during app initialization.
 type InitializableComponent interface {
+	// Name returns a human-readable name for the component (used in logs).
 	Name() string
+	// CheckAvailability verifies if the component's external dependencies are reachable (e.g., network connectivity to DB/API).
+	// Should use retries.
 	CheckAvailability(ctx context.Context) error
-	CheckIfInitializationIsRequired(ctx context.Context) error // Returns nil if init required, ErrAlreadyInitialized if not, other error on failure
+	// CheckIfInitializationIsRequired checks if the core prerequisite for configuration is met (e.g., database exists).
+	// Returns nil ONLY if the prerequisite is met, allowing the Configure step to run.
+	// Returns a specific error if the prerequisite is NOT met, halting initialization for this component.
+	CheckIfInitializationIsRequired(ctx context.Context) error
+	// Configure performs the necessary setup actions IF CheckIfInitializationIsRequired returned nil.
+	// (e.g., ensure Dex clients, create initial user).
 	Configure(ctx context.Context) error
+	// CheckHealth verifies the component is operational after potential configuration.
+	// Should use retries.
 	CheckHealth(ctx context.Context) error
-}
-
-// AvailabilityChecker can be used if only the first step is needed initially.
-// It's a subset of InitializableComponent.
-type AvailabilityChecker interface {
-	Name() string
-	CheckAvailability(ctx context.Context) error
 }
 
 // --- Exported Helper for Retries ---
 
 // WaitForCondition implements generic retry logic for checks like availability or health.
-// It calls the checkFunc up to maxRetries+1 times with delays in between.
+// It calls the checkFunc up to maxRetries times after the first failed attempt.
 // It applies the RequestTimeout to the context passed to each individual checkFunc call.
 func WaitForCondition(ctx context.Context, componentName string, actionName string, maxRetries int, delay time.Duration, checkFunc func(ctx context.Context) error) error {
 	log.Printf("INFO: [%s] Checking %s...", componentName, actionName)
 	var lastErr error
 
-	// The loop runs for the initial attempt (attempt 0) plus maxRetries
+	// Loop runs for the initial attempt (attempt 0) + maxRetries
 	for attempt := 0; attempt <= maxRetries; attempt++ {
 		// Check for overall context cancellation before each attempt
 		select {
 		case <-ctx.Done():
 			log.Printf("WARN: [%s] Context cancelled while waiting for %s check.", componentName, actionName)
+			// Wrap context error for clarity
 			return fmt.Errorf("context cancelled waiting for %s %s: %w", componentName, actionName, ctx.Err())
 		default:
 			// Continue with the attempt
@@ -59,7 +68,7 @@ func WaitForCondition(ctx context.Context, componentName string, actionName stri
 
 		// Apply delay *before* retries (i.e., starting from the second attempt)
 		if attempt > 0 {
-			log.Printf("INFO: [%s] %s check failed. Retrying in %v (attempt %d/%d)", componentName, actionName, delay, attempt, maxRetries)
+			log.Printf("INFO: [%s] %s check failed (Attempt %d/%d). Retrying in %v...", componentName, actionName, attempt, maxRetries, delay)
 			// Wait for the delay, but also listen for context cancellation
 			select {
 			case <-time.After(delay):
@@ -72,9 +81,11 @@ func WaitForCondition(ctx context.Context, componentName string, actionName stri
 
 		// Execute the specific check function with its own timeout context
 		log.Printf("INFO: [%s] Attempt %d/%d: Performing %s check...", componentName, attempt+1, maxRetries+1, actionName)
-		checkCtx, checkCancel := context.WithTimeout(ctx, RequestTimeout) // Apply attempt timeout
+		// Use the standard RequestTimeout for these checks
+		checkCtx, checkCancel := context.WithTimeout(ctx, RequestTimeout)
 		err := checkFunc(checkCtx)
-		checkCancel() // Release the timeout context promptly
+		// It's crucial to cancel the context to release resources, especially in loops.
+		checkCancel()
 
 		if err == nil {
 			log.Printf("INFO: [%s] %s check successful!", componentName, actionName)
@@ -83,11 +94,12 @@ func WaitForCondition(ctx context.Context, componentName string, actionName stri
 
 		// Store the last error encountered
 		lastErr = err
-		log.Printf("WARN: [%s] Attempt %d failed for %s: %v", componentName, attempt+1, actionName, err)
+		log.Printf("WARN: [%s] Attempt %d/%d failed for %s: %v", componentName, attempt+1, maxRetries+1, actionName, err)
 
 	} // End retry loop
 
 	// If the loop finishes, all attempts failed
 	log.Printf("ERROR: [%s] %s failed after %d retries.", componentName, actionName, maxRetries)
+	// Wrap the last error for better context
 	return fmt.Errorf("%s %s failed after %d retries; last error: %w", componentName, actionName, maxRetries, lastErr)
 }
