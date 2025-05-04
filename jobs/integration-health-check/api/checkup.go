@@ -1,9 +1,9 @@
 package api
 
-type CheckupJobStatus string
+type IntegrationHealthCheckJobStatus string
 
 const (
-	CheckupJobInProgress CheckupJobStatus = "IN_PROGRESS"
-	CheckupJobFailed     CheckupJobStatus = "FAILED"
-	CheckupJobSucceeded  CheckupJobStatus = "SUCCEEDED"
+	IntegrationHealthCheckJobInProgress IntegrationHealthCheckJobStatus = "IN_PROGRESS"
+	IntegrationHealthCheckJobFailed     IntegrationHealthCheckJobStatus = "FAILED"
+	IntegrationHealthCheckJobSucceeded  IntegrationHealthCheckJobStatus = "SUCCEEDED"
 )

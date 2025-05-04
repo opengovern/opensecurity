@@ -26,14 +26,14 @@ var (
 	HttpServerAddress = os.Getenv("HTTP_ADDRESS")
 	GRPCServerAddress = os.Getenv("GRPC_ADDRESS")
 
-	DescribeIntervalHours      = os.Getenv("DESCRIBE_INTERVAL_HOURS")
-	CostDiscoveryIntervalHours = os.Getenv("COST_DISCOVERY_INTERVAL_HOURS")
-	DescribeTimeoutHours       = os.Getenv("DESCRIBE_TIMEOUT_HOURS")
-	CheckupIntervalHours       = os.Getenv("CHECKUP_INTERVAL_HOURS")
-	MustSummarizeIntervalHours = os.Getenv("MUST_SUMMARIZE_INTERVAL_HOURS")
-	CoreBaseURL                = os.Getenv("CORE_BASE_URL")
-	ComplianceBaseURL          = os.Getenv("COMPLIANCE_BASE_URL")
-	IntegrationBaseURL         = os.Getenv("INTEGRATION_BASE_URL")
+	DescribeIntervalHours               = os.Getenv("DESCRIBE_INTERVAL_HOURS")
+	CostDiscoveryIntervalHours          = os.Getenv("COST_DISCOVERY_INTERVAL_HOURS")
+	DescribeTimeoutHours                = os.Getenv("DESCRIBE_TIMEOUT_HOURS")
+	IntegrationHealthCheckIntervalHours = os.Getenv("INTEGRATIONHEALTHCHECK_INTERVAL_HOURS")
+	MustSummarizeIntervalHours          = os.Getenv("MUST_SUMMARIZE_INTERVAL_HOURS")
+	CoreBaseURL                         = os.Getenv("CORE_BASE_URL")
+	ComplianceBaseURL                   = os.Getenv("COMPLIANCE_BASE_URL")
+	IntegrationBaseURL                  = os.Getenv("INTEGRATION_BASE_URL")
 
 	EsSinkBaseURL = os.Getenv("ESSINK_BASEURL")
 	AuthGRPCURI   = os.Getenv("AUTH_GRPC_URI")
@@ -83,7 +83,7 @@ func SchedulerCommand() *cobra.Command {
 				PostgreSQLSSLMode,
 				HttpServerAddress,
 				DescribeTimeoutHours,
-				CheckupIntervalHours,
+				IntegrationHealthCheckIntervalHours,
 				MustSummarizeIntervalHours,
 				cmd.Context(),
 				complianceEnabled,

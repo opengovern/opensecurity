@@ -3,9 +3,10 @@ package db
 import (
 	"errors"
 	"fmt"
-	"github.com/jackc/pgtype"
 	"math/rand"
 	"time"
+
+	"github.com/jackc/pgtype"
 
 	"github.com/lib/pq"
 

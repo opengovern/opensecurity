@@ -3,6 +3,8 @@ package compliance_quick_run_job
 import (
 	"bytes"
 	"fmt"
+	"text/template"
+
 	authApi "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/integration"
@@ -12,7 +14,6 @@ import (
 	coreApi "github.com/opengovern/opensecurity/services/core/api"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
-	"text/template"
 )
 
 type QueryResult struct {

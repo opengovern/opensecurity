@@ -1,4 +1,4 @@
-package checkup
+package integration_health_check
 
 import (
 	"encoding/json"
@@ -27,7 +27,7 @@ type Job struct {
 
 type JobResult struct {
 	JobID  uint
-	Status api.CheckupJobStatus
+	Status api.IntegrationHealthCheckJobStatus
 	Error  string
 }
 
@@ -40,7 +40,7 @@ func (j Job) Do(integrationClient client.IntegrationServiceClient, authClient au
 
 			r = JobResult{
 				JobID:  j.JobID,
-				Status: api.CheckupJobFailed,
+				Status: api.IntegrationHealthCheckJobFailed,
 				Error:  fmt.Sprintf("paniced: %s", err),
 			}
 		}
@@ -48,13 +48,13 @@ func (j Job) Do(integrationClient client.IntegrationServiceClient, authClient au
 
 	// Assume it succeeded unless it fails somewhere
 	var (
-		status         = api.CheckupJobSucceeded
+		status         = api.IntegrationHealthCheckJobSucceeded
 		firstErr error = nil
 	)
 
 	fail := func(err error) {
 
-		status = api.CheckupJobFailed
+		status = api.IntegrationHealthCheckJobFailed
 		if firstErr == nil {
 			firstErr = err
 		}

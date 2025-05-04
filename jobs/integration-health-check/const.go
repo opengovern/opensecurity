@@ -1,7 +1,7 @@
-package checkup
+package integration_health_check
 
 const (
-	JobsQueueName    = "checkup-jobs-queue"
-	ResultsQueueName = "checkup-results-queue"
-	StreamName       = "checkup"
+	JobsQueueName    = "integration-health-check-queue"
+	ResultsQueueName = "integration-health-check-results-queue"
+	StreamName       = "integration-health-check"
 )

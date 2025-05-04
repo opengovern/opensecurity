@@ -33,8 +33,8 @@ import (
 	"github.com/opengovern/og-util/proto/src/golang"
 	runner "github.com/opengovern/opensecurity/jobs/compliance-runner"
 	summarizer "github.com/opengovern/opensecurity/jobs/compliance-summarizer"
-	checkup "github.com/opengovern/opensecurity/jobs/integration-health-check"
-	checkupAPI "github.com/opengovern/opensecurity/jobs/integration-health-check/api"
+	integrationHealthCheck "github.com/opengovern/opensecurity/jobs/integration-health-check"
+	integrationHealthCheckAPI "github.com/opengovern/opensecurity/jobs/integration-health-check/api"
 	"github.com/opengovern/opensecurity/pkg/utils"
 	"github.com/opengovern/opensecurity/services/compliance/client"
 	integrationClient "github.com/opengovern/opensecurity/services/integration/client"
@@ -70,11 +70,11 @@ var DescribePublishingBlocked = promauto.NewGaugeVec(prometheus.GaugeOpts{
 	Help:      "The gauge whether publishing tasks to a queue is blocked: 0 for resumed and 1 for blocked",
 }, []string{"queue_name"})
 
-var CheckupJobsCount = promauto.NewCounterVec(prometheus.CounterOpts{
+var IntegrationHealthCheckJobsCount = promauto.NewCounterVec(prometheus.CounterOpts{
 	Namespace: "opengovernance",
 	Subsystem: "scheduler",
-	Name:      "schedule_checkup_jobs_total",
-	Help:      "Count of checkup jobs in scheduler service",
+	Name:      "schedule_integration_health_check_jobs_total",
+	Help:      "Count of integrationHealthCheck jobs in scheduler service",
 }, []string{"status"})
 
 var LargeDescribeResourceMessage = promauto.NewCounterVec(prometheus.CounterOpts{
@@ -95,12 +95,12 @@ type Scheduler struct {
 	httpServer *HttpServer
 	grpcServer *grpc.Server
 
-	discoveryIntervalHours     time.Duration
-	costDiscoveryIntervalHours time.Duration
-	describeTimeoutHours       int64
-	checkupIntervalHours       int64
-	mustSummarizeIntervalHours int64
-	complianceIntervalHours    time.Duration
+	discoveryIntervalHours              time.Duration
+	costDiscoveryIntervalHours          time.Duration
+	describeTimeoutHours                int64
+	IntegrationHealthCheckIntervalHours int64
+	mustSummarizeIntervalHours          int64
+	complianceIntervalHours             time.Duration
 
 	logger            *zap.Logger
 	coreClient        coreClient.CoreServiceClient
@@ -143,7 +143,7 @@ func InitializeScheduler(
 	postgresSSLMode string,
 	httpServerAddress string,
 	describeTimeoutHours string,
-	checkupIntervalHours string,
+	integrationHealthCheckIntervalHours string,
 	mustSummarizeIntervalHours string,
 	ctx context.Context,
 	complianceEnabled bool,
@@ -247,9 +247,9 @@ func InitializeScheduler(
 		return nil, err
 	}
 
-	s.checkupIntervalHours, err = strconv.ParseInt(checkupIntervalHours, 10, 64)
+	s.IntegrationHealthCheckIntervalHours, err = strconv.ParseInt(IntegrationHealthCheckIntervalHours, 10, 64)
 	if err != nil {
-		s.logger.Error("Failed to parse checkup interval hours", zap.Error(err))
+		s.logger.Error("Failed to parse IntegrationHealthCheckIntervalHours interval hours", zap.Error(err))
 		return nil, err
 	}
 
@@ -369,8 +369,8 @@ func (s *Scheduler) SetupNats(ctx context.Context) error {
 		return err
 	}
 
-	if err := s.jq.Stream(ctx, checkup.StreamName, "checkup job queue", []string{checkup.JobsQueueName, checkup.ResultsQueueName}, 1000); err != nil {
-		s.logger.Error("Failed to stream to checkup queue", zap.Error(err))
+	if err := s.jq.Stream(ctx, integrationHealthCheck.StreamName, "integrationHealthCheck job queue", []string{integrationHealthCheck.JobsQueueName, integrationHealthCheck.ResultsQueueName}, 1000); err != nil {
+		s.logger.Error("Failed to stream to integrationHealthCheck queue", zap.Error(err))
 		return err
 	}
 
@@ -571,7 +571,7 @@ func (s *Scheduler) Run(ctx context.Context) error {
 	}
 
 	utils.EnsureRunGoroutine(func() {
-		s.RunCheckupJobScheduler(ctx)
+		s.RunIntegrationHealthCheckJobScheduler(ctx)
 	})
 	utils.EnsureRunGoroutine(func() {
 		s.RunNamedQueryCache(ctx)
@@ -584,7 +584,7 @@ func (s *Scheduler) Run(ctx context.Context) error {
 	})
 	wg.Add(1)
 	utils.EnsureRunGoroutine(func() {
-		s.logger.Fatal("CheckupJobResult consumer exited", zap.Error(s.RunCheckupJobResultsConsumer(ctx)))
+		s.logger.Fatal("IntegrationHealthCheckJobResult consumer exited", zap.Error(s.RunIntegrationHealthCheckJobResultsConsumer(ctx)))
 		wg.Done()
 	})
 	utils.EnsureRunGoroutine(func() {
@@ -698,82 +698,82 @@ func (s *Scheduler) RunScheduledJobCleanup() {
 func (s *Scheduler) Stop() {
 }
 
-func (s *Scheduler) RunCheckupJobScheduler(ctx context.Context) {
-	s.logger.Info("Scheduling checkup jobs on a timer")
+func (s *Scheduler) RunIntegrationHealthCheckJobScheduler(ctx context.Context) {
+	s.logger.Info("Scheduling integrationHealthCheck jobs on a timer")
 
 	t := ticker.NewTicker(JobSchedulingInterval, time.Second*10)
 	defer t.Stop()
 
 	for ; ; <-t.C {
-		s.scheduleCheckupJob(ctx)
+		s.scheduleIntegrationHealthCheckJob(ctx)
 	}
 }
 
-func (s *Scheduler) scheduleCheckupJob(ctx context.Context) {
-	checkupJob, err := s.db.FetchLastCheckupJob()
+func (s *Scheduler) scheduleIntegrationHealthCheckJob(ctx context.Context) {
+	integrationHealthCheckJob, err := s.db.FetchLastIntegrationHealthCheckJob()
 	if err != nil {
-		s.logger.Error("Failed to find the last job to check for CheckupJob", zap.Error(err))
-		CheckupJobsCount.WithLabelValues("failure").Inc()
+		s.logger.Error("Failed to find the last job to check for integrationHealthCheckJob", zap.Error(err))
+		IntegrationHealthCheckJobsCount.WithLabelValues("failure").Inc()
 		return
 	}
 
-	if checkupJob == nil ||
-		checkupJob.CreatedAt.Add(time.Duration(s.checkupIntervalHours)*time.Hour).Before(time.Now()) {
-		job := newCheckupJob()
-		err = s.db.AddCheckupJob(&job)
+	if integrationHealthCheckJob == nil ||
+		integrationHealthCheckJob.CreatedAt.Add(time.Duration(s.IntegrationHealthCheckIntervalHours)*time.Hour).Before(time.Now()) {
+		job := NewIntegrationHealthCheckJob()
+		err = s.db.AddIntegrationHealthCheckJob(&job)
 		if err != nil {
-			CheckupJobsCount.WithLabelValues("failure").Inc()
-			s.logger.Error("Failed to create CheckupJob",
+			IntegrationHealthCheckJobsCount.WithLabelValues("failure").Inc()
+			s.logger.Error("Failed to create integrationHealthCheckJob",
 				zap.Uint("jobId", job.ID),
 				zap.Error(err),
 			)
 		}
 
-		bytes, err := json.Marshal(checkup.Job{
+		bytes, err := json.Marshal(integrationHealthCheck.Job{
 			JobID:      job.ID,
 			ExecutedAt: job.CreatedAt.UnixMilli(),
 		})
 		if err != nil {
-			CheckupJobsCount.WithLabelValues("failure").Inc()
-			s.logger.Error("Failed to marshal a checkup job as json", zap.Error(err), zap.Uint("jobId", job.ID))
+			IntegrationHealthCheckJobsCount.WithLabelValues("failure").Inc()
+			s.logger.Error("Failed to marshal a integrationHealthCheck job as json", zap.Error(err), zap.Uint("jobId", job.ID))
 		}
 
-		if _, err := s.jq.Produce(ctx, checkup.JobsQueueName, bytes, fmt.Sprintf("job-%d", job.ID)); err != nil {
-			CheckupJobsCount.WithLabelValues("failure").Inc()
-			s.logger.Error("Failed to enqueue CheckupJob",
+		if _, err := s.jq.Produce(ctx, integrationHealthCheck.JobsQueueName, bytes, fmt.Sprintf("job-%d", job.ID)); err != nil {
+			IntegrationHealthCheckJobsCount.WithLabelValues("failure").Inc()
+			s.logger.Error("Failed to enqueue integrationHealthCheckJob",
 				zap.Uint("jobId", job.ID),
 				zap.Error(err),
 			)
-			job.Status = checkupAPI.CheckupJobFailed
-			err = s.db.UpdateCheckupJobStatus(job)
+			job.Status = integrationHealthCheckAPI.IntegrationHealthCheckJobFailed
+			err = s.db.UpdateIntegrationHealthCheckJobStatus(job)
 			if err != nil {
-				s.logger.Error("Failed to update CheckupJob status",
+				s.logger.Error("Failed to update integrationHealthCheckJob status",
 					zap.Uint("jobId", job.ID),
 					zap.Error(err),
 				)
 			}
 		}
-		CheckupJobsCount.WithLabelValues("successful").Inc()
+		IntegrationHealthCheckJobsCount.WithLabelValues("successful").Inc()
 	}
 }
 
-// RunCheckupJobResultsConsumer consumes messages from the checkupJobResultQueue queue.
+// RunintegrationHealthCheckJobResultsConsumer consumes messages from the integrationHealthCheckJobResultQueue queue.
 // It will update the status of the jobs in the database based on the message.
 // It will also update the jobs status that are not completed in certain time to FAILED
-func (s *Scheduler) RunCheckupJobResultsConsumer(ctx context.Context) error {
-	s.logger.Info("Consuming messages from the CheckupJobResultQueue queue")
+func (s *Scheduler) RunIntegrationHealthCheckJobResultsConsumer(ctx context.Context) error {
+	s.logger.Info("Consuming messages from the IntegrationHealthCheckJobResultQueue queue")
 
 	consumeCtx, err := s.jq.Consume(
 		ctx,
-		"checkup-scheduler",
-		checkup.StreamName,
-		[]string{checkup.ResultsQueueName},
-		"checkup-scheduler",
+		"integrationHealthCheck-scheduler",
+		integrationHealthCheck.StreamName,
+		[]string{integrationHealthCheck.ResultsQueueName},
+		"integrationHealthCheck-scheduler",
 		func(msg jetstream.Msg) {
-			var result checkup.JobResult
+			var result integrationHealthCheck.JobResult
 
 			if err := json.Unmarshal(msg.Data(), &result); err != nil {
-				s.logger.Error("Failed to unmarshal CheckupJobResult results", zap.Error(err))
+				s.logger.Error("Failed to unmarshal IntegrationHealthCheckJobResult results", zap.Error(err))
 
 				// when message cannot be unmarshal, there is no need to consume it again.
 				if err := msg.Ack(); err != nil {
@@ -783,13 +783,13 @@ func (s *Scheduler) RunCheckupJobResultsConsumer(ctx context.Context) error {
 				return
 			}
 
-			s.logger.Info("Processing CheckupJobResult for Job",
+			s.logger.Info("Processing IntegrationHealthCheckJobResult for Job",
 				zap.Uint("jobId", result.JobID),
 				zap.String("status", string(result.Status)),
 			)
 
-			if err := s.db.UpdateCheckupJob(result.JobID, result.Status, result.Error); err != nil {
-				s.logger.Error("Failed to update the status of CheckupJob",
+			if err := s.db.UpdateIntegrationHealthCheckJob(result.JobID, result.Status, result.Error); err != nil {
+				s.logger.Error("Failed to update the status of IntegrationHealthCheckJob",
 					zap.Uint("jobId", result.JobID),
 					zap.Error(err))
 
@@ -815,8 +815,8 @@ func (s *Scheduler) RunCheckupJobResultsConsumer(ctx context.Context) error {
 	for {
 		select {
 		case <-t.C:
-			if err := s.db.UpdateCheckupJobsTimedOut(s.checkupIntervalHours); err != nil {
-				s.logger.Error("Failed to update timed out CheckupJob", zap.Error(err))
+			if err := s.db.UpdateIntegrationHealthCheckJobsTimedOut(s.IntegrationHealthCheckIntervalHours); err != nil {
+				s.logger.Error("Failed to update timed out IntegrationHealthCheckJob", zap.Error(err))
 			}
 		case <-ctx.Done():
 			consumeCtx.Drain()
@@ -826,8 +826,8 @@ func (s *Scheduler) RunCheckupJobResultsConsumer(ctx context.Context) error {
 	}
 }
 
-func newCheckupJob() model.CheckupJob {
-	return model.CheckupJob{
-		Status: checkupAPI.CheckupJobInProgress,
+func NewIntegrationHealthCheckJob() model.IntegrationHealthCheckJob {
+	return model.IntegrationHealthCheckJob{
+		Status: integrationHealthCheckAPI.IntegrationHealthCheckJobInProgress,
 	}
 }

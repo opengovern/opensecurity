@@ -1,4 +1,4 @@
-package checkup
+package integration_health_check
 
 import (
 	"context"
@@ -69,10 +69,10 @@ func NewWorker(
 func (w *Worker) Run(ctx context.Context) error {
 	consumeCtx, err := w.jq.Consume(
 		ctx,
-		"checkup-service",
+		"integration-health-check-service",
 		StreamName,
 		[]string{JobsQueueName},
-		"checkup-service",
+		"integration-health-check-service",
 		func(msg jetstream.Msg) {
 			var job Job
 			if err := json.Unmarshal(msg.Data(), &job); err != nil {

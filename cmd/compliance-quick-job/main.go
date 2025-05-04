@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	checkup "github.com/opengovern/opensecurity/jobs/integration-health-check"
+	runner "github.com/opengovern/opensecurity/jobs/compliance-quick"
 )
 
 func main() {
@@ -29,7 +29,7 @@ func main() {
 		}
 	}()
 
-	if err := checkup.WorkerCommand().ExecuteContext(ctx); err != nil {
+	if err := runner.WorkerCommand().ExecuteContext(ctx); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

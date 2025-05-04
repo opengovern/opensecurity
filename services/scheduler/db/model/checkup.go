@@ -7,6 +7,6 @@ import (
 
 type CheckupJob struct {
 	gorm.Model
-	Status         checkupapi.CheckupJobStatus
+	Status         checkupapi.IntegrationHealthCheckJobStatus
 	FailureMessage string
 }

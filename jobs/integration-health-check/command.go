@@ -1,4 +1,4 @@
-package checkup
+package integration_health_check
 
 import (
 	"errors"

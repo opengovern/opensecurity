@@ -2,12 +2,13 @@ package scheduler
 
 import (
 	"context"
+	"time"
+
 	"github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/ticker"
 	"github.com/opengovern/opensecurity/services/tasks/db/models"
 	"go.uber.org/zap"
-	"time"
 )
 
 func (s *MainScheduler) CreateTaskScheduler(ctx context.Context) {
