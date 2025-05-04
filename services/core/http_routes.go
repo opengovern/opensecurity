@@ -46,6 +46,9 @@ import (
 )
 
 func (h *HttpHandler) Register(r *echo.Echo) {
+	// Register the health check endpoint (typically public, no auth needed)
+	r.GET("/health", h.healthCheck) // <--- ADD THIS LINE
+
 	v1 := r.Group("/api/v1")
 	// metadata
 	filter := v1.Group("/filter")
