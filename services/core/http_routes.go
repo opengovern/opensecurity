@@ -22,8 +22,8 @@ import (
 	api3 "github.com/opengovern/og-util/pkg/api"
 	"github.com/opengovern/og-util/pkg/httpclient"
 	"github.com/opengovern/og-util/pkg/httpserver"
-	model2 "github.com/opengovern/opensecurity/jobs/demo-importer-job/db/model"
 	"github.com/opengovern/opensecurity/jobs/post-install-job/db/model"
+	model2 "github.com/opengovern/opensecurity/jobs/post-install-job/db/model"
 	complianceapi "github.com/opengovern/opensecurity/services/compliance/api"
 	integrationApi "github.com/opengovern/opensecurity/services/integration/api/models"
 	integrationClient "github.com/opengovern/opensecurity/services/integration/client"
@@ -79,9 +79,7 @@ func (h *HttpHandler) Register(r *echo.Echo) {
 	v3 := r.Group("/api/v3")
 	// metadata
 	v3.PUT("/sample/purge", httpserver.AuthorizeHandler(h.PurgeSampleData, api3.ViewerRole))
-	v3.PUT("/sample/sync", httpserver.AuthorizeHandler(h.SyncDemo, api3.ViewerRole))
 	v3.PUT("/sample/loaded", httpserver.AuthorizeHandler(h.WorkspaceLoadedSampleData, api3.ViewerRole))
-	v3.GET("/sample/sync/status", httpserver.AuthorizeHandler(h.GetSampleSyncStatus, api3.ViewerRole))
 	v3.GET("/migration/status", httpserver.AuthorizeHandler(h.GetMigrationStatus, api3.ViewerRole))
 	v3.GET("/configured/status", httpserver.AuthorizeHandler(h.GetConfiguredStatus, api3.ViewerRole))
 	v3.PUT("/configured/set", httpserver.AuthorizeHandler(h.SetConfiguredStatus, api3.AdminRole))
@@ -721,203 +719,6 @@ func (h *HttpHandler) PurgeSampleData(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-// SyncDemo godoc
-//
-//	@Summary		Sync demo
-//
-//	@Description	Syncs demo with the git backend.
-//
-//	@Security		BearerToken
-//	@Tags			compliance
-//	@Param			demo_data_s3_url	query	string	false	"Demo Data S3 URL"
-//	@Accept			json
-//	@Produce		json
-//	@Success		200
-//	@Router			/metadata/api/v3/sample/sync [put]
-func (h *HttpHandler) SyncDemo(echoCtx echo.Context) error {
-	ctx := echoCtx.Request().Context()
-
-	var mig *model.Migration
-	tx := h.migratorDb.ORM.Model(&model.Migration{}).Where("id = ?", model2.MigrationJobName).Find(&mig)
-	if tx.Error != nil && !errors.Is(tx.Error, gorm.ErrRecordNotFound) {
-		h.logger.Error("failed to get migration", zap.Error(tx.Error))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get migration")
-	}
-
-	if mig != nil && mig.ID == model2.MigrationJobName {
-		h.logger.Info("last migration job", zap.Any("job", *mig))
-		if mig.Status != "COMPLETED" && mig.UpdatedAt.After(time.Now().Add(-1*10*time.Minute)) {
-			return echo.NewHTTPError(http.StatusBadRequest, "sync sample data already in progress")
-		}
-	}
-
-	metadata, err := coreUtils.GetConfigMetadata(h.db, string(models.MetadataKeyCustomizationEnabled))
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return echo.NewHTTPError(http.StatusNotFound, "config not found")
-		}
-		return err
-	}
-
-	cnf := metadata.GetCore()
-
-	var enabled models.IConfigMetadata
-	switch cnf.Type {
-	case models.ConfigMetadataTypeString:
-		enabled = &models.StringConfigMetadata{
-			ConfigMetadata: cnf,
-		}
-	case models.ConfigMetadataTypeInt:
-		intValue, err := strconv.ParseInt(cnf.Value, 10, 64)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "failed to parse int value")
-		}
-		enabled = &models.IntConfigMetadata{
-			ConfigMetadata: cnf,
-			Value:          int(intValue),
-		}
-	case models.ConfigMetadataTypeBool:
-		boolValue, err := strconv.ParseBool(cnf.Value)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to convert bool to int")
-		}
-		enabled = &models.BoolConfigMetadata{
-			ConfigMetadata: cnf,
-			Value:          boolValue,
-		}
-	case models.ConfigMetadataTypeJSON:
-		enabled = &models.JSONConfigMetadata{
-			ConfigMetadata: cnf,
-			Value:          cnf.Value,
-		}
-	}
-
-	if !enabled.GetValue().(bool) {
-		return echo.NewHTTPError(http.StatusForbidden, "customization is not allowed")
-	}
-
-	demoDataS3URL := echoCtx.QueryParam("demo_data_s3_url")
-	if demoDataS3URL != "" {
-		// validate url
-		_, err := url.ParseRequestURI(demoDataS3URL)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid url")
-		}
-		err = coreUtils.SetConfigMetadata(h.db, models.DemoDataS3URL, demoDataS3URL)
-		if err != nil {
-			h.logger.Error("set config metadata", zap.Error(err))
-			return err
-		}
-	}
-
-	var importDemoJob batchv1.Job
-	err = h.kubeClient.Get(ctx, k8sclient.ObjectKey{
-		Namespace: h.cfg.OpengovernanceNamespace,
-		Name:      "import-es-demo-data",
-	}, &importDemoJob)
-	if err != nil {
-		return err
-	}
-
-	err = h.kubeClient.Delete(ctx, &importDemoJob)
-	if err != nil {
-		return err
-	}
-
-	for {
-		err = h.kubeClient.Get(ctx, k8sclient.ObjectKey{
-			Namespace: h.cfg.OpengovernanceNamespace,
-			Name:      "import-es-demo-data",
-		}, &importDemoJob)
-		if err != nil {
-			if k8sclient.IgnoreNotFound(err) == nil {
-				break
-			}
-			return err
-		}
-
-		time.Sleep(1 * time.Second)
-	}
-
-	importDemoJob.ObjectMeta = metav1.ObjectMeta{
-		Name:      "import-es-demo-data",
-		Namespace: h.cfg.OpengovernanceNamespace,
-		Annotations: map[string]string{
-			"helm.sh/hook":        "post-install,post-upgrade",
-			"helm.sh/hook-weight": "0",
-		},
-	}
-	importDemoJob.Spec.Selector = nil
-	importDemoJob.Spec.Suspend = aws.Bool(false)
-	importDemoJob.Spec.Template.ObjectMeta = metav1.ObjectMeta{}
-	importDemoJob.Status = batchv1.JobStatus{}
-
-	err = h.kubeClient.Create(ctx, &importDemoJob)
-	if err != nil {
-		return err
-	}
-
-	var importDemoDbJob batchv1.Job
-	err = h.kubeClient.Get(ctx, k8sclient.ObjectKey{
-		Namespace: h.cfg.OpengovernanceNamespace,
-		Name:      "import-psql-demo-data",
-	}, &importDemoDbJob)
-	if err != nil {
-		return err
-	}
-
-	err = h.kubeClient.Delete(ctx, &importDemoDbJob)
-	if err != nil {
-		return err
-	}
-
-	for {
-		err = h.kubeClient.Get(ctx, k8sclient.ObjectKey{
-			Namespace: h.cfg.OpengovernanceNamespace,
-			Name:      "import-psql-demo-data",
-		}, &importDemoDbJob)
-		if err != nil {
-			if k8sclient.IgnoreNotFound(err) == nil {
-				break
-			}
-			return err
-		}
-
-		time.Sleep(1 * time.Second)
-	}
-
-	importDemoDbJob.ObjectMeta = metav1.ObjectMeta{
-		Name:      "import-psql-demo-data",
-		Namespace: h.cfg.OpengovernanceNamespace,
-		Annotations: map[string]string{
-			"helm.sh/hook":        "post-install,post-upgrade",
-			"helm.sh/hook-weight": "0",
-		},
-	}
-	importDemoDbJob.Spec.Selector = nil
-	importDemoDbJob.Spec.Suspend = aws.Bool(false)
-	importDemoDbJob.Spec.Template.ObjectMeta = metav1.ObjectMeta{}
-	importDemoDbJob.Status = batchv1.JobStatus{}
-
-	err = h.kubeClient.Create(ctx, &importDemoDbJob)
-	if err != nil {
-		return err
-	}
-
-	jp := pgtype.JSONB{}
-	err = jp.Set([]byte(""))
-	if err != nil {
-		return err
-	}
-	tx = h.migratorDb.ORM.Model(&model.Migration{}).Where("id = ?", model2.MigrationJobName).Update("status", "Started").Update("jobs_status", jp)
-	if tx.Error != nil && !errors.Is(tx.Error, gorm.ErrRecordNotFound) {
-		h.logger.Error("failed to update migration", zap.Error(tx.Error))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update migration")
-	}
-
-	return echoCtx.JSON(http.StatusOK, struct{}{})
-}
-
 // WorkspaceLoadedSampleData godoc
 //
 //	@Summary		Sync demo
@@ -1000,40 +801,6 @@ func (h *HttpHandler) GetMigrationStatus(echoCtx echo.Context) error {
 		},
 		UpdatedAt: mig.UpdatedAt,
 		CreatedAt: mig.CreatedAt,
-	})
-}
-
-// GetSampleSyncStatus godoc
-//
-//	@Summary		Sync demo
-//
-//	@Description	Syncs demo with the git backend.
-//
-//	@Security		BearerToken
-//	@Tags			compliance
-//	@Param			demo_data_s3_url	query	string	false	"Demo Data S3 URL"
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	{object}	api.GetSampleSyncStatusResponse
-//	@Router			/workspace/api/v3/sample/sync/status [get]
-func (h *HttpHandler) GetSampleSyncStatus(echoCtx echo.Context) error {
-	var mig *model.Migration
-	tx := h.migratorDb.ORM.Model(&model.Migration{}).Where("id = ?", model2.MigrationJobName).First(&mig)
-	if tx.Error != nil && !errors.Is(tx.Error, gorm.ErrRecordNotFound) {
-		h.logger.Error("failed to get migration", zap.Error(tx.Error))
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get migration")
-	}
-	var jobsStatus model2.ESImportProgress
-
-	if len(mig.JobsStatus.Bytes) > 0 {
-		err := json.Unmarshal(mig.JobsStatus.Bytes, &jobsStatus)
-		if err != nil {
-			return err
-		}
-	}
-	return echoCtx.JSON(http.StatusOK, api.GetSampleSyncStatusResponse{
-		Status:   mig.Status,
-		Progress: jobsStatus.Progress,
 	})
 }
 
