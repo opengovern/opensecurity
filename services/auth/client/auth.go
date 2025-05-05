@@ -11,6 +11,7 @@ import (
 
 type AuthServiceClient interface {
 	ListUsers(ctx *httpclient.Context) ([]api.GetUsersResponse, error)
+	ListApiKeys(ctx *httpclient.Context) ([]api.APIKeyResponse, error)
 	GetConnectors(ctx *httpclient.Context) ([]api.GetConnectorsResponse, error)
 }
 
@@ -33,6 +34,19 @@ func (s *authClient) ListUsers(ctx *httpclient.Context) ([]api.GetUsersResponse,
 		return nil, err
 	}
 	return users, nil
+}
+
+func (s *authClient) ListApiKeys(ctx *httpclient.Context) ([]api.APIKeyResponse, error) {
+	url := fmt.Sprintf("%s/api/v1/keys", s.baseURL)
+
+	var keys []api.APIKeyResponse
+	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &keys); err != nil {
+		if 400 <= statusCode && statusCode < 500 {
+			return nil, echo.NewHTTPError(statusCode, err.Error())
+		}
+		return nil, err
+	}
+	return keys, nil
 }
 
 func (s *authClient) GetConnectors(ctx *httpclient.Context) ([]api.GetConnectorsResponse, error) {

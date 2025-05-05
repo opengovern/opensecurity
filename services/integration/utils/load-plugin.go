@@ -164,6 +164,7 @@ func ExtractIntegrationBinaries(logger *zap.Logger, plugin platformspec.PluginSp
 			IntegrationType:          plugin.IntegrationType,
 			Name:                     plugin.Name,
 			Description:              plugin.Metadata.Description,
+			Version:                  plugin.Version,
 			Icon:                     plugin.Metadata.Icon,
 			PackageType:              plugin.Type,
 			InstallState:             installState,

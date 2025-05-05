@@ -56,6 +56,7 @@ type IntegrationPlugin struct {
 	Name                     string
 	Tier                     string
 	Description              string
+	Version                  string
 	Icon                     string
 	Availability             string
 	SourceCode               string

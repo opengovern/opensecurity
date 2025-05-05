@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	authAPI "github.com/opengovern/og-util/pkg/api"
@@ -18,6 +19,10 @@ import (
 	"github.com/opengovern/opensecurity/jobs/checkup-job/api"
 	"github.com/opengovern/opensecurity/services/integration/client"
 	"go.uber.org/zap"
+)
+
+var (
+	UsageTrackerEndpoint = os.Getenv("USAGE_TRACKER_ENDPOINT")
 )
 
 type Job struct {
@@ -62,34 +67,32 @@ func (j Job) Do(integrationClient client.IntegrationServiceClient, authClient au
 
 	// Healthcheck
 	logger.Info("starting healthcheck")
-	
+
 	counter := 0
 	integrations, err := integrationClient.ListIntegrations(&httpclient.Context{
 		UserRole: authAPI.EditorRole,
 	}, nil)
 
-	
-
 	if err != nil {
 		time.Sleep(3 * time.Minute)
-				integrations, err = integrationClient.ListIntegrations(&httpclient.Context{
-				UserRole: authAPI.EditorRole,
-			}, nil)
-			for {
-					if err != nil {
-						counter++
-						if counter < 10 {
-							logger.Warn("Waiting for status to be GREEN or YELLOW. Sleeping for 10 seconds...")
-							time.Sleep(4 * time.Minute)
-							continue
-						}
+		integrations, err = integrationClient.ListIntegrations(&httpclient.Context{
+			UserRole: authAPI.EditorRole,
+		}, nil)
+		for {
+			if err != nil {
+				counter++
+				if counter < 10 {
+					logger.Warn("Waiting for status to be GREEN or YELLOW. Sleeping for 10 seconds...")
+					time.Sleep(4 * time.Minute)
+					continue
+				}
 
-						logger.Error("failed to check integration healthcheck", zap.Error(err))
-						fail(fmt.Errorf("failed to check integration healthcheck: %w", err))
-					}
-				break
-			}	
-		
+				logger.Error("failed to check integration healthcheck", zap.Error(err))
+				fail(fmt.Errorf("failed to check integration healthcheck: %w", err))
+			}
+			break
+		}
+
 	} else {
 		for _, integrationObj := range integrations.Integrations {
 			if integrationObj.LastCheck != nil && integrationObj.LastCheck.Add(8*time.Hour).After(time.Now()) {
@@ -127,22 +130,19 @@ func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfi
 
 	httpCtx := httpclient.Context{Ctx: ctx, UserRole: authAPI.AdminRole}
 
-	req := shared_entities.CspmUsageRequest{
-		GatherTimestamp:      now,
-		Hostname:             workerConfig.TelemetryHostname,
-		IntegrationTypeCount: make(map[string]int),
-	}
+	var plugins []shared_entities.UsageTrackerPluginInfo
 
-	integrations, err := integrationClient.ListIntegrations(&httpCtx, nil)
+	pluginsResponse, err := integrationClient.ListPlugins(&httpCtx)
 	if err != nil {
 		logger.Error("failed to list sources", zap.Error(err))
 		return
 	}
-	for _, integration := range integrations.Integrations {
-		if _, ok := req.IntegrationTypeCount[integration.IntegrationType.String()]; !ok {
-			req.IntegrationTypeCount[integration.IntegrationType.String()] = 0
-		}
-		req.IntegrationTypeCount[integration.IntegrationType.String()] += 1
+	for _, p := range pluginsResponse.Items {
+		plugins = append(plugins, shared_entities.UsageTrackerPluginInfo{
+			Name:             p.Name,
+			Version:          p.Version,
+			IntegrationCount: p.Count.Total,
+		})
 	}
 
 	users, err := authClient.ListUsers(&httpCtx)
@@ -150,26 +150,38 @@ func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfi
 		logger.Error("failed to list users", zap.Error(err))
 		return
 	}
-	req.NumberOfUsers = int64(len(users))
+	keys, err := authClient.ListApiKeys(&httpCtx)
+	if err != nil {
+		logger.Error("failed to list api keys", zap.Error(err))
+		return
+	}
 
 	about, err := coreClient.GetAbout(&httpCtx)
 	if err != nil {
 		logger.Error("failed to get about", zap.Error(err))
 		return
 	}
-	req.InstallId = about.InstallID
 
-	url := fmt.Sprintf("%s/api/v1/information/usage", "https://hub.clearcompass.so")
+	req := shared_entities.UsageTrackerRequest{
+		InstanceID:      about.InstallID,
+		Time:            now,
+		Version:         about.AppVersion,
+		Hostname:        workerConfig.TelemetryHostname,
+		IsSsoConfigured: false,
+		UserCount:       int64(len(users)),
+		ApiKeyCount:     int64(len(keys)),
+	}
+
 	reqBytes, err := json.Marshal(req)
 	if err != nil {
 		logger.Error("failed to marshal telemetry request", zap.Error(err))
 		return
 	}
 	var resp any
-	if statusCode, err := httpclient.DoRequest(httpCtx.Ctx, http.MethodPost, url, httpCtx.ToHeaders(), reqBytes, &resp); err != nil {
-		logger.Error("failed to send telemetry", zap.Error(err), zap.Int("status_code", statusCode), zap.String("url", url), zap.Any("req", req), zap.Any("resp", resp))
+	if statusCode, err := httpclient.DoRequest(httpCtx.Ctx, http.MethodPost, UsageTrackerEndpoint, httpCtx.ToHeaders(), reqBytes, &resp); err != nil {
+		logger.Error("failed to send telemetry", zap.Error(err), zap.Int("status_code", statusCode), zap.String("url", UsageTrackerEndpoint), zap.Any("req", req), zap.Any("resp", resp))
 		return
 	}
 
-	logger.Info("sent telemetry", zap.String("url", url))
+	logger.Info("sent telemetry", zap.String("url", UsageTrackerEndpoint))
 }

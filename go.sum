@@ -986,6 +986,12 @@ github.com/opencontainers/runc v1.2.6 h1:P7Hqg40bsMvQGCS4S7DJYhUZOISMLJOB2iGX5CO
 github.com/opencontainers/runc v1.2.6/go.mod h1:dOQeFo29xZKBNeRBI0B19mJtfHv68YgCTh1X+YphA+4=
 github.com/opengovern/og-util v1.15.48 h1:w9St+tfVphxAhdZUZtnsfMGabili7xBUGvQ/OskDVkQ=
 github.com/opengovern/og-util v1.15.48/go.mod h1:THqKUUaoAemc4x31PzZEWIzhp+MnJNf9413wgfZyHyc=
+github.com/opengovern/og-util v1.15.49 h1:IZbqjV5MfXM/3SVchZoJQRIFXaOVZjecBARaNQ3wZ5s=
+github.com/opengovern/og-util v1.15.49/go.mod h1:THqKUUaoAemc4x31PzZEWIzhp+MnJNf9413wgfZyHyc=
+github.com/opengovern/og-util v1.15.50-0.20250505101939-eda5a95e3b6f h1:lREXwaCh7avGIAVNyk2+6ZB4AdtNOZjt8BWI4HgQbYU=
+github.com/opengovern/og-util v1.15.50-0.20250505101939-eda5a95e3b6f/go.mod h1:THqKUUaoAemc4x31PzZEWIzhp+MnJNf9413wgfZyHyc=
+github.com/opengovern/og-util v1.15.51 h1:x6lx327j2rQdnMDBwsSBgXQVwPhXe8RK4n0fG8zGesg=
+github.com/opengovern/og-util v1.15.51/go.mod h1:THqKUUaoAemc4x31PzZEWIzhp+MnJNf9413wgfZyHyc=
 github.com/opensearch-project/opensearch-go/v2 v2.3.0 h1:nQIEMr+A92CkhHrZgUhcfsrZjibvB3APXf2a1VwCmMQ=
 github.com/opensearch-project/opensearch-go/v2 v2.3.0/go.mod h1:8LDr9FCgUTVoT+5ESjc2+iaZuldqE+23Iq0r1XeNue8=
 github.com/ory/dockertest/v3 v3.10.0 h1:4K3z2VMe8Woe++invjaTB7VRyQXQy5UY+loujO4aNE4=

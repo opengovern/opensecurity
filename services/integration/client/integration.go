@@ -29,6 +29,7 @@ type IntegrationServiceClient interface {
 	GetPluginsTables(ctx *httpclient.Context) ([]models.PluginTables, error)
 	GetIntegrationTypeResourceType(ctx *httpclient.Context, integrationType string, resourceType string) (*models.ResourceTypeConfiguration, error)
 	ListIntegrationTypeResourceTypes(ctx *httpclient.Context, integrationType string) (*models.ListIntegrationTypeResourceTypesResponse, error)
+	ListPlugins(ctx *httpclient.Context) (*models.IntegrationPluginListResponse, error)
 }
 
 type integrationClient struct {
@@ -283,6 +284,20 @@ func (c *integrationClient) ListIntegrationTypeResourceTypes(ctx *httpclient.Con
 func (c *integrationClient) GetIntegrationTypeResourceType(ctx *httpclient.Context, integrationType string, resourceType string) (*models.ResourceTypeConfiguration, error) {
 	url := fmt.Sprintf("%s/api/v1/integrations/types/%s/resource_types/%s", c.baseURL, integrationType, resourceType)
 	var response models.ResourceTypeConfiguration
+
+	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &response); err != nil {
+		if 400 <= statusCode && statusCode < 500 {
+			return nil, echo.NewHTTPError(statusCode, err.Error())
+		}
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func (c *integrationClient) ListPlugins(ctx *httpclient.Context) (*models.IntegrationPluginListResponse, error) {
+	url := fmt.Sprintf("%s/api/v1/integrations-types/plugin", c.baseURL)
+	var response models.IntegrationPluginListResponse
 
 	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &response); err != nil {
 		if 400 <= statusCode && statusCode < 500 {

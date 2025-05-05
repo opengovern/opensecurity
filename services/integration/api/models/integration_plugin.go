@@ -16,6 +16,7 @@ type IntegrationPlugin struct {
 	Name              string                          `json:"name"`
 	Tier              string                          `json:"tier"`
 	Description       string                          `json:"description"`
+	Version           string                          `json:"version"`
 	Icon              string                          `json:"icon"`
 	Availability      string                          `json:"availability"`
 	SourceCode        string                          `json:"source_code"`
