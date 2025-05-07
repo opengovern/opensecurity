@@ -115,7 +115,11 @@ func (j Job) Do(integrationClient client.IntegrationServiceClient, authClient au
 		errMsg = firstErr.Error()
 	}
 
-	j.SendTelemetry(context.Background(), logger, config, integrationClient, authClient, coreClient)
+	err = j.SendTelemetry(context.Background(), logger, config, integrationClient, authClient, coreClient)
+	if err != nil {
+		status = api.CheckupJobFailed
+		errMsg = fmt.Sprintf("%s \n failed to check integration healthcheck: %s", errMsg, err.Error())
+	}
 
 	return JobResult{
 		JobID:  j.JobID,
@@ -125,7 +129,7 @@ func (j Job) Do(integrationClient client.IntegrationServiceClient, authClient au
 }
 
 func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfig config.WorkerConfig,
-	integrationClient client.IntegrationServiceClient, authClient authClient.AuthServiceClient, coreClient coreClient.CoreServiceClient) {
+	integrationClient client.IntegrationServiceClient, authClient authClient.AuthServiceClient, coreClient coreClient.CoreServiceClient) error {
 	now := time.Now()
 
 	httpCtx := httpclient.Context{Ctx: ctx, UserRole: authAPI.AdminRole}
@@ -135,7 +139,7 @@ func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfi
 	pluginsResponse, err := integrationClient.ListPlugins(&httpCtx)
 	if err != nil {
 		logger.Error("failed to list sources", zap.Error(err))
-		return
+		return err
 	}
 	for _, p := range pluginsResponse.Items {
 		plugins = append(plugins, shared_entities.UsageTrackerPluginInfo{
@@ -148,18 +152,18 @@ func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfi
 	users, err := authClient.ListUsers(&httpCtx)
 	if err != nil {
 		logger.Error("failed to list users", zap.Error(err))
-		return
+		return err
 	}
 	keys, err := authClient.ListApiKeys(&httpCtx)
 	if err != nil {
 		logger.Error("failed to list api keys", zap.Error(err))
-		return
+		return err
 	}
 
 	about, err := coreClient.GetAbout(&httpCtx)
 	if err != nil {
 		logger.Error("failed to get about", zap.Error(err))
-		return
+		return err
 	}
 
 	req := shared_entities.UsageTrackerRequest{
@@ -175,13 +179,14 @@ func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfi
 	reqBytes, err := json.Marshal(req)
 	if err != nil {
 		logger.Error("failed to marshal telemetry request", zap.Error(err))
-		return
+		return err
 	}
 	var resp any
 	if statusCode, err := httpclient.DoRequest(httpCtx.Ctx, http.MethodPost, UsageTrackerEndpoint, httpCtx.ToHeaders(), reqBytes, &resp); err != nil {
 		logger.Error("failed to send telemetry", zap.Error(err), zap.Int("status_code", statusCode), zap.String("url", UsageTrackerEndpoint), zap.Any("req", req), zap.Any("resp", resp))
-		return
+		return err
 	}
 
 	logger.Info("sent telemetry", zap.String("url", UsageTrackerEndpoint))
+	return nil
 }
