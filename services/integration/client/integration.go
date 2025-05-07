@@ -296,7 +296,7 @@ func (c *integrationClient) GetIntegrationTypeResourceType(ctx *httpclient.Conte
 }
 
 func (c *integrationClient) ListPlugins(ctx *httpclient.Context) (*models.IntegrationPluginListResponse, error) {
-	url := fmt.Sprintf("%s/api/v1/integrations-types/plugin", c.baseURL)
+	url := fmt.Sprintf("%s/api/v1/integration-types/plugin", c.baseURL)
 	var response models.IntegrationPluginListResponse
 
 	if statusCode, err := httpclient.DoRequest(ctx.Ctx, http.MethodGet, url, ctx.ToHeaders(), nil, &response); err != nil {

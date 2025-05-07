@@ -138,8 +138,8 @@ func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfi
 
 	pluginsResponse, err := integrationClient.ListPlugins(&httpCtx)
 	if err != nil {
-		logger.Error("failed to list sources", zap.Error(err))
-		return fmt.Errorf("failed to list sources: %w", err)
+		logger.Error("failed to list plugins", zap.Error(err))
+		return fmt.Errorf("failed to list plugins: %w", err)
 	}
 	for _, p := range pluginsResponse.Items {
 		plugins = append(plugins, shared_entities.UsageTrackerPluginInfo{
