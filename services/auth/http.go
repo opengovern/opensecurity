@@ -488,15 +488,15 @@ func (r *httpRoutes) EditAPIKey(ctx echo.Context) error {
 
 // ListAPIKeys lists API keys for the currently authenticated user.
 func (r *httpRoutes) ListAPIKeys(ctx echo.Context) error {
-	externalUserID := httpserver.GetUserID(ctx)
-	if externalUserID == "" {
-		r.logger.Error("Unable to get user ID from context in ListAPIKeys")
-		return echo.NewHTTPError(http.StatusUnauthorized, "Cannot identify authenticated user")
-	}
+	//externalUserID := httpserver.GetUserID(ctx)
+	//if externalUserID == "" {
+	//	r.logger.Error("Unable to get user ID from context in ListAPIKeys")
+	//	return echo.NewHTTPError(http.StatusUnauthorized, "Cannot identify authenticated user")
+	//}
 
-	keys, err := r.db.ListApiKeysForUser(externalUserID)
+	keys, err := r.db.ListApiKeys()
 	if err != nil {
-		r.logger.Error("Failed to list API keys for user", zap.String("externalId", externalUserID), zap.Error(err))
+		r.logger.Error("Failed to list API keys", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve API keys")
 	}
 
