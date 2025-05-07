@@ -118,7 +118,7 @@ func (j Job) Do(integrationClient client.IntegrationServiceClient, authClient au
 	err = j.SendTelemetry(context.Background(), logger, config, integrationClient, authClient, coreClient)
 	if err != nil {
 		status = api.CheckupJobFailed
-		errMsg = fmt.Sprintf("%s \n failed to check integration healthcheck: %s", errMsg, err.Error())
+		errMsg = fmt.Sprintf("%s \n failed to send telemetry: %s", errMsg, err.Error())
 	}
 
 	return JobResult{
@@ -139,7 +139,7 @@ func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfi
 	pluginsResponse, err := integrationClient.ListPlugins(&httpCtx)
 	if err != nil {
 		logger.Error("failed to list sources", zap.Error(err))
-		return err
+		return fmt.Errorf("failed to list sources: %w", err)
 	}
 	for _, p := range pluginsResponse.Items {
 		plugins = append(plugins, shared_entities.UsageTrackerPluginInfo{
@@ -152,18 +152,18 @@ func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfi
 	users, err := authClient.ListUsers(&httpCtx)
 	if err != nil {
 		logger.Error("failed to list users", zap.Error(err))
-		return err
+		return fmt.Errorf("failed to list users: %w", err)
 	}
 	keys, err := authClient.ListApiKeys(&httpCtx)
 	if err != nil {
 		logger.Error("failed to list api keys", zap.Error(err))
-		return err
+		return fmt.Errorf("failed to list api keys: %w", err)
 	}
 
 	about, err := coreClient.GetAbout(&httpCtx)
 	if err != nil {
 		logger.Error("failed to get about", zap.Error(err))
-		return err
+		return fmt.Errorf("failed to get about: %w", err)
 	}
 
 	req := shared_entities.UsageTrackerRequest{
@@ -179,12 +179,12 @@ func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfi
 	reqBytes, err := json.Marshal(req)
 	if err != nil {
 		logger.Error("failed to marshal telemetry request", zap.Error(err))
-		return err
+		return fmt.Errorf("failed to marshal telemetry request: %w", err)
 	}
 	var resp any
 	if statusCode, err := httpclient.DoRequest(httpCtx.Ctx, http.MethodPost, UsageTrackerEndpoint, httpCtx.ToHeaders(), reqBytes, &resp); err != nil {
 		logger.Error("failed to send telemetry", zap.Error(err), zap.Int("status_code", statusCode), zap.String("url", UsageTrackerEndpoint), zap.Any("req", req), zap.Any("resp", resp))
-		return err
+		return fmt.Errorf("failed to send telemetry request: %w", err)
 	}
 
 	logger.Info("sent telemetry", zap.String("url", UsageTrackerEndpoint))
