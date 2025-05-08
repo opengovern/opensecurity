@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	authAPI "github.com/opengovern/og-util/pkg/api"
@@ -171,6 +172,7 @@ func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfi
 		Time:            now,
 		Version:         about.AppVersion,
 		Hostname:        workerConfig.TelemetryHostname,
+		Plugins:         plugins,
 		IsSsoConfigured: false,
 		UserCount:       int64(len(users)),
 		ApiKeyCount:     int64(len(keys)),
@@ -182,7 +184,7 @@ func (j *Job) SendTelemetry(ctx context.Context, logger *zap.Logger, workerConfi
 		return fmt.Errorf("failed to marshal telemetry request: %w", err)
 	}
 	var resp any
-	if statusCode, err := httpclient.DoRequest(httpCtx.Ctx, http.MethodPost, UsageTrackerEndpoint, httpCtx.ToHeaders(), reqBytes, &resp); err != nil {
+	if statusCode, err := httpclient.DoRequest(httpCtx.Ctx, http.MethodPost, UsageTrackerEndpoint, httpCtx.ToHeaders(), reqBytes, &resp); err != nil && (statusCode != 200 && statusCode != 201) && !strings.Contains(err.Error(), "Usage data processed successfully.") {
 		logger.Error("failed to send telemetry", zap.Error(err), zap.Int("status_code", statusCode), zap.String("url", UsageTrackerEndpoint), zap.Any("req", req), zap.Any("resp", resp))
 		return fmt.Errorf("failed to send telemetry request: %w", err)
 	}
